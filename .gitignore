@@ -1,6 +1,9 @@
 # Cursor IDE 相关文件
 .cursor/
 
+# 文档相关
+doc/
+
 # Go 相关
 # 编译后的二进制文件
 *.exe
