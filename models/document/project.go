@@ -77,3 +77,11 @@ func (n *Node) TouchForCreate() {
 func (n *Node) TouchForUpdate() {
 	n.UpdatedAt = time.Now()
 }
+
+// BuildRelativePath 根据父路径生成相对路径
+func (n *Node) BuildRelativePath(parentPath string) string {
+	if parentPath == "" || parentPath == "/" {
+		return n.Name
+	}
+	return parentPath + "/" + n.Name
+}
