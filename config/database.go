@@ -19,13 +19,13 @@ type DatabaseConfig struct {
 // LoadDatabaseConfig 加载数据库配置
 func LoadDatabaseConfig() *DatabaseConfig {
 	return &DatabaseConfig{
-		MongoURI:        getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		DBName:          getEnv("DB_NAME", "Qingyu_writer"),
+		MongoURI:        getEnv("DB_URI", "mongodb://localhost:27017"), // URI
+		DBName:          getEnv("DB_NAME", "Qingyu_writer"),            // 数据库名称
 		ConnectTimeout:  time.Duration(getEnvAsInt("MONGO_CONNECT_TIMEOUT", 10)) * time.Second,
-		MaxPoolSize:     uint64(getEnvAsInt("MONGO_MAX_POOL_SIZE", 100)),
-		MinPoolSize:     uint64(getEnvAsInt("MONGO_MIN_POOL_SIZE", 10)),
-		MaxConnIdleTime: time.Duration(getEnvAsInt("MONGO_MAX_CONN_IDLE_TIME", 60)) * time.Second,
-		RetryWrites:     getEnvAsBool("MONGO_RETRY_WRITES", true),
-		RetryReads:      getEnvAsBool("MONGO_RETRY_READS", true),
+		MaxPoolSize:     uint64(getEnvAsInt("MONGO_MAX_POOL_SIZE", 100)),                          // 最大连接数
+		MinPoolSize:     uint64(getEnvAsInt("MONGO_MIN_POOL_SIZE", 10)),                           // 最小连接数
+		MaxConnIdleTime: time.Duration(getEnvAsInt("MONGO_MAX_CONN_IDLE_TIME", 60)) * time.Second, // 最大连接空闲时间
+		RetryWrites:     getEnvAsBool("MONGO_RETRY_WRITES", true),                                 // 重试写入
+		RetryReads:      getEnvAsBool("MONGO_RETRY_READS", true),                                  // 重试读取
 	}
 }

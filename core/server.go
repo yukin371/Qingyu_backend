@@ -49,7 +49,7 @@ func RunServer() {
 
 	// 在goroutine中启动服务器
 	go func() {
-		log.Printf("Server is running on port %s", cfg.Server.Port)
+		log.Printf("服务器运行在端口：%s", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
@@ -59,7 +59,7 @@ func RunServer() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	log.Println("关闭服务器中...")
 
 	// 设置关闭超时
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -73,5 +73,5 @@ func RunServer() {
 	// 关闭数据库连接
 	CloseMongoDB()
 
-	log.Println("Server exited")
+	log.Println("服务已退出")
 }

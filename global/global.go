@@ -8,7 +8,7 @@ import (
 var (
 	// MongoDB 客户端
 	MongoClient *mongo.Client
-	
+
 	// MongoDB 数据库
 	DB *mongo.Database
 )
