@@ -40,7 +40,10 @@ func (s *NodeService) RenameNode(projectID, nodeID, newName string) error {
 		}
 		parentPath = parent.RelativePath
 	}
-	newPath := (&model.Node{Name: newName}).BuildRelativePath(parentPath)
+	newPath, err := (&model.Node{Name: newName}).BuildRelativePath(parentPath)
+	if err != nil {
+		return err
+	}
 
 	// 更新当前节点
 	update := bson.M{
@@ -108,7 +111,10 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 		}
 		parentPath = parent.RelativePath
 	}
-	newPath := (&model.Node{Name: n.Name}).BuildRelativePath(parentPath)
+	newPath, err := (&model.Node{Name: n.Name}).BuildRelativePath(parentPath)
+	if err != nil {
+		return err
+	}
 
 	// 更新当前节点的 ParentID 和 RelativePath
 	if _, err := nodeCol().UpdateOne(ctx, bson.M{"_id": nodeID}, bson.M{"$set": bson.M{

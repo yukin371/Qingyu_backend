@@ -3,7 +3,6 @@ package document
 import "time"
 
 // Document 表示系统中的文档数据模型
-// 仅包含与数据本身紧密相关的字段与方法
 type Document struct {
 	ID        string    `bson:"_id,omitempty" json:"id"`
 	UserID    string    `bson:"user_id" json:"userId"`
