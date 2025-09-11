@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/global"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -17,6 +18,16 @@ const (
 	ProjectStatusPublic  ProjectStatus = "public"
 	ProjectStatusPrivate ProjectStatus = "private"
 )
+
+// IsValidProjectStatus 验证工程状态是否合法
+func IsValidProjectStatus(status string) bool {
+	switch ProjectStatus(status) {
+	case ProjectStatusPublic, ProjectStatusPrivate:
+		return true
+	default:
+		return false
+	}
+}
 
 // Project 表示一本小说工程
 type Project struct {
@@ -169,9 +180,9 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 		context.Background(),
 		bson.M{"_id": nodeID},
 		bson.M{"$set": bson.M{
-			"parent_id":      node.ParentID,
-			"relative_path":  node.RelativePath,
-			"updated_at":     time.Now(),
+			"parent_id":     node.ParentID,
+			"relative_path": node.RelativePath,
+			"updated_at":    time.Now(),
 		}},
 	)
 	if err != nil {

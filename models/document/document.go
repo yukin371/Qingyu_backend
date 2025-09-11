@@ -6,6 +6,7 @@ import "time"
 type Document struct {
 	ID        string    `bson:"_id,omitempty" json:"id"`
 	UserID    string    `bson:"user_id" json:"userId"`
+	ProjectID string    `bson:"project_id" json:"projectId"`
 	Title     string    `bson:"title" json:"title"`
 	Content   string    `bson:"content" json:"content"`
 	Tags      []string  `bson:"tags" json:"tags"`
