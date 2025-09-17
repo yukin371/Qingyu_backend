@@ -112,10 +112,18 @@ func (n *Node) TouchForUpdate() {
 
 // BuildRelativePath 根据父路径生成相对路径
 func (n *Node) BuildRelativePath(parentPath string) (string, error) {
-	name := filepath.Clean(n.Name) // 清理路径中的 .. 等多余片段
+	if n.Name == "" {
+		return "", fmt.Errorf("节点名不能为空")
+	}
+
+	// 将所有的反斜杠转换为正斜杠，并清理路径中的 .. 等多余片段
+	name := filepath.ToSlash(filepath.Clean(n.Name))
 	if parentPath == "" || parentPath == "/" {
 		return name, nil
 	}
+
+	// 确保使用正斜杠作为路径分隔符
+	parentPath = filepath.ToSlash(filepath.Clean(parentPath))
 	return parentPath + "/" + name, nil
 }
 
