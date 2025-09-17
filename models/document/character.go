@@ -20,13 +20,23 @@ type Character struct {
 type RelationType string
 
 const (
-	RelationFriend  RelationType = "friend"
-	RelationFamily  RelationType = "family"
-	RelationEnemy   RelationType = "enemy"
-	RelationRomance RelationType = "romance"
-	RelationAlly    RelationType = "ally"
-	RelationOther   RelationType = "other"
+	RelationFriend  RelationType = "朋友"
+	RelationFamily  RelationType = "家庭"
+	RelationEnemy   RelationType = "敌人"
+	RelationRomance RelationType = "恋人"
+	RelationAlly    RelationType = "盟友"
+	RelationOther   RelationType = "其他"
 )
+
+// IsValidRelationType 验证关系类型是否合法
+func IsValidRelationType(t string) bool {
+	switch RelationType(t) {
+	case RelationFriend, RelationFamily, RelationEnemy, RelationRomance, RelationAlly, RelationOther:
+		return true
+	default:
+		return false
+	}
+}
 
 // CharacterRelation 角色关系（边表）
 // 允许有方向，也可约定对称关系由 Service 保持双向两条边
@@ -40,4 +50,9 @@ type CharacterRelation struct {
 	Notes     string       `bson:"notes,omitempty" json:"notes,omitempty"`
 	CreatedAt time.Time    `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time    `bson:"updated_at" json:"updatedAt"`
+}
+
+// IsValidRelationType 验证关系类型是否合法
+func (r *CharacterRelation) IsValidRelationType() bool {
+	return IsValidRelationType(string(r.Type))
 }

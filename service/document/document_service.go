@@ -17,6 +17,7 @@ import (
 // DocumentService 处理文档相关业务逻辑
 type DocumentService struct{}
 
+// getCollection 获取数据库集合
 func getCollection() *mongo.Collection {
 	return global.DB.Collection("documents")
 }
@@ -24,7 +25,7 @@ func getCollection() *mongo.Collection {
 // Create 创建文档
 func (s *DocumentService) Create(doc *model.Document) (*model.Document, error) {
 	if doc == nil {
-		return nil, errors.New("document is nil")
+		return nil, errors.New("Document is nil")
 	}
 	doc.ID = primitive.NewObjectID().Hex()
 	doc.TouchForCreate()
@@ -110,7 +111,6 @@ func (s *DocumentService) Update(id string, update *model.Document) (*model.Docu
 		"$set": bson.M{
 			"title":      update.Title,
 			"content":    update.Content,
-			"tags":       update.Tags,
 			"updated_at": update.UpdatedAt,
 		},
 	}

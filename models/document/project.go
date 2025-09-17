@@ -3,6 +3,7 @@ package document
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"Qingyu_backend/global"
@@ -66,11 +67,11 @@ type Node struct {
 	Children []*Node `bson:"-" json:"children,omitempty"`
 }
 
-// NovelFile 存放文件的内容与文件级元信息（仅当 Node.Type==file 时有对应记录）
-type NovelFile struct {
+// Document 存放文件的内容与文件级元信息（仅当 Node.Type==file 时有对应记录）
+type Document struct {
 	ID        string    `bson:"_id,omitempty" json:"id"`
-	ProjectID string    `bson:"project_id" json:"projectId"`
-	NodeID    string    `bson:"node_id" json:"nodeId"`
+	ProjectID string    `bson:"project_id,omitempty" json:"projectId,omitempty"` // 省略 project_id 时，视为独立文档
+	NodeID    string    `bson:"node_id,omitempty" json:"nodeId,omitempty"`
 	Title     string    `bson:"title" json:"title"`
 	Content   string    `bson:"content" json:"content"`
 	Format    string    `bson:"format" json:"format"` // markdown / txt / json 等
@@ -81,7 +82,7 @@ type NovelFile struct {
 }
 
 // TouchForCreate 在创建前设置时间戳
-func (f *NovelFile) TouchForCreate() {
+func (f *Document) TouchForCreate() {
 	now := time.Now()
 	f.CreatedAt = now
 	f.UpdatedAt = now
@@ -91,14 +92,18 @@ func (f *NovelFile) TouchForCreate() {
 }
 
 // TouchForUpdate 在更新前刷新更新时间戳
-func (f *NovelFile) TouchForUpdate() {
+func (f *Document) TouchForUpdate() {
 	f.UpdatedAt = time.Now()
+	f.Version++
 }
 
 func (n *Node) TouchForCreate() {
 	now := time.Now()
 	n.CreatedAt = now
 	n.UpdatedAt = now
+	if n.Order == 0 {
+		n.Order = 1
+	}
 }
 
 func (n *Node) TouchForUpdate() {
@@ -107,15 +112,11 @@ func (n *Node) TouchForUpdate() {
 
 // BuildRelativePath 根据父路径生成相对路径
 func (n *Node) BuildRelativePath(parentPath string) (string, error) {
-	// 检查节点名是否为空
-	if n.Name == "" {
-		return "", fmt.Errorf("node name cannot be empty")
-	}
-
+	name := filepath.Clean(n.Name) // 清理路径中的 .. 等多余片段
 	if parentPath == "" || parentPath == "/" {
-		return n.Name, nil
+		return name, nil
 	}
-	return parentPath + "/" + n.Name, nil
+	return parentPath + "/" + name, nil
 }
 
 // nodeCol 返回节点的 MongoDB 集合
@@ -130,7 +131,7 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 	var node Node
 	err := nodeCol().FindOne(context.Background(), bson.M{"_id": nodeID, "project_id": projectID}).Decode(&node)
 	if err != nil {
-		return fmt.Errorf("node not found: %v", err)
+		return fmt.Errorf("节点不存在: %v", err)
 	}
 
 	// 如果是移动到根目录
@@ -142,25 +143,25 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 		var parent Node
 		err = nodeCol().FindOne(context.Background(), bson.M{"_id": newParentID, "project_id": projectID}).Decode(&parent)
 		if err != nil {
-			return fmt.Errorf("parent node not found: %v", err)
+			return fmt.Errorf("父节点不存在: %v", err)
 		}
 
 		// 检查是否是移动到自己的后代节点（会造成循环引用）
 		if newParentID == nodeID {
-			return fmt.Errorf("cannot move node to itself")
+			return fmt.Errorf("不能将节点移动到其自身的后代")
 		}
 
 		// 检查新父节点是否是当前节点的后代
 		currentID := newParentID
 		for {
 			var currentNode Node
-			err = nodeCol().FindOne(context.Background(), bson.M{"_id": currentID}).Decode(&currentNode)
+			err = nodeCol().FindOne(context.Background(), bson.M{"_id": currentID, "project_id": projectID}).Decode(&currentNode)
 			if err != nil {
 				break
 			}
 
 			if currentNode.ParentID == nodeID {
-				return fmt.Errorf("cannot move node to its own descendant")
+				return fmt.Errorf("无法将节点移动到其自身的后代")
 			}
 
 			if currentNode.ParentID == "" {
@@ -178,7 +179,7 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 	// 更新节点
 	_, err = nodeCol().UpdateOne(
 		context.Background(),
-		bson.M{"_id": nodeID},
+		bson.M{"_id": nodeID, "project_id": projectID},
 		bson.M{"$set": bson.M{
 			"parent_id":     node.ParentID,
 			"relative_path": node.RelativePath,
@@ -186,7 +187,7 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 		}},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update node: %v", err)
+		return fmt.Errorf("更新节点失败: %v", err)
 	}
 
 	// 递归更新所有子节点的路径
@@ -198,33 +199,33 @@ func (s *NodeService) updateChildPaths(projectID, parentID, parentPath string) e
 	// 查找所有直接子节点
 	cursor, err := nodeCol().Find(context.Background(), bson.M{"project_id": projectID, "parent_id": parentID})
 	if err != nil {
-		return err
+		return fmt.Errorf("查找子节点失败: %v", err)
 	}
 	defer cursor.Close(context.Background())
 
 	for cursor.Next(context.Background()) {
 		var child Node
-		if err := cursor.Decode(&child); err != nil {
-			return err
+		if decodeErr := cursor.Decode(&child); decodeErr != nil {
+			return fmt.Errorf("解码子节点失败: %v", decodeErr)
 		}
 
 		// 更新子节点的路径
 		newPath := parentPath + "/" + child.Name
 		_, err = nodeCol().UpdateOne(
 			context.Background(),
-			bson.M{"_id": child.ID},
+			bson.M{"_id": child.ID, "project_id": projectID},
 			bson.M{"$set": bson.M{
 				"relative_path": newPath,
 				"updated_at":    time.Now(),
 			}},
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf("更新子节点路径失败: %v", err)
 		}
 
 		// 递归更新子节点的子节点
 		if err := s.updateChildPaths(projectID, child.ID, newPath); err != nil {
-			return err
+			return fmt.Errorf("递归更新子节点失败: %v", err)
 		}
 	}
 

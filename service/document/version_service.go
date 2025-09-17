@@ -25,7 +25,7 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var f model.NovelFile
+	var f model.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
