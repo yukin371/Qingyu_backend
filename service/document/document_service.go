@@ -25,7 +25,7 @@ func getCollection() *mongo.Collection {
 // Create 创建文档
 func (s *DocumentService) Create(doc *model.Document) (*model.Document, error) {
 	if doc == nil {
-		return nil, errors.New("Document is nil")
+		return nil, errors.New("文档不能为空")
 	}
 	doc.ID = primitive.NewObjectID().Hex()
 	doc.TouchForCreate()
@@ -81,7 +81,7 @@ func (s *DocumentService) List(userID string, limit, offset int64) ([]*model.Doc
 // GetByID 根据ID获取文档
 func (s *DocumentService) GetByID(id string) (*model.Document, error) {
 	if id == "" {
-		return nil, errors.New("id is empty")
+		return nil, errors.New("id为空")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -100,7 +100,7 @@ func (s *DocumentService) GetByID(id string) (*model.Document, error) {
 // Update 更新文档（不更新 UserID 和 ID）
 func (s *DocumentService) Update(id string, update *model.Document) (*model.Document, error) {
 	if id == "" || update == nil {
-		return nil, errors.New("invalid arguments")
+		return nil, errors.New("id 或 update 为空")
 	}
 	update.TouchForUpdate()
 

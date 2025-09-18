@@ -11,20 +11,29 @@ func RegisterRoutes(r *gin.RouterGroup) {
 	// 文档路由组
 	docRouter := r.Group("/document")
 	{
-		a := api.NewDocumentApi()
+		d := api.NewDocumentApi()
+		v := api.NewVersionApi()
 		// 创建文档
-		docRouter.POST("/", a.Create)
+		docRouter.POST("/", d.Create)
 
 		// 获取文档列表
-		docRouter.GET("/", a.List)
+		docRouter.GET("/", d.List)
 
 		// 获取单个文档
-		docRouter.GET("/:id", a.Get)
+		docRouter.GET("/:id", d.Get)
 
 		// 更新文档
-		docRouter.PUT("/:id", a.Update)
+		docRouter.PUT("/:id", d.Update)
 
 		// 删除文档
-		docRouter.DELETE("/:id", a.Delete)
+		docRouter.DELETE("/:id", d.Delete)
+
+		// 版本相关
+		// 创建新版本（提交内容）
+		docRouter.POST(":projectId/:nodeId/version", v.CreateVersion)
+		docRouter.POST(":projectId/:nodeId/rollback", v.Rollback)
+		docRouter.POST(":projectId/:nodeId/patch", v.CreatePatch)
+		docRouter.POST(":projectId/:nodeId/patch/:patchId/apply", v.ApplyPatch)
+		docRouter.GET(":projectId/:nodeId/versions", v.ListVersions)
 	}
 }

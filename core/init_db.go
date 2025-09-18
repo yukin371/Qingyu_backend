@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
+	svc "Qingyu_backend/service/document"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -52,6 +53,16 @@ func InitMongoDB() error {
 
 	log.Printf("Connected to MongoDB: %s, Database: %s", cfg.Database.MongoURI, cfg.Database.DBName)
 	log.Printf("MongoDB connection pool configured with MaxSize: %d, MinSize: %d", cfg.Database.MaxPoolSize, cfg.Database.MinPoolSize)
+	// 确保版本相关的索引
+	go func() {
+		ctx2, cancel2 := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel2()
+		if err := (&svc.VersionService{}).EnsureIndexes(ctx2); err != nil {
+			log.Printf("warning: could not ensure version indexes: %v", err)
+		} else {
+			log.Println("version indexes ensured")
+		}
+	}()
 	return nil
 }
 

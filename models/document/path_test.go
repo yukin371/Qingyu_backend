@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"Qingyu_backend/global"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -83,6 +85,11 @@ func TestBuildRelativePath(t *testing.T) {
 func TestMoveNode(t *testing.T) {
 	// 初始化测试服务
 	service := &NodeService{}
+
+	// 如果没有 MongoDB 连接，跳过集成测试
+	if global.DB == nil {
+		t.Skip("skipping integration TestMoveNode: global.DB not initialized")
+	}
 
 	// 创建测试项目
 	projectID := "test_project"
@@ -270,6 +277,10 @@ func TestMoveNode(t *testing.T) {
 
 func TestCascadePathUpdate(t *testing.T) {
 	service := &NodeService{}
+
+	if global.DB == nil {
+		t.Skip("skipping integration TestCascadePathUpdate: global.DB not initialized")
+	}
 	projectID := "test_project"
 
 	// 清理之前的测试数据
