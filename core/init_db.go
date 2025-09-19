@@ -57,6 +57,11 @@ func InitMongoDB() error {
 	go func() {
 		ctx2, cancel2 := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel2()
+		if err := (&svc.ProjectService{}).EnsureIndexes(ctx2); err != nil {
+			log.Printf("warning: could not ensure project indexes: %v", err)
+		} else {
+			log.Println("project indexes ensured")
+		}
 		if err := (&svc.VersionService{}).EnsureIndexes(ctx2); err != nil {
 			log.Printf("warning: could not ensure version indexes: %v", err)
 		} else {

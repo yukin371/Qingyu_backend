@@ -45,13 +45,14 @@ func (a *VersionApi) CreateVersion(c *gin.Context) {
 	c.JSON(http.StatusCreated, rev)
 }
 
-// rollback request
+// rollback request body
 type rollbackReq struct {
 	AuthorID string `json:"authorId" binding:"required"`
 	Version  int    `json:"version" binding:"required"`
 	Message  string `json:"message"`
 }
 
+// Rollback 回滚到指定版本
 // POST /api/v1/document/:nodeId/rollback
 func (a *VersionApi) Rollback(c *gin.Context) {
 	nodeId := c.Param("nodeId")
@@ -77,6 +78,7 @@ type createPatchReq struct {
 	Message     string `json:"message"`
 }
 
+// CreatePatch 创建补丁
 // POST /api/v1/document/:nodeId/patch
 func (a *VersionApi) CreatePatch(c *gin.Context) {
 	nodeId := c.Param("nodeId")
@@ -93,6 +95,7 @@ func (a *VersionApi) CreatePatch(c *gin.Context) {
 	c.JSON(http.StatusCreated, p)
 }
 
+// ApplyPatch 补丁应用
 // POST /api/v1/document/:nodeId/patch/:patchId/apply
 func (a *VersionApi) ApplyPatch(c *gin.Context) {
 	patchId := c.Param("patchId")
@@ -113,6 +116,7 @@ func (a *VersionApi) ApplyPatch(c *gin.Context) {
 	c.JSON(http.StatusOK, rev)
 }
 
+// ListPatches 补丁列表
 // GET /api/v1/document/:nodeId/versions
 func (a *VersionApi) ListVersions(c *gin.Context) {
 	nodeId := c.Param("nodeId")

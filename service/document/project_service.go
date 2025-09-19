@@ -62,7 +62,7 @@ func (s *ProjectService) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (s *ProjectService) Create(ctx context.Context, p *model.Project) error {
+func (s *ProjectService) CreateProject(ctx context.Context, p *model.Project) error {
 	if p.Name == "" || p.ID == "" {
 		return errors.New("invalid arguments")
 	}
@@ -143,6 +143,8 @@ func (s *ProjectService) Delete(ctx context.Context, projectID, ownerID string) 
 	return err
 }
 
+// TODO: Restore 恢复（软删恢复）
+
 // DeleteHard 硬删除（管理后台用）
 func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error {
 	_, err := projectCol().DeleteOne(ctx, bson.M{"_id": projectID})
@@ -162,7 +164,7 @@ func (s *ProjectService) CreateWithRootNode(ctx context.Context, p *model.Projec
 		}
 		defer sc.EndSession(ctx)
 
-		if err := s.Create(ctx, p); err != nil {
+		if err := s.CreateProject(ctx, p); err != nil {
 			sc.AbortTransaction(sc)
 			return err
 		}

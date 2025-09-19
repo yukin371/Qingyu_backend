@@ -5,7 +5,7 @@ import "time"
 // FileRevision 表示文件的一个历史版本（快照）
 type FileRevision struct {
 	ID         string                 `bson:"_id,omitempty" json:"id"`
-	ProjectID  string                 `bson:"project_id" json:"projectId"`
+	ProjectID  string                 `bson:"project_id,omitempty" json:"projectId,omitempty"`
 	NodeID     string                 `bson:"node_id" json:"nodeId"`
 	Version    int                    `bson:"version" json:"version"`
 	AuthorID   string                 `bson:"author_id" json:"authorId"` // 可为AI或用户
@@ -17,6 +17,15 @@ type FileRevision struct {
 	Compressed bool                   `bson:"compressed,omitempty" json:"compressed,omitempty"`  // Snapshot 是否压缩
 	CreatedAt  time.Time              `bson:"created_at" json:"createdAt"`
 }
+
+type Status string
+
+const (
+	StatusPending  Status = "pending"
+	StatusApproved Status = "approved"
+	StatusRejected Status = "rejected"
+	StatusApplied  Status = "applied"
+)
 
 // FilePatch 表示一次候选变更（补丁）
 type FilePatch struct {
