@@ -77,6 +77,16 @@ type Document struct {
 	Format    string    `bson:"format" json:"format"` // markdown / txt / json 等
 	Words     int       `bson:"words" json:"words"`
 	Version   int       `bson:"version" json:"version"`
+	
+	// AI相关字段
+	AIContext    string   `bson:"ai_context,omitempty" json:"aiContext,omitempty"`
+	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty"`
+	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty"`
+	WritingHints string   `bson:"writing_hints,omitempty" json:"writingHints,omitempty"`
+	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty"`
+	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty"`
+	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty"`
+	
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }

@@ -12,6 +12,12 @@ type Character struct {
 	Traits     []string  `bson:"traits,omitempty" json:"traits,omitempty"` // 性格标签
 	Background string    `bson:"background,omitempty" json:"background,omitempty"`
 	AvatarURL  string    `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty"`
+	
+	// AI相关字段
+	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty"`
+	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty"`
+	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty"`
+	
 	CreatedAt  time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updatedAt"`
 }
