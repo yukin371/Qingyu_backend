@@ -1,0 +1,40 @@
+[
+  {
+    "name": "create_file",
+    "description": "在指定目录下新建文件并写入内容",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "parentNodeId": {"type": "string"},
+        "fileName":     {"type": "string"},
+        "content":      {"type": "string"},
+        "format":       {"type": "string", "enum": ["markdown", "txt"]}
+      },
+      "required": ["parentNodeId", "fileName", "content"]
+    }
+  },
+  {
+    "name": "read_file",
+    "description": "读取文件内容",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nodeId": {"type": "string"}
+      },
+      "required": ["nodeId"]
+    }
+  },
+  {
+    "name": "update_file",
+    "description": "全量或局部替换文件内容",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nodeId":   {"type": "string"},
+        "newText":  {"type": "string"},
+        "mode":     {"type": "string", "enum": ["full", "patch"]}
+      },
+      "required": ["nodeId", "newText"]
+    }
+  }
+]

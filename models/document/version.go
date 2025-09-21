@@ -1,12 +1,26 @@
 package document
 
-import "time"
+import (
+	"time"
+)
 
-// FileRevision 表示文件的一个历史版本（快照）
+// Commit 表示一次批量提交，可包含多个文件的修改
+type Commit struct {
+	ID        string                 `bson:"_id,omitempty" json:"id"`
+	ProjectID string                 `bson:"project_id" json:"projectId"`
+	AuthorID  string                 `bson:"author_id" json:"authorId"`
+	Message   string                 `bson:"message,omitempty" json:"message,omitempty"`
+	FileCount int                    `bson:"file_count" json:"fileCount"`                  // 本次提交涉及的文件数量
+	Metadata  map[string]interface{} `bson:"metadata,omitempty" json:"metadata,omitempty"` // 可选元数据
+	CreatedAt time.Time              `bson:"created_at" json:"createdAt"`
+}
+
+// FileRevision 文件修订记录
 type FileRevision struct {
 	ID         string                 `bson:"_id,omitempty" json:"id"`
 	ProjectID  string                 `bson:"project_id,omitempty" json:"projectId,omitempty"`
 	NodeID     string                 `bson:"node_id" json:"nodeId"`
+	CommitID   string                 ``
 	Version    int                    `bson:"version" json:"version"`
 	AuthorID   string                 `bson:"author_id" json:"authorId"` // 可为AI或用户
 	Message    string                 `bson:"message,omitempty" json:"message,omitempty"`
@@ -33,12 +47,67 @@ type FilePatch struct {
 	ProjectID   string                 `bson:"project_id" json:"projectId"`
 	NodeID      string                 `bson:"node_id" json:"nodeId"`
 	BaseVersion int                    `bson:"base_version" json:"baseVersion"`
-	DiffFormat  string                 `bson:"diff_format" json:"diffFormat"`              // unified|json-patch
+	DiffFormat  string                 `bson:"diff_format" json:"diffFormat"`              // unified|json-patch|full
 	DiffPayload string                 `bson:"diff_payload" json:"diffPayload"`            // 原始diff内容
 	CreatedBy   string                 `bson:"created_by" json:"createdBy"`                // ai|user:ID
-	Status      string                 `bson:"status" json:"status"`                       // pending|approved|rejected|applied
+	Status      Status                 `bson:"status" json:"status"`                       // pending|approved|rejected|applied
 	Preview     string                 `bson:"preview,omitempty" json:"preview,omitempty"` // 可选：预览合并结果
 	Metadata    map[string]interface{} `bson:"metadata,omitempty" json:"metadata,omitempty"`
 	CreatedAt   time.Time              `bson:"created_at" json:"createdAt"`
 	UpdatedAt   time.Time              `bson:"updated_at" json:"updatedAt"`
+}
+
+// ConflictInfo 冲突信息结构
+type ConflictInfo struct {
+	HasConflict          bool           `json:"hasConflict"`
+	CurrentVersion       int            `json:"currentVersion"`
+	ExpectedVersion      int            `json:"expectedVersion"`
+	ConflictingRevisions []FileRevision `json:"conflictingRevisions,omitempty"`
+	LastModified         time.Time      `json:"lastModified,omitempty"`
+}
+
+// BatchConflictResult 批量冲突检测结果
+type BatchConflictResult struct {
+	ProjectID    string                   `json:"projectId"`
+	HasConflicts bool                     `json:"hasConflicts"`
+	Conflicts    map[string]*ConflictInfo `json:"conflicts"`
+}
+
+// SnapshotStorage 快照存储策略配置
+type SnapshotStorage struct {
+	Strategy     string `json:"strategy"`     // inline, external, hybrid
+	Threshold    int    `json:"threshold"`    // 内容大小阈值（字节）
+	ExternalPath string `json:"externalPath"` // 外部存储路径
+}
+
+// GetSnapshotStrategy 根据内容大小决定存储策略
+func GetSnapshotStrategy(contentSize int) string {
+	const INLINE_THRESHOLD = 64 * 1024 // 64KB
+	if contentSize <= INLINE_THRESHOLD {
+		return "inline"
+	}
+	return "external"
+}
+
+// ConflictResolution 冲突解决策略
+type ConflictResolution struct {
+	Strategy      string `json:"strategy"`      // auto, manual, force
+	ResolvedBy    string `json:"resolvedBy"`    // 解决者ID
+	Resolution    string `json:"resolution"`    // 解决方案描述
+	MergedContent string `json:"mergedContent"` // 合并后的内容
+}
+
+// BatchConflictResolution 批量冲突解决请求
+type BatchConflictResolution struct {
+	ProjectID   string                         `json:"projectId" binding:"required"`
+	AuthorID    string                         `json:"authorId" binding:"required"`
+	Message     string                         `json:"message"`
+	Resolutions map[string]*ConflictResolution `json:"resolutions" binding:"required"` // nodeID -> resolution
+}
+
+// CommitFile 提交文件结构
+type CommitFile struct {
+	NodeID          string `json:"nodeId"`
+	Content         string `json:"content"`
+	ExpectedVersion int    `json:"expectedVersion"`
 }
