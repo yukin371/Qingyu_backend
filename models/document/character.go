@@ -4,22 +4,22 @@ import "time"
 
 // Character 角色卡片
 type Character struct {
-	ID         string    `bson:"_id,omitempty" json:"id"`
-	ProjectID  string    `bson:"project_id" json:"projectId"`
-	Name       string    `bson:"name" json:"name"`
-	Alias      []string  `bson:"alias,omitempty" json:"alias,omitempty"`
-	Summary    string    `bson:"summary,omitempty" json:"summary,omitempty"`
-	Traits     []string  `bson:"traits,omitempty" json:"traits,omitempty"` // 性格标签
-	Background string    `bson:"background,omitempty" json:"background,omitempty"`
-	AvatarURL  string    `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty"`
-	
+	ID         string   `bson:"_id,omitempty" json:"id"`
+	ProjectID  string   `bson:"project_id" json:"projectId"`
+	Name       string   `bson:"name" json:"name"`
+	Alias      []string `bson:"alias,omitempty" json:"alias,omitempty"`
+	Summary    string   `bson:"summary,omitempty" json:"summary,omitempty"`
+	Traits     []string `bson:"traits,omitempty" json:"traits,omitempty"` // 性格标签
+	Background string   `bson:"background,omitempty" json:"background,omitempty"`
+	AvatarURL  string   `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty"`
+
 	// AI相关字段
-	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty"`
-	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty"`
-	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty"`
-	
-	CreatedAt  time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt  time.Time `bson:"updated_at" json:"updatedAt"`
+	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty"` // 角色性格提示
+	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty"`         // 角色语音模式
+	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty"`           // 角色当前状态
+
+	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
 
 // RelationType 关系类型

@@ -53,9 +53,9 @@ func (s *ContextService) BuildContext(ctx context.Context, projectID string, cha
 	aiContext := &ai.AIContext{
 		ProjectID:        projectID,
 		CurrentChapter:   chapterInfo,
-		ActiveCharacters: []*ai.CharacterInfo{}, // TODO: 实现角色信息获取
-		CurrentLocations: []*ai.LocationInfo{},  // TODO: 实现地点信息获取
-		RelevantEvents:   []*ai.TimelineEvent{}, // TODO: 实现时间线事件获取
+		ActiveCharacters: []*ai.CharacterInfo{},  // TODO: 实现角色信息获取
+		CurrentLocations: []*ai.LocationInfo{},   // TODO: 实现地点信息获取
+		RelevantEvents:   []*ai.TimelineEvent{},  // TODO: 实现时间线事件获取
 		PreviousChapters: []*ai.ChapterSummary{}, // TODO: 实现前序章节摘要
 		NextChapters:     []*ai.ChapterOutline{}, // TODO: 实现下一章节大纲
 		WorldSettings:    nil,                    // TODO: 实现世界观设定获取

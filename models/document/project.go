@@ -69,24 +69,24 @@ type Node struct {
 
 // Document 存放文件的内容与文件级元信息（仅当 Node.Type==file 时有对应记录）
 type Document struct {
-	ID        string    `bson:"_id,omitempty" json:"id"`
-	ProjectID string    `bson:"project_id,omitempty" json:"projectId,omitempty"` // 省略 project_id 时，视为独立文档
-	NodeID    string    `bson:"node_id,omitempty" json:"nodeId,omitempty"`
-	Title     string    `bson:"title" json:"title"`
-	Content   string    `bson:"content" json:"content"`
-	Format    string    `bson:"format" json:"format"` // markdown / txt / json 等
-	Words     int       `bson:"words" json:"words"`
-	Version   int       `bson:"version" json:"version"`
-	
+	ID        string `bson:"_id,omitempty" json:"id"`
+	ProjectID string `bson:"project_id,omitempty" json:"projectId,omitempty"` // 省略 project_id 时，视为独立文档
+	NodeID    string `bson:"node_id,omitempty" json:"nodeId,omitempty"`
+	Title     string `bson:"title" json:"title"`
+	Content   string `bson:"content" json:"content"`
+	Format    string `bson:"format" json:"format"` // markdown / txt / json 等
+	Words     int    `bson:"words" json:"words"`
+	Version   int    `bson:"version" json:"version"`
+
 	// AI相关字段
-	AIContext    string   `bson:"ai_context,omitempty" json:"aiContext,omitempty"`
-	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty"`
-	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty"`
-	WritingHints string   `bson:"writing_hints,omitempty" json:"writingHints,omitempty"`
-	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty"`
-	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty"`
-	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty"`
-	
+	AIContext    string   `bson:"ai_context,omitempty" json:"aiContext,omitempty"`       // 文档的AI上下文，用于生成内容
+	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty"`   // 文档的剧情线程，用于生成内容
+	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty"`       // 文档的关键词点，用于生成内容
+	WritingHints string   `bson:"writing_hints,omitempty" json:"writingHints,omitempty"` // 文档的写作提示，用于生成内容
+	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty"` // 文档中出现的角色ID列表
+	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty"`   // 文档中出现的地点ID列表
+	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty"`   // 文档中出现的时间线ID列表
+
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
