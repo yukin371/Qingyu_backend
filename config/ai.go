@@ -19,11 +19,35 @@ type AIConfig struct {
 
 // ExternalAPIConfig 外部API配置
 type ExternalAPIConfig struct {
-	// API提供商 (openai, claude, gemini, etc.)
-	Provider string `json:"provider"`
+	// 默认提供商
+	DefaultProvider string `json:"defaultProvider"`
+	
+	// 提供商配置映射
+	Providers map[string]*ProviderConfig `json:"providers"`
+	
+	// 全局请求超时时间
+	Timeout time.Duration `json:"timeout"`
+	
+	// 全局最大重试次数
+	MaxRetries int `json:"maxRetries"`
+	
+	// 全局重试间隔
+	RetryInterval time.Duration `json:"retryInterval"`
+	
+	// 全局代理设置
+	ProxyURL string `json:"proxyUrl,omitempty"`
+}
+
+// ProviderConfig 单个提供商配置
+type ProviderConfig struct {
+	// 提供商名称 (openai, claude, gemini, wenxin, qwen)
+	Name string `json:"name"`
 	
 	// API密钥
 	APIKey string `json:"apiKey"`
+	
+	// API密钥2 (用于百度文心一言的SecretKey)
+	SecretKey string `json:"secretKey,omitempty"`
 	
 	// API基础URL
 	BaseURL string `json:"baseUrl"`
@@ -31,17 +55,29 @@ type ExternalAPIConfig struct {
 	// 默认模型
 	DefaultModel string `json:"defaultModel"`
 	
-	// 请求超时时间
-	Timeout time.Duration `json:"timeout"`
+	// 支持的模型列表
+	SupportedModels []string `json:"supportedModels"`
 	
-	// 最大重试次数
-	MaxRetries int `json:"maxRetries"`
+	// 是否启用
+	Enabled bool `json:"enabled"`
 	
-	// 重试间隔
-	RetryInterval time.Duration `json:"retryInterval"`
+	// 优先级 (数字越小优先级越高)
+	Priority int `json:"priority"`
 	
-	// 代理设置
+	// 提供商特定的超时时间
+	Timeout time.Duration `json:"timeout,omitempty"`
+	
+	// 提供商特定的最大重试次数
+	MaxRetries int `json:"maxRetries,omitempty"`
+	
+	// 提供商特定的重试间隔
+	RetryInterval time.Duration `json:"retryInterval,omitempty"`
+	
+	// 提供商特定的代理设置
 	ProxyURL string `json:"proxyUrl,omitempty"`
+	
+	// 额外配置参数
+	ExtraConfig map[string]interface{} `json:"extraConfig,omitempty"`
 }
 
 // ContextConfig 上下文配置
@@ -108,10 +144,55 @@ type RateLimitConfig struct {
 func LoadAIConfig() *AIConfig {
 	return &AIConfig{
 		ExternalAPI: &ExternalAPIConfig{
-			Provider:      getEnv("AI_PROVIDER", "openai"),
-			APIKey:        getEnv("AI_API_KEY", ""),
-			BaseURL:       getEnv("AI_BASE_URL", "https://api.openai.com/v1"),
-			DefaultModel:  getEnv("AI_DEFAULT_MODEL", "gpt-3.5-turbo"),
+			DefaultProvider: getEnv("AI_DEFAULT_PROVIDER", "openai"),
+			Providers: map[string]*ProviderConfig{
+				"openai": {
+					Name:            "openai",
+					APIKey:          getEnv("OPENAI_API_KEY", ""),
+					BaseURL:         getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+					DefaultModel:    getEnv("OPENAI_DEFAULT_MODEL", "gpt-3.5-turbo"),
+					SupportedModels: []string{"gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"},
+					Enabled:         getEnvAsBool("OPENAI_ENABLED", true),
+					Priority:        getEnvAsInt("OPENAI_PRIORITY", 1),
+				},
+				"claude": {
+					Name:            "claude",
+					APIKey:          getEnv("CLAUDE_API_KEY", ""),
+					BaseURL:         getEnv("CLAUDE_BASE_URL", "https://api.anthropic.com"),
+					DefaultModel:    getEnv("CLAUDE_DEFAULT_MODEL", "claude-3-5-sonnet-20241022"),
+					SupportedModels: []string{"claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"},
+					Enabled:         getEnvAsBool("CLAUDE_ENABLED", false),
+					Priority:        getEnvAsInt("CLAUDE_PRIORITY", 2),
+				},
+				"gemini": {
+					Name:            "gemini",
+					APIKey:          getEnv("GEMINI_API_KEY", ""),
+					BaseURL:         getEnv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com"),
+					DefaultModel:    getEnv("GEMINI_DEFAULT_MODEL", "gemini-1.5-pro"),
+					SupportedModels: []string{"gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "gemini-pro-vision"},
+					Enabled:         getEnvAsBool("GEMINI_ENABLED", false),
+					Priority:        getEnvAsInt("GEMINI_PRIORITY", 3),
+				},
+				"wenxin": {
+					Name:            "wenxin",
+					APIKey:          getEnv("WENXIN_API_KEY", ""),
+					SecretKey:       getEnv("WENXIN_SECRET_KEY", ""),
+					BaseURL:         getEnv("WENXIN_BASE_URL", "https://aip.baidubce.com"),
+					DefaultModel:    getEnv("WENXIN_DEFAULT_MODEL", "ernie-3.5-8k"),
+					SupportedModels: []string{"ernie-4.0-8k", "ernie-4.0-8k-preview", "ernie-3.5-8k", "ernie-3.5-8k-0205", "ernie-turbo-8k", "ernie-speed-8k", "ernie-lite-8k", "ernie-tiny-8k"},
+					Enabled:         getEnvAsBool("WENXIN_ENABLED", false),
+					Priority:        getEnvAsInt("WENXIN_PRIORITY", 4),
+				},
+				"qwen": {
+					Name:            "qwen",
+					APIKey:          getEnv("QWEN_API_KEY", ""),
+					BaseURL:         getEnv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com"),
+					DefaultModel:    getEnv("QWEN_DEFAULT_MODEL", "qwen-turbo"),
+					SupportedModels: []string{"qwen-turbo", "qwen-plus", "qwen-max", "qwen-max-1201", "qwen-max-longcontext", "qwen-7b-chat", "qwen-14b-chat", "qwen-72b-chat", "qwen1.5-7b-chat", "qwen1.5-14b-chat", "qwen1.5-72b-chat", "qwen2-7b-instruct", "qwen2-72b-instruct"},
+					Enabled:         getEnvAsBool("QWEN_ENABLED", false),
+					Priority:        getEnvAsInt("QWEN_PRIORITY", 5),
+				},
+			},
 			Timeout:       time.Duration(getEnvAsInt("AI_TIMEOUT", 30)) * time.Second,
 			MaxRetries:    getEnvAsInt("AI_MAX_RETRIES", 3),
 			RetryInterval: time.Duration(getEnvAsInt("AI_RETRY_INTERVAL", 1)) * time.Second,
