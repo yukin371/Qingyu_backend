@@ -2,6 +2,7 @@ package ai
 
 import (
 	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,10 +39,10 @@ type ChatMessage struct {
 
 // ChatSettings 聊天设置
 type ChatSettings struct {
-	Model           string  `json:"model"`           // AI模型
-	Temperature     float32 `json:"temperature"`     // 温度参数
-	MaxTokens       int     `json:"maxTokens"`       // 最大token数
-	TopP            float32 `json:"topP"`            // Top-p参数
+	Model            string  `json:"model"`            // AI模型
+	Temperature      float32 `json:"temperature"`      // 温度参数
+	MaxTokens        int     `json:"maxTokens"`        // 最大token数
+	TopP             float32 `json:"topP"`             // Top-p参数
 	FrequencyPenalty float32 `json:"frequencyPenalty"` // 频率惩罚
 	PresencePenalty  float32 `json:"presencePenalty"`  // 存在惩罚
 	SystemPrompt     string  `json:"systemPrompt"`     // 系统提示词
@@ -52,28 +53,28 @@ type ChatSettings struct {
 
 // ChatMetadata 聊天元数据
 type ChatMetadata struct {
-	TotalMessages    int                    `json:"totalMessages"`    // 总消息数
-	TotalTokens      int                    `json:"totalTokens"`      // 总token数
-	AverageResponse  float64                `json:"averageResponse"`  // 平均响应时间
-	LastActiveAt     time.Time              `json:"lastActiveAt"`     // 最后活跃时间
-	Tags             []string               `json:"tags"`             // 标签
-	Category         string                 `json:"category"`         // 分类
-	Priority         int                    `json:"priority"`         // 优先级
-	CustomFields     map[string]interface{} `json:"customFields"`     // 自定义字段
+	TotalMessages   int                    `json:"totalMessages"`   // 总消息数
+	TotalTokens     int                    `json:"totalTokens"`     // 总token数
+	AverageResponse float64                `json:"averageResponse"` // 平均响应时间
+	LastActiveAt    time.Time              `json:"lastActiveAt"`    // 最后活跃时间
+	Tags            []string               `json:"tags"`            // 标签
+	Category        string                 `json:"category"`        // 分类
+	Priority        int                    `json:"priority"`        // 优先级
+	CustomFields    map[string]interface{} `json:"customFields"`    // 自定义字段
 }
 
 // MessageMeta 消息元数据
 type MessageMeta struct {
-	ResponseTime    float64                `json:"responseTime"`    // 响应时间(毫秒)
-	ModelUsed       string                 `json:"modelUsed"`       // 使用的模型
-	ContextUsed     bool                   `json:"contextUsed"`     // 是否使用了上下文
-	MemoryUsed      bool                   `json:"memoryUsed"`      // 是否使用了记忆
-	Sources         []string               `json:"sources"`         // 信息来源
-	Confidence      float64                `json:"confidence"`      // 置信度
-	Sentiment       string                 `json:"sentiment"`       // 情感分析
-	Intent          string                 `json:"intent"`          // 意图识别
-	Entities        []Entity               `json:"entities"`        // 实体识别
-	CustomData      map[string]interface{} `json:"customData"`      // 自定义数据
+	ResponseTime float64                `json:"responseTime"` // 响应时间(毫秒)
+	ModelUsed    string                 `json:"modelUsed"`    // 使用的模型
+	ContextUsed  bool                   `json:"contextUsed"`  // 是否使用了上下文
+	MemoryUsed   bool                   `json:"memoryUsed"`   // 是否使用了记忆
+	Sources      []string               `json:"sources"`      // 信息来源
+	Confidence   float64                `json:"confidence"`   // 置信度
+	Sentiment    string                 `json:"sentiment"`    // 情感分析
+	Intent       string                 `json:"intent"`       // 意图识别
+	Entities     []Entity               `json:"entities"`     // 实体识别
+	CustomData   map[string]interface{} `json:"customData"`   // 自定义数据
 }
 
 // Entity 实体信息
@@ -178,10 +179,10 @@ func (cs *ChatSession) AddMessage(role, content string, tokenUsed int, metadata 
 		Metadata:  metadata,
 		Timestamp: time.Now(),
 	}
-	
+
 	cs.Messages = append(cs.Messages, *message)
 	cs.UpdatedAt = time.Now()
-	
+
 	// 更新元数据
 	if cs.Metadata == nil {
 		cs.Metadata = &ChatMetadata{}
@@ -189,7 +190,7 @@ func (cs *ChatSession) AddMessage(role, content string, tokenUsed int, metadata 
 	cs.Metadata.TotalMessages = len(cs.Messages)
 	cs.Metadata.TotalTokens = cs.GetTotalTokens()
 	cs.Metadata.LastActiveAt = time.Now()
-	
+
 	return message
 }
 
