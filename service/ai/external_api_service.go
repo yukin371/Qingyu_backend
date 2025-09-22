@@ -11,12 +11,15 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
+	"Qingyu_backend/service/ai/adapter"
 )
 
-// ExternalAPIService 外部AI API服务
+// ExternalAPIService 外部AI API服务（已弃用，保留用于向后兼容）
+// 推荐使用 adapter.AdapterManager 进行AI服务调用
 type ExternalAPIService struct {
-	httpClient *http.Client
-	config     *config.AIConfig
+	httpClient     *http.Client
+	config         *config.AIConfig
+	adapterManager *adapter.AdapterManager // 新增适配器管理器
 }
 
 // NewExternalAPIService 创建外部API服务
@@ -25,7 +28,8 @@ func NewExternalAPIService(cfg *config.AIConfig) *ExternalAPIService {
 		httpClient: &http.Client{
 			Timeout: cfg.ExternalAPI.Timeout,
 		},
-		config: cfg,
+		config:         cfg,
+		adapterManager: adapter.NewAdapterManager(cfg.ExternalAPI),
 	}
 }
 
@@ -68,45 +72,37 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
-// GenerateContent 生成内容
+// GenerateContent 生成内容（向后兼容方法，内部使用适配器管理器）
 func (s *ExternalAPIService) GenerateContent(ctx context.Context, aiContext *ai.AIContext, prompt string, options *ai.GenerateOptions) (*ai.GenerateResult, error) {
 	// 构建系统提示词
 	systemPrompt := s.buildSystemPrompt(aiContext)
 	
 	// 构建用户提示词
 	userPrompt := s.buildUserPrompt(aiContext, prompt)
+	
+	// 组合完整提示词
+	fullPrompt := fmt.Sprintf("%s\n\n%s", systemPrompt, userPrompt)
 
-	// 构建请求
-	request := &GenerateRequest{
-		Model: s.config.ExternalAPI.DefaultModel,
-		Messages: []Message{
-			{Role: "system", Content: systemPrompt},
-			{Role: "user", Content: userPrompt},
-		},
+	// 使用适配器管理器生成内容
+	adapterReq := &adapter.TextGenerationRequest{
+		Prompt:      fullPrompt,
 		Temperature: options.Temperature,
 		MaxTokens:   options.MaxTokens,
-		Stream:      false,
+		Model:       options.Model,
 	}
 
-	// 发送请求
-	response, err := s.sendRequest(ctx, request)
+	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
 	if err != nil {
-		return nil, fmt.Errorf("发送AI请求失败: %w", err)
+		return nil, fmt.Errorf("生成内容失败: %w", err)
 	}
 
-	// 解析响应
-	if len(response.Choices) == 0 {
-		return nil, fmt.Errorf("AI响应为空")
-	}
-
-	result := &ai.GenerateResult{
-		Content:     response.Choices[0].Message.Content,
-		TokensUsed:  response.Usage.TotalTokens,
-		Model:       response.Model,
-		FinishReason: response.Choices[0].FinishReason,
-	}
-
-	return result, nil
+	// 转换为旧格式响应
+	return &ai.GenerateResult{
+		Content:      result.Text,
+		TokensUsed:   result.Usage.TotalTokens,
+		Model:        result.Model,
+		FinishReason: result.FinishReason,
+	}, nil
 }
 
 // buildSystemPrompt 构建系统提示词
@@ -206,8 +202,15 @@ func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt str
 	return userPrompt.String()
 }
 
-// sendRequest 发送HTTP请求
+// sendRequest 发送HTTP请求（已弃用，保留用于向后兼容）
 func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateRequest) (*GenerateResponse, error) {
+	// 获取默认提供商配置
+	defaultProvider := s.config.ExternalAPI.DefaultProvider
+	providerConfig, exists := s.config.ExternalAPI.Providers[defaultProvider]
+	if !exists {
+		return nil, fmt.Errorf("默认提供商 %s 配置不存在", defaultProvider)
+	}
+
 	// 序列化请求
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -215,14 +218,14 @@ func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateR
 	}
 
 	// 创建HTTP请求
-	req, err := http.NewRequestWithContext(ctx, "POST", s.config.ExternalAPI.BaseURL+"/chat/completions", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", providerConfig.BaseURL+"/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("创建HTTP请求失败: %w", err)
 	}
 
 	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.ExternalAPI.APIKey)
+	req.Header.Set("Authorization", "Bearer "+providerConfig.APIKey)
 
 	// 发送请求
 	resp, err := s.httpClient.Do(req)
@@ -251,7 +254,7 @@ func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateR
 	return &response, nil
 }
 
-// AnalyzeContent 分析内容
+// AnalyzeContent 分析内容（向后兼容方法，内部使用适配器管理器）
 func (s *ExternalAPIService) AnalyzeContent(ctx context.Context, content string, analysisType string) (*ai.AnalysisResult, error) {
 	var prompt string
 	switch analysisType {
@@ -265,31 +268,26 @@ func (s *ExternalAPIService) AnalyzeContent(ctx context.Context, content string,
 		prompt = "请对以下文本进行综合分析："
 	}
 
-	request := &GenerateRequest{
-		Model: s.config.ExternalAPI.DefaultModel, // 使用外部API配置中的默认模型
-		Messages: []Message{
-			{Role: "system", Content: "你是一个专业的文学分析师，请对提供的文本进行深入分析。"},
-			{Role: "user", Content: fmt.Sprintf("%s\n\n文本内容：\n%s", prompt, content)},
-		},
+	// 构建完整提示词
+	fullPrompt := fmt.Sprintf("你是一个专业的文学分析师，请对提供的文本进行深入分析。\n\n%s\n\n文本内容：\n%s", prompt, content)
+
+	// 使用适配器管理器生成分析
+	adapterReq := &adapter.TextGenerationRequest{
+		Prompt:      fullPrompt,
 		Temperature: 0.3,
 		MaxTokens:   1000,
 	}
 
-	response, err := s.sendRequest(ctx, request)
+	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
 	if err != nil {
-		return nil, fmt.Errorf("发送分析请求失败: %w", err)
+		return nil, fmt.Errorf("分析内容失败: %w", err)
 	}
 
-	if len(response.Choices) == 0 {
-		return nil, fmt.Errorf("分析响应为空")
-	}
-
-	result := &ai.AnalysisResult{
+	// 转换为旧格式响应
+	return &ai.AnalysisResult{
 		Type:       analysisType,
-		Analysis:   response.Choices[0].Message.Content,
-		TokensUsed: response.Usage.TotalTokens,
-		Model:      response.Model,
-	}
-
-	return result, nil
+		Analysis:   result.Text,
+		TokensUsed: result.Usage.TotalTokens,
+		Model:      result.Model,
+	}, nil
 }

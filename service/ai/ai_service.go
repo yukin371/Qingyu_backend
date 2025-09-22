@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
+	"Qingyu_backend/service/ai/adapter"
 	documentService "Qingyu_backend/service/document"
 )
 
@@ -14,6 +15,7 @@ import (
 type Service struct {
 	contextService     *ContextService
 	externalAPIService *ExternalAPIService
+	adapterManager     *adapter.AdapterManager
 }
 
 // NewService 创建AI服务
@@ -33,9 +35,13 @@ func NewService() *Service {
 	// 创建外部API服务
 	externalAPIService := NewExternalAPIService(cfg.AI)
 	
+	// 创建适配器管理器
+	adapterManager := adapter.NewAdapterManager(cfg.AI.ExternalAPI)
+	
 	return &Service{
 		contextService:     contextService,
 		externalAPIService: externalAPIService,
+		adapterManager:     adapterManager,
 	}
 }
 
@@ -58,7 +64,7 @@ type GenerateContentResponse struct {
 // GenerateContent 生成内容
 func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentRequest) (*GenerateContentResponse, error) {
 	// 构建AI上下文
-	aiContext, err := s.contextService.BuildContext(ctx, req.ProjectID, req.ChapterID)
+	_, err := s.contextService.BuildContext(ctx, req.ProjectID, req.ChapterID)
 	if err != nil {
 		return nil, fmt.Errorf("构建AI上下文失败: %w", err)
 	}
@@ -72,17 +78,24 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 		}
 	}
 
-	// 调用外部AI API生成内容
-	result, err := s.externalAPIService.GenerateContent(ctx, aiContext, req.Prompt, options)
+	// 使用适配器管理器生成内容
+	adapterReq := &adapter.TextGenerationRequest{
+		Prompt:      req.Prompt,
+		Temperature: options.Temperature,
+		MaxTokens:   options.MaxTokens,
+		Model:       options.Model,
+	}
+
+	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
 	if err != nil {
 		return nil, fmt.Errorf("生成内容失败: %w", err)
 	}
 
 	response := &GenerateContentResponse{
-		Content:     result.Content,
-		TokensUsed:  result.TokensUsed,
+		Content:     result.Text,
+		TokensUsed:  result.Usage.TotalTokens,
 		Model:       result.Model,
-		GeneratedAt: time.Now(),
+		GeneratedAt: result.CreatedAt,
 	}
 
 	return response, nil
@@ -105,18 +118,27 @@ type AnalyzeContentResponse struct {
 
 // AnalyzeContent 分析内容
 func (s *Service) AnalyzeContent(ctx context.Context, req *AnalyzeContentRequest) (*AnalyzeContentResponse, error) {
-	// 调用外部AI API分析内容
-	result, err := s.externalAPIService.AnalyzeContent(ctx, req.Content, req.AnalysisType)
+	// 构建分析提示词
+	prompt := fmt.Sprintf("请对以下内容进行%s分析：\n\n%s", req.AnalysisType, req.Content)
+	
+	// 使用适配器管理器生成分析
+	adapterReq := &adapter.TextGenerationRequest{
+		Prompt:      prompt,
+		Temperature: 0.3, // 分析任务使用较低的温度
+		MaxTokens:   1500,
+	}
+
+	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
 	if err != nil {
 		return nil, fmt.Errorf("分析内容失败: %w", err)
 	}
 
 	response := &AnalyzeContentResponse{
-		Type:       result.Type,
-		Analysis:   result.Analysis,
-		TokensUsed: result.TokensUsed,
+		Type:       req.AnalysisType,
+		Analysis:   result.Text,
+		TokensUsed: result.Usage.TotalTokens,
 		Model:      result.Model,
-		AnalyzedAt: time.Now(),
+		AnalyzedAt: result.CreatedAt,
 	}
 
 	return response, nil
