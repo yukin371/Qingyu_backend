@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
+	"Qingyu_backend/middleware"
 	"Qingyu_backend/router"
 
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,9 @@ func InitServer() *gin.Engine {
 
 	// 创建Gin引擎
 	app := gin.Default()
+
+	// 添加logger中间件
+	app.Use(middleware.Logger())
 
 	// 注册路由
 	router.RegisterRoutes(app)

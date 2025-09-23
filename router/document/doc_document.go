@@ -13,27 +13,22 @@ func RegisterRoutes(r *gin.RouterGroup) {
 	{
 		d := api.NewDocumentApi()
 		v := api.NewVersionApi()
-		// 创建文档
+		
+		// 基础文档操作
 		docRouter.POST("/", d.Create)
-
-		// 获取文档列表
 		docRouter.GET("/", d.List)
+		docRouter.GET("/doc/:id", d.Get)
+		docRouter.PUT("/doc/:id", d.Update)
+		docRouter.DELETE("/doc/:id", d.Delete)
 
-		// 获取单个文档
-		docRouter.GET("/:id", d.Get)
-
-		// 更新文档
-		docRouter.PUT("/:id", d.Update)
-
-		// 删除文档
-		docRouter.DELETE("/:id", d.Delete)
-
-		// 版本相关
-		// 创建新版本（提交内容）
-		docRouter.POST(":projectId/:nodeId/version", v.CreateVersion)
-		docRouter.POST(":projectId/:nodeId/rollback", v.Rollback)
-		docRouter.POST(":projectId/:nodeId/patch", v.CreatePatch)
-		docRouter.POST(":projectId/:nodeId/patch/:patchId/apply", v.ApplyPatch)
-		docRouter.GET(":projectId/:nodeId/versions", v.ListVersions)
+		// 版本相关路由 - 使用不同的路径前缀避免冲突
+		versionRouter := docRouter.Group("/version")
+		{
+			versionRouter.POST("/:projectId/:nodeId", v.CreateVersion)
+			versionRouter.POST("/:projectId/:nodeId/rollback", v.Rollback)
+			versionRouter.POST("/:projectId/:nodeId/patch", v.CreatePatch)
+			versionRouter.POST("/:projectId/:nodeId/patch/:patchId/apply", v.ApplyPatch)
+			versionRouter.GET("/:projectId/:nodeId/versions", v.ListVersions)
+		}
 	}
 }
