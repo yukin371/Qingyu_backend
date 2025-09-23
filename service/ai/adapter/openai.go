@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -116,6 +117,30 @@ type OpenAIError struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
 	Code    string `json:"code"`
+}
+
+// OpenAIStreamResponse OpenAI流式响应结构
+type OpenAIStreamResponse struct {
+	ID      string                `json:"id"`
+	Object  string                `json:"object"`
+	Created int64                 `json:"created"`
+	Model   string                `json:"model"`
+	Choices []OpenAIStreamChoice  `json:"choices"`
+	Usage   *OpenAIUsage          `json:"usage,omitempty"`
+	Error   *OpenAIError          `json:"error,omitempty"`
+}
+
+// OpenAIStreamChoice OpenAI流式选择结构
+type OpenAIStreamChoice struct {
+	Index        int                `json:"index"`
+	Delta        *OpenAIStreamDelta `json:"delta,omitempty"`
+	FinishReason *string            `json:"finish_reason"`
+}
+
+// OpenAIStreamDelta OpenAI流式增量结构
+type OpenAIStreamDelta struct {
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
 // TextGeneration 实现文本生成方法
@@ -237,12 +262,186 @@ func (a *OpenAIAdapter) doChatCompletion(ctx context.Context, req *ChatCompletio
 
 // TextGenerationStream 实现流式文本生成方法
 func (a *OpenAIAdapter) TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
-	// TODO: 实现流式文本生成
-	return nil, &AdapterError{
-		Code:    ErrorTypeNotImplemented,
-		Message: "OpenAI 流式文本生成功能暂未实现",
-		Type:    ErrorTypeNotImplemented,
+	result, err := ExecuteWithResult(ctx, a.errorHandler.retryer, func(ctx context.Context) (interface{}, error) {
+		return a.doTextGenerationStream(ctx, req)
+	})
+	
+	if err != nil {
+		return nil, err
 	}
+	
+	return result.(<-chan *TextGenerationResponse), nil
+}
+
+// doTextGenerationStream 执行流式文本生成
+func (a *OpenAIAdapter) doTextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
+	// 创建响应通道
+	responseChan := make(chan *TextGenerationResponse, 10)
+	
+	// 构建OpenAI请求
+	openaiReq := &OpenAIRequest{
+		Model:       req.Model,
+		Prompt:      req.Prompt,
+		MaxTokens:   req.MaxTokens,
+		Temperature: req.Temperature,
+		TopP:        req.TopP,
+		Stream:      true, // 启用流式响应
+		Stop:        req.Stop,
+		User:        req.User,
+	}
+	
+	// 发起流式请求
+	go func() {
+		defer close(responseChan)
+		
+		if err := a.sendStreamRequest(ctx, "completions", openaiReq, responseChan); err != nil {
+			// 发送错误到通道
+			select {
+			case responseChan <- &TextGenerationResponse{
+				ID:           primitive.NewObjectID().Hex(),
+				Text:         "",
+				Usage:        Usage{},
+				Model:        req.Model,
+				FinishReason: "error",
+				CreatedAt:    time.Now(),
+			}:
+			case <-ctx.Done():
+			}
+		}
+	}()
+	
+	return responseChan, nil
+}
+
+// sendStreamRequest 发送流式请求
+func (a *OpenAIAdapter) sendStreamRequest(ctx context.Context, endpoint string, req *OpenAIRequest, responseChan chan<- *TextGenerationResponse) error {
+	// 序列化请求
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %w", err)
+	}
+	
+	// 创建HTTP请求
+	url := fmt.Sprintf("%s/%s", a.baseURL, endpoint)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return fmt.Errorf("创建请求失败: %w", err)
+	}
+	
+	// 设置请求头
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+a.apiKey)
+	httpReq.Header.Set("Accept", "text/event-stream")
+	httpReq.Header.Set("Cache-Control", "no-cache")
+	
+	// 发送请求
+	resp, err := a.client.Do(httpReq)
+	if err != nil {
+		return fmt.Errorf("发送请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+	
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return a.handleHTTPError(resp.StatusCode, string(body))
+	}
+	
+	// 处理流式响应
+	return a.processStreamResponse(ctx, resp.Body, responseChan, req.Model)
+}
+
+// processStreamResponse 处理流式响应
+func (a *OpenAIAdapter) processStreamResponse(ctx context.Context, body io.Reader, responseChan chan<- *TextGenerationResponse, model string) error {
+	scanner := bufio.NewScanner(body)
+	var fullText strings.Builder
+	var totalTokens int
+	
+	for scanner.Scan() {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		
+		line := scanner.Text()
+		
+		// 跳过空行和注释行
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+		
+		// 处理SSE数据行
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+			
+			// 检查结束标记
+			if data == "[DONE]" {
+				// 发送最终响应
+				select {
+				case responseChan <- &TextGenerationResponse{
+					ID:           primitive.NewObjectID().Hex(),
+					Text:         fullText.String(),
+					Usage:        Usage{TotalTokens: totalTokens},
+					Model:        model,
+					FinishReason: "stop",
+					CreatedAt:    time.Now(),
+				}:
+				case <-ctx.Done():
+				}
+				break
+			}
+			
+			// 解析JSON数据
+			var streamResp OpenAIStreamResponse
+			if err := json.Unmarshal([]byte(data), &streamResp); err != nil {
+				continue // 跳过无法解析的数据
+			}
+			
+			// 处理错误
+			if streamResp.Error != nil {
+				return a.handleAPIError(400, streamResp.Error)
+			}
+			
+			// 处理选择
+			if len(streamResp.Choices) > 0 {
+				choice := streamResp.Choices[0]
+				
+				// 处理增量内容
+				if choice.Delta != nil && choice.Delta.Content != "" {
+					fullText.WriteString(choice.Delta.Content)
+					
+					// 发送增量响应
+					select {
+					case responseChan <- &TextGenerationResponse{
+						ID:           streamResp.ID,
+						Text:         choice.Delta.Content,
+						Usage:        Usage{},
+						Model:        streamResp.Model,
+						FinishReason: "",
+						CreatedAt:    time.Now(),
+					}:
+					case <-ctx.Done():
+						return ctx.Err()
+					}
+				}
+				
+				// 检查完成原因
+				if choice.FinishReason != nil && *choice.FinishReason != "" {
+					// 更新token使用量
+					if streamResp.Usage != nil {
+						totalTokens = streamResp.Usage.TotalTokens
+					}
+				}
+			}
+		}
+	}
+	
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("读取流式响应失败: %w", err)
+	}
+	
+	return nil
 }
 
 // ImageGeneration 实现图像生成方法

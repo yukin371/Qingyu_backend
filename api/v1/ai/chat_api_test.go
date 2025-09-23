@@ -45,6 +45,11 @@ func (m *MockChatService) GetStatistics(projectID string) (*aiService.ChatStatis
 	return args.Get(0).(*aiService.ChatStatistics), args.Error(1)
 }
 
+func (m *MockChatService) StartChatStream(ctx context.Context, req *aiService.ChatRequest) (<-chan *aiService.StreamChatResponse, error) {
+	args := m.Called(ctx, req)
+	return args.Get(0).(<-chan *aiService.StreamChatResponse), args.Error(1)
+}
+
 // setupTestRouter 设置测试路由
 func setupTestChatRouter() (*gin.Engine, *MockChatService) {
 	gin.SetMode(gin.TestMode)

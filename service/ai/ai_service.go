@@ -101,6 +101,68 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 	return response, nil
 }
 
+// GenerateContentStream 流式生成内容
+func (s *Service) GenerateContentStream(ctx context.Context, req *GenerateContentRequest) (<-chan *GenerateContentResponse, error) {
+	// 构建AI上下文
+	_, err := s.contextService.BuildContext(ctx, req.ProjectID, req.ChapterID)
+	if err != nil {
+		return nil, fmt.Errorf("构建AI上下文失败: %w", err)
+	}
+
+	// 设置默认选项
+	options := req.Options
+	if options == nil {
+		options = &ai.GenerateOptions{
+			Temperature: 0.7,
+			MaxTokens:   2000,
+		}
+	}
+
+	// 使用适配器管理器进行流式生成
+	adapterReq := &adapter.TextGenerationRequest{
+		Prompt:      req.Prompt,
+		Temperature: options.Temperature,
+		MaxTokens:   options.MaxTokens,
+		Model:       options.Model,
+		Stream:      true, // 启用流式响应
+	}
+
+	// 获取流式响应通道
+	streamChan, err := s.adapterManager.AutoTextGenerationStream(ctx, adapterReq)
+	if err != nil {
+		return nil, fmt.Errorf("流式生成内容失败: %w", err)
+	}
+
+	// 创建响应通道
+	responseChan := make(chan *GenerateContentResponse, 10)
+
+	// 转换流式响应格式
+	go func() {
+		defer close(responseChan)
+		
+		for result := range streamChan {
+			if result == nil {
+				continue
+			}
+
+			response := &GenerateContentResponse{
+				Content:     result.Text,
+				TokensUsed:  result.Usage.TotalTokens,
+				Model:       result.Model,
+				GeneratedAt: result.CreatedAt,
+			}
+
+			select {
+			case responseChan <- response:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return responseChan, nil
+}
+
 // AnalyzeContentRequest 分析内容请求
 type AnalyzeContentRequest struct {
 	Content      string `json:"content"`

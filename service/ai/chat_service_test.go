@@ -62,6 +62,11 @@ func (m *MockAIService) GenerateContent(ctx context.Context, req *GenerateConten
 	return args.Get(0).(*GenerateContentResponse), args.Error(1)
 }
 
+func (m *MockAIService) GenerateContentStream(ctx context.Context, req *GenerateContentRequest) (<-chan *GenerateContentResponse, error) {
+	args := m.Called(ctx, req)
+	return args.Get(0).(<-chan *GenerateContentResponse), args.Error(1)
+}
+
 // setupTestChatService 设置测试聊天服务
 func setupTestChatService() (*ChatService, *MockChatRepository, *MockAIService) {
 	mockRepo := &MockChatRepository{}

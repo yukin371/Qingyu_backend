@@ -1,12 +1,14 @@
 package adapter
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -113,6 +115,18 @@ type GeminiUsage struct {
 	PromptTokenCount     int `json:"promptTokenCount"`
 	CandidatesTokenCount int `json:"candidatesTokenCount"`
 	TotalTokenCount      int `json:"totalTokenCount"`
+}
+
+// Gemini流式响应结构体
+type GeminiStreamResponse struct {
+	Candidates []GeminiStreamCandidate `json:"candidates"`
+	UsageMetadata *GeminiUsage `json:"usageMetadata,omitempty"`
+}
+
+type GeminiStreamCandidate struct {
+	Content GeminiContent `json:"content"`
+	FinishReason string `json:"finishReason,omitempty"`
+	Index int `json:"index"`
 }
 
 // TextGeneration 实现文本生成方法
@@ -236,12 +250,152 @@ func (a *GeminiAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionR
 
 // TextGenerationStream 实现流式文本生成
 func (a *GeminiAdapter) TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
-	// Gemini流式API实现较复杂，这里先返回错误
-	return nil, &AdapterError{
-		Code:    ErrorTypeServiceUnavailable,
-		Message: "Gemini流式生成暂未实现",
-		Type:    ErrorTypeServiceUnavailable,
+	// 创建响应通道
+	responseChan := make(chan *TextGenerationResponse, 10)
+	
+	// 启动协程处理流式响应
+	go func() {
+		defer close(responseChan)
+		
+		if err := a.doTextGenerationStream(ctx, req, responseChan); err != nil {
+			// 发送错误响应
+			responseChan <- &TextGenerationResponse{
+				ID:           primitive.NewObjectID().Hex(),
+				Text:         fmt.Sprintf("流式生成失败: %v", err),
+				Model:        req.Model,
+				FinishReason: "error",
+				CreatedAt:    time.Now(),
+			}
+		}
+	}()
+	
+	return responseChan, nil
+}
+
+// doTextGenerationStream 执行流式文本生成
+func (a *GeminiAdapter) doTextGenerationStream(ctx context.Context, req *TextGenerationRequest, responseChan chan<- *TextGenerationResponse) error {
+	// 构建Gemini请求
+	geminiReq := &GeminiRequest{
+		Contents: []GeminiContent{
+			{
+				Parts: []GeminiPart{
+					{Text: req.Prompt},
+				},
+				Role: "user",
+			},
+		},
+		GenerationConfig: &GeminiGenerationConfig{
+			Temperature:     req.Temperature,
+			TopP:            req.TopP,
+			MaxOutputTokens: req.MaxTokens,
+			StopSequences:   req.Stop,
+		},
+		SafetySettings: a.getDefaultSafetySettings(),
 	}
+
+	// 发送流式请求
+	return a.sendStreamRequest(ctx, fmt.Sprintf("/v1/models/%s:streamGenerateContent", req.Model), geminiReq, responseChan)
+}
+
+// sendStreamRequest 发送流式HTTP请求
+func (a *GeminiAdapter) sendStreamRequest(ctx context.Context, endpoint string, request interface{}, responseChan chan<- *TextGenerationResponse) error {
+	// 序列化请求
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %v", err)
+	}
+
+	// 创建HTTP请求
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+endpoint+"?key="+a.apiKey+"&alt=sse", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return fmt.Errorf("创建HTTP请求失败: %v", err)
+	}
+
+	// 设置请求头
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "text/event-stream")
+
+	// 发送请求
+	resp, err := a.client.Do(httpReq)
+	if err != nil {
+		return fmt.Errorf("发送HTTP请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API请求失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))
+	}
+
+	// 处理流式响应
+	return a.processStreamResponse(resp.Body, responseChan)
+}
+
+// processStreamResponse 处理流式响应
+func (a *GeminiAdapter) processStreamResponse(body io.Reader, responseChan chan<- *TextGenerationResponse) error {
+	scanner := bufio.NewScanner(body)
+	var fullContent strings.Builder
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// 跳过空行和注释行
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// 解析SSE数据
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+			
+			// 检查是否为结束标记
+			if data == "[DONE]" {
+				break
+			}
+
+			// 解析JSON数据
+			var streamResp GeminiStreamResponse
+			if err := json.Unmarshal([]byte(data), &streamResp); err != nil {
+				continue // 跳过无法解析的数据
+			}
+
+			// 处理候选响应
+			if len(streamResp.Candidates) > 0 {
+				candidate := streamResp.Candidates[0]
+				if len(candidate.Content.Parts) > 0 {
+					text := candidate.Content.Parts[0].Text
+					if text != "" {
+						fullContent.WriteString(text)
+						
+						// 发送增量响应
+						responseChan <- &TextGenerationResponse{
+							ID:           primitive.NewObjectID().Hex(),
+							Text:         text,
+							Model:        "gemini",
+							Usage:        Usage{TotalTokens: 0}, // Gemini流式响应中token信息在最后提供
+							FinishReason: "",
+							CreatedAt:    time.Now(),
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 发送最终完整响应
+	if fullContent.Len() > 0 {
+		responseChan <- &TextGenerationResponse{
+			ID:           primitive.NewObjectID().Hex(),
+			Text:         fullContent.String(),
+			Model:        "gemini",
+			Usage:        Usage{TotalTokens: 0},
+			FinishReason: "stop",
+			CreatedAt:    time.Now(),
+		}
+	}
+
+	return scanner.Err()
 }
 
 // ImageGeneration 实现图像生成方法

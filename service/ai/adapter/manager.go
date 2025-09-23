@@ -257,6 +257,25 @@ func (m *AdapterManager) ChatCompletion(ctx context.Context, provider string, re
 	return adapter.ChatCompletion(ctx, req)
 }
 
+// AutoTextGenerationStream 自动选择最佳适配器进行流式文本生成
+func (m *AdapterManager) AutoTextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
+	// 如果指定了模型，尝试根据模型选择适配器
+	if req.Model != "" {
+		adapter, err := m.GetAdapterByModel(req.Model)
+		if err == nil {
+			return adapter.TextGenerationStream(ctx, req)
+		}
+	}
+
+	// 否则使用默认适配器
+	adapter, err := m.GetDefaultAdapter()
+	if err != nil {
+		return nil, err
+	}
+
+	return adapter.TextGenerationStream(ctx, req)
+}
+
 // TextGenerationStream 使用指定提供商进行流式文本生成
 func (m *AdapterManager) TextGenerationStream(ctx context.Context, provider string, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
 	adapter, err := m.GetAdapter(provider)

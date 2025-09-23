@@ -15,18 +15,19 @@ import (
 
 // ChatRepositoryInterface 聊天仓库接口
 type ChatRepositoryInterface interface {
-	CreateSession(ctx context.Context, session *aiModels.ChatSession) error
-	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)
-	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error
-	DeleteSession(ctx context.Context, sessionID string) error
-	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error)
-	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error
-	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)
+	CreateSession(ctx context.Context, session *aiModels.ChatSession) error // 创建会话
+	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error) // 获取会话
+	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error // 更新会话
+	DeleteSession(ctx context.Context, sessionID string) error // 删除会话
+	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error) // 获取项目会话列表
+	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error // 创建消息
+	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error) // 获取会话统计信息
 }
 
 // AIServiceInterface AI服务接口
 type AIServiceInterface interface {
 	GenerateContent(ctx context.Context, req *GenerateContentRequest) (*GenerateContentResponse, error)
+	GenerateContentStream(ctx context.Context, req *GenerateContentRequest) (<-chan *GenerateContentResponse, error)
 }
 
 // ChatService AI聊天服务
@@ -85,6 +86,19 @@ type ChatResponse struct {
 	TokensUsed   int           `json:"tokensUsed"`
 	Model        string        `json:"model"`
 	ContextUsed  bool          `json:"contextUsed"`
+	ResponseTime time.Duration `json:"responseTime"`
+}
+
+// StreamChatResponse 流式聊天响应
+type StreamChatResponse struct {
+	SessionID    string        `json:"sessionId"`
+	MessageID    string        `json:"messageId"`
+	Content      string        `json:"content"`
+	Delta        string        `json:"delta"`
+	TokensUsed   int           `json:"tokensUsed"`
+	Model        string        `json:"model"`
+	ContextUsed  bool          `json:"contextUsed"`
+	IsComplete   bool          `json:"isComplete"`
 	ResponseTime time.Duration `json:"responseTime"`
 }
 
@@ -174,6 +188,156 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 	}
 
 	return response, nil
+}
+
+// StartChatStream 开始流式聊天
+func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-chan *StreamChatResponse, error) {
+	// 验证请求
+	if req.Message == "" {
+		return nil, errors.New("消息内容不能为空")
+	}
+
+	// 获取或创建会话
+	session, err := s.getOrCreateSession(ctx, req.SessionID, req.ProjectID)
+	if err != nil {
+		return nil, fmt.Errorf("获取会话失败: %w", err)
+	}
+
+	// 构建聊天上下文 - 转换为服务层类型
+	serviceSession := convertToServiceChatSession(session)
+	context, err := s.buildChatContext(ctx, serviceSession, req)
+	if err != nil {
+		return nil, fmt.Errorf("构建上下文失败: %w", err)
+	}
+
+	// 添加用户消息到会话
+	userMessage := &aiModels.ChatMessage{
+		ID:        primitive.NewObjectID(),
+		SessionID: session.SessionID,
+		Role:      "user",
+		Content:   req.Message,
+		Timestamp: time.Now(),
+	}
+	session.Messages = append(session.Messages, *userMessage)
+
+	// 保存用户消息
+	if err := s.repository.CreateMessage(ctx, userMessage); err != nil {
+		return nil, fmt.Errorf("保存用户消息失败: %w", err)
+	}
+
+	// 创建响应通道
+	responseChan := make(chan *StreamChatResponse, 10)
+
+	// 启动流式生成
+	go func() {
+		defer close(responseChan)
+		
+		startTime := time.Now()
+		
+		// 准备AI请求
+		aiRequest := &GenerateContentRequest{
+			ProjectID: req.ProjectID,
+			Prompt:    req.Message,
+			Options:   req.Options,
+		}
+
+		// 调用流式AI生成
+		streamChan, err := s.aiService.GenerateContentStream(ctx, aiRequest)
+		if err != nil {
+			// 发送错误响应
+			select {
+			case responseChan <- &StreamChatResponse{
+				SessionID:    session.SessionID,
+				MessageID:    primitive.NewObjectID().Hex(),
+				Content:      "",
+				Delta:        "",
+				TokensUsed:   0,
+				Model:        "",
+				ContextUsed:  len(context) > 1,
+				IsComplete:   true,
+				ResponseTime: time.Since(startTime),
+			}:
+			case <-ctx.Done():
+			}
+			return
+		}
+
+		var fullContent string
+		var totalTokens int
+		var model string
+		messageID := primitive.NewObjectID().Hex()
+
+		// 处理流式响应
+		for aiResponse := range streamChan {
+			if aiResponse == nil {
+				continue
+			}
+
+			fullContent += aiResponse.Content
+			totalTokens = aiResponse.TokensUsed
+			model = aiResponse.Model
+
+			// 发送流式响应
+			select {
+			case responseChan <- &StreamChatResponse{
+				SessionID:    session.SessionID,
+				MessageID:    messageID,
+				Content:      fullContent,
+				Delta:        aiResponse.Content,
+				TokensUsed:   totalTokens,
+				Model:        model,
+				ContextUsed:  len(context) > 1,
+				IsComplete:   false,
+				ResponseTime: time.Since(startTime),
+			}:
+			case <-ctx.Done():
+				return
+			}
+		}
+
+		// 发送完成响应
+		select {
+		case responseChan <- &StreamChatResponse{
+			SessionID:    session.SessionID,
+			MessageID:    messageID,
+			Content:      fullContent,
+			Delta:        "",
+			TokensUsed:   totalTokens,
+			Model:        model,
+			ContextUsed:  len(context) > 1,
+			IsComplete:   true,
+			ResponseTime: time.Since(startTime),
+		}:
+		case <-ctx.Done():
+			return
+		}
+
+		// 保存AI响应消息
+		assistantMessage := &aiModels.ChatMessage{
+			ID:        primitive.NewObjectID(),
+			SessionID: session.SessionID,
+			Role:      "assistant",
+			Content:   fullContent,
+			TokenUsed: totalTokens,
+			Timestamp: time.Now(),
+		}
+		session.Messages = append(session.Messages, *assistantMessage)
+
+		// 保存AI消息
+		if err := s.repository.CreateMessage(ctx, assistantMessage); err != nil {
+			// 记录错误但不中断流式响应
+			fmt.Printf("保存AI消息失败: %v\n", err)
+		}
+
+		// 更新会话
+		session.UpdatedAt = time.Now()
+		if err := s.repository.UpdateSession(ctx, session); err != nil {
+			// 记录错误但不中断流式响应
+			fmt.Printf("保存会话失败: %v\n", err)
+		}
+	}()
+
+	return responseChan, nil
 }
 
 // buildChatContext 构建对话上下文

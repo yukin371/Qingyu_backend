@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -22,6 +23,7 @@ type ChatApi struct {
 // ChatServiceInterface 聊天服务接口
 type ChatServiceInterface interface {
 	StartChat(ctx context.Context, req *aiService.ChatRequest) (*aiService.ChatResponse, error)
+	StartChatStream(ctx context.Context, req *aiService.ChatRequest) (<-chan *aiService.StreamChatResponse, error)
 	GetChatHistory(ctx context.Context, sessionID string) (*aiService.ChatSession, error)
 	ListChatSessions(ctx context.Context, projectID string, limit, offset int) ([]*aiService.ChatSession, error)
 	DeleteChatSession(ctx context.Context, sessionID string) error
@@ -217,30 +219,65 @@ func (a *ChatApi) ContinueChat(c *gin.Context) {
 	}
 	req.Options.Stream = true
 
-	// 设置响应头
+	// 设置SSE响应头
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Headers", "Cache-Control")
 
-	// 这里需要实现流式响应逻辑
-	// 暂时使用普通响应
-	response, err := a.chatService.StartChat(c.Request.Context(), &req)
+	// 获取流式响应通道
+	streamChan, err := a.chatService.StartChatStream(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		// 发送错误事件
+		errorData := gin.H{
 			"code":      500,
 			"message":   "聊天处理失败: " + err.Error(),
 			"timestamp": getTimestamp(),
-		})
+		}
+		errorJSON, _ := json.Marshal(errorData)
+		c.Writer.WriteString(fmt.Sprintf("event: error\ndata: %s\n\n", errorJSON))
+		c.Writer.Flush()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	// 处理流式响应
+	for response := range streamChan {
+		// 发送流式数据事件
+		responseData := gin.H{
+			"code":      0,
+			"message":   "success",
+			"data":      response,
+			"timestamp": getTimestamp(),
+		}
+		responseJSON, err := json.Marshal(responseData)
+		if err != nil {
+			continue
+		}
+
+		// 写入SSE格式数据
+		c.Writer.WriteString(fmt.Sprintf("event: message\ndata: %s\n\n", responseJSON))
+		c.Writer.Flush()
+
+		// 检查连接是否已断开
+		if c.Writer.CloseNotify() != nil {
+			select {
+			case <-c.Writer.CloseNotify():
+				return
+			default:
+			}
+		}
+	}
+
+	// 发送结束事件
+	endData := gin.H{
 		"code":      0,
-		"message":   "success",
-		"data":      response,
+		"message":   "stream_end",
 		"timestamp": getTimestamp(),
-	})
+	}
+	endJSON, _ := json.Marshal(endData)
+	c.Writer.WriteString(fmt.Sprintf("event: end\ndata: %s\n\n", endJSON))
+	c.Writer.Flush()
 }
 
 // UpdateChatSession 更新聊天会话信息
@@ -354,19 +391,19 @@ func (a *ChatApi) ExportChatHistory(c *gin.Context) {
 
 func formatChatAsText(session *aiService.ChatSession) string {
 	var result strings.Builder
-	
+
 	result.WriteString(fmt.Sprintf("聊天会话: %s\n", session.Title))
 	result.WriteString(fmt.Sprintf("创建时间: %s\n", session.CreatedAt.Format("2006-01-02 15:04:05")))
 	result.WriteString(fmt.Sprintf("更新时间: %s\n", session.UpdatedAt.Format("2006-01-02 15:04:05")))
 	result.WriteString("\n--- 消息记录 ---\n\n")
-	
+
 	for _, msg := range session.Messages {
-		result.WriteString(fmt.Sprintf("[%s] %s: %s\n", 
-			msg.Timestamp.Format("15:04:05"), 
-			msg.Role, 
+		result.WriteString(fmt.Sprintf("[%s] %s: %s\n",
+			msg.Timestamp.Format("15:04:05"),
+			msg.Role,
 			msg.Content))
 		result.WriteString("\n")
 	}
-	
+
 	return result.String()
 }

@@ -1,13 +1,17 @@
 package adapter
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ClaudeAdapter Claude (Anthropic) 适配器实现
@@ -63,6 +67,7 @@ type ClaudeRequest struct {
 	TopP        float64         `json:"top_p,omitempty"`
 	Stop        []string        `json:"stop_sequences,omitempty"`
 	System      string          `json:"system,omitempty"`
+	Stream      bool            `json:"stream,omitempty"`
 }
 
 // ClaudeResponse Claude API响应结构
@@ -87,6 +92,19 @@ type ClaudeContent struct {
 type ClaudeUsage struct {
 	InputTokens  int `json:"input_tokens"`
 	OutputTokens int `json:"output_tokens"`
+}
+
+// Claude流式响应结构体
+type ClaudeStreamResponse struct {
+	Type  string                 `json:"type"`
+	Index int                    `json:"index,omitempty"`
+	Delta *ClaudeStreamDelta     `json:"delta,omitempty"`
+	Usage *ClaudeUsage          `json:"usage,omitempty"`
+}
+
+type ClaudeStreamDelta struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
 }
 
 // TextGeneration 实现文本生成方法
@@ -191,12 +209,145 @@ func (a *ClaudeAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionR
 
 // TextGenerationStream 实现流式文本生成
 func (a *ClaudeAdapter) TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
-	// Claude流式API实现较复杂，这里先返回错误
-	return nil, &AdapterError{
-		Code:    ErrorTypeServiceUnavailable,
-		Message: "Claude流式生成暂未实现",
-		Type:    ErrorTypeServiceUnavailable,
+	// 创建响应通道
+	responseChan := make(chan *TextGenerationResponse, 10)
+	
+	// 启动协程处理流式响应
+	go func() {
+		defer close(responseChan)
+		
+		if err := a.doTextGenerationStream(ctx, req, responseChan); err != nil {
+			// 发送错误响应
+			responseChan <- &TextGenerationResponse{
+				ID:           primitive.NewObjectID().Hex(),
+				Text:         fmt.Sprintf("流式生成失败: %v", err),
+				Model:        req.Model,
+				FinishReason: "error",
+				CreatedAt:    time.Now(),
+			}
+		}
+	}()
+	
+	return responseChan, nil
+}
+
+// doTextGenerationStream 执行流式文本生成
+func (a *ClaudeAdapter) doTextGenerationStream(ctx context.Context, req *TextGenerationRequest, responseChan chan<- *TextGenerationResponse) error {
+	// 构建Claude请求
+	claudeReq := &ClaudeRequest{
+		Model:     req.Model,
+		MaxTokens: req.MaxTokens,
+		Messages: []ClaudeMessage{
+			{
+				Role:    "user",
+				Content: req.Prompt,
+			},
+		},
+		Temperature: req.Temperature,
+		TopP:        req.TopP,
+		Stop:        req.Stop,
+		Stream:      true,
 	}
+
+	// 发送流式请求
+	return a.sendStreamRequest(ctx, "/v1/messages", claudeReq, responseChan)
+}
+
+// sendStreamRequest 发送流式HTTP请求
+func (a *ClaudeAdapter) sendStreamRequest(ctx context.Context, endpoint string, request interface{}, responseChan chan<- *TextGenerationResponse) error {
+	// 序列化请求
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %v", err)
+	}
+
+	// 创建HTTP请求
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+endpoint, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return fmt.Errorf("创建HTTP请求失败: %v", err)
+	}
+
+	// 设置请求头
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", a.apiKey)
+	httpReq.Header.Set("anthropic-version", "2023-06-01")
+	httpReq.Header.Set("Accept", "text/event-stream")
+
+	// 发送请求
+	resp, err := a.client.Do(httpReq)
+	if err != nil {
+		return fmt.Errorf("发送HTTP请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API请求失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))
+	}
+
+	// 处理流式响应
+	return a.processStreamResponse(resp.Body, responseChan)
+}
+
+// processStreamResponse 处理流式响应
+func (a *ClaudeAdapter) processStreamResponse(body io.Reader, responseChan chan<- *TextGenerationResponse) error {
+	scanner := bufio.NewScanner(body)
+	var fullContent strings.Builder
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// 跳过空行和注释行
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// 解析SSE数据
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+			
+			// 检查是否为结束标记
+			if data == "[DONE]" {
+				break
+			}
+
+			// 解析JSON数据
+			var streamResp ClaudeStreamResponse
+			if err := json.Unmarshal([]byte(data), &streamResp); err != nil {
+				continue // 跳过无法解析的数据
+			}
+
+			// 处理内容增量
+			if streamResp.Delta != nil && streamResp.Delta.Text != "" {
+				fullContent.WriteString(streamResp.Delta.Text)
+				
+				// 发送增量响应
+				responseChan <- &TextGenerationResponse{
+					ID:           primitive.NewObjectID().Hex(),
+					Text:         streamResp.Delta.Text,
+					Model:        "claude",
+					Usage:        Usage{TotalTokens: 0}, // Claude流式响应中token信息在最后提供
+					FinishReason: "",
+					CreatedAt:    time.Now(),
+				}
+			}
+		}
+	}
+
+	// 发送最终完整响应
+	if fullContent.Len() > 0 {
+		responseChan <- &TextGenerationResponse{
+			ID:           primitive.NewObjectID().Hex(),
+			Text:         fullContent.String(),
+			Model:        "claude",
+			Usage:        Usage{TotalTokens: 0},
+			FinishReason: "stop",
+			CreatedAt:    time.Now(),
+		}
+	}
+
+	return scanner.Err()
 }
 
 // ImageGeneration 实现图像生成方法
