@@ -420,3 +420,19 @@ func (api *VersionApi) AutoResolveConflicts(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": commit})
 }
+
+// GET /api/v1/document/:nodeId/version/current
+func (a *VersionApi) GetCurrentVersion(c *gin.Context) {
+	projectId := c.Param("projectId")
+	nodeId := c.Param("nodeId")
+	
+	version, err := a.service.GetCurrentVersion(c.Request.Context(), projectId, nodeId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"data": version})
+}
+
+// rollback request body

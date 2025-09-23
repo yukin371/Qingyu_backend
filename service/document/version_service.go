@@ -583,17 +583,33 @@ func (s *VersionService) GetCommitDetails(ctx context.Context, projectID, commit
 		return nil, nil, err
 	}
 
-	return commit, revisions, nil
+	return &commit, revisions, nil
+}
+
+// GetCurrentVersion 获取文件的当前版本号
+func (s *VersionService) GetCurrentVersion(ctx context.Context, projectID, nodeID string) (int, error) {
+	if projectID == "" || nodeID == "" {
+		return 0, errors.New("invalid arguments")
+	}
+
+	var file struct {
+		Version int `bson:"version"`
+	}
+	err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&file)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return 0, errors.New("file_not_found")
+		}
+		return 0, err
+	}
+
+	return file.Version, nil
 }
 
 // ResolveBatchConflicts 批量解决冲突
 func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *model.BatchConflictResolution) (*model.Commit, error) {
 	// 首先检测所有文件的冲突状态
-	var files []struct {
-		NodeID          string
-		ExpectedVersion int
-		Content         string
-	}
+	var commitFiles []model.CommitFile
 
 	for nodeID, resolution := range req.Resolutions {
 		// 验证冲突是否仍然存在
@@ -629,28 +645,24 @@ func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *model.B
 			return nil, fmt.Errorf("failed to get current version for file %s: %w", nodeID, err)
 		}
 
-		files = append(files, struct {
-			NodeID          string
-			ExpectedVersion int
-			Content         string
-		}{
+		commitFiles = append(commitFiles, model.CommitFile{
 			NodeID:          nodeID,
 			ExpectedVersion: currentVersion,
 			Content:         resolvedContent,
 		})
 	}
 
-	if len(files) == 0 {
+	if len(commitFiles) == 0 {
 		return nil, errors.New("no conflicts to resolve")
 	}
 
 	// 创建批量提交来应用解决方案
 	message := fmt.Sprintf("Resolve conflicts: %s", req.Message)
-	return s.CreateCommit(ctx, req.ProjectID, req.AuthorID, message, files)
+	return s.CreateCommit(ctx, req.ProjectID, req.AuthorID, message, commitFiles)
 }
 
 // AutoResolveConflicts 自动解决简单冲突
-func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, nodeID string, conflictingRevisions []*model.FileRevision) (string, error) {
+func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, nodeID string, conflictingRevisions []model.FileRevision) (string, error) {
 	// 简化的自动合并实现
 	// 在实际项目中，这里需要实现更复杂的三路合并算法
 	
@@ -672,5 +684,7 @@ func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, no
 		return "", fmt.Errorf("failed to retrieve snapshot: %w", err)
 	}
 
+	// 简化的合并策略：返回最新版本的内容
+	// 在实际项目中，这里需要实现更智能的合并算法
 	return content, nil
 }
