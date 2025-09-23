@@ -1,5 +1,7 @@
 # Cursor IDE 相关文件
+.cursor/
 
+README.md
 # 文档相关
 doc/
 
