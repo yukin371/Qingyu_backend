@@ -19,8 +19,19 @@ import (
 
 func TestMain(m *testing.M) {
 	// 尝试直接连接 MongoDB（避免 import cycle），如果失败则跳过测试
-	cfg := config.LoadConfig()
-	clientOpts := options.Client().ApplyURI(cfg.Database.MongoURI)
+	// 加载配置
+	_, err := config.LoadConfig(".")
+	if err != nil {
+		fmt.Println("Skipping integration tests: cannot load config:", err)
+		os.Exit(0)
+	}
+	
+	if config.GlobalConfig == nil || config.GlobalConfig.Database == nil {
+		fmt.Println("Skipping integration tests: database config is nil")
+		os.Exit(0)
+	}
+	
+	clientOpts := options.Client().ApplyURI(config.GlobalConfig.Database.MongoURI)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, clientOpts)
@@ -34,7 +45,7 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 	global.MongoClient = client
-	global.DB = client.Database(cfg.Database.DBName)
+	global.DB = client.Database(config.GlobalConfig.Database.DBName)
 
 	code := m.Run()
 

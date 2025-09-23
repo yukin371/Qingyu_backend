@@ -1,0 +1,29 @@
+# 青羽写作系统配置文件
+
+# 数据库配置
+database:
+  uri: "mongodb://localhost:27017"
+  name: "Qingyu_writer"
+  connect_timeout: 10s
+  max_pool_size: 100
+  min_pool_size: 10
+  max_conn_idle_time: 60s
+  retry_writes: true
+  retry_reads: true
+
+# 服务器配置
+server:
+  port: "8080"
+  mode: "debug"  # debug or release
+
+# JWT配置
+jwt:
+  secret: "qingyu_secret_key"  # 生产环境请修改为强密钥
+  expiration_hours: 24
+
+# AI配置
+ai:
+  api_key: ""  # 请填入您的API密钥
+  base_url: "https://api.openai.com/v1"
+  max_tokens: 2000
+  temperature: 7  # 0-10，值越高创造性越强

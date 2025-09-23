@@ -20,8 +20,11 @@ type Service struct {
 
 // NewService 创建AI服务
 func NewService() *Service {
-	// 加载配置
-	cfg := config.LoadConfig()
+	// 使用全局配置
+	cfg := config.GlobalConfig
+	if cfg == nil {
+		panic("GlobalConfig is not initialized")
+	}
 	
 	// 创建document服务实例
 	docService := &documentService.DocumentService{}
@@ -35,8 +38,25 @@ func NewService() *Service {
 	// 创建外部API服务
 	externalAPIService := NewExternalAPIService(cfg.AI)
 	
-	// 创建适配器管理器
-	adapterManager := adapter.NewAdapterManager(cfg.AI.ExternalAPI)
+	// 创建适配器管理器 - 使用简化的配置
+	var adapterManager *adapter.AdapterManager
+	if cfg.AI != nil {
+		// 创建一个简化的ExternalAPIConfig
+		externalAPIConfig := &config.ExternalAPIConfig{
+			DefaultProvider: "openai",
+			Providers: map[string]*config.ProviderConfig{
+				"openai": {
+					Name:            "openai",
+					APIKey:          cfg.AI.APIKey,
+					BaseURL:         cfg.AI.BaseURL,
+					Priority:        1,
+					Enabled:         true,
+					SupportedModels: []string{"gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"},
+				},
+			},
+		}
+		adapterManager = adapter.NewAdapterManager(externalAPIConfig)
+	}
 	
 	return &Service{
 		contextService:     contextService,

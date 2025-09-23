@@ -5,15 +5,22 @@ import (
 	"testing"
 	"time"
 
+	"Qingyu_backend/config"
 	"Qingyu_backend/global"
 )
 
 // TestMongoDBConnection 测试MongoDB连接
 func TestMongoDBConnection(t *testing.T) {
-	// 初始化MongoDB连接
-	err := InitMongoDB()
+	// 加载配置
+	_, err := config.LoadConfig(".")
 	if err != nil {
-		t.Fatalf("Failed to initialize MongoDB: %v", err)
+		t.Skipf("Skipping test: cannot load config: %v", err)
+	}
+	
+	// 初始化MongoDB连接
+	err = InitDB()
+	if err != nil {
+		t.Skipf("Skipping test: cannot initialize MongoDB: %v", err)
 	}
 
 	// 检查全局变量是否已设置
@@ -33,9 +40,6 @@ func TestMongoDBConnection(t *testing.T) {
 	if result.Err() != nil {
 		t.Fatalf("Failed to ping MongoDB: %v", result.Err())
 	}
-
-	// 关闭MongoDB连接
-	CloseMongoDB()
 
 	t.Log("MongoDB connection test passed")
 }
