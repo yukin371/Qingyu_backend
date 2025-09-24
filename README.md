@@ -44,7 +44,7 @@
 ### 环境要求
 
 - Go 1.19+
-- PostgreSQL 12+ 或 MySQL 8.0+
+- MongoDB
 - Redis (可选，用于缓存)
 
 ### 安装步骤
