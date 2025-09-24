@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -14,18 +15,7 @@ type Config struct {
 	Server   *ServerConfig   `mapstructure:"server"`
 	JWT      *JWTConfig     `mapstructure:"jwt"`
 	AI       *AIConfig      `mapstructure:"ai"`
-}
-
-// DatabaseConfig 数据库配置
-type DatabaseConfig struct {
-	MongoURI        string        `mapstructure:"uri"`
-	DBName          string        `mapstructure:"name"`
-	ConnectTimeout  time.Duration `mapstructure:"connect_timeout"`
-	MaxPoolSize     uint64        `mapstructure:"max_pool_size"`
-	MinPoolSize     uint64        `mapstructure:"min_pool_size"`
-	MaxConnIdleTime time.Duration `mapstructure:"max_conn_idle_time"`
-	RetryWrites     bool          `mapstructure:"retry_writes"`
-	RetryReads      bool          `mapstructure:"retry_reads"`
+	External *ExternalAPIConfig `mapstructure:"external"`
 }
 
 // ServerConfig 服务器配置
@@ -79,13 +69,21 @@ func LoadConfig(configPath string) (*Config, error) {
 	// 设置默认值
 	setDefaults()
 
-	// 配置Viper
-	v.SetConfigName("config")    // 配置文件名（不带扩展名）
-	v.SetConfigType("yaml")      // 配置文件类型
-	v.AddConfigPath(configPath)  // 配置文件路径
-	v.AddConfigPath(".")         // 当前目录
+	// 检查是否是文件路径
+	if strings.HasSuffix(configPath, ".yaml") || strings.HasSuffix(configPath, ".yml") {
+		// 直接设置配置文件
+		v.SetConfigFile(configPath)
+	} else {
+		// 配置Viper
+		v.SetConfigName("config")    // 配置文件名（不带扩展名）
+		v.SetConfigType("yaml")      // 配置文件类型
+		v.AddConfigPath(configPath)  // 配置文件路径
+		v.AddConfigPath(".")         // 当前目录
+	}
+	
 	v.AutomaticEnv()            // 读取环境变量
 	v.SetEnvPrefix("QINGYU")    // 环境变量前缀
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))  // 环境变量键替换器
 
 	// 读取配置文件
 	if err := v.ReadInConfig(); err != nil {
@@ -117,17 +115,58 @@ func LoadConfig(configPath string) (*Config, error) {
 	return config, nil
 }
 
+// LoadDatabaseConfigFromViper 从viper加载数据库配置
+func LoadDatabaseConfigFromViper() (*DatabaseConfig, error) {
+	if v == nil {
+		return nil, fmt.Errorf("viper未初始化，请先调用LoadConfig")
+	}
+
+	var dbConfig DatabaseConfig
+	if err := v.UnmarshalKey("database", &dbConfig); err != nil {
+		return nil, fmt.Errorf("解析数据库配置失败: %w", err)
+	}
+
+	// 验证配置
+	if err := dbConfig.Validate(); err != nil {
+		return nil, fmt.Errorf("数据库配置验证失败: %w", err)
+	}
+
+	return &dbConfig, nil
+}
+
 // setDefaults 设置Viper默认值
 func setDefaults() {
-	// 数据库默认配置
-	v.SetDefault("database.uri", "mongodb://localhost:27017")
-	v.SetDefault("database.name", "Qingyu_writer")
-	v.SetDefault("database.connect_timeout", 10*time.Second)
-	v.SetDefault("database.max_pool_size", 100)
-	v.SetDefault("database.min_pool_size", 10)
-	v.SetDefault("database.max_conn_idle_time", 60*time.Second)
-	v.SetDefault("database.retry_writes", true)
-	v.SetDefault("database.retry_reads", true)
+	// 数据库默认配置 - 使用database.go中的高级配置结构
+	v.SetDefault("database.primary.type", "mongodb")
+	v.SetDefault("database.primary.mongodb.uri", "mongodb://localhost:27017")
+	v.SetDefault("database.primary.mongodb.database", "qingyu")
+	v.SetDefault("database.primary.mongodb.max_pool_size", 100)
+	v.SetDefault("database.primary.mongodb.min_pool_size", 5)
+	v.SetDefault("database.primary.mongodb.connect_timeout", 10*time.Second)
+	v.SetDefault("database.primary.mongodb.server_timeout", 30*time.Second)
+	
+	// 索引配置
+	v.SetDefault("database.indexing.auto_create", true)
+	v.SetDefault("database.indexing.background", true)
+	
+	// 验证配置
+	v.SetDefault("database.validation.enabled", true)
+	v.SetDefault("database.validation.strict_mode", false)
+	
+	// 迁移配置
+	v.SetDefault("database.migration.enabled", false)
+	v.SetDefault("database.migration.batch_size", 1000)
+	v.SetDefault("database.migration.timeout", 30*time.Minute)
+	v.SetDefault("database.migration.strategy.type", "full")
+	v.SetDefault("database.migration.strategy.verify_data", true)
+	v.SetDefault("database.migration.strategy.rollback_on_fail", true)
+	
+	// 同步配置
+	v.SetDefault("database.sync.enabled", false)
+	v.SetDefault("database.sync.interval", 5*time.Minute)
+	v.SetDefault("database.sync.batch_size", 100)
+	v.SetDefault("database.sync.direction", "source_to_target")
+	v.SetDefault("database.sync.conflict_resolution", "latest_wins")
 
 	// 服务器默认配置
 	v.SetDefault("server.port", "8080")
@@ -138,6 +177,7 @@ func setDefaults() {
 	v.SetDefault("jwt.expiration_hours", 24)
 
 	// AI默认配置
+	v.SetDefault("ai.api_key", "default_api_key")
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)
