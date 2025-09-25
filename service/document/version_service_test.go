@@ -26,12 +26,20 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 	
-	if config.GlobalConfig == nil || config.GlobalConfig.Database == nil {
+	if config.GlobalConfig.Database == nil {
 		fmt.Println("Skipping integration tests: database config is nil")
 		os.Exit(0)
 	}
 	
-	clientOpts := options.Client().ApplyURI(config.GlobalConfig.Database.MongoURI)
+	// 检查MongoDB配置
+	if config.GlobalConfig.Database.Primary.Type != config.DatabaseTypeMongoDB || 
+	   config.GlobalConfig.Database.Primary.MongoDB == nil {
+		fmt.Println("Skipping integration tests: MongoDB config is missing")
+		os.Exit(0)
+	}
+	
+	mongoCfg := config.GlobalConfig.Database.Primary.MongoDB
+	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, clientOpts)
@@ -45,7 +53,7 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 	global.MongoClient = client
-	global.DB = client.Database(config.GlobalConfig.Database.DBName)
+	global.DB = client.Database(mongoCfg.Database)
 
 	code := m.Run()
 
