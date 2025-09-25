@@ -62,17 +62,18 @@ func (s *ProjectService) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (s *ProjectService) CreateProject(ctx context.Context, p *model.Project) error {
+// CreateProject 创建项目
+func (s *ProjectService) CreateProject(ctx context.Context, p *model.Project) (*model.Project, error) {
 	if p.Name == "" || p.ID == "" {
-		return errors.New("invalid arguments")
+		return nil, errors.New("invalid arguments")
 	}
 	p.CreatedAt = time.Now()
 	p.UpdatedAt = p.CreatedAt
 	p.ID = primitive.NewObjectID().Hex()
 	if _, err := projectCol().InsertOne(ctx, p); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return p, nil
 }
 
 // GetProjectByID 根据项目id获取项目详情
@@ -87,8 +88,8 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (
 	return &p, nil
 }
 
-// ProjectList 获取项目列表(支持owner过滤/状态过滤)
-func (s *ProjectService) List(ctx context.Context, ownerID string, status string) ([]*model.Project, error) {
+// ProjectList 获取项目列表(支持owner过滤/状态过滤)分页
+func (s *ProjectService) GetProjectList(ctx context.Context, ownerID string, status string, limit, offset int64) ([]*model.Project, error) {
 	filter := bson.M{}
 	if ownerID != "" {
 		filter["owner_id"] = ownerID
@@ -96,7 +97,7 @@ func (s *ProjectService) List(ctx context.Context, ownerID string, status string
 	if status != "" {
 		filter["status"] = status
 	}
-	opt := options.Find().SetSort(bson.M{"created_at": -1})
+	opt := options.Find().SetSort(bson.M{"created_at": -1}).SetLimit(limit).SetSkip(offset)
 	cur, err := projectCol().Find(ctx, filter, opt)
 	if err != nil {
 		return nil, err
@@ -108,8 +109,11 @@ func (s *ProjectService) List(ctx context.Context, ownerID string, status string
 	return list, nil
 }
 
-// Update更新（只允许改 name/description/status）
-func (s *ProjectService) Update(ctx context.Context, projectID, ownerID string, upd model.Project) error {
+// UpdateProject 更新项目（只允许改 name/description/status）
+func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, ownerID string, upd *model.Project) error {
+	if upd == nil {
+		return errors.New("invalid arguments")
+	}
 	set := bson.M{"updated_at": time.Now()}
 	if upd.Name != "" {
 		set["name"] = upd.Name
@@ -133,7 +137,10 @@ func (s *ProjectService) Update(ctx context.Context, projectID, ownerID string, 
 }
 
 // 软删除（软删标记，防真删）
-func (s *ProjectService) Delete(ctx context.Context, projectID, ownerID string) error {
+func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, ownerID string) error {
+	if projectID == "" || ownerID == "" {
+		return errors.New("invalid arguments")
+	}
 	res, err := projectCol().UpdateOne(ctx,
 		bson.M{"_id": projectID, "owner_id": ownerID},
 		bson.M{"$set": bson.M{"deleted_at": time.Now(), "status": "deleted"}})
@@ -143,12 +150,23 @@ func (s *ProjectService) Delete(ctx context.Context, projectID, ownerID string) 
 	return err
 }
 
-// TODO: Restore 恢复（软删恢复）
+// RestoreProjectByID 恢复项目（软删恢复）
+func (s *ProjectService) RestoreProjectByID(ctx context.Context, projectID, ownerID string) error {
+	if projectID == "" || ownerID == "" {
+		return errors.New("invalid arguments")
+	}
+	return s.UpdateProjectByID(ctx, projectID, ownerID, &model.Project{
+		Status: "active",
+	})
+}
 
 // DeleteHard 硬删除（管理后台用）
 func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error {
 	_, err := projectCol().DeleteOne(ctx, bson.M{"_id": projectID})
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // IsOwner 判断用户是否 owner（权限切面用）
@@ -164,7 +182,7 @@ func (s *ProjectService) CreateWithRootNode(ctx context.Context, p *model.Projec
 		}
 		defer sc.EndSession(ctx)
 
-		if err := s.CreateProject(ctx, p); err != nil {
+		if _, err := s.CreateProject(ctx, p); err != nil {
 			sc.AbortTransaction(sc)
 			return err
 		}

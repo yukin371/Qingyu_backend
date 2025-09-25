@@ -12,14 +12,14 @@ import (
 type MiddlewareType string
 
 const (
-	MiddlewareTypeLogger     MiddlewareType = "logger"
-	MiddlewareTypeCORS       MiddlewareType = "cors"
-	MiddlewareTypeRateLimit  MiddlewareType = "rate_limit"
-	MiddlewareTypeRecovery   MiddlewareType = "recovery"
-	MiddlewareTypeAuth       MiddlewareType = "auth"
-	MiddlewareTypePermission MiddlewareType = "permission"
-	MiddlewareTypeSecurity   MiddlewareType = "security"
-	MiddlewareTypeTimeout    MiddlewareType = "timeout"
+	MiddlewareTypeLogger     MiddlewareType = "logger"     // 日志中间件
+	MiddlewareTypeCORS       MiddlewareType = "cors"       // CORS 中间件
+	MiddlewareTypeRateLimit  MiddlewareType = "rate_limit" // 限流中间件
+	MiddlewareTypeRecovery   MiddlewareType = "recovery"   // 恢复中间件
+	MiddlewareTypeAuth       MiddlewareType = "auth"       // 认证中间件
+	MiddlewareTypePermission MiddlewareType = "permission" // 权限中间件
+	MiddlewareTypeSecurity   MiddlewareType = "security"   // 安全中间件
+	MiddlewareTypeTimeout    MiddlewareType = "timeout"    // 超时中间件
 )
 
 // MiddlewareConfig 中间件配置
@@ -43,7 +43,7 @@ func NewMiddlewareFactory() *MiddlewareFactory {
 	factory := &MiddlewareFactory{
 		creators: make(map[MiddlewareType]MiddlewareCreator),
 	}
-	
+
 	// 注册默认中间件创建器
 	factory.RegisterCreator(MiddlewareTypeLogger, CreateLoggerMiddleware)
 	factory.RegisterCreator(MiddlewareTypeCORS, CreateCORSMiddleware)
@@ -53,7 +53,7 @@ func NewMiddlewareFactory() *MiddlewareFactory {
 	factory.RegisterCreator(MiddlewareTypePermission, CreatePermissionMiddleware)
 	factory.RegisterCreator(MiddlewareTypeSecurity, CreateSecurityMiddleware)
 	factory.RegisterCreator(MiddlewareTypeTimeout, CreateTimeoutMiddleware)
-	
+
 	return factory
 }
 
@@ -68,34 +68,34 @@ func (f *MiddlewareFactory) CreateMiddleware(config MiddlewareConfig) (gin.Handl
 	if !exists {
 		return nil, fmt.Errorf("unknown middleware type: %s", config.Type)
 	}
-	
+
 	if !config.Enabled {
 		return nil, nil
 	}
-	
+
 	return creator(config.Config)
 }
 
 // CreateMiddlewares 创建多个中间件
 func (f *MiddlewareFactory) CreateMiddlewares(configs []MiddlewareConfig) ([]gin.HandlerFunc, error) {
 	var middlewares []gin.HandlerFunc
-	
+
 	// 按优先级排序
 	sort.Slice(configs, func(i, j int) bool {
 		return configs[i].Priority < configs[j].Priority
 	})
-	
+
 	for _, config := range configs {
 		middleware, err := f.CreateMiddleware(config)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create middleware %s: %w", config.Type, err)
 		}
-		
+
 		if middleware != nil {
 			middlewares = append(middlewares, middleware)
 		}
 	}
-	
+
 	return middlewares, nil
 }
 
@@ -222,31 +222,31 @@ type RouteConfig struct {
 // ApplyRouteConfig 应用路由配置
 func ApplyRouteConfig(engine *gin.Engine, groupConfigs []RouteGroupConfig) error {
 	factory := NewMiddlewareFactory()
-	
+
 	for _, groupConfig := range groupConfigs {
 		// 创建路由组中间件
 		groupMiddlewares, err := factory.CreateMiddlewares(groupConfig.Middlewares)
 		if err != nil {
 			return fmt.Errorf("failed to create group middlewares for %s: %w", groupConfig.Path, err)
 		}
-		
+
 		// 创建路由组
 		_ = engine.Group(groupConfig.Path, groupMiddlewares...)
-		
+
 		// 应用路由
 		for _, routeConfig := range groupConfig.Routes {
 			// 创建路由中间件
 			_, err := factory.CreateMiddlewares(routeConfig.Middlewares)
 			if err != nil {
-				return fmt.Errorf("failed to create route middlewares for %s %s: %w", 
+				return fmt.Errorf("failed to create route middlewares for %s %s: %w",
 					routeConfig.Method, routeConfig.Path, err)
 			}
-			
+
 			// 注册路由（这里需要根据实际的处理器注册逻辑来实现）
 			// 示例：group.Handle(routeConfig.Method, routeConfig.Path, append(routeMiddlewares, handler)...)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -269,7 +269,7 @@ func CreateLoggerMiddleware(config map[string]interface{}) (gin.HandlerFunc, err
 		SlowThreshold:     time.Second * 2,
 		EnablePerformance: true,
 	}
-	
+
 	// 解析配置
 	if enableColor, ok := config["enable_color"].(bool); ok {
 		loggerConfig.EnableColor = enableColor
@@ -291,6 +291,6 @@ func CreateLoggerMiddleware(config map[string]interface{}) (gin.HandlerFunc, err
 	if enablePerformance, ok := config["enable_performance"].(bool); ok {
 		loggerConfig.EnablePerformance = enablePerformance
 	}
-	
+
 	return LoggerWithConfig(loggerConfig), nil
 }
