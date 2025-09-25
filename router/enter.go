@@ -2,7 +2,7 @@ package router
 
 import (
 	"Qingyu_backend/router/ai"
-	"Qingyu_backend/router/document"
+	document "Qingyu_backend/router/project"
 	"Qingyu_backend/router/system"
 
 	aiService "Qingyu_backend/service/ai"
