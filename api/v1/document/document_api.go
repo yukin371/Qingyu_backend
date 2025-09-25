@@ -14,6 +14,7 @@ type DocumentApi struct {
 	service *svc.DocumentService
 }
 
+// NewDocumentApi 创建文档相关API实例
 func NewDocumentApi() *DocumentApi {
 	return &DocumentApi{service: &svc.DocumentService{}}
 }
