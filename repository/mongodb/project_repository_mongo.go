@@ -27,7 +27,7 @@ func NewMongoProjectRepository(db *mongo.Database) documentRepo.ProjectRepositor
 	return &MongoProjectRepository{
 		db:           db,
 		collection:   db.Collection("projects"),
-		queryBuilder: base.NewMongoQueryBuilder(),
+		queryBuilder: NewMongoQueryBuilder(),
 	}
 }
 

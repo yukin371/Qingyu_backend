@@ -77,7 +77,7 @@ func (f UserFilter) Validate() error {
 // UserRepository 用户仓储接口
 // 继承BaseRepository的通用CRUD操作，并添加用户特定的业务方法
 type UserRepository interface {
-	// 继承基础Repository接口
+	// 继承CRUDRepository接口
 	CRUDRepository[*system.User, UserFilter]
 
 	// 用户特定的查询方法

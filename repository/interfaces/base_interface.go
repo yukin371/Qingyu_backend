@@ -174,12 +174,6 @@ func NewFieldValidationError(field, message string) *ValidationError {
 	return &ValidationError{Field: field, Message: message}
 }
 
-// 查询接口
-type QueryRepository[T any] interface {
-	List(ctx context.Context, filter Filter) ([]T, error)
-	FindWithPagination(ctx context.Context, filter Filter, pagination Pagination) (*PagedResult[T], error)
-}
-
 // 批量操作接口
 type BatchRepository[T any, ID comparable] interface {
 	BatchCreate(ctx context.Context, entities []T) error

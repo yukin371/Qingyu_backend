@@ -13,15 +13,15 @@ import (
 	base "Qingyu_backend/repository/interfaces"
 )
 
-// MongoRepositoryFactoryNew 新的MongoDB仓储工厂实现
-type MongoRepositoryFactoryNew struct {
+// MongoRepositoryFactory MongoDB仓储工厂实现
+type MongoRepositoryFactory struct {
 	client   *mongo.Client
 	database *mongo.Database
 	config   *base.MongoConfig
 }
 
-// NewMongoRepositoryFactoryNew 创建新的MongoDB仓储工厂
-func NewMongoRepositoryFactoryNew(config *base.MongoConfig) (base.RepositoryFactory, error) {
+// NewMongoRepositoryFactory 创建新的MongoDB仓储工厂
+func NewMongoRepositoryFactory(config *base.MongoConfig) (base.RepositoryFactory, error) {
 	// 验证配置
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("MongoDB配置验证失败: %w", err)
@@ -52,7 +52,7 @@ func NewMongoRepositoryFactoryNew(config *base.MongoConfig) (base.RepositoryFact
 
 	database := client.Database(config.Database)
 
-	return &MongoRepositoryFactoryNew{
+	return &MongoRepositoryFactory{
 		client:   client,
 		database: database,
 		config:   config,
@@ -60,22 +60,22 @@ func NewMongoRepositoryFactoryNew(config *base.MongoConfig) (base.RepositoryFact
 }
 
 // CreateUserRepository 创建用户Repository
-func (f *MongoRepositoryFactoryNew) CreateUserRepository() base.UserRepository {
-	return NewMongoUserRepositoryNew(f.database)
+func (f *MongoRepositoryFactory) CreateUserRepository() base.UserRepository {
+	return NewMongoUserRepository(f.database)
 }
 
 // CreateProjectRepository 创建项目Repository
-func (f *MongoRepositoryFactoryNew) CreateProjectRepository() base.ProjectRepository {
-	return NewMongoProjectRepositoryNew(f.database)
+func (f *MongoRepositoryFactory) CreateProjectRepository() base.ProjectRepository {
+	return NewMongoProjectRepository(f.database)
 }
 
 // CreateRoleRepository 创建角色Repository
-func (f *MongoRepositoryFactoryNew) CreateRoleRepository() base.RoleRepository {
-	return NewMongoRoleRepositoryNew(f.database)
+func (f *MongoRepositoryFactory) CreateRoleRepository() base.RoleRepository {
+	return NewMongoRoleRepository(f.database)
 }
 
 // Close 关闭数据库连接
-func (f *MongoRepositoryFactoryNew) Close() error {
+func (f *MongoRepositoryFactory) Close() error {
 	if f.client != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -472,22 +472,22 @@ func (r *MongoProjectRepositoryNew) BatchCreate(ctx context.Context, projects []
 	return nil
 }
 
-// MongoRoleRepositoryNew 新的MongoDB角色仓储实现
-type MongoRoleRepositoryNew struct {
+// MongoRoleRepository 新的MongoDB角色仓储实现
+type MongoRoleRepository struct {
 	db         *mongo.Database
 	collection *mongo.Collection
 }
 
-// NewMongoRoleRepositoryNew 创建新的MongoDB角色仓储实例
-func NewMongoRoleRepositoryNew(db *mongo.Database) base.RoleRepository {
-	return &MongoRoleRepositoryNew{
+// NewMongoRoleRepository 创建新的MongoDB角色仓储实例
+func NewMongoRoleRepository(db *mongo.Database) base.RoleRepository {
+	return &MongoRoleRepository{
 		db:         db,
 		collection: db.Collection("roles"),
 	}
 }
 
 // Create 创建角色
-func (r *MongoRoleRepositoryNew) Create(ctx context.Context, role *interface{}) error {
+func (r *MongoRoleRepository) Create(ctx context.Context, role *interface{}) error {
 	if role == nil {
 		return base.NewRepositoryError(
 			base.ErrorTypeValidation,
