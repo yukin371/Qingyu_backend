@@ -4,7 +4,7 @@ import (
 	"context"
 
 	model "Qingyu_backend/models/document"
-	documentRepo "Qingyu_backend/repository/document"
+	documentRepo "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/base"
 )
 
@@ -34,7 +34,7 @@ func (s *ProjectService) Initialize(ctx context.Context) error {
 	}
 
 	// 检查Repository健康状态
-	if err := s.projectRepo.Health(ctx); err != nil {
+	if err := s.Health(ctx); err != nil {
 		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "项目Repository健康检查失败", err)
 	}
 
@@ -43,7 +43,7 @@ func (s *ProjectService) Initialize(ctx context.Context) error {
 
 // Health 健康检查
 func (s *ProjectService) Health(ctx context.Context) error {
-	return s.projectRepo.Health(ctx)
+	return s.Health(ctx)
 }
 
 // Close 关闭服务

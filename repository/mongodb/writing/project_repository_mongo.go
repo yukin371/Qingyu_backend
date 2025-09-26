@@ -11,8 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/document"
-	documentRepo "Qingyu_backend/repository/document"
-	base "Qingyu_backend/repository/interfaces"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
+	documentRepo "Qingyu_backend/repository/interfaces/writing"
 )
 
 // MongoProjectRepository MongoDB项目仓储实现

@@ -1,4 +1,4 @@
-package interfaces
+package user
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/system"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // UserFilter 用户查询过滤器
@@ -78,7 +79,7 @@ func (f UserFilter) Validate() error {
 // 继承BaseRepository的通用CRUD操作，并添加用户特定的业务方法
 type UserRepository interface {
 	// 继承CRUDRepository接口
-	CRUDRepository[*system.User, UserFilter]
+	base.CRUDRepository[*system.User, UserFilter]
 
 	// 用户特定的查询方法
 	GetByUsername(ctx context.Context, username string) (*system.User, error)
@@ -97,7 +98,7 @@ type UserRepository interface {
 
 // ProjectRepository 项目仓储接口
 type ProjectRepository interface {
-	CRUDRepository[interface{}, interface{}]
+	base.CRUDRepository[interface{}, interface{}]
 
 	// 项目特定方法
 	GetByCreatorID(ctx context.Context, creatorID string) ([]interface{}, error)
@@ -106,7 +107,7 @@ type ProjectRepository interface {
 
 // RoleRepository 角色仓储接口
 type RoleRepository interface {
-	CRUDRepository[*system.Role, interface{}]
+	base.CRUDRepository[*system.Role, interface{}]
 
 	// 角色特定方法
 	GetByName(ctx context.Context, name string) (interface{}, error)

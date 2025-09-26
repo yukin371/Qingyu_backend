@@ -1,17 +1,17 @@
-package document
+package writing
 
 import (
 	"Qingyu_backend/models/document"
-	"Qingyu_backend/repository/interfaces"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
 	"context"
 )
 
 // ProjectRepository 项目仓储接口
 type ProjectRepository interface {
 	// 继承CRUDRepository接口
-	interfaces.CRUDRepository[*document.Project, string]
+	base.CRUDRepository[*document.Project, string]
 	// 继承 HealthRepository 接口
-	interfaces.HealthRepository
+	base.HealthRepository
 	// 项目特定的查询方法
 	GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*document.Project, error)
 	GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*document.Project, error)
@@ -50,7 +50,7 @@ type IndexInfo struct {
 // NodeRepository 节点仓储接口
 type NodeRepository interface {
 	// 继承基础Repository接口
-	interfaces.CRUDRepository[*document.Node, string]
+	base.CRUDRepository[*document.Node, string]
 
 	// 节点特定的查询方法
 	GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Node, error)
@@ -74,7 +74,7 @@ type NodeRepository interface {
 // DocumentRepository 文档仓储接口
 type DocumentRepository interface {
 	// 继承基础Repository接口
-	interfaces.CRUDRepository[*document.Document, string]
+	base.CRUDRepository[*document.Document, string]
 
 	// 文档特定的查询方法
 	GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Document, error)

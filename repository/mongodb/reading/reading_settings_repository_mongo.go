@@ -1,50 +1,53 @@
-package mongodb
+package reading
 
 import (
 	"context"
 	"time"
-	
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	
+
 	"Qingyu_backend/models/reading/reader"
-	"Qingyu_backend/repository/base"
-	"Qingyu_backend/repository/reading"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
+	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
 )
 
 // MongoReadingSettingsRepository MongoDB阅读设置仓储实现
 type MongoReadingSettingsRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	db           *mongo.Database
+	collection   *mongo.Collection
 	queryBuilder base.QueryBuilder
 }
 
 // NewMongoReadingSettingsRepository 创建MongoDB阅读设置仓储实例
-func NewMongoReadingSettingsRepository(db *mongo.Database) reading.ReadingSettingsRepository {
+func NewMongoReadingSettingsRepository(db *mongo.Database) ReadingInterfaces.ReadingSettingsRepository {
 	return &MongoReadingSettingsRepository{
-		db:         db,
-		collection: db.Collection("reading_settings"),
+		db:           db,
+		collection:   db.Collection("reading_settings"),
 		queryBuilder: base.NewMongoQueryBuilder(),
 	}
 }
 
 // Create 创建阅读设置
-func (r *MongoReadingSettingsRepository) Create(ctx context.Context, settings **reader.ReadingSettings) error {
-	if settings == nil || *settings == nil {
-		return nil
+func (r *MongoReadingSettingsRepository) Create(ctx context.Context, settings *reader.ReadingSettings) error {
+	if settings == nil {
+		return base.NewRepositoryError(
+			base.ErrorTypeValidation,
+			"阅读设置对象不能为空",
+			nil,
+		)
 	}
-	
-	actualSettings := *settings
-	actualSettings.CreatedAt = time.Now()
-	actualSettings.UpdatedAt = time.Now()
-	
-	_, err := r.collection.InsertOne(ctx, actualSettings)
+
+	settings.CreatedAt = time.Now()
+	settings.UpdatedAt = time.Now()
+
+	_, err := r.collection.InsertOne(ctx, settings)
 	return err
 }
 
 // GetByID 根据ID获取阅读设置
-func (r *MongoReadingSettingsRepository) GetByID(ctx context.Context, id string) (**reader.ReadingSettings, error) {
+func (r *MongoReadingSettingsRepository) GetByID(ctx context.Context, id string) (*reader.ReadingSettings, error) {
 	var settings reader.ReadingSettings
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&settings)
 	if err != nil {
@@ -54,7 +57,7 @@ func (r *MongoReadingSettingsRepository) GetByID(ctx context.Context, id string)
 		return nil, err
 	}
 	result := &settings
-	return &result, nil
+	return result, nil
 }
 
 // Update 更新阅读设置
@@ -73,24 +76,24 @@ func (r *MongoReadingSettingsRepository) Delete(ctx context.Context, id string) 
 // List 获取阅读设置列表
 func (r *MongoReadingSettingsRepository) List(ctx context.Context, filter base.Filter) ([]**reader.ReadingSettings, error) {
 	mongoFilter := filter.GetConditions()
-	
+
 	cursor, err := r.collection.Find(ctx, mongoFilter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var settings []*reader.ReadingSettings
 	if err = cursor.All(ctx, &settings); err != nil {
 		return nil, err
 	}
-	
+
 	// 转换为双指针类型
 	result := make([]**reader.ReadingSettings, len(settings))
 	for i, setting := range settings {
 		result[i] = &setting
 	}
-	
+
 	return result, nil
 }
 
@@ -121,7 +124,7 @@ func (r *MongoReadingSettingsRepository) GetByUserID(ctx context.Context, userID
 // UpdateByUserID 根据用户ID更新阅读设置
 func (r *MongoReadingSettingsRepository) UpdateByUserID(ctx context.Context, userID string, settings *reader.ReadingSettings) error {
 	settings.UpdatedAt = time.Now()
-	
+
 	_, err := r.collection.UpdateOne(
 		ctx,
 		bson.M{"user_id": userID},
@@ -146,12 +149,12 @@ func (r *MongoReadingSettingsRepository) CreateDefaultSettings(ctx context.Conte
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
-	err := r.Create(ctx, &settings)
+
+	err := r.Create(ctx, settings)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return settings, nil
 }
 
@@ -169,14 +172,14 @@ func (r *MongoReadingSettingsRepository) BatchCreate(ctx context.Context, settin
 	if len(settings) == 0 {
 		return nil
 	}
-	
+
 	// 验证设置对象
 	for _, setting := range settings {
 		if setting == nil || *setting == nil {
 			continue
 		}
 	}
-	
+
 	// 准备批量插入的文档
 	var documents []interface{}
 	now := time.Now()
@@ -188,11 +191,11 @@ func (r *MongoReadingSettingsRepository) BatchCreate(ctx context.Context, settin
 		(*setting).UpdatedAt = now
 		documents = append(documents, *setting)
 	}
-	
+
 	if len(documents) == 0 {
 		return nil
 	}
-	
+
 	_, err := r.collection.InsertMany(ctx, documents)
 	return err
 }
@@ -202,11 +205,11 @@ func (r *MongoReadingSettingsRepository) BatchUpdate(ctx context.Context, ids []
 	if len(ids) == 0 {
 		return nil
 	}
-	
+
 	updates["updated_at"] = time.Now()
 	filter := bson.M{"_id": bson.M{"$in": ids}}
 	update := bson.M{"$set": updates}
-	
+
 	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }
@@ -216,7 +219,7 @@ func (r *MongoReadingSettingsRepository) BatchDelete(ctx context.Context, ids []
 	if len(ids) == 0 {
 		return nil
 	}
-	
+
 	filter := bson.M{"_id": bson.M{"$in": ids}}
 	_, err := r.collection.DeleteMany(ctx, filter)
 	return err
@@ -234,13 +237,13 @@ func (r *MongoReadingSettingsRepository) Exists(ctx context.Context, id string) 
 // FindWithPagination 分页查询阅读设置
 func (r *MongoReadingSettingsRepository) FindWithPagination(ctx context.Context, filter base.Filter, pagination base.Pagination) (*base.PagedResult[*reader.ReadingSettings], error) {
 	mongoFilter := filter.GetConditions()
-	
+
 	// 计算总数
 	total, err := r.collection.CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 构建查询选项
 	opts := options.Find()
 	if pagination.Skip > 0 {
@@ -249,18 +252,18 @@ func (r *MongoReadingSettingsRepository) FindWithPagination(ctx context.Context,
 		skip := (pagination.Page - 1) * pagination.PageSize
 		opts.SetSkip(int64(skip))
 	}
-	
+
 	if pagination.PageSize > 0 {
 		opts.SetLimit(int64(pagination.PageSize))
 	}
-	
+
 	// 执行查询
 	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	// 解析结果为双指针类型
 	var settingsData []**reader.ReadingSettings
 	for cursor.Next(ctx) {
@@ -271,11 +274,11 @@ func (r *MongoReadingSettingsRepository) FindWithPagination(ctx context.Context,
 		settingsPtr := &settings
 		settingsData = append(settingsData, &settingsPtr)
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
-	
+
 	// 使用NewPagedResult创建分页结果
 	return base.NewPagedResult[*reader.ReadingSettings](settingsData, total, pagination), nil
 }

@@ -2,7 +2,7 @@ package reading
 
 import (
 	"Qingyu_backend/models/reading/reader"
-	base "Qingyu_backend/repository/interfaces"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
 	"context"
 )
 

@@ -1,4 +1,4 @@
-package interfaces
+package infrastructure
 
 // QueryBuilder 查询构建器接口
 type QueryBuilder interface {

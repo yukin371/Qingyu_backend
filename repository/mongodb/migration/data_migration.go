@@ -1,4 +1,4 @@
-package migration
+package mongodb
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"Qingyu_backend/models/system"
-	"Qingyu_backend/repository"
+	repository "Qingyu_backend/repository/mongodb"
 )
 
 // MigrationStatus 迁移状态
 type MigrationStatus string
 
 const (
-	MigrationStatusPending    MigrationStatus = "pending"
-	MigrationStatusRunning    MigrationStatus = "running"
-	MigrationStatusCompleted  MigrationStatus = "completed"
-	MigrationStatusFailed     MigrationStatus = "failed"
-	MigrationStatusRollback   MigrationStatus = "rollback"
+	MigrationStatusPending   MigrationStatus = "pending"
+	MigrationStatusRunning   MigrationStatus = "running"
+	MigrationStatusCompleted MigrationStatus = "completed"
+	MigrationStatusFailed    MigrationStatus = "failed"
+	MigrationStatusRollback  MigrationStatus = "rollback"
 )
 
 // MigrationDirection 迁移方向
@@ -32,18 +32,18 @@ const (
 
 // MigrationRecord 迁移记录
 type MigrationRecord struct {
-	ID          string            `json:"id" bson:"_id"`
-	Name        string            `json:"name" bson:"name"`
-	Direction   MigrationDirection `json:"direction" bson:"direction"`
-	Status      MigrationStatus   `json:"status" bson:"status"`
-	StartTime   time.Time         `json:"start_time" bson:"start_time"`
-	EndTime     *time.Time        `json:"end_time,omitempty" bson:"end_time,omitempty"`
-	Error       string            `json:"error,omitempty" bson:"error,omitempty"`
-	Progress    int               `json:"progress" bson:"progress"` // 0-100
-	TotalItems  int64             `json:"total_items" bson:"total_items"`
-	ProcessedItems int64          `json:"processed_items" bson:"processed_items"`
-	CreatedAt   time.Time         `json:"created_at" bson:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at" bson:"updated_at"`
+	ID             string             `json:"id" bson:"_id"`
+	Name           string             `json:"name" bson:"name"`
+	Direction      MigrationDirection `json:"direction" bson:"direction"`
+	Status         MigrationStatus    `json:"status" bson:"status"`
+	StartTime      time.Time          `json:"start_time" bson:"start_time"`
+	EndTime        *time.Time         `json:"end_time,omitempty" bson:"end_time,omitempty"`
+	Error          string             `json:"error,omitempty" bson:"error,omitempty"`
+	Progress       int                `json:"progress" bson:"progress"` // 0-100
+	TotalItems     int64              `json:"total_items" bson:"total_items"`
+	ProcessedItems int64              `json:"processed_items" bson:"processed_items"`
+	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // Migration 迁移接口
@@ -69,18 +69,18 @@ type Migration interface {
 
 // UserMigration 用户数据迁移
 type UserMigration struct {
-	batchSize     int
-	processed     int64
-	total         int64
-	mu            sync.RWMutex
-	progressChan  chan MigrationProgress
+	batchSize    int
+	processed    int64
+	total        int64
+	mu           sync.RWMutex
+	progressChan chan MigrationProgress
 }
 
 // MigrationProgress 迁移进度
 type MigrationProgress struct {
-	Processed int64 `json:"processed"`
-	Total     int64 `json:"total"`
-	Progress  int   `json:"progress"`
+	Processed int64  `json:"processed"`
+	Total     int64  `json:"total"`
+	Progress  int    `json:"progress"`
 	Message   string `json:"message"`
 }
 
@@ -400,10 +400,10 @@ type DataSyncManager struct {
 
 // SyncConfig 同步配置
 type SyncConfig struct {
-	Interval    time.Duration `json:"interval"`    // 同步间隔
-	BatchSize   int           `json:"batch_size"`  // 批处理大小
-	Enabled     bool          `json:"enabled"`     // 是否启用同步
-	Direction   string        `json:"direction"`   // 同步方向: "source_to_target", "target_to_source", "bidirectional"
+	Interval    time.Duration `json:"interval"`            // 同步间隔
+	BatchSize   int           `json:"batch_size"`          // 批处理大小
+	Enabled     bool          `json:"enabled"`             // 是否启用同步
+	Direction   string        `json:"direction"`           // 同步方向: "source_to_target", "target_to_source", "bidirectional"
 	ConflictRes string        `json:"conflict_resolution"` // 冲突解决策略: "source_wins", "target_wins", "latest_wins"
 }
 

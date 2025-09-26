@@ -1,10 +1,8 @@
-package mongodb
+package infrastructure
 
 import (
 	"fmt"
 	"strings"
-
-	interfaces "Qingyu_backend/repository/interfaces"
 )
 
 // MongoQueryBuilder MongoDB查询构建器实现
@@ -20,7 +18,7 @@ type MongoQueryBuilder struct {
 }
 
 // NewMongoQueryBuilder 创建MongoDB查询构建器
-func NewMongoQueryBuilder() interfaces.QueryBuilder {
+func NewMongoQueryBuilder() QueryBuilder {
 	return &MongoQueryBuilder{
 		conditions:    make([]map[string]interface{}, 0),
 		sortFields:    make(map[string]int),
@@ -32,14 +30,14 @@ func NewMongoQueryBuilder() interfaces.QueryBuilder {
 }
 
 // Where 添加条件
-func (qb *MongoQueryBuilder) Where(field string, operator string, value interface{}) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Where(field string, operator string, value interface{}) QueryBuilder {
 	condition := qb.buildCondition(field, operator, value)
 	qb.conditions = append(qb.conditions, condition)
 	return qb
 }
 
 // WhereIn 添加IN条件
-func (qb *MongoQueryBuilder) WhereIn(field string, values []interface{}) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereIn(field string, values []interface{}) QueryBuilder {
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$in": values},
 	}
@@ -48,7 +46,7 @@ func (qb *MongoQueryBuilder) WhereIn(field string, values []interface{}) interfa
 }
 
 // WhereNotIn 添加NOT IN条件
-func (qb *MongoQueryBuilder) WhereNotIn(field string, values []interface{}) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereNotIn(field string, values []interface{}) QueryBuilder {
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$nin": values},
 	}
@@ -57,7 +55,7 @@ func (qb *MongoQueryBuilder) WhereNotIn(field string, values []interface{}) inte
 }
 
 // WhereBetween 添加范围条件
-func (qb *MongoQueryBuilder) WhereBetween(field string, start, end interface{}) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereBetween(field string, start, end interface{}) QueryBuilder {
 	condition := map[string]interface{}{
 		field: map[string]interface{}{
 			"$gte": start,
@@ -69,7 +67,7 @@ func (qb *MongoQueryBuilder) WhereBetween(field string, start, end interface{}) 
 }
 
 // WhereNull 添加NULL条件
-func (qb *MongoQueryBuilder) WhereNull(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereNull(field string) QueryBuilder {
 	condition := map[string]interface{}{
 		field: nil,
 	}
@@ -78,7 +76,7 @@ func (qb *MongoQueryBuilder) WhereNull(field string) interfaces.QueryBuilder {
 }
 
 // WhereNotNull 添加NOT NULL条件
-func (qb *MongoQueryBuilder) WhereNotNull(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereNotNull(field string) QueryBuilder {
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$ne": nil},
 	}
@@ -87,7 +85,7 @@ func (qb *MongoQueryBuilder) WhereNotNull(field string) interfaces.QueryBuilder 
 }
 
 // WhereLike 添加LIKE条件（模糊匹配）
-func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) QueryBuilder {
 	// 转换SQL LIKE模式到MongoDB正则表达式
 	regexPattern := strings.ReplaceAll(pattern, "%", ".*")
 	regexPattern = strings.ReplaceAll(regexPattern, "_", ".")
@@ -103,7 +101,7 @@ func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) interfaces.
 }
 
 // WhereRegex 添加正则表达式条件
-func (qb *MongoQueryBuilder) WhereRegex(field string, pattern string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) WhereRegex(field string, pattern string) QueryBuilder {
 	condition := map[string]interface{}{
 		field: map[string]interface{}{
 			"$regex":   pattern,
@@ -115,25 +113,25 @@ func (qb *MongoQueryBuilder) WhereRegex(field string, pattern string) interfaces
 }
 
 // And 设置AND逻辑
-func (qb *MongoQueryBuilder) And() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) And() QueryBuilder {
 	qb.currentLogic = "and"
 	return qb
 }
 
 // Or 设置OR逻辑
-func (qb *MongoQueryBuilder) Or() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Or() QueryBuilder {
 	qb.currentLogic = "or"
 	return qb
 }
 
 // Not 设置NOT逻辑
-func (qb *MongoQueryBuilder) Not() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Not() QueryBuilder {
 	qb.currentLogic = "not"
 	return qb
 }
 
 // OrderBy 添加排序
-func (qb *MongoQueryBuilder) OrderBy(field string, direction string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) OrderBy(field string, direction string) QueryBuilder {
 	dir := 1
 	if strings.ToLower(direction) == "desc" {
 		dir = -1
@@ -143,43 +141,43 @@ func (qb *MongoQueryBuilder) OrderBy(field string, direction string) interfaces.
 }
 
 // OrderByAsc 升序排序
-func (qb *MongoQueryBuilder) OrderByAsc(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) OrderByAsc(field string) QueryBuilder {
 	qb.sortFields[field] = 1
 	return qb
 }
 
 // OrderByDesc 降序排序
-func (qb *MongoQueryBuilder) OrderByDesc(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) OrderByDesc(field string) QueryBuilder {
 	qb.sortFields[field] = -1
 	return qb
 }
 
 // Select 选择字段
-func (qb *MongoQueryBuilder) Select(fields ...string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Select(fields ...string) QueryBuilder {
 	qb.selectFields = append(qb.selectFields, fields...)
 	return qb
 }
 
 // Exclude 排除字段
-func (qb *MongoQueryBuilder) Exclude(fields ...string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Exclude(fields ...string) QueryBuilder {
 	qb.excludeFields = append(qb.excludeFields, fields...)
 	return qb
 }
 
 // Limit 限制数量
-func (qb *MongoQueryBuilder) Limit(limit int) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Limit(limit int) QueryBuilder {
 	qb.limitValue = limit
 	return qb
 }
 
 // Skip 跳过数量
-func (qb *MongoQueryBuilder) Skip(skip int) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Skip(skip int) QueryBuilder {
 	qb.skipValue = skip
 	return qb
 }
 
 // Count 计数聚合
-func (qb *MongoQueryBuilder) Count() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Count() QueryBuilder {
 	qb.aggregations = append(qb.aggregations, map[string]interface{}{
 		"$count": "total",
 	})
@@ -187,7 +185,7 @@ func (qb *MongoQueryBuilder) Count() interfaces.QueryBuilder {
 }
 
 // Sum 求和聚合
-func (qb *MongoQueryBuilder) Sum(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Sum(field string) QueryBuilder {
 	qb.aggregations = append(qb.aggregations, map[string]interface{}{
 		"$group": map[string]interface{}{
 			"_id":   nil,
@@ -198,7 +196,7 @@ func (qb *MongoQueryBuilder) Sum(field string) interfaces.QueryBuilder {
 }
 
 // Avg 平均值聚合
-func (qb *MongoQueryBuilder) Avg(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Avg(field string) QueryBuilder {
 	qb.aggregations = append(qb.aggregations, map[string]interface{}{
 		"$group": map[string]interface{}{
 			"_id":     nil,
@@ -209,7 +207,7 @@ func (qb *MongoQueryBuilder) Avg(field string) interfaces.QueryBuilder {
 }
 
 // Max 最大值聚合
-func (qb *MongoQueryBuilder) Max(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Max(field string) QueryBuilder {
 	qb.aggregations = append(qb.aggregations, map[string]interface{}{
 		"$group": map[string]interface{}{
 			"_id":     nil,
@@ -220,7 +218,7 @@ func (qb *MongoQueryBuilder) Max(field string) interfaces.QueryBuilder {
 }
 
 // Min 最小值聚合
-func (qb *MongoQueryBuilder) Min(field string) interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Min(field string) QueryBuilder {
 	qb.aggregations = append(qb.aggregations, map[string]interface{}{
 		"$group": map[string]interface{}{
 			"_id":     nil,
@@ -309,7 +307,7 @@ func (qb *MongoQueryBuilder) Build() (map[string]interface{}, error) {
 }
 
 // BuildFilter 构建Filter对象
-func (qb *MongoQueryBuilder) BuildFilter() (interfaces.Filter, error) {
+func (qb *MongoQueryBuilder) BuildFilter() (Filter, error) {
 	query, err := qb.Build()
 	if err != nil {
 		return nil, err
@@ -328,7 +326,7 @@ func (qb *MongoQueryBuilder) BuildFilter() (interfaces.Filter, error) {
 }
 
 // Reset 重置查询构建器
-func (qb *MongoQueryBuilder) Reset() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Reset() QueryBuilder {
 	qb.conditions = make([]map[string]interface{}, 0)
 	qb.sortFields = make(map[string]int)
 	qb.selectFields = make([]string, 0)
@@ -341,7 +339,7 @@ func (qb *MongoQueryBuilder) Reset() interfaces.QueryBuilder {
 }
 
 // Clone 克隆查询构建器
-func (qb *MongoQueryBuilder) Clone() interfaces.QueryBuilder {
+func (qb *MongoQueryBuilder) Clone() QueryBuilder {
 	clone := &MongoQueryBuilder{
 		conditions:    make([]map[string]interface{}, len(qb.conditions)),
 		sortFields:    make(map[string]int),
@@ -462,7 +460,7 @@ func (f *MongoFilter) validateQuery(query map[string]interface{}) error {
 		if strings.HasPrefix(field, "$") {
 			// 验证MongoDB操作符
 			if !f.isValidOperator(field) {
-				return interfaces.NewValidationError(fmt.Sprintf("无效的查询操作符: %s", field))
+				return NewValidationError(fmt.Sprintf("无效的查询操作符: %s", field))
 			}
 		}
 
@@ -490,20 +488,20 @@ func (f *MongoFilter) validateOptions(options map[string]interface{}) error {
 
 	for option := range options {
 		if !validOptions[option] {
-			return interfaces.NewValidationError(fmt.Sprintf("无效的查询选项: %s", option))
+			return NewValidationError(fmt.Sprintf("无效的查询选项: %s", option))
 		}
 	}
 
 	// 验证limit和skip
 	if limit, exists := options["limit"]; exists {
 		if limitVal, ok := limit.(int); ok && limitVal < 0 {
-			return interfaces.NewValidationError("limit不能为负数")
+			return NewValidationError("limit不能为负数")
 		}
 	}
 
 	if skip, exists := options["skip"]; exists {
 		if skipVal, ok := skip.(int); ok && skipVal < 0 {
-			return interfaces.NewValidationError("skip不能为负数")
+			return NewValidationError("skip不能为负数")
 		}
 	}
 

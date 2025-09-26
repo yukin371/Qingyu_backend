@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"Qingyu_backend/models/reading/reader"
-	"Qingyu_backend/repository/reading"
+	"Qingyu_backend/repository/interfaces/reading"
 )
 
 // SettingService 阅读设置服务

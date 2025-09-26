@@ -10,7 +10,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	base "Qingyu_backend/repository/interfaces"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
+	ProjectInterface "Qingyu_backend/repository/interfaces/project"
+	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
+	RoleInterface "Qingyu_backend/repository/interfaces/role"
+	UserInterface "Qingyu_backend/repository/interfaces/user"
 )
 
 // MongoRepositoryFactory MongoDB仓储工厂实现
@@ -60,17 +64,22 @@ func NewMongoRepositoryFactory(config *base.MongoConfig) (base.RepositoryFactory
 }
 
 // CreateUserRepository 创建用户Repository
-func (f *MongoRepositoryFactory) CreateUserRepository() base.UserRepository {
+func (f *MongoRepositoryFactory) CreateUserRepository() UserInterface.UserRepository {
 	return NewMongoUserRepository(f.database)
 }
 
 // CreateProjectRepository 创建项目Repository
-func (f *MongoRepositoryFactory) CreateProjectRepository() base.ProjectRepository {
+func (f *MongoRepositoryFactory) CreateProjectRepository() ProjectInterface.ProjectRepository {
 	return NewMongoProjectRepository(f.database)
 }
 
+// CreateReadingSettingsRepository 创建阅读设置Repository
+func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository {
+	return NewMongoReadingSettingsRepository(f.database)
+}
+
 // CreateRoleRepository 创建角色Repository
-func (f *MongoRepositoryFactory) CreateRoleRepository() base.RoleRepository {
+func (f *MongoRepositoryFactory) CreateRoleRepository() RoleInterface.RoleRepository {
 	return NewMongoRoleRepository(f.database)
 }
 
@@ -85,7 +94,7 @@ func (f *MongoRepositoryFactory) Close() error {
 }
 
 // Health 健康检查
-func (f *MongoRepositoryFactoryNew) Health(ctx context.Context) error {
+func (f *MongoRepositoryFactory) Health(ctx context.Context) error {
 	if f.client == nil {
 		return fmt.Errorf("MongoDB客户端未初始化")
 	}
@@ -98,7 +107,7 @@ func (f *MongoRepositoryFactoryNew) Health(ctx context.Context) error {
 }
 
 // GetDatabaseType 获取数据库类型
-func (f *MongoRepositoryFactoryNew) GetDatabaseType() string {
+func (f *MongoRepositoryFactory) GetDatabaseType() string {
 	return base.DatabaseTypeMongoDB
 }
 
@@ -479,7 +488,7 @@ type MongoRoleRepository struct {
 }
 
 // NewMongoRoleRepository 创建新的MongoDB角色仓储实例
-func NewMongoRoleRepository(db *mongo.Database) base.RoleRepository {
+func NewMongoRoleRepository(db *mongo.Database) RoleInterface.RoleRepository {
 	return &MongoRoleRepository{
 		db:         db,
 		collection: db.Collection("roles"),
@@ -508,7 +517,7 @@ func (r *MongoRoleRepository) Create(ctx context.Context, role *interface{}) err
 }
 
 // GetByID 根据ID获取角色
-func (r *MongoRoleRepositoryNew) GetByID(ctx context.Context, id interface{}) (*interface{}, error) {
+func (r *MongoRoleRepository) GetByID(ctx context.Context, id interface{}) (*interface{}, error) {
 	var role interface{}
 	err := r.collection.FindOne(ctx, map[string]interface{}{"_id": id}).Decode(&role)
 	if err != nil {
@@ -529,7 +538,7 @@ func (r *MongoRoleRepositoryNew) GetByID(ctx context.Context, id interface{}) (*
 }
 
 // Update 更新角色
-func (r *MongoRoleRepositoryNew) Update(ctx context.Context, id interface{}, updates map[string]interface{}) error {
+func (r *MongoRoleRepository) Update(ctx context.Context, id interface{}, updates map[string]interface{}) error {
 	objectID, err := primitive.ObjectIDFromHex(id.(string))
 	if err != nil {
 		return err
@@ -543,10 +552,15 @@ func (r *MongoRoleRepositoryNew) Update(ctx context.Context, id interface{}, upd
 }
 
 // Delete 删除角色
-func (r *MongoRoleRepositoryNew) Delete(ctx context.Context, id interface{}) error {
-	_, err := r.collection.UpdateOne(ctx,
-		map[string]interface{}{"_id": id},
-		map[string]interface{}{"$set": map[string]interface{}{"deleted_at": time.Now()}})
+func (r *MongoRoleRepository) Delete(ctx context.Context, id interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id.(string))
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.UpdateOne(ctx,
+		bson.M{"_id": objectID},
+		bson.M{"$set": map[string]interface{}{"deleted_at": time.Now()}})
 	if err != nil {
 		return base.NewRepositoryError(
 			base.ErrorTypeInternal,
@@ -558,7 +572,7 @@ func (r *MongoRoleRepositoryNew) Delete(ctx context.Context, id interface{}) err
 }
 
 // HardDelete 硬删除角色
-func (r *MongoRoleRepositoryNew) HardDelete(ctx context.Context, id string) error {
+func (r *MongoRoleRepository) HardDelete(ctx context.Context, id string) error {
 	_, err := r.collection.DeleteOne(ctx, map[string]interface{}{"_id": id})
 	if err != nil {
 		return base.NewRepositoryError(
@@ -571,7 +585,7 @@ func (r *MongoRoleRepositoryNew) HardDelete(ctx context.Context, id string) erro
 }
 
 // List 获取角色列表
-func (r *MongoRoleRepositoryNew) List(ctx context.Context, filter base.Filter) ([]*interface{}, error) {
+func (r *MongoRoleRepository) List(ctx context.Context, filter base.Filter) ([]*interface{}, error) {
 	mongoFilter := bson.M{}
 
 	if filter != nil {
@@ -608,13 +622,13 @@ func (r *MongoRoleRepositoryNew) List(ctx context.Context, filter base.Filter) (
 }
 
 // ListWithPagination 分页获取角色列表
-func (r *MongoRoleRepositoryNew) ListWithPagination(ctx context.Context, filter interface{}, pagination base.Pagination) (*base.PagedResult[interface{}], error) {
+func (r *MongoRoleRepository) ListWithPagination(ctx context.Context, filter interface{}, pagination base.Pagination) (*base.PagedResult[interface{}], error) {
 	// 实现分页逻辑
 	return nil, fmt.Errorf("角色分页查询功能待实现")
 }
 
 // FindWithPagination 分页查询角色
-func (r *MongoRoleRepositoryNew) FindWithPagination(ctx context.Context, filter base.Filter, pagination base.Pagination) (*base.PagedResult[interface{}], error) {
+func (r *MongoRoleRepository) FindWithPagination(ctx context.Context, filter base.Filter, pagination base.Pagination) (*base.PagedResult[interface{}], error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 
@@ -690,7 +704,7 @@ func (r *MongoRoleRepositoryNew) FindWithPagination(ctx context.Context, filter 
 }
 
 // Count 统计角色数量
-func (r *MongoRoleRepositoryNew) Count(ctx context.Context, filter base.Filter) (int64, error) {
+func (r *MongoRoleRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
 	mongoFilter := bson.M{}
 
 	if filter != nil {
@@ -712,7 +726,7 @@ func (r *MongoRoleRepositoryNew) Count(ctx context.Context, filter base.Filter) 
 }
 
 // Exists 检查角色是否存在
-func (r *MongoRoleRepositoryNew) Exists(ctx context.Context, id interface{}) (bool, error) {
+func (r *MongoRoleRepository) Exists(ctx context.Context, id interface{}) (bool, error) {
 	count, err := r.collection.CountDocuments(ctx, map[string]interface{}{"_id": id})
 	if err != nil {
 		return false, base.NewRepositoryError(
@@ -725,7 +739,7 @@ func (r *MongoRoleRepositoryNew) Exists(ctx context.Context, id interface{}) (bo
 }
 
 // GetByName 根据名称获取角色
-func (r *MongoRoleRepositoryNew) GetByName(ctx context.Context, name string) (interface{}, error) {
+func (r *MongoRoleRepository) GetByName(ctx context.Context, name string) (interface{}, error) {
 	var role interface{}
 	err := r.collection.FindOne(ctx, map[string]interface{}{"name": name}).Decode(&role)
 	if err != nil {
@@ -746,7 +760,7 @@ func (r *MongoRoleRepositoryNew) GetByName(ctx context.Context, name string) (in
 }
 
 // GetDefaultRole 获取默认角色
-func (r *MongoRoleRepositoryNew) GetDefaultRole(ctx context.Context) (interface{}, error) {
+func (r *MongoRoleRepository) GetDefaultRole(ctx context.Context) (interface{}, error) {
 	var role interface{}
 	err := r.collection.FindOne(ctx, map[string]interface{}{"is_default": true}).Decode(&role)
 	if err != nil {
@@ -767,7 +781,7 @@ func (r *MongoRoleRepositoryNew) GetDefaultRole(ctx context.Context) (interface{
 }
 
 // GetUserRoles 获取用户角色
-func (r *MongoRoleRepositoryNew) GetUserRoles(ctx context.Context, userID string) ([]interface{}, error) {
+func (r *MongoRoleRepository) GetUserRoles(ctx context.Context, userID string) ([]interface{}, error) {
 	// 这里需要查询用户角色关联表
 	userRolesCollection := r.db.Collection("user_roles")
 	cursor, err := userRolesCollection.Find(ctx, map[string]interface{}{"user_id": userID})
@@ -823,7 +837,7 @@ func (r *MongoRoleRepositoryNew) GetUserRoles(ctx context.Context, userID string
 }
 
 // AssignRole 分配角色
-func (r *MongoRoleRepositoryNew) AssignRole(ctx context.Context, userID, roleID string) error {
+func (r *MongoRoleRepository) AssignRole(ctx context.Context, userID, roleID string) error {
 	userRolesCollection := r.db.Collection("user_roles")
 	userRole := map[string]interface{}{
 		"user_id":    userID,
@@ -843,7 +857,7 @@ func (r *MongoRoleRepositoryNew) AssignRole(ctx context.Context, userID, roleID 
 }
 
 // RemoveRole 移除角色
-func (r *MongoRoleRepositoryNew) RemoveRole(ctx context.Context, userID, roleID string) error {
+func (r *MongoRoleRepository) RemoveRole(ctx context.Context, userID, roleID string) error {
 	userRolesCollection := r.db.Collection("user_roles")
 	filter := map[string]interface{}{
 		"user_id": userID,
@@ -862,7 +876,7 @@ func (r *MongoRoleRepositoryNew) RemoveRole(ctx context.Context, userID, roleID 
 }
 
 // GetUserPermissions 获取用户权限
-func (r *MongoRoleRepositoryNew) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
+func (r *MongoRoleRepository) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
 	// 获取用户角色
 	roles, err := r.GetUserRoles(ctx, userID)
 	if err != nil {
@@ -893,7 +907,7 @@ func (r *MongoRoleRepositoryNew) GetUserPermissions(ctx context.Context, userID 
 }
 
 // BatchUpdate 批量更新角色
-func (r *MongoRoleRepositoryNew) BatchUpdate(ctx context.Context, ids []interface{}, updates map[string]interface{}) error {
+func (r *MongoRoleRepository) BatchUpdate(ctx context.Context, ids []interface{}, updates map[string]interface{}) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -930,7 +944,7 @@ func (r *MongoRoleRepositoryNew) BatchUpdate(ctx context.Context, ids []interfac
 }
 
 // BatchCreate 批量创建角色
-func (r *MongoRoleRepositoryNew) BatchCreate(ctx context.Context, roles []*interface{}) error {
+func (r *MongoRoleRepository) BatchCreate(ctx context.Context, roles []*interface{}) error {
 	if len(roles) == 0 {
 		return nil
 	}
@@ -999,7 +1013,7 @@ func (r *MongoProjectRepositoryNew) Health(ctx context.Context) error {
 }
 
 // BatchDelete 批量删除角色
-func (r *MongoRoleRepositoryNew) BatchDelete(ctx context.Context, ids []interface{}) error {
+func (r *MongoRoleRepository) BatchDelete(ctx context.Context, ids []interface{}) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -1032,7 +1046,7 @@ func (r *MongoRoleRepositoryNew) BatchDelete(ctx context.Context, ids []interfac
 }
 
 // Health 健康检查
-func (r *MongoRoleRepositoryNew) Health(ctx context.Context) error {
+func (r *MongoRoleRepository) Health(ctx context.Context) error {
 	// 执行简单的ping操作来检查连接
 	return r.db.Client().Ping(ctx, nil)
 }
