@@ -23,7 +23,7 @@ func NewUserRepositoryAdapter(newRepo interfaces.UserRepository) repository.User
 
 // Create 创建用户
 func (a *UserRepositoryAdapter) Create(ctx context.Context, user *system.User) error {
-	return a.newRepo.Create(ctx, &user)
+	return a.newRepo.Create(ctx, user)
 }
 
 // GetByID 根据ID获取用户
@@ -34,7 +34,7 @@ func (a *UserRepositoryAdapter) GetByID(ctx context.Context, id string) (*system
 	if err != nil {
 		return nil, err
 	}
-	return *user, nil
+	return user, nil
 }
 
 // GetByUsername 根据用户名获取用户

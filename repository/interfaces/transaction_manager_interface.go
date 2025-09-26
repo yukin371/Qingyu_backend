@@ -1,10 +1,14 @@
-package base
+package interfaces
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"time"
+
+	"Qingyu_backend/models/ai"
+	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/system"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -13,13 +17,13 @@ import (
 type TransactionManager interface {
 	// 执行事务
 	ExecuteTransaction(ctx context.Context, fn TransactionFunc) error
-	
+
 	// 执行Saga事务
 	ExecuteSaga(ctx context.Context, saga *Saga) error
-	
+
 	// 获取事务上下文
 	GetTransactionContext(ctx context.Context) (TransactionContext, error)
-	
+
 	// 健康检查
 	Health(ctx context.Context) error
 }
@@ -30,114 +34,75 @@ type TransactionFunc func(txCtx TransactionContext) error
 // TransactionContext 事务上下文接口
 type TransactionContext interface {
 	context.Context
-	
+
 	// 获取MongoDB会话
 	GetSession() mongo.Session
-	
+
 	// 获取Repository工厂
-	GetRepositoryFactory() RepositoryFactory
-	
+	GetRepositoryFactory() TransactionRepositoryFactory
+
 	// 事务状态
 	IsInTransaction() bool
 	GetTransactionID() string
-	
+
 	// 回滚标记
 	MarkForRollback(reason string)
 	IsMarkedForRollback() bool
 	GetRollbackReason() string
 }
 
-// RepositoryFactory Repository工厂接口
-type RepositoryFactory interface {
+// TransactionRepositoryFactory 事务Repository工厂接口
+type TransactionRepositoryFactory interface {
 	// 创建用户Repository
-	CreateUserRepository(ctx TransactionContext) UserRepository
-	
+	CreateUserRepository(ctx TransactionContext) TransactionUserRepository
+
 	// 创建AI Repository
-	CreateAIRepository(ctx TransactionContext) AIRepository
-	
+	CreateAIRepository(ctx TransactionContext) TransactionAIRepository
+
 	// 创建文档Repository
-	CreateDocumentRepository(ctx TransactionContext) DocumentRepository
-	
+	CreateDocumentRepository(ctx TransactionContext) TransactionDocumentRepository
+
 	// 创建角色Repository
-	CreateRoleRepository(ctx TransactionContext) RoleRepository
+	CreateRoleRepository(ctx TransactionContext) TransactionRoleRepository
 }
 
-// UserRepository 用户Repository接口（简化版，用于事务上下文）
-type UserRepository interface {
-	BaseRepository[User, string]
+// TransactionUserRepository 用户事务接口（简化版，用于事务上下文）
+type TransactionUserRepository interface {
+	CRUDRepository[*system.User, system.UserFilter]
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
-	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*system.User, error)
 }
 
-// AIRepository AI Repository接口
-type AIRepository interface {
-	BaseRepository[AIModel, string]
-	GetByType(ctx context.Context, modelType string) ([]*AIModel, error)
+// TransactionAIRepository AI事务Repository接口
+type TransactionAIRepository interface {
+	CRUDRepository[*ai.AIModel, string]
+	GetByType(ctx context.Context, modelType string) ([]*ai.AIModel, error)
 }
 
-// DocumentRepository 文档Repository接口
-type DocumentRepository interface {
-	BaseRepository[Document, string]
-	GetByProjectID(ctx context.Context, projectID string) ([]*Document, error)
+// TransactionDocumentRepository 文档事务Repository接口
+type TransactionDocumentRepository interface {
+	CRUDRepository[*document.Document, string]
+	GetByProjectID(ctx context.Context, projectID string) ([]*document.Document, error)
 }
 
-// RoleRepository 角色Repository接口
-type RoleRepository interface {
-	BaseRepository[Role, string]
-	GetDefaultRole(ctx context.Context) (*Role, error)
+// TransactionRoleRepository 角色事务Repository接口
+type TransactionRoleRepository interface {
+	CRUDRepository[*system.Role, string]
+	GetDefaultRole(ctx context.Context) (*system.Role, error)
 	AssignRole(ctx context.Context, userID, roleID string) error
-}
-
-// 实体类型定义（简化版）
-type User struct {
-	ID       string    `bson:"_id,omitempty" json:"id"`
-	Username string    `bson:"username" json:"username"`
-	Email    string    `bson:"email" json:"email"`
-	Password string    `bson:"password" json:"-"`
-	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-}
-
-type AIModel struct {
-	ID        string    `bson:"_id,omitempty" json:"id"`
-	Name      string    `bson:"name" json:"name"`
-	Type      string    `bson:"type" json:"type"`
-	Config    map[string]interface{} `bson:"config" json:"config"`
-	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-}
-
-type Document struct {
-	ID        string    `bson:"_id,omitempty" json:"id"`
-	Title     string    `bson:"title" json:"title"`
-	Content   string    `bson:"content" json:"content"`
-	ProjectID string    `bson:"projectId" json:"projectId"`
-	UserID    string    `bson:"userId" json:"userId"`
-	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-}
-
-type Role struct {
-	ID          string    `bson:"_id,omitempty" json:"id"`
-	Name        string    `bson:"name" json:"name"`
-	Description string    `bson:"description" json:"description"`
-	IsDefault   bool      `bson:"isDefault" json:"isDefault"`
-	Permissions []string  `bson:"permissions" json:"permissions"`
-	CreatedAt   time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt   time.Time `bson:"updatedAt" json:"updatedAt"`
 }
 
 // MongoTransactionManager MongoDB事务管理器实现
 type MongoTransactionManager struct {
-	client *mongo.Client
-	repositoryFactory RepositoryFactory
+	client                       *mongo.Client
+	transactionRepositoryFactory TransactionRepositoryFactory
 }
 
 // NewMongoTransactionManager 创建MongoDB事务管理器
-func NewMongoTransactionManager(client *mongo.Client, factory RepositoryFactory) TransactionManager {
+func NewMongoTransactionManager(client *mongo.Client, factory TransactionRepositoryFactory) TransactionManager {
 	return &MongoTransactionManager{
-		client: client,
-		repositoryFactory: factory,
+		client:                       client,
+		transactionRepositoryFactory: factory,
 	}
 }
 
@@ -151,28 +116,28 @@ func (tm *MongoTransactionManager) ExecuteTransaction(ctx context.Context, fn Tr
 
 	// 创建事务上下文
 	txCtx := &mongoTransactionContext{
-		Context: ctx,
-		session: session,
-		repositoryFactory: tm.repositoryFactory,
-		transactionID: generateTransactionID(),
-		inTransaction: true,
+		Context:                      ctx,
+		session:                      session,
+		transactionRepositoryFactory: tm.transactionRepositoryFactory,
+		transactionID:                generateTransactionID(),
+		inTransaction:                true,
 	}
 
 	// 执行事务
 	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
 		// 更新事务上下文
 		txCtx.Context = sc
-		
+
 		// 执行业务逻辑
 		if err := fn(txCtx); err != nil {
 			return nil, err
 		}
-		
+
 		// 检查是否标记为回滚
 		if txCtx.IsMarkedForRollback() {
 			return nil, fmt.Errorf("事务被标记为回滚: %s", txCtx.GetRollbackReason())
 		}
-		
+
 		return nil, nil
 	})
 
@@ -192,9 +157,9 @@ func (tm *MongoTransactionManager) ExecuteSaga(ctx context.Context, saga *Saga) 
 		SagaID:  generateSagaID(),
 		Steps:   make([]*SagaStepResult, 0, len(saga.Steps)),
 	}
-	
+
 	log.Printf("开始执行Saga [%s]: %s", sagaCtx.SagaID, saga.Name)
-	
+
 	// 执行所有步骤
 	for i, step := range saga.Steps {
 		stepResult := &SagaStepResult{
@@ -202,35 +167,35 @@ func (tm *MongoTransactionManager) ExecuteSaga(ctx context.Context, saga *Saga) 
 			StepIndex: i,
 			StartTime: time.Now(),
 		}
-		
+
 		log.Printf("执行Saga步骤 [%s-%d]: %s", sagaCtx.SagaID, i, step.Name)
-		
+
 		// 执行步骤
 		err := tm.ExecuteTransaction(ctx, step.Execute)
 		stepResult.EndTime = time.Now()
 		stepResult.Duration = stepResult.EndTime.Sub(stepResult.StartTime)
-		
+
 		if err != nil {
 			stepResult.Error = err
 			sagaCtx.Steps = append(sagaCtx.Steps, stepResult)
-			
+
 			log.Printf("Saga步骤失败 [%s-%d]: %v", sagaCtx.SagaID, i, err)
-			
+
 			// 执行补偿操作
 			if compensateErr := tm.compensateSaga(ctx, sagaCtx, saga); compensateErr != nil {
 				log.Printf("Saga补偿失败 [%s]: %v", sagaCtx.SagaID, compensateErr)
 				return fmt.Errorf("Saga执行失败且补偿失败: 原错误=%w, 补偿错误=%v", err, compensateErr)
 			}
-			
+
 			return fmt.Errorf("Saga执行失败: %w", err)
 		}
-		
+
 		stepResult.Success = true
 		sagaCtx.Steps = append(sagaCtx.Steps, stepResult)
-		
+
 		log.Printf("Saga步骤成功 [%s-%d]: %s (耗时: %v)", sagaCtx.SagaID, i, step.Name, stepResult.Duration)
 	}
-	
+
 	log.Printf("Saga执行成功 [%s]: %s", sagaCtx.SagaID, saga.Name)
 	return nil
 }
@@ -238,29 +203,29 @@ func (tm *MongoTransactionManager) ExecuteSaga(ctx context.Context, saga *Saga) 
 // compensateSaga 执行Saga补偿
 func (tm *MongoTransactionManager) compensateSaga(ctx context.Context, sagaCtx *SagaContext, saga *Saga) error {
 	log.Printf("开始Saga补偿 [%s]", sagaCtx.SagaID)
-	
+
 	// 逆序执行补偿操作
 	for i := len(sagaCtx.Steps) - 1; i >= 0; i-- {
 		stepResult := sagaCtx.Steps[i]
 		if !stepResult.Success {
 			continue // 跳过失败的步骤
 		}
-		
+
 		step := saga.Steps[stepResult.StepIndex]
 		if step.Compensate == nil {
 			continue // 跳过没有补偿操作的步骤
 		}
-		
+
 		log.Printf("执行Saga补偿步骤 [%s-%d]: %s", sagaCtx.SagaID, i, step.Name)
-		
+
 		if err := tm.ExecuteTransaction(ctx, step.Compensate); err != nil {
 			log.Printf("Saga补偿步骤失败 [%s-%d]: %v", sagaCtx.SagaID, i, err)
 			return fmt.Errorf("补偿步骤 %s 失败: %w", step.Name, err)
 		}
-		
+
 		log.Printf("Saga补偿步骤成功 [%s-%d]: %s", sagaCtx.SagaID, i, step.Name)
 	}
-	
+
 	log.Printf("Saga补偿完成 [%s]", sagaCtx.SagaID)
 	return nil
 }
@@ -271,13 +236,13 @@ func (tm *MongoTransactionManager) GetTransactionContext(ctx context.Context) (T
 	if txCtx, ok := ctx.(TransactionContext); ok {
 		return txCtx, nil
 	}
-	
+
 	// 创建新的事务上下文（非事务模式）
 	return &mongoTransactionContext{
-		Context: ctx,
-		repositoryFactory: tm.repositoryFactory,
-		transactionID: generateTransactionID(),
-		inTransaction: false,
+		Context:                      ctx,
+		transactionRepositoryFactory: tm.transactionRepositoryFactory,
+		transactionID:                generateTransactionID(),
+		inTransaction:                false,
 	}, nil
 }
 
@@ -289,12 +254,12 @@ func (tm *MongoTransactionManager) Health(ctx context.Context) error {
 // mongoTransactionContext MongoDB事务上下文实现
 type mongoTransactionContext struct {
 	context.Context
-	session           mongo.Session
-	repositoryFactory RepositoryFactory
-	transactionID     string
-	inTransaction     bool
-	rollbackMarked    bool
-	rollbackReason    string
+	session                      mongo.Session
+	transactionRepositoryFactory TransactionRepositoryFactory
+	transactionID                string
+	inTransaction                bool
+	rollbackMarked               bool
+	rollbackReason               string
 }
 
 // GetSession 获取MongoDB会话
@@ -303,8 +268,8 @@ func (ctx *mongoTransactionContext) GetSession() mongo.Session {
 }
 
 // GetRepositoryFactory 获取Repository工厂
-func (ctx *mongoTransactionContext) GetRepositoryFactory() RepositoryFactory {
-	return ctx.repositoryFactory
+func (ctx *mongoTransactionContext) GetRepositoryFactory() TransactionRepositoryFactory {
+	return ctx.transactionRepositoryFactory
 }
 
 // IsInTransaction 是否在事务中
@@ -349,8 +314,8 @@ type SagaStep struct {
 // SagaContext Saga上下文
 type SagaContext struct {
 	context.Context
-	SagaID string             `json:"sagaId"`
-	Steps  []*SagaStepResult  `json:"steps"`
+	SagaID string            `json:"sagaId"`
+	Steps  []*SagaStepResult `json:"steps"`
 }
 
 // SagaStepResult Saga步骤结果
@@ -384,7 +349,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 				Name: "创建用户",
 				Execute: func(txCtx TransactionContext) error {
 					userRepo := txCtx.GetRepositoryFactory().CreateUserRepository(txCtx)
-					
+
 					// 检查用户是否已存在
 					exists, err := userRepo.ExistsByEmail(txCtx, userReq.Email)
 					if err != nil {
@@ -393,29 +358,29 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					if exists {
 						return fmt.Errorf("邮箱已被注册: %s", userReq.Email)
 					}
-					
+
 					// 创建用户
-					user := &User{
+					user := &system.User{
 						Username:  userReq.Username,
 						Email:     userReq.Email,
 						Password:  userReq.HashedPassword,
 						CreatedAt: time.Now(),
 						UpdatedAt: time.Now(),
 					}
-					
+
 					return userRepo.Create(txCtx, user)
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					userRepo := txCtx.GetRepositoryFactory().CreateUserRepository(txCtx)
-					
+
 					// 查找用户
 					user, err := userRepo.GetByEmail(txCtx, userReq.Email)
 					if err != nil {
-						return nil // 用户不存在，无需补偿
+						return fmt.Errorf("获取用户失败: %w", err) // 用户不存在，无需补偿
 					}
-					
+
 					// 删除用户
-					return userRepo.Delete(txCtx, user.ID)
+					return userRepo.Delete(txCtx, system.UserFilter{ID: user.ID})
 				},
 			},
 			{
@@ -423,19 +388,19 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 				Execute: func(txCtx TransactionContext) error {
 					userRepo := txCtx.GetRepositoryFactory().CreateUserRepository(txCtx)
 					roleRepo := txCtx.GetRepositoryFactory().CreateRoleRepository(txCtx)
-					
+
 					// 获取用户
 					user, err := userRepo.GetByEmail(txCtx, userReq.Email)
 					if err != nil {
 						return fmt.Errorf("获取用户失败: %w", err)
 					}
-					
+
 					// 获取默认角色
 					defaultRole, err := roleRepo.GetDefaultRole(txCtx)
 					if err != nil {
 						return fmt.Errorf("获取默认角色失败: %w", err)
 					}
-					
+
 					// 分配角色
 					return roleRepo.AssignRole(txCtx, user.ID, defaultRole.ID)
 				},

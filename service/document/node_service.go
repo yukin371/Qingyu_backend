@@ -14,6 +14,11 @@ import (
 
 type NodeService struct{}
 
+// NewNodeService 创建设置服务
+func NewNodeService() *NodeService {
+	return &NodeService{}
+}
+
 func nodeCol() *mongo.Collection { return global.DB.Collection("nodes") }
 
 // RenameNode 重命名节点，并对所有子孙节点的相对路径进行级联更新

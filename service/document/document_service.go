@@ -17,6 +17,11 @@ import (
 // DocumentService 处理文档相关业务逻辑
 type DocumentService struct{}
 
+// NewDocumentService 创建设置服务
+func NewDocumentService() *DocumentService {
+	return &DocumentService{}
+}
+
 // getCollection 获取数据库集合
 func getCollection() *mongo.Collection {
 	return global.DB.Collection("documents")

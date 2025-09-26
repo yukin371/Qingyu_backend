@@ -18,6 +18,7 @@ type ProjectStatus string
 const (
 	ProjectStatusPublic  ProjectStatus = "public"
 	ProjectStatusPrivate ProjectStatus = "private"
+	ProjectStatusDeleted ProjectStatus = "deleted" // 软删除
 )
 
 // IsValidProjectStatus 验证工程状态是否合法
