@@ -1,4 +1,4 @@
-package interfaces
+package bookstore
 
 import (
 	"Qingyu_backend/models/reading/bookstore"

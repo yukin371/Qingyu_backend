@@ -1,7 +1,7 @@
 package document
 
 import (
-	svc "Qingyu_backend/service/document"
+	svc "Qingyu_backend/service/project"
 	"net/http"
 	"strconv"
 
