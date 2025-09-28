@@ -23,7 +23,7 @@ jwt:
 
 # AI配置（测试）
 ai:
-  api_key: "AIzaSyA3ENYLxj7OJAzylVgFcQL5AhsVJ03GEzo"  # 开发环境测试密钥
+  api_key: ""  # 开发环境测试密钥
   base_url: "https://generativelanguage.googleapis.com/v1beta"
   model: "gemini-1.5-flash"  # 或者使用 gemini-1.5-pro
   max_tokens: 2000
