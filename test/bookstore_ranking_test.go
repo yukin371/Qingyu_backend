@@ -8,9 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"Qingyu_backend/models/reading/bookstore"
-	"Qingyu_backend/service/reading/bookstore"
 )
 
 // MockRankingRepository 模拟榜单仓储
@@ -230,9 +227,9 @@ func TestGetPeriodString(t *testing.T) {
 	testTime := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC) // 2024年1月15日，周一
 
 	tests := []struct {
-		name         string
-		rankingType  bookstore.RankingType
-		expected     string
+		name        string
+		rankingType bookstore.RankingType
+		expected    string
 	}{
 		{"Realtime period", bookstore.RankingTypeRealtime, "2024-01-15"},
 		{"Weekly period", bookstore.RankingTypeWeekly, "2024-W03"},

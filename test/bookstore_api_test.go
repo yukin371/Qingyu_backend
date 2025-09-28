@@ -1,7 +1,6 @@
 package test
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,22 +13,22 @@ import (
 
 	readingAPI "Qingyu_backend/api/v1/reading"
 	"Qingyu_backend/models/reading/bookstore"
-	bookstoreService "Qingyu_backend/service/reading/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // setupTestRouter 设置测试路由
 func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	api := readingAPI.NewBookstoreAPI(service)
-	
+
 	v1 := router.Group("/api/v1")
 	bookstoreGroup := v1.Group("/bookstore")
 	{
 		// 首页数据
 		bookstoreGroup.GET("/homepage", api.GetHomepage)
-		
+
 		// 书籍相关
 		books := bookstoreGroup.Group("/books")
 		{
@@ -39,7 +38,7 @@ func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 			books.GET("/search", api.SearchBooks)
 			books.POST("/:id/view", api.IncrementBookView)
 		}
-		
+
 		// 榜单相关
 		rankings := bookstoreGroup.Group("/rankings")
 		{
@@ -49,14 +48,14 @@ func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 			rankings.GET("/newbie", api.GetNewbieRanking)
 			rankings.GET("/:type", api.GetRankingByType)
 		}
-		
+
 		// Banner相关
 		banners := bookstoreGroup.Group("/banners")
 		{
 			banners.GET("", api.GetActiveBanners)
 			banners.POST("/:id/click", api.IncrementBannerClick)
 		}
-		
+
 		// 分类相关
 		categories := bookstoreGroup.Group("/categories")
 		{
@@ -65,7 +64,7 @@ func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 			categories.GET("/:categoryId/books", api.GetBooksByCategory)
 		}
 	}
-	
+
 	return router
 }
 
@@ -121,7 +120,7 @@ func TestGetHomepage(t *testing.T) {
 }
 
 // TestGetRealtimeRanking 测试获取实时榜API
-func TestGetRealtimeRanking(t *testing.T) {
+func TestGetRealtimeRankingApi(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
@@ -169,7 +168,7 @@ func TestGetRealtimeRanking(t *testing.T) {
 	dataBytes, _ := json.Marshal(response.Data)
 	var returnedItems []*bookstore.RankingItem
 	json.Unmarshal(dataBytes, &returnedItems)
-	
+
 	assert.Len(t, returnedItems, 2)
 	assert.Equal(t, 1, returnedItems[0].Rank)
 	assert.Equal(t, 2, returnedItems[1].Rank)
@@ -201,7 +200,7 @@ func TestGetRealtimeRankingWithLimit(t *testing.T) {
 }
 
 // TestGetWeeklyRanking 测试获取周榜API
-func TestGetWeeklyRanking(t *testing.T) {
+func TestGetWeeklyRankingApi(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 

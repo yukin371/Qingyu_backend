@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"Qingyu_backend/models/system"
+	"Qingyu_backend/models/users"
 	repository "Qingyu_backend/repository/mongodb"
 )
 

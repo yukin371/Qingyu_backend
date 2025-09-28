@@ -16,7 +16,7 @@ import (
 	
 	"Qingyu_backend/models/reading/bookstore"
 	readingAPI "Qingyu_backend/api/v1/reading"
-	bookstoreService "Qingyu_backend/service/reading/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/repository/mongodb"
 	"Qingyu_backend/repository/interfaces"
 )
@@ -30,6 +30,7 @@ type BookstoreIntegrationTestSuite struct {
 	bookRepo    interfaces.BookRepository
 	categoryRepo interfaces.CategoryRepository
 	bannerRepo  interfaces.BannerRepository
+	rankingRepo interfaces.RankingRepository
 }
 
 // SetupSuite 测试套件初始化
@@ -45,11 +46,15 @@ func (suite *BookstoreIntegrationTestSuite) SetupSuite() {
 	suite.categoryRepo = &MockCategoryRepository{}
 	suite.bannerRepo = &MockBannerRepository{}
 	
+	// 创建 MockRankingRepository
+	suite.rankingRepo = &MockRankingRepository{}
+	
 	// 创建服务层
 	suite.service = bookstoreService.NewBookstoreService(
 		suite.bookRepo,
 		suite.categoryRepo,
 		suite.bannerRepo,
+		suite.rankingRepo,
 	)
 	
 	// 创建API层
@@ -700,5 +705,144 @@ func (m *MockBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs 
 }
 
 func (m *MockBannerRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	return fn(ctx)
+}
+
+// RankingRepository 的 Mock 实现
+type MockRankingRepository struct {
+	mock.Mock
+}
+
+func (m *MockRankingRepository) Create(ctx context.Context, entity *bookstore.RankingItem) error {
+	args := m.Called(ctx, entity)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.RankingItem, error) {
+	args := m.Called(ctx, id)
+	if v := args.Get(0); v != nil {
+		return v.(*bookstore.RankingItem), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockRankingRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) GetByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, rankingType, period, limit, offset)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) GetByTypeWithBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, rankingType, period, limit, offset)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID, rankingType bookstore.RankingType, period string) (*bookstore.RankingItem, error) {
+	args := m.Called(ctx, bookID, rankingType, period)
+	if v := args.Get(0); v != nil {
+		return v.(*bookstore.RankingItem), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockRankingRepository) GetByPeriod(ctx context.Context, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period, limit, offset)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) GetRankingStats(ctx context.Context, rankingType bookstore.RankingType, period string) (*bookstore.RankingStats, error) {
+	args := m.Called(ctx, rankingType, period)
+	if v := args.Get(0); v != nil {
+		return v.(*bookstore.RankingStats), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockRankingRepository) CountByType(ctx context.Context, rankingType bookstore.RankingType, period string) (int64, error) {
+	args := m.Called(ctx, rankingType, period)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockRankingRepository) GetTopBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, rankingType, period, limit)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) UpsertRankingItem(ctx context.Context, item *bookstore.RankingItem) error {
+	args := m.Called(ctx, item)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) BatchUpsertRankingItems(ctx context.Context, items []*bookstore.RankingItem) error {
+	args := m.Called(ctx, items)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem) error {
+	args := m.Called(ctx, rankingType, period, items)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) DeleteByPeriod(ctx context.Context, period string) error {
+	args := m.Called(ctx, period)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) DeleteByType(ctx context.Context, rankingType bookstore.RankingType) error {
+	args := m.Called(ctx, rankingType)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error {
+	args := m.Called(ctx, beforeDate)
+	return args.Error(0)
+}
+
+func (m *MockRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period)
+	if v := args.Get(0); v != nil {
+		return v.([]*bookstore.RankingItem), args.Error(1)
+	}
+	return []*bookstore.RankingItem{}, args.Error(1)
+}
+
+func (m *MockRankingRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	return fn(ctx)
 }

@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reading/bookstore"
-	bookstoreService "Qingyu_backend/service/reading/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // MockRedisClient 模拟Redis客户端

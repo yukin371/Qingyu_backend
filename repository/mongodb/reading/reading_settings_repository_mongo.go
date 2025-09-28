@@ -11,6 +11,7 @@ import (
 	"Qingyu_backend/models/reading/reader"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
+	"Qingyu_backend/repository/mongodb"
 )
 
 // MongoReadingSettingsRepository MongoDB阅读设置仓储实现
@@ -25,7 +26,7 @@ func NewMongoReadingSettingsRepository(db *mongo.Database) ReadingInterfaces.Rea
 	return &MongoReadingSettingsRepository{
 		db:           db,
 		collection:   db.Collection("reading_settings"),
-		queryBuilder: base.NewMongoQueryBuilder(),
+		queryBuilder: mongodb.NewMongoQueryBuilder(),
 	}
 }
 

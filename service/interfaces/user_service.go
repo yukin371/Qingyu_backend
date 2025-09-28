@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"Qingyu_backend/models/system"
+	usersModel "Qingyu_backend/models/users"
 )
 
 // UserService 用户服务接口
@@ -49,7 +49,7 @@ type CreateUserRequest struct {
 
 // CreateUserResponse 创建用户响应
 type CreateUserResponse struct {
-	User *system.User `json:"user"`
+	User *usersModel.User `json:"user"`
 }
 
 // GetUserRequest 获取用户请求
@@ -59,7 +59,7 @@ type GetUserRequest struct {
 
 // GetUserResponse 获取用户响应
 type GetUserResponse struct {
-	User *system.User `json:"user"`
+	User *usersModel.User `json:"user"`
 }
 
 // UpdateUserRequest 更新用户请求
@@ -98,7 +98,7 @@ type ListUsersRequest struct {
 
 // ListUsersResponse 列出用户响应
 type ListUsersResponse struct {
-	Users      []*system.User `json:"users"`
+	Users      []*usersModel.User `json:"users"`
 	Total      int64          `json:"total"`
 	Page       int            `json:"page"`
 	PageSize   int            `json:"page_size"`
@@ -114,7 +114,7 @@ type RegisterUserRequest struct {
 
 // RegisterUserResponse 注册用户响应
 type RegisterUserResponse struct {
-	User  *system.User `json:"user"`
+	User  *usersModel.User `json:"user"`
 	Token string       `json:"token,omitempty"`
 }
 
@@ -126,7 +126,7 @@ type LoginUserRequest struct {
 
 // LoginUserResponse 登录用户响应
 type LoginUserResponse struct {
-	User  *system.User `json:"user"`
+	User  *usersModel.User `json:"user"`
 	Token string       `json:"token"`
 }
 
@@ -147,8 +147,8 @@ type ValidateTokenRequest struct {
 
 // ValidateTokenResponse 验证令牌响应
 type ValidateTokenResponse struct {
+	User  *usersModel.User `json:"user,omitempty"`
 	Valid bool         `json:"valid"`
-	User  *system.User `json:"user,omitempty"`
 }
 
 // UpdateLastLoginRequest 更新最后登录时间请求

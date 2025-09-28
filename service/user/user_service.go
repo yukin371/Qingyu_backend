@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/system"
-	repoInterfaces "Qingyu_backend/repository/interfaces"
+	usersModel "Qingyu_backend/models/users"
+	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
@@ -76,7 +76,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 3. 创建用户对象
-	user := &system.User{
+	user := &usersModel.User{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -88,7 +88,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 5. 保存到数据库
-	if err := s.userRepo.Create(ctx, &user); err != nil {
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 
@@ -210,11 +210,9 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.
 	}
 
 	// 5. 转换用户列表类型
-	var userList []*system.User
+	var userList []*usersModel.User
 	for _, user := range users {
-		if user != nil && *user != nil {
-			userList = append(userList, *user)
-		}
+		userList = append(userList, user)
 	}
 
 	// 6. 计算总页数
@@ -254,7 +252,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 	}
 
 	// 3. 创建用户对象
-	user := &system.User{
+	user := &usersModel.User{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -266,7 +264,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 	}
 
 	// 5. 保存到数据库
-	if err := s.userRepo.Create(ctx, &user); err != nil {
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 

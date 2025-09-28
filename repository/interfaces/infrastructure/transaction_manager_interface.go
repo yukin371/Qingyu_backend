@@ -8,7 +8,7 @@ import (
 
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/models/document"
-	"Qingyu_backend/models/system"
+	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -68,9 +68,9 @@ type TransactionRepositoryFactory interface {
 
 // TransactionUserRepository 用户事务接口（简化版，用于事务上下文）
 type TransactionUserRepository interface {
-	CRUDRepository[*system.User, system.UserFilter]
+	CRUDRepository[*usersModel.User, usersModel.UserFilter]
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
-	GetByEmail(ctx context.Context, email string) (*system.User, error)
+	GetByEmail(ctx context.Context, email string) (*usersModel.User, error)
 }
 
 // TransactionAIRepository AI事务Repository接口
@@ -87,8 +87,8 @@ type TransactionDocumentRepository interface {
 
 // TransactionRoleRepository 角色事务Repository接口
 type TransactionRoleRepository interface {
-	CRUDRepository[*system.Role, string]
-	GetDefaultRole(ctx context.Context) (*system.Role, error)
+	CRUDRepository[*usersModel.Role, string]
+	GetDefaultRole(ctx context.Context) (*usersModel.Role, error)
 	AssignRole(ctx context.Context, userID, roleID string) error
 }
 
@@ -360,7 +360,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 创建用户
-					user := &system.User{
+					user := &usersModel.User{
 						Username:  userReq.Username,
 						Email:     userReq.Email,
 						Password:  userReq.HashedPassword,
@@ -380,7 +380,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 删除用户
-					return userRepo.Delete(txCtx, system.UserFilter{ID: user.ID})
+					return userRepo.Delete(txCtx, usersModel.UserFilter{ID: user.ID})
 				},
 			},
 			{
