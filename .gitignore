@@ -1,6 +1,7 @@
 # Cursor IDE 相关文件
 .cursor/
 
+config.yaml
 README.md
 # 文档相关
 # doc/

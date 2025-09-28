@@ -3,11 +3,11 @@ package reading
 import (
 	"net/http"
 	"strconv"
-	
+
 	"github.com/gin-gonic/gin"
-	
+
 	"Qingyu_backend/models/reading/bookstore"
-	bookstoreService "Qingyu_backend/service/reading/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // BookstoreAPI 书城API处理器
@@ -57,7 +57,7 @@ func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取首页数据成功",
@@ -86,7 +86,7 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	book, err := api.service.GetBookByID(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "book not found" || err.Error() == "book not available" {
@@ -96,14 +96,14 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: "获取书籍详情失败: " + err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取书籍详情成功",
@@ -133,18 +133,18 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// 解析分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	
+
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
 	}
-	
+
 	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), categoryID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
@@ -153,7 +153,7 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
 		Message: "获取书籍列表成功",
@@ -178,14 +178,14 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	
+
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
 	}
-	
+
 	books, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
@@ -194,7 +194,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
 		Message: "获取推荐书籍成功",
@@ -218,14 +218,14 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	
+
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
 	}
-	
+
 	books, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
@@ -234,7 +234,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
 		Message: "获取精选书籍成功",
@@ -265,45 +265,45 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 // @Router /api/v1/bookstore/books/search [get]
 func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
-	
+
 	// 构建过滤器
 	filter := &bookstore.BookFilter{}
-	
+
 	if categoryID := c.Query("categoryId"); categoryID != "" {
 		// 这里需要转换为ObjectID，简化处理
 		filter.CategoryID = nil // 实际实现中需要转换
 	}
-	
+
 	if author := c.Query("author"); author != "" {
 		filter.Author = &author
 	}
-	
+
 	if minRatingStr := c.Query("minRating"); minRatingStr != "" {
 		if minRating, err := strconv.ParseFloat(minRatingStr, 64); err == nil {
 			filter.MinRating = &minRating
 		}
 	}
-	
+
 	if tags := c.QueryArray("tags"); len(tags) > 0 {
 		filter.Tags = tags
 	}
-	
+
 	filter.SortBy = c.DefaultQuery("sortBy", "created_at")
 	filter.SortOrder = c.DefaultQuery("sortOrder", "desc")
-	
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	
+
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
 	}
-	
+
 	filter.Limit = size
 	filter.Offset = (page - 1) * size
-	
+
 	if keyword == "" && filter.CategoryID == nil && filter.Author == nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
@@ -311,7 +311,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	books, err := api.service.SearchBooks(c.Request.Context(), keyword, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
@@ -320,7 +320,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
 		Message: "搜索书籍成功",
@@ -348,7 +348,7 @@ func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取分类树成功",
@@ -377,7 +377,7 @@ func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	category, err := api.service.GetCategoryByID(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "category not found" || err.Error() == "category not available" {
@@ -387,14 +387,14 @@ func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: "获取分类详情失败: " + err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取分类详情成功",
@@ -417,7 +417,7 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 	if limit < 1 || limit > 20 {
 		limit = 5
 	}
-	
+
 	banners, err := api.service.GetActiveBanners(c.Request.Context(), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
@@ -426,7 +426,7 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取Banner列表成功",
@@ -455,7 +455,7 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	err := api.service.IncrementBookView(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "book not found" || err.Error() == "book not available" {
@@ -465,14 +465,14 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: "增加浏览量失败: " + err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "浏览量增加成功",
@@ -500,7 +500,7 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	err := api.service.IncrementBannerClick(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "banner not found" || err.Error() == "banner not available" {
@@ -510,14 +510,14 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: "增加点击次数失败: " + err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "点击次数增加成功",
