@@ -8,7 +8,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
-	documentService "Qingyu_backend/service/document"
+	documentService "Qingyu_backend/service/project"
 )
 
 // Service AI服务

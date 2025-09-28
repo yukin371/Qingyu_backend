@@ -1,4 +1,4 @@
-package interfaces
+package bookstore
 
 import (
 	"Qingyu_backend/models/reading/bookstore"
@@ -95,13 +95,4 @@ type BannerRepository interface {
 
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
-// BookstoreRepositoryFactory 书城仓储工厂接口
-type BookstoreRepositoryFactory interface {
-	GetBookRepository() BookRepository
-	GetCategoryRepository() CategoryRepository
-	GetBannerRepository() BannerRepository
-	Health(ctx context.Context) error
-	Close() error
 }

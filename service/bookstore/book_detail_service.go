@@ -1,0 +1,609 @@
+package bookstore
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/reading/bookstore"
+	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+)
+
+// BookDetailService 书籍详情服务接口
+type BookDetailService interface {
+	// 书籍详情基础操作
+	CreateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error
+	GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookDetail, error)
+	UpdateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error
+	DeleteBookDetail(ctx context.Context, id primitive.ObjectID) error
+
+	// 书籍详情查询
+	GetBookDetailByTitle(ctx context.Context, title string) (*bookstore.BookDetail, error)
+	GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBookDetailsByStatus(ctx context.Context, status bookstore.BookStatus, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+
+	// 书籍详情统计
+	GetBookDetailStats(ctx context.Context) (map[string]interface{}, error)
+	GetBookDetailCountByCategory(ctx context.Context, category string) (int64, error)
+	GetBookDetailCountByAuthor(ctx context.Context, author string) (int64, error)
+	GetBookDetailCountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error)
+
+	// 书籍详情推荐
+	GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
+	GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
+	GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+
+	// 书籍详情批量操作
+	BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error
+	BatchUpdateBookDetailCategories(ctx context.Context, bookIDs []primitive.ObjectID, categories []string) error
+	BatchUpdateBookDetailTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error
+}
+
+// BookDetailServiceImpl 书籍详情服务实现
+type BookDetailServiceImpl struct {
+	bookDetailRepo BookstoreRepo.BookDetailRepository
+	cacheService   CacheService
+}
+
+// NewBookDetailService 创建书籍详情服务实例
+func NewBookDetailService(bookDetailRepo BookstoreRepo.BookDetailRepository, cacheService CacheService) BookDetailService {
+	return &BookDetailServiceImpl{
+		bookDetailRepo: bookDetailRepo,
+		cacheService:   cacheService,
+	}
+}
+
+// CreateBookDetail 创建书籍详情
+func (s *BookDetailServiceImpl) CreateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error {
+	if bookDetail == nil {
+		return errors.New("book detail cannot be nil")
+	}
+
+	// 验证必填字段
+	if bookDetail.Title == "" {
+		return errors.New("book title is required")
+	}
+	if bookDetail.Author == "" {
+		return errors.New("book author is required")
+	}
+
+	// 检查标题是否已存在
+	existingBook, err := s.bookDetailRepo.GetByTitle(ctx, bookDetail.Title)
+	if err != nil {
+		return fmt.Errorf("failed to check existing book: %w", err)
+	}
+	if existingBook != nil {
+		return errors.New("book with this title already exists")
+	}
+
+	// 创建书籍详情
+	if err := s.bookDetailRepo.Create(ctx, bookDetail); err != nil {
+		return fmt.Errorf("failed to create book detail: %w", err)
+	}
+
+	// 清除相关缓存
+	s.invalidateRelatedCache(ctx, bookDetail)
+
+	return nil
+}
+
+// GetBookDetailByID 根据ID获取书籍详情
+func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookDetail, error) {
+	// 先尝试从缓存获取
+	if s.cacheService != nil {
+		if cachedBook, err := s.cacheService.GetBookDetail(ctx, id.Hex()); err == nil && cachedBook != nil {
+			return cachedBook, nil
+		}
+	}
+
+	// 从数据库获取
+	bookDetail, err := s.bookDetailRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book detail: %w", err)
+	}
+	if bookDetail == nil {
+		return nil, errors.New("book detail not found")
+	}
+
+	// 缓存结果
+	if s.cacheService != nil {
+		s.cacheService.SetBookDetail(ctx, id.Hex(), bookDetail, 30*time.Minute)
+	}
+
+	return bookDetail, nil
+}
+
+// UpdateBookDetail 更新书籍详情
+func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error {
+	if bookDetail == nil {
+		return errors.New("book detail cannot be nil")
+	}
+
+	// 验证必填字段
+	if bookDetail.ID.IsZero() {
+		return errors.New("book detail ID is required")
+	}
+	if bookDetail.Title == "" {
+		return errors.New("book title is required")
+	}
+	if bookDetail.Author == "" {
+		return errors.New("book author is required")
+	}
+
+	// 构建更新字段
+	updates := map[string]interface{}{
+		"title":         bookDetail.Title,
+		"subtitle":      bookDetail.Subtitle,
+		"author":        bookDetail.Author,
+		"author_id":     bookDetail.AuthorID,
+		"description":   bookDetail.Description,
+		"cover_url":     bookDetail.CoverURL,
+		"publisher":     bookDetail.Publisher,
+		"publish_date":  bookDetail.PublishDate,
+		"isbn":          bookDetail.ISBN,
+		"categories":    bookDetail.Categories,
+		"tags":          bookDetail.Tags,
+		"status":        bookDetail.Status,
+		"word_count":    bookDetail.WordCount,
+		"chapter_count": bookDetail.ChapterCount,
+		"price":         bookDetail.Price,
+		"is_free":       bookDetail.IsFree,
+		"updated_at":    time.Now(),
+	}
+
+	// 更新数据库
+	if err := s.bookDetailRepo.Update(ctx, bookDetail.ID, updates); err != nil {
+		return fmt.Errorf("failed to update book detail: %w", err)
+	}
+
+	// 清除相关缓存
+	s.invalidateRelatedCache(ctx, bookDetail)
+
+	return nil
+}
+
+// DeleteBookDetail 删除书籍详情
+func (s *BookDetailServiceImpl) DeleteBookDetail(ctx context.Context, id primitive.ObjectID) error {
+	// 先获取书籍详情用于清除缓存
+	bookDetail, err := s.bookDetailRepo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to get book detail for deletion: %w", err)
+	}
+	if bookDetail == nil {
+		return errors.New("book detail not found")
+	}
+
+	// 删除书籍详情
+	if err := s.bookDetailRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("failed to delete book detail: %w", err)
+	}
+
+	// 清除相关缓存
+	s.invalidateRelatedCache(ctx, bookDetail)
+
+	return nil
+}
+
+// GetBookDetailByTitle 根据标题获取书籍详情
+func (s *BookDetailServiceImpl) GetBookDetailByTitle(ctx context.Context, title string) (*bookstore.BookDetail, error) {
+	if title == "" {
+		return nil, errors.New("title cannot be empty")
+	}
+
+	bookDetail, err := s.bookDetailRepo.GetByTitle(ctx, title)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book detail by title: %w", err)
+	}
+
+	return bookDetail, nil
+}
+
+// GetBookDetailsByAuthor 根据作者获取书籍详情列表
+func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if author == "" {
+		return nil, 0, errors.New("author cannot be empty")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	bookDetails, err := s.bookDetailRepo.GetByAuthor(ctx, author, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get book details by author: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookDetailRepo.CountByAuthor(ctx, author)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count book details by author: %w", err)
+	}
+
+	return bookDetails, total, nil
+}
+
+// GetBookDetailsByCategory 根据分类获取书籍详情列表
+func (s *BookDetailServiceImpl) GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if category == "" {
+		return nil, 0, errors.New("category cannot be empty")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	bookDetails, err := s.bookDetailRepo.GetByCategory(ctx, category, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get book details by category: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookDetailRepo.CountByCategory(ctx, category)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count book details by category: %w", err)
+	}
+
+	return bookDetails, total, nil
+}
+
+// GetBookDetailsByStatus 根据状态获取书籍详情列表
+func (s *BookDetailServiceImpl) GetBookDetailsByStatus(ctx context.Context, status bookstore.BookStatus, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, status, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get book details by status: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookDetailRepo.CountByStatus(ctx, status)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count book details by status: %w", err)
+	}
+
+	return bookDetails, total, nil
+}
+
+// GetBookDetailsByTags 根据标签获取书籍详情列表
+func (s *BookDetailServiceImpl) GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if len(tags) == 0 {
+		return nil, 0, errors.New("tags cannot be empty")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	bookDetails, err := s.bookDetailRepo.GetByTags(ctx, tags, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get book details by tags: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookDetailRepo.CountByTags(ctx, tags)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count book details by tags: %w", err)
+	}
+
+	return bookDetails, total, nil
+}
+
+// SearchBookDetails 搜索书籍详情
+func (s *BookDetailServiceImpl) SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if keyword == "" {
+		return nil, 0, errors.New("keyword cannot be empty")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 搜索书籍
+	bookDetails, err := s.bookDetailRepo.Search(ctx, keyword, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search book details: %w", err)
+	}
+
+	// 这里简化处理，实际应该有专门的搜索计数方法
+	total := int64(len(bookDetails))
+	if len(bookDetails) == pageSize {
+		// 如果返回的结果等于页面大小，可能还有更多结果
+		total = int64((page + 1) * pageSize)
+	}
+
+	return bookDetails, total, nil
+}
+
+// GetBookDetailStats 获取书籍详情统计
+func (s *BookDetailServiceImpl) GetBookDetailStats(ctx context.Context) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// 各状态书籍数量
+	completedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusCompleted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed book count: %w", err)
+	}
+	stats["completed_books"] = completedCount
+
+	ongoingCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusOngoing)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ongoing book count: %w", err)
+	}
+	stats["ongoing_books"] = ongoingCount
+
+	pausedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusPaused)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get paused book count: %w", err)
+	}
+	stats["paused_books"] = pausedCount
+
+	// 计算总书籍数
+	totalCount := completedCount + ongoingCount + pausedCount
+	stats["total_books"] = totalCount
+
+	return stats, nil
+}
+
+// GetBookDetailCountByCategory 根据分类统计书籍数量
+func (s *BookDetailServiceImpl) GetBookDetailCountByCategory(ctx context.Context, category string) (int64, error) {
+	if category == "" {
+		return 0, errors.New("category cannot be empty")
+	}
+
+	count, err := s.bookDetailRepo.CountByCategory(ctx, category)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count book details by category: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetBookDetailCountByAuthor 根据作者统计书籍数量
+func (s *BookDetailServiceImpl) GetBookDetailCountByAuthor(ctx context.Context, author string) (int64, error) {
+	if author == "" {
+		return 0, errors.New("author cannot be empty")
+	}
+
+	count, err := s.bookDetailRepo.CountByAuthor(ctx, author)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count book details by author: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetBookDetailCountByStatus 根据状态统计书籍数量
+func (s *BookDetailServiceImpl) GetBookDetailCountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
+	count, err := s.bookDetailRepo.CountByStatus(ctx, status)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count book details by status: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetRecommendedBookDetails 获取推荐书籍详情
+func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+
+	// 先获取当前书籍信息
+	currentBook, err := s.bookDetailRepo.GetByID(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current book: %w", err)
+	}
+	if currentBook == nil {
+		return nil, errors.New("current book not found")
+	}
+
+	// 基于分类推荐
+	if len(currentBook.Categories) > 0 {
+		recommendedBooks, err := s.bookDetailRepo.GetByCategory(ctx, currentBook.Categories[0], limit, 0)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get recommended books: %w", err)
+		}
+
+		// 过滤掉当前书籍
+		var filteredBooks []*bookstore.BookDetail
+		for _, book := range recommendedBooks {
+			if book.ID != bookID {
+				filteredBooks = append(filteredBooks, book)
+			}
+		}
+
+		return filteredBooks, nil
+	}
+
+	// 如果没有分类，返回最新书籍
+	return s.GetLatestBookDetails(ctx, limit)
+}
+
+// GetSimilarBookDetails 获取相似书籍详情
+func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+
+	// 先获取当前书籍信息
+	currentBook, err := s.bookDetailRepo.GetByID(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current book: %w", err)
+	}
+	if currentBook == nil {
+		return nil, errors.New("current book not found")
+	}
+
+	// 基于标签推荐
+	if len(currentBook.Tags) > 0 {
+		similarBooks, err := s.bookDetailRepo.GetByTags(ctx, currentBook.Tags, limit, 0)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get similar books: %w", err)
+		}
+
+		// 过滤掉当前书籍
+		var filteredBooks []*bookstore.BookDetail
+		for _, book := range similarBooks {
+			if book.ID != bookID {
+				filteredBooks = append(filteredBooks, book)
+			}
+		}
+
+		return filteredBooks, nil
+	}
+
+	// 如果没有标签，基于作者推荐
+	authorBooks, _, err := s.GetBookDetailsByAuthor(ctx, currentBook.Author, 1, limit)
+	return authorBooks, err
+}
+
+// GetPopularBookDetails 获取热门书籍详情
+func (s *BookDetailServiceImpl) GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+
+	// 使用已完成状态的书籍作为热门书籍
+	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore.BookStatusCompleted, limit, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get popular books: %w", err)
+	}
+
+	return bookDetails, nil
+}
+
+// GetLatestBookDetails 获取最新书籍详情
+func (s *BookDetailServiceImpl) GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+
+	// 使用正在连载状态的书籍作为最新书籍
+	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore.BookStatusOngoing, limit, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest books: %w", err)
+	}
+
+	return bookDetails, nil
+}
+
+// BatchUpdateBookDetailStatus 批量更新书籍状态
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
+	if len(bookIDs) == 0 {
+		return errors.New("book IDs cannot be empty")
+	}
+
+	if err := s.bookDetailRepo.BatchUpdateStatus(ctx, bookIDs, status); err != nil {
+		return fmt.Errorf("failed to batch update book status: %w", err)
+	}
+
+	// 清除相关缓存
+	for _, bookID := range bookIDs {
+		if s.cacheService != nil {
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		}
+	}
+
+	return nil
+}
+
+// BatchUpdateBookDetailCategories 批量更新书籍分类
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailCategories(ctx context.Context, bookIDs []primitive.ObjectID, categories []string) error {
+	if len(bookIDs) == 0 {
+		return errors.New("book IDs cannot be empty")
+	}
+	if len(categories) == 0 {
+		return errors.New("categories cannot be empty")
+	}
+
+	if err := s.bookDetailRepo.BatchUpdateCategories(ctx, bookIDs, categories); err != nil {
+		return fmt.Errorf("failed to batch update book categories: %w", err)
+	}
+
+	// 清除相关缓存
+	for _, bookID := range bookIDs {
+		if s.cacheService != nil {
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		}
+	}
+
+	return nil
+}
+
+// BatchUpdateBookDetailTags 批量更新书籍标签
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error {
+	if len(bookIDs) == 0 {
+		return errors.New("book IDs cannot be empty")
+	}
+	if len(tags) == 0 {
+		return errors.New("tags cannot be empty")
+	}
+
+	if err := s.bookDetailRepo.BatchUpdateTags(ctx, bookIDs, tags); err != nil {
+		return fmt.Errorf("failed to batch update book tags: %w", err)
+	}
+
+	// 清除相关缓存
+	for _, bookID := range bookIDs {
+		if s.cacheService != nil {
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		}
+	}
+
+	return nil
+}
+
+// invalidateRelatedCache 清除相关缓存
+func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, bookDetail *bookstore.BookDetail) {
+	if s.cacheService == nil {
+		return
+	}
+
+	// 清除书籍详情缓存
+	s.cacheService.InvalidateBookDetailCache(ctx, bookDetail.ID.Hex())
+
+	// 清除分类相关缓存
+	for _, category := range bookDetail.Categories {
+		s.cacheService.InvalidateCategoryCache(ctx, category)
+	}
+
+	// 清除作者相关缓存
+	s.cacheService.InvalidateAuthorCache(ctx, bookDetail.Author)
+
+	// 清除首页缓存
+	s.cacheService.InvalidateHomepageCache(ctx)
+}

@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/document"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	mongodb "Qingyu_backend/repository/mongodb"
 	documentRepo "Qingyu_backend/repository/interfaces/writing"
 )
 
@@ -27,7 +28,7 @@ func NewMongoProjectRepository(db *mongo.Database) documentRepo.ProjectRepositor
 	return &MongoProjectRepository{
 		db:           db,
 		collection:   db.Collection("projects"),
-		queryBuilder: NewMongoQueryBuilder(),
+		queryBuilder: mongodb.NewMongoQueryBuilder(),
 	}
 }
 

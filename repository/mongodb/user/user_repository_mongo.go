@@ -12,6 +12,7 @@ import (
 
 	usersModel "Qingyu_backend/models/users"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 )
 
@@ -20,7 +21,7 @@ import (
 type MongoUserRepository struct {
 	db           *mongo.Database
 	collection   *mongo.Collection
-	queryBuilder base.QueryBuilder
+	queryBuilder infrastructure.QueryBuilder
 }
 
 // NewMongoUserRepository 创建新的MongoDB用户仓储实例
@@ -291,7 +292,7 @@ func (r *MongoUserRepository) List(ctx context.Context, filter UserInterface.Use
 }
 
 // ListWithPagination 分页获取用户列表
-func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter UserInterface.UserFilter, pagination base.Pagination) (*base.PagedResult[usersModel.User], error) {
+func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter UserInterface.UserFilter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[usersModel.User], error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 	
@@ -362,7 +363,7 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 	}
 
 	// 创建分页结果
-	pagedResult := &base.PagedResult[usersModel.User]{
+	pagedResult := &infrastructure.PagedResult[usersModel.User]{
 		Data:       users,
 		Total:      total,
 		Page:       pagination.Page,
@@ -375,30 +376,31 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 }
 
 // Count 统计用户数量
-func (r *MongoUserRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
+func (r *MongoUserRepository) Count(ctx context.Context, filter UserInterface.UserFilter) (int64, error) {
 	// 构建MongoDB过滤器
-	mongoFilter := bson.M{}
+	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 
-	// 如果是UserFilter类型，添加过滤条件
-	if userFilter, ok := filter.(UserInterface.UserFilter); ok {
-		if userFilter.ID != "" {
-			mongoFilter["_id"] = userFilter.ID
+	// 添加过滤条件
+	if filter.ID != "" {
+		mongoFilter["_id"] = filter.ID
+	}
+	if filter.Username != "" {
+		mongoFilter["username"] = bson.M{"$regex": filter.Username, "$options": "i"}
+	}
+	if filter.Email != "" {
+		mongoFilter["email"] = bson.M{"$regex": filter.Email, "$options": "i"}
+	}
+	if filter.Status != "" {
+		mongoFilter["status"] = filter.Status
+	}
+	if !filter.FromDate.IsZero() {
+		mongoFilter["created_at"] = bson.M{"$gte": filter.FromDate}
+	}
+	if !filter.ToDate.IsZero() {
+		if mongoFilter["created_at"] == nil {
+			mongoFilter["created_at"] = bson.M{}
 		}
-		if userFilter.Username != "" {
-			mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
-		}
-		if userFilter.Email != "" {
-			mongoFilter["email"] = bson.M{"$regex": userFilter.Email, "$options": "i"}
-		}
-		if userFilter.Status != "" {
-			mongoFilter["status"] = userFilter.Status
-		}
-	} else if filter != nil {
-		// 使用通用Filter接口的条件
-		conditions := filter.GetConditions()
-		for k, v := range conditions {
-			mongoFilter[k] = v
-		}
+		mongoFilter["created_at"].(bson.M)["$lte"] = filter.ToDate
 	}
 
 	count, err := r.collection.CountDocuments(ctx, mongoFilter)
