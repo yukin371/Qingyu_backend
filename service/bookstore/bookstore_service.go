@@ -12,16 +12,19 @@ import (
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
-// BookstoreService 书城服务接口
+// BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
+// 用于书城首页、分类页面、搜索结果等列表场景
 type BookstoreService interface {
-	// 书籍相关服务
+	// 书籍列表相关服务 - 使用Book模型
 	GetBookByID(ctx context.Context, id string) (*bookstore.Book, error)
 	GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error)
 	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
 	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	SearchBooks(ctx context.Context, keyword string, filter *bookstore.BookFilter) ([]*bookstore.Book, error)
-	GetBookStats(ctx context.Context) (*bookstore.BookStats, error)
-	IncrementBookView(ctx context.Context, bookID string) error
+	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
+	GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
+	GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
+	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error)
+	SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error)
 
 	// 分类相关服务
 	GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error)

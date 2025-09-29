@@ -11,6 +11,9 @@ type CRUDRepository[T any, ID comparable] interface {
 	GetByID(ctx context.Context, id ID) (T, error)
 	Update(ctx context.Context, id ID, updates map[string]interface{}) error
 	Delete(ctx context.Context, id ID) error
+	List(ctx context.Context, filter Filter) ([]T, error)
+	Count(ctx context.Context, filter Filter) (int64, error)
+	Exists(ctx context.Context, id ID) (bool, error)
 }
 
 // Filter 定义查询过滤器接口

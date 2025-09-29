@@ -7,6 +7,7 @@ const (
 	ErrorTypeValidation ErrorType = "validation" // 验证错误
 	ErrorTypeNotFound   ErrorType = "not_found"  // 未找到错误
 	ErrorTypeConflict   ErrorType = "conflict"   // 冲突错误
+	ErrorTypeDuplicate  ErrorType = "duplicate"  // 重复错误
 	ErrorTypeInternal   ErrorType = "internal"   // 内部错误
 )
 
