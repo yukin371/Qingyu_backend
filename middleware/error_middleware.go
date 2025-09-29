@@ -2,7 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/Qingyu_backend/pkg/errors"
+
+	"Qingyu_backend/pkg/errors"
 )
 
 // ErrorMiddlewareConfig 错误中间件配置
@@ -49,7 +50,7 @@ func PanicRecovery(service string) gin.HandlerFunc {
 // PanicRecoveryWithConfig 带配置的panic恢复中间件
 func PanicRecoveryWithConfig(config ErrorMiddlewareConfig) gin.HandlerFunc {
 	errorHandler := errors.NewErrorHandler(config.EnableLogging, config.EnableStackTrace)
-	
+
 	return func(c *gin.Context) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -57,7 +58,7 @@ func PanicRecoveryWithConfig(config ErrorMiddlewareConfig) gin.HandlerFunc {
 				c.Abort()
 			}
 		}()
-		
+
 		c.Next()
 	}
 }
@@ -68,26 +69,26 @@ func CreateErrorMiddleware(config map[string]interface{}) (gin.HandlerFunc, erro
 	if !ok {
 		service = "unknown"
 	}
-	
+
 	enableLogging := true
 	if logging, exists := config["enable_logging"]; exists {
 		if loggingBool, ok := logging.(bool); ok {
 			enableLogging = loggingBool
 		}
 	}
-	
+
 	enableStackTrace := false
 	if stackTrace, exists := config["enable_stack_trace"]; exists {
 		if stackTraceBool, ok := stackTrace.(bool); ok {
 			enableStackTrace = stackTraceBool
 		}
 	}
-	
+
 	middlewareConfig := ErrorMiddlewareConfig{
 		Service:          service,
 		EnableLogging:    enableLogging,
 		EnableStackTrace: enableStackTrace,
 	}
-	
+
 	return ErrorHandlerWithConfig(middlewareConfig), nil
 }

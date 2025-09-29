@@ -3,9 +3,6 @@ package errors
 import (
 	"fmt"
 	"time"
-
-	"Qingyu_backend/repository/interfaces/infrastructure"
-	"Qingyu_backend/service/base"
 )
 
 // ErrorConverter 错误转换器
@@ -17,7 +14,7 @@ func NewErrorConverter() *ErrorConverter {
 }
 
 // ConvertRepositoryError 转换Repository错误
-func (c *ErrorConverter) ConvertRepositoryError(err *infrastructure.RepositoryError, service string) *UnifiedError {
+func (c *ErrorConverter) ConvertRepositoryError(err *RepositoryError, service string) *UnifiedError {
 	if err == nil {
 		return nil
 	}
@@ -27,19 +24,19 @@ func (c *ErrorConverter) ConvertRepositoryError(err *infrastructure.RepositoryEr
 	var level ErrorLevel
 
 	switch err.Type {
-	case infrastructure.ValidationError:
+	case RepositoryErrorValidation:
 		category = CategoryValidation
 		httpStatus = 400
 		level = LevelWarning
-	case infrastructure.NotFoundError:
+	case RepositoryErrorNotFound:
 		category = CategoryBusiness
 		httpStatus = 404
 		level = LevelWarning
-	case infrastructure.DuplicateError:
+	case RepositoryErrorDuplicate:
 		category = CategoryBusiness
 		httpStatus = 409
 		level = LevelWarning
-	case infrastructure.InternalError:
+	case RepositoryErrorInternal:
 		category = CategorySystem
 		httpStatus = 500
 		level = LevelError
@@ -55,7 +52,7 @@ func (c *ErrorConverter) ConvertRepositoryError(err *infrastructure.RepositoryEr
 		Category:   category,
 		Level:      level,
 		Message:    err.Message,
-		Details:    err.Detail,
+		Details:    err.Detail.Error(),
 		Service:    service,
 		Timestamp:  time.Now(),
 		HTTPStatus: httpStatus,
@@ -65,7 +62,7 @@ func (c *ErrorConverter) ConvertRepositoryError(err *infrastructure.RepositoryEr
 }
 
 // ConvertServiceError 转换Service错误
-func (c *ErrorConverter) ConvertServiceError(err *base.ServiceError, service string) *UnifiedError {
+func (c *ErrorConverter) ConvertServiceError(err *ServiceError, service string) *UnifiedError {
 	if err == nil {
 		return nil
 	}
@@ -75,19 +72,19 @@ func (c *ErrorConverter) ConvertServiceError(err *base.ServiceError, service str
 	var level ErrorLevel
 
 	switch err.Type {
-	case base.VALIDATION:
+	case ServiceErrorValidation:
 		category = CategoryValidation
 		httpStatus = 400
 		level = LevelWarning
-	case base.BUSINESS:
+	case ServiceErrorBusiness:
 		category = CategoryBusiness
 		httpStatus = 409
 		level = LevelError
-	case base.NOT_FOUND:
+	case ServiceErrorNotFound:
 		category = CategoryBusiness
 		httpStatus = 404
 		level = LevelWarning
-	case base.INTERNAL:
+	case ServiceErrorInternal:
 		category = CategorySystem
 		httpStatus = 500
 		level = LevelError
@@ -125,12 +122,12 @@ func (c *ErrorConverter) ConvertGenericError(err error, service, operation strin
 	}
 
 	// 检查是否是RepositoryError
-	if repoErr, ok := err.(*infrastructure.RepositoryError); ok {
+	if repoErr, ok := err.(*RepositoryError); ok {
 		return c.ConvertRepositoryError(repoErr, service)
 	}
 
 	// 检查是否是ServiceError
-	if serviceErr, ok := err.(*base.ServiceError); ok {
+	if serviceErr, ok := err.(*ServiceError); ok {
 		return c.ConvertServiceError(serviceErr, service)
 	}
 
