@@ -586,6 +586,13 @@ func (r *MongoBookRatingRepository) BatchDeleteByUserID(ctx context.Context, use
 	return err
 }
 
+// DeleteByBookID 根据书籍ID删除评分
+func (r *MongoBookRatingRepository) DeleteByBookID(ctx context.Context, bookID primitive.ObjectID) error {
+	filter := bson.M{"book_id": bookID}
+	_, err := r.collection.DeleteMany(ctx, filter)
+	return err
+}
+
 // DeleteByUserID 根据用户ID删除评分
 func (r *MongoBookRatingRepository) DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error {
 	filter := bson.M{"user_id": userID}

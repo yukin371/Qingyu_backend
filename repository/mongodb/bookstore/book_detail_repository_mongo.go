@@ -349,12 +349,6 @@ func (r *MongoBookDetailRepository) Search(ctx context.Context, keyword string, 
 // SearchByFilter 根据过滤器搜索书籍详情
 func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *BookstoreInterface.BookDetailFilter) ([]*bookstore.BookDetail, error) {
 	opts := options.Find()
-	if filter.Limit > 0 {
-		opts.SetLimit(int64(filter.Limit))
-	}
-	if filter.Offset > 0 {
-		opts.SetSkip(int64(filter.Offset))
-	}
 
 	// 构建排序
 	sortField := "created_at"
@@ -379,8 +373,8 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 	if filter.AuthorID != nil {
 		query["author_id"] = *filter.AuthorID
 	}
-	if len(filter.Categories) > 0 {
-		query["categories"] = bson.M{"$in": filter.Categories}
+	if len(filter.CategoryIDs) > 0 {
+		query["category_ids"] = bson.M{"$in": filter.CategoryIDs}
 	}
 	if len(filter.Tags) > 0 {
 		query["tags"] = bson.M{"$in": filter.Tags}
@@ -401,6 +395,16 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 		}
 		query["price"] = priceQuery
 	}
+	if filter.MinRating != nil || filter.MaxRating != nil {
+		ratingQuery := bson.M{}
+		if filter.MinRating != nil {
+			ratingQuery["$gte"] = *filter.MinRating
+		}
+		if filter.MaxRating != nil {
+			ratingQuery["$lte"] = *filter.MaxRating
+		}
+		query["rating"] = ratingQuery
+	}
 	if filter.MinWordCount != nil || filter.MaxWordCount != nil {
 		wordCountQuery := bson.M{}
 		if filter.MinWordCount != nil {
@@ -411,8 +415,45 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 		}
 		query["word_count"] = wordCountQuery
 	}
-	if filter.Publisher != "" {
-		query["publisher"] = bson.M{"$regex": filter.Publisher, "$options": "i"}
+	if filter.SerializedFrom != nil || filter.SerializedTo != nil {
+		serializedQuery := bson.M{}
+		if filter.SerializedFrom != nil {
+			serializedQuery["$gte"] = *filter.SerializedFrom
+		}
+		if filter.SerializedTo != nil {
+			serializedQuery["$lte"] = *filter.SerializedTo
+		}
+		query["serialized_at"] = serializedQuery
+	}
+	if filter.CompletedFrom != nil || filter.CompletedTo != nil {
+		completedQuery := bson.M{}
+		if filter.CompletedFrom != nil {
+			completedQuery["$gte"] = *filter.CompletedFrom
+		}
+		if filter.CompletedTo != nil {
+			completedQuery["$lte"] = *filter.CompletedTo
+		}
+		query["completed_at"] = completedQuery
+	}
+	if filter.CreatedAtFrom != nil || filter.CreatedAtTo != nil {
+		createdQuery := bson.M{}
+		if filter.CreatedAtFrom != nil {
+			createdQuery["$gte"] = *filter.CreatedAtFrom
+		}
+		if filter.CreatedAtTo != nil {
+			createdQuery["$lte"] = *filter.CreatedAtTo
+		}
+		query["created_at"] = createdQuery
+	}
+	if filter.UpdatedAtFrom != nil || filter.UpdatedAtTo != nil {
+		updatedQuery := bson.M{}
+		if filter.UpdatedAtFrom != nil {
+			updatedQuery["$gte"] = *filter.UpdatedAtFrom
+		}
+		if filter.UpdatedAtTo != nil {
+			updatedQuery["$lte"] = *filter.UpdatedAtTo
+		}
+		query["updated_at"] = updatedQuery
 	}
 
 	cursor, err := r.collection.Find(ctx, query, opts)

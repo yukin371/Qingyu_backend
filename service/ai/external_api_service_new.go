@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"Qingyu_backend/pkg/errors"
 	"Qingyu_backend/repository/interfaces"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -62,12 +63,14 @@ func (s *ExternalAPIServiceNew) Initialize(ctx context.Context) error {
 	
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂不可用", err)
+		return errors.ExternalAPIFactory.InternalError("Repository工厂不可用", err).
+			WithOperation("Initialize")
 	}
 	
 	// 从配置或数据库加载API密钥
 	if err := s.loadAPIKeys(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "加载API密钥失败", err)
+		return errors.ExternalAPIFactory.InternalError("加载API密钥失败", err).
+			WithOperation("Initialize")
 	}
 	
 	s.initialized = true
@@ -93,17 +96,20 @@ func (s *ExternalAPIServiceNew) Initialize(ctx context.Context) error {
 // Health 健康检查
 func (s *ExternalAPIServiceNew) Health(ctx context.Context) error {
 	if !s.initialized {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "服务未初始化", nil)
+		return errors.ExternalAPIFactory.InternalError("服务未初始化", nil).
+			WithOperation("Health")
 	}
 	
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂健康检查失败", err)
+		return errors.ExternalAPIFactory.InternalError("Repository工厂健康检查失败", err).
+			WithOperation("Health")
 	}
 	
 	// 检查HTTP客户端
 	if s.httpClient == nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "HTTP客户端未初始化", nil)
+		return errors.ExternalAPIFactory.InternalError("HTTP客户端未初始化", nil).
+			WithOperation("Health")
 	}
 	
 	return nil
@@ -151,19 +157,34 @@ func (s *ExternalAPIServiceNew) GetVersion() string {
 func (s *ExternalAPIServiceNew) CallAPI(ctx context.Context, req *serviceInterfaces.CallAPIRequest) (*serviceInterfaces.CallAPIResponse, error) {
 	// 验证请求
 	if err := s.validateCallAPIRequest(req); err != nil {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "请求验证失败", err)
+		return nil, errors.ExternalAPIFactory.ValidationError("请求验证失败", err).
+			WithOperation("CallAPI").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+				"endpoint": req.Endpoint,
+				"method": req.Method,
+			})
 	}
 	
 	// 获取API端点
 	endpoint, exists := s.apiEndpoints[req.Provider]
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, fmt.Sprintf("不支持的API提供商: %s", req.Provider), nil)
+		return nil, errors.ExternalAPIFactory.ValidationError(fmt.Sprintf("不支持的API提供商: %s", req.Provider), nil).
+			WithOperation("CallAPI").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+				"available_providers": s.getAvailableProviders(),
+			})
 	}
 	
 	// 获取API密钥
 	apiKey, exists := s.apiKeys[req.Provider]
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, fmt.Sprintf("未配置API密钥: %s", req.Provider), nil)
+		return nil, errors.ExternalAPIFactory.ValidationError(fmt.Sprintf("未配置API密钥: %s", req.Provider), nil).
+			WithOperation("CallAPI").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+			})
 	}
 	
 	// 构建完整URL
@@ -172,7 +193,14 @@ func (s *ExternalAPIServiceNew) CallAPI(ctx context.Context, req *serviceInterfa
 	// 创建HTTP请求
 	httpReq, err := http.NewRequestWithContext(ctx, req.Method, fullURL, nil)
 	if err != nil {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "创建HTTP请求失败", err)
+		return nil, errors.ExternalAPIFactory.InternalError("创建HTTP请求失败", err).
+			WithOperation("CallAPI").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+				"endpoint": req.Endpoint,
+				"method": req.Method,
+				"full_url": fullURL,
+			})
 	}
 	
 	// 设置请求头
@@ -192,7 +220,15 @@ func (s *ExternalAPIServiceNew) CallAPI(ctx context.Context, req *serviceInterfa
 	if err != nil {
 		// 记录API调用失败事件
 		s.recordAPICall(ctx, req.Provider, req.Endpoint, "failed", duration, err.Error())
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeExternal, "API调用失败", err)
+		return nil, errors.ExternalAPIFactory.ExternalError("API调用失败", err).
+			WithOperation("CallAPI").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+				"endpoint": req.Endpoint,
+				"method": req.Method,
+				"full_url": fullURL,
+				"duration_ms": duration.Milliseconds(),
+			})
 	}
 	defer resp.Body.Close()
 	
@@ -245,7 +281,8 @@ func (s *ExternalAPIServiceNew) GetAPIStatus(ctx context.Context, req *serviceIn
 // GetUsageStats 获取API使用统计
 func (s *ExternalAPIServiceNew) GetUsageStats(ctx context.Context, req *serviceInterfaces.GetAPIUsageRequest) (*serviceInterfaces.GetAPIUsageResponse, error) {
 	if req.Provider == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "Provider不能为空", nil)
+		return nil, errors.ExternalAPIFactory.ValidationError("Provider不能为空", nil).
+			WithOperation("GetUsageStats")
 	}
 
 	// 这里应该从数据库或缓存中获取实际的使用统计
@@ -268,7 +305,11 @@ func (s *ExternalAPIServiceNew) GetUsageStats(ctx context.Context, req *serviceI
 // RefreshAPIKey 刷新API密钥
 func (s *ExternalAPIServiceNew) RefreshAPIKey(ctx context.Context, req *serviceInterfaces.RefreshAPIKeyRequest) (*serviceInterfaces.RefreshAPIKeyResponse, error) {
 	if req.Provider == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "Provider不能为空", nil)
+		return nil, errors.ExternalAPIFactory.ValidationError("Provider不能为空", nil).
+			WithOperation("RefreshAPIKey").
+			WithMetadata(map[string]interface{}{
+				"provider": req.Provider,
+			})
 	}
 
 	// 这里应该实现实际的API密钥刷新逻辑
@@ -426,4 +467,13 @@ func (s *ExternalAPIServiceNew) validateRefreshAPIKeyRequest(req *serviceInterfa
 	}
 	
 	return nil
+}
+
+// getAvailableProviders 获取可用的API提供商列表
+func (s *ExternalAPIServiceNew) getAvailableProviders() []string {
+	providers := make([]string, 0, len(s.apiEndpoints))
+	for provider := range s.apiEndpoints {
+		providers = append(providers, provider)
+	}
+	return providers
 }

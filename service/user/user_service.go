@@ -115,7 +115,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, req *serviceInterfaces.Ge
 	}
 
 	return &serviceInterfaces.GetUserResponse{
-		User: *user,
+		User: user,
 	}, nil
 }
 

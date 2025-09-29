@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"Qingyu_backend/pkg/errors"
 	"Qingyu_backend/repository/interfaces"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -133,43 +134,31 @@ func (s *AdapterManagerNew) Initialize(ctx context.Context) error {
 
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂不可用", err)
+		return errors.AdapterFactory.InternalError("Repository工厂不可用", err).
+			WithOperation("Initialize")
 	}
 
 	// 初始化默认适配器
 	if err := s.initializeDefaultAdapters(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "初始化默认适配器失败", err)
+		return errors.AdapterFactory.InternalError("初始化默认适配器失败", err).
+			WithOperation("Initialize")
 	}
 
 	s.initialized = true
-
-	// 发布服务初始化事件
-	event := &base.BaseEvent{
-		EventType: "service.initialized",
-		EventData: map[string]interface{}{
-			"service": s.serviceName,
-			"version": s.version,
-		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-
-	if err := s.eventBus.PublishAsync(ctx, event); err != nil {
-		fmt.Printf("发布服务初始化事件失败: %v\n", err)
-	}
-
 	return nil
 }
 
 // Health 健康检查
 func (s *AdapterManagerNew) Health(ctx context.Context) error {
 	if !s.initialized {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "服务未初始化", nil)
+		return errors.AdapterFactory.InternalError("服务未初始化", nil).
+			WithOperation("Health")
 	}
 
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂健康检查失败", err)
+		return errors.AdapterFactory.InternalError("Repository工厂健康检查失败", err).
+			WithOperation("Health")
 	}
 
 	// 检查适配器状态
@@ -178,7 +167,8 @@ func (s *AdapterManagerNew) Health(ctx context.Context) error {
 	s.adapterMutex.RUnlock()
 
 	if adapterCount == 0 {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "没有可用的模型适配器", nil)
+		return errors.AdapterFactory.InternalError("没有可用的模型适配器", nil).
+			WithOperation("Health")
 	}
 
 	return nil
@@ -287,7 +277,13 @@ func (s *AdapterManagerNew) GetAdapter(ctx context.Context, req *serviceInterfac
 // RegisterAdapter 注册适配器
 func (s *AdapterManagerNew) RegisterAdapter(ctx context.Context, req *serviceInterfaces.RegisterAdapterRequest) (*serviceInterfaces.RegisterAdapterResponse, error) {
 	if req.Name == "" || req.Type == "" || req.Provider == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "名称、类型和提供商不能为空", nil)
+		return nil, errors.AdapterFactory.ValidationError("名称、类型和提供商不能为空", nil).
+			WithOperation("RegisterAdapter").
+			WithMetadata(map[string]interface{}{
+				"name": req.Name,
+				"type": req.Type,
+				"provider": req.Provider,
+			})
 	}
 
 	// 生成适配器ID
@@ -345,7 +341,8 @@ func (s *AdapterManagerNew) RegisterAdapter(ctx context.Context, req *serviceInt
 // UnregisterAdapter 注销适配器
 func (s *AdapterManagerNew) UnregisterAdapter(ctx context.Context, req *serviceInterfaces.UnregisterAdapterRequest) (*serviceInterfaces.UnregisterAdapterResponse, error) {
 	if req.AdapterID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "适配器ID不能为空", nil)
+		return nil, errors.AdapterFactory.ValidationError("适配器ID不能为空", nil).
+			WithOperation("UnregisterAdapter")
 	}
 
 	s.adapterMutex.Lock()
@@ -356,7 +353,11 @@ func (s *AdapterManagerNew) UnregisterAdapter(ctx context.Context, req *serviceI
 	s.adapterMutex.Unlock()
 
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeNotFound, fmt.Sprintf("未找到适配器: %s", req.AdapterID), nil)
+		return nil, errors.AdapterFactory.NotFoundError(fmt.Sprintf("未找到适配器: %s", req.AdapterID), nil).
+			WithOperation("UnregisterAdapter").
+			WithMetadata(map[string]interface{}{
+				"adapter_id": req.AdapterID,
+			})
 	}
 
 	// 关闭适配器
@@ -368,20 +369,6 @@ func (s *AdapterManagerNew) UnregisterAdapter(ctx context.Context, req *serviceI
 	s.adapterMutex.Lock()
 	delete(s.modelConfigs, req.AdapterID)
 	s.adapterMutex.Unlock()
-
-	// 发布适配器注销事件
-	event := &base.BaseEvent{
-		EventType: "adapter.unregistered",
-		EventData: map[string]interface{}{
-			"adapter_id": req.AdapterID,
-		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-
-	if err := s.eventBus.Publish(ctx, event); err != nil {
-		// 记录日志但不返回错误
-	}
 
 	return &serviceInterfaces.UnregisterAdapterResponse{
 		Unregistered:   true,
@@ -493,7 +480,11 @@ func (s *AdapterManagerNew) GetModelConfig(ctx context.Context, req *serviceInte
 	s.configMutex.RUnlock()
 
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeNotFound, fmt.Sprintf("未找到模型配置: %s", req.ModelID), nil)
+		return nil, errors.AdapterFactory.NotFoundError(fmt.Sprintf("未找到模型配置: %s", req.ModelID), nil).
+			WithOperation("GetModelConfig").
+			WithMetadata(map[string]interface{}{
+				"model_id": req.ModelID,
+			})
 	}
 
 	response := &serviceInterfaces.GetModelConfigResponse{
@@ -506,7 +497,8 @@ func (s *AdapterManagerNew) GetModelConfig(ctx context.Context, req *serviceInte
 // UpdateModelConfig 更新模型配置
 func (s *AdapterManagerNew) UpdateModelConfig(ctx context.Context, req *serviceInterfaces.UpdateModelConfigRequest) (*serviceInterfaces.UpdateModelConfigResponse, error) {
 	if req.ModelID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "模型ID不能为空", nil)
+		return nil, errors.AdapterFactory.ValidationError("模型ID不能为空", nil).
+			WithOperation("UpdateModelConfig")
 	}
 
 	s.configMutex.Lock()
@@ -514,7 +506,11 @@ func (s *AdapterManagerNew) UpdateModelConfig(ctx context.Context, req *serviceI
 
 	config, exists := s.modelConfigs[req.ModelID]
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeNotFound, "模型配置不存在", nil)
+		return nil, errors.AdapterFactory.NotFoundError("模型配置不存在", nil).
+			WithOperation("UpdateModelConfig").
+			WithMetadata(map[string]interface{}{
+				"model_id": req.ModelID,
+			})
 	}
 
 	// 更新配置字段
