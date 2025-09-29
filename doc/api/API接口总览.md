@@ -32,7 +32,8 @@
 - 5000x：服务内部错误
 
 ## 4. 通用约定
-- 认证：Authorization: Bearer <token>
+
+- 认证：Authorization: Bearer `<token>`
 - 幂等：PUT/DELETE 的幂等性约定；写操作返回资源最新状态
 - 分页：page/size + 排序字段（默认 created_at desc）
 

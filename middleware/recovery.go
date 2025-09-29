@@ -10,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	
+	"github.com/Qingyu_backend/pkg/errors"
 )
 
 // RecoveryConfig 恢复中间件配置
@@ -41,26 +43,13 @@ func Recovery() gin.HandlerFunc {
 
 // RecoveryWithConfig 带配置的恢复中间件
 func RecoveryWithConfig(config RecoveryConfig) gin.HandlerFunc {
-	logger := initZapLogger()
+	errorHandler := errors.NewErrorHandler(config.EnableLogging, config.EnableStackTrace)
 	
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				// 获取堆栈信息
-				stack := make([]byte, config.StackSize)
-				length := runtime.Stack(stack, false)
-				stackTrace := string(stack[:length])
-				
-				// 记录错误日志
-				if config.EnableLogging {
-					logPanicError(logger, c, err, stackTrace, config)
-				}
-				
-				// 构建错误响应
-				response := buildErrorResponse(err, stackTrace, config)
-				
-				// 返回错误响应
-				c.JSON(config.StatusCode, response)
+				// 使用统一错误处理器处理panic
+				errorHandler.HandlePanic(c, err, "middleware", "recovery")
 				c.Abort()
 			}
 		}()
