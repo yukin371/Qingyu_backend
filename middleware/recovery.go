@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"runtime"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	
-	"github.com/Qingyu_backend/pkg/errors"
+
+	"Qingyu_backend/pkg/errors"
 )
 
 // RecoveryConfig 恢复中间件配置
@@ -44,7 +43,7 @@ func Recovery() gin.HandlerFunc {
 // RecoveryWithConfig 带配置的恢复中间件
 func RecoveryWithConfig(config RecoveryConfig) gin.HandlerFunc {
 	errorHandler := errors.NewErrorHandler(config.EnableLogging, config.EnableStackTrace)
-	
+
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -53,7 +52,7 @@ func RecoveryWithConfig(config RecoveryConfig) gin.HandlerFunc {
 				c.Abort()
 			}
 		}()
-		
+
 		c.Next()
 	}
 }
@@ -65,14 +64,14 @@ func logPanicError(logger *zap.Logger, c *gin.Context, err interface{}, stackTra
 	if id, exists := c.Get("request_id"); exists {
 		requestID = fmt.Sprintf("%v", id)
 	}
-	
+
 	userID := ""
 	if user, exists := c.Get("user"); exists {
 		if userCtx, ok := user.(*UserContext); ok {
 			userID = userCtx.UserID
 		}
 	}
-	
+
 	// 构建日志字段
 	fields := []zap.Field{
 		zap.String("request_id", requestID),
@@ -84,12 +83,12 @@ func logPanicError(logger *zap.Logger, c *gin.Context, err interface{}, stackTra
 		zap.Any("panic", err),
 		zap.String("timestamp", time.Now().Format(time.RFC3339)),
 	}
-	
+
 	// 添加堆栈信息
 	if config.EnableStackTrace {
 		fields = append(fields, zap.String("stack_trace", stackTrace))
 	}
-	
+
 	// 记录日志
 	switch strings.ToLower(config.LogLevel) {
 	case "fatal":
@@ -111,7 +110,7 @@ func buildErrorResponse(err interface{}, stackTrace string, config RecoveryConfi
 		"timestamp": time.Now().Unix(),
 		"data":      nil,
 	}
-	
+
 	// 在开发环境下添加详细错误信息
 	if gin.Mode() == gin.DebugMode {
 		response["error"] = fmt.Sprintf("%v", err)
@@ -119,7 +118,7 @@ func buildErrorResponse(err interface{}, stackTrace string, config RecoveryConfi
 			response["stack_trace"] = stackTrace
 		}
 	}
-	
+
 	return response
 }
 
@@ -134,7 +133,7 @@ func CustomRecoveryWithWriter(out io.Writer, recovery ...gin.RecoveryFunc) gin.H
 // CreateRecoveryMiddleware 创建恢复中间件（用于中间件工厂）
 func CreateRecoveryMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
 	recoveryConfig := DefaultRecoveryConfig()
-	
+
 	// 解析配置
 	if enableStackTrace, ok := config["enable_stack_trace"].(bool); ok {
 		recoveryConfig.EnableStackTrace = enableStackTrace
@@ -154,6 +153,6 @@ func CreateRecoveryMiddleware(config map[string]interface{}) (gin.HandlerFunc, e
 	if logLevel, ok := config["log_level"].(string); ok {
 		recoveryConfig.LogLevel = logLevel
 	}
-	
+
 	return RecoveryWithConfig(recoveryConfig), nil
 }

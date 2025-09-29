@@ -13,16 +13,16 @@ import (
 type BaseService interface {
 	// Initialize 初始化服务
 	Initialize(ctx context.Context) error
-	
+
 	// Health 健康检查
 	Health(ctx context.Context) error
-	
+
 	// Close 关闭服务
 	Close(ctx context.Context) error
-	
+
 	// GetServiceName 获取服务名称
 	GetServiceName() string
-	
+
 	// GetVersion 获取服务版本
 	GetVersion() string
 }
@@ -49,7 +49,7 @@ func (c *ServiceContainer) RegisterService(name string, service BaseService) err
 	if c.services[name] != nil {
 		return fmt.Errorf("服务 %s 已存在", name)
 	}
-	
+
 	c.services[name] = service
 	return nil
 }
@@ -60,7 +60,7 @@ func (c *ServiceContainer) GetService(name string) (BaseService, error) {
 	if !exists {
 		return nil, fmt.Errorf("服务 %s 不存在", name)
 	}
-	
+
 	return service, nil
 }
 
@@ -69,13 +69,13 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	if c.initialized {
 		return nil
 	}
-	
+
 	for name, service := range c.services {
 		if err := service.Initialize(ctx); err != nil {
 			return fmt.Errorf("初始化服务 %s 失败: %w", name, err)
 		}
 	}
-	
+
 	c.initialized = true
 	return nil
 }
@@ -86,33 +86,33 @@ func (c *ServiceContainer) Health(ctx context.Context) error {
 	if err := c.repositoryFactory.Health(ctx); err != nil {
 		return fmt.Errorf("Repository工厂健康检查失败: %w", err)
 	}
-	
+
 	// 检查所有服务健康状态
 	for name, service := range c.services {
 		if err := service.Health(ctx); err != nil {
 			return fmt.Errorf("服务 %s 健康检查失败: %w", name, err)
 		}
 	}
-	
+
 	return nil
 }
 
 // Close 关闭所有服务
 func (c *ServiceContainer) Close(ctx context.Context) error {
 	var lastErr error
-	
+
 	// 关闭所有服务
 	for name, service := range c.services {
 		if err := service.Close(ctx); err != nil {
 			lastErr = fmt.Errorf("关闭服务 %s 失败: %w", name, err)
 		}
 	}
-	
+
 	// 关闭Repository工厂
 	if err := c.repositoryFactory.Close(); err != nil {
 		lastErr = fmt.Errorf("关闭Repository工厂失败: %w", err)
 	}
-	
+
 	c.initialized = false
 	return lastErr
 }
@@ -120,69 +120,6 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 // GetRepositoryFactory 获取Repository工厂
 func (c *ServiceContainer) GetRepositoryFactory() interfaces.RepositoryFactory {
 	return c.repositoryFactory
-}
-
-// ServiceError 服务错误类型
-type ServiceError struct {
-	Type      string    `json:"type"`
-	Message   string    `json:"message"`
-	Cause     error     `json:"cause,omitempty"`
-	Service   string    `json:"service"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
-func (e *ServiceError) Error() string {
-	if e.Cause != nil {
-		return fmt.Sprintf("[%s] %s: %s (caused by: %v)", e.Service, e.Type, e.Message, e.Cause)
-	}
-	return fmt.Sprintf("[%s] %s: %s", e.Service, e.Type, e.Message)
-}
-
-// 错误类型常量
-const (
-	ErrorTypeValidation   = "VALIDATION"
-	ErrorTypeBusiness     = "BUSINESS"
-	ErrorTypeNotFound     = "NOT_FOUND"
-	ErrorTypeUnauthorized = "UNAUTHORIZED"
-	ErrorTypeForbidden    = "FORBIDDEN"
-	ErrorTypeInternal     = "INTERNAL"
-	ErrorTypeTimeout      = "TIMEOUT"
-	ErrorTypeExternal     = "EXTERNAL"
-)
-
-// NewServiceError 创建服务错误
-func NewServiceError(service, errorType, message string, cause error) *ServiceError {
-	return &ServiceError{
-		Type:      errorType,
-		Message:   message,
-		Cause:     cause,
-		Service:   service,
-		Timestamp: time.Now(),
-	}
-}
-
-// IsValidationError 检查是否为验证错误
-func IsValidationError(err error) bool {
-	if serviceErr, ok := err.(*ServiceError); ok {
-		return serviceErr.Type == ErrorTypeValidation
-	}
-	return false
-}
-
-// IsBusinessError 检查是否为业务错误
-func IsBusinessError(err error) bool {
-	if serviceErr, ok := err.(*ServiceError); ok {
-		return serviceErr.Type == ErrorTypeBusiness
-	}
-	return false
-}
-
-// IsNotFoundError 检查是否为未找到错误
-func IsNotFoundError(err error) bool {
-	if serviceErr, ok := err.(*ServiceError); ok {
-		return serviceErr.Type == ErrorTypeNotFound
-	}
-	return false
 }
 
 // ValidationRule 验证规则接口
@@ -231,13 +168,13 @@ func (v *BaseValidator) ValidateField(ctx context.Context, fieldName string, val
 	if !exists {
 		return nil
 	}
-	
+
 	for _, rule := range rules {
 		if err := rule.Validate(ctx, value); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -260,12 +197,12 @@ func (r *RequiredRule) Validate(ctx context.Context, value interface{}) error {
 	if value == nil {
 		return fmt.Errorf(r.errorMessage)
 	}
-	
+
 	// 检查字符串是否为空
 	if str, ok := value.(string); ok && str == "" {
 		return fmt.Errorf(r.errorMessage)
 	}
-	
+
 	return nil
 }
 
@@ -303,12 +240,12 @@ func (r *LengthRule) Validate(ctx context.Context, value interface{}) error {
 	if !ok {
 		return fmt.Errorf("%s 必须是字符串类型", r.fieldName)
 	}
-	
+
 	length := len(str)
 	if length < r.minLength || length > r.maxLength {
 		return fmt.Errorf(r.errorMessage)
 	}
-	
+
 	return nil
 }
 
