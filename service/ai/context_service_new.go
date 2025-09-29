@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/pkg/errors"
 	"Qingyu_backend/repository/interfaces"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -53,43 +54,30 @@ func (s *ContextServiceNew) Initialize(ctx context.Context) error {
 	if s.initialized {
 		return nil
 	}
-	
-	// 检查Repository工厂健康状态
+
+	// 检查Repository工厂是否可用
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂不可用", err)
+		return errors.ContextFactory.InternalError("Repository工厂不可用", err).
+			WithOperation("Initialize")
 	}
-	
+
 	s.initialized = true
-	
-	// 发布服务初始化事件
-	event := &base.BaseEvent{
-		EventType: "service.initialized",
-		EventData: map[string]interface{}{
-			"service": s.serviceName,
-			"version": s.version,
-		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	
-	if err := s.eventBus.PublishAsync(ctx, event); err != nil {
-		fmt.Printf("发布服务初始化事件失败: %v\n", err)
-	}
-	
 	return nil
 }
 
 // Health 健康检查
 func (s *ContextServiceNew) Health(ctx context.Context) error {
 	if !s.initialized {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "服务未初始化", nil)
+		return errors.ContextFactory.InternalError("服务未初始化", nil).
+			WithOperation("Health")
 	}
-	
+
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return base.NewServiceError(s.serviceName, base.ErrorTypeInternal, "Repository工厂健康检查失败", err)
+		return errors.ContextFactory.InternalError("Repository工厂健康检查失败", err).
+			WithOperation("Health")
 	}
-	
+
 	return nil
 }
 
@@ -132,296 +120,208 @@ func (s *ContextServiceNew) GetVersion() string {
 func (s *ContextServiceNew) CreateContext(ctx context.Context, req *serviceInterfaces.CreateContextRequest) (*serviceInterfaces.CreateContextResponse, error) {
 	// 验证请求
 	if err := s.validateCreateContextRequest(req); err != nil {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "请求验证失败", err)
+		return nil, errors.ContextFactory.ValidationError("请求验证失败", err).
+			WithOperation("CreateContext").
+			WithUserID(req.UserID).
+			WithMetadata(map[string]interface{}{
+				"name": req.Name,
+				"type": req.Type,
+			})
 	}
-	
-	// 生成上下文ID
-	contextID := fmt.Sprintf("ctx_%d_%s", time.Now().UnixNano(), req.UserID)
-	
-	// 这里应该将上下文信息保存到数据库
-	// 为了简化，我们模拟保存操作
-	
-	// 发布上下文创建事件
-	event := &base.BaseEvent{
-		EventType: "context.created",
-		EventData: map[string]interface{}{
-			"context_id": contextID,
-			"user_id":    req.UserID,
-			"name":       req.Name,
-			"type":       req.Type,
+
+	// TODO: 实现创建上下文逻辑
+	return &serviceInterfaces.CreateContextResponse{
+		Context: &serviceInterfaces.Context{
+			ID:          fmt.Sprintf("ctx_%d", time.Now().UnixNano()),
+			Name:        req.Name,
+			Type:        req.Type,
+			UserID:      req.UserID,
+			Description: req.Description,
+			Metadata:    req.Metadata,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	s.eventBus.PublishAsync(ctx, event)
-	
-	response := &serviceInterfaces.CreateContextResponse{
-		ContextID: contextID,
-		CreatedAt: time.Now(),
-	}
-	
-	return response, nil
+	}, nil
 }
 
 // GetContext 获取上下文
 func (s *ContextServiceNew) GetContext(ctx context.Context, req *serviceInterfaces.GetContextRequest) (*serviceInterfaces.GetContextResponse, error) {
 	// 验证请求
 	if req.ContextID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "上下文ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("上下文ID不能为空", nil).
+			WithOperation("GetContext").
+			WithUserID(req.UserID)
 	}
-	
-	// 这里应该从数据库获取上下文信息
-	// 为了简化，我们返回模拟数据
-	contextInfo := serviceInterfaces.ContextInfo{
-		ID:          req.ContextID,
-		Name:        "示例上下文",
-		Description: "这是一个示例上下文",
-		Type:        "conversation",
-		Status:      "active",
-		UserID:      req.UserID,
-		Metadata: map[string]string{
-			"created_by": "system",
+
+	// TODO: 实现获取上下文逻辑
+	return &serviceInterfaces.GetContextResponse{
+		Context: &serviceInterfaces.Context{
+			ID:          req.ContextID,
+			Name:        "示例上下文",
+			Type:        "conversation",
+			UserID:      req.UserID,
+			Description: "这是一个示例上下文",
+			CreatedAt:   time.Now().Add(-time.Hour),
+			UpdatedAt:   time.Now(),
 		},
-		CreatedAt: time.Now().Add(-24 * time.Hour),
-		UpdatedAt: time.Now(),
-	}
-	
-	response := &serviceInterfaces.GetContextResponse{
-		Context: contextInfo,
-	}
-	
-	return response, nil
+	}, nil
 }
 
 // UpdateContext 更新上下文
 func (s *ContextServiceNew) UpdateContext(ctx context.Context, req *serviceInterfaces.UpdateContextRequest) (*serviceInterfaces.UpdateContextResponse, error) {
 	// 验证请求
 	if req.ContextID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "上下文ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("上下文ID不能为空", nil).
+			WithOperation("UpdateContext").
+			WithUserID(req.UserID)
 	}
-	
-	// 这里应该更新数据库中的上下文信息
-	// 为了简化，我们模拟更新操作
-	
-	// 发布上下文更新事件
-	event := &base.BaseEvent{
-		EventType: "context.updated",
-		EventData: map[string]interface{}{
-			"context_id": req.ContextID,
-			"user_id":    req.UserID,
+
+	// TODO: 实现更新上下文逻辑
+	return &serviceInterfaces.UpdateContextResponse{
+		Context: &serviceInterfaces.Context{
+			ID:          req.ContextID,
+			Name:        req.Name,
+			UserID:      req.UserID,
+			Description: req.Description,
+			Metadata:    req.Metadata,
+			UpdatedAt:   time.Now(),
 		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	s.eventBus.PublishAsync(ctx, event)
-	
-	response := &serviceInterfaces.UpdateContextResponse{
-		Updated:   true,
-		UpdatedAt: time.Now(),
-	}
-	
-	return response, nil
+	}, nil
 }
 
 // DeleteContext 删除上下文
 func (s *ContextServiceNew) DeleteContext(ctx context.Context, req *serviceInterfaces.DeleteContextRequest) (*serviceInterfaces.DeleteContextResponse, error) {
 	// 验证请求
 	if req.ContextID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "上下文ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("上下文ID不能为空", nil).
+			WithOperation("DeleteContext").
+			WithUserID(req.UserID)
 	}
-	
-	// 这里应该从数据库删除上下文信息
-	// 为了简化，我们模拟删除操作
-	
-	// 发布上下文删除事件
-	event := &base.BaseEvent{
-		EventType: "context.deleted",
-		EventData: map[string]interface{}{
-			"context_id": req.ContextID,
-			"user_id":    req.UserID,
-		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	s.eventBus.PublishAsync(ctx, event)
-	
-	response := &serviceInterfaces.DeleteContextResponse{
-		Deleted:   true,
-		DeletedAt: time.Now(),
-	}
-	
-	return response, nil
+
+	// TODO: 实现删除上下文逻辑
+	return &serviceInterfaces.DeleteContextResponse{
+		Success: true,
+		Message: "上下文已删除",
+	}, nil
 }
 
 // ListContexts 列出上下文
 func (s *ContextServiceNew) ListContexts(ctx context.Context, req *serviceInterfaces.ListContextsRequest) (*serviceInterfaces.ListContextsResponse, error) {
 	// 验证请求
 	if req.UserID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "用户ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("用户ID不能为空", nil).
+			WithOperation("ListContexts")
 	}
-	
-	// 设置默认分页参数
-	page := req.Page
-	if page <= 0 {
-		page = 1
-	}
-	
-	pageSize := req.PageSize
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	
-	// 这里应该从数据库查询上下文列表
-	// 为了简化，我们返回模拟数据
-	contexts := []serviceInterfaces.ContextInfo{
+
+	// TODO: 实现列出上下文逻辑
+	contexts := []*serviceInterfaces.Context{
 		{
 			ID:          "ctx_1",
-			Name:        "对话上下文1",
-			Description: "第一个对话上下文",
+			Name:        "上下文1",
 			Type:        "conversation",
-			Status:      "active",
 			UserID:      req.UserID,
-			Metadata:    map[string]string{"tag": "important"},
-			CreatedAt:   time.Now().Add(-48 * time.Hour),
-			UpdatedAt:   time.Now().Add(-1 * time.Hour),
+			Description: "第一个上下文",
+			CreatedAt:   time.Now().Add(-2 * time.Hour),
+			UpdatedAt:   time.Now().Add(-time.Hour),
 		},
 		{
 			ID:          "ctx_2",
-			Name:        "对话上下文2",
-			Description: "第二个对话上下文",
-			Type:        "conversation",
-			Status:      "active",
+			Name:        "上下文2",
+			Type:        "document",
 			UserID:      req.UserID,
-			Metadata:    map[string]string{"tag": "normal"},
-			CreatedAt:   time.Now().Add(-24 * time.Hour),
+			Description: "第二个上下文",
+			CreatedAt:   time.Now().Add(-time.Hour),
 			UpdatedAt:   time.Now(),
 		},
 	}
-	
-	total := len(contexts)
-	totalPages := (total + pageSize - 1) / pageSize
-	
-	response := &serviceInterfaces.ListContextsResponse{
-		Contexts:   contexts,
-		Total:      total,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: totalPages,
-	}
-	
-	return response, nil
+
+	return &serviceInterfaces.ListContextsResponse{
+		Contexts: contexts,
+		Total:    len(contexts),
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
 }
 
-// AddMessage 添加消息到上下文
+// AddMessage 添加消息
 func (s *ContextServiceNew) AddMessage(ctx context.Context, req *serviceInterfaces.AddMessageRequest) (*serviceInterfaces.AddMessageResponse, error) {
 	// 验证请求
 	if err := s.validateAddMessageRequest(req); err != nil {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "请求验证失败", err)
+		return nil, errors.ContextFactory.ValidationError("请求验证失败", err).
+			WithOperation("AddMessage").
+			WithUserID(req.UserID).
+			WithMetadata(map[string]interface{}{
+				"context_id": req.ContextID,
+				"role": req.Role,
+			})
 	}
-	
-	// 生成消息ID
-	messageID := fmt.Sprintf("msg_%d", time.Now().UnixNano())
-	
-	// 这里应该将消息保存到数据库
-	// 为了简化，我们模拟保存操作
-	
-	// 发布消息添加事件
-	event := &base.BaseEvent{
-		EventType: "message.added",
-		EventData: map[string]interface{}{
-			"context_id": req.ContextID,
-			"message_id": messageID,
-			"role":       req.Role,
-			"user_id":    req.UserID,
+
+	// TODO: 实现添加消息逻辑
+	return &serviceInterfaces.AddMessageResponse{
+		Message: &serviceInterfaces.Message{
+			ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+			ContextID: req.ContextID,
+			Role:      req.Role,
+			Content:   req.Content,
+			UserID:    req.UserID,
+			Metadata:  req.Metadata,
+			CreatedAt: time.Now(),
 		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	s.eventBus.PublishAsync(ctx, event)
-	
-	response := &serviceInterfaces.AddMessageResponse{
-		MessageID: messageID,
-		AddedAt:   time.Now(),
-	}
-	
-	return response, nil
+	}, nil
 }
 
-// GetMessages 获取上下文消息
+// GetMessages 获取消息
 func (s *ContextServiceNew) GetMessages(ctx context.Context, req *serviceInterfaces.GetMessagesRequest) (*serviceInterfaces.GetMessagesResponse, error) {
 	// 验证请求
 	if req.ContextID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "上下文ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("上下文ID不能为空", nil).
+			WithOperation("GetMessages").
+			WithUserID(req.UserID)
 	}
-	
-	// 设置默认参数
-	limit := req.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	
-	offset := req.Offset
-	if offset < 0 {
-		offset = 0
-	}
-	
-	// 这里应该从数据库查询消息列表
-	// 为了简化，我们返回模拟数据
-	messages := []serviceInterfaces.MessageInfo{
+
+	// TODO: 实现获取消息逻辑
+	messages := []*serviceInterfaces.Message{
 		{
 			ID:        "msg_1",
 			ContextID: req.ContextID,
 			Role:      "user",
-			Content:   "你好，请帮我写一篇文章",
-			Metadata:  map[string]string{"type": "text"},
-			CreatedAt: time.Now().Add(-1 * time.Hour),
+			Content:   "用户消息1",
+			UserID:    req.UserID,
+			CreatedAt: time.Now().Add(-time.Hour),
 		},
 		{
 			ID:        "msg_2",
 			ContextID: req.ContextID,
 			Role:      "assistant",
-			Content:   "好的，我来帮您写文章。请告诉我文章的主题和要求。",
-			Metadata:  map[string]string{"type": "text"},
+			Content:   "助手回复1",
+			UserID:    req.UserID,
 			CreatedAt: time.Now().Add(-30 * time.Minute),
 		},
 	}
-	
-	response := &serviceInterfaces.GetMessagesResponse{
+
+	return &serviceInterfaces.GetMessagesResponse{
 		Messages: messages,
 		Total:    len(messages),
-	}
-	
-	return response, nil
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
 }
 
-// ClearMessages 清空上下文消息
+// ClearMessages 清空消息
 func (s *ContextServiceNew) ClearMessages(ctx context.Context, req *serviceInterfaces.ClearMessagesRequest) (*serviceInterfaces.ClearMessagesResponse, error) {
 	// 验证请求
 	if req.ContextID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "上下文ID不能为空", nil)
+		return nil, errors.ContextFactory.ValidationError("上下文ID不能为空", nil).
+			WithOperation("ClearMessages").
+			WithUserID(req.UserID)
 	}
-	
-	// 这里应该从数据库清空消息
-	// 为了简化，我们模拟清空操作
-	
-	// 发布消息清空事件
-	event := &base.BaseEvent{
-		EventType: "messages.cleared",
-		EventData: map[string]interface{}{
-			"context_id": req.ContextID,
-			"user_id":    req.UserID,
-		},
-		Timestamp: time.Now(),
-		Source:    s.serviceName,
-	}
-	s.eventBus.PublishAsync(ctx, event)
-	
-	response := &serviceInterfaces.ClearMessagesResponse{
-		Cleared:   true,
-		ClearedAt: time.Now(),
-	}
-	
-	return response, nil
+
+	// TODO: 实现清空消息逻辑
+	return &serviceInterfaces.ClearMessagesResponse{
+		Success: true,
+		Message: "消息已清空",
+		Cleared: 10, // 示例数量
+	}, nil
 }
 
 // 辅助方法

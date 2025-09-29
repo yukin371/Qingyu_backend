@@ -762,6 +762,142 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
-		Message: "删除成功",
+		Message: "书籍详情删除成功",
+	})
+}
+
+// IncrementViewCount 增加书籍浏览量
+// @Summary 增加书籍浏览量
+// @Description 记录用户浏览书籍详情，增加浏览量统计
+// @Tags 书籍详情
+// @Accept json
+// @Produce json
+// @Param id path string true "书籍ID"
+// @Success 200 {object} APIResponse
+// @Failure 400 {object} APIResponse
+// @Failure 404 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/books/{id}/view [post]
+func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "书籍ID不能为空",
+		})
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "无效的书籍ID格式",
+		})
+		return
+	}
+
+	err = api.service.IncrementViewCount(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "增加浏览量失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "浏览量增加成功",
+	})
+}
+
+// IncrementLikeCount 增加书籍点赞数
+// @Summary 增加书籍点赞数
+// @Description 用户点赞书籍，增加点赞数统计
+// @Tags 书籍详情
+// @Accept json
+// @Produce json
+// @Param id path string true "书籍ID"
+// @Success 200 {object} APIResponse
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/books/{id}/like [post]
+func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "书籍ID不能为空",
+		})
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "无效的书籍ID格式",
+		})
+		return
+	}
+
+	err = api.service.IncrementLikeCount(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "增加点赞数失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "点赞成功",
+	})
+}
+
+// DecrementLikeCount 减少书籍点赞数
+// @Summary 减少书籍点赞数
+// @Description 用户取消点赞书籍，减少点赞数统计
+// @Tags 书籍详情
+// @Accept json
+// @Produce json
+// @Param id path string true "书籍ID"
+// @Success 200 {object} APIResponse
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/books/{id}/unlike [post]
+func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "书籍ID不能为空",
+		})
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "无效的书籍ID格式",
+		})
+		return
+	}
+
+	err = api.service.DecrementLikeCount(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "取消点赞失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "取消点赞成功",
 	})
 }

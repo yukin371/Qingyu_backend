@@ -3,6 +3,7 @@ package user
 import (
 	usersModel "Qingyu_backend/models/users"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	writingRepoInterface "Qingyu_backend/repository/interfaces/writing"
 	"context"
 	"fmt"
 	"time"
@@ -99,32 +100,10 @@ type UserRepository interface {
 		fn func(ctx context.Context, repo UserRepository) error) error
 }
 
-// ProjectRepository 项目仓储接口
-type ProjectRepository interface {
-	base.CRUDRepository[interface{}, interface{}]
-
-	// 项目特定方法
-	GetByCreatorID(ctx context.Context, creatorID string) ([]interface{}, error)
-	ArchiveByCreatorID(ctx context.Context, creatorID string) error
-}
-
-// RoleRepository 角色仓储接口
-type RoleRepository interface {
-	base.CRUDRepository[*usersModel.Role, interface{}]
-
-	// 角色特定方法
-	GetByName(ctx context.Context, name string) (interface{}, error)
-	GetDefaultRole(ctx context.Context) (interface{}, error)
-	GetUserRoles(ctx context.Context, userID string) ([]interface{}, error)
-	AssignRole(ctx context.Context, userID, roleID string) error
-	RemoveRole(ctx context.Context, userID, roleID string) error
-	GetUserPermissions(ctx context.Context, userID string) ([]string, error)
-}
-
 // RepositoryFactory 仓储工厂接口
 type RepositoryFactory interface {
 	CreateUserRepository() UserRepository
-	CreateProjectRepository() ProjectRepository
+	CreateProjectRepository() writingRepoInterface.ProjectRepository
 	CreateRoleRepository() RoleRepository
 	Close() error
 	Health(ctx context.Context) error

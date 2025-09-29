@@ -9,40 +9,41 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// BookRepository 书籍仓储接口
+// BookRepository 书籍仓储接口 - 专注于书籍列表展示和基础管理
+// 用于书城首页、分类页面、搜索结果等列表场景
 type BookRepository interface {
 	// 继承基础CRUD接口
 	base.CRUDRepository[*bookstore.Book, primitive.ObjectID]
 	// 继承 HealthRepository 接口
 	base.HealthRepository
 
-	// 书籍特定查询方法
-	GetByTitle(ctx context.Context, title string) (*bookstore.Book, error)
-	GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore.Book, error)
+	// 列表查询方法 - 用于书城展示
 	GetByCategory(ctx context.Context, categoryID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error)
-	GetByStatus(ctx context.Context, status string, limit, offset int) ([]*bookstore.Book, error)
+	GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore.Book, error)
+	GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error)
+	GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error)
 	GetRecommended(ctx context.Context, limit, offset int) ([]*bookstore.Book, error)
 	GetFeatured(ctx context.Context, limit, offset int) ([]*bookstore.Book, error)
+	GetHotBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error)
+	GetNewReleases(ctx context.Context, limit, offset int) ([]*bookstore.Book, error)
+	GetFreeBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error)
+	GetByPriceRange(ctx context.Context, minPrice, maxPrice float64, limit, offset int) ([]*bookstore.Book, error)
 
-	// 搜索方法
-	Search(ctx context.Context, keyword string, filter *bookstore.BookFilter) ([]*bookstore.Book, error)
+	// 搜索方法 - 用于书城搜索
+	Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.Book, error)
 	SearchWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, error)
 
-	// 统计方法
+	// 统计方法 - 用于列表计数
 	CountByCategory(ctx context.Context, categoryID primitive.ObjectID) (int64, error)
 	CountByAuthor(ctx context.Context, author string) (int64, error)
-	CountByStatus(ctx context.Context, status string) (int64, error)
-	GetStats(ctx context.Context) (*bookstore.BookStats, error)
+	CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error)
+	CountByFilter(ctx context.Context, filter *bookstore.BookFilter) (int64, error)
 
-	// 更新统计数据
-	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error
-	UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error
-
-	// 批量操作
-	BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status string) error
+	// 批量操作 - 用于管理
+	BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error
 	BatchUpdateCategory(ctx context.Context, bookIDs []primitive.ObjectID, categoryIDs []primitive.ObjectID) error
+	BatchUpdateRecommended(ctx context.Context, bookIDs []primitive.ObjectID, isRecommended bool) error
+	BatchUpdateFeatured(ctx context.Context, bookIDs []primitive.ObjectID, isFeatured bool) error
 
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error

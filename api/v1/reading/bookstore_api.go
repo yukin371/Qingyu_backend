@@ -446,39 +446,6 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 // @Failure 404 {object} APIResponse
 // @Failure 500 {object} APIResponse
 // @Router /api/v1/bookstore/books/{id}/view [post]
-func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
-		return
-	}
-
-	err := api.service.IncrementBookView(c.Request.Context(), id)
-	if err != nil {
-		if err.Error() == "book not found" || err.Error() == "book not available" {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "书籍不存在或不可用",
-			})
-			return
-		}
-
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "增加浏览量失败: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "浏览量增加成功",
-	})
-}
-
 // IncrementBannerClick 增加Banner点击次数
 // @Summary 增加Banner点击次数
 // @Description 记录用户点击Banner，增加点击次数统计

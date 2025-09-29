@@ -17,6 +17,8 @@ import (
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/config"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	mongoUser "Qingyu_backend/repository/mongodb/user"
+	mongoReading "Qingyu_backend/repository/mongodb/reading"
 )
 
 // MongoRepositoryFactory MongoDB仓储工厂实现
@@ -27,7 +29,7 @@ type MongoRepositoryFactory struct {
 }
 
 // NewMongoRepositoryFactory 创建MongoDB仓储工厂
-func NewMongoRepositoryFactory(config *config.MongoDBConfig) (infrastructure.RepositoryFactory, error) {
+func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFactory, error) {
 	// 验证配置
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("MongoDB配置验证失败: %w", err)
@@ -67,7 +69,7 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (infrastructure.Rep
 
 // CreateUserRepository 创建用户Repository
 func (f *MongoRepositoryFactory) CreateUserRepository() UserInterface.UserRepository {
-	return NewMongoUserRepository(f.database)
+	return mongoUser.NewMongoUserRepository(f.database)
 }
 
 // CreateProjectRepository 创建项目Repository
@@ -77,7 +79,7 @@ func (f *MongoRepositoryFactory) CreateProjectRepository() UserInterface.Project
 
 // CreateReadingSettingsRepository 创建阅读设置Repository
 func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository {
-	return NewMongoReadingSettingsRepository(f.database)
+	return mongoReading.NewMongoReadingSettingsRepository(f.database)
 }
 
 // CreateRoleRepository 创建角色Repository
@@ -110,7 +112,7 @@ func (f *MongoRepositoryFactory) Health(ctx context.Context) error {
 
 // GetDatabaseType 获取数据库类型
 func (f *MongoRepositoryFactory) GetDatabaseType() string {
-	return infrastructure.DatabaseTypeMongoDB
+	return "mongodb"
 }
 
 // MongoProjectRepositoryNew 新的MongoDB项目仓储实现
