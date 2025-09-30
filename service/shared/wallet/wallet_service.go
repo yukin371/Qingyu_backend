@@ -34,7 +34,7 @@ func (s *WalletServiceImpl) CreateWallet(ctx context.Context, userID string) (*W
 	wallet := &walletModel.Wallet{
 		UserID:  userID,
 		Balance: 0,
-		Status:  "active",
+		Frozen:  false,
 	}
 
 	if err := s.walletRepo.CreateWallet(ctx, wallet); err != nil {
@@ -77,7 +77,7 @@ func (s *WalletServiceImpl) GetBalance(ctx context.Context, walletID string) (fl
 // FreezeWallet 冻结钱包
 func (s *WalletServiceImpl) FreezeWallet(ctx context.Context, walletID string, reason string) error {
 	updates := map[string]interface{}{
-		"status": "frozen",
+		"frozen": true,
 	}
 
 	if err := s.walletRepo.UpdateWallet(ctx, walletID, updates); err != nil {
@@ -90,7 +90,7 @@ func (s *WalletServiceImpl) FreezeWallet(ctx context.Context, walletID string, r
 // UnfreezeWallet 解冻钱包
 func (s *WalletServiceImpl) UnfreezeWallet(ctx context.Context, walletID string) error {
 	updates := map[string]interface{}{
-		"status": "active",
+		"frozen": false,
 	}
 
 	if err := s.walletRepo.UpdateWallet(ctx, walletID, updates); err != nil {
@@ -108,7 +108,7 @@ func convertToWalletResponse(wallet *walletModel.Wallet) *Wallet {
 		ID:        wallet.ID,
 		UserID:    wallet.UserID,
 		Balance:   wallet.Balance,
-		Status:    wallet.Status,
+		Frozen:    wallet.Frozen,
 		CreatedAt: wallet.CreatedAt,
 		UpdatedAt: wallet.UpdatedAt,
 	}

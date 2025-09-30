@@ -13,6 +13,15 @@ type TransactionServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
 }
 
+// TransactionService 交易服务接口
+type TransactionService interface {
+	Recharge(ctx context.Context, walletID string, amount float64, method, orderNo string) (*Transaction, error)
+	Consume(ctx context.Context, walletID string, amount float64, reason string) (*Transaction, error)
+	Transfer(ctx context.Context, fromWalletID, toWalletID string, amount float64, reason string) error
+	GetTransaction(ctx context.Context, transactionID string) (*Transaction, error)
+	ListTransactions(ctx context.Context, walletID string, limit, offset int) ([]*Transaction, error)
+}
+
 // NewTransactionService 创建交易服务
 func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionService {
 	return &TransactionServiceImpl{
@@ -36,20 +45,19 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 	}
 
 	// 3. 检查钱包状态
-	if wallet.Status != "active" {
+	if wallet.Frozen {
 		return nil, fmt.Errorf("钱包已冻结，无法充值")
 	}
 
 	// 4. 创建交易记录
 	transaction := &walletModel.Transaction{
-		WalletID:    walletID,
-		UserID:      wallet.UserID,
-		Type:        "recharge",
-		Amount:      amount,
-		Method:      method,
-		OrderNo:     orderNo,
-		Status:      "success",
-		Description: "充值",
+		UserID:  wallet.UserID,
+		Type:    "recharge",
+		Amount:  amount,
+		Method:  method,
+		OrderNo: orderNo,
+		Status:  "success",
+		Reason:  "充值",
 	}
 
 	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
@@ -78,7 +86,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 	}
 
 	// 3. 检查钱包状态
-	if wallet.Status != "active" {
+	if wallet.Frozen {
 		return nil, fmt.Errorf("钱包已冻结，无法消费")
 	}
 
@@ -89,12 +97,11 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 
 	// 5. 创建交易记录
 	transaction := &walletModel.Transaction{
-		WalletID:    walletID,
-		UserID:      wallet.UserID,
-		Type:        "consume",
-		Amount:      -amount, // 负数表示消费
-		Status:      "success",
-		Description: reason,
+		UserID: wallet.UserID,
+		Type:   "consume",
+		Amount: -amount, // 负数表示消费
+		Status: "success",
+		Reason: reason,
 	}
 
 	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
@@ -129,7 +136,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 	}
 
 	// 4. 检查钱包状态
-	if fromWallet.Status != "active" || toWallet.Status != "active" {
+	if fromWallet.Frozen || toWallet.Frozen {
 		return fmt.Errorf("钱包已冻结，无法转账")
 	}
 
@@ -140,12 +147,12 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 
 	// 6. 创建转出交易记录
 	outTransaction := &walletModel.Transaction{
-		WalletID:    fromWalletID,
-		UserID:      fromWallet.UserID,
-		Type:        "transfer_out",
-		Amount:      -amount,
-		Status:      "success",
-		Description: "转账给 " + toWallet.UserID + ": " + reason,
+		UserID:        fromWallet.UserID,
+		Type:          "transfer_out",
+		Amount:        -amount,
+		Status:        "success",
+		Reason:        "转账给 " + toWallet.UserID + ": " + reason,
+		RelatedUserID: toWallet.UserID,
 	}
 
 	if err := s.walletRepo.CreateTransaction(ctx, outTransaction); err != nil {
@@ -154,12 +161,12 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 
 	// 7. 创建转入交易记录
 	inTransaction := &walletModel.Transaction{
-		WalletID:    toWalletID,
-		UserID:      toWallet.UserID,
-		Type:        "transfer_in",
-		Amount:      amount,
-		Status:      "success",
-		Description: "来自 " + fromWallet.UserID + " 的转账: " + reason,
+		UserID:        toWallet.UserID,
+		Type:          "transfer_in",
+		Amount:        amount,
+		Status:        "success",
+		Reason:        "来自 " + fromWallet.UserID + " 的转账: " + reason,
+		RelatedUserID: fromWallet.UserID,
 	}
 
 	if err := s.walletRepo.CreateTransaction(ctx, inTransaction); err != nil {
@@ -215,15 +222,16 @@ func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, walletID 
 // convertToTransactionResponse 转换为响应格式
 func convertToTransactionResponse(transaction *walletModel.Transaction) *Transaction {
 	return &Transaction{
-		ID:          transaction.ID,
-		WalletID:    transaction.WalletID,
-		UserID:      transaction.UserID,
-		Type:        transaction.Type,
-		Amount:      transaction.Amount,
-		Method:      transaction.Method,
-		OrderNo:     transaction.OrderNo,
-		Status:      transaction.Status,
-		Description: transaction.Description,
-		CreatedAt:   transaction.CreatedAt,
+		ID:              transaction.ID,
+		UserID:          transaction.UserID,
+		Type:            transaction.Type,
+		Amount:          transaction.Amount,
+		Balance:         transaction.Balance,
+		RelatedUserID:   transaction.RelatedUserID,
+		Method:          transaction.Method,
+		Reason:          transaction.Reason,
+		Status:          transaction.Status,
+		TransactionTime: transaction.TransactionTime,
+		CreatedAt:       transaction.CreatedAt,
 	}
 }
