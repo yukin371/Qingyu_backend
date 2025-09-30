@@ -21,7 +21,7 @@ func (f *ErrorFactory) ValidationError(code, message string, details ...string) 
 	if len(details) > 0 {
 		detail = details[0]
 	}
-	
+
 	return &UnifiedError{
 		ID:         generateErrorID(),
 		Code:       code,
@@ -43,7 +43,7 @@ func (f *ErrorFactory) BusinessError(code, message string, details ...string) *U
 	if len(details) > 0 {
 		detail = details[0]
 	}
-	
+
 	return &UnifiedError{
 		ID:         generateErrorID(),
 		Code:       code,
@@ -216,6 +216,7 @@ var (
 	AIServiceFactory        = NewErrorFactory("ai-service")
 	UserServiceFactory      = NewErrorFactory("user-service")
 	DocumentServiceFactory  = NewErrorFactory("document-service")
+	ProjectFactory          = NewErrorFactory("project-service")
 	BookstoreServiceFactory = NewErrorFactory("bookstore-service")
 	ReaderServiceFactory    = NewErrorFactory("reader-service")
 	WriterServiceFactory    = NewErrorFactory("writer-service")

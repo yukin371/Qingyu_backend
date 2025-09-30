@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoBookStatisticsRepository MongoDB书籍统计仓储实现
@@ -58,26 +59,19 @@ func (r *MongoBookStatisticsRepository) GetByID(ctx context.Context, id primitiv
 	return &statistics, nil
 }
 
-// Update 更新书籍统计
-func (r *MongoBookStatisticsRepository) Update(ctx context.Context, statistics *bookstore.BookStatistics) error {
-	if statistics == nil {
-		return errors.New("book statistics cannot be nil")
+// Update 更新书籍统计（符合基础CRUD接口）
+func (r *MongoBookStatisticsRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return errors.New("updates cannot be empty")
 	}
-
-	statistics.BeforeUpdate()
-
-	filter := bson.M{"_id": statistics.ID}
-	update := bson.M{"$set": statistics}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	updates["updated_at"] = time.Now()
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
 	if err != nil {
 		return err
 	}
-
 	if result.MatchedCount == 0 {
 		return errors.New("book statistics not found")
 	}
-
 	return nil
 }
 
@@ -125,8 +119,54 @@ func (r *MongoBookStatisticsRepository) GetAll(ctx context.Context, limit, offse
 }
 
 // Count 统计书籍统计总数
-func (r *MongoBookStatisticsRepository) Count(ctx context.Context) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{})
+func (r *MongoBookStatisticsRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
+}
+
+// List 根据过滤条件列出统计
+func (r *MongoBookStatisticsRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.BookStatistics, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.BookStatistics
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Exists 判断统计是否存在
+func (r *MongoBookStatisticsRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // GetByBookID 根据书籍ID获取统计信息
@@ -144,10 +184,13 @@ func (r *MongoBookStatisticsRepository) GetByBookID(ctx context.Context, bookID 
 }
 
 // GetTopViewed 获取浏览量最高的书籍统计
-func (r *MongoBookStatisticsRepository) GetTopViewed(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetTopViewed(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
 	}
 	opts.SetSort(bson.D{{Key: "view_count", Value: -1}})
 
@@ -170,10 +213,13 @@ func (r *MongoBookStatisticsRepository) GetTopViewed(ctx context.Context, limit 
 }
 
 // GetTopFavorited 获取收藏量最高的书籍统计
-func (r *MongoBookStatisticsRepository) GetTopFavorited(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetTopFavorited(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
 	}
 	opts.SetSort(bson.D{{Key: "favorite_count", Value: -1}})
 
@@ -195,11 +241,43 @@ func (r *MongoBookStatisticsRepository) GetTopFavorited(ctx context.Context, lim
 	return statisticsList, cursor.Err()
 }
 
-// GetTopRated 获取评分最高的书籍统计
-func (r *MongoBookStatisticsRepository) GetTopRated(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+// GetMostShared 获取分享最多的书籍统计
+func (r *MongoBookStatisticsRepository) GetMostShared(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{Key: "share_count", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var statisticsList []*bookstore.BookStatistics
+	for cursor.Next(ctx) {
+		var statistics bookstore.BookStatistics
+		if err := cursor.Decode(&statistics); err != nil {
+			return nil, err
+		}
+		statisticsList = append(statisticsList, &statistics)
+	}
+
+	return statisticsList, cursor.Err()
+}
+
+// GetTopRated 获取评分最高的书籍统计
+func (r *MongoBookStatisticsRepository) GetTopRated(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
 	}
 	opts.SetSort(bson.D{{Key: "average_rating", Value: -1}})
 
@@ -222,11 +300,43 @@ func (r *MongoBookStatisticsRepository) GetTopRated(ctx context.Context, limit i
 	return statisticsList, cursor.Err()
 }
 
-// GetHottest 获取热度最高的书籍统计
-func (r *MongoBookStatisticsRepository) GetHottest(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+// GetMostCommented 获取评论最多的书籍统计
+func (r *MongoBookStatisticsRepository) GetMostCommented(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{Key: "comment_count", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var statisticsList []*bookstore.BookStatistics
+	for cursor.Next(ctx) {
+		var statistics bookstore.BookStatistics
+		if err := cursor.Decode(&statistics); err != nil {
+			return nil, err
+		}
+		statisticsList = append(statisticsList, &statistics)
+	}
+
+	return statisticsList, cursor.Err()
+}
+
+// GetHottest 获取热度最高的书籍统计
+func (r *MongoBookStatisticsRepository) GetHottest(ctx context.Context, limit, offset int) ([]*bookstore.BookStatistics, error) {
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
 	}
 	opts.SetSort(bson.D{{Key: "hot_score", Value: -1}})
 
@@ -363,7 +473,7 @@ func (r *MongoBookStatisticsRepository) IncrementShareCount(ctx context.Context,
 }
 
 // UpdateRating 更新评分统计
-func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID primitive.ObjectID, averageRating float64, ratingCount int64, ratingDistribution map[int]int64) error {
+func (r *MongoBookStatisticsRepository) UpdateRatingSummary(ctx context.Context, bookID primitive.ObjectID, averageRating float64, ratingCount int64, ratingDistribution map[int]int64) error {
 	filter := bson.M{"book_id": bookID}
 	update := bson.M{
 		"$set": bson.M{
@@ -376,6 +486,62 @@ func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID
 
 	opts := options.Update().SetUpsert(true)
 	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	return err
+}
+
+// UpdateRating 根据新增评分更新统计（按增量更新平均值与计数）
+func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating int) error {
+	// 读取当前统计
+	var stats bookstore.BookStatistics
+	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&stats)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			return err
+		}
+		// 初始创建
+		stats = bookstore.BookStatistics{BookID: bookID, AverageRating: 0, RatingCount: 0}
+	}
+
+	newCount := stats.RatingCount + 1
+	newAvg := ((stats.AverageRating * float64(stats.RatingCount)) + float64(rating)) / float64(newCount)
+
+	_, err = r.collection.UpdateOne(
+		ctx,
+		bson.M{"book_id": bookID},
+		bson.M{"$set": bson.M{"average_rating": newAvg, "rating_count": newCount, "updated_at": time.Now()}},
+		options.Update().SetUpsert(true),
+	)
+	return err
+}
+
+// RemoveRating 根据移除评分更新统计
+func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID primitive.ObjectID, rating int) error {
+	var stats bookstore.BookStatistics
+	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&stats)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil
+		}
+		return err
+	}
+
+	if stats.RatingCount <= 0 {
+		return nil
+	}
+
+	newCount := stats.RatingCount - 1
+	var newAvg float64
+	if newCount > 0 {
+		newAvg = ((stats.AverageRating * float64(stats.RatingCount)) - float64(rating)) / float64(newCount)
+	} else {
+		newAvg = 0
+	}
+
+	_, err = r.collection.UpdateOne(
+		ctx,
+		bson.M{"book_id": bookID},
+		bson.M{"$set": bson.M{"average_rating": newAvg, "rating_count": newCount, "updated_at": time.Now()}},
+	)
 	return err
 }
 
@@ -417,12 +583,12 @@ func (r *MongoBookStatisticsRepository) BatchIncrementViewCount(ctx context.Cont
 			"$inc": bson.M{"view_count": count},
 			"$set": bson.M{"updated_at": time.Now()},
 		}
-		
+
 		operation := mongo.NewUpdateOneModel()
 		operation.SetFilter(filter)
 		operation.SetUpdate(update)
 		operation.SetUpsert(true)
-		
+
 		operations = append(operations, operation)
 	}
 
@@ -438,14 +604,14 @@ func (r *MongoBookStatisticsRepository) BatchIncrementViewCount(ctx context.Cont
 func (r *MongoBookStatisticsRepository) GetAggregatedStatistics(ctx context.Context) (map[string]interface{}, error) {
 	pipeline := []bson.M{
 		{"$group": bson.M{
-			"_id":                   nil,
-			"total_books":           bson.M{"$sum": 1},
-			"total_views":           bson.M{"$sum": "$view_count"},
-			"total_favorites":       bson.M{"$sum": "$favorite_count"},
-			"total_comments":        bson.M{"$sum": "$comment_count"},
-			"total_shares":          bson.M{"$sum": "$share_count"},
-			"average_rating":        bson.M{"$avg": "$average_rating"},
-			"average_hot_score":     bson.M{"$avg": "$hot_score"},
+			"_id":               nil,
+			"total_books":       bson.M{"$sum": 1},
+			"total_views":       bson.M{"$sum": "$view_count"},
+			"total_favorites":   bson.M{"$sum": "$favorite_count"},
+			"total_comments":    bson.M{"$sum": "$comment_count"},
+			"total_shares":      bson.M{"$sum": "$share_count"},
+			"average_rating":    bson.M{"$avg": "$average_rating"},
+			"average_hot_score": bson.M{"$avg": "$hot_score"},
 		}},
 	}
 
@@ -650,14 +816,8 @@ func (r *MongoBookStatisticsRepository) GetCommentsInRange(ctx context.Context, 
 }
 
 // GetStatisticsByTimeRange 根据时间范围获取统计信息
-func (r *MongoBookStatisticsRepository) GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time, limit, offset int) ([]*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore.BookStatistics, error) {
 	opts := options.Find()
-	if limit > 0 {
-		opts.SetLimit(int64(limit))
-	}
-	if offset > 0 {
-		opts.SetSkip(int64(offset))
-	}
 	opts.SetSort(bson.D{{Key: "updated_at", Value: -1}})
 
 	filter := bson.M{
@@ -686,7 +846,7 @@ func (r *MongoBookStatisticsRepository) GetStatisticsByTimeRange(ctx context.Con
 }
 
 // GetTrendingBooks 获取趋势书籍（基于最近的统计变化）
-func (r *MongoBookStatisticsRepository) GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetTrendingBooks(ctx context.Context, days int, limit, offset int) ([]*bookstore.BookStatistics, error) {
 	// 计算时间范围
 	endTime := time.Now()
 	startTime := endTime.AddDate(0, 0, -days)
@@ -694,6 +854,9 @@ func (r *MongoBookStatisticsRepository) GetTrendingBooks(ctx context.Context, da
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
 	}
 	opts.SetSort(bson.D{{Key: "hot_score", Value: -1}})
 
@@ -734,7 +897,7 @@ func (r *MongoBookStatisticsRepository) BatchRecalculateStatistics(ctx context.C
 				"updated_at": time.Now(),
 			},
 		}
-		
+
 		_, err := r.collection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
@@ -780,12 +943,12 @@ func (r *MongoBookStatisticsRepository) BatchUpdateViewCount(ctx context.Context
 			"$inc": bson.M{"view_count": increment},
 			"$set": bson.M{"updated_at": time.Now()},
 		}
-		
+
 		operation := mongo.NewUpdateOneModel()
 		operation.SetFilter(filter)
 		operation.SetUpdate(update)
 		operation.SetUpsert(true)
-		
+
 		operations = append(operations, operation)
 	}
 
@@ -801,7 +964,7 @@ func (r *MongoBookStatisticsRepository) BatchUpdateViewCount(ctx context.Context
 func (r *MongoBookStatisticsRepository) SearchByFilter(ctx context.Context, filter *BookstoreInterface.BookStatisticsFilter, page, pageSize int) ([]*bookstore.BookStatistics, int64, error) {
 	// 构建查询条件
 	query := bson.M{}
-	
+
 	if filter.BookID != nil {
 		query["book_id"] = *filter.BookID
 	}

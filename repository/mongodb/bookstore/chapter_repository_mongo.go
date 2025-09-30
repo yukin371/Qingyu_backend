@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoChapterRepository MongoDB章节仓储实现
@@ -126,8 +127,54 @@ func (r *MongoChapterRepository) GetAll(ctx context.Context, limit, offset int) 
 }
 
 // Count 统计章节总数
-func (r *MongoChapterRepository) Count(ctx context.Context) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{})
+func (r *MongoChapterRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
+}
+
+// List 根据过滤条件列出章节
+func (r *MongoChapterRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.Chapter, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.Chapter
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Exists 判断章节是否存在
+func (r *MongoChapterRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // GetByBookID 根据书籍ID获取章节列表
@@ -356,7 +403,7 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 
 	// 构建查询条件
 	query := bson.M{}
-	
+
 	if filter.BookID != nil {
 		query["book_id"] = *filter.BookID
 	}

@@ -26,6 +26,10 @@ type BookDetailRepository interface {
 	GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.BookDetail, error)
 	GetByTags(ctx context.Context, tags []string, limit, offset int) ([]*bookstore.BookDetail, error)
 	GetByPublisher(ctx context.Context, publisher string, limit, offset int) ([]*bookstore.BookDetail, error)
+	GetByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookDetail, error)
+	GetByBookIDs(ctx context.Context, bookIDs []primitive.ObjectID) ([]*bookstore.BookDetail, error)
+	UpdateAuthor(ctx context.Context, bookID primitive.ObjectID, authorID primitive.ObjectID, authorName string) error
+	GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
 
 	// 搜索方法 - 用于详细搜索
 	Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.BookDetail, error)
@@ -52,6 +56,7 @@ type BookDetailRepository interface {
 	BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error
 	BatchUpdatePublisher(ctx context.Context, bookIDs []primitive.ObjectID, publisher string) error
 	BatchUpdateTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error
+	BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryID primitive.ObjectID, categoryName string) error
 
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
@@ -59,27 +64,27 @@ type BookDetailRepository interface {
 
 // BookDetailFilter 书籍详情筛选条件 - 适用于网络小说平台
 type BookDetailFilter struct {
-	Title            string                   `json:"title,omitempty"`
-	Author           string                   `json:"author,omitempty"`
-	AuthorID         *primitive.ObjectID      `json:"author_id,omitempty"`
-	CategoryIDs      []primitive.ObjectID     `json:"category_ids,omitempty"`
-	Tags             []string                 `json:"tags,omitempty"`
-	Status           *bookstore.BookStatus    `json:"status,omitempty"`
-	IsFree           *bool                    `json:"is_free,omitempty"`
-	MinPrice         *float64                 `json:"min_price,omitempty"`
-	MaxPrice         *float64                 `json:"max_price,omitempty"`
-	MinRating        *float64                 `json:"min_rating,omitempty"`
-	MaxRating        *float64                 `json:"max_rating,omitempty"`
-	MinWordCount     *int64                   `json:"min_word_count,omitempty"`
-	MaxWordCount     *int64                   `json:"max_word_count,omitempty"`
-	SerializedFrom   *time.Time               `json:"serialized_from,omitempty"`    // 开始连载时间范围
-	SerializedTo     *time.Time               `json:"serialized_to,omitempty"`      // 开始连载时间范围
-	CompletedFrom    *time.Time               `json:"completed_from,omitempty"`     // 完结时间范围
-	CompletedTo      *time.Time               `json:"completed_to,omitempty"`       // 完结时间范围
-	CreatedAtFrom    *time.Time               `json:"created_at_from,omitempty"`
-	CreatedAtTo      *time.Time               `json:"created_at_to,omitempty"`
-	UpdatedAtFrom    *time.Time               `json:"updated_at_from,omitempty"`
-	UpdatedAtTo      *time.Time               `json:"updated_at_to,omitempty"`
-	SortBy           string                   `json:"sort_by,omitempty"` // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
-	SortOrder        string                   `json:"sort_order,omitempty"` // asc, desc
+	Title          string                `json:"title,omitempty"`
+	Author         string                `json:"author,omitempty"`
+	AuthorID       *primitive.ObjectID   `json:"author_id,omitempty"`
+	CategoryIDs    []primitive.ObjectID  `json:"category_ids,omitempty"`
+	Tags           []string              `json:"tags,omitempty"`
+	Status         *bookstore.BookStatus `json:"status,omitempty"`
+	IsFree         *bool                 `json:"is_free,omitempty"`
+	MinPrice       *float64              `json:"min_price,omitempty"`
+	MaxPrice       *float64              `json:"max_price,omitempty"`
+	MinRating      *float64              `json:"min_rating,omitempty"`
+	MaxRating      *float64              `json:"max_rating,omitempty"`
+	MinWordCount   *int64                `json:"min_word_count,omitempty"`
+	MaxWordCount   *int64                `json:"max_word_count,omitempty"`
+	SerializedFrom *time.Time            `json:"serialized_from,omitempty"` // 开始连载时间范围
+	SerializedTo   *time.Time            `json:"serialized_to,omitempty"`   // 开始连载时间范围
+	CompletedFrom  *time.Time            `json:"completed_from,omitempty"`  // 完结时间范围
+	CompletedTo    *time.Time            `json:"completed_to,omitempty"`    // 完结时间范围
+	CreatedAtFrom  *time.Time            `json:"created_at_from,omitempty"`
+	CreatedAtTo    *time.Time            `json:"created_at_to,omitempty"`
+	UpdatedAtFrom  *time.Time            `json:"updated_at_from,omitempty"`
+	UpdatedAtTo    *time.Time            `json:"updated_at_to,omitempty"`
+	SortBy         string                `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
+	SortOrder      string                `json:"sort_order,omitempty"` // asc, desc
 }

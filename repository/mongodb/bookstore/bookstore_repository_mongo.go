@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoBookRepository MongoDB书籍仓储实现
@@ -98,6 +99,17 @@ func (r *MongoBookRepository) Health(ctx context.Context) error {
 	return r.client.Ping(ctx, nil)
 }
 
+// Count 满足基础接口签名
+func (r *MongoBookRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
+}
+
 // GetByTitle 根据标题获取书籍
 func (r *MongoBookRepository) GetByTitle(ctx context.Context, title string) (*bookstore.Book, error) {
 	var book bookstore.Book
@@ -128,6 +140,21 @@ func (r *MongoBookRepository) GetByAuthor(ctx context.Context, author string, li
 	return books, nil
 }
 
+// GetByAuthorID 根据作者ID获取书籍
+func (r *MongoBookRepository) GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error) {
+	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
+	cursor, err := r.collection.Find(ctx, bson.M{"author_id": authorID}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
 // GetByCategory 根据分类获取书籍列表
 func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error) {
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
@@ -146,7 +173,7 @@ func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID prim
 }
 
 // GetByStatus 根据状态获取书籍列表
-func (r *MongoBookRepository) GetByStatus(ctx context.Context, status string, limit, offset int) ([]*bookstore.Book, error) {
+func (r *MongoBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
 	cursor, err := r.collection.Find(ctx, bson.M{"status": status}, opts)
 	if err != nil {
@@ -204,8 +231,118 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 	return books, nil
 }
 
-// Search 搜索书籍
-func (r *MongoBookRepository) Search(ctx context.Context, keyword string, filter *bookstore.BookFilter) ([]*bookstore.Book, error) {
+// GetHotBooks 获取热门书籍（按浏览量/评分综合排序，这里按view_count降序）
+func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset)).
+		SetSort(bson.D{{"view_count", -1}, {"rating", -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{"status": "published"}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+// GetNewReleases 获取新上架书籍
+func (r *MongoBookRepository) GetNewReleases(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset)).
+		SetSort(bson.D{{"published_at", -1}})
+	cursor, err := r.collection.Find(ctx, bson.M{"status": "published"}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+// GetFreeBooks 获取免费书籍
+func (r *MongoBookRepository) GetFreeBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset)).
+		SetSort(bson.D{{"updated_at", -1}})
+	cursor, err := r.collection.Find(ctx, bson.M{"is_free": true}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+// GetByPriceRange 按价格区间获取
+func (r *MongoBookRepository) GetByPriceRange(ctx context.Context, minPrice, maxPrice float64, limit, offset int) ([]*bookstore.Book, error) {
+	priceQuery := bson.M{}
+	priceQuery["$gte"] = minPrice
+	priceQuery["$lte"] = maxPrice
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset)).
+		SetSort(bson.D{{"price", 1}})
+	cursor, err := r.collection.Find(ctx, bson.M{"price": priceQuery}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+// Search 搜索书籍（简化版本，符合接口定义）
+func (r *MongoBookRepository) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.Book, error) {
+	query := bson.M{
+		"$or": []bson.M{
+			{"title": bson.M{"$regex": keyword, "$options": "i"}},
+			{"author": bson.M{"$regex": keyword, "$options": "i"}},
+			{"introduction": bson.M{"$regex": keyword, "$options": "i"}},
+		},
+	}
+
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{"created_at", -1}})
+
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []*bookstore.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+
+	return books, nil
+}
+
+// SearchWithPagination 搜索书籍（带分页和过滤，内部使用）
+func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword string, filter *bookstore.BookFilter, page, pageSize int) ([]*bookstore.Book, int64, error) {
 	query := bson.M{
 		"$or": []bson.M{
 			{"title": bson.M{"$regex": keyword, "$options": "i"}},
@@ -222,14 +359,14 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, filter
 		if filter.CategoryID != nil {
 			query["category_ids"] = *filter.CategoryID
 		}
+		if filter.Author != nil {
+			query["author"] = bson.M{"$regex": *filter.Author, "$options": "i"}
+		}
 		if filter.IsRecommended != nil {
 			query["is_recommended"] = *filter.IsRecommended
 		}
 		if filter.IsFeatured != nil {
 			query["is_featured"] = *filter.IsFeatured
-		}
-		if filter.MinRating != nil {
-			query["rating"] = bson.M{"$gte": *filter.MinRating}
 		}
 		if len(filter.Tags) > 0 {
 			query["tags"] = bson.M{"$in": filter.Tags}
@@ -237,15 +374,20 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, filter
 	}
 
 	opts := options.Find()
-	if filter != nil {
-		if filter.Limit > 0 {
-			opts.SetLimit(int64(filter.Limit))
-		}
-		if filter.Offset > 0 {
-			opts.SetSkip(int64(filter.Offset))
-		}
+	limit := pageSize
+	offset := 0
+	if page > 0 && pageSize > 0 {
+		offset = (page - 1) * pageSize
+	}
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
 
-		// 排序
+	// 排序
+	if filter != nil {
 		sortBy := "created_at"
 		sortOrder := -1
 		if filter.SortBy != "" {
@@ -259,16 +401,21 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, filter
 
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
 	var books []*bookstore.Book
 	if err = cursor.All(ctx, &books); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return books, nil
+	total, err := r.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return books, total, nil
 }
 
 // SearchWithFilter 使用过滤器搜索书籍
@@ -290,9 +437,7 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	if filter.IsFeatured != nil {
 		query["is_featured"] = *filter.IsFeatured
 	}
-	if filter.MinRating != nil {
-		query["rating"] = bson.M{"$gte": *filter.MinRating}
-	}
+	// 忽略最小评分过滤以兼容当前模型
 	if len(filter.Tags) > 0 {
 		query["tags"] = bson.M{"$in": filter.Tags}
 	}
@@ -348,8 +493,41 @@ func (r *MongoBookRepository) CountByAuthor(ctx context.Context, author string) 
 }
 
 // CountByStatus 统计指定状态的书籍数量
-func (r *MongoBookRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+func (r *MongoBookRepository) CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
 	return r.collection.CountDocuments(ctx, bson.M{"status": status})
+}
+
+// CountByFilter 根据过滤器统计
+func (r *MongoBookRepository) CountByFilter(ctx context.Context, filter *bookstore.BookFilter) (int64, error) {
+	query := bson.M{}
+	if filter != nil {
+		if filter.Status != nil {
+			query["status"] = *filter.Status
+		}
+		if filter.CategoryID != nil {
+			query["category_ids"] = *filter.CategoryID
+		}
+		if filter.Author != nil {
+			query["author"] = bson.M{"$regex": *filter.Author, "$options": "i"}
+		}
+		if filter.IsRecommended != nil {
+			query["is_recommended"] = *filter.IsRecommended
+		}
+		if filter.IsFeatured != nil {
+			query["is_featured"] = *filter.IsFeatured
+		}
+		if len(filter.Tags) > 0 {
+			query["tags"] = bson.M{"$in": filter.Tags}
+		}
+		if filter.Keyword != nil {
+			query["$or"] = []bson.M{
+				{"title": bson.M{"$regex": *filter.Keyword, "$options": "i"}},
+				{"author": bson.M{"$regex": *filter.Keyword, "$options": "i"}},
+				{"introduction": bson.M{"$regex": *filter.Keyword, "$options": "i"}},
+			}
+		}
+	}
+	return r.collection.CountDocuments(ctx, query)
 }
 
 // GetStats 获取书籍统计信息
@@ -451,7 +629,7 @@ func (r *MongoBookRepository) UpdateRating(ctx context.Context, bookID primitive
 }
 
 // BatchUpdateStatus 批量更新状态
-func (r *MongoBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status string) error {
+func (r *MongoBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
 	_, err := r.collection.UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": bookIDs}},
@@ -459,6 +637,36 @@ func (r *MongoBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []p
 			"$set": bson.M{
 				"status":     status,
 				"updated_at": time.Now(),
+			},
+		},
+	)
+	return err
+}
+
+// BatchUpdateFeatured 批量更新精选状态
+func (r *MongoBookRepository) BatchUpdateFeatured(ctx context.Context, bookIDs []primitive.ObjectID, isFeatured bool) error {
+	_, err := r.collection.UpdateMany(
+		ctx,
+		bson.M{"_id": bson.M{"$in": bookIDs}},
+		bson.M{
+			"$set": bson.M{
+				"is_featured": isFeatured,
+				"updated_at":  time.Now(),
+			},
+		},
+	)
+	return err
+}
+
+// BatchUpdateRecommended 批量更新推荐状态
+func (r *MongoBookRepository) BatchUpdateRecommended(ctx context.Context, bookIDs []primitive.ObjectID, isRecommended bool) error {
+	_, err := r.collection.UpdateMany(
+		ctx,
+		bson.M{"_id": bson.M{"$in": bookIDs}},
+		bson.M{
+			"$set": bson.M{
+				"is_recommended": isRecommended,
+				"updated_at":     time.Now(),
 			},
 		},
 	)
@@ -492,4 +700,44 @@ func (r *MongoBookRepository) Transaction(ctx context.Context, fn func(ctx conte
 		return nil, fn(sc)
 	})
 	return err
+}
+
+// List 实现基础接口的List
+func (r *MongoBookRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.Book, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.Book
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Exists 判断书籍是否存在
+func (r *MongoBookRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

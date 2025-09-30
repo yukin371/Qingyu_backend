@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoBookDetailRepository MongoDB书籍详情仓储实现
@@ -126,8 +127,14 @@ func (r *MongoBookDetailRepository) GetAll(ctx context.Context, limit, offset in
 }
 
 // Count 统计书籍详情总数
-func (r *MongoBookDetailRepository) Count(ctx context.Context) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{})
+func (r *MongoBookDetailRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
 }
 
 // GetByTitle 根据标题获取书籍详情
@@ -278,6 +285,30 @@ func (r *MongoBookDetailRepository) GetByISBN(ctx context.Context, isbn string) 
 	return &bookDetail, nil
 }
 
+// GetByPublisher 根据出版社获取书籍详情列表
+func (r *MongoBookDetailRepository) GetByPublisher(ctx context.Context, publisher string, limit, offset int) ([]*bookstore.BookDetail, error) {
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{"publisher": publisher}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var result []*bookstore.BookDetail
+	if err = cursor.All(ctx, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // GetByTags 根据标签获取书籍详情列表
 func (r *MongoBookDetailRepository) GetByTags(ctx context.Context, tags []string, limit, offset int) ([]*bookstore.BookDetail, error) {
 	opts := options.Find()
@@ -363,7 +394,7 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 
 	// 构建查询条件
 	query := bson.M{}
-	
+
 	if filter.Title != "" {
 		query["title"] = bson.M{"$regex": filter.Title, "$options": "i"}
 	}
@@ -474,6 +505,80 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 	return bookDetails, cursor.Err()
 }
 
+// GetByBookID 根据书籍基础ID获取详情
+func (r *MongoBookDetailRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookDetail, error) {
+	var detail bookstore.BookDetail
+	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&detail)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &detail, nil
+}
+
+// GetByBookIDs 批量根据书籍基础ID获取详情
+func (r *MongoBookDetailRepository) GetByBookIDs(ctx context.Context, bookIDs []primitive.ObjectID) ([]*bookstore.BookDetail, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bson.M{"$in": bookIDs}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.BookDetail
+	for cursor.Next(ctx) {
+		var d bookstore.BookDetail
+		if err := cursor.Decode(&d); err != nil {
+			return nil, err
+		}
+		results = append(results, &d)
+	}
+	return results, cursor.Err()
+}
+
+// UpdateAuthor 更新作者信息
+func (r *MongoBookDetailRepository) UpdateAuthor(ctx context.Context, bookID primitive.ObjectID, authorID primitive.ObjectID, authorName string) error {
+	_, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": bookID},
+		bson.M{"$set": bson.M{"author_id": authorID, "author": authorName, "updated_at": time.Now()}},
+	)
+	return err
+}
+
+// GetSimilarBooks 获取相似书籍（基于标签和分类）
+func (r *MongoBookDetailRepository) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+	// 先获取目标书的标签
+	var current bookstore.BookDetail
+	if err := r.collection.FindOne(ctx, bson.M{"_id": bookID}).Decode(&current); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return []*bookstore.BookDetail{}, nil
+		}
+		return nil, err
+	}
+	query := bson.M{
+		"_id": bson.M{"$ne": bookID},
+		"$or": []bson.M{
+			{"tags": bson.M{"$in": current.Tags}},
+			{"category_ids": bson.M{"$in": current.CategoryIDs}},
+		},
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "updated_at", Value: -1}})
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.BookDetail
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 // CountByCategory 根据分类统计书籍数量
 func (r *MongoBookDetailRepository) CountByCategory(ctx context.Context, category string) (int64, error) {
 	filter := bson.M{"categories": category}
@@ -498,6 +603,12 @@ func (r *MongoBookDetailRepository) CountByTags(ctx context.Context, tags []stri
 	return r.collection.CountDocuments(ctx, filter)
 }
 
+// CountByPublisher 根据出版社统计数量
+func (r *MongoBookDetailRepository) CountByPublisher(ctx context.Context, publisher string) (int64, error) {
+	filter := bson.M{"publisher": publisher}
+	return r.collection.CountDocuments(ctx, filter)
+}
+
 // BatchUpdateStatus 批量更新书籍状态
 func (r *MongoBookDetailRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
 	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
@@ -512,16 +623,31 @@ func (r *MongoBookDetailRepository) BatchUpdateStatus(ctx context.Context, bookI
 	return err
 }
 
+// DecrementCommentCount递减评论数
+func (r *MongoBookDetailRepository) DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+	filter := bson.M{"_id": bookID}
+	update := bson.M{"$inc": bson.M{"comment_count": -1}}
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	return err
+}
+
 // BatchUpdateCategories 批量更新书籍分类
-func (r *MongoBookDetailRepository) BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categories []string) error {
+func (r *MongoBookDetailRepository) BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryID primitive.ObjectID, categoryName string) error {
+	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
+	update := bson.M{"$set": bson.M{"category.id": categoryID, "category.name": categoryName}}
+	_, err := r.collection.UpdateMany(ctx, filter, update)
+	return err
+}
+
+// BatchUpdatePublisher 批量更新出版社
+func (r *MongoBookDetailRepository) BatchUpdatePublisher(ctx context.Context, bookIDs []primitive.ObjectID, publisher string) error {
 	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
 	update := bson.M{
 		"$set": bson.M{
-			"categories": categories,
+			"publisher":  publisher,
 			"updated_at": time.Now(),
 		},
 	}
-
 	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }
@@ -537,6 +663,56 @@ func (r *MongoBookDetailRepository) BatchUpdateTags(ctx context.Context, bookIDs
 	}
 
 	_, err := r.collection.UpdateMany(ctx, filter, update)
+	return err
+}
+
+// IncrementViewCount 递增浏览量
+func (r *MongoBookDetailRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": bookID}, bson.M{"$inc": bson.M{"view_count": 1}, "$set": bson.M{"updated_at": time.Now()}})
+	return err
+}
+
+// IncrementLikeCount 递增点赞数
+func (r *MongoBookDetailRepository) IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": bookID}, bson.M{"$inc": bson.M{"like_count": 1}, "$set": bson.M{"updated_at": time.Now()}})
+	return err
+}
+
+// DecrementLikeCount 递减点赞数
+func (r *MongoBookDetailRepository) DecrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": bookID}, bson.M{"$inc": bson.M{"like_count": -1}, "$set": bson.M{"updated_at": time.Now()}})
+	return err
+}
+
+// IncrementCommentCount 递增评论数
+func (r *MongoBookDetailRepository) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": bookID}, bson.M{"$inc": bson.M{"comment_count": 1}, "$set": bson.M{"updated_at": time.Now()}})
+	return err
+}
+
+// IncrementShareCount 递增分享数
+func (r *MongoBookDetailRepository) IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": bookID}, bson.M{"$inc": bson.M{"share_count": 1}, "$set": bson.M{"updated_at": time.Now()}})
+	return err
+}
+
+// UpdateRating 更新评分统计
+func (r *MongoBookDetailRepository) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64, ratingCount int64) error {
+	_, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": bookID},
+		bson.M{"$set": bson.M{"rating": rating, "rating_count": ratingCount, "updated_at": time.Now()}},
+	)
+	return err
+}
+
+// UpdateLastChapter 更新最后章节标题
+func (r *MongoBookDetailRepository) UpdateLastChapter(ctx context.Context, bookID primitive.ObjectID, chapterTitle string) error {
+	_, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": bookID},
+		bson.M{"$set": bson.M{"last_chapter": chapterTitle, "updated_at": time.Now()}},
+	)
 	return err
 }
 
@@ -565,4 +741,44 @@ func (r *MongoBookDetailRepository) Transaction(ctx context.Context, fn func(ctx
 // Health 健康检查
 func (r *MongoBookDetailRepository) Health(ctx context.Context) error {
 	return r.client.Ping(ctx, nil)
+}
+
+// List 根据过滤条件列出书籍详情
+func (r *MongoBookDetailRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.BookDetail, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.BookDetail
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Exists 判断记录是否存在
+func (r *MongoBookDetailRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
