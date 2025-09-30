@@ -195,12 +195,12 @@ func NewRequiredRule(fieldName string) *RequiredRule {
 // Validate 验证值
 func (r *RequiredRule) Validate(ctx context.Context, value interface{}) error {
 	if value == nil {
-		return fmt.Errorf(r.errorMessage)
+		return fmt.Errorf("%s", r.errorMessage)
 	}
 
 	// 检查字符串是否为空
 	if str, ok := value.(string); ok && str == "" {
-		return fmt.Errorf(r.errorMessage)
+		return fmt.Errorf("%s", r.errorMessage)
 	}
 
 	return nil
@@ -243,7 +243,7 @@ func (r *LengthRule) Validate(ctx context.Context, value interface{}) error {
 
 	length := len(str)
 	if length < r.minLength || length > r.maxLength {
-		return fmt.Errorf(r.errorMessage)
+		return fmt.Errorf("%s", r.errorMessage)
 	}
 
 	return nil
