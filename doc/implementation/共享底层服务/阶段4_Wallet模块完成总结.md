@@ -20,10 +20,13 @@
 |------|------|------|
 | `repository/mongodb/shared/wallet_repository.go` | 305 | Wallet Repository实现 |
 | `service/shared/wallet/wallet_service.go` | 116 | 钱包服务 |
-| `service/shared/wallet/transaction_service.go` | 198 | 交易服务 |
-| `service/shared/wallet/withdraw_service.go` | 190 | 提现服务 |
+| `service/shared/wallet/transaction_service.go` | 230 | 交易服务 |
+| `service/shared/wallet/withdraw_service.go` | 200 | 提现服务 |
+| `service/shared/wallet/wallet_service_test.go` | 200 | 钱包服务测试 |
+| `service/shared/wallet/transaction_service_test.go` | 240 | 交易服务测试 |
+| `service/shared/wallet/withdraw_service_test.go` | 280 | 提现服务测试 |
 
-**总代码量**: ~809行（实现代码）
+**总代码量**: ~1,571行（实现代码 + 测试代码）
 
 ---
 
@@ -531,6 +534,56 @@ transactions, err := transactionService.ListTransactions(ctx,
 
 ---
 
+## 🧪 测试用例
+
+### 测试统计
+
+```
+测试文件: 3个
+测试用例: 已编写约30个
+状态: 代码已完成，待接口调整后运行
+```
+
+### 测试文件列表
+
+1. **`wallet_service_test.go`** - 钱包服务测试
+   - TestCreateWallet - 创建钱包
+   - TestCreateWallet_Duplicate - 重复创建
+   - TestGetWallet - 获取钱包
+   - TestGetWalletByUserID - 根据用户ID获取
+   - TestGetBalance - 获取余额
+   - TestFreezeWallet - 冻结钱包
+   - TestUnfreezeWallet - 解冻钱包
+   - TestGetWallet_NotFound - 钱包不存在
+
+2. **`transaction_service_test.go`** - 交易服务测试
+   - TestRecharge - 充值
+   - TestRecharge_InvalidAmount - 无效金额充值
+   - TestConsume - 消费
+   - TestConsume_InsufficientBalance - 余额不足
+   - TestTransfer - 转账
+   - TestTransfer_InsufficientBalance - 转账余额不足
+   - TestGetTransaction - 获取交易记录
+   - TestListTransactions - 列出交易记录
+   - TestMultipleTransactions - 多次交易余额正确性
+
+3. **`withdraw_service_test.go`** - 提现服务测试
+   - TestCreateWithdrawRequest - 创建提现请求
+   - TestCreateWithdrawRequest_InvalidAmount - 无效提现金额
+   - TestCreateWithdrawRequest_InsufficientBalance - 余额不足
+   - TestApproveWithdraw - 审核通过
+   - TestRejectWithdraw - 审核拒绝
+   - TestGetWithdrawRequest - 获取提现请求
+   - TestListWithdrawRequests - 列出提现请求
+   - TestListWithdrawRequests_FilterByStatus - 按状态筛选
+   - TestWithdrawWorkflow - 完整提现流程
+
+### Mock Repository
+
+已实现完整的Mock Repository，包含所有钱包、交易、提现相关的Mock方法，支持独立测试。
+
+---
+
 ## 🚨 已知限制
 
 ### 当前版本限制
@@ -540,9 +593,11 @@ transactions, err := transactionService.ListTransactions(ctx,
 3. **无限额控制** - 无提现/转账限额
 4. **无实名验证** - 提现无实名认证
 5. **无对账功能** - 缺少对账和对账单导出
+6. **测试待运行** - 测试代码已完成，待接口调整后运行
 
 ### 未来改进方向
 
+- [ ] 调整接口匹配，运行测试用例
 - [ ] 增加MongoDB事务支持
 - [ ] 实现手续费计算
 - [ ] 增加限额和风控

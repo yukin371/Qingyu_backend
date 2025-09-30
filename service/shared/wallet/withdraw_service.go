@@ -14,6 +14,15 @@ type WithdrawServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
 }
 
+// WithdrawService 提现服务接口
+type WithdrawService interface {
+	CreateWithdrawRequest(ctx context.Context, userID, walletID string, amount float64, method, account string) (*WithdrawRequest, error)
+	ApproveWithdraw(ctx context.Context, requestID, reviewerID, remark string) error
+	RejectWithdraw(ctx context.Context, requestID, reviewerID, reason string) error
+	GetWithdrawRequest(ctx context.Context, requestID string) (*WithdrawRequest, error)
+	ListWithdrawRequests(ctx context.Context, userID, status string, limit, offset int) ([]*WithdrawRequest, error)
+}
+
 // NewWithdrawService 创建提现服务
 func NewWithdrawService(walletRepo sharedRepo.WalletRepository) WithdrawService {
 	return &WithdrawServiceImpl{
@@ -42,7 +51,7 @@ func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID,
 	}
 
 	// 3. 检查钱包状态
-	if wallet.Status != "active" {
+	if wallet.Frozen {
 		return nil, fmt.Errorf("钱包已冻结，无法提现")
 	}
 
