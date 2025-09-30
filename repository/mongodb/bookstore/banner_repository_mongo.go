@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	interfaces "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoBannerRepository MongoDB Banner仓储实现
@@ -96,6 +97,60 @@ func (r *MongoBannerRepository) Delete(ctx context.Context, id primitive.ObjectI
 // Health 健康检查
 func (r *MongoBannerRepository) Health(ctx context.Context) error {
 	return r.client.Ping(ctx, nil)
+}
+
+// Count 统计Banner数量（满足Filter接口）
+func (r *MongoBannerRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
+}
+
+// List 根据过滤条件列出Banner
+func (r *MongoBannerRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.Banner, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var banners []*bookstore.Banner
+	if err := cursor.All(ctx, &banners); err != nil {
+		return nil, err
+	}
+	return banners, nil
+}
+
+// Exists 判断Banner是否存在
+func (r *MongoBannerRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // GetActive 获取激活的Banner列表

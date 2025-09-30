@@ -12,6 +12,7 @@ import (
 
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
+	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoBookRatingRepository MongoDB书籍评分仓储实现
@@ -59,25 +60,18 @@ func (r *MongoBookRatingRepository) GetByID(ctx context.Context, id primitive.Ob
 }
 
 // Update 更新书籍评分
-func (r *MongoBookRatingRepository) Update(ctx context.Context, rating *bookstore.BookRating) error {
-	if rating == nil {
-		return errors.New("book rating cannot be nil")
+func (r *MongoBookRatingRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return errors.New("updates cannot be empty")
 	}
-
-	rating.BeforeUpdate()
-
-	filter := bson.M{"_id": rating.ID}
-	update := bson.M{"$set": rating}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	updates["updated_at"] = time.Now()
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
 	if err != nil {
 		return err
 	}
-
 	if result.MatchedCount == 0 {
 		return errors.New("book rating not found")
 	}
-
 	return nil
 }
 
@@ -125,8 +119,54 @@ func (r *MongoBookRatingRepository) GetAll(ctx context.Context, limit, offset in
 }
 
 // Count 统计书籍评分总数
-func (r *MongoBookRatingRepository) Count(ctx context.Context) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{})
+func (r *MongoBookRatingRepository) Count(ctx context.Context, filter infra.Filter) (int64, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	return r.collection.CountDocuments(ctx, query)
+}
+
+// List 根据过滤条件列出评分
+func (r *MongoBookRatingRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.BookRating, error) {
+	var query bson.M
+	if filter != nil {
+		query = bson.M(filter.GetConditions())
+	} else {
+		query = bson.M{}
+	}
+	opts := options.Find()
+	if filter != nil {
+		sort := filter.GetSort()
+		if len(sort) > 0 {
+			var sortDoc bson.D
+			for k, v := range sort {
+				sortDoc = append(sortDoc, bson.E{Key: k, Value: v})
+			}
+			opts.SetSort(sortDoc)
+		}
+	}
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var results []*bookstore.BookRating
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Exists 判断评分是否存在
+func (r *MongoBookRatingRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // GetByBookID 根据书籍ID获取评分列表
@@ -189,6 +229,30 @@ func (r *MongoBookRatingRepository) GetByUserID(ctx context.Context, userID prim
 	return ratings, cursor.Err()
 }
 
+// GetMostLiked 获取点赞最多的评分
+func (r *MongoBookRatingRepository) GetMostLiked(ctx context.Context, bookID primitive.ObjectID, limit, offset int) ([]*bookstore.BookRating, error) {
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{Key: "likes", Value: -1}, {Key: "created_at", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var ratings []*bookstore.BookRating
+	if err := cursor.All(ctx, &ratings); err != nil {
+		return nil, err
+	}
+	return ratings, nil
+}
+
 // GetByBookIDAndUserID 根据书籍ID和用户ID获取评分
 func (r *MongoBookRatingRepository) GetByBookIDAndUserID(ctx context.Context, bookID, userID primitive.ObjectID) (*bookstore.BookRating, error) {
 	var rating bookstore.BookRating
@@ -231,6 +295,30 @@ func (r *MongoBookRatingRepository) GetByRating(ctx context.Context, rating int,
 	}
 
 	return ratings, cursor.Err()
+}
+
+// GetTopRated 获取某书籍评分最高的记录（按评分降序）
+func (r *MongoBookRatingRepository) GetTopRated(ctx context.Context, bookID primitive.ObjectID, limit, offset int) ([]*bookstore.BookRating, error) {
+	opts := options.Find()
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetSkip(int64(offset))
+	}
+	opts.SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "likes", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var ratings []*bookstore.BookRating
+	if err := cursor.All(ctx, &ratings); err != nil {
+		return nil, err
+	}
+	return ratings, nil
 }
 
 // GetByTags 根据标签获取评分列表
@@ -322,7 +410,7 @@ func (r *MongoBookRatingRepository) SearchByFilter(ctx context.Context, filter *
 
 	// 构建查询条件
 	query := bson.M{}
-	
+
 	if filter.BookID != nil {
 		query["book_id"] = *filter.BookID
 	}
@@ -455,6 +543,29 @@ func (r *MongoBookRatingRepository) GetRatingDistribution(ctx context.Context, b
 	return distribution, cursor.Err()
 }
 
+// GetTotalLikes 获取某书籍评分总点赞数
+func (r *MongoBookRatingRepository) GetTotalLikes(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
+	pipeline := []bson.M{
+		{"$match": bson.M{"book_id": bookID}},
+		{"$group": bson.M{"_id": nil, "total": bson.M{"$sum": "$likes"}}},
+	}
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+	var result struct {
+		Total int64 `bson:"total"`
+	}
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+		return result.Total, nil
+	}
+	return 0, nil
+}
+
 // GetTopRatedBooks 获取评分最高的书籍
 func (r *MongoBookRatingRepository) GetTopRatedBooks(ctx context.Context, limit int) ([]primitive.ObjectID, error) {
 	pipeline := []bson.M{
@@ -529,12 +640,11 @@ func (r *MongoBookRatingRepository) DecrementLikes(ctx context.Context, id primi
 }
 
 // UpdateRating 更新评分
-func (r *MongoBookRatingRepository) UpdateRating(ctx context.Context, id primitive.ObjectID, rating float64, comment string) error {
+func (r *MongoBookRatingRepository) UpdateRating(ctx context.Context, id primitive.ObjectID, rating int) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{
 		"$set": bson.M{
 			"rating":     rating,
-			"comment":    comment,
 			"updated_at": time.Now(),
 		},
 	}
@@ -548,6 +658,44 @@ func (r *MongoBookRatingRepository) UpdateRating(ctx context.Context, id primiti
 		return errors.New("book rating not found")
 	}
 
+	return nil
+}
+
+// UpdateComment 更新评论内容
+func (r *MongoBookRatingRepository) UpdateComment(ctx context.Context, id primitive.ObjectID, comment string) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{
+		"$set": bson.M{
+			"comment":    comment,
+			"updated_at": time.Now(),
+		},
+	}
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("book rating not found")
+	}
+	return nil
+}
+
+// UpdateTags 更新评分标签
+func (r *MongoBookRatingRepository) UpdateTags(ctx context.Context, id primitive.ObjectID, tags []string) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{
+		"$set": bson.M{
+			"tags":       tags,
+			"updated_at": time.Now(),
+		},
+	}
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("book rating not found")
+	}
 	return nil
 }
 
