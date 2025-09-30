@@ -127,6 +127,23 @@ func (e *UnifiedError) WithService(service, operation string) *UnifiedError {
 	return e
 }
 
+// WithOperation 设置操作信息
+func (e *UnifiedError) WithOperation(operation string) *UnifiedError {
+	e.Operation = operation
+	return e
+}
+
+// WithMetadata 设置元数据
+func (e *UnifiedError) WithMetadata(metadata map[string]interface{}) *UnifiedError {
+	if e.Metadata == nil {
+		e.Metadata = make(map[string]interface{})
+	}
+	for k, v := range metadata {
+		e.Metadata[k] = v
+	}
+	return e
+}
+
 // ToJSON 转换为JSON格式
 func (e *UnifiedError) ToJSON() ([]byte, error) {
 	return json.Marshal(e)
