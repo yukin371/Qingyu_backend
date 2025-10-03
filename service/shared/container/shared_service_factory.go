@@ -70,8 +70,16 @@ func (f *SharedServiceFactory) CreateAuthService() (auth.AuthService, error) {
 }
 
 // CreateWalletService 创建钱包服务
-func (f *SharedServiceFactory) CreateWalletService() (wallet.WalletService, error) {
-	// TODO: 实现钱包服务创建
+// 需要传入walletRepository
+func (f *SharedServiceFactory) CreateWalletService(walletRepo interface{}) (wallet.WalletService, error) {
+	// 使用统一的Wallet服务
+	// walletRepo应该是 WalletRepository 类型
+	// 这里简化处理，实际使用时需要正确的类型断言
+
+	// TODO: 实现完整的wallet服务创建逻辑
+	// walletService := wallet.NewUnifiedWalletService(walletRepo)
+	// return walletService, nil
+
 	return nil, nil
 }
 

@@ -197,11 +197,11 @@ func (s *TransactionServiceImpl) GetTransaction(ctx context.Context, transaction
 }
 
 // ListTransactions 列出交易记录
-func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, walletID string, limit, offset int) ([]*Transaction, error) {
+func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, userID string, limit, offset int) ([]*Transaction, error) {
 	filter := &sharedRepo.TransactionFilter{
-		WalletID: walletID,
-		Limit:    limit,
-		Offset:   offset,
+		UserID: userID,
+		Limit:  int64(limit),
+		Offset: int64(offset),
 	}
 
 	transactions, err := s.walletRepo.ListTransactions(ctx, filter)
