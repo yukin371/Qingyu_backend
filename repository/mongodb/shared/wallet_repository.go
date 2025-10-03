@@ -52,8 +52,24 @@ func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *walletM
 	return nil
 }
 
-// GetWallet 获取钱包
-func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, walletID string) (*walletModel.Wallet, error) {
+// GetWallet 获取钱包（根据用户ID）
+// 注意：这是接口定义的方法，使用userID作为参数
+func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*walletModel.Wallet, error) {
+	var wallet walletModel.Wallet
+	err := r.walletCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&wallet)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("钱包不存在: user %s", userID)
+		}
+		return nil, fmt.Errorf("查询钱包失败: %w", err)
+	}
+
+	return &wallet, nil
+}
+
+// GetWalletByID 根据钱包ID获取钱包（内部使用）
+// 这是一个额外的辅助方法，用于通过钱包ObjectID查询
+func (r *WalletRepositoryImpl) GetWalletByID(ctx context.Context, walletID string) (*walletModel.Wallet, error) {
 	objectID, err := primitive.ObjectIDFromHex(walletID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的钱包ID: %w", err)
@@ -64,20 +80,6 @@ func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, walletID string) (
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("钱包不存在: %s", walletID)
-		}
-		return nil, fmt.Errorf("查询钱包失败: %w", err)
-	}
-
-	return &wallet, nil
-}
-
-// GetWalletByUserID 根据用户ID获取钱包
-func (r *WalletRepositoryImpl) GetWalletByUserID(ctx context.Context, userID string) (*walletModel.Wallet, error) {
-	var wallet walletModel.Wallet
-	err := r.walletCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&wallet)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("钱包不存在: user %s", userID)
 		}
 		return nil, fmt.Errorf("查询钱包失败: %w", err)
 	}
@@ -179,9 +181,6 @@ func (r *WalletRepositoryImpl) GetTransaction(ctx context.Context, transactionID
 func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) ([]*walletModel.Transaction, error) {
 	query := bson.M{}
 
-	if filter.WalletID != "" {
-		query["wallet_id"] = filter.WalletID
-	}
 	if filter.UserID != "" {
 		query["user_id"] = filter.UserID
 	}
@@ -191,13 +190,23 @@ func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sha
 	if filter.Status != "" {
 		query["status"] = filter.Status
 	}
+	if !filter.StartDate.IsZero() {
+		query["created_at"] = bson.M{"$gte": filter.StartDate}
+	}
+	if !filter.EndDate.IsZero() {
+		if query["created_at"] != nil {
+			query["created_at"].(bson.M)["$lte"] = filter.EndDate
+		} else {
+			query["created_at"] = bson.M{"$lte": filter.EndDate}
+		}
+	}
 
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
-		SetLimit(int64(filter.Limit))
+		SetLimit(filter.Limit)
 
 	if filter.Offset > 0 {
-		opts.SetSkip(int64(filter.Offset))
+		opts.SetSkip(filter.Offset)
 	}
 
 	cursor, err := r.transactionCollection.Find(ctx, query, opts)
@@ -212,6 +221,38 @@ func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sha
 	}
 
 	return transactions, nil
+}
+
+// CountTransactions 统计交易数量
+func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) (int64, error) {
+	query := bson.M{}
+
+	if filter.UserID != "" {
+		query["user_id"] = filter.UserID
+	}
+	if filter.Type != "" {
+		query["type"] = filter.Type
+	}
+	if filter.Status != "" {
+		query["status"] = filter.Status
+	}
+	if !filter.StartDate.IsZero() {
+		query["created_at"] = bson.M{"$gte": filter.StartDate}
+	}
+	if !filter.EndDate.IsZero() {
+		if query["created_at"] != nil {
+			query["created_at"].(bson.M)["$lte"] = filter.EndDate
+		} else {
+			query["created_at"] = bson.M{"$lte": filter.EndDate}
+		}
+	}
+
+	count, err := r.transactionCollection.CountDocuments(ctx, query)
+	if err != nil {
+		return 0, fmt.Errorf("统计交易数量失败: %w", err)
+	}
+
+	return count, nil
 }
 
 // ============ 提现管理 ============
@@ -288,13 +329,23 @@ func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter 
 	if filter.Status != "" {
 		query["status"] = filter.Status
 	}
+	if !filter.StartDate.IsZero() {
+		query["created_at"] = bson.M{"$gte": filter.StartDate}
+	}
+	if !filter.EndDate.IsZero() {
+		if query["created_at"] != nil {
+			query["created_at"].(bson.M)["$lte"] = filter.EndDate
+		} else {
+			query["created_at"] = bson.M{"$lte": filter.EndDate}
+		}
+	}
 
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
-		SetLimit(int64(filter.Limit))
+		SetLimit(filter.Limit)
 
 	if filter.Offset > 0 {
-		opts.SetSkip(int64(filter.Offset))
+		opts.SetSkip(filter.Offset)
 	}
 
 	cursor, err := r.withdrawRequestCollection.Find(ctx, query, opts)
@@ -309,6 +360,35 @@ func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter 
 	}
 
 	return requests, nil
+}
+
+// CountWithdrawRequests 统计提现请求数量
+func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter *sharedInterfaces.WithdrawFilter) (int64, error) {
+	query := bson.M{}
+
+	if filter.UserID != "" {
+		query["user_id"] = filter.UserID
+	}
+	if filter.Status != "" {
+		query["status"] = filter.Status
+	}
+	if !filter.StartDate.IsZero() {
+		query["created_at"] = bson.M{"$gte": filter.StartDate}
+	}
+	if !filter.EndDate.IsZero() {
+		if query["created_at"] != nil {
+			query["created_at"].(bson.M)["$lte"] = filter.EndDate
+		} else {
+			query["created_at"] = bson.M{"$lte": filter.EndDate}
+		}
+	}
+
+	count, err := r.withdrawRequestCollection.CountDocuments(ctx, query)
+	if err != nil {
+		return 0, fmt.Errorf("统计提现请求数量失败: %w", err)
+	}
+
+	return count, nil
 }
 
 // ============ 健康检查 ============

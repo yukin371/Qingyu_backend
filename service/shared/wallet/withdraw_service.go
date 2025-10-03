@@ -62,12 +62,11 @@ func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID,
 
 	// 5. 创建提现请求
 	request := &walletModel.WithdrawRequest{
-		UserID:   userID,
-		WalletID: walletID,
-		Amount:   amount,
-		Method:   method,
-		Account:  account,
-		Status:   "pending",
+		UserID:      userID,
+		Amount:      amount,
+		Account:     account,
+		AccountType: method, // 使用AccountType字段
+		Status:      "pending",
 	}
 
 	if err := s.walletRepo.CreateWithdrawRequest(ctx, request); err != nil {
@@ -111,13 +110,12 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 
 	// 4. 创建提现交易记录
 	transaction := &walletModel.Transaction{
-		WalletID:    request.WalletID,
-		UserID:      request.UserID,
-		Type:        "withdraw",
-		Amount:      -request.Amount,
-		Method:      request.Method,
-		Status:      "success",
-		Description: "提现",
+		UserID: request.UserID,
+		Type:   "withdraw",
+		Amount: -request.Amount,
+		Method: request.AccountType,
+		Status: "success",
+		Reason: "提现",
 	}
 
 	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
@@ -140,8 +138,13 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 		return fmt.Errorf("提现请求状态异常: %s", request.Status)
 	}
 
-	// 3. 退还金额
-	if err := s.walletRepo.UpdateBalance(ctx, request.WalletID, request.Amount); err != nil {
+	// 3. 获取钱包并退还金额
+	wallet, err := s.walletRepo.GetWallet(ctx, request.UserID)
+	if err != nil {
+		return fmt.Errorf("获取钱包失败: %w", err)
+	}
+
+	if err := s.walletRepo.UpdateBalance(ctx, wallet.ID, request.Amount); err != nil {
 		return fmt.Errorf("退还金额失败: %w", err)
 	}
 
@@ -176,8 +179,8 @@ func (s *WithdrawServiceImpl) ListWithdrawRequests(ctx context.Context, userID, 
 	filter := &sharedRepo.WithdrawFilter{
 		UserID: userID,
 		Status: status,
-		Limit:  limit,
-		Offset: offset,
+		Limit:  int64(limit),
+		Offset: int64(offset),
 	}
 
 	requests, err := s.walletRepo.ListWithdrawRequests(ctx, filter)
@@ -198,18 +201,16 @@ func (s *WithdrawServiceImpl) ListWithdrawRequests(ctx context.Context, userID, 
 // convertToWithdrawResponse 转换为响应格式
 func convertToWithdrawResponse(request *walletModel.WithdrawRequest) *WithdrawRequest {
 	return &WithdrawRequest{
-		ID:          request.ID,
-		UserID:      request.UserID,
-		WalletID:    request.WalletID,
-		Amount:      request.Amount,
-		Method:      request.Method,
-		Account:     request.Account,
-		Status:      request.Status,
-		ReviewerID:  request.ReviewerID,
-		ReviewedAt:  request.ReviewedAt,
-		ProcessedAt: request.ProcessedAt,
-		Remark:      request.Remark,
-		CreatedAt:   request.CreatedAt,
-		UpdatedAt:   request.UpdatedAt,
+		ID:           request.ID,
+		UserID:       request.UserID,
+		Amount:       request.Amount,
+		Account:      request.Account,
+		Status:       request.Status,
+		ReviewedBy:   request.ReviewedBy,
+		ReviewedAt:   request.ReviewedAt,
+		ProcessedAt:  request.ProcessedAt,
+		RejectReason: request.RejectReason,
+		CreatedAt:    request.CreatedAt,
+		UpdatedAt:    request.UpdatedAt,
 	}
 }
