@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	model "Qingyu_backend/models/document"
-	svc "Qingyu_backend/service/document"
+	svc "Qingyu_backend/service/project"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,14 +1,7 @@
 package core
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/middleware"
@@ -18,64 +11,37 @@ import (
 )
 
 // InitServer 初始化服务器
-func InitServer() *gin.Engine {
-	// 加载配置
-	cfg := config.LoadConfig()
+func InitServer() (*gin.Engine, error) {
+	cfg := config.GlobalConfig.Server
+	if cfg == nil {
+		return nil, fmt.Errorf("server configuration is missing")
+	}
 
-	// 设置Gin模式
-	gin.SetMode(cfg.Server.Mode)
+	// 设置gin模式
+	gin.SetMode(cfg.Mode)
 
-	// 创建Gin引擎
-	app := gin.Default()
+	// 创建gin实例
+	r := gin.New()
 
-	// 添加logger中间件
-	app.Use(middleware.Logger())
+	// 使用中间件
+	r.Use(gin.Recovery())
+	r.Use(middleware.Logger())
+	r.Use(middleware.CORS())
 
 	// 注册路由
-	router.RegisterRoutes(app)
+	router.RegisterRoutes(r)
 
-	return app
+	return r, nil
 }
 
 // RunServer 运行服务器
-func RunServer() {
-	// 加载配置
-	cfg := config.LoadConfig()
-
-	// 初始化服务器
-	app := InitServer()
-
-	// 创建HTTP服务器
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", cfg.Server.Port),
-		Handler: app,
+func RunServer(r *gin.Engine) error {
+	cfg := config.GlobalConfig.Server
+	if cfg == nil {
+		return fmt.Errorf("server configuration is missing")
 	}
 
-	// 在goroutine中启动服务器
-	go func() {
-		log.Printf("服务器运行在端口：%s", cfg.Server.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
-		}
-	}()
-
-	// 等待中断信号以关闭服务器
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("关闭服务器中...")
-
-	// 设置关闭超时
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// 关闭服务器
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	// 关闭数据库连接
-	CloseMongoDB()
-
-	log.Println("服务已退出")
+	addr := fmt.Sprintf(":%s", cfg.Port)
+	fmt.Printf("Server is running on port %s in %s mode\n", cfg.Port, cfg.Mode)
+	return r.Run(addr)
 }

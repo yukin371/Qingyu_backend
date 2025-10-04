@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
@@ -26,10 +27,10 @@ type ExternalAPIService struct {
 func NewExternalAPIService(cfg *config.AIConfig) *ExternalAPIService {
 	return &ExternalAPIService{
 		httpClient: &http.Client{
-			Timeout: cfg.ExternalAPI.Timeout,
+			Timeout: 30 * time.Second, // 使用固定超时时间
 		},
 		config:         cfg,
-		adapterManager: adapter.NewAdapterManager(cfg.ExternalAPI),
+		adapterManager: nil, // 暂时设为nil，由ai_service.go中统一管理
 	}
 }
 
@@ -204,13 +205,9 @@ func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt str
 
 // sendRequest 发送HTTP请求（已弃用，保留用于向后兼容）
 func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateRequest) (*GenerateResponse, error) {
-	// 获取默认提供商配置
-	defaultProvider := s.config.ExternalAPI.DefaultProvider
-	providerConfig, exists := s.config.ExternalAPI.Providers[defaultProvider]
-	if !exists {
-		return nil, fmt.Errorf("默认提供商 %s 配置不存在", defaultProvider)
-	}
-
+	// 使用简化的配置
+	apiURL := s.config.BaseURL + "/chat/completions"
+	
 	// 序列化请求
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -218,14 +215,14 @@ func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateR
 	}
 
 	// 创建HTTP请求
-	req, err := http.NewRequestWithContext(ctx, "POST", providerConfig.BaseURL+"/chat/completions", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("创建HTTP请求失败: %w", err)
 	}
 
 	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+providerConfig.APIKey)
+	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
 
 	// 发送请求
 	resp, err := s.httpClient.Do(req)

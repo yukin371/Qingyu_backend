@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/ai"
-	documentService "Qingyu_backend/service/document"
+	documentService "Qingyu_backend/service/project"
 )
 
 // NovelContextService 小说上下文管理服务

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"Qingyu_backend/pkg/errors"
 	aiService "Qingyu_backend/service/ai"
 	"github.com/gin-gonic/gin"
 )
@@ -20,37 +21,60 @@ func NewAIApi(service *aiService.Service) *AIApi {
 	}
 }
 
-// GenerateContent 生成内容
-// POST /api/v1/ai/generate
-func (a *AIApi) GenerateContent(c *gin.Context) {
-	var req aiService.GenerateContentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "请求参数错误: " + err.Error(),
+// handleError 统一处理错误并返回适当的HTTP响应
+func (a *AIApi) handleError(c *gin.Context, err error, operation string) {
+	if err == nil {
+		return
+	}
+
+	// 检查是否是统一错误类型
+	if apiErr, ok := err.(*errors.APIError); ok {
+		c.JSON(apiErr.HTTPStatus, gin.H{
+			"code":      apiErr.Code,
+			"message":   apiErr.Message,
 			"timestamp": getTimestamp(),
 		})
 		return
 	}
 
+	// 默认处理为内部服务器错误
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"code":      500,
+		"message":   "内部服务器错误: " + err.Error(),
+		"timestamp": getTimestamp(),
+	})
+}
+
+// GenerateContent 生成内容
+// POST /api/v1/ai/generate
+func (a *AIApi) GenerateContent(c *gin.Context) {
+	var req aiService.GenerateContentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		validationErr := errors.AIFactory.ValidationError("请求参数格式错误").
+			WithOperation("GenerateContent").
+			WithMetadata(map[string]interface{}{
+				"error": err.Error(),
+			})
+		a.handleError(c, validationErr, "GenerateContent")
+		return
+	}
+
 	// 验证必填字段
 	if req.ProjectID == "" || req.Prompt == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "项目ID和提示词不能为空",
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("项目ID和提示词不能为空").
+			WithOperation("GenerateContent").
+			WithMetadata(map[string]interface{}{
+				"project_id": req.ProjectID,
+				"prompt":     req.Prompt,
+			})
+		a.handleError(c, validationErr, "GenerateContent")
 		return
 	}
 
 	// 调用服务生成内容
 	response, err := a.service.GenerateContent(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":      500,
-			"message":   "生成内容失败: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		a.handleError(c, err, "GenerateContent")
 		return
 	}
 
@@ -67,21 +91,23 @@ func (a *AIApi) GenerateContent(c *gin.Context) {
 func (a *AIApi) AnalyzeContent(c *gin.Context) {
 	var req aiService.AnalyzeContentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "请求参数错误: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("请求参数格式错误").
+			WithOperation("AnalyzeContent").
+			WithMetadata(map[string]interface{}{
+				"error": err.Error(),
+			})
+		a.handleError(c, validationErr, "AnalyzeContent")
 		return
 	}
 
 	// 验证必填字段
 	if req.Content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "分析内容不能为空",
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("分析内容不能为空").
+			WithOperation("AnalyzeContent").
+			WithMetadata(map[string]interface{}{
+				"content": req.Content,
+			})
+		a.handleError(c, validationErr, "AnalyzeContent")
 		return
 	}
 
@@ -93,11 +119,7 @@ func (a *AIApi) AnalyzeContent(c *gin.Context) {
 	// 调用服务分析内容
 	response, err := a.service.AnalyzeContent(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":      500,
-			"message":   "分析内容失败: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		a.handleError(c, err, "AnalyzeContent")
 		return
 	}
 
@@ -114,32 +136,31 @@ func (a *AIApi) AnalyzeContent(c *gin.Context) {
 func (a *AIApi) ContinueWriting(c *gin.Context) {
 	var req aiService.ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "请求参数错误: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("请求参数格式错误").
+			WithOperation("ContinueWriting").
+			WithMetadata(map[string]interface{}{
+				"error": err.Error(),
+			})
+		a.handleError(c, validationErr, "ContinueWriting")
 		return
 	}
 
 	// 验证必填字段
-	if req.ProjectID == "" || req.ChapterID == "" || req.CurrentText == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "项目ID、章节ID和当前文本不能为空",
-			"timestamp": getTimestamp(),
-		})
+	if req.ProjectID == "" || req.Content == "" {
+		validationErr := errors.AIFactory.ValidationError("项目ID和内容不能为空").
+			WithOperation("ContinueWriting").
+			WithMetadata(map[string]interface{}{
+				"project_id": req.ProjectID,
+				"content":    req.Content,
+			})
+		a.handleError(c, validationErr, "ContinueWriting")
 		return
 	}
 
 	// 调用服务续写内容
 	response, err := a.service.ContinueWriting(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":      500,
-			"message":   "续写内容失败: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		a.handleError(c, err, "ContinueWriting")
 		return
 	}
 
@@ -156,37 +177,30 @@ func (a *AIApi) ContinueWriting(c *gin.Context) {
 func (a *AIApi) OptimizeText(c *gin.Context) {
 	var req aiService.OptimizeTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "请求参数错误: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("请求参数格式错误").
+			WithOperation("OptimizeText").
+			WithMetadata(map[string]interface{}{
+				"error": err.Error(),
+			})
+		a.handleError(c, validationErr, "OptimizeText")
 		return
 	}
 
 	// 验证必填字段
-	if req.ProjectID == "" || req.OriginalText == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "项目ID和原始文本不能为空",
-			"timestamp": getTimestamp(),
-		})
+	if req.Content == "" {
+		validationErr := errors.AIFactory.ValidationError("优化内容不能为空").
+			WithOperation("OptimizeText").
+			WithMetadata(map[string]interface{}{
+				"content": req.Content,
+			})
+		a.handleError(c, validationErr, "OptimizeText")
 		return
-	}
-
-	// 设置默认优化类型
-	if req.OptimizeType == "" {
-		req.OptimizeType = "style"
 	}
 
 	// 调用服务优化文本
 	response, err := a.service.OptimizeText(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":      500,
-			"message":   "优化文本失败: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		a.handleError(c, err, "OptimizeText")
 		return
 	}
 
@@ -203,32 +217,31 @@ func (a *AIApi) OptimizeText(c *gin.Context) {
 func (a *AIApi) GenerateOutline(c *gin.Context) {
 	var req aiService.GenerateOutlineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "请求参数错误: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("请求参数格式错误").
+			WithOperation("GenerateOutline").
+			WithMetadata(map[string]interface{}{
+				"error": err.Error(),
+			})
+		a.handleError(c, validationErr, "GenerateOutline")
 		return
 	}
 
 	// 验证必填字段
 	if req.ProjectID == "" || req.Theme == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":      400,
-			"message":   "项目ID和主题不能为空",
-			"timestamp": getTimestamp(),
-		})
+		validationErr := errors.AIFactory.ValidationError("项目ID和主题不能为空").
+			WithOperation("GenerateOutline").
+			WithMetadata(map[string]interface{}{
+				"project_id": req.ProjectID,
+				"theme":      req.Theme,
+			})
+		a.handleError(c, validationErr, "GenerateOutline")
 		return
 	}
 
 	// 调用服务生成大纲
 	response, err := a.service.GenerateOutline(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":      500,
-			"message":   "生成大纲失败: " + err.Error(),
-			"timestamp": getTimestamp(),
-		})
+		a.handleError(c, err, "GenerateOutline")
 		return
 	}
 

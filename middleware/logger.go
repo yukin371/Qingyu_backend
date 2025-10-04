@@ -4,199 +4,290 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
-	"os"
+	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// LoggerConfig logger中间件配置
+// LoggerConfig 日志中间件配置
 type LoggerConfig struct {
-	// 是否启用彩色输出
-	EnableColor bool
-	// 是否记录请求体
-	LogRequestBody bool
-	// 是否记录响应体
-	LogResponseBody bool
-	// 最大请求体大小（字节）
-	MaxRequestBodySize int64
-	// 最大响应体大小（字节）
-	MaxResponseBodySize int64
-	// 跳过记录的路径
-	SkipPaths []string
+	EnableColor      bool          `json:"enable_color" yaml:"enable_color"`
+	EnableReqBody    bool          `json:"enable_req_body" yaml:"enable_req_body"`
+	EnableRespBody   bool          `json:"enable_resp_body" yaml:"enable_resp_body"`
+	MaxReqBodySize   int           `json:"max_req_body_size" yaml:"max_req_body_size"`
+	MaxRespBodySize  int           `json:"max_resp_body_size" yaml:"max_resp_body_size"`
+	SkipPaths        []string      `json:"skip_paths" yaml:"skip_paths"`
+	SlowThreshold    time.Duration `json:"slow_threshold" yaml:"slow_threshold"`
+	EnablePerformance bool         `json:"enable_performance" yaml:"enable_performance"`
 }
 
-// DefaultLoggerConfig 默认配置
-func DefaultLoggerConfig() LoggerConfig {
-	return LoggerConfig{
-		EnableColor:         true,
-		LogRequestBody:      false,
-		LogResponseBody:     false,
-		MaxRequestBodySize:  1024 * 1024, // 1MB
-		MaxResponseBodySize: 1024 * 1024, // 1MB
-		SkipPaths:          []string{"/ping", "/health"},
-	}
+// RequestInfo 请求信息
+type RequestInfo struct {
+	Method      string            `json:"method"`
+	Path        string            `json:"path"`
+	Query       string            `json:"query,omitempty"`
+	Headers     map[string]string `json:"headers,omitempty"`
+	Body        string            `json:"body,omitempty"`
+	ClientIP    string            `json:"client_ip"`
+	UserAgent   string            `json:"user_agent"`
+	UserID      string            `json:"user_id,omitempty"`
+	RequestID   string            `json:"request_id"`
+	Timestamp   time.Time         `json:"timestamp"`
+	BodySize    int64             `json:"body_size"`
 }
 
-// responseBodyWriter 用于捕获响应体的writer
-type responseBodyWriter struct {
+// ResponseInfo 响应信息
+type ResponseInfo struct {
+	StatusCode int               `json:"status_code"`
+	Headers    map[string]string `json:"headers,omitempty"`
+	Body       string            `json:"body,omitempty"`
+	BodySize   int64             `json:"body_size"`
+	Duration   time.Duration     `json:"duration"`
+	Error      string            `json:"error,omitempty"`
+}
+
+// responseWriter 响应写入器包装
+type responseWriter struct {
 	gin.ResponseWriter
 	body *bytes.Buffer
 }
 
-func (r responseBodyWriter) Write(b []byte) (int, error) {
-	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
+func (w *responseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
 }
 
-// Logger 创建logger中间件
+// Logger 默认日志中间件
 func Logger() gin.HandlerFunc {
-	return LoggerWithConfig(DefaultLoggerConfig())
+	return LoggerWithConfig(LoggerConfig{
+		EnableColor:     true,
+		MaxReqBodySize:  1024,
+		MaxRespBodySize: 1024,
+		SlowThreshold:   200 * time.Millisecond,
+		SkipPaths: []string{
+			"/health",
+			"/metrics",
+			"/favicon.ico",
+		},
+	})
 }
 
-// LoggerWithConfig 使用自定义配置创建logger中间件
+// LoggerWithConfig 带配置的日志中间件
 func LoggerWithConfig(config LoggerConfig) gin.HandlerFunc {
-	// 创建标准输出logger
-	logger := log.New(os.Stdout, "", 0)
+	// 初始化zap日志器
+	logger := initZapLogger()
 	
 	return func(c *gin.Context) {
-		// 检查是否跳过记录
-		path := c.Request.URL.Path
-		for _, skipPath := range config.SkipPaths {
-			if path == skipPath {
-				c.Next()
-				return
-			}
+		// 检查是否跳过日志记录
+		if shouldSkipLogging(c.Request.URL.Path, config.SkipPaths) {
+			c.Next()
+			return
 		}
 
 		// 记录开始时间
 		start := time.Now()
 		
-		// 读取请求体（如果启用）
-		var requestBody string
-		if config.LogRequestBody && c.Request.Body != nil {
-			bodyBytes, err := io.ReadAll(io.LimitReader(c.Request.Body, config.MaxRequestBodySize))
-			if err == nil {
-				requestBody = string(bodyBytes)
-				// 重新设置请求体，以便后续处理器可以读取
-				c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-			}
+		// 生成请求ID
+		requestID := generateRequestID()
+		c.Set("request_id", requestID)
+
+		// 读取请求体
+		var reqBody string
+		if config.EnableReqBody && c.Request.Body != nil {
+			reqBody = readRequestBody(c, int64(config.MaxReqBodySize))
 		}
 
-		// 创建响应体捕获器（如果启用）
-		var responseWriter *responseBodyWriter
-		if config.LogResponseBody {
-			responseWriter = &responseBodyWriter{
+		// 包装响应写入器
+		var respWriter *responseWriter
+		if config.EnableRespBody {
+			respWriter = &responseWriter{
 				ResponseWriter: c.Writer,
-				body:          bytes.NewBufferString(""),
+				body:          bytes.NewBuffer([]byte{}),
 			}
-			c.Writer = responseWriter
+			c.Writer = respWriter
 		}
+
+		// 构建请求信息
+		reqInfo := buildRequestInfo(c, reqBody, requestID, start)
+
+		// 记录请求开始
+		logger.Info("Request started",
+			zap.String("request_id", requestID),
+			zap.String("method", reqInfo.Method),
+			zap.String("path", reqInfo.Path),
+			zap.String("client_ip", reqInfo.ClientIP),
+			zap.String("user_agent", reqInfo.UserAgent),
+			zap.String("user_id", reqInfo.UserID),
+		)
 
 		// 处理请求
 		c.Next()
 
 		// 计算处理时间
-		latency := time.Since(start)
+		duration := time.Since(start)
 		
-		// 获取响应体（如果启用）
-		var responseBody string
-		if config.LogResponseBody && responseWriter != nil {
-			responseBytes := responseWriter.body.Bytes()
-			if len(responseBytes) > int(config.MaxResponseBodySize) {
-				responseBody = string(responseBytes[:config.MaxResponseBodySize]) + "...[truncated]"
-			} else {
-				responseBody = string(responseBytes)
-			}
-		}
+		// 构建响应信息
+		respInfo := buildResponseInfo(c, respWriter, duration, config)
 
-		// 构建日志信息
-		statusCode := c.Writer.Status()
-		method := c.Request.Method
-		clientIP := c.ClientIP()
-		userAgent := c.Request.UserAgent()
+		// 记录请求完成
+		logLevel := determineLogLevel(respInfo.StatusCode, duration, config.SlowThreshold)
 		
-		// 根据状态码选择颜色
-		var statusColor, methodColor, resetColor string
-		if config.EnableColor {
-			statusColor = getStatusColor(statusCode)
-			methodColor = getMethodColor(method)
-			resetColor = "\033[0m"
+		fields := []zap.Field{
+			zap.String("request_id", requestID),
+			zap.String("method", reqInfo.Method),
+			zap.String("path", reqInfo.Path),
+			zap.String("client_ip", reqInfo.ClientIP),
+			zap.Int("status_code", respInfo.StatusCode),
+			zap.Duration("duration", duration),
+			zap.Int64("req_body_size", reqInfo.BodySize),
+			zap.Int64("resp_body_size", respInfo.BodySize),
 		}
 
-		// 基础日志信息
-		logMsg := fmt.Sprintf("[GIN] %s |%s %3d %s| %13v | %15s |%s %-7s %s %s",
-			time.Now().Format("2006/01/02 - 15:04:05"),
-			statusColor, statusCode, resetColor,
-			latency,
-			clientIP,
-			methodColor, method, resetColor,
-			path,
-		)
-
-		// 添加查询参数
-		if rawQuery := c.Request.URL.RawQuery; rawQuery != "" {
-			logMsg += fmt.Sprintf(" | Query: %s", rawQuery)
-		}
-
-		// 添加User-Agent
-		if userAgent != "" {
-			logMsg += fmt.Sprintf(" | UA: %s", userAgent)
-		}
-
-		// 添加请求体
-		if config.LogRequestBody && requestBody != "" {
-			logMsg += fmt.Sprintf(" | ReqBody: %s", requestBody)
-		}
-
-		// 添加响应体
-		if config.LogResponseBody && responseBody != "" {
-			logMsg += fmt.Sprintf(" | RespBody: %s", responseBody)
+		// 添加用户信息
+		if reqInfo.UserID != "" {
+			fields = append(fields, zap.String("user_id", reqInfo.UserID))
 		}
 
 		// 添加错误信息
-		if len(c.Errors) > 0 {
-			logMsg += fmt.Sprintf(" | Errors: %s", c.Errors.String())
+		if respInfo.Error != "" {
+			fields = append(fields, zap.String("error", respInfo.Error))
 		}
 
-		// 输出日志
-		logger.Println(logMsg)
+		// 添加请求体
+		if config.EnableReqBody && reqBody != "" {
+			fields = append(fields, zap.String("req_body", reqBody))
+		}
+
+		// 添加响应体
+		if config.EnableRespBody && respInfo.Body != "" {
+			fields = append(fields, zap.String("resp_body", respInfo.Body))
+		}
+
+		// 记录日志
+		switch logLevel {
+		case zapcore.ErrorLevel:
+			logger.Error("Request completed with error", fields...)
+		case zapcore.WarnLevel:
+			logger.Warn("Request completed slowly", fields...)
+		default:
+			logger.Info("Request completed", fields...)
+		}
 	}
 }
 
-// getStatusColor 根据状态码获取颜色
-func getStatusColor(code int) string {
-	switch {
-	case code >= 200 && code < 300:
-		return "\033[97;42m" // 绿色背景
-	case code >= 300 && code < 400:
-		return "\033[90;47m" // 白色背景
-	case code >= 400 && code < 500:
-		return "\033[90;43m" // 黄色背景
-	default:
-		return "\033[97;41m" // 红色背景
+// 辅助函数
+
+// initZapLogger 初始化zap日志器
+func initZapLogger() *zap.Logger {
+	cfg := zap.NewProductionConfig()
+	cfg.OutputPaths = []string{"stdout"}
+	cfg.ErrorOutputPaths = []string{"stderr"}
+	cfg.EncoderConfig.TimeKey = "timestamp"
+	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	
+	logger, err := cfg.Build()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize zap logger: %v", err))
+	}
+	
+	return logger
+}
+
+// shouldSkipLogging 检查是否应该跳过日志记录
+func shouldSkipLogging(path string, skipPaths []string) bool {
+	for _, skipPath := range skipPaths {
+		if strings.HasPrefix(path, skipPath) {
+			return true
+		}
+	}
+	return false
+}
+
+// generateRequestID 生成请求ID
+func generateRequestID() string {
+	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
+}
+
+// readRequestBody 读取请求体
+func readRequestBody(c *gin.Context, maxSize int64) string {
+	if c.Request.Body == nil {
+		return ""
+	}
+	
+	// 限制读取大小
+	body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxSize))
+	if err != nil {
+		return ""
+	}
+	
+	// 重新设置请求体，以便后续处理
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	
+	return string(body)
+}
+
+// buildRequestInfo 构建请求信息
+func buildRequestInfo(c *gin.Context, reqBody, requestID string, start time.Time) RequestInfo {
+	userID := ""
+	if user, exists := c.Get("user"); exists {
+		if userCtx, ok := user.(*UserContext); ok {
+			userID = userCtx.UserID
+		}
+	}
+	
+	return RequestInfo{
+		RequestID: requestID,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Query:     c.Request.URL.RawQuery,
+		ClientIP:  c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+		UserID:    userID,
+		Body:      reqBody,
+		BodySize:  int64(len(reqBody)),
+		Timestamp: start,
 	}
 }
 
-// getMethodColor 根据HTTP方法获取颜色
-func getMethodColor(method string) string {
-	switch method {
-	case "GET":
-		return "\033[97;44m" // 蓝色背景
-	case "POST":
-		return "\033[97;42m" // 绿色背景
-	case "PUT":
-		return "\033[97;43m" // 黄色背景
-	case "DELETE":
-		return "\033[97;41m" // 红色背景
-	case "PATCH":
-		return "\033[97;42m" // 绿色背景
-	case "HEAD":
-		return "\033[97;45m" // 紫色背景
-	case "OPTIONS":
-		return "\033[90;47m" // 白色背景
-	default:
-		return "\033[0m" // 默认颜色
+// buildResponseInfo 构建响应信息
+func buildResponseInfo(c *gin.Context, respWriter *responseWriter, duration time.Duration, config LoggerConfig) ResponseInfo {
+	respBody := ""
+	respBodySize := int64(0)
+	
+	if config.EnableRespBody && respWriter != nil {
+		respBody = respWriter.body.String()
+		respBodySize = int64(len(respBody))
 	}
+	
+	// 获取错误信息
+	errorMsg := ""
+	if len(c.Errors) > 0 {
+		errorMsg = c.Errors.String()
+	}
+	
+	return ResponseInfo{
+		StatusCode: c.Writer.Status(),
+		Body:       respBody,
+		BodySize:   respBodySize,
+		Duration:   duration,
+		Error:      errorMsg,
+	}
+}
+
+// determineLogLevel 确定日志级别
+func determineLogLevel(statusCode int, duration time.Duration, slowThreshold time.Duration) zapcore.Level {
+	if statusCode >= 500 {
+		return zapcore.ErrorLevel
+	}
+	if statusCode >= 400 {
+		return zapcore.WarnLevel
+	}
+	if duration > slowThreshold {
+		return zapcore.WarnLevel
+	}
+	return zapcore.InfoLevel
 }

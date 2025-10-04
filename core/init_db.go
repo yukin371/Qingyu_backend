@@ -2,86 +2,55 @@ package core
 
 import (
 	"context"
-	"log"
-	"time"
+	"fmt"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
-	svc "Qingyu_backend/service/document"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// InitMongoDB 初始化MongoDB连接
-func InitMongoDB() error {
-	// 加载配置
-	cfg := config.LoadConfig()
+// InitDB 初始化数据库连接
+func InitDB() error {
+	cfg := config.GlobalConfig.Database
+	if cfg == nil {
+		return fmt.Errorf("database configuration is missing")
+	}
 
-	// 设置MongoDB连接选项
-	clientOptions := options.Client().ApplyURI(cfg.Database.MongoURI)
+	// 检查主数据库配置
+	if cfg.Primary.Type != config.DatabaseTypeMongoDB || cfg.Primary.MongoDB == nil {
+		return fmt.Errorf("MongoDB configuration is missing or invalid")
+	}
 
-	// 应用高级配置选项
-	clientOptions.SetConnectTimeout(cfg.Database.ConnectTimeout)
-	clientOptions.SetMaxPoolSize(cfg.Database.MaxPoolSize)
-	clientOptions.SetMinPoolSize(cfg.Database.MinPoolSize)
-	clientOptions.SetMaxConnIdleTime(cfg.Database.MaxConnIdleTime)
-	clientOptions.SetRetryWrites(cfg.Database.RetryWrites)
-	clientOptions.SetRetryReads(cfg.Database.RetryReads)
+	mongoCfg := cfg.Primary.MongoDB
 
-	// 设置连接超时
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Database.ConnectTimeout)
-	defer cancel()
+	// 创建MongoDB客户端配置
+	clientOptions := options.Client().
+		ApplyURI(mongoCfg.URI).
+		SetConnectTimeout(mongoCfg.ConnectTimeout).
+		SetMaxPoolSize(mongoCfg.MaxPoolSize).
+		SetMinPoolSize(mongoCfg.MinPoolSize).
+		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
 
 	// 连接到MongoDB
+	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
+	defer cancel()
+
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Printf("Failed to connect to MongoDB: %v", err)
-		return err
+		return fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
-	// 检查连接
+	// 验证连接
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Printf("Failed to ping MongoDB: %v", err)
-		return err
+		return fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
-	// 设置全局变量
-	global.MongoClient = client
-	global.DB = client.Database(cfg.Database.DBName)
+	// 设置全局数据库实例
+	global.DB = client.Database(mongoCfg.Database)
 
-	log.Printf("Connected to MongoDB: %s, Database: %s", cfg.Database.MongoURI, cfg.Database.DBName)
-	log.Printf("MongoDB connection pool configured with MaxSize: %d, MinSize: %d", cfg.Database.MaxPoolSize, cfg.Database.MinPoolSize)
-	// 确保版本相关的索引
-	go func() {
-		ctx2, cancel2 := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel2()
-		if err := (&svc.ProjectService{}).EnsureIndexes(ctx2); err != nil {
-			log.Printf("warning: could not ensure project indexes: %v", err)
-		} else {
-			log.Println("project indexes ensured")
-		}
-		if err := (&svc.VersionService{}).EnsureIndexes(ctx2); err != nil {
-			log.Printf("warning: could not ensure version indexes: %v", err)
-		} else {
-			log.Println("version indexes ensured")
-		}
-	}()
+	fmt.Printf("Successfully connected to MongoDB: %s/%s\n", mongoCfg.URI, mongoCfg.Database)
 	return nil
-}
-
-// CloseMongoDB 关闭MongoDB连接
-func CloseMongoDB() {
-	if global.MongoClient != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		err := global.MongoClient.Disconnect(ctx)
-		if err != nil {
-			log.Printf("Error disconnecting from MongoDB: %v", err)
-		} else {
-			log.Println("Disconnected from MongoDB")
-		}
-	}
 }

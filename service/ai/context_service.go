@@ -7,7 +7,7 @@ import (
 
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/models/document"
-	documentService "Qingyu_backend/service/document"
+	documentService "Qingyu_backend/service/project"
 )
 
 // ContextService AI上下文服务
