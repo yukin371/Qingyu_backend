@@ -65,10 +65,10 @@ func (api *AdminAPI) GetPendingReviews(c *gin.Context) {
 
 // ReviewContentRequest 审核内容请求
 type ReviewContentRequest struct {
-	ContentID   string `json:"content_id" binding:"required"`
-	ContentType string `json:"content_type" binding:"required"`
+	ContentID   string `json:"content_id" binding:"required,min=1"`
+	ContentType string `json:"content_type" binding:"required" validate:"content_type"`
 	Action      string `json:"action" binding:"required,oneof=approve reject"`
-	Reason      string `json:"reason"`
+	Reason      string `json:"reason" validate:"omitempty,max=500"`
 }
 
 // ReviewContent 审核内容

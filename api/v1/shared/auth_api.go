@@ -33,11 +33,7 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 // @Router /api/v1/shared/auth/register [post]
 func (api *AuthAPI) Register(c *gin.Context) {
 	var req auth.RegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+	if !ValidateRequest(c, &req) {
 		return
 	}
 

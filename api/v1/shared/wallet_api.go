@@ -97,8 +97,8 @@ func (api *WalletAPI) GetWallet(c *gin.Context) {
 
 // RechargeRequest 充值请求
 type RechargeRequest struct {
-	Amount float64 `json:"amount" binding:"required,gt=0"`
-	Method string  `json:"method" binding:"required"` // alipay, wechat, etc.
+	Amount float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
+	Method string  `json:"method" binding:"required,oneof=alipay wechat bank"`
 }
 
 // Recharge 充值
@@ -125,11 +125,7 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 	}
 
 	var req RechargeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+	if !ValidateRequest(c, &req) {
 		return
 	}
 
@@ -151,8 +147,8 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 
 // ConsumeRequest 消费请求
 type ConsumeRequest struct {
-	Amount float64 `json:"amount" binding:"required,gt=0"`
-	Reason string  `json:"reason" binding:"required"`
+	Amount float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
+	Reason string  `json:"reason" binding:"required,min=1,max=200"`
 }
 
 // Consume 消费
@@ -179,11 +175,7 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 	}
 
 	var req ConsumeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+	if !ValidateRequest(c, &req) {
 		return
 	}
 
@@ -205,9 +197,9 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 
 // TransferRequest 转账请求
 type TransferRequest struct {
-	ToUserID string  `json:"to_user_id" binding:"required"`
-	Amount   float64 `json:"amount" binding:"required,gt=0"`
-	Reason   string  `json:"reason"`
+	ToUserID string  `json:"to_user_id" binding:"required,min=1"`
+	Amount   float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
+	Reason   string  `json:"reason" validate:"omitempty,max=200"`
 }
 
 // Transfer 转账
@@ -234,11 +226,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 	}
 
 	var req TransferRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+	if !ValidateRequest(c, &req) {
 		return
 	}
 
@@ -314,8 +302,8 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 
 // WithdrawRequest 提现请求
 type WithdrawRequest struct {
-	Amount  float64 `json:"amount" binding:"required,gt=0"`
-	Account string  `json:"account" binding:"required"`
+	Amount  float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
+	Account string  `json:"account" binding:"required" validate:"withdraw_account"`
 }
 
 // RequestWithdraw 申请提现
@@ -342,11 +330,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 	}
 
 	var req WithdrawRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+	if !ValidateRequest(c, &req) {
 		return
 	}
 
