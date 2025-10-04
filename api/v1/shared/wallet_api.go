@@ -1,0 +1,422 @@
+package shared
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	"Qingyu_backend/service/shared/wallet"
+)
+
+// WalletAPI 钱包服务API处理器
+type WalletAPI struct {
+	walletService wallet.WalletService
+}
+
+// NewWalletAPI 创建钱包API实例
+func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
+	return &WalletAPI{
+		walletService: walletService,
+	}
+}
+
+// GetBalance 查询余额
+// @Summary 查询余额
+// @Description 查询用户钱包余额
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} APIResponse{data=float64}
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/balance [get]
+func (api *WalletAPI) GetBalance(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	balance, err := api.walletService.GetBalance(c.Request.Context(), userID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "查询余额失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "查询余额成功",
+		Data:    balance,
+	})
+}
+
+// GetWallet 获取钱包信息
+// @Summary 获取钱包信息
+// @Description 获取用户完整钱包信息
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} APIResponse{data=wallet.Wallet}
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet [get]
+func (api *WalletAPI) GetWallet(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	walletInfo, err := api.walletService.GetWallet(c.Request.Context(), userID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取钱包信息失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "获取钱包信息成功",
+		Data:    walletInfo,
+	})
+}
+
+// RechargeRequest 充值请求
+type RechargeRequest struct {
+	Amount float64 `json:"amount" binding:"required,gt=0"`
+	Method string  `json:"method" binding:"required"` // alipay, wechat, etc.
+}
+
+// Recharge 充值
+// @Summary 钱包充值
+// @Description 用户钱包充值
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body RechargeRequest true "充值信息"
+// @Success 200 {object} APIResponse{data=wallet.Transaction}
+// @Failure 400 {object} APIResponse
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/recharge [post]
+func (api *WalletAPI) Recharge(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	var req RechargeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), req.Amount, req.Method)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "充值失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "充值成功",
+		Data:    transaction,
+	})
+}
+
+// ConsumeRequest 消费请求
+type ConsumeRequest struct {
+	Amount float64 `json:"amount" binding:"required,gt=0"`
+	Reason string  `json:"reason" binding:"required"`
+}
+
+// Consume 消费
+// @Summary 钱包消费
+// @Description 用户钱包消费
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body ConsumeRequest true "消费信息"
+// @Success 200 {object} APIResponse{data=wallet.Transaction}
+// @Failure 400 {object} APIResponse
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/consume [post]
+func (api *WalletAPI) Consume(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	var req ConsumeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), req.Amount, req.Reason)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "消费失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "消费成功",
+		Data:    transaction,
+	})
+}
+
+// TransferRequest 转账请求
+type TransferRequest struct {
+	ToUserID string  `json:"to_user_id" binding:"required"`
+	Amount   float64 `json:"amount" binding:"required,gt=0"`
+	Reason   string  `json:"reason"`
+}
+
+// Transfer 转账
+// @Summary 用户转账
+// @Description 向其他用户转账
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body TransferRequest true "转账信息"
+// @Success 200 {object} APIResponse{data=wallet.Transaction}
+// @Failure 400 {object} APIResponse
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/transfer [post]
+func (api *WalletAPI) Transfer(c *gin.Context) {
+	fromUserID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	var req TransferRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID.(string), req.ToUserID, req.Amount, req.Reason)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "转账失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "转账成功",
+		Data:    transaction,
+	})
+}
+
+// GetTransactions 查询交易记录
+// @Summary 查询交易记录
+// @Description 查询用户交易记录列表
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Param type query string false "交易类型"
+// @Success 200 {object} PaginatedResponse{data=[]wallet.Transaction}
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/transactions [get]
+func (api *WalletAPI) GetTransactions(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	// 解析分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	transactionType := c.Query("type")
+
+	req := &wallet.ListTransactionsRequest{
+		TransactionType: transactionType,
+		Page:            page,
+		PageSize:        pageSize,
+	}
+
+	transactions, err := api.walletService.ListTransactions(c.Request.Context(), userID.(string), req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "查询交易记录失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, PaginatedResponse{
+		Code:    200,
+		Message: "查询交易记录成功",
+		Data:    transactions,
+		Total:   int64(len(transactions)),
+		Page:    page,
+		Size:    pageSize,
+	})
+}
+
+// WithdrawRequest 提现请求
+type WithdrawRequest struct {
+	Amount  float64 `json:"amount" binding:"required,gt=0"`
+	Account string  `json:"account" binding:"required"`
+}
+
+// RequestWithdraw 申请提现
+// @Summary 申请提现
+// @Description 用户申请提现
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body WithdrawRequest true "提现信息"
+// @Success 200 {object} APIResponse{data=wallet.WithdrawRequest}
+// @Failure 400 {object} APIResponse
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/withdraw [post]
+func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	var req WithdrawRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	withdrawReq, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), req.Amount, req.Account)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "申请提现失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "申请提现成功",
+		Data:    withdrawReq,
+	})
+}
+
+// GetWithdrawRequests 查询提现申请
+// @Summary 查询提现申请
+// @Description 查询用户提现申请列表
+// @Tags 钱包
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Param status query string false "状态"
+// @Success 200 {object} PaginatedResponse{data=[]wallet.WithdrawRequest}
+// @Failure 401 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v1/shared/wallet/withdrawals [get]
+func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "未认证",
+		})
+		return
+	}
+
+	// 解析分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	status := c.Query("status")
+
+	req := &wallet.ListWithdrawRequestsRequest{
+		UserID:   userID.(string),
+		Status:   status,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	requests, err := api.walletService.ListWithdrawRequests(c.Request.Context(), req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "查询提现申请失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, PaginatedResponse{
+		Code:    200,
+		Message: "查询提现申请成功",
+		Data:    requests,
+		Total:   int64(len(requests)),
+		Page:    page,
+		Size:    pageSize,
+	})
+}
