@@ -13,16 +13,16 @@ import (
 
 // RateLimitConfig 限流中间件配置
 type RateLimitConfig struct {
-	RequestsPerSecond int           `json:"requests_per_second" yaml:"requests_per_second"`
-	RequestsPerMinute int           `json:"requests_per_minute" yaml:"requests_per_minute"`
-	RequestsPerHour   int           `json:"requests_per_hour" yaml:"requests_per_hour"`
-	BurstSize         int           `json:"burst_size" yaml:"burst_size"`
-	KeyFunc           string        `json:"key_func" yaml:"key_func"`
-	SkipSuccessful    bool          `json:"skip_successful" yaml:"skip_successful"`
-	SkipFailedRequest bool          `json:"skip_failed_request" yaml:"skip_failed_request"`
-	SkipPaths         []string      `json:"skip_paths" yaml:"skip_paths"`
-	Message           string        `json:"message" yaml:"message"`
-	StatusCode        int           `json:"status_code" yaml:"status_code"`
+	RequestsPerSecond int      `json:"requests_per_second" yaml:"requests_per_second"`
+	RequestsPerMinute int      `json:"requests_per_minute" yaml:"requests_per_minute"`
+	RequestsPerHour   int      `json:"requests_per_hour" yaml:"requests_per_hour"`
+	BurstSize         int      `json:"burst_size" yaml:"burst_size"`
+	KeyFunc           string   `json:"key_func" yaml:"key_func"`
+	SkipSuccessful    bool     `json:"skip_successful" yaml:"skip_successful"`
+	SkipFailedRequest bool     `json:"skip_failed_request" yaml:"skip_failed_request"`
+	SkipPaths         []string `json:"skip_paths" yaml:"skip_paths"`
+	Message           string   `json:"message" yaml:"message"`
+	StatusCode        int      `json:"status_code" yaml:"status_code"`
 }
 
 // RateLimiter 限流器接口
@@ -45,6 +45,30 @@ func NewTokenBucketLimiter(rps int, burst int) *TokenBucketLimiter {
 		limiters: make(map[string]*rate.Limiter),
 		rps:      rate.Limit(rps),
 		burst:    burst,
+	}
+}
+
+// RateLimitMiddleware 简单的速率限制中间件
+// limit: 允许的请求数, window: 时间窗口（秒）
+func RateLimitMiddleware(limit int, window int) gin.HandlerFunc {
+	// 计算每秒速率
+	rps := float64(limit) / float64(window)
+	limiter := NewTokenBucketLimiter(int(rps*100), limit) // 使用更精细的速率控制
+
+	return func(c *gin.Context) {
+		// 使用IP作为限流key
+		key := c.ClientIP()
+
+		if !limiter.Allow(key) {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code":    429,
+				"message": fmt.Sprintf("请求过于频繁，每%d秒最多%d次请求", window, limit),
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
 	}
 }
 
@@ -103,7 +127,7 @@ func RateLimit() gin.HandlerFunc {
 // RateLimitWithConfig 带配置的限流中间件
 func RateLimitWithConfig(config RateLimitConfig) gin.HandlerFunc {
 	limiter := NewTokenBucketLimiter(config.RequestsPerSecond, config.BurstSize)
-	
+
 	return func(c *gin.Context) {
 		// 检查是否跳过限流
 		if shouldSkipRateLimit(c.Request.URL.Path, config.SkipPaths) {
@@ -113,7 +137,7 @@ func RateLimitWithConfig(config RateLimitConfig) gin.HandlerFunc {
 
 		// 获取限流键
 		key := getRateLimitKey(c, config.KeyFunc)
-		
+
 		// 检查是否允许请求
 		if !limiter.Allow(key) {
 			c.JSON(config.StatusCode, gin.H{
@@ -167,7 +191,7 @@ func getRateLimitKey(c *gin.Context, keyFunc string) string {
 // CreateRateLimitMiddleware 创建限流中间件（用于中间件工厂）
 func CreateRateLimitMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
 	rateLimitConfig := DefaultRateLimitConfig()
-	
+
 	// 解析配置
 	if rps, ok := config["requests_per_second"].(int); ok {
 		rateLimitConfig.RequestsPerSecond = rps
@@ -199,6 +223,6 @@ func CreateRateLimitMiddleware(config map[string]interface{}) (gin.HandlerFunc, 
 	if statusCode, ok := config["status_code"].(int); ok {
 		rateLimitConfig.StatusCode = statusCode
 	}
-	
+
 	return RateLimitWithConfig(rateLimitConfig), nil
 }
