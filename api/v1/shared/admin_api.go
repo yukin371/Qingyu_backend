@@ -291,12 +291,11 @@ func (api *AdminAPI) GetOperationLogs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取操作日志成功",
-		Data:    logs,
-		Total:   int64(len(logs)),
-		Page:    page,
-		Size:    pageSize,
-	})
+	c.JSON(http.StatusOK, PaginatedResponseHelper(
+		logs,
+		int64(len(logs)),
+		page,
+		pageSize,
+		"获取操作日志成功",
+	))
 }

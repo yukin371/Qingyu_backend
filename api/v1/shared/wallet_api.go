@@ -290,14 +290,13 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "查询交易记录成功",
-		Data:    transactions,
-		Total:   int64(len(transactions)),
-		Page:    page,
-		Size:    pageSize,
-	})
+	c.JSON(http.StatusOK, PaginatedResponseHelper(
+		transactions,
+		int64(len(transactions)),
+		page,
+		pageSize,
+		"查询交易记录成功",
+	))
 }
 
 // WithdrawRequest 提现请求
@@ -395,12 +394,11 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "查询提现申请成功",
-		Data:    requests,
-		Total:   int64(len(requests)),
-		Page:    page,
-		Size:    pageSize,
-	})
+	c.JSON(http.StatusOK, PaginatedResponseHelper(
+		requests,
+		int64(len(requests)),
+		page,
+		pageSize,
+		"查询提现申请成功",
+	))
 }

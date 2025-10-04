@@ -293,14 +293,13 @@ func (api *StorageAPI) ListFiles(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "列出文件成功",
-		Data:    files,
-		Total:   int64(len(files)),
-		Page:    page,
-		Size:    pageSize,
-	})
+	c.JSON(http.StatusOK, PaginatedResponseHelper(
+		files,
+		int64(len(files)),
+		page,
+		pageSize,
+		"列出文件成功",
+	))
 }
 
 // GetFileURL 获取文件访问URL
