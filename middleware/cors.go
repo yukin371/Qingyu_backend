@@ -2,80 +2,30 @@ package middleware
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// CORSConfig CORS中间件配置
-type CORSConfig struct {
-	AllowOrigins     []string      `json:"allow_origins" yaml:"allow_origins"`
-	AllowMethods     []string      `json:"allow_methods" yaml:"allow_methods"`
-	AllowHeaders     []string      `json:"allow_headers" yaml:"allow_headers"`
-	ExposeHeaders    []string      `json:"expose_headers" yaml:"expose_headers"`
-	AllowCredentials bool          `json:"allow_credentials" yaml:"allow_credentials"`
-	MaxAge           time.Duration `json:"max_age" yaml:"max_age"`
-	AllowWildcard    bool          `json:"allow_wildcard" yaml:"allow_wildcard"`
-	AllowBrowserExt  bool          `json:"allow_browser_ext" yaml:"allow_browser_ext"`
-	AllowWebSockets  bool          `json:"allow_websockets" yaml:"allow_websockets"`
-	AllowFiles       bool          `json:"allow_files" yaml:"allow_files"`
-}
-
-// DefaultCORSConfig 默认CORS配置
-func DefaultCORSConfig() CORSConfig {
-	return CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-			http.MethodHead,
-			http.MethodOptions,
-		},
-		AllowHeaders: []string{
-			"Origin",
-			"Content-Length",
-			"Content-Type",
-			"Authorization",
-			"Accept",
-			"X-Requested-With",
-		},
-		ExposeHeaders:    []string{},
-		AllowCredentials: false,
-		MaxAge:           12 * time.Hour,
-		AllowWildcard:    true,
-		AllowBrowserExt:  false,
-		AllowWebSockets:  false,
-		AllowFiles:       false,
-	}
-}
-
-// CORS 默认CORS中间件
-func CORS() gin.HandlerFunc {
-	return CORSWithConfig(DefaultCORSConfig())
-}
-
-// CORSWithConfig 带配置的CORS中间件
-func CORSWithConfig(config CORSConfig) gin.HandlerFunc {
+// CORSMiddleware CORS跨域中间件
+func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 允许的源（生产环境应该配置具体域名）
 		origin := c.Request.Header.Get("Origin")
-		
-		// 检查是否允许该源
-		if !isOriginAllowed(origin, config) {
-			c.Next()
-			return
+		if origin == "" {
+			origin = "*"
 		}
 
-		// 设置CORS头部
-		setCORSHeaders(c, origin, config)
+		// 设置CORS响应头
+		c.Header("Access-Control-Allow-Origin", origin)
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, Authorization, X-Request-ID")
+		c.Header("Access-Control-Expose-Headers", "Content-Length, X-Request-ID, X-Response-Time")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Max-Age", "86400") // 24小时
 
 		// 处理预检请求
-		if c.Request.Method == http.MethodOptions {
-			handlePreflightRequest(c, config)
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 
@@ -83,185 +33,81 @@ func CORSWithConfig(config CORSConfig) gin.HandlerFunc {
 	}
 }
 
-// isOriginAllowed 检查源是否被允许
-func isOriginAllowed(origin string, config CORSConfig) bool {
-	if origin == "" {
-		return true
-	}
+// CORSMiddlewareWithConfig 带配置的CORS中间件
+func CORSMiddlewareWithConfig(config CORSConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
 
-	// 检查通配符
-	if config.AllowWildcard {
-		for _, allowedOrigin := range config.AllowOrigins {
-			if allowedOrigin == "*" {
-				return true
-			}
+		// 检查origin是否在允许列表中
+		if !isAllowedOrigin(origin, config.AllowedOrigins) {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
 		}
-	}
 
-	// 检查精确匹配
-	for _, allowedOrigin := range config.AllowOrigins {
-		if allowedOrigin == origin {
-			return true
-		}
-		
-		// 支持子域名通配符，如 *.example.com
-		if strings.HasPrefix(allowedOrigin, "*.") {
-			domain := allowedOrigin[2:]
-			if strings.HasSuffix(origin, "."+domain) || origin == domain {
-				return true
-			}
-		}
-	}
-
-	// 检查浏览器扩展
-	if config.AllowBrowserExt {
-		if strings.HasPrefix(origin, "chrome-extension://") ||
-			strings.HasPrefix(origin, "moz-extension://") ||
-			strings.HasPrefix(origin, "safari-extension://") {
-			return true
-		}
-	}
-
-	// 检查文件协议
-	if config.AllowFiles && strings.HasPrefix(origin, "file://") {
-		return true
-	}
-
-	return false
-}
-
-// setCORSHeaders 设置CORS头部
-func setCORSHeaders(c *gin.Context, origin string, config CORSConfig) {
-	// 设置允许的源
-	if origin != "" && isOriginAllowed(origin, config) {
+		// 设置CORS响应头
 		c.Header("Access-Control-Allow-Origin", origin)
-	} else if len(config.AllowOrigins) == 1 && config.AllowOrigins[0] == "*" {
-		c.Header("Access-Control-Allow-Origin", "*")
-	}
+		c.Header("Access-Control-Allow-Methods", joinStrings(config.AllowedMethods))
+		c.Header("Access-Control-Allow-Headers", joinStrings(config.AllowedHeaders))
+		c.Header("Access-Control-Expose-Headers", joinStrings(config.ExposedHeaders))
 
-	// 设置允许的方法
-	if len(config.AllowMethods) > 0 {
-		c.Header("Access-Control-Allow-Methods", strings.Join(config.AllowMethods, ", "))
-	}
-
-	// 设置允许的头部
-	if len(config.AllowHeaders) > 0 {
-		c.Header("Access-Control-Allow-Headers", strings.Join(config.AllowHeaders, ", "))
-	}
-
-	// 设置暴露的头部
-	if len(config.ExposeHeaders) > 0 {
-		c.Header("Access-Control-Expose-Headers", strings.Join(config.ExposeHeaders, ", "))
-	}
-
-	// 设置是否允许凭据
-	if config.AllowCredentials {
-		c.Header("Access-Control-Allow-Credentials", "true")
-	}
-
-	// 设置预检缓存时间
-	if config.MaxAge > 0 {
-		c.Header("Access-Control-Max-Age", strconv.Itoa(int(config.MaxAge.Seconds())))
-	}
-
-	// WebSocket支持
-	if config.AllowWebSockets {
-		if c.Request.Header.Get("Upgrade") == "websocket" {
-			c.Header("Access-Control-Allow-Origin", origin)
+		if config.AllowCredentials {
+			c.Header("Access-Control-Allow-Credentials", "true")
 		}
+
+		if config.MaxAge > 0 {
+			c.Header("Access-Control-Max-Age", string(rune(config.MaxAge)))
+		}
+
+		// 处理预检请求
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
 	}
 }
 
-// handlePreflightRequest 处理预检请求
-func handlePreflightRequest(c *gin.Context, config CORSConfig) {
-	// 检查请求的方法是否被允许
-	requestMethod := c.Request.Header.Get("Access-Control-Request-Method")
-	if requestMethod != "" && !isMethodAllowed(requestMethod, config.AllowMethods) {
-		c.AbortWithStatus(http.StatusMethodNotAllowed)
-		return
-	}
-
-	// 检查请求的头部是否被允许
-	requestHeaders := c.Request.Header.Get("Access-Control-Request-Headers")
-	if requestHeaders != "" && !areHeadersAllowed(requestHeaders, config.AllowHeaders) {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
-
-	c.AbortWithStatus(http.StatusNoContent)
+// CORSConfig CORS配置
+type CORSConfig struct {
+	AllowedOrigins   []string // 允许的源
+	AllowedMethods   []string // 允许的HTTP方法
+	AllowedHeaders   []string // 允许的请求头
+	ExposedHeaders   []string // 暴露的响应头
+	AllowCredentials bool     // 是否允许携带凭证
+	MaxAge           int      // 预检请求缓存时间（秒）
 }
 
-// isMethodAllowed 检查方法是否被允许
-func isMethodAllowed(method string, allowedMethods []string) bool {
-	for _, allowedMethod := range allowedMethods {
-		if strings.EqualFold(method, allowedMethod) {
+// DefaultCORSConfig 默认CORS配置
+func DefaultCORSConfig() CORSConfig {
+	return CORSConfig{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "X-Request-ID"},
+		ExposedHeaders:   []string{"Content-Length", "X-Request-ID", "X-Response-Time"},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}
+}
+
+// isAllowedOrigin 检查origin是否在允许列表中
+func isAllowedOrigin(origin string, allowedOrigins []string) bool {
+	for _, allowed := range allowedOrigins {
+		if allowed == "*" || allowed == origin {
 			return true
 		}
 	}
 	return false
 }
 
-// areHeadersAllowed 检查头部是否被允许
-func areHeadersAllowed(requestHeaders string, allowedHeaders []string) bool {
-	headers := strings.Split(requestHeaders, ",")
-	for _, header := range headers {
-		header = strings.TrimSpace(header)
-		if !isHeaderAllowed(header, allowedHeaders) {
-			return false
-		}
+// joinStrings 连接字符串数组
+func joinStrings(strs []string) string {
+	if len(strs) == 0 {
+		return ""
 	}
-	return true
-}
-
-// isHeaderAllowed 检查单个头部是否被允许
-func isHeaderAllowed(header string, allowedHeaders []string) bool {
-	// 检查通配符
-	for _, allowedHeader := range allowedHeaders {
-		if allowedHeader == "*" {
-			return true
-		}
-		if strings.EqualFold(header, allowedHeader) {
-			return true
-		}
+	result := strs[0]
+	for i := 1; i < len(strs); i++ {
+		result += ", " + strs[i]
 	}
-	return false
-}
-
-// CreateCORSMiddleware 创建CORS中间件（用于中间件工厂）
-func CreateCORSMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
-	corsConfig := DefaultCORSConfig()
-	
-	// 解析配置
-	if allowOrigins, ok := config["allow_origins"].([]string); ok {
-		corsConfig.AllowOrigins = allowOrigins
-	}
-	if allowMethods, ok := config["allow_methods"].([]string); ok {
-		corsConfig.AllowMethods = allowMethods
-	}
-	if allowHeaders, ok := config["allow_headers"].([]string); ok {
-		corsConfig.AllowHeaders = allowHeaders
-	}
-	if exposeHeaders, ok := config["expose_headers"].([]string); ok {
-		corsConfig.ExposeHeaders = exposeHeaders
-	}
-	if allowCredentials, ok := config["allow_credentials"].(bool); ok {
-		corsConfig.AllowCredentials = allowCredentials
-	}
-	if maxAge, ok := config["max_age"].(time.Duration); ok {
-		corsConfig.MaxAge = maxAge
-	}
-	if allowWildcard, ok := config["allow_wildcard"].(bool); ok {
-		corsConfig.AllowWildcard = allowWildcard
-	}
-	if allowBrowserExt, ok := config["allow_browser_ext"].(bool); ok {
-		corsConfig.AllowBrowserExt = allowBrowserExt
-	}
-	if allowWebSockets, ok := config["allow_websockets"].(bool); ok {
-		corsConfig.AllowWebSockets = allowWebSockets
-	}
-	if allowFiles, ok := config["allow_files"].(bool); ok {
-		corsConfig.AllowFiles = allowFiles
-	}
-	
-	return CORSWithConfig(corsConfig), nil
+	return result
 }
