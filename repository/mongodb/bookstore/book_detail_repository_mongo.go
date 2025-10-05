@@ -632,9 +632,14 @@ func (r *MongoBookDetailRepository) DecrementCommentCount(ctx context.Context, b
 }
 
 // BatchUpdateCategories 批量更新书籍分类
-func (r *MongoBookDetailRepository) BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryID primitive.ObjectID, categoryName string) error {
+func (r *MongoBookDetailRepository) BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryIDs []string) error {
 	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
-	update := bson.M{"$set": bson.M{"category.id": categoryID, "category.name": categoryName}}
+	update := bson.M{
+		"$set": bson.M{
+			"category_ids": categoryIDs,
+			"updated_at":   time.Now(),
+		},
+	}
 	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }

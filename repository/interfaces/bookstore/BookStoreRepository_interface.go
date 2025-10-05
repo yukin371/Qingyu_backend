@@ -45,6 +45,10 @@ type BookRepository interface {
 	BatchUpdateRecommended(ctx context.Context, bookIDs []primitive.ObjectID, isRecommended bool) error
 	BatchUpdateFeatured(ctx context.Context, bookIDs []primitive.ObjectID, isFeatured bool) error
 
+	// 统计和计数操作
+	GetStats(ctx context.Context) (*bookstore.BookStats, error)
+	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
+
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 }

@@ -14,29 +14,29 @@ import (
 
 // BookDetailFilter 书籍详情筛选条件 - 适用于网络小说平台
 type BookDetailFilter struct {
-	Title            string                   `json:"title,omitempty"`
-	Author           string                   `json:"author,omitempty"`
-	AuthorID         *primitive.ObjectID      `json:"author_id,omitempty"`
-	CategoryIDs      []primitive.ObjectID     `json:"category_ids,omitempty"`
-	Tags             []string                 `json:"tags,omitempty"`
-	Status           *bookstore.BookStatus    `json:"status,omitempty"`
-	IsFree           *bool                    `json:"is_free,omitempty"`
-	MinPrice         *float64                 `json:"min_price,omitempty"`
-	MaxPrice         *float64                 `json:"max_price,omitempty"`
-	MinRating        *float64                 `json:"min_rating,omitempty"`
-	MaxRating        *float64                 `json:"max_rating,omitempty"`
-	MinWordCount     *int64                   `json:"min_word_count,omitempty"`
-	MaxWordCount     *int64                   `json:"max_word_count,omitempty"`
-	SerializedFrom   *time.Time               `json:"serialized_from,omitempty"`    // 开始连载时间范围
-	SerializedTo     *time.Time               `json:"serialized_to,omitempty"`      // 开始连载时间范围
-	CompletedFrom    *time.Time               `json:"completed_from,omitempty"`     // 完结时间范围
-	CompletedTo      *time.Time               `json:"completed_to,omitempty"`       // 完结时间范围
-	CreatedAtFrom    *time.Time               `json:"created_at_from,omitempty"`
-	CreatedAtTo      *time.Time               `json:"created_at_to,omitempty"`
-	UpdatedAtFrom    *time.Time               `json:"updated_at_from,omitempty"`
-	UpdatedAtTo      *time.Time               `json:"updated_at_to,omitempty"`
-	SortBy           string                   `json:"sort_by,omitempty"` // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
-	SortOrder        string                   `json:"sort_order,omitempty"` // asc, desc
+	Title          string                `json:"title,omitempty"`
+	Author         string                `json:"author,omitempty"`
+	AuthorID       *primitive.ObjectID   `json:"author_id,omitempty"`
+	CategoryIDs    []primitive.ObjectID  `json:"category_ids,omitempty"`
+	Tags           []string              `json:"tags,omitempty"`
+	Status         *bookstore.BookStatus `json:"status,omitempty"`
+	IsFree         *bool                 `json:"is_free,omitempty"`
+	MinPrice       *float64              `json:"min_price,omitempty"`
+	MaxPrice       *float64              `json:"max_price,omitempty"`
+	MinRating      *float64              `json:"min_rating,omitempty"`
+	MaxRating      *float64              `json:"max_rating,omitempty"`
+	MinWordCount   *int64                `json:"min_word_count,omitempty"`
+	MaxWordCount   *int64                `json:"max_word_count,omitempty"`
+	SerializedFrom *time.Time            `json:"serialized_from,omitempty"` // 开始连载时间范围
+	SerializedTo   *time.Time            `json:"serialized_to,omitempty"`   // 开始连载时间范围
+	CompletedFrom  *time.Time            `json:"completed_from,omitempty"`  // 完结时间范围
+	CompletedTo    *time.Time            `json:"completed_to,omitempty"`    // 完结时间范围
+	CreatedAtFrom  *time.Time            `json:"created_at_from,omitempty"`
+	CreatedAtTo    *time.Time            `json:"created_at_to,omitempty"`
+	UpdatedAtFrom  *time.Time            `json:"updated_at_from,omitempty"`
+	UpdatedAtTo    *time.Time            `json:"updated_at_to,omitempty"`
+	SortBy         string                `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
+	SortOrder      string                `json:"sort_order,omitempty"` // asc, desc
 }
 
 // BookDetailService 书籍详情服务接口 - 专注于书籍详情页面的完整信息管理
@@ -178,22 +178,22 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 
 	// 构建更新字段
 	updates := map[string]interface{}{
-		"title":           bookDetail.Title,
-		"subtitle":        bookDetail.Subtitle,
-		"author":          bookDetail.Author,
-		"author_id":       bookDetail.AuthorID,
-		"description":     bookDetail.Description,
-		"cover_url":       bookDetail.CoverURL,
-		"categories":      bookDetail.Categories,
-		"tags":            bookDetail.Tags,
-		"status":          bookDetail.Status,
-		"word_count":      bookDetail.WordCount,
-		"chapter_count":   bookDetail.ChapterCount,
-		"price":           bookDetail.Price,
-		"is_free":         bookDetail.IsFree,
-		"serialized_at":   bookDetail.SerializedAt,
-		"completed_at":    bookDetail.CompletedAt,
-		"updated_at":      time.Now(),
+		"title":         bookDetail.Title,
+		"subtitle":      bookDetail.Subtitle,
+		"author":        bookDetail.Author,
+		"author_id":     bookDetail.AuthorID,
+		"description":   bookDetail.Description,
+		"cover_url":     bookDetail.CoverURL,
+		"categories":    bookDetail.Categories,
+		"tags":          bookDetail.Tags,
+		"status":        bookDetail.Status,
+		"word_count":    bookDetail.WordCount,
+		"chapter_count": bookDetail.ChapterCount,
+		"price":         bookDetail.Price,
+		"is_free":       bookDetail.IsFree,
+		"serialized_at": bookDetail.SerializedAt,
+		"completed_at":  bookDetail.CompletedAt,
+		"updated_at":    time.Now(),
 	}
 
 	// 更新数据库
@@ -557,6 +557,118 @@ func (s *BookDetailServiceImpl) GetLatestBookDetails(ctx context.Context, limit 
 	}
 
 	return bookDetails, nil
+}
+
+// IncrementViewCount 增加浏览计数
+func (s *BookDetailServiceImpl) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.IncrementViewCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to increment view count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// IncrementLikeCount 增加点赞计数
+func (s *BookDetailServiceImpl) IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.IncrementLikeCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to increment like count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// DecrementLikeCount 减少点赞计数
+func (s *BookDetailServiceImpl) DecrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.DecrementLikeCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to decrement like count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// IncrementCommentCount 增加评论计数
+func (s *BookDetailServiceImpl) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.IncrementCommentCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to increment comment count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// DecrementCommentCount 减少评论计数
+func (s *BookDetailServiceImpl) DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.DecrementCommentCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to decrement comment count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// IncrementShareCount 增加分享计数
+func (s *BookDetailServiceImpl) IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error {
+	if err := s.bookDetailRepo.IncrementShareCount(ctx, bookID); err != nil {
+		return fmt.Errorf("failed to increment share count: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// UpdateRating 更新评分
+func (s *BookDetailServiceImpl) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64, ratingCount int64) error {
+	if err := s.bookDetailRepo.UpdateRating(ctx, bookID, rating, ratingCount); err != nil {
+		return fmt.Errorf("failed to update rating: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
+}
+
+// UpdateLastChapter 更新最新章节信息
+func (s *BookDetailServiceImpl) UpdateLastChapter(ctx context.Context, bookID primitive.ObjectID, chapterTitle string) error {
+	if err := s.bookDetailRepo.UpdateLastChapter(ctx, bookID, chapterTitle); err != nil {
+		return fmt.Errorf("failed to update last chapter: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+	}
+
+	return nil
 }
 
 // BatchUpdateBookDetailStatus 批量更新书籍状态
