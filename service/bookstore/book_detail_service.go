@@ -272,6 +272,33 @@ func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, auth
 	return bookDetails, total, nil
 }
 
+// GetBookDetailsByAuthorID 根据作者ID获取书籍详情列表
+func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if authorID.IsZero() {
+		return nil, 0, errors.New("author ID cannot be empty")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	bookDetails, err := s.bookDetailRepo.GetByAuthorID(ctx, authorID, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get book details by author ID: %w", err)
+	}
+
+	// TODO: 需要在 Repository 添加 CountByAuthorID 方法
+	// 暂时返回书籍列表长度作为总数
+	total := int64(len(bookDetails))
+
+	return bookDetails, total, nil
+}
+
 // GetBookDetailsByCategory 根据分类获取书籍详情列表
 func (s *BookDetailServiceImpl) GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
 	if category == "" {
@@ -382,6 +409,47 @@ func (s *BookDetailServiceImpl) SearchBookDetails(ctx context.Context, keyword s
 		// 如果返回的结果等于页面大小，可能还有更多结果
 		total = int64((page + 1) * pageSize)
 	}
+
+	return bookDetails, total, nil
+}
+
+// SearchBookDetailsWithFilter 使用过滤器搜索书籍详情
+func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	if filter == nil {
+		return nil, 0, errors.New("filter cannot be nil")
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// TODO: Repository 层需要实现 SearchWithFilter 方法
+	// 暂时使用简单搜索方式
+	var bookDetails []*bookstore.BookDetail
+	var err error
+
+	// 根据过滤器条件调用不同的查询方法
+	if filter.Title != "" {
+		bookDetails, err = s.bookDetailRepo.Search(ctx, filter.Title, pageSize, offset)
+	} else if filter.Status != nil {
+		bookDetails, err = s.bookDetailRepo.GetByStatus(ctx, *filter.Status, pageSize, offset)
+	} else if filter.Author != "" {
+		bookDetails, err = s.bookDetailRepo.GetByAuthor(ctx, filter.Author, pageSize, offset)
+	} else {
+		// 默认搜索
+		bookDetails, err = s.bookDetailRepo.Search(ctx, "", pageSize, offset)
+	}
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search book details with filter: %w", err)
+	}
+
+	// 暂时返回结果长度作为总数
+	total := int64(len(bookDetails))
 
 	return bookDetails, total, nil
 }
