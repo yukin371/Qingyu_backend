@@ -45,6 +45,10 @@ type BookstoreService interface {
 
 	// 首页数据聚合
 	GetHomepageData(ctx context.Context) (*HomepageData, error)
+
+	// 统计和计数
+	GetBookStats(ctx context.Context) (*bookstore.BookStats, error)
+	IncrementBookView(ctx context.Context, bookID string) error
 }
 
 // BookstoreServiceImpl 书城服务实现
@@ -213,8 +217,9 @@ func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, 
 
 	// 计算总数
 	publishedStatus := bookstore.BookStatusPublished
+	keywordPtr := keyword
 	filter := &bookstore.BookFilter{
-		Keyword: keyword,
+		Keyword: &keywordPtr,
 		Status:  &publishedStatus,
 	}
 	total, err := s.bookRepo.CountByFilter(ctx, filter)
