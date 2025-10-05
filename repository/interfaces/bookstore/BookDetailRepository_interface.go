@@ -56,7 +56,7 @@ type BookDetailRepository interface {
 	BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error
 	BatchUpdatePublisher(ctx context.Context, bookIDs []primitive.ObjectID, publisher string) error
 	BatchUpdateTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error
-	BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryID primitive.ObjectID, categoryName string) error
+	BatchUpdateCategories(ctx context.Context, bookIDs []primitive.ObjectID, categoryIDs []string) error
 
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
