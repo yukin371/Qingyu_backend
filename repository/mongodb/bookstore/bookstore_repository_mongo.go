@@ -741,3 +741,43 @@ func (r *MongoBookRepository) Exists(ctx context.Context, id primitive.ObjectID)
 	}
 	return count > 0, nil
 }
+
+// GetStats 获取书籍统计信息
+func (r *MongoBookRepository) GetStats(ctx context.Context) (*bookstore.BookStats, error) {
+	stats := &bookstore.BookStats{}
+
+	// 统计总书籍数
+	total, err := r.collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	stats.TotalBooks = total
+
+	// 统计已发布书籍数
+	published, err := r.collection.CountDocuments(ctx, bson.M{"status": "published"})
+	if err != nil {
+		return nil, err
+	}
+	stats.PublishedBooks = published
+
+	// 统计免费书籍数
+	free, err := r.collection.CountDocuments(ctx, bson.M{"is_free": true})
+	if err != nil {
+		return nil, err
+	}
+	stats.FreeBooks = free
+
+	return stats, nil
+}
+
+// IncrementViewCount 增加浏览计数
+func (r *MongoBookRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+	filter := bson.M{"_id": bookID}
+	update := bson.M{
+		"$inc": bson.M{"view_count": 1},
+		"$set": bson.M{"updated_at": time.Now()},
+	}
+
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	return err
+}
