@@ -2,7 +2,6 @@ package bookstore
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"Qingyu_backend/models/reading/bookstore"
@@ -284,99 +283,23 @@ func (c *CachedBookstoreService) GetFeaturedBooks(ctx context.Context, page, pag
 }
 
 func (c *CachedBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
-	cacheKey := fmt.Sprintf("books:hot:%d:%d", page, pageSize)
-
-	// 尝试从缓存获取
-	var books []*bookstore.Book
-	if err := c.cache.Get(ctx, cacheKey, &books); err == nil && books != nil {
-		return books, nil
-	}
-
-	// 缓存未命中，从服务获取
-	books, err := c.service.GetHotBooks(ctx, page, pageSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// 设置缓存（异步）
-	go func() {
-		c.cache.Set(context.Background(), cacheKey, books, BookCacheExpiration)
-	}()
-
-	return books, nil
+	// 暂不使用缓存，直接调用服务
+	return c.service.GetHotBooks(ctx, page, pageSize)
 }
 
 func (c *CachedBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
-	cacheKey := fmt.Sprintf("books:new:%d:%d", page, pageSize)
-
-	// 尝试从缓存获取
-	var books []*bookstore.Book
-	if err := c.cache.Get(ctx, cacheKey, &books); err == nil && books != nil {
-		return books, nil
-	}
-
-	// 缓存未命中，从服务获取
-	books, err := c.service.GetNewReleases(ctx, page, pageSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// 设置缓存（异步）
-	go func() {
-		c.cache.Set(context.Background(), cacheKey, books, BookCacheExpiration)
-	}()
-
-	return books, nil
+	// 暂不使用缓存，直接调用服务
+	return c.service.GetNewReleases(ctx, page, pageSize)
 }
 
 func (c *CachedBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
-	cacheKey := fmt.Sprintf("books:free:%d:%d", page, pageSize)
-
-	// 尝试从缓存获取
-	var books []*bookstore.Book
-	if err := c.cache.Get(ctx, cacheKey, &books); err == nil && books != nil {
-		return books, nil
-	}
-
-	// 缓存未命中，从服务获取
-	books, err := c.service.GetFreeBooks(ctx, page, pageSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// 设置缓存（异步）
-	go func() {
-		c.cache.Set(context.Background(), cacheKey, books, BookCacheExpiration)
-	}()
-
-	return books, nil
+	// 暂不使用缓存，直接调用服务
+	return c.service.GetFreeBooks(ctx, page, pageSize)
 }
 
 func (c *CachedBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
-	cacheKey := fmt.Sprintf("search:%s:%d:%d", keyword, page, pageSize)
-
-	// 尝试从缓存获取
-	type CachedResult struct {
-		Books []*bookstore.Book
-		Total int64
-	}
-	var cached CachedResult
-	if err := c.cache.Get(ctx, cacheKey, &cached); err == nil {
-		return cached.Books, cached.Total, nil
-	}
-
-	// 缓存未命中，从服务获取
-	books, total, err := c.service.SearchBooks(ctx, keyword, page, pageSize)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 设置缓存（异步）
-	go func() {
-		c.cache.Set(context.Background(), cacheKey, CachedResult{Books: books, Total: total}, BookCacheExpiration)
-	}()
-
-	return books, total, nil
+	// 暂不使用缓存，直接调用服务
+	return c.service.SearchBooks(ctx, keyword, page, pageSize)
 }
 
 func (c *CachedBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
