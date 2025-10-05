@@ -161,33 +161,95 @@ func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageS
 	return books, nil
 }
 
-// SearchBooks 搜索书籍
-func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, filter *bookstore.BookFilter) ([]*bookstore.Book, error) {
-	if keyword == "" && filter == nil {
-		return nil, errors.New("keyword or filter is required")
-	}
+// GetHotBooks 获取热门书籍
+func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	offset := (page - 1) * pageSize
 
-	// 确保只搜索已发布的书籍
-	if filter == nil {
-		filter = &bookstore.BookFilter{}
-	}
-	status := "published"
-	filter.Status = &status
-
-	var books []*bookstore.Book
-	var err error
-
-	if keyword != "" {
-		books, err = s.bookRepo.Search(ctx, keyword, filter)
-	} else {
-		books, err = s.bookRepo.SearchWithFilter(ctx, filter)
-	}
-
+	books, err := s.bookRepo.GetHotBooks(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to search books: %w", err)
+		return nil, fmt.Errorf("failed to get hot books: %w", err)
 	}
 
 	return books, nil
+}
+
+// GetNewReleases 获取新书列表
+func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	offset := (page - 1) * pageSize
+
+	books, err := s.bookRepo.GetNewReleases(ctx, pageSize, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get new releases: %w", err)
+	}
+
+	return books, nil
+}
+
+// GetFreeBooks 获取免费书籍列表
+func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	offset := (page - 1) * pageSize
+
+	books, err := s.bookRepo.GetFreeBooks(ctx, pageSize, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get free books: %w", err)
+	}
+
+	return books, nil
+}
+
+// SearchBooks 搜索书籍 - 简单搜索
+func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+	if keyword == "" {
+		return nil, 0, errors.New("keyword is required")
+	}
+
+	offset := (page - 1) * pageSize
+
+	// 调用Repository的Search方法
+	books, err := s.bookRepo.Search(ctx, keyword, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search books: %w", err)
+	}
+
+	// 计算总数
+	publishedStatus := bookstore.BookStatusPublished
+	filter := &bookstore.BookFilter{
+		Keyword: keyword,
+		Status:  &publishedStatus,
+	}
+	total, err := s.bookRepo.CountByFilter(ctx, filter)
+	if err != nil {
+		return books, 0, fmt.Errorf("failed to count search results: %w", err)
+	}
+
+	return books, total, nil
+}
+
+// SearchBooksWithFilter 搜索书籍 - 高级搜索
+func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+	if filter == nil {
+		return nil, 0, errors.New("filter is required")
+	}
+
+	// 确保只搜索已发布的书籍
+	if filter.Status == nil {
+		publishedStatus := bookstore.BookStatusPublished
+		filter.Status = &publishedStatus
+	}
+
+	// 执行搜索
+	books, err := s.bookRepo.SearchWithFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search books: %w", err)
+	}
+
+	// 计算总数
+	total, err := s.bookRepo.CountByFilter(ctx, filter)
+	if err != nil {
+		return books, 0, fmt.Errorf("failed to count search results: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetBookStats 获取书籍统计信息

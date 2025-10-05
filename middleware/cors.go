@@ -111,3 +111,10 @@ func joinStrings(strs []string) string {
 	}
 	return result
 }
+
+// CreateCORSMiddleware 创建CORS中间件的工厂函数
+func CreateCORSMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
+	// 可以从 config 中读取 CORS 配置
+	// 暂时使用默认配置
+	return CORSMiddleware(), nil
+}
