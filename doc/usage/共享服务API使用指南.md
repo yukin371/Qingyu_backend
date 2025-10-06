@@ -1329,17 +1329,3 @@ A: 实现指数退避重试策略，或降低请求频率。
 A: RequestID用于追踪请求链路，遇到问题时提供RequestID可以帮助快速定位。
 
 ---
-
-## 联系支持
-
-- **技术文档**: https://docs.qingyu.com
-- **GitHub**: https://github.com/yourusername/Qingyu_backend
-- **问题反馈**: support@qingyu.com
-- **技术社区**: https://community.qingyu.com
-
----
-
-**文档版本**: v1.0  
-**最后更新**: 2025-10-04  
-**维护团队**: 青羽后端团队
-
