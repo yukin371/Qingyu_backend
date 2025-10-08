@@ -134,14 +134,12 @@ func (s *AdapterManagerNew) Initialize(ctx context.Context) error {
 
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return errors.AdapterFactory.InternalError("Repository工厂不可用", err).
-			WithOperation("Initialize")
+		return fmt.Errorf("Repository工厂不可用: %w", err)
 	}
 
 	// 初始化默认适配器
 	if err := s.initializeDefaultAdapters(ctx); err != nil {
-		return errors.AdapterFactory.InternalError("初始化默认适配器失败", err).
-			WithOperation("Initialize")
+		return fmt.Errorf("初始化默认适配器失败: %w", err)
 	}
 
 	s.initialized = true
@@ -151,14 +149,12 @@ func (s *AdapterManagerNew) Initialize(ctx context.Context) error {
 // Health 健康检查
 func (s *AdapterManagerNew) Health(ctx context.Context) error {
 	if !s.initialized {
-		return errors.AdapterFactory.InternalError("服务未初始化", nil).
-			WithOperation("Health")
+		return fmt.Errorf("服务未初始化")
 	}
 
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return errors.AdapterFactory.InternalError("Repository工厂健康检查失败", err).
-			WithOperation("Health")
+		return fmt.Errorf("Repository工厂健康检查失败: %w", err)
 	}
 
 	// 检查适配器状态
@@ -167,8 +163,7 @@ func (s *AdapterManagerNew) Health(ctx context.Context) error {
 	s.adapterMutex.RUnlock()
 
 	if adapterCount == 0 {
-		return errors.AdapterFactory.InternalError("没有可用的模型适配器", nil).
-			WithOperation("Health")
+		return fmt.Errorf("没有可用的模型适配器")
 	}
 
 	return nil
@@ -222,7 +217,7 @@ func (s *AdapterManagerNew) GetVersion() string {
 // GetAdapter 获取适配器
 func (s *AdapterManagerNew) GetAdapter(ctx context.Context, req *serviceInterfaces.GetAdapterRequest) (*serviceInterfaces.GetAdapterResponse, error) {
 	if req.AdapterID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "适配器ID不能为空", nil)
+		return nil, fmt.Errorf("适配器ID不能为空")
 	}
 
 	s.adapterMutex.RLock()
@@ -230,7 +225,7 @@ func (s *AdapterManagerNew) GetAdapter(ctx context.Context, req *serviceInterfac
 
 	adapter, exists := s.adapters[req.AdapterID]
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeNotFound, fmt.Sprintf("适配器 %s 不存在", req.AdapterID), nil)
+		return nil, fmt.Errorf("适配器 %s 不存在", req.AdapterID)
 	}
 
 	// 获取模型配置
@@ -277,13 +272,7 @@ func (s *AdapterManagerNew) GetAdapter(ctx context.Context, req *serviceInterfac
 // RegisterAdapter 注册适配器
 func (s *AdapterManagerNew) RegisterAdapter(ctx context.Context, req *serviceInterfaces.RegisterAdapterRequest) (*serviceInterfaces.RegisterAdapterResponse, error) {
 	if req.Name == "" || req.Type == "" || req.Provider == "" {
-		return nil, errors.AdapterFactory.ValidationError("名称、类型和提供商不能为空", nil).
-			WithOperation("RegisterAdapter").
-			WithMetadata(map[string]interface{}{
-				"name": req.Name,
-				"type": req.Type,
-				"provider": req.Provider,
-			})
+		return nil, fmt.Errorf("名称、类型和提供商不能为空")
 	}
 
 	// 生成适配器ID
@@ -341,8 +330,7 @@ func (s *AdapterManagerNew) RegisterAdapter(ctx context.Context, req *serviceInt
 // UnregisterAdapter 注销适配器
 func (s *AdapterManagerNew) UnregisterAdapter(ctx context.Context, req *serviceInterfaces.UnregisterAdapterRequest) (*serviceInterfaces.UnregisterAdapterResponse, error) {
 	if req.AdapterID == "" {
-		return nil, errors.AdapterFactory.ValidationError("适配器ID不能为空", nil).
-			WithOperation("UnregisterAdapter")
+		return nil, fmt.Errorf("适配器ID不能为空")
 	}
 
 	s.adapterMutex.Lock()
@@ -353,11 +341,7 @@ func (s *AdapterManagerNew) UnregisterAdapter(ctx context.Context, req *serviceI
 	s.adapterMutex.Unlock()
 
 	if !exists {
-		return nil, errors.AdapterFactory.NotFoundError(fmt.Sprintf("未找到适配器: %s", req.AdapterID), nil).
-			WithOperation("UnregisterAdapter").
-			WithMetadata(map[string]interface{}{
-				"adapter_id": req.AdapterID,
-			})
+		return nil, fmt.Errorf("未找到适配器: %s", req.AdapterID)
 	}
 
 	// 关闭适配器
@@ -435,7 +419,7 @@ func (s *AdapterManagerNew) ListAdapters(ctx context.Context, req *serviceInterf
 // UpdateAdapter 更新适配器
 func (s *AdapterManagerNew) UpdateAdapter(ctx context.Context, req *serviceInterfaces.UpdateAdapterRequest) (*serviceInterfaces.UpdateAdapterResponse, error) {
 	if req.AdapterID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "适配器ID不能为空", nil)
+		return nil, fmt.Errorf("适配器ID不能为空")
 	}
 
 	s.adapterMutex.Lock()
@@ -443,7 +427,7 @@ func (s *AdapterManagerNew) UpdateAdapter(ctx context.Context, req *serviceInter
 
 	adapter, exists := s.adapters[req.AdapterID]
 	if !exists {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeNotFound, "适配器不存在", nil)
+		return nil, fmt.Errorf("适配器不存在")
 	}
 
 	// 更新适配器信息（这里是模拟实现）
@@ -472,7 +456,7 @@ func (s *AdapterManagerNew) UpdateAdapter(ctx context.Context, req *serviceInter
 func (s *AdapterManagerNew) GetModelConfig(ctx context.Context, req *serviceInterfaces.GetModelConfigRequest) (*serviceInterfaces.GetModelConfigResponse, error) {
 	// 验证请求
 	if req.ModelID == "" {
-		return nil, base.NewServiceError(s.serviceName, base.ErrorTypeValidation, "模型ID不能为空", nil)
+		return nil, fmt.Errorf("模型ID不能为空")
 	}
 
 	s.configMutex.RLock()
@@ -480,11 +464,7 @@ func (s *AdapterManagerNew) GetModelConfig(ctx context.Context, req *serviceInte
 	s.configMutex.RUnlock()
 
 	if !exists {
-		return nil, errors.AdapterFactory.NotFoundError(fmt.Sprintf("未找到模型配置: %s", req.ModelID), nil).
-			WithOperation("GetModelConfig").
-			WithMetadata(map[string]interface{}{
-				"model_id": req.ModelID,
-			})
+		return nil, fmt.Errorf("未找到模型配置: %s", req.ModelID)
 	}
 
 	response := &serviceInterfaces.GetModelConfigResponse{
@@ -497,8 +477,7 @@ func (s *AdapterManagerNew) GetModelConfig(ctx context.Context, req *serviceInte
 // UpdateModelConfig 更新模型配置
 func (s *AdapterManagerNew) UpdateModelConfig(ctx context.Context, req *serviceInterfaces.UpdateModelConfigRequest) (*serviceInterfaces.UpdateModelConfigResponse, error) {
 	if req.ModelID == "" {
-		return nil, errors.AdapterFactory.ValidationError("模型ID不能为空", nil).
-			WithOperation("UpdateModelConfig")
+		return nil, fmt.Errorf("模型ID不能为空")
 	}
 
 	s.configMutex.Lock()
@@ -506,11 +485,7 @@ func (s *AdapterManagerNew) UpdateModelConfig(ctx context.Context, req *serviceI
 
 	config, exists := s.modelConfigs[req.ModelID]
 	if !exists {
-		return nil, errors.AdapterFactory.NotFoundError("模型配置不存在", nil).
-			WithOperation("UpdateModelConfig").
-			WithMetadata(map[string]interface{}{
-				"model_id": req.ModelID,
-			})
+		return nil, fmt.Errorf("模型配置不存在")
 	}
 
 	// 更新配置字段
