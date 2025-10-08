@@ -120,18 +120,15 @@ func (s *AIServiceNew) Close(ctx context.Context) error {
 
 	// 关闭上下文服务
 	if err := s.contextService.Close(ctx); err != nil {
-		lastErr = errors.AIFactory.InternalError("关闭上下文服务失败", err).
-			WithOperation("Close")
+		lastErr = fmt.Errorf("关闭上下文服务失败: %w", err)
 	}
 	// 关闭外部API服务
 	if err := s.externalAPIService.Close(ctx); err != nil {
-		lastErr = errors.AIFactory.InternalError("关闭外部API服务失败", err).
-			WithOperation("Close")
+		lastErr = fmt.Errorf("关闭外部API服务失败: %w", err)
 	}
 	// 关闭适配器管理器
 	if err := s.adapterManager.Close(ctx); err != nil {
-		lastErr = errors.AIFactory.InternalError("关闭适配器管理器失败", err).
-			WithOperation("Close")
+		lastErr = fmt.Errorf("关闭适配器管理器失败: %w", err)
 	}
 
 	s.initialized = false
@@ -154,13 +151,7 @@ func (s *AIServiceNew) GenerateContent(ctx context.Context, req *serviceInterfac
 	
 	// 验证请求
 	if err := s.validateGenerateContentRequest(req); err != nil {
-		return nil, errors.AIFactory.ValidationError("请求验证失败", err).
-			WithOperation("GenerateContent").
-			WithUserID(req.UserID).
-			WithMetadata(map[string]interface{}{
-				"model": req.Model,
-				"session_id": req.SessionID,
-			})
+		return nil, fmt.Errorf("请求验证失败: %w", err)
 	}
 	
 	// 发布请求开始事件
@@ -182,12 +173,7 @@ func (s *AIServiceNew) GenerateContent(ctx context.Context, req *serviceInterfac
 	}
 	adapterResp, err := s.adapterManager.GetAdapter(ctx, adapterReq)
 	if err != nil {
-		return nil, errors.AIFactory.NotFoundError("获取模型适配器失败", err).
-			WithOperation("GenerateContent").
-			WithUserID(req.UserID).
-			WithMetadata(map[string]interface{}{
-				"adapter_id": req.Model,
-			})
+		return nil, fmt.Errorf("获取模型适配器失败: %w", err)
 	}
 	
 	// 调用外部API
@@ -212,24 +198,11 @@ func (s *AIServiceNew) GenerateContent(ctx context.Context, req *serviceInterfac
 	
 	apiResp, err := s.externalAPIService.CallAPI(ctx, apiReq)
 	if err != nil {
-		return nil, errors.AIFactory.ExternalError("调用外部API失败", err).
-			WithOperation("GenerateContent").
-			WithUserID(req.UserID).
-			WithMetadata(map[string]interface{}{
-				"provider": adapterResp.Adapter.Provider,
-				"endpoint": "/v1/chat/completions",
-				"model": req.Model,
-			})
+		return nil, fmt.Errorf("调用外部API失败: %w", err)
 	}
 
 	if !apiResp.Success {
-		return nil, errors.AIFactory.ExternalError("外部API调用失败", fmt.Errorf("%s", apiResp.Error)).
-			WithOperation("GenerateContent").
-			WithUserID(req.UserID).
-			WithMetadata(map[string]interface{}{
-				"provider": adapterResp.Adapter.Provider,
-				"error_message": apiResp.Error,
-			})
+		return nil, fmt.Errorf("外部API调用失败: %s", apiResp.Error)
 	}
 	
 	// 解析API响应
@@ -295,23 +268,18 @@ func (s *AIServiceNew) GenerateContentStream(ctx context.Context, req *serviceIn
 func (s *AIServiceNew) AnalyzeContent(ctx context.Context, req *serviceInterfaces.AnalyzeContentRequest) (*serviceInterfaces.AnalyzeContentResponse, error) {
 	// 验证请求
 	if req.Content == "" {
-		return nil, errors.AIFactory.ValidationError("内容不能为空", nil).
-			WithOperation("AnalyzeContent").
-			WithUserID(req.UserID)
+		return nil, fmt.Errorf("内容不能为空")
 	}
 	if req.AnalysisType == "" {
-		return nil, errors.AIFactory.ValidationError("分析类型不能为空", nil).
-			WithOperation("AnalyzeContent").
-			WithUserID(req.UserID)
+		return nil, fmt.Errorf("分析类型不能为空")
 	}
 
 	// TODO: 实现内容分析逻辑
 	return &serviceInterfaces.AnalyzeContentResponse{
-		Analysis: "分析结果",
-		Score:    0.8,
-		Suggestions: []string{
-			"建议1",
-			"建议2",
+		Analysis: map[string]interface{}{
+			"result": "分析结果",
+			"score": 0.8,
+			"suggestions": []string{"建议1", "建议2"},
 		},
 	}, nil
 }
@@ -320,9 +288,7 @@ func (s *AIServiceNew) AnalyzeContent(ctx context.Context, req *serviceInterface
 func (s *AIServiceNew) ContinueWriting(ctx context.Context, req *serviceInterfaces.ContinueWritingRequest) (*serviceInterfaces.ContinueWritingResponse, error) {
 	// 验证请求
 	if req.Content == "" {
-		return nil, errors.AIFactory.ValidationError("内容不能为空", nil).
-			WithOperation("ContinueWriting").
-			WithUserID(req.UserID)
+		return nil, fmt.Errorf("内容不能为空")
 	}
 
 	// TODO: 实现续写逻辑
@@ -336,14 +302,10 @@ func (s *AIServiceNew) ContinueWriting(ctx context.Context, req *serviceInterfac
 func (s *AIServiceNew) OptimizeText(ctx context.Context, req *serviceInterfaces.OptimizeTextRequest) (*serviceInterfaces.OptimizeTextResponse, error) {
 	// 验证请求
 	if req.Text == "" {
-		return nil, errors.AIFactory.ValidationError("文本不能为空", nil).
-			WithOperation("OptimizeText").
-			WithUserID(req.UserID)
+		return nil, fmt.Errorf("文本不能为空")
 	}
 	if req.OptimizationType == "" {
-		return nil, errors.AIFactory.ValidationError("优化类型不能为空", nil).
-			WithOperation("OptimizeText").
-			WithUserID(req.UserID)
+		return nil, fmt.Errorf("优化类型不能为空")
 	}
 
 	// TODO: 实现文本优化逻辑
