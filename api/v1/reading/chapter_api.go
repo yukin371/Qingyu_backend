@@ -181,7 +181,7 @@ func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetChapterByBookIDAndNumber(c.Request.Context(), bookID, chapterNum)
+	chapter, err := api.service.GetChapterByBookIDAndNum(c.Request.Context(), bookID, chapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -246,7 +246,7 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetFreeChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetFreeChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -307,7 +307,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetPaidChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetPaidChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -368,7 +368,7 @@ func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetPublishedChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetPublishedChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -418,7 +418,17 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetPreviousChapter(c.Request.Context(), id)
+	// 先获取当前章节信息
+	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{
+			Code:    404,
+			Message: "当前章节不存在",
+		})
+		return
+	}
+
+	chapter, err := api.service.GetPreviousChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -472,7 +482,17 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetNextChapter(c.Request.Context(), id)
+	// 先获取当前章节信息
+	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{
+			Code:    404,
+			Message: "当前章节不存在",
+		})
+		return
+	}
+
+	chapter, err := api.service.GetNextChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -634,7 +654,15 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 		return
 	}
 
-	content, err := api.service.GetChapterContent(c.Request.Context(), id)
+	// 获取用户ID（从中间件设置的上下文中）
+	var userID primitive.ObjectID
+	if userIDValue, exists := c.Get("userId"); exists {
+		if uid, ok := userIDValue.(string); ok {
+			userID, _ = primitive.ObjectIDFromHex(uid)
+		}
+	}
+	
+	content, err := api.service.GetChapterContent(c.Request.Context(), id, userID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -744,7 +772,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 	}
 
 	// 获取统计信息
-	totalCount, err := api.service.CountChaptersByBookID(c.Request.Context(), bookID)
+	totalCount, err := api.service.GetChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -753,7 +781,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	freeCount, err := api.service.CountFreeChapters(c.Request.Context(), bookID)
+	freeCount, err := api.service.GetFreeChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -762,7 +790,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	paidCount, err := api.service.CountPaidChapters(c.Request.Context(), bookID)
+	paidCount, err := api.service.GetPaidChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -771,7 +799,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	totalWordCount, err := api.service.GetTotalWordCount(c.Request.Context(), bookID)
+	totalWordCount, err := api.service.GetTotalWordCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,

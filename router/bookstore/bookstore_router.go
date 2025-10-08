@@ -32,9 +32,6 @@ func (r *BookstoreRouter) RegisterRoutes(rg *gin.RouterGroup) {
 			// 获取书籍详情
 			books.GET("/:id", r.api.GetBookByID)
 			
-			// 增加书籍浏览量
-			books.POST("/:id/view", r.api.IncrementBookView)
-			
 			// 获取推荐书籍
 			books.GET("/recommended", r.api.GetRecommendedBooks)
 			
@@ -55,7 +52,7 @@ func (r *BookstoreRouter) RegisterRoutes(rg *gin.RouterGroup) {
 			categories.GET("/:id", r.api.GetCategoryByID)
 			
 			// 根据分类获取书籍列表
-			categories.GET("/:categoryId/books", r.api.GetBooksByCategory)
+			categories.GET("/:id/books", r.api.GetBooksByCategory)
 		}
 		
 		// 榜单相关路由
@@ -82,9 +79,6 @@ func (r *BookstoreRouter) RegisterRoutes(rg *gin.RouterGroup) {
 		{
 			// 获取激活的Banner列表
 			banners.GET("", r.api.GetActiveBanners)
-			
-			// 增加Banner点击次数
-			banners.POST("/:id/click", r.api.IncrementBannerClick)
 		}
 	}
 }
@@ -123,7 +117,7 @@ func (r *BookstoreRouter) RegisterPublicRoutes(rg *gin.RouterGroup) {
 			categories.GET("/:id", r.api.GetCategoryByID)
 			
 			// 根据分类获取书籍列表（公开访问）
-			categories.GET("/:categoryId/books", r.api.GetBooksByCategory)
+			categories.GET("/:id/books", r.api.GetBooksByCategory)
 		}
 		
 		// Banner相关公开路由

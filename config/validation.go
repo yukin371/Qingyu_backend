@@ -87,12 +87,9 @@ func validateJWTConfig(cfg *JWTConfig) error {
 
 // validateAIConfig 验证AI配置
 func validateAIConfig(cfg *AIConfig) error {
-	if cfg == nil {
-		return fmt.Errorf("AI config is required")
-	}
-
-	if cfg.APIKey == "" {
-		return fmt.Errorf("AI API key is required")
+	// AI 模块临时禁用，跳过配置验证
+	if cfg == nil || cfg.APIKey == "" {
+		return nil
 	}
 
 	if cfg.BaseURL == "" {
