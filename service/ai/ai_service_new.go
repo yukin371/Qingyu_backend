@@ -66,18 +66,15 @@ func (s *AIServiceNew) Initialize(ctx context.Context) error {
 
 	// 初始化上下文服务
 	if err := s.contextService.Initialize(ctx); err != nil {
-		return errors.AIFactory.InternalError("初始化上下文服务失败", err).
-			WithOperation("Initialize")
+		return fmt.Errorf("初始化上下文服务失败: %w", err)
 	}
 	// 初始化外部API服务
 	if err := s.externalAPIService.Initialize(ctx); err != nil {
-		return errors.AIFactory.InternalError("初始化外部API服务失败", err).
-			WithOperation("Initialize")
+		return fmt.Errorf("初始化外部API服务失败: %w", err)
 	}
 	// 初始化适配器管理器
 	if err := s.adapterManager.Initialize(ctx); err != nil {
-		return errors.AIFactory.InternalError("初始化适配器管理器失败", err).
-			WithOperation("Initialize")
+		return fmt.Errorf("初始化适配器管理器失败: %w", err)
 	}
 
 	// 设置验证规则
@@ -90,29 +87,24 @@ func (s *AIServiceNew) Initialize(ctx context.Context) error {
 // Health 健康检查
 func (s *AIServiceNew) Health(ctx context.Context) error {
 	if !s.initialized {
-		return errors.AIFactory.InternalError("服务未初始化", nil).
-			WithOperation("Health")
+		return fmt.Errorf("服务未初始化")
 	}
 
 	// 检查上下文服务健康状态
 	if err := s.contextService.Health(ctx); err != nil {
-		return errors.AIFactory.InternalError("上下文服务健康检查失败", err).
-			WithOperation("Health")
+		return fmt.Errorf("上下文服务健康检查失败: %w", err)
 	}
 	// 检查外部API服务健康状态
 	if err := s.externalAPIService.Health(ctx); err != nil {
-		return errors.AIFactory.InternalError("外部API服务健康检查失败", err).
-			WithOperation("Health")
+		return fmt.Errorf("外部API服务健康检查失败: %w", err)
 	}
 	// 检查适配器管理器健康状态
 	if err := s.adapterManager.Health(ctx); err != nil {
-		return errors.AIFactory.InternalError("适配器管理器健康检查失败", err).
-			WithOperation("Health")
+		return fmt.Errorf("适配器管理器健康检查失败: %w", err)
 	}
 	// 检查Repository工厂健康状态
 	if err := s.repositoryFactory.Health(ctx); err != nil {
-		return errors.AIFactory.InternalError("Repository工厂健康检查失败", err).
-			WithOperation("Health")
+		return fmt.Errorf("Repository工厂健康检查失败: %w", err)
 	}
 
 	return nil
