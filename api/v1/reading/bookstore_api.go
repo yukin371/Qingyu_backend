@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
@@ -278,12 +279,6 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		filter.Author = &author
 	}
 
-	if minRatingStr := c.Query("minRating"); minRatingStr != "" {
-		if minRating, err := strconv.ParseFloat(minRatingStr, 64); err == nil {
-			filter.MinRating = &minRating
-		}
-	}
-
 	if tags := c.QueryArray("tags"); len(tags) > 0 {
 		filter.Tags = tags
 	}
@@ -312,7 +307,12 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		return
 	}
 
-	books, err := api.service.SearchBooks(c.Request.Context(), keyword, filter)
+	// 设置关键词
+	if keyword != "" {
+		filter.Keyword = &keyword
+	}
+
+	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -325,6 +325,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		Code:    200,
 		Message: "搜索书籍成功",
 		Data:    books,
+		Total:   total,
 		Page:    page,
 		Size:    size,
 	})
@@ -446,6 +447,40 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 // @Failure 404 {object} APIResponse
 // @Failure 500 {object} APIResponse
 // @Router /api/v1/bookstore/books/{id}/view [post]
+func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "书籍ID不能为空",
+		})
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "无效的书籍ID格式",
+		})
+		return
+	}
+
+	err = api.service.IncrementBookView(c.Request.Context(), id.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "增加浏览量失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "浏览量增加成功",
+	})
+}
+
 // IncrementBannerClick 增加Banner点击次数
 // @Summary 增加Banner点击次数
 // @Description 记录用户点击Banner，增加点击次数统计
