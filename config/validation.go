@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -45,30 +44,11 @@ func validateConfigDetails(cfg *Config) error {
 // validateDatabaseConfig 验证数据库配置
 func validateDatabaseConfig(cfg *DatabaseConfig) error {
 	if cfg == nil {
-		return fmt.Errorf("database config is required")
+		return fmt.Errorf("数据库配置不能为空")
 	}
 
-	if cfg.MongoURI == "" {
-		return fmt.Errorf("database URI is required")
-	}
-
-	if cfg.DBName == "" {
-		return fmt.Errorf("database name is required")
-	}
-
-	if cfg.ConnectTimeout < time.Second {
-		return fmt.Errorf("connect timeout must be at least 1 second")
-	}
-
-	if cfg.MaxPoolSize < cfg.MinPoolSize {
-		return fmt.Errorf("max pool size must be greater than or equal to min pool size")
-	}
-
-	if cfg.MaxConnIdleTime < time.Second {
-		return fmt.Errorf("max connection idle time must be at least 1 second")
-	}
-
-	return nil
+	// 使用database.go中的验证方法
+	return cfg.Validate()
 }
 
 // validateServerConfig 验证服务器配置
@@ -107,12 +87,9 @@ func validateJWTConfig(cfg *JWTConfig) error {
 
 // validateAIConfig 验证AI配置
 func validateAIConfig(cfg *AIConfig) error {
-	if cfg == nil {
-		return fmt.Errorf("AI config is required")
-	}
-
-	if cfg.APIKey == "" {
-		return fmt.Errorf("AI API key is required")
+	// AI 模块临时禁用，跳过配置验证
+	if cfg == nil || cfg.APIKey == "" {
+		return nil
 	}
 
 	if cfg.BaseURL == "" {
@@ -132,27 +109,15 @@ func validateAIConfig(cfg *AIConfig) error {
 
 // setConfigDefaults 设置配置默认值
 func setConfigDefaults(cfg *Config) {
-	// 数据库默认值
+	// 数据库默认值 - 现在使用database.go中的高级配置
 	if cfg.Database == nil {
-		cfg.Database = &DatabaseConfig{}
-	}
-	if cfg.Database.ConnectTimeout == 0 {
-		cfg.Database.ConnectTimeout = 10 * time.Second
-	}
-	if cfg.Database.MaxPoolSize == 0 {
-		cfg.Database.MaxPoolSize = 100
-	}
-	if cfg.Database.MinPoolSize == 0 {
-		cfg.Database.MinPoolSize = 10
-	}
-	if cfg.Database.MaxConnIdleTime == 0 {
-		cfg.Database.MaxConnIdleTime = 60 * time.Second
-	}
-	if !cfg.Database.RetryWrites {
-		cfg.Database.RetryWrites = true
-	}
-	if !cfg.Database.RetryReads {
-		cfg.Database.RetryReads = true
+		// 从viper加载数据库配置，如果失败则使用默认配置
+		if dbConfig, err := LoadDatabaseConfigFromViper(); err == nil {
+			cfg.Database = dbConfig
+		} else {
+			// 使用默认配置
+			cfg.Database = getDefaultDatabaseConfig()
+		}
 	}
 
 	// 服务器默认值

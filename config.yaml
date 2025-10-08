@@ -2,7 +2,8 @@
 
 # 数据库配置
 database:
-  uri: "mongodb://localhost:27017"
+  # Docker环境使用服务名，本地开发使用localhost
+  uri: "mongodb://mongodb:27017"  # Docker: mongodb | 本地: localhost
   name: "Qingyu_writer"
   connect_timeout: 10s
   max_pool_size: 100
@@ -21,9 +22,10 @@ jwt:
   secret: "qingyu_secret_key"  # 生产环境请修改为强密钥
   expiration_hours: 24
 
-# AI配置
+# AI配置（测试）
 ai:
-  api_key: ""  # 请填入您的API密钥
-  base_url: "https://api.openai.com/v1"
+  api_key: ""  # 开发环境测试密钥
+  base_url: "https://generativelanguage.googleapis.com/v1beta"
+  model: "gemini-1.5-flash"  # 或者使用 gemini-1.5-pro
   max_tokens: 2000
-  temperature: 7  # 0-10，值越高创造性越强
+  temperature: 0.7  # 0.0-1.0，值越高创造性越强

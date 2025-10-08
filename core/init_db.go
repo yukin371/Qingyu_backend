@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
@@ -19,18 +18,23 @@ func InitDB() error {
 		return fmt.Errorf("database configuration is missing")
 	}
 
+	// 检查主数据库配置
+	if cfg.Primary.Type != config.DatabaseTypeMongoDB || cfg.Primary.MongoDB == nil {
+		return fmt.Errorf("MongoDB configuration is missing or invalid")
+	}
+
+	mongoCfg := cfg.Primary.MongoDB
+
 	// 创建MongoDB客户端配置
 	clientOptions := options.Client().
-		ApplyURI(cfg.MongoURI).
-		SetConnectTimeout(cfg.ConnectTimeout).
-		SetMaxPoolSize(cfg.MaxPoolSize).
-		SetMinPoolSize(cfg.MinPoolSize).
-		SetMaxConnIdleTime(cfg.MaxConnIdleTime).
-		SetRetryWrites(cfg.RetryWrites).
-		SetRetryReads(cfg.RetryReads)
+		ApplyURI(mongoCfg.URI).
+		SetConnectTimeout(mongoCfg.ConnectTimeout).
+		SetMaxPoolSize(mongoCfg.MaxPoolSize).
+		SetMinPoolSize(mongoCfg.MinPoolSize).
+		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
 
 	// 连接到MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, clientOptions)
@@ -45,8 +49,8 @@ func InitDB() error {
 	}
 
 	// 设置全局数据库实例
-	global.DB = client.Database(cfg.DBName)
+	global.DB = client.Database(mongoCfg.Database)
 
-	fmt.Printf("Successfully connected to MongoDB: %s/%s\n", cfg.MongoURI, cfg.DBName)
+	fmt.Printf("Successfully connected to MongoDB: %s/%s\n", mongoCfg.URI, mongoCfg.Database)
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	model "Qingyu_backend/models/document"
-	svc "Qingyu_backend/service/document"
+	svc "Qingyu_backend/service/project"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +14,9 @@ type DocumentApi struct {
 	service *svc.DocumentService
 }
 
+// NewDocumentApi 创建文档相关API实例
 func NewDocumentApi() *DocumentApi {
-	return &DocumentApi{service: &svc.DocumentService{}}
+	return &DocumentApi{service: svc.NewDocumentService()}
 }
 
 // Create 创建文档
