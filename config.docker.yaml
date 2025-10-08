@@ -1,9 +1,8 @@
-# 青羽写作系统配置文件
+# 青羽写作系统配置文件 - Docker环境专用
 
 # 数据库配置
 database:
-  # Docker环境使用服务名，本地开发使用localhost
-  uri: "mongodb://mongodb:27017"  # Docker: mongodb | 本地: localhost
+  uri: "mongodb://mongodb:27017"  # Docker服务名
   name: "Qingyu_writer"
   connect_timeout: 10s
   max_pool_size: 100
@@ -11,6 +10,12 @@ database:
   max_conn_idle_time: 60s
   retry_writes: true
   retry_reads: true
+
+# Redis配置
+redis:
+  addr: "redis:6379"  # Docker服务名
+  password: ""
+  db: 0
 
 # 服务器配置
 server:
@@ -29,3 +34,6 @@ ai:
   model: "gemini-1.5-flash"  # 或者使用 gemini-1.5-pro
   max_tokens: 2000
   temperature: 0.7  # 0.0-1.0，值越高创造性越强
+
+
+
