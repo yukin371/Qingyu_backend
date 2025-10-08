@@ -1,8 +1,0 @@
-fix(bookstore): 完成所有编译错误修复
-- 添加 GetBookDetailsByAuthorID 方法
-- 添加 SearchBookDetailsWithFilter 方法
-- 修复 SearchBooks filter.Keyword 指针类型
-- 添加 GetBookStats/IncrementBookView 到接口
-- 简化缓存服务调用
-- 移除未使用的 fmt 导入
-
