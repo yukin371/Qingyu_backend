@@ -58,6 +58,19 @@ type BookDetailService interface {
 	SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
 	SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
 
+	// API 兼容方法别名（为了与 API 层命名保持一致）
+	GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
+	GetPopularBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	GetLatestBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	CountBooksByCategory(ctx context.Context, category string) (int64, error)
+
 	// 书籍详情统计和交互
 	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
 	IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error
@@ -824,4 +837,74 @@ func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, book
 
 	// 清除首页缓存
 	s.cacheService.InvalidateHomepageCache(ctx)
+}
+
+// API 兼容方法别名实现
+
+// GetBooksByTitle 根据标题搜索书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	return s.SearchBookDetails(ctx, title, page, pageSize)
+}
+
+// GetBooksByAuthor 根据作者获取书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	return s.GetBookDetailsByAuthor(ctx, author, page, pageSize)
+}
+
+// GetBooksByCategory 根据分类获取书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	return s.GetBookDetailsByCategory(ctx, category, page, pageSize)
+}
+
+// GetBooksByStatus 根据状态获取书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	// 将字符串状态转换为 BookStatus 类型
+	var bookStatus bookstore.BookStatus
+	switch status {
+	case "serializing", "ongoing":
+		bookStatus = bookstore.BookStatusOngoing
+	case "completed":
+		bookStatus = bookstore.BookStatusCompleted
+	case "paused":
+		bookStatus = bookstore.BookStatusPaused
+	default:
+		return nil, 0, fmt.Errorf("无效的书籍状态: %s", status)
+	}
+	return s.GetBookDetailsByStatus(ctx, bookStatus, page, pageSize)
+}
+
+// GetBooksByTags 根据标签获取书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	return s.GetBookDetailsByTags(ctx, tags, page, pageSize)
+}
+
+// SearchBooks 搜索书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+	return s.SearchBookDetails(ctx, keyword, page, pageSize)
+}
+
+// GetRecommendedBooks 获取推荐书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+	// 返回热门书籍作为推荐
+	return s.GetPopularBookDetails(ctx, limit)
+}
+
+// GetSimilarBooks 获取相似书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+	return s.GetSimilarBookDetails(ctx, bookID, limit)
+}
+
+// GetPopularBooks 获取热门书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetPopularBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+	return s.GetPopularBookDetails(ctx, limit)
+}
+
+// GetLatestBooks 获取最新书籍（API 兼容方法）
+func (s *BookDetailServiceImpl) GetLatestBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+	return s.GetLatestBookDetails(ctx, limit)
+}
+
+// CountBooksByCategory 根据分类统计书籍数量（API 兼容方法）
+func (s *BookDetailServiceImpl) CountBooksByCategory(ctx context.Context, category string) (int64, error) {
+	return s.GetBookDetailCountByCategory(ctx, category)
 }
