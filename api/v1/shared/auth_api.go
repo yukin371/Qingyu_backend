@@ -21,16 +21,17 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 }
 
 // Register 用户注册
-// @Summary 用户注册
-// @Description 注册新用户账号
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Param request body auth.RegisterRequest true "注册信息"
-// @Success 200 {object} APIResponse{data=auth.RegisterResponse}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/register [post]
+//
+//	@Summary		用户注册
+//	@Description	注册新用户账号
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		auth.RegisterRequest	true	"注册信息"
+//	@Success		200		{object}	APIResponse{data=auth.RegisterResponse}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/auth/register [post]
 func (api *AuthAPI) Register(c *gin.Context) {
 	var req auth.RegisterRequest
 	if !ValidateRequest(c, &req) {
@@ -54,17 +55,18 @@ func (api *AuthAPI) Register(c *gin.Context) {
 }
 
 // Login 用户登录
-// @Summary 用户登录
-// @Description 用户登录获取Token
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Param request body auth.LoginRequest true "登录信息"
-// @Success 200 {object} APIResponse{data=auth.LoginResponse}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/login [post]
+//
+//	@Summary		用户登录
+//	@Description	用户登录获取Token
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		auth.LoginRequest	true	"登录信息"
+//	@Success		200		{object}	APIResponse{data=auth.LoginResponse}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/auth/login [post]
 func (api *AuthAPI) Login(c *gin.Context) {
 	var req auth.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -92,16 +94,17 @@ func (api *AuthAPI) Login(c *gin.Context) {
 }
 
 // Logout 用户登出
-// @Summary 用户登出
-// @Description 用户登出，使Token失效
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/logout [post]
+//
+//	@Summary		用户登出
+//	@Description	用户登出，使Token失效
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	APIResponse
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/auth/logout [post]
 func (api *AuthAPI) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
@@ -133,16 +136,17 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 }
 
 // RefreshToken 刷新Token
-// @Summary 刷新Token
-// @Description 使用当前Token获取新Token
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse{data=string}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/refresh [post]
+//
+//	@Summary		刷新Token
+//	@Description	使用当前Token获取新Token
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	APIResponse{data=string}
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/auth/refresh [post]
 func (api *AuthAPI) RefreshToken(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
@@ -175,16 +179,17 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 }
 
 // GetUserPermissions 获取用户权限
-// @Summary 获取用户权限
-// @Description 获取当前用户的权限列表
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse{data=[]string}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/permissions [get]
+//
+//	@Summary		获取用户权限
+//	@Description	获取当前用户的权限列表
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	APIResponse{data=[]string}
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/auth/permissions [get]
 func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 	// 从Context中获取当前用户ID（由中间件设置）
 	userID, exists := c.Get("user_id")
@@ -213,16 +218,17 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 }
 
 // GetUserRoles 获取用户角色
-// @Summary 获取用户角色
-// @Description 获取当前用户的角色列表
-// @Tags 认证
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse{data=[]string}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/auth/roles [get]
+//
+//	@Summary		获取用户角色
+//	@Description	获取当前用户的角色列表
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	APIResponse{data=[]string}
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/auth/roles [get]
 func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")

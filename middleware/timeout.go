@@ -10,10 +10,10 @@ import (
 
 // TimeoutConfig 超时中间件配置
 type TimeoutConfig struct {
-	Timeout     time.Duration `json:"timeout" yaml:"timeout"`
-	Message     string        `json:"message" yaml:"message"`
-	StatusCode  int           `json:"status_code" yaml:"status_code"`
-	SkipPaths   []string      `json:"skip_paths" yaml:"skip_paths"`
+	Timeout      time.Duration      `json:"timeout" yaml:"timeout"`
+	Message      string             `json:"message" yaml:"message"`
+	StatusCode   int                `json:"status_code" yaml:"status_code"`
+	SkipPaths    []string           `json:"skip_paths" yaml:"skip_paths"`
 	ErrorHandler func(*gin.Context) `json:"-" yaml:"-"`
 }
 
@@ -162,15 +162,15 @@ func (tw *TimeoutWriter) Flush() {
 		for k, v := range tw.h {
 			tw.ResponseWriter.Header()[k] = v
 		}
-		
+
 		if tw.code != 0 {
 			tw.ResponseWriter.WriteHeader(tw.code)
 		}
-		
+
 		if len(tw.wbuf) > 0 {
 			tw.ResponseWriter.Write(tw.wbuf)
 		}
-		
+
 		if flusher, ok := tw.ResponseWriter.(http.Flusher); ok {
 			flusher.Flush()
 		}
@@ -188,7 +188,7 @@ func (tw *TimeoutWriter) Timeout() {
 // CreateTimeoutMiddleware 创建超时中间件（用于中间件工厂）
 func CreateTimeoutMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
 	timeoutConfig := DefaultTimeoutConfig()
-	
+
 	// 解析配置
 	if timeout, ok := config["timeout"].(string); ok {
 		if duration, err := time.ParseDuration(timeout); err == nil {
@@ -207,6 +207,6 @@ func CreateTimeoutMiddleware(config map[string]interface{}) (gin.HandlerFunc, er
 	if skipPaths, ok := config["skip_paths"].([]string); ok {
 		timeoutConfig.SkipPaths = skipPaths
 	}
-	
+
 	return TimeoutWithConfig(timeoutConfig), nil
 }

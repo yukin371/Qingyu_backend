@@ -77,10 +77,10 @@ type Usage struct {
 func (s *ExternalAPIService) GenerateContent(ctx context.Context, aiContext *ai.AIContext, prompt string, options *ai.GenerateOptions) (*ai.GenerateResult, error) {
 	// 构建系统提示词
 	systemPrompt := s.buildSystemPrompt(aiContext)
-	
+
 	// 构建用户提示词
 	userPrompt := s.buildUserPrompt(aiContext, prompt)
-	
+
 	// 组合完整提示词
 	fullPrompt := fmt.Sprintf("%s\n\n%s", systemPrompt, userPrompt)
 
@@ -109,9 +109,9 @@ func (s *ExternalAPIService) GenerateContent(ctx context.Context, aiContext *ai.
 // buildSystemPrompt 构建系统提示词
 func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 	var prompt strings.Builder
-	
+
 	prompt.WriteString("你是一个专业的小说写作助手。请根据以下项目信息和上下文来协助创作：\n\n")
-	
+
 	// 当前章节信息
 	if aiContext.CurrentChapter != nil {
 		prompt.WriteString(fmt.Sprintf("当前章节：%s\n", aiContext.CurrentChapter.Title))
@@ -119,7 +119,7 @@ func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 			prompt.WriteString(fmt.Sprintf("章节摘要：%s\n", aiContext.CurrentChapter.Summary))
 		}
 	}
-	
+
 	// 角色信息
 	if len(aiContext.ActiveCharacters) > 0 {
 		prompt.WriteString("\n活跃角色：\n")
@@ -130,7 +130,7 @@ func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 			}
 		}
 	}
-	
+
 	// 地点信息
 	if len(aiContext.CurrentLocations) > 0 {
 		prompt.WriteString("\n当前场景：\n")
@@ -138,7 +138,7 @@ func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 			prompt.WriteString(fmt.Sprintf("- %s: %s\n", loc.Name, loc.Description))
 		}
 	}
-	
+
 	// 情节线索
 	if len(aiContext.PlotThreads) > 0 {
 		prompt.WriteString("\n活跃情节线索：\n")
@@ -146,7 +146,7 @@ func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 			prompt.WriteString(fmt.Sprintf("- %s: %s\n", thread.Name, thread.Description))
 		}
 	}
-	
+
 	// 世界观设定
 	if aiContext.WorldSettings != nil {
 		prompt.WriteString(fmt.Sprintf("\n世界观设定：%s\n", aiContext.WorldSettings.Description))
@@ -157,22 +157,22 @@ func (s *ExternalAPIService) buildSystemPrompt(aiContext *ai.AIContext) string {
 			}
 		}
 	}
-	
+
 	prompt.WriteString("\n请基于以上信息协助创作，保持角色一致性和情节连贯性。")
-	
+
 	return prompt.String()
 }
 
 // buildUserPrompt 构建用户提示词
 func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt string) string {
 	var userPrompt strings.Builder
-	
+
 	// 当前章节内容
 	if aiContext.CurrentChapter != nil {
 		if aiContext.CurrentChapter.Content != "" {
 			userPrompt.WriteString(fmt.Sprintf("当前章节内容：\n%s\n\n", aiContext.CurrentChapter.Content))
 		}
-		
+
 		// 章节关键点
 		if len(aiContext.CurrentChapter.KeyPoints) > 0 {
 			userPrompt.WriteString("章节关键点：\n")
@@ -181,13 +181,13 @@ func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt str
 			}
 			userPrompt.WriteString("\n")
 		}
-		
+
 		// 写作提示
 		if aiContext.CurrentChapter.WritingHints != "" {
 			userPrompt.WriteString(fmt.Sprintf("写作提示：%s\n\n", aiContext.CurrentChapter.WritingHints))
 		}
 	}
-	
+
 	// 前序章节摘要
 	if len(aiContext.PreviousChapters) > 0 {
 		userPrompt.WriteString("前序章节摘要：\n")
@@ -196,10 +196,10 @@ func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt str
 		}
 		userPrompt.WriteString("\n")
 	}
-	
+
 	// 用户具体请求
 	userPrompt.WriteString(fmt.Sprintf("用户请求：%s", prompt))
-	
+
 	return userPrompt.String()
 }
 
@@ -207,7 +207,7 @@ func (s *ExternalAPIService) buildUserPrompt(aiContext *ai.AIContext, prompt str
 func (s *ExternalAPIService) sendRequest(ctx context.Context, request *GenerateRequest) (*GenerateResponse, error) {
 	// 使用简化的配置
 	apiURL := s.config.BaseURL + "/chat/completions"
-	
+
 	// 序列化请求
 	requestBody, err := json.Marshal(request)
 	if err != nil {

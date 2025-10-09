@@ -194,7 +194,7 @@ func (r *MongoBookRepository) GetRecommended(ctx context.Context, limit, offset 
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"rating", -1}, {"view_count", -1}})
+		SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "view_count", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"is_recommended": true, "status": "published"}, opts)
 	if err != nil {
@@ -215,7 +215,7 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"rating", -1}, {"view_count", -1}})
+		SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "view_count", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"is_featured": true, "status": "published"}, opts)
 	if err != nil {
@@ -236,7 +236,7 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"view_count", -1}, {"rating", -1}})
+		SetSort(bson.D{{Key: "view_count", Value: -1}, {Key: "rating", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"status": "published"}, opts)
 	if err != nil {
@@ -256,7 +256,7 @@ func (r *MongoBookRepository) GetNewReleases(ctx context.Context, limit, offset 
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"published_at", -1}})
+		SetSort(bson.D{{Key: "published_at", Value: -1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"status": "published"}, opts)
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (r *MongoBookRepository) GetFreeBooks(ctx context.Context, limit, offset in
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"updated_at", -1}})
+		SetSort(bson.D{{Key: "updated_at", Value: -1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"is_free": true}, opts)
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func (r *MongoBookRepository) GetByPriceRange(ctx context.Context, minPrice, max
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"price", 1}})
+		SetSort(bson.D{{Key: "price", Value: 1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"price": priceQuery}, opts)
 	if err != nil {
 		return nil, err
@@ -325,7 +325,7 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, limit,
 	if offset > 0 {
 		opts.SetSkip(int64(offset))
 	}
-	opts.SetSort(bson.D{{"created_at", -1}})
+	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
@@ -396,7 +396,7 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 		if filter.SortOrder == "asc" {
 			sortOrder = 1
 		}
-		opts.SetSort(bson.D{{sortBy, sortOrder}})
+		opts.SetSort(bson.D{{Key: sortBy, Value: sortOrder}})
 	}
 
 	cursor, err := r.collection.Find(ctx, query, opts)
@@ -466,7 +466,7 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	if filter.SortOrder == "asc" {
 		sortOrder = 1
 	}
-	opts.SetSort(bson.D{{sortBy, sortOrder}})
+	opts.SetSort(bson.D{{Key: sortBy, Value: sortOrder}})
 
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
@@ -570,19 +570,6 @@ func (r *MongoBookRepository) GetStats(ctx context.Context) (*bookstore.BookStat
 	stats.FeaturedBooks = featured
 
 	return stats, nil
-}
-
-// IncrementViewCount 增加浏览量
-func (r *MongoBookRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
-	_, err := r.collection.UpdateOne(
-		ctx,
-		bson.M{"_id": bookID},
-		bson.M{
-			"$inc": bson.M{"view_count": 1},
-			"$set": bson.M{"updated_at": time.Now()},
-		},
-	)
-	return err
 }
 
 // IncrementLikeCount 增加点赞数
@@ -740,34 +727,6 @@ func (r *MongoBookRepository) Exists(ctx context.Context, id primitive.ObjectID)
 		return false, err
 	}
 	return count > 0, nil
-}
-
-// GetStats 获取书籍统计信息
-func (r *MongoBookRepository) GetStats(ctx context.Context) (*bookstore.BookStats, error) {
-	stats := &bookstore.BookStats{}
-
-	// 统计总书籍数
-	total, err := r.collection.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		return nil, err
-	}
-	stats.TotalBooks = total
-
-	// 统计已发布书籍数
-	published, err := r.collection.CountDocuments(ctx, bson.M{"status": "published"})
-	if err != nil {
-		return nil, err
-	}
-	stats.PublishedBooks = published
-
-	// 统计免费书籍数
-	free, err := r.collection.CountDocuments(ctx, bson.M{"is_free": true})
-	if err != nil {
-		return nil, err
-	}
-	stats.FreeBooks = free
-
-	return stats, nil
 }
 
 // IncrementViewCount 增加浏览计数

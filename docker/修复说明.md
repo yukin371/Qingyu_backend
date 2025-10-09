@@ -1,0 +1,71 @@
+# Docker构建修复说明
+
+## 问题1: .dockerignore排除了docker目录
+
+**问题描述：**
+`.dockerignore` 文件中包含了 `docker/`，这会导致 `docker/.air.toml` 文件无法被Dockerfile复制。
+
+**已修复：**
+- 注释掉了 `.dockerignore` 中的 `docker/` 行
+- 现在可以正常复制 `.air.toml` 配置文件
+
+## 问题2: Go版本
+
+**问题描述：**
+原本使用 `golang:1.24-alpine`，但该版本不存在。
+
+**已修复：**
+- 改为 `golang:1.23-alpine`
+
+## 问题3: docker-compose版本警告
+
+**问题描述：**
+`version: '3.8'` 在新版docker-compose中已过时。
+
+**已修复：**
+- 移除了所有 `version` 字段
+
+## 重新构建服务
+
+```bash
+# 清理旧构建
+cd Qingyu_backend\docker
+docker-compose -f docker-compose.dev.yml down
+docker-compose -f docker-compose.dev.yml build --no-cache
+
+# 重新启动
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+## 如果仍有问题
+
+如果仍然无法构建，可以尝试简化Dockerfile，不复制.air.toml文件：
+
+### 方法1：使用Air默认配置
+
+修改 `Dockerfile.dev` 最后一行：
+```dockerfile
+CMD ["air"]  # 不指定配置文件，使用默认配置
+```
+
+### 方法2：在Dockerfile中创建配置
+
+删除COPY行，添加：
+```dockerfile
+RUN echo 'root = "."' > .air.toml && \
+    echo 'tmp_dir = "tmp"' >> .air.toml && \
+    echo '[build]' >> .air.toml && \
+    echo '  cmd = "go build -o ./tmp/main ."' >> .air.toml && \
+    echo '  bin = "./tmp/main"' >> .air.toml && \
+    echo '  include_ext = ["go", "yaml"]' >> .air.toml && \
+    echo '  exclude_dir = ["tmp", "vendor"]' >> .air.toml
+```
+
+## 验证
+
+构建成功后，应该看到：
+```
+✔ Container qingyu-mongodb  Created
+✔ Container qingyu-redis    Created  
+✔ Container qingyu-backend  Created
+```

@@ -25,17 +25,18 @@ func NewChapterAPI(service bookstoreService.ChapterService) *ChapterAPI {
 }
 
 // GetChapter 获取章节详情
-// @Summary 获取章节详情
-// @Description 根据章节ID获取章节详细信息
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "章节ID"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id} [get]
+//
+//	@Summary		获取章节详情
+//	@Description	根据章节ID获取章节详细信息
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"章节ID"
+//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/chapters/{id} [get]
 func (api *ChapterAPI) GetChapter(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -79,18 +80,19 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 }
 
 // GetChaptersByBookID 根据书籍ID获取章节列表
-// @Summary 根据书籍ID获取章节列表
-// @Description 根据书籍ID获取所有章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters [get]
+//
+//	@Summary		根据书籍ID获取章节列表
+//	@Description	根据书籍ID获取所有章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters [get]
 func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -140,18 +142,19 @@ func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 }
 
 // GetChapterByBookIDAndNumber 根据书籍ID和章节号获取章节
-// @Summary 根据书籍ID和章节号获取章节
-// @Description 根据书籍ID和章节号获取特定章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Param chapter_num path int true "章节号"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/{chapter_num} [get]
+//
+//	@Summary		根据书籍ID和章节号获取章节
+//	@Description	根据书籍ID和章节号获取特定章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id		path		string	true	"书籍ID"
+//	@Param			chapter_num	path		int		true	"章节号"
+//	@Success		200			{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400			{object}	APIResponse
+//	@Failure		404			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/{chapter_num} [get]
 func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -181,7 +184,7 @@ func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetChapterByBookIDAndNumber(c.Request.Context(), bookID, chapterNum)
+	chapter, err := api.service.GetChapterByBookIDAndNum(c.Request.Context(), bookID, chapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -205,18 +208,19 @@ func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 }
 
 // GetFreeChapters 获取免费章节
-// @Summary 获取免费章节
-// @Description 根据书籍ID获取免费章节列表
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/free [get]
+//
+//	@Summary		获取免费章节
+//	@Description	根据书籍ID获取免费章节列表
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/free [get]
 func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -246,7 +250,7 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetFreeChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetFreeChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -266,18 +270,19 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 }
 
 // GetPaidChapters 获取付费章节
-// @Summary 获取付费章节
-// @Description 根据书籍ID获取付费章节列表
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/paid [get]
+//
+//	@Summary		获取付费章节
+//	@Description	根据书籍ID获取付费章节列表
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/paid [get]
 func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -307,7 +312,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetPaidChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetPaidChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -327,18 +332,19 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 }
 
 // GetPublishedChapters 获取已发布章节
-// @Summary 获取已发布章节
-// @Description 根据书籍ID获取已发布章节列表
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/published [get]
+//
+//	@Summary		获取已发布章节
+//	@Description	根据书籍ID获取已发布章节列表
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/published [get]
 func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -368,7 +374,7 @@ func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 		size = 20
 	}
 
-	chapters, total, err := api.service.GetPublishedChapters(c.Request.Context(), bookID, page, size)
+	chapters, total, err := api.service.GetPublishedChaptersByBookID(c.Request.Context(), bookID, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -388,17 +394,18 @@ func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 }
 
 // GetPreviousChapter 获取上一章节
-// @Summary 获取上一章节
-// @Description 根据当前章节ID获取上一章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "当前章节ID"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id}/previous [get]
+//
+//	@Summary		获取上一章节
+//	@Description	根据当前章节ID获取上一章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"当前章节ID"
+//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/chapters/{id}/previous [get]
 func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -418,7 +425,17 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetPreviousChapter(c.Request.Context(), id)
+	// 先获取当前章节信息
+	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{
+			Code:    404,
+			Message: "当前章节不存在",
+		})
+		return
+	}
+
+	chapter, err := api.service.GetPreviousChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -442,17 +459,18 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 }
 
 // GetNextChapter 获取下一章节
-// @Summary 获取下一章节
-// @Description 根据当前章节ID获取下一章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "当前章节ID"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id}/next [get]
+//
+//	@Summary		获取下一章节
+//	@Description	根据当前章节ID获取下一章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"当前章节ID"
+//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/chapters/{id}/next [get]
 func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -472,7 +490,17 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.service.GetNextChapter(c.Request.Context(), id)
+	// 先获取当前章节信息
+	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{
+			Code:    404,
+			Message: "当前章节不存在",
+		})
+		return
+	}
+
+	chapter, err := api.service.GetNextChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -496,17 +524,18 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 }
 
 // GetFirstChapter 获取第一章节
-// @Summary 获取第一章节
-// @Description 根据书籍ID获取第一章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/first [get]
+//
+//	@Summary		获取第一章节
+//	@Description	根据书籍ID获取第一章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/first [get]
 func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -550,17 +579,18 @@ func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
 }
 
 // GetLastChapter 获取最后章节
-// @Summary 获取最后章节
-// @Description 根据书籍ID获取最后章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/last [get]
+//
+//	@Summary		获取最后章节
+//	@Description	根据书籍ID获取最后章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/last [get]
 func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -604,17 +634,18 @@ func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
 }
 
 // GetChapterContent 获取章节内容
-// @Summary 获取章节内容
-// @Description 根据章节ID获取章节内容
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "章节ID"
-// @Success 200 {object} APIResponse{data=map[string]interface{}}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id}/content [get]
+//
+//	@Summary		获取章节内容
+//	@Description	根据章节ID获取章节内容
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"章节ID"
+//	@Success		200	{object}	APIResponse{data=map[string]interface{}}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/chapters/{id}/content [get]
 func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -634,7 +665,15 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 		return
 	}
 
-	content, err := api.service.GetChapterContent(c.Request.Context(), id)
+	// 获取用户ID（从中间件设置的上下文中）
+	var userID primitive.ObjectID
+	if userIDValue, exists := c.Get("userId"); exists {
+		if uid, ok := userIDValue.(string); ok {
+			userID, _ = primitive.ObjectIDFromHex(uid)
+		}
+	}
+
+	content, err := api.service.GetChapterContent(c.Request.Context(), id, userID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
@@ -653,7 +692,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "获取成功",
-		Data:    map[string]interface{}{
+		Data: map[string]interface{}{
 			"chapter_id": id.Hex(),
 			"content":    content,
 		},
@@ -661,19 +700,20 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 }
 
 // SearchChapters 搜索章节
-// @Summary 搜索章节
-// @Description 根据关键词搜索章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param keyword query string true "搜索关键词"
-// @Param book_id query string false "书籍ID(可选)"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/search [get]
+//
+//	@Summary		搜索章节
+//	@Description	根据关键词搜索章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			keyword	query		string	true	"搜索关键词"
+//	@Param			book_id	query		string	false	"书籍ID(可选)"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/chapters/search [get]
 func (api *ChapterAPI) SearchChapters(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
@@ -714,16 +754,17 @@ func (api *ChapterAPI) SearchChapters(c *gin.Context) {
 }
 
 // GetChapterStatistics 获取章节统计信息
-// @Summary 获取章节统计信息
-// @Description 获取书籍的章节统计信息
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param book_id path string true "书籍ID"
-// @Success 200 {object} APIResponse{data=map[string]interface{}}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{book_id}/chapters/statistics [get]
+//
+//	@Summary		获取章节统计信息
+//	@Description	获取书籍的章节统计信息
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			book_id	path		string	true	"书籍ID"
+//	@Success		200		{object}	APIResponse{data=map[string]interface{}}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{book_id}/chapters/statistics [get]
 func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -744,7 +785,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 	}
 
 	// 获取统计信息
-	totalCount, err := api.service.CountChaptersByBookID(c.Request.Context(), bookID)
+	totalCount, err := api.service.GetChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -753,7 +794,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	freeCount, err := api.service.CountFreeChapters(c.Request.Context(), bookID)
+	freeCount, err := api.service.GetFreeChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -762,7 +803,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	paidCount, err := api.service.CountPaidChapters(c.Request.Context(), bookID)
+	paidCount, err := api.service.GetPaidChapterCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -771,7 +812,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 		return
 	}
 
-	totalWordCount, err := api.service.GetTotalWordCount(c.Request.Context(), bookID)
+	totalWordCount, err := api.service.GetTotalWordCountByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -796,16 +837,17 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 }
 
 // CreateChapter 创建章节
-// @Summary 创建章节
-// @Description 创建新的章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param chapter body bookstore.Chapter true "章节信息"
-// @Success 201 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters [post]
+//
+//	@Summary		创建章节
+//	@Description	创建新的章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Success		201		{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/chapters [post]
 func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 	var chapter bookstore.Chapter
 	if err := c.ShouldBindJSON(&chapter); err != nil {
@@ -832,18 +874,19 @@ func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 }
 
 // UpdateChapter 更新章节
-// @Summary 更新章节
-// @Description 更新章节信息
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "章节ID"
-// @Param chapter body bookstore.Chapter true "章节信息"
-// @Success 200 {object} APIResponse{data=bookstore.Chapter}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id} [put]
+//
+//	@Summary		更新章节
+//	@Description	更新章节信息
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"章节ID"
+//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/chapters/{id} [put]
 func (api *ChapterAPI) UpdateChapter(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -897,17 +940,18 @@ func (api *ChapterAPI) UpdateChapter(c *gin.Context) {
 }
 
 // DeleteChapter 删除章节
-// @Summary 删除章节
-// @Description 删除章节
-// @Tags 章节
-// @Accept json
-// @Produce json
-// @Param id path string true "章节ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/chapters/{id} [delete]
+//
+//	@Summary		删除章节
+//	@Description	删除章节
+//	@Tags			章节
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"章节ID"
+//	@Success		200	{object}	APIResponse
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/chapters/{id} [delete]
 func (api *ChapterAPI) DeleteChapter(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {

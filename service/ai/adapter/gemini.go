@@ -26,7 +26,7 @@ func NewGeminiAdapter(apiKey, baseURL string) *GeminiAdapter {
 	if baseURL == "" {
 		baseURL = "https://generativelanguage.googleapis.com"
 	}
-	
+
 	return &GeminiAdapter{
 		apiKey:  apiKey,
 		baseURL: baseURL,
@@ -64,9 +64,9 @@ type GeminiPart struct {
 
 // GeminiRequest Gemini API请求结构
 type GeminiRequest struct {
-	Contents         []GeminiContent           `json:"contents"`
-	GenerationConfig *GeminiGenerationConfig   `json:"generationConfig,omitempty"`
-	SafetySettings   []GeminiSafetySetting     `json:"safetySettings,omitempty"`
+	Contents         []GeminiContent         `json:"contents"`
+	GenerationConfig *GeminiGenerationConfig `json:"generationConfig,omitempty"`
+	SafetySettings   []GeminiSafetySetting   `json:"safetySettings,omitempty"`
 }
 
 // GeminiGenerationConfig Gemini生成配置
@@ -86,16 +86,16 @@ type GeminiSafetySetting struct {
 
 // GeminiResponse Gemini API响应结构
 type GeminiResponse struct {
-	Candidates     []GeminiCandidate `json:"candidates"`
-	UsageMetadata  GeminiUsage       `json:"usageMetadata"`
+	Candidates     []GeminiCandidate    `json:"candidates"`
+	UsageMetadata  GeminiUsage          `json:"usageMetadata"`
 	PromptFeedback GeminiPromptFeedback `json:"promptFeedback,omitempty"`
 }
 
 // GeminiCandidate Gemini候选结果
 type GeminiCandidate struct {
-	Content       GeminiContent `json:"content"`
-	FinishReason  string        `json:"finishReason"`
-	Index         int           `json:"index"`
+	Content       GeminiContent        `json:"content"`
+	FinishReason  string               `json:"finishReason"`
+	Index         int                  `json:"index"`
 	SafetyRatings []GeminiSafetyRating `json:"safetyRatings"`
 }
 
@@ -119,14 +119,14 @@ type GeminiUsage struct {
 
 // Gemini流式响应结构体
 type GeminiStreamResponse struct {
-	Candidates []GeminiStreamCandidate `json:"candidates"`
-	UsageMetadata *GeminiUsage `json:"usageMetadata,omitempty"`
+	Candidates    []GeminiStreamCandidate `json:"candidates"`
+	UsageMetadata *GeminiUsage            `json:"usageMetadata,omitempty"`
 }
 
 type GeminiStreamCandidate struct {
-	Content GeminiContent `json:"content"`
-	FinishReason string `json:"finishReason,omitempty"`
-	Index int `json:"index"`
+	Content      GeminiContent `json:"content"`
+	FinishReason string        `json:"finishReason,omitempty"`
+	Index        int           `json:"index"`
 }
 
 // TextGeneration 实现文本生成方法
@@ -184,13 +184,13 @@ func (a *GeminiAdapter) TextGeneration(ctx context.Context, req *TextGenerationR
 func (a *GeminiAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionRequest) (*ChatCompletionResponse, error) {
 	// 转换消息格式
 	var contents []GeminiContent
-	
+
 	for _, msg := range req.Messages {
 		role := msg.Role
 		if role == "assistant" {
 			role = "model"
 		}
-		
+
 		contents = append(contents, GeminiContent{
 			Parts: []GeminiPart{
 				{Text: msg.Content},
@@ -226,7 +226,7 @@ func (a *GeminiAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionR
 		if len(candidate.Content.Parts) > 0 {
 			text = candidate.Content.Parts[0].Text
 		}
-		
+
 		message = Message{
 			Role:    "assistant",
 			Content: text,
@@ -252,11 +252,11 @@ func (a *GeminiAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionR
 func (a *GeminiAdapter) TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
 	// 创建响应通道
 	responseChan := make(chan *TextGenerationResponse, 10)
-	
+
 	// 启动协程处理流式响应
 	go func() {
 		defer close(responseChan)
-		
+
 		if err := a.doTextGenerationStream(ctx, req, responseChan); err != nil {
 			// 发送错误响应
 			responseChan <- &TextGenerationResponse{
@@ -268,7 +268,7 @@ func (a *GeminiAdapter) TextGenerationStream(ctx context.Context, req *TextGener
 			}
 		}
 	}()
-	
+
 	return responseChan, nil
 }
 
@@ -339,7 +339,7 @@ func (a *GeminiAdapter) processStreamResponse(body io.Reader, responseChan chan<
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// 跳过空行和注释行
 		if line == "" || strings.HasPrefix(line, ":") {
 			continue
@@ -348,7 +348,7 @@ func (a *GeminiAdapter) processStreamResponse(body io.Reader, responseChan chan<
 		// 解析SSE数据
 		if strings.HasPrefix(line, "data: ") {
 			data := strings.TrimPrefix(line, "data: ")
-			
+
 			// 检查是否为结束标记
 			if data == "[DONE]" {
 				break
@@ -367,7 +367,7 @@ func (a *GeminiAdapter) processStreamResponse(body io.Reader, responseChan chan<
 					text := candidate.Content.Parts[0].Text
 					if text != "" {
 						fullContent.WriteString(text)
-						
+
 						// 发送增量响应
 						responseChan <- &TextGenerationResponse{
 							ID:           primitive.NewObjectID().Hex(),

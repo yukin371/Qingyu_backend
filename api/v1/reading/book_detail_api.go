@@ -25,17 +25,18 @@ func NewBookDetailAPI(service bookstoreService.BookDetailService) *BookDetailAPI
 }
 
 // GetBookDetail 获取书籍详情
-// @Summary 获取书籍详情
-// @Description 根据书籍ID获取详细信息
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse{data=bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id} [get]
+//
+//	@Summary		获取书籍详情
+//	@Description	根据书籍ID获取详细信息
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse{data=bookstore.BookDetail}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id} [get]
 func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -79,18 +80,19 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 }
 
 // GetBooksByTitle 根据标题搜索书籍
-// @Summary 根据标题搜索书籍
-// @Description 根据书籍标题进行模糊搜索
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param title query string true "书籍标题"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/search/title [get]
+//
+//	@Summary		根据标题搜索书籍
+//	@Description	根据书籍标题进行模糊搜索
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			title	query		string	true	"书籍标题"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/search/title [get]
 func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 	title := c.Query("title")
 	if title == "" {
@@ -131,18 +133,19 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 }
 
 // GetBooksByAuthor 根据作者搜索书籍
-// @Summary 根据作者搜索书籍
-// @Description 根据作者名称搜索书籍
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param author query string true "作者名称"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/search/author [get]
+//
+//	@Summary		根据作者搜索书籍
+//	@Description	根据作者名称搜索书籍
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			author	query		string	true	"作者名称"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/search/author [get]
 func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 	author := c.Query("author")
 	if author == "" {
@@ -183,18 +186,19 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 }
 
 // GetBooksByCategory 根据分类获取书籍
-// @Summary 根据分类获取书籍
-// @Description 根据分类获取书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param category query string true "分类名称"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/category [get]
+//
+//	@Summary		根据分类获取书籍
+//	@Description	根据分类获取书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			category	query		string	true	"分类名称"
+//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			size		query		int		false	"每页数量"	default(20)
+//	@Success		200			{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/books/category [get]
 func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 	category := c.Query("category")
 	if category == "" {
@@ -235,18 +239,19 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 }
 
 // GetBooksByStatus 根据状态获取书籍
-// @Summary 根据状态获取书籍
-// @Description 根据书籍状态获取书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param status query string true "书籍状态(serializing/completed/paused)"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/status [get]
+//
+//	@Summary		根据状态获取书籍
+//	@Description	根据书籍状态获取书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			status	query		string	true	"书籍状态(serializing/completed/paused)"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/status [get]
 func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 	status := c.Query("status")
 	if status == "" {
@@ -304,18 +309,19 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 }
 
 // GetBooksByTags 根据标签获取书籍
-// @Summary 根据标签获取书籍
-// @Description 根据标签获取书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param tags query string true "标签列表(逗号分隔)"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/tags [get]
+//
+//	@Summary		根据标签获取书籍
+//	@Description	根据标签获取书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			tags	query		string	true	"标签列表(逗号分隔)"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/tags [get]
 func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 	tagsStr := c.Query("tags")
 	if tagsStr == "" {
@@ -361,18 +367,19 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 }
 
 // SearchBooks 搜索书籍
-// @Summary 搜索书籍
-// @Description 根据关键词搜索书籍
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param keyword query string true "搜索关键词"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/search [get]
+//
+//	@Summary		搜索书籍
+//	@Description	根据关键词搜索书籍
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			keyword	query		string	true	"搜索关键词"
+//	@Param			page	query		int		false	"页码"	default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/search [get]
 func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
@@ -413,15 +420,16 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 }
 
 // GetRecommendedBooks 获取推荐书籍
-// @Summary 获取推荐书籍
-// @Description 获取推荐书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param limit query int false "数量限制" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookDetail}
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/recommended [get]
+//
+//	@Summary		获取推荐书籍
+//	@Description	获取推荐书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int	false	"数量限制"	default(10)
+//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/recommended [get]
 func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -445,17 +453,18 @@ func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 }
 
 // GetSimilarBooks 获取相似书籍
-// @Summary 获取相似书籍
-// @Description 根据书籍ID获取相似书籍
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Param limit query int false "数量限制" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id}/similar [get]
+//
+//	@Summary		获取相似书籍
+//	@Description	根据书籍ID获取相似书籍
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"书籍ID"
+//	@Param			limit	query		int		false	"数量限制"	default(10)
+//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{id}/similar [get]
 func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -497,15 +506,16 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 }
 
 // GetPopularBooks 获取热门书籍
-// @Summary 获取热门书籍
-// @Description 获取热门书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param limit query int false "数量限制" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookDetail}
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/popular [get]
+//
+//	@Summary		获取热门书籍
+//	@Description	获取热门书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int	false	"数量限制"	default(10)
+//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/popular [get]
 func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -529,15 +539,16 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 }
 
 // GetLatestBooks 获取最新书籍
-// @Summary 获取最新书籍
-// @Description 获取最新发布的书籍列表
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param limit query int false "数量限制" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookDetail}
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/latest [get]
+//
+//	@Summary		获取最新书籍
+//	@Description	获取最新发布的书籍列表
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int	false	"数量限制"	default(10)
+//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/latest [get]
 func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -561,16 +572,17 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 }
 
 // GetBookStatistics 获取书籍统计信息
-// @Summary 获取书籍统计信息
-// @Description 获取书籍的浏览量、收藏量等统计信息
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse{data=map[string]interface{}}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id}/statistics [get]
+//
+//	@Summary		获取书籍统计信息
+//	@Description	获取书籍的浏览量、收藏量等统计信息
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse{data=map[string]interface{}}
+//	@Failure		400	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id}/statistics [get]
 func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -614,16 +626,17 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 }
 
 // CreateBookDetail 创建书籍详情
-// @Summary 创建书籍详情
-// @Description 创建新的书籍详情信息
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param book body bookstore.BookDetail true "书籍详情信息"
-// @Success 201 {object} APIResponse{data=bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books [post]
+//
+//	@Summary		创建书籍详情
+//	@Description	创建新的书籍详情信息
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
+//	@Success		201		{object}	APIResponse{data=bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books [post]
 func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 	var book bookstore.BookDetail
 	if err := c.ShouldBindJSON(&book); err != nil {
@@ -650,18 +663,19 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 }
 
 // UpdateBookDetail 更新书籍详情
-// @Summary 更新书籍详情
-// @Description 更新书籍详情信息
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Param book body bookstore.BookDetail true "书籍详情信息"
-// @Success 200 {object} APIResponse{data=bookstore.BookDetail}
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id} [put]
+//
+//	@Summary		更新书籍详情
+//	@Description	更新书籍详情信息
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"书籍ID"
+//	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
+//	@Success		200		{object}	APIResponse{data=bookstore.BookDetail}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/books/{id} [put]
 func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -715,17 +729,18 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 }
 
 // DeleteBookDetail 删除书籍详情
-// @Summary 删除书籍详情
-// @Description 删除书籍详情信息
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id} [delete]
+//
+//	@Summary		删除书籍详情
+//	@Description	删除书籍详情信息
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id} [delete]
 func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -767,17 +782,18 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 }
 
 // IncrementViewCount 增加书籍浏览量
-// @Summary 增加书籍浏览量
-// @Description 记录用户浏览书籍详情，增加浏览量统计
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id}/view [post]
+//
+//	@Summary		增加书籍浏览量
+//	@Description	记录用户浏览书籍详情，增加浏览量统计
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse
+//	@Failure		400	{object}	APIResponse
+//	@Failure		404	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id}/view [post]
 func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -813,16 +829,17 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 }
 
 // IncrementLikeCount 增加书籍点赞数
-// @Summary 增加书籍点赞数
-// @Description 用户点赞书籍，增加点赞数统计
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id}/like [post]
+//
+//	@Summary		增加书籍点赞数
+//	@Description	用户点赞书籍，增加点赞数统计
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse
+//	@Failure		400	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id}/like [post]
 func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -858,16 +875,17 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 }
 
 // DecrementLikeCount 减少书籍点赞数
-// @Summary 减少书籍点赞数
-// @Description 用户取消点赞书籍，减少点赞数统计
-// @Tags 书籍详情
-// @Accept json
-// @Produce json
-// @Param id path string true "书籍ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/books/{id}/unlike [post]
+//
+//	@Summary		减少书籍点赞数
+//	@Description	用户取消点赞书籍，减少点赞数统计
+//	@Tags			书籍详情
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"书籍ID"
+//	@Success		200	{object}	APIResponse
+//	@Failure		400	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/books/{id}/unlike [post]
 func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
