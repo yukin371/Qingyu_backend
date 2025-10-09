@@ -8,16 +8,16 @@ import (
 
 // AIContext AI上下文数据结构
 type AIContext struct {
-	ProjectID        string             `json:"projectId"`
-	CurrentChapter   *ChapterInfo       `json:"currentChapter"`
-	ActiveCharacters []*CharacterInfo   `json:"activeCharacters"`
-	CurrentLocations []*LocationInfo    `json:"currentLocations"`
-	RelevantEvents   []*TimelineEvent   `json:"relevantEvents"`
-	PreviousChapters []*ChapterSummary  `json:"previousChapters"`
-	NextChapters     []*ChapterOutline  `json:"nextChapters"`
-	WorldSettings    *WorldSettings     `json:"worldSettings"`
-	PlotThreads      []*PlotThread      `json:"plotThreads"`
-	TokenCount       int                `json:"tokenCount"`
+	ProjectID        string            `json:"projectId"`
+	CurrentChapter   *ChapterInfo      `json:"currentChapter"`
+	ActiveCharacters []*CharacterInfo  `json:"activeCharacters"`
+	CurrentLocations []*LocationInfo   `json:"currentLocations"`
+	RelevantEvents   []*TimelineEvent  `json:"relevantEvents"`
+	PreviousChapters []*ChapterSummary `json:"previousChapters"`
+	NextChapters     []*ChapterOutline `json:"nextChapters"`
+	WorldSettings    *WorldSettings    `json:"worldSettings"`
+	PlotThreads      []*PlotThread     `json:"plotThreads"`
+	TokenCount       int               `json:"tokenCount"`
 }
 
 // ChapterInfo 当前章节信息
@@ -61,12 +61,12 @@ type LocationInfo struct {
 
 // TimelineEvent 时间线事件
 type TimelineEvent struct {
-	ID          string     `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	StoryTime   *StoryTime `json:"storyTime,omitempty"`
-	Impact      string     `json:"impact,omitempty"`
-	Participants []string  `json:"participants,omitempty"`
+	ID           string     `json:"id"`
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	StoryTime    *StoryTime `json:"storyTime,omitempty"`
+	Impact       string     `json:"impact,omitempty"`
+	Participants []string   `json:"participants,omitempty"`
 }
 
 // StoryTime 故事时间
@@ -81,19 +81,19 @@ type StoryTime struct {
 
 // ChapterSummary 章节摘要
 type ChapterSummary struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Summary string `json:"summary"`
-	Order   int    `json:"order"`
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	Summary   string   `json:"summary"`
+	Order     int      `json:"order"`
 	KeyEvents []string `json:"keyEvents,omitempty"`
 }
 
 // ChapterOutline 章节大纲
 type ChapterOutline struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Outline string `json:"outline"`
-	Order   int    `json:"order"`
+	ID      string   `json:"id"`
+	Title   string   `json:"title"`
+	Outline string   `json:"outline"`
+	Order   int      `json:"order"`
 	Goals   []string `json:"goals,omitempty"`
 }
 
@@ -116,18 +116,18 @@ type WorldSettings struct {
 
 // PlotThread 情节线索
 type PlotThread struct {
-	ID          string   `json:"id"`
-	ProjectID   string   `json:"projectId"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Status      string   `json:"status"` // active, resolved, pending, suspended
-	Priority    int      `json:"priority"` // 1-10, 10为最高优先级
-	ChapterIDs  []string `json:"chapterIds"`
-	Characters  []string `json:"characters,omitempty"`
-	StartChapter string  `json:"startChapter,omitempty"`
-	EndChapter   string  `json:"endChapter,omitempty"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           string    `json:"id"`
+	ProjectID    string    `json:"projectId"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	Status       string    `json:"status"`   // active, resolved, pending, suspended
+	Priority     int       `json:"priority"` // 1-10, 10为最高优先级
+	ChapterIDs   []string  `json:"chapterIds"`
+	Characters   []string  `json:"characters,omitempty"`
+	StartChapter string    `json:"startChapter,omitempty"`
+	EndChapter   string    `json:"endChapter,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // ContextOptions 上下文构建选项
@@ -152,9 +152,9 @@ type GenerateOptions struct {
 
 // GenerateResult AI生成结果
 type GenerateResult struct {
-	Content    string `json:"content"`
-	TokensUsed int    `json:"tokensUsed"`
-	Model      string `json:"model"`
+	Content      string `json:"content"`
+	TokensUsed   int    `json:"tokensUsed"`
+	Model        string `json:"model"`
 	FinishReason string `json:"finishReason,omitempty"`
 }
 

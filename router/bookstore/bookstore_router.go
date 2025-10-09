@@ -2,7 +2,7 @@ package reading
 
 import (
 	"github.com/gin-gonic/gin"
-	
+
 	readingAPI "Qingyu_backend/api/v1/reading"
 )
 
@@ -25,55 +25,55 @@ func (r *BookstoreRouter) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		// 首页数据
 		bookstore.GET("/homepage", r.api.GetHomepage)
-		
+
 		// 书籍相关路由
 		books := bookstore.Group("/books")
 		{
 			// 获取书籍详情
 			books.GET("/:id", r.api.GetBookByID)
-			
+
 			// 获取推荐书籍
 			books.GET("/recommended", r.api.GetRecommendedBooks)
-			
+
 			// 获取精选书籍
 			books.GET("/featured", r.api.GetFeaturedBooks)
-			
+
 			// 搜索书籍
 			books.GET("/search", r.api.SearchBooks)
 		}
-		
+
 		// 分类相关路由
 		categories := bookstore.Group("/categories")
 		{
 			// 获取分类树
 			categories.GET("/tree", r.api.GetCategoryTree)
-			
+
 			// 获取分类详情
 			categories.GET("/:id", r.api.GetCategoryByID)
-			
+
 			// 根据分类获取书籍列表
 			categories.GET("/:id/books", r.api.GetBooksByCategory)
 		}
-		
+
 		// 榜单相关路由
 		rankings := bookstore.Group("/rankings")
 		{
 			// 获取实时榜
 			rankings.GET("/realtime", r.api.GetRealtimeRanking)
-			
+
 			// 获取周榜
 			rankings.GET("/weekly", r.api.GetWeeklyRanking)
-			
+
 			// 获取月榜
 			rankings.GET("/monthly", r.api.GetMonthlyRanking)
-			
+
 			// 获取新人榜
 			rankings.GET("/newbie", r.api.GetNewbieRanking)
-			
+
 			// 根据类型获取榜单
 			rankings.GET("/:type", r.api.GetRankingByType)
 		}
-		
+
 		// Banner相关路由
 		banners := bookstore.Group("/banners")
 		{
@@ -90,36 +90,36 @@ func (r *BookstoreRouter) RegisterPublicRoutes(rg *gin.RouterGroup) {
 	{
 		// 首页数据（公开访问）
 		public.GET("/homepage", r.api.GetHomepage)
-		
+
 		// 书籍相关公开路由
 		books := public.Group("/books")
 		{
 			// 获取书籍详情（公开访问）
 			books.GET("/:id", r.api.GetBookByID)
-			
+
 			// 获取推荐书籍（公开访问）
 			books.GET("/recommended", r.api.GetRecommendedBooks)
-			
+
 			// 获取精选书籍（公开访问）
 			books.GET("/featured", r.api.GetFeaturedBooks)
-			
+
 			// 搜索书籍（公开访问）
 			books.GET("/search", r.api.SearchBooks)
 		}
-		
+
 		// 分类相关公开路由
 		categories := public.Group("/categories")
 		{
 			// 获取分类树（公开访问）
 			categories.GET("/tree", r.api.GetCategoryTree)
-			
+
 			// 获取分类详情（公开访问）
 			categories.GET("/:id", r.api.GetCategoryByID)
-			
+
 			// 根据分类获取书籍列表（公开访问）
 			categories.GET("/:id/books", r.api.GetBooksByCategory)
 		}
-		
+
 		// Banner相关公开路由
 		banners := public.Group("/banners")
 		{
@@ -142,7 +142,7 @@ func (r *BookstoreRouter) RegisterPrivateRoutes(rg *gin.RouterGroup) {
 			// 增加书籍浏览量（需要认证以防刷量）
 			books.POST("/:id/view", r.api.IncrementBookView)
 		}
-		
+
 		// Banner相关私有路由
 		banners := private.Group("/banners")
 		{

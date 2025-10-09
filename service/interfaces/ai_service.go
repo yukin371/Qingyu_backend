@@ -11,37 +11,37 @@ import (
 // 定义AI相关的所有服务方法
 type AIService interface {
 	base.BaseService
-	
+
 	// GenerateContent 生成内容
 	GenerateContent(ctx context.Context, req *GenerateContentRequest) (*GenerateContentResponse, error)
-	
+
 	// GenerateContentStream 流式生成内容
 	GenerateContentStream(ctx context.Context, req *GenerateContentRequest) (<-chan *StreamResponse, error)
-	
+
 	// AnalyzeContent 分析内容
 	AnalyzeContent(ctx context.Context, req *AnalyzeContentRequest) (*AnalyzeContentResponse, error)
-	
+
 	// ContinueWriting 续写内容
 	ContinueWriting(ctx context.Context, req *ContinueWritingRequest) (*ContinueWritingResponse, error)
-	
+
 	// OptimizeText 优化文本
 	OptimizeText(ctx context.Context, req *OptimizeTextRequest) (*OptimizeTextResponse, error)
-	
+
 	// GenerateOutline 生成大纲
 	GenerateOutline(ctx context.Context, req *GenerateOutlineRequest) (*GenerateOutlineResponse, error)
-	
+
 	// GetContextInfo 获取上下文信息
 	GetContextInfo(ctx context.Context, req *GetContextInfoRequest) (*GetContextInfoResponse, error)
-	
+
 	// UpdateContextWithFeedback 根据反馈更新上下文
 	UpdateContextWithFeedback(ctx context.Context, req *UpdateContextWithFeedbackRequest) (*UpdateContextWithFeedbackResponse, error)
-	
+
 	// GetSupportedModels 获取支持的AI模型列表
 	GetSupportedModels(ctx context.Context) (*GetSupportedModelsResponse, error)
-	
+
 	// GetModelInfo 获取模型信息
 	GetModelInfo(ctx context.Context, req *GetModelInfoRequest) (*GetModelInfoResponse, error)
-	
+
 	// ValidateAPIKey 验证API密钥
 	ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error)
 }
@@ -49,28 +49,28 @@ type AIService interface {
 // ContextService 上下文服务接口
 type ContextService interface {
 	base.BaseService
-	
+
 	// CreateContext 创建上下文
 	CreateContext(ctx context.Context, req *CreateContextRequest) (*CreateContextResponse, error)
-	
+
 	// GetContext 获取上下文
 	GetContext(ctx context.Context, req *GetContextRequest) (*GetContextResponse, error)
-	
+
 	// UpdateContext 更新上下文
 	UpdateContext(ctx context.Context, req *UpdateContextRequest) (*UpdateContextResponse, error)
-	
+
 	// DeleteContext 删除上下文
 	DeleteContext(ctx context.Context, req *DeleteContextRequest) (*DeleteContextResponse, error)
-	
+
 	// ListContexts 列出上下文
 	ListContexts(ctx context.Context, req *ListContextsRequest) (*ListContextsResponse, error)
-	
+
 	// AddMessage 添加消息到上下文
 	AddMessage(ctx context.Context, req *AddMessageRequest) (*AddMessageResponse, error)
-	
+
 	// GetMessages 获取上下文消息
 	GetMessages(ctx context.Context, req *GetMessagesRequest) (*GetMessagesResponse, error)
-	
+
 	// ClearMessages 清空上下文消息
 	ClearMessages(ctx context.Context, req *ClearMessagesRequest) (*ClearMessagesResponse, error)
 }
@@ -78,16 +78,16 @@ type ContextService interface {
 // ExternalAPIService 外部API服务接口
 type ExternalAPIService interface {
 	base.BaseService
-	
+
 	// CallAPI 调用外部API
 	CallAPI(ctx context.Context, req *CallAPIRequest) (*CallAPIResponse, error)
-	
+
 	// GetAPIStatus 获取API状态
 	GetAPIStatus(ctx context.Context, req *GetAPIStatusRequest) (*GetAPIStatusResponse, error)
-	
+
 	// GetAPIUsage 获取API使用情况
 	GetAPIUsage(ctx context.Context, req *GetAPIUsageRequest) (*GetAPIUsageResponse, error)
-	
+
 	// RefreshAPIKey 刷新API密钥
 	RefreshAPIKey(ctx context.Context, req *RefreshAPIKeyRequest) (*RefreshAPIKeyResponse, error)
 }
@@ -95,25 +95,25 @@ type ExternalAPIService interface {
 // AdapterManager 适配器管理器接口
 type AdapterManager interface {
 	base.BaseService
-	
+
 	// GetAdapter 获取适配器
 	GetAdapter(ctx context.Context, req *GetAdapterRequest) (*GetAdapterResponse, error)
-	
+
 	// ListAdapters 列出适配器
 	ListAdapters(ctx context.Context, req *ListAdaptersRequest) (*ListAdaptersResponse, error)
-	
+
 	// RegisterAdapter 注册适配器
 	RegisterAdapter(ctx context.Context, req *RegisterAdapterRequest) (*RegisterAdapterResponse, error)
-	
+
 	// UnregisterAdapter 注销适配器
 	UnregisterAdapter(ctx context.Context, req *UnregisterAdapterRequest) (*UnregisterAdapterResponse, error)
-	
+
 	// UpdateAdapter 更新适配器
 	UpdateAdapter(ctx context.Context, req *UpdateAdapterRequest) (*UpdateAdapterResponse, error)
-	
+
 	// GetModelConfig 获取模型配置
 	GetModelConfig(ctx context.Context, req *GetModelConfigRequest) (*GetModelConfigResponse, error)
-	
+
 	// UpdateModelConfig 更新模型配置
 	UpdateModelConfig(ctx context.Context, req *UpdateModelConfigRequest) (*UpdateModelConfigResponse, error)
 }
@@ -137,13 +137,13 @@ type GenerateContentRequest struct {
 
 // GenerateContentResponse 生成内容响应
 type GenerateContentResponse struct {
-	Content       string            `json:"content"`
-	Model         string            `json:"model"`
-	TokensUsed    int               `json:"tokens_used"`
-	FinishReason  string            `json:"finish_reason"`
-	ResponseTime  time.Duration     `json:"response_time"`
-	Metadata      map[string]string `json:"metadata,omitempty"`
-	RequestID     string            `json:"request_id"`
+	Content      string            `json:"content"`
+	Model        string            `json:"model"`
+	TokensUsed   int               `json:"tokens_used"`
+	FinishReason string            `json:"finish_reason"`
+	ResponseTime time.Duration     `json:"response_time"`
+	Metadata     map[string]string `json:"metadata,omitempty"`
+	RequestID    string            `json:"request_id"`
 }
 
 // StreamResponse 流式响应
@@ -159,10 +159,10 @@ type StreamResponse struct {
 
 // AnalyzeContentRequest 分析内容请求
 type AnalyzeContentRequest struct {
-	Content     string   `json:"content" validate:"required"`
-	AnalysisType string  `json:"analysis_type" validate:"required"`
-	Options     []string `json:"options,omitempty"`
-	UserID      string   `json:"user_id,omitempty"`
+	Content      string   `json:"content" validate:"required"`
+	AnalysisType string   `json:"analysis_type" validate:"required"`
+	Options      []string `json:"options,omitempty"`
+	UserID       string   `json:"user_id,omitempty"`
 }
 
 // AnalyzeContentResponse 分析内容响应
@@ -179,11 +179,11 @@ type AnalyzeContentResponse struct {
 
 // ContinueWritingRequest 续写内容请求
 type ContinueWritingRequest struct {
-	Content     string            `json:"content" validate:"required"`
-	Style       string            `json:"style,omitempty"`
-	Length      int               `json:"length,omitempty"`
-	Context     map[string]string `json:"context,omitempty"`
-	UserID      string            `json:"user_id,omitempty"`
+	Content string            `json:"content" validate:"required"`
+	Style   string            `json:"style,omitempty"`
+	Length  int               `json:"length,omitempty"`
+	Context map[string]string `json:"context,omitempty"`
+	UserID  string            `json:"user_id,omitempty"`
 }
 
 // ContinueWritingResponse 续写内容响应
@@ -196,12 +196,12 @@ type ContinueWritingResponse struct {
 
 // OptimizeTextRequest 优化文本请求
 type OptimizeTextRequest struct {
-	Text            string   `json:"text" validate:"required"`
-	OptimizationType string  `json:"optimization_type" validate:"required"`
-	TargetAudience  string   `json:"target_audience,omitempty"`
-	Style           string   `json:"style,omitempty"`
-	Options         []string `json:"options,omitempty"`
-	UserID          string   `json:"user_id,omitempty"`
+	Text             string   `json:"text" validate:"required"`
+	OptimizationType string   `json:"optimization_type" validate:"required"`
+	TargetAudience   string   `json:"target_audience,omitempty"`
+	Style            string   `json:"style,omitempty"`
+	Options          []string `json:"options,omitempty"`
+	UserID           string   `json:"user_id,omitempty"`
 }
 
 // OptimizeTextResponse 优化文本响应
@@ -218,21 +218,21 @@ type OptimizeTextResponse struct {
 
 // GenerateOutlineRequest 生成大纲请求
 type GenerateOutlineRequest struct {
-	Topic       string   `json:"topic" validate:"required"`
-	Type        string   `json:"type,omitempty"`
-	Depth       int      `json:"depth,omitempty"`
-	Sections    []string `json:"sections,omitempty"`
-	Style       string   `json:"style,omitempty"`
-	UserID      string   `json:"user_id,omitempty"`
+	Topic    string   `json:"topic" validate:"required"`
+	Type     string   `json:"type,omitempty"`
+	Depth    int      `json:"depth,omitempty"`
+	Sections []string `json:"sections,omitempty"`
+	Style    string   `json:"style,omitempty"`
+	UserID   string   `json:"user_id,omitempty"`
 }
 
 // GenerateOutlineResponse 生成大纲响应
 type GenerateOutlineResponse struct {
-	Outline      []OutlineItem `json:"outline"`
-	Title        string        `json:"title"`
-	Summary      string        `json:"summary"`
-	EstimatedLength int        `json:"estimated_length"`
-	ResponseTime time.Duration `json:"response_time"`
+	Outline         []OutlineItem `json:"outline"`
+	Title           string        `json:"title"`
+	Summary         string        `json:"summary"`
+	EstimatedLength int           `json:"estimated_length"`
+	ResponseTime    time.Duration `json:"response_time"`
 }
 
 // OutlineItem 大纲项目
@@ -271,9 +271,9 @@ type UpdateContextWithFeedbackRequest struct {
 
 // UpdateContextWithFeedbackResponse 根据反馈更新上下文响应
 type UpdateContextWithFeedbackResponse struct {
-	ContextID   string        `json:"context_id"`
-	Updated     bool          `json:"updated"`
-	Changes     []string      `json:"changes,omitempty"`
+	ContextID    string        `json:"context_id"`
+	Updated      bool          `json:"updated"`
+	Changes      []string      `json:"changes,omitempty"`
 	ResponseTime time.Duration `json:"response_time"`
 }
 
@@ -284,17 +284,17 @@ type GetSupportedModelsResponse struct {
 
 // ModelInfo 模型信息
 type ModelInfo struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Provider     string            `json:"provider"`
-	Type         string            `json:"type"`
-	MaxTokens    int               `json:"max_tokens"`
-	InputPrice   float64           `json:"input_price"`
-	OutputPrice  float64           `json:"output_price"`
-	Features     []string          `json:"features"`
-	Status       string            `json:"status"`
-	Description  string            `json:"description,omitempty"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Provider    string            `json:"provider"`
+	Type        string            `json:"type"`
+	MaxTokens   int               `json:"max_tokens"`
+	InputPrice  float64           `json:"input_price"`
+	OutputPrice float64           `json:"output_price"`
+	Features    []string          `json:"features"`
+	Status      string            `json:"status"`
+	Description string            `json:"description,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 // GetModelInfoRequest 获取模型信息请求
@@ -514,10 +514,10 @@ type GetAPIUsageRequest struct {
 
 // GetAPIUsageResponse 获取API使用情况响应
 type GetAPIUsageResponse struct {
-	Provider    string      `json:"provider"`
-	Usage       APIUsage    `json:"usage"`
-	Period      TimePeriod  `json:"period"`
-	Breakdown   []UsageItem `json:"breakdown,omitempty"`
+	Provider  string      `json:"provider"`
+	Usage     APIUsage    `json:"usage"`
+	Period    TimePeriod  `json:"period"`
+	Breakdown []UsageItem `json:"breakdown,omitempty"`
 }
 
 // APIUsage API使用情况
@@ -614,8 +614,8 @@ type RegisterAdapterRequest struct {
 
 // RegisterAdapterResponse 注册适配器响应
 type RegisterAdapterResponse struct {
-	AdapterID   string    `json:"adapter_id"`
-	Registered  bool      `json:"registered"`
+	AdapterID    string    `json:"adapter_id"`
+	Registered   bool      `json:"registered"`
 	RegisteredAt time.Time `json:"registered_at"`
 }
 

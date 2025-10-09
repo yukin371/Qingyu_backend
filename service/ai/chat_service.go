@@ -15,13 +15,13 @@ import (
 
 // ChatRepositoryInterface 聊天仓库接口
 type ChatRepositoryInterface interface {
-	CreateSession(ctx context.Context, session *aiModels.ChatSession) error // 创建会话
-	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error) // 获取会话
-	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error // 更新会话
-	DeleteSession(ctx context.Context, sessionID string) error // 删除会话
+	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 创建会话
+	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                              // 获取会话
+	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 更新会话
+	DeleteSession(ctx context.Context, sessionID string) error                                                        // 删除会话
 	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error) // 获取项目会话列表
-	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error // 创建消息
-	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error) // 获取会话统计信息
+	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                           // 创建消息
+	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                              // 获取会话统计信息
 }
 
 // AIServiceInterface AI服务接口
@@ -139,19 +139,19 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 
 	// 调用AI生成响应
 	startTime := time.Now()
-	
+
 	// 准备AI请求 - 使用GenerateContentRequest
 	aiRequest := &GenerateContentRequest{
 		ProjectID: req.ProjectID,
 		Prompt:    req.Message,
 		Options:   req.Options,
 	}
-	
+
 	aiResponse, err := s.aiService.GenerateContent(ctx, aiRequest)
 	if err != nil {
 		return nil, fmt.Errorf("生成AI响应失败: %w", err)
 	}
-	
+
 	responseTime := time.Since(startTime)
 
 	// 添加AI响应到会话
@@ -231,9 +231,9 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 	// 启动流式生成
 	go func() {
 		defer close(responseChan)
-		
+
 		startTime := time.Now()
-		
+
 		// 准备AI请求
 		aiRequest := &GenerateContentRequest{
 			ProjectID: req.ProjectID,
@@ -509,7 +509,7 @@ func convertToServiceChatSession(session *aiModels.ChatSession) *ChatSession {
 			Metadata:  make(map[string]interface{}),
 		}
 	}
-	
+
 	return &ChatSession{
 		ID:        session.SessionID,
 		ProjectID: session.ProjectID,
@@ -548,7 +548,7 @@ func (s *ChatService) GetChatHistory(ctx context.Context, sessionID string) (*Ch
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return convertToServiceChatSession(session), nil
 }
 
@@ -558,12 +558,12 @@ func (s *ChatService) ListChatSessions(ctx context.Context, projectID string, li
 	if err != nil {
 		return nil, err
 	}
-	
+
 	result := make([]*ChatSession, len(sessions))
 	for i, session := range sessions {
 		result[i] = convertToServiceChatSession(session)
 	}
-	
+
 	return result, nil
 }
 

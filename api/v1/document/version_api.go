@@ -154,7 +154,7 @@ func (a *VersionApi) CreateCommit(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	
+
 	// 转换请求格式为model.CommitFile
 	var files []model.CommitFile
 	for _, file := range req.Files {
@@ -183,7 +183,7 @@ func (a *VersionApi) CreateCommit(c *gin.Context) {
 func (a *VersionApi) ListCommits(c *gin.Context) {
 	projectID := c.Param("projectId")
 	authorID := c.Query("authorId")
-	
+
 	// 简化分页参数处理
 	limit := int64(50)
 	offset := int64(0)
@@ -225,21 +225,21 @@ func (a *VersionApi) GetCommitDetails(c *gin.Context) {
 // POST /api/v1/document/:projectId/conflicts
 func (a *VersionApi) DetectConflicts(c *gin.Context) {
 	projectID := c.Param("projectId")
-	
+
 	var req struct {
 		Files []struct {
 			NodeID          string `json:"nodeId" binding:"required"`
 			ExpectedVersion int    `json:"expectedVersion"`
 		} `json:"files" binding:"required,min=1"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
 	ctx := c.Request.Context()
-	
+
 	// 转换请求格式
 	var files []struct {
 		NodeID          string `json:"node_id"`
@@ -425,13 +425,13 @@ func (api *VersionApi) AutoResolveConflicts(c *gin.Context) {
 func (a *VersionApi) GetCurrentVersion(c *gin.Context) {
 	projectId := c.Param("projectId")
 	nodeId := c.Param("nodeId")
-	
+
 	version, err := a.service.GetCurrentVersion(c.Request.Context(), projectId, nodeId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"data": version})
 }
 

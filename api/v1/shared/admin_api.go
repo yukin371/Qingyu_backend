@@ -22,18 +22,19 @@ func NewAdminAPI(adminService admin.AdminService) *AdminAPI {
 }
 
 // GetPendingReviews 获取待审核内容
-// @Summary 获取待审核内容
-// @Description 获取待审核内容列表
-// @Tags 管理
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param content_type query string false "内容类型"
-// @Success 200 {object} APIResponse{data=[]admin.AuditRecord}
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/admin/reviews/pending [get]
+//
+//	@Summary		获取待审核内容
+//	@Description	获取待审核内容列表
+//	@Tags			管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			content_type	query		string	false	"内容类型"
+//	@Success		200				{object}	APIResponse{data=[]admin.AuditRecord}
+//	@Failure		401				{object}	APIResponse
+//	@Failure		403				{object}	APIResponse
+//	@Failure		500				{object}	APIResponse
+//	@Router			/api/v1/shared/admin/reviews/pending [get]
 func (api *AdminAPI) GetPendingReviews(c *gin.Context) {
 	// 检查管理员权限
 	role, exists := c.Get("user_role")
@@ -72,19 +73,20 @@ type ReviewContentRequest struct {
 }
 
 // ReviewContent 审核内容
-// @Summary 审核内容
-// @Description 审核用户提交的内容
-// @Tags 管理
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body ReviewContentRequest true "审核信息"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/admin/reviews [post]
+//
+//	@Summary		审核内容
+//	@Description	审核用户提交的内容
+//	@Tags			管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		ReviewContentRequest	true	"审核信息"
+//	@Success		200		{object}	APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		403		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/admin/reviews [post]
 func (api *AdminAPI) ReviewContent(c *gin.Context) {
 	// 检查管理员权限
 	role, exists := c.Get("user_role")
@@ -138,19 +140,20 @@ type ReviewWithdrawRequest struct {
 }
 
 // ReviewWithdraw 审核提现
-// @Summary 审核提现
-// @Description 审核用户提现申请（批准或拒绝）
-// @Tags 管理
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body ReviewWithdrawRequest true "审核信息"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/admin/withdraw/review [post]
+//
+//	@Summary		审核提现
+//	@Description	审核用户提现申请（批准或拒绝）
+//	@Tags			管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		ReviewWithdrawRequest	true	"审核信息"
+//	@Success		200		{object}	APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		403		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/admin/withdraw/review [post]
 func (api *AdminAPI) ReviewWithdraw(c *gin.Context) {
 	// 检查管理员权限
 	role, exists := c.Get("user_role")
@@ -194,18 +197,19 @@ func (api *AdminAPI) ReviewWithdraw(c *gin.Context) {
 }
 
 // GetUserStatistics 获取用户统计
-// @Summary 获取用户统计
-// @Description 获取指定用户的统计信息
-// @Tags 管理
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param user_id path string true "用户ID"
-// @Success 200 {object} APIResponse{data=admin.UserStatistics}
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/admin/users/{user_id}/statistics [get]
+//
+//	@Summary		获取用户统计
+//	@Description	获取指定用户的统计信息
+//	@Tags			管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			user_id	path		string	true	"用户ID"
+//	@Success		200		{object}	APIResponse{data=admin.UserStatistics}
+//	@Failure		401		{object}	APIResponse
+//	@Failure		403		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/admin/users/{user_id}/statistics [get]
 func (api *AdminAPI) GetUserStatistics(c *gin.Context) {
 	// 检查管理员权限
 	role, exists := c.Get("user_role")
@@ -243,21 +247,22 @@ func (api *AdminAPI) GetUserStatistics(c *gin.Context) {
 }
 
 // GetOperationLogs 获取操作日志
-// @Summary 获取操作日志
-// @Description 获取管理员操作日志
-// @Tags 管理
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Param admin_id query string false "管理员ID"
-// @Param operation query string false "操作类型"
-// @Success 200 {object} PaginatedResponse{data=[]admin.AdminLog}
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/admin/operation-logs [get]
+//
+//	@Summary		获取操作日志
+//	@Description	获取管理员操作日志
+//	@Tags			管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			page_size	query		int		false	"每页数量"	default(20)
+//	@Param			admin_id	query		string	false	"管理员ID"
+//	@Param			operation	query		string	false	"操作类型"
+//	@Success		200			{object}	PaginatedResponse{data=[]admin.AdminLog}
+//	@Failure		401			{object}	APIResponse
+//	@Failure		403			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/shared/admin/operation-logs [get]
 func (api *AdminAPI) GetOperationLogs(c *gin.Context) {
 	// 检查管理员权限
 	role, exists := c.Get("user_role")

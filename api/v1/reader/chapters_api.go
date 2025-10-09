@@ -23,11 +23,12 @@ func NewChaptersAPI(readerService *reading.ReaderService) *ChaptersAPI {
 }
 
 // GetChapterByID 获取章节信息
-// @Summary 获取章节信息
-// @Tags 阅读器
-// @Param id path string true "章节ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters/{id} [get]
+//
+//	@Summary	获取章节信息
+//	@Tags		阅读器
+//	@Param		id	path		string	true	"章节ID"
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/chapters/{id} [get]
 func (api *ChaptersAPI) GetChapterByID(c *gin.Context) {
 	chapterID := c.Param("id")
 
@@ -41,11 +42,12 @@ func (api *ChaptersAPI) GetChapterByID(c *gin.Context) {
 }
 
 // GetChapterContent 获取章节内容
-// @Summary 获取章节内容
-// @Tags 阅读器
-// @Param id path string true "章节ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters/{id}/content [get]
+//
+//	@Summary	获取章节内容
+//	@Tags		阅读器
+//	@Param		id	path		string	true	"章节ID"
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/chapters/{id}/content [get]
 func (api *ChaptersAPI) GetChapterContent(c *gin.Context) {
 	chapterID := c.Param("id")
 
@@ -66,13 +68,14 @@ func (api *ChaptersAPI) GetChapterContent(c *gin.Context) {
 }
 
 // GetBookChapters 获取书籍章节列表
-// @Summary 获取书籍章节列表
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters [get]
+//
+//	@Summary	获取书籍章节列表
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Param		page	query		int		false	"页码"	default(1)
+//	@Param		size	query		int		false	"每页数量"	default(20)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/chapters [get]
 func (api *ChaptersAPI) GetBookChapters(c *gin.Context) {
 	bookID := c.Query("bookId")
 	if bookID == "" {
@@ -98,12 +101,13 @@ func (api *ChaptersAPI) GetBookChapters(c *gin.Context) {
 }
 
 // GetNavigationChapters 获取章节导航（上一章/下一章）
-// @Summary 获取章节导航
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Param chapterNum query int true "当前章节号"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters/navigation [get]
+//
+//	@Summary	获取章节导航
+//	@Tags		阅读器
+//	@Param		bookId		query		string	true	"书籍ID"
+//	@Param		chapterNum	query		int		true	"当前章节号"
+//	@Success	200			{object}	response.Response
+//	@Router		/api/v1/reader/chapters/navigation [get]
 func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 	bookID := c.Query("bookId")
 	chapterNumStr := c.Query("chapterNum")
@@ -129,11 +133,12 @@ func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 }
 
 // GetFirstChapter 获取第一章
-// @Summary 获取第一章
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters/first [get]
+//
+//	@Summary	获取第一章
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/chapters/first [get]
 func (api *ChaptersAPI) GetFirstChapter(c *gin.Context) {
 	bookID := c.Query("bookId")
 	if bookID == "" {
@@ -151,11 +156,12 @@ func (api *ChaptersAPI) GetFirstChapter(c *gin.Context) {
 }
 
 // GetLastChapter 获取最后一章
-// @Summary 获取最后一章
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/chapters/last [get]
+//
+//	@Summary	获取最后一章
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/chapters/last [get]
 func (api *ChaptersAPI) GetLastChapter(c *gin.Context) {
 	bookID := c.Query("bookId")
 	if bookID == "" {

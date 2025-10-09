@@ -11,10 +11,10 @@ import (
 
 // Config 存储应用配置
 type Config struct {
-	Database *DatabaseConfig `mapstructure:"database"`
-	Server   *ServerConfig   `mapstructure:"server"`
-	JWT      *JWTConfig     `mapstructure:"jwt"`
-	AI       *AIConfig      `mapstructure:"ai"`
+	Database *DatabaseConfig    `mapstructure:"database"`
+	Server   *ServerConfig      `mapstructure:"server"`
+	JWT      *JWTConfig         `mapstructure:"jwt"`
+	AI       *AIConfig          `mapstructure:"ai"`
 	External *ExternalAPIConfig `mapstructure:"external"`
 }
 
@@ -75,15 +75,15 @@ func LoadConfig(configPath string) (*Config, error) {
 		v.SetConfigFile(configPath)
 	} else {
 		// 配置Viper
-		v.SetConfigName("config")    // 配置文件名（不带扩展名）
-		v.SetConfigType("yaml")      // 配置文件类型
-		v.AddConfigPath(configPath)  // 配置文件路径
-		v.AddConfigPath(".")         // 当前目录
+		v.SetConfigName("config")   // 配置文件名（不带扩展名）
+		v.SetConfigType("yaml")     // 配置文件类型
+		v.AddConfigPath(configPath) // 配置文件路径
+		v.AddConfigPath(".")        // 当前目录
 	}
-	
-	v.AutomaticEnv()            // 读取环境变量
-	v.SetEnvPrefix("QINGYU")    // 环境变量前缀
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))  // 环境变量键替换器
+
+	v.AutomaticEnv()                                   // 读取环境变量
+	v.SetEnvPrefix("QINGYU")                           // 环境变量前缀
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // 环境变量键替换器
 
 	// 读取配置文件
 	if err := v.ReadInConfig(); err != nil {
@@ -144,15 +144,15 @@ func setDefaults() {
 	v.SetDefault("database.primary.mongodb.min_pool_size", 5)
 	v.SetDefault("database.primary.mongodb.connect_timeout", 10*time.Second)
 	v.SetDefault("database.primary.mongodb.server_timeout", 30*time.Second)
-	
+
 	// 索引配置
 	v.SetDefault("database.indexing.auto_create", true)
 	v.SetDefault("database.indexing.background", true)
-	
+
 	// 验证配置
 	v.SetDefault("database.validation.enabled", true)
 	v.SetDefault("database.validation.strict_mode", false)
-	
+
 	// 迁移配置
 	v.SetDefault("database.migration.enabled", false)
 	v.SetDefault("database.migration.batch_size", 1000)
@@ -160,7 +160,7 @@ func setDefaults() {
 	v.SetDefault("database.migration.strategy.type", "full")
 	v.SetDefault("database.migration.strategy.verify_data", true)
 	v.SetDefault("database.migration.strategy.rollback_on_fail", true)
-	
+
 	// 同步配置
 	v.SetDefault("database.sync.enabled", false)
 	v.SetDefault("database.sync.interval", 5*time.Minute)

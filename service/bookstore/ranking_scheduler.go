@@ -6,8 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"Qingyu_backend/models/reading/bookstore"
+
+	"github.com/robfig/cron/v3"
 )
 
 // RankingScheduler 榜单调度器
@@ -75,15 +76,15 @@ func (s *RankingScheduler) updateRealtimeRanking() {
 	defer cancel()
 
 	period := bookstore.GetPeriodString(bookstore.RankingTypeRealtime, time.Now())
-	
+
 	s.logger.Printf("Updating realtime ranking for period: %s", period)
-	
+
 	err := s.service.UpdateRankings(ctx, bookstore.RankingTypeRealtime, period)
 	if err != nil {
 		s.logger.Printf("Failed to update realtime ranking: %v", err)
 		return
 	}
-	
+
 	s.logger.Printf("Successfully updated realtime ranking for period: %s", period)
 }
 
@@ -94,24 +95,24 @@ func (s *RankingScheduler) updateWeeklyRanking() {
 
 	now := time.Now()
 	period := bookstore.GetPeriodString(bookstore.RankingTypeWeekly, now)
-	
+
 	s.logger.Printf("Updating weekly ranking for period: %s", period)
-	
+
 	err := s.service.UpdateRankings(ctx, bookstore.RankingTypeWeekly, period)
 	if err != nil {
 		s.logger.Printf("Failed to update weekly ranking: %v", err)
 		return
 	}
-	
+
 	s.logger.Printf("Successfully updated weekly ranking for period: %s", period)
 
 	// 如果是周一，也更新上周的榜单
 	if now.Weekday() == time.Monday {
 		lastWeek := now.AddDate(0, 0, -7)
 		lastWeekPeriod := bookstore.GetPeriodString(bookstore.RankingTypeWeekly, lastWeek)
-		
+
 		s.logger.Printf("Updating last week ranking for period: %s", lastWeekPeriod)
-		
+
 		err := s.service.UpdateRankings(ctx, bookstore.RankingTypeWeekly, lastWeekPeriod)
 		if err != nil {
 			s.logger.Printf("Failed to update last week ranking: %v", err)
@@ -128,24 +129,24 @@ func (s *RankingScheduler) updateMonthlyRanking() {
 
 	now := time.Now()
 	period := bookstore.GetPeriodString(bookstore.RankingTypeMonthly, now)
-	
+
 	s.logger.Printf("Updating monthly ranking for period: %s", period)
-	
+
 	err := s.service.UpdateRankings(ctx, bookstore.RankingTypeMonthly, period)
 	if err != nil {
 		s.logger.Printf("Failed to update monthly ranking: %v", err)
 		return
 	}
-	
+
 	s.logger.Printf("Successfully updated monthly ranking for period: %s", period)
 
 	// 如果是每月1号，也更新上个月的榜单
 	if now.Day() == 1 {
 		lastMonth := now.AddDate(0, -1, 0)
 		lastMonthPeriod := bookstore.GetPeriodString(bookstore.RankingTypeMonthly, lastMonth)
-		
+
 		s.logger.Printf("Updating last month ranking for period: %s", lastMonthPeriod)
-		
+
 		err := s.service.UpdateRankings(ctx, bookstore.RankingTypeMonthly, lastMonthPeriod)
 		if err != nil {
 			s.logger.Printf("Failed to update last month ranking: %v", err)
@@ -162,24 +163,24 @@ func (s *RankingScheduler) updateNewbieRanking() {
 
 	now := time.Now()
 	period := bookstore.GetPeriodString(bookstore.RankingTypeNewbie, now)
-	
+
 	s.logger.Printf("Updating newbie ranking for period: %s", period)
-	
+
 	err := s.service.UpdateRankings(ctx, bookstore.RankingTypeNewbie, period)
 	if err != nil {
 		s.logger.Printf("Failed to update newbie ranking: %v", err)
 		return
 	}
-	
+
 	s.logger.Printf("Successfully updated newbie ranking for period: %s", period)
 
 	// 如果是每月1号，也更新上个月的新人榜
 	if now.Day() == 1 {
 		lastMonth := now.AddDate(0, -1, 0)
 		lastMonthPeriod := bookstore.GetPeriodString(bookstore.RankingTypeNewbie, lastMonth)
-		
+
 		s.logger.Printf("Updating last month newbie ranking for period: %s", lastMonthPeriod)
-		
+
 		err := s.service.UpdateRankings(ctx, bookstore.RankingTypeNewbie, lastMonthPeriod)
 		if err != nil {
 			s.logger.Printf("Failed to update last month newbie ranking: %v", err)
@@ -192,11 +193,11 @@ func (s *RankingScheduler) updateNewbieRanking() {
 // cleanupExpiredRankings 清理过期榜单
 func (s *RankingScheduler) cleanupExpiredRankings() {
 	s.logger.Println("Starting cleanup of expired rankings")
-	
+
 	// 这里可以添加清理逻辑，比如删除3个月前的榜单数据
 	// 由于没有直接的Repository访问，这里只是记录日志
 	// 实际实现中可能需要注入RankingRepository
-	
+
 	s.logger.Println("Cleanup of expired rankings completed")
 }
 
@@ -210,13 +211,13 @@ func (s *RankingScheduler) UpdateRankingNow(rankingType bookstore.RankingType, p
 	}
 
 	s.logger.Printf("Manually updating %s ranking for period: %s", rankingType, period)
-	
+
 	err := s.service.UpdateRankings(ctx, rankingType, period)
 	if err != nil {
 		s.logger.Printf("Failed to manually update %s ranking: %v", rankingType, err)
 		return err
 	}
-	
+
 	s.logger.Printf("Successfully manually updated %s ranking for period: %s", rankingType, period)
 	return nil
 }
@@ -224,11 +225,11 @@ func (s *RankingScheduler) UpdateRankingNow(rankingType bookstore.RankingType, p
 // GetSchedulerStatus 获取调度器状态
 func (s *RankingScheduler) GetSchedulerStatus() map[string]interface{} {
 	entries := s.cron.Entries()
-	
+
 	status := map[string]interface{}{
-		"running":    len(entries) > 0,
-		"job_count":  len(entries),
-		"next_runs":  make([]map[string]interface{}, 0),
+		"running":   len(entries) > 0,
+		"job_count": len(entries),
+		"next_runs": make([]map[string]interface{}, 0),
 	}
 
 	for i, entry := range entries {

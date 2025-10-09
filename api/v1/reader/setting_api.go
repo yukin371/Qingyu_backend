@@ -35,10 +35,11 @@ type UpdateSettingsRequest struct {
 }
 
 // GetReadingSettings 获取阅读设置
-// @Summary 获取阅读设置
-// @Tags 阅读器
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/settings [get]
+//
+//	@Summary	获取阅读设置
+//	@Tags		阅读器
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/settings [get]
 func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -57,11 +58,12 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 }
 
 // SaveReadingSettings 保存阅读设置
-// @Summary 保存阅读设置
-// @Tags 阅读器
-// @Param request body reader.ReadingSettings true "阅读设置"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/settings [post]
+//
+//	@Summary	保存阅读设置
+//	@Tags		阅读器
+//	@Param		request	body		reader.ReadingSettings	true	"阅读设置"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/settings [post]
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -88,11 +90,12 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 }
 
 // UpdateReadingSettings 更新阅读设置
-// @Summary 更新阅读设置
-// @Tags 阅读器
-// @Param request body UpdateSettingsRequest true "更新设置请求"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/settings [put]
+//
+//	@Summary	更新阅读设置
+//	@Tags		阅读器
+//	@Param		request	body		UpdateSettingsRequest	true	"更新设置请求"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/settings [put]
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")

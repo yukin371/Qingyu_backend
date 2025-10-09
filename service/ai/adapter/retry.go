@@ -105,7 +105,7 @@ func (r *Retryer) isRetryableError(err error) bool {
 func (r *Retryer) calculateDelay(attempt int) time.Duration {
 	// 指数退避
 	delay := float64(r.config.InitialDelay) * math.Pow(r.config.BackoffFactor, float64(attempt))
-	
+
 	// 限制最大延迟
 	if delay > float64(r.config.MaxDelay) {
 		delay = float64(r.config.MaxDelay)
@@ -216,7 +216,7 @@ func (cb *CircuitBreaker) GetState() CircuitState {
 
 // RateLimiter 限流器
 type RateLimiter struct {
-	tokens    chan struct{}
+	tokens     chan struct{}
 	refillRate time.Duration
 	capacity   int
 	ticker     *time.Ticker
@@ -314,7 +314,7 @@ func (eh *ErrorHandler) Execute(ctx context.Context, fn RetryableFunc) error {
 // ExecuteWithResult 执行函数并返回结果（带完整错误处理）
 func (eh *ErrorHandler) ExecuteWithResult(ctx context.Context, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
 	var result interface{}
-	
+
 	err := eh.Execute(ctx, func(ctx context.Context) error {
 		var err error
 		result, err = fn(ctx)

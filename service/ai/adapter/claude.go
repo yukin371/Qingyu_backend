@@ -96,10 +96,10 @@ type ClaudeUsage struct {
 
 // Claude流式响应结构体
 type ClaudeStreamResponse struct {
-	Type  string                 `json:"type"`
-	Index int                    `json:"index,omitempty"`
-	Delta *ClaudeStreamDelta     `json:"delta,omitempty"`
-	Usage *ClaudeUsage          `json:"usage,omitempty"`
+	Type  string             `json:"type"`
+	Index int                `json:"index,omitempty"`
+	Delta *ClaudeStreamDelta `json:"delta,omitempty"`
+	Usage *ClaudeUsage       `json:"usage,omitempty"`
 }
 
 type ClaudeStreamDelta struct {
@@ -211,11 +211,11 @@ func (a *ClaudeAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionR
 func (a *ClaudeAdapter) TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
 	// 创建响应通道
 	responseChan := make(chan *TextGenerationResponse, 10)
-	
+
 	// 启动协程处理流式响应
 	go func() {
 		defer close(responseChan)
-		
+
 		if err := a.doTextGenerationStream(ctx, req, responseChan); err != nil {
 			// 发送错误响应
 			responseChan <- &TextGenerationResponse{
@@ -227,7 +227,7 @@ func (a *ClaudeAdapter) TextGenerationStream(ctx context.Context, req *TextGener
 			}
 		}
 	}()
-	
+
 	return responseChan, nil
 }
 
@@ -297,7 +297,7 @@ func (a *ClaudeAdapter) processStreamResponse(body io.Reader, responseChan chan<
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// 跳过空行和注释行
 		if line == "" || strings.HasPrefix(line, ":") {
 			continue
@@ -306,7 +306,7 @@ func (a *ClaudeAdapter) processStreamResponse(body io.Reader, responseChan chan<
 		// 解析SSE数据
 		if strings.HasPrefix(line, "data: ") {
 			data := strings.TrimPrefix(line, "data: ")
-			
+
 			// 检查是否为结束标记
 			if data == "[DONE]" {
 				break
@@ -321,7 +321,7 @@ func (a *ClaudeAdapter) processStreamResponse(body io.Reader, responseChan chan<
 			// 处理内容增量
 			if streamResp.Delta != nil && streamResp.Delta.Text != "" {
 				fullContent.WriteString(streamResp.Delta.Text)
-				
+
 				// 发送增量响应
 				responseChan <- &TextGenerationResponse{
 					ID:           primitive.NewObjectID().Hex(),
@@ -383,14 +383,14 @@ func (a *ClaudeAdapter) sendRequest(ctx context.Context, endpoint string, reques
 	// 序列化请求
 	requestBody, err := json.Marshal(request)
 	if err != nil {
-		return nil, NewAdapterError("claude", ErrorTypeInvalidRequest, 
+		return nil, NewAdapterError("claude", ErrorTypeInvalidRequest,
 			fmt.Sprintf("序列化请求失败: %v", err), "REQUEST_MARSHAL_ERROR", 0, false)
 	}
 
 	// 创建HTTP请求
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, NewAdapterError("claude", ErrorTypeInvalidRequest, 
+		return nil, NewAdapterError("claude", ErrorTypeInvalidRequest,
 			fmt.Sprintf("创建HTTP请求失败: %v", err), "REQUEST_CREATE_ERROR", 0, false)
 	}
 
@@ -402,7 +402,7 @@ func (a *ClaudeAdapter) sendRequest(ctx context.Context, endpoint string, reques
 	// 发送请求
 	resp, err := a.client.Do(httpReq)
 	if err != nil {
-		return nil, NewAdapterError("claude", ErrorTypeTimeout, 
+		return nil, NewAdapterError("claude", ErrorTypeTimeout,
 			fmt.Sprintf("发送HTTP请求失败: %v", err), "REQUEST_SEND_ERROR", 0, true)
 	}
 	defer resp.Body.Close()
@@ -410,7 +410,7 @@ func (a *ClaudeAdapter) sendRequest(ctx context.Context, endpoint string, reques
 	// 读取响应
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, NewAdapterError("claude", ErrorTypeUnknown, 
+		return nil, NewAdapterError("claude", ErrorTypeUnknown,
 			fmt.Sprintf("读取响应失败: %v", err), "RESPONSE_READ_ERROR", resp.StatusCode, false)
 	}
 
@@ -422,7 +422,7 @@ func (a *ClaudeAdapter) sendRequest(ctx context.Context, endpoint string, reques
 	// 解析响应
 	var claudeResp ClaudeResponse
 	if err := json.Unmarshal(responseBody, &claudeResp); err != nil {
-		return nil, NewAdapterError("claude", ErrorTypeInvalidResponse, 
+		return nil, NewAdapterError("claude", ErrorTypeInvalidResponse,
 			fmt.Sprintf("解析响应失败: %v", err), "RESPONSE_PARSE_ERROR", resp.StatusCode, false)
 	}
 
@@ -472,6 +472,6 @@ func (a *ClaudeAdapter) handleErrorResponse(statusCode int, body []byte) error {
 		}
 	}
 
-	return NewAdapterError("claude", errorType, message, 
+	return NewAdapterError("claude", errorType, message,
 		fmt.Sprintf("CLAUDE_%d", statusCode), statusCode, isRetryable)
 }

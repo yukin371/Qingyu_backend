@@ -207,7 +207,7 @@ func FormatErrorChain(chain *ErrorChain) string {
 	for i, err := range chain.GetErrors() {
 		parts = append(parts, fmt.Sprintf("%d. [%s] %s", i+1, err.Code, err.Message))
 	}
-	
+
 	return strings.Join(parts, "\n")
 }
 
@@ -224,7 +224,7 @@ func FormatErrorAggregator(aggregator *ErrorAggregator) string {
 			parts = append(parts, fmt.Sprintf("  - [%s] %s", err.Code, err.Message))
 		}
 	}
-	
+
 	return strings.Join(parts, "\n")
 }
 

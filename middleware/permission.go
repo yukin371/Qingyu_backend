@@ -10,14 +10,14 @@ import (
 
 // PermissionConfig 权限中间件配置
 type PermissionConfig struct {
-	RequiredRoles       []string          `json:"required_roles" yaml:"required_roles"`
-	RequiredPermissions []string          `json:"required_permissions" yaml:"required_permissions"`
-	AllowedRoles        []string          `json:"allowed_roles" yaml:"allowed_roles"`
-	AllowedPermissions  []string          `json:"allowed_permissions" yaml:"allowed_permissions"`
-	SkipPaths           []string          `json:"skip_paths" yaml:"skip_paths"`
-	CheckMode           string            `json:"check_mode" yaml:"check_mode"` // "any", "all"
-	Message             string            `json:"message" yaml:"message"`
-	StatusCode          int               `json:"status_code" yaml:"status_code"`
+	RequiredRoles       []string            `json:"required_roles" yaml:"required_roles"`
+	RequiredPermissions []string            `json:"required_permissions" yaml:"required_permissions"`
+	AllowedRoles        []string            `json:"allowed_roles" yaml:"allowed_roles"`
+	AllowedPermissions  []string            `json:"allowed_permissions" yaml:"allowed_permissions"`
+	SkipPaths           []string            `json:"skip_paths" yaml:"skip_paths"`
+	CheckMode           string              `json:"check_mode" yaml:"check_mode"` // "any", "all"
+	Message             string              `json:"message" yaml:"message"`
+	StatusCode          int                 `json:"status_code" yaml:"status_code"`
 	RoleHierarchy       map[string][]string `json:"role_hierarchy" yaml:"role_hierarchy"`
 }
 
@@ -217,7 +217,7 @@ func hasRole(userRoles []string, targetRole string, hierarchy map[string][]strin
 		if userRole == targetRole {
 			return true
 		}
-		
+
 		// 检查角色层次
 		if inheritedRoles, exists := hierarchy[userRole]; exists {
 			for _, inheritedRole := range inheritedRoles {
@@ -256,7 +256,7 @@ func hasPermission(userPermissions []string, targetPermission string) bool {
 		if userPermission == targetPermission {
 			return true
 		}
-		
+
 		// 支持通配符权限，如 "user:*" 匹配 "user:read", "user:write"
 		if strings.HasSuffix(userPermission, ":*") {
 			prefix := strings.TrimSuffix(userPermission, ":*")
@@ -271,7 +271,7 @@ func hasPermission(userPermissions []string, targetPermission string) bool {
 // CreatePermissionMiddleware 创建权限中间件（用于中间件工厂）
 func CreatePermissionMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
 	permissionConfig := DefaultPermissionConfig()
-	
+
 	// 解析配置
 	if requiredRoles, ok := config["required_roles"].([]string); ok {
 		permissionConfig.RequiredRoles = requiredRoles
@@ -300,6 +300,6 @@ func CreatePermissionMiddleware(config map[string]interface{}) (gin.HandlerFunc,
 	if roleHierarchy, ok := config["role_hierarchy"].(map[string][]string); ok {
 		permissionConfig.RoleHierarchy = roleHierarchy
 	}
-	
+
 	return PermissionWithConfig(permissionConfig), nil
 }

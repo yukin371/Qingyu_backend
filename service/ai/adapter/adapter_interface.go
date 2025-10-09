@@ -10,22 +10,22 @@ import (
 type AIAdapter interface {
 	// 获取适配器名称
 	GetName() string
-	
+
 	// 获取支持的模型列表
 	GetSupportedModels() []string
-	
+
 	// 文本生成相关方法
 	TextGeneration(ctx context.Context, req *TextGenerationRequest) (*TextGenerationResponse, error)
-	
+
 	// 对话生成方法（支持多轮对话）
 	ChatCompletion(ctx context.Context, req *ChatCompletionRequest) (*ChatCompletionResponse, error)
-	
+
 	// 流式文本生成
 	TextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error)
-	
+
 	// 图像生成相关方法
 	ImageGeneration(ctx context.Context, req *ImageGenerationRequest) (*ImageGenerationResponse, error)
-	
+
 	// 健康检查
 	HealthCheck(ctx context.Context) error
 }
@@ -38,14 +38,14 @@ type Message struct {
 
 // TextGenerationRequest 文本生成请求结构
 type TextGenerationRequest struct {
-	Model       string  `json:"model"`
-	Prompt      string  `json:"prompt"`
-	MaxTokens   int     `json:"max_tokens,omitempty"`
-	Temperature float64 `json:"temperature,omitempty"`
-	TopP        float64 `json:"top_p,omitempty"`
-	Stream      bool    `json:"stream,omitempty"`
+	Model       string   `json:"model"`
+	Prompt      string   `json:"prompt"`
+	MaxTokens   int      `json:"max_tokens,omitempty"`
+	Temperature float64  `json:"temperature,omitempty"`
+	TopP        float64  `json:"top_p,omitempty"`
+	Stream      bool     `json:"stream,omitempty"`
 	Stop        []string `json:"stop,omitempty"`
-	User        string  `json:"user,omitempty"`
+	User        string   `json:"user,omitempty"`
 }
 
 // ChatCompletionRequest 对话完成请求结构
@@ -98,9 +98,9 @@ type Usage struct {
 type ImageGenerationRequest struct {
 	Model  string `json:"model,omitempty"`
 	Prompt string `json:"prompt"`
-	Size   string `json:"size,omitempty"`   // 图像尺寸，如 "1024x1024"
-	Style  string `json:"style,omitempty"`  // 图像风格
-	N      int    `json:"n,omitempty"`      // 生成图像数量
+	Size   string `json:"size,omitempty"`  // 图像尺寸，如 "1024x1024"
+	Style  string `json:"style,omitempty"` // 图像风格
+	N      int    `json:"n,omitempty"`     // 生成图像数量
 }
 
 // ImageGenerationResponse 图像生成响应结构
@@ -130,7 +130,7 @@ type AdapterError struct {
 }
 
 func (e *AdapterError) Error() string {
-	return fmt.Sprintf("[%s:%s] %s (code: %s, status: %d, retryable: %t)", 
+	return fmt.Sprintf("[%s:%s] %s (code: %s, status: %d, retryable: %t)",
 		e.Provider, e.Type, e.Message, e.Code, e.StatusCode, e.Retryable)
 }
 
