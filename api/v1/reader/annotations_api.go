@@ -25,23 +25,19 @@ func NewAnnotationsAPI(readerService *reading.ReaderService) *AnnotationsAPI {
 
 // CreateAnnotationRequest 创建标注请求
 type CreateAnnotationRequest struct {
-	BookID      string `json:"bookId" binding:"required"`
-	ChapterID   string `json:"chapterId" binding:"required"`
-	Type        int    `json:"type" binding:"required,min=1,max=3"` // 1:笔记 2:书签 3:高亮
-	Content     string `json:"content"`
-	Note        string `json:"note"`
-	Color       string `json:"color"`
-	StartOffset int    `json:"startOffset"`
-	EndOffset   int    `json:"endOffset"`
-	IsPublic    bool   `json:"isPublic"`
+	BookID    string `json:"bookId" binding:"required"`
+	ChapterID string `json:"chapterId" binding:"required"`
+	Type      string `json:"type" binding:"required"` // bookmark(书签) | highlight(高亮) | note(笔记)
+	Text      string `json:"text"`                    // 标注文本
+	Note      string `json:"note"`                    // 注释内容
+	Range     string `json:"range"`                   // 标注范围：start-end
 }
 
 // UpdateAnnotationRequest 更新标注请求
 type UpdateAnnotationRequest struct {
-	Content  *string `json:"content"`
-	Note     *string `json:"note"`
-	Color    *string `json:"color"`
-	IsPublic *bool   `json:"isPublic"`
+	Text  *string `json:"text"`  // 标注文本
+	Note  *string `json:"note"`  // 注释内容
+	Range *string `json:"range"` // 标注范围
 }
 
 // CreateAnnotation 创建标注
@@ -65,16 +61,13 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	}
 
 	annotation := &reader.Annotation{
-		UserID:      userID.(string),
-		BookID:      req.BookID,
-		ChapterID:   req.ChapterID,
-		Type:        req.Type,
-		Content:     req.Content,
-		Note:        req.Note,
-		Color:       req.Color,
-		StartOffset: req.StartOffset,
-		EndOffset:   req.EndOffset,
-		IsPublic:    req.IsPublic,
+		UserID:    userID.(string),
+		BookID:    req.BookID,
+		ChapterID: req.ChapterID,
+		Type:      req.Type,
+		Text:      req.Text,
+		Note:      req.Note,
+		Range:     req.Range,
 	}
 
 	err := api.readerService.CreateAnnotation(c.Request.Context(), annotation)
@@ -103,17 +96,14 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 	}
 
 	updates := make(map[string]interface{})
-	if req.Content != nil {
-		updates["content"] = *req.Content
+	if req.Text != nil {
+		updates["text"] = *req.Text
 	}
 	if req.Note != nil {
 		updates["note"] = *req.Note
 	}
-	if req.Color != nil {
-		updates["color"] = *req.Color
-	}
-	if req.IsPublic != nil {
-		updates["is_public"] = *req.IsPublic
+	if req.Range != nil {
+		updates["range"] = *req.Range
 	}
 
 	err := api.readerService.UpdateAnnotation(c.Request.Context(), annotationID, updates)
