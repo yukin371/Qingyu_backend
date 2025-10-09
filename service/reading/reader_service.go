@@ -17,6 +17,8 @@ type ReaderService struct {
 	annotationRepo readingRepo.AnnotationRepository
 	settingsRepo   readingRepo.ReadingSettingsRepository
 	eventBus       base.EventBus
+	cacheService   ReaderCacheService
+	vipService     VIPPermissionService
 	serviceName    string
 	version        string
 }
@@ -28,6 +30,8 @@ func NewReaderService(
 	annotationRepo readingRepo.AnnotationRepository,
 	settingsRepo readingRepo.ReadingSettingsRepository,
 	eventBus base.EventBus,
+	cacheService ReaderCacheService,
+	vipService VIPPermissionService,
 ) *ReaderService {
 	return &ReaderService{
 		chapterRepo:    chapterRepo,
@@ -35,6 +39,8 @@ func NewReaderService(
 		annotationRepo: annotationRepo,
 		settingsRepo:   settingsRepo,
 		eventBus:       eventBus,
+		cacheService:   cacheService,
+		vipService:     vipService,
 		serviceName:    "ReaderService",
 		version:        "1.0.0",
 	}
@@ -147,28 +153,59 @@ func (s *ReaderService) GetNextChapter(ctx context.Context, bookID string, curre
 
 // GetChapterContent 获取章节内容
 func (s *ReaderService) GetChapterContent(ctx context.Context, userID, chapterID string) (string, error) {
-	// 1. 检查VIP权限
+	// 1. 尝试从缓存获取章节内容
+	if s.cacheService != nil {
+		cachedContent, err := s.cacheService.GetChapterContent(ctx, chapterID)
+		if err == nil && cachedContent != "" {
+			// 缓存命中，仍需验证VIP权限
+			isVIP, _ := s.chapterRepo.CheckVIPAccess(ctx, chapterID)
+			if isVIP {
+				hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapterID, true)
+				if err != nil {
+					return "", fmt.Errorf("检查VIP权限失败: %w", err)
+				}
+				if !hasAccess {
+					return "", fmt.Errorf("该章节为VIP章节，需要VIP权限或购买后才能阅读")
+				}
+			}
+
+			// 发布阅读事件
+			s.publishReadingEvent(ctx, userID, chapterID)
+			return cachedContent, nil
+		}
+	}
+
+	// 2. 检查VIP权限
 	isVIP, err := s.chapterRepo.CheckVIPAccess(ctx, chapterID)
 	if err != nil {
 		return "", fmt.Errorf("检查VIP权限失败: %w", err)
 	}
 
 	if isVIP {
-		// TODO: 检查用户是否有VIP权限或已购买该章节
-		// 这里需要调用用户服务或钱包服务
-		// hasAccess := s.checkUserVIPAccess(ctx, userID, chapterID)
-		// if !hasAccess {
-		//     return "", fmt.Errorf("需要VIP权限或购买该章节")
-		// }
+		// 验证用户是否有VIP权限或已购买该章节
+		if s.vipService != nil {
+			hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapterID, true)
+			if err != nil {
+				return "", fmt.Errorf("检查VIP权限失败: %w", err)
+			}
+			if !hasAccess {
+				return "", fmt.Errorf("该章节为VIP章节，需要VIP权限或购买后才能阅读")
+			}
+		}
 	}
 
-	// 2. 获取章节内容
+	// 3. 从数据库获取章节内容
 	content, err := s.chapterRepo.GetChapterContent(ctx, chapterID)
 	if err != nil {
 		return "", fmt.Errorf("获取章节内容失败: %w", err)
 	}
 
-	// 3. 发布阅读事件
+	// 4. 缓存章节内容（30分钟）
+	if s.cacheService != nil {
+		_ = s.cacheService.SetChapterContent(ctx, chapterID, content, 30*time.Minute)
+	}
+
+	// 5. 发布阅读事件
 	s.publishReadingEvent(ctx, userID, chapterID)
 
 	return content, nil
@@ -457,14 +494,28 @@ func (s *ReaderService) GetPublicAnnotations(ctx context.Context, bookID, chapte
 
 // GetReadingSettings 获取阅读设置
 func (s *ReaderService) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+	// 1. 尝试从缓存获取
+	if s.cacheService != nil {
+		cachedSettings, err := s.cacheService.GetReadingSettings(ctx, userID)
+		if err == nil && cachedSettings != nil {
+			return cachedSettings, nil
+		}
+	}
+
+	// 2. 从数据库获取
 	settings, err := s.settingsRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取阅读设置失败: %w", err)
 	}
 
-	// 如果没有设置，返回默认设置
+	// 3. 如果没有设置，返回默认设置
 	if settings == nil {
 		settings = s.getDefaultSettings(userID)
+	} else {
+		// 4. 缓存设置（1小时）
+		if s.cacheService != nil {
+			_ = s.cacheService.SetReadingSettings(ctx, userID, settings, time.Hour)
+		}
 	}
 
 	return settings, nil
@@ -494,6 +545,11 @@ func (s *ReaderService) SaveReadingSettings(ctx context.Context, settings *reade
 		if err != nil {
 			return fmt.Errorf("创建阅读设置失败: %w", err)
 		}
+	}
+
+	// 更新缓存
+	if s.cacheService != nil {
+		_ = s.cacheService.SetReadingSettings(ctx, settings.UserID, settings, time.Hour)
 	}
 
 	return nil
@@ -542,6 +598,11 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 	err = s.settingsRepo.UpdateByUserID(ctx, userID, settings)
 	if err != nil {
 		return fmt.Errorf("更新阅读设置失败: %w", err)
+	}
+
+	// 更新缓存
+	if s.cacheService != nil {
+		_ = s.cacheService.SetReadingSettings(ctx, userID, settings, time.Hour)
 	}
 
 	return nil
