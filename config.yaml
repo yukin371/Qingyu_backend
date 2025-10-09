@@ -2,7 +2,8 @@
 
 # 数据库配置
 database:
-  uri: "mongodb://localhost:27017"
+  # Docker环境使用服务名，本地开发使用localhost
+  uri: "mongodb://mongodb:27017"  # Docker: mongodb | 本地: localhost
   name: "Qingyu_writer"
   connect_timeout: 10s
   max_pool_size: 100

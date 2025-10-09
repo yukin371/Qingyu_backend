@@ -9,16 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reading/bookstore"
-	"Qingyu_backend/service/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // BookStatisticsAPI 图书统计API控制器
 type BookStatisticsAPI struct {
-	BookStatisticsService bookstore.BookStatisticsService
+	BookStatisticsService bookstoreService.BookStatisticsService
 }
 
 // NewBookStatisticsAPI 创建新的图书统计API实例
-func NewBookStatisticsAPI(bookStatisticsService bookstore.BookStatisticsService) *BookStatisticsAPI {
+func NewBookStatisticsAPI(bookStatisticsService bookstoreService.BookStatisticsService) *BookStatisticsAPI {
 	return &BookStatisticsAPI{
 		BookStatisticsService: bookStatisticsService,
 	}

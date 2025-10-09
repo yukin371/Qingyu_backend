@@ -48,7 +48,7 @@ func NewErrorHandler(enableLogging, enableStackTrace bool) *ErrorHandler {
 func (h *ErrorHandler) HandleError(c *gin.Context, err error, service, operation string) {
 	// 转换为统一错误
 	unifiedErr := h.converter.ConvertGenericError(err, service, operation)
-	
+
 	// 添加请求上下文
 	if requestID := c.GetString("request_id"); requestID != "" {
 		unifiedErr.RequestID = requestID
@@ -67,7 +67,7 @@ func (h *ErrorHandler) HandleError(c *gin.Context, err error, service, operation
 
 	// 构建响应
 	response := h.buildErrorResponse(unifiedErr)
-	
+
 	// 返回HTTP响应
 	c.JSON(unifiedErr.GetHTTPStatus(), response)
 }
@@ -76,7 +76,7 @@ func (h *ErrorHandler) HandleError(c *gin.Context, err error, service, operation
 func (h *ErrorHandler) HandlePanic(c *gin.Context, panicValue interface{}, service, operation string) {
 	// 转换panic为错误
 	unifiedErr := h.converter.ConvertPanic(panicValue, service, operation)
-	
+
 	// 添加堆栈信息
 	if h.enableStackTrace {
 		unifiedErr.Stack = string(debug.Stack())
@@ -97,7 +97,7 @@ func (h *ErrorHandler) HandlePanic(c *gin.Context, panicValue interface{}, servi
 
 	// 构建响应
 	response := h.buildErrorResponse(unifiedErr)
-	
+
 	// 返回HTTP响应
 	c.JSON(500, response)
 }
@@ -166,7 +166,7 @@ func (h *ErrorHandler) isSensitiveKey(key string) bool {
 		"password", "token", "secret", "key", "auth",
 		"credential", "private", "confidential",
 	}
-	
+
 	for _, sensitive := range sensitiveKeys {
 		if key == sensitive {
 			return true
@@ -178,7 +178,7 @@ func (h *ErrorHandler) isSensitiveKey(key string) bool {
 // ErrorMiddleware Gin错误处理中间件
 func ErrorMiddleware(service string) gin.HandlerFunc {
 	handler := NewErrorHandler(true, false)
-	
+
 	return func(c *gin.Context) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -186,9 +186,9 @@ func ErrorMiddleware(service string) gin.HandlerFunc {
 				c.Abort()
 			}
 		}()
-		
+
 		c.Next()
-		
+
 		// 检查是否有错误
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last().Err
@@ -201,10 +201,10 @@ func ErrorMiddleware(service string) gin.HandlerFunc {
 // BusinessErrorMiddleware 业务错误处理中间件
 func BusinessErrorMiddleware(service string) gin.HandlerFunc {
 	handler := NewErrorHandler(true, false)
-	
+
 	return func(c *gin.Context) {
 		c.Next()
-		
+
 		// 检查响应状态码
 		if c.Writer.Status() >= 400 {
 			// 如果已经设置了错误状态码但没有响应体，创建默认错误
@@ -218,7 +218,7 @@ func BusinessErrorMiddleware(service string) gin.HandlerFunc {
 					Service:    service,
 					HTTPStatus: c.Writer.Status(),
 				}
-				
+
 				response := handler.buildErrorResponse(err)
 				c.JSON(c.Writer.Status(), response)
 			}

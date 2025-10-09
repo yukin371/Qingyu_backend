@@ -8,16 +8,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reading/bookstore"
-	"Qingyu_backend/service/bookstore"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // BookRatingAPI 图书评分API控制器
 type BookRatingAPI struct {
-	BookRatingService bookstore.BookRatingService
+	BookRatingService bookstoreService.BookRatingService
 }
 
 // NewBookRatingAPI 创建新的图书评分API实例
-func NewBookRatingAPI(bookRatingService bookstore.BookRatingService) *BookRatingAPI {
+func NewBookRatingAPI(bookRatingService bookstoreService.BookRatingService) *BookRatingAPI {
 	return &BookRatingAPI{
 		BookRatingService: bookRatingService,
 	}

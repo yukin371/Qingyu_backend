@@ -26,7 +26,7 @@ func InitServer() (*gin.Engine, error) {
 	// 使用中间件
 	r.Use(gin.Recovery())
 	r.Use(middleware.Logger())
-	r.Use(middleware.CORS())
+	r.Use(middleware.CORSMiddleware())
 
 	// 注册路由
 	router.RegisterRoutes(r)

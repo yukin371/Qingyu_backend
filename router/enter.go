@@ -3,14 +3,14 @@ package router
 import (
 	"log"
 
-	"Qingyu_backend/router/ai"
+	// "Qingyu_backend/router/ai" // 临时禁用
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	projectRouter "Qingyu_backend/router/project"
 	sharedRouter "Qingyu_backend/router/shared"
 	userRouter "Qingyu_backend/router/users"
 
 	readingAPI "Qingyu_backend/api/v1/reading"
-	aiService "Qingyu_backend/service/ai"
+	// aiService "Qingyu_backend/service/ai" // 临时禁用
 	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/shared/container"
 
@@ -55,10 +55,10 @@ func RegisterRoutes(r *gin.Engine) {
 	// 注册文档路由
 	projectRouter.RegisterRoutes(v1)
 
-	// 注册AI路由
-	aiSvc := aiService.NewService()
-	aiRouter := ai.NewAIRouter(aiSvc)
-	aiRouter.InitAIRouter(v1)
+	// 注册AI路由 (临时禁用)
+	// aiSvc := aiService.NewService()
+	// aiRouter := ai.NewAIRouter(aiSvc)
+	// aiRouter.InitAIRouter(v1)
 
 	// 健康检查
 	r.GET("/ping", func(c *gin.Context) {
