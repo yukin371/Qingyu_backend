@@ -16,31 +16,31 @@ type SecurityConfig struct {
 	XSSProtection      bool   `json:"xss_protection" yaml:"xss_protection"`
 	ContentTypeNoSniff bool   `json:"content_type_nosniff" yaml:"content_type_nosniff"`
 	FrameOptions       string `json:"frame_options" yaml:"frame_options"` // DENY, SAMEORIGIN, ALLOW-FROM
-	
+
 	// HSTS (HTTP Strict Transport Security)
-	HSTSMaxAge            int    `json:"hsts_max_age" yaml:"hsts_max_age"`
-	HSTSIncludeSubdomains bool   `json:"hsts_include_subdomains" yaml:"hsts_include_subdomains"`
-	HSTSPreload           bool   `json:"hsts_preload" yaml:"hsts_preload"`
-	
+	HSTSMaxAge            int  `json:"hsts_max_age" yaml:"hsts_max_age"`
+	HSTSIncludeSubdomains bool `json:"hsts_include_subdomains" yaml:"hsts_include_subdomains"`
+	HSTSPreload           bool `json:"hsts_preload" yaml:"hsts_preload"`
+
 	// CSP (Content Security Policy)
 	ContentSecurityPolicy string `json:"content_security_policy" yaml:"content_security_policy"`
-	
+
 	// CSRF 防护
 	CSRFProtection bool     `json:"csrf_protection" yaml:"csrf_protection"`
 	CSRFTokenName  string   `json:"csrf_token_name" yaml:"csrf_token_name"`
 	CSRFCookieName string   `json:"csrf_cookie_name" yaml:"csrf_cookie_name"`
 	CSRFSkipPaths  []string `json:"csrf_skip_paths" yaml:"csrf_skip_paths"`
-	
+
 	// 其他安全头
-	ReferrerPolicy        string `json:"referrer_policy" yaml:"referrer_policy"`
-	PermissionsPolicy     string `json:"permissions_policy" yaml:"permissions_policy"`
-	CrossOriginEmbedder   string `json:"cross_origin_embedder" yaml:"cross_origin_embedder"`
-	CrossOriginOpener     string `json:"cross_origin_opener" yaml:"cross_origin_opener"`
-	CrossOriginResource   string `json:"cross_origin_resource" yaml:"cross_origin_resource"`
-	
+	ReferrerPolicy      string `json:"referrer_policy" yaml:"referrer_policy"`
+	PermissionsPolicy   string `json:"permissions_policy" yaml:"permissions_policy"`
+	CrossOriginEmbedder string `json:"cross_origin_embedder" yaml:"cross_origin_embedder"`
+	CrossOriginOpener   string `json:"cross_origin_opener" yaml:"cross_origin_opener"`
+	CrossOriginResource string `json:"cross_origin_resource" yaml:"cross_origin_resource"`
+
 	// 自定义头
 	CustomHeaders map[string]string `json:"custom_headers" yaml:"custom_headers"`
-	
+
 	// 移除的头
 	RemoveHeaders []string `json:"remove_headers" yaml:"remove_headers"`
 }
@@ -79,10 +79,10 @@ func SecurityWithConfig(config SecurityConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 设置安全头
 		setSecurityHeaders(c, config)
-		
+
 		// 移除指定头
 		removeHeaders(c, config.RemoveHeaders)
-		
+
 		// CSRF 防护
 		if config.CSRFProtection && !shouldSkipCSRF(c.Request.URL.Path, config.CSRFSkipPaths) {
 			if !validateCSRFToken(c, config) {
@@ -96,7 +96,7 @@ func SecurityWithConfig(config SecurityConfig) gin.HandlerFunc {
 				return
 			}
 		}
-		
+
 		c.Next()
 	}
 }
@@ -107,17 +107,17 @@ func setSecurityHeaders(c *gin.Context, config SecurityConfig) {
 	if config.XSSProtection {
 		c.Header("X-XSS-Protection", "1; mode=block")
 	}
-	
+
 	// 内容类型嗅探防护
 	if config.ContentTypeNoSniff {
 		c.Header("X-Content-Type-Options", "nosniff")
 	}
-	
+
 	// 点击劫持防护
 	if config.FrameOptions != "" {
 		c.Header("X-Frame-Options", config.FrameOptions)
 	}
-	
+
 	// HSTS
 	if config.HSTSMaxAge > 0 {
 		hstsValue := "max-age=" + string(rune(config.HSTSMaxAge))
@@ -129,22 +129,22 @@ func setSecurityHeaders(c *gin.Context, config SecurityConfig) {
 		}
 		c.Header("Strict-Transport-Security", hstsValue)
 	}
-	
+
 	// CSP
 	if config.ContentSecurityPolicy != "" {
 		c.Header("Content-Security-Policy", config.ContentSecurityPolicy)
 	}
-	
+
 	// Referrer Policy
 	if config.ReferrerPolicy != "" {
 		c.Header("Referrer-Policy", config.ReferrerPolicy)
 	}
-	
+
 	// Permissions Policy
 	if config.PermissionsPolicy != "" {
 		c.Header("Permissions-Policy", config.PermissionsPolicy)
 	}
-	
+
 	// Cross-Origin 头
 	if config.CrossOriginEmbedder != "" {
 		c.Header("Cross-Origin-Embedder-Policy", config.CrossOriginEmbedder)
@@ -155,7 +155,7 @@ func setSecurityHeaders(c *gin.Context, config SecurityConfig) {
 	if config.CrossOriginResource != "" {
 		c.Header("Cross-Origin-Resource-Policy", config.CrossOriginResource)
 	}
-	
+
 	// 自定义头
 	for key, value := range config.CustomHeaders {
 		c.Header(key, value)
@@ -185,24 +185,24 @@ func validateCSRFToken(c *gin.Context, config SecurityConfig) bool {
 	if c.Request.Method == "GET" || c.Request.Method == "HEAD" || c.Request.Method == "OPTIONS" {
 		return true
 	}
-	
+
 	// 从请求头获取CSRF令牌
 	token := c.GetHeader(config.CSRFTokenName)
 	if token == "" {
 		// 从表单数据获取
 		token = c.PostForm(strings.ToLower(config.CSRFTokenName))
 	}
-	
+
 	if token == "" {
 		return false
 	}
-	
+
 	// 从Cookie获取期望的令牌
 	expectedToken, err := c.Cookie(config.CSRFCookieName)
 	if err != nil {
 		return false
 	}
-	
+
 	return token == expectedToken
 }
 
@@ -248,7 +248,7 @@ func CSRFTokenWithConfig(config SecurityConfig) gin.HandlerFunc {
 // CreateSecurityMiddleware 创建安全中间件（用于中间件工厂）
 func CreateSecurityMiddleware(config map[string]interface{}) (gin.HandlerFunc, error) {
 	securityConfig := DefaultSecurityConfig()
-	
+
 	// 解析配置
 	if xssProtection, ok := config["xss_protection"].(bool); ok {
 		securityConfig.XSSProtection = xssProtection
@@ -304,6 +304,6 @@ func CreateSecurityMiddleware(config map[string]interface{}) (gin.HandlerFunc, e
 	if removeHeaders, ok := config["remove_headers"].([]string); ok {
 		securityConfig.RemoveHeaders = removeHeaders
 	}
-	
+
 	return SecurityWithConfig(securityConfig), nil
 }

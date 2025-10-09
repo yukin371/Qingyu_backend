@@ -272,14 +272,14 @@ func (a *QwenAdapter) sendRequest(ctx context.Context, endpoint string, request 
 	// 序列化请求
 	requestBody, err := json.Marshal(request)
 	if err != nil {
-		return nil, NewAdapterError("qwen", ErrorTypeInvalidRequest, 
+		return nil, NewAdapterError("qwen", ErrorTypeInvalidRequest,
 			fmt.Sprintf("序列化请求失败: %v", err), "REQUEST_MARSHAL_ERROR", 0, false)
 	}
 
 	// 创建HTTP请求
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, NewAdapterError("qwen", ErrorTypeInvalidRequest, 
+		return nil, NewAdapterError("qwen", ErrorTypeInvalidRequest,
 			fmt.Sprintf("创建HTTP请求失败: %v", err), "REQUEST_CREATE_ERROR", 0, false)
 	}
 
@@ -290,7 +290,7 @@ func (a *QwenAdapter) sendRequest(ctx context.Context, endpoint string, request 
 	// 发送请求
 	resp, err := a.client.Do(httpReq)
 	if err != nil {
-		return nil, NewAdapterError("qwen", ErrorTypeTimeout, 
+		return nil, NewAdapterError("qwen", ErrorTypeTimeout,
 			fmt.Sprintf("发送HTTP请求失败: %v", err), "REQUEST_SEND_ERROR", 0, true)
 	}
 	defer resp.Body.Close()
@@ -298,7 +298,7 @@ func (a *QwenAdapter) sendRequest(ctx context.Context, endpoint string, request 
 	// 读取响应
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, NewAdapterError("qwen", ErrorTypeUnknown, 
+		return nil, NewAdapterError("qwen", ErrorTypeUnknown,
 			fmt.Sprintf("读取响应失败: %v", err), "RESPONSE_READ_ERROR", resp.StatusCode, false)
 	}
 
@@ -310,7 +310,7 @@ func (a *QwenAdapter) sendRequest(ctx context.Context, endpoint string, request 
 	// 解析响应
 	var qwenResp QwenResponse
 	if err := json.Unmarshal(responseBody, &qwenResp); err != nil {
-		return nil, NewAdapterError("qwen", ErrorTypeInvalidResponse, 
+		return nil, NewAdapterError("qwen", ErrorTypeInvalidResponse,
 			fmt.Sprintf("解析响应失败: %v", err), "RESPONSE_PARSE_ERROR", resp.StatusCode, false)
 	}
 
@@ -360,6 +360,6 @@ func (a *QwenAdapter) handleErrorResponse(statusCode int, body []byte) error {
 		}
 	}
 
-	return NewAdapterError("qwen", errorType, message, 
+	return NewAdapterError("qwen", errorType, message,
 		fmt.Sprintf("QWEN_%d", statusCode), statusCode, isRetryable)
 }

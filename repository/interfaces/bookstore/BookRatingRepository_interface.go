@@ -57,16 +57,16 @@ type BookRatingRepository interface {
 
 // BookRatingFilter 书籍评分过滤器
 type BookRatingFilter struct {
-	BookID      *primitive.ObjectID `json:"book_id,omitempty"`
-	UserID      *primitive.ObjectID `json:"user_id,omitempty"`
-	MinRating   *int                `json:"min_rating,omitempty"`
-	MaxRating   *int                `json:"max_rating,omitempty"`
-	Tags        []string            `json:"tags,omitempty"`
-	HasComment  *bool               `json:"has_comment,omitempty"`
-	MinLikes    *int                `json:"min_likes,omitempty"`
-	MaxLikes    *int                `json:"max_likes,omitempty"`
-	Limit       int                 `json:"limit,omitempty"`
-	Offset      int                 `json:"offset,omitempty"`
-	SortBy      string              `json:"sort_by,omitempty"`
-	SortOrder   string              `json:"sort_order,omitempty"`
+	BookID     *primitive.ObjectID `json:"book_id,omitempty"`
+	UserID     *primitive.ObjectID `json:"user_id,omitempty"`
+	MinRating  *int                `json:"min_rating,omitempty"`
+	MaxRating  *int                `json:"max_rating,omitempty"`
+	Tags       []string            `json:"tags,omitempty"`
+	HasComment *bool               `json:"has_comment,omitempty"`
+	MinLikes   *int                `json:"min_likes,omitempty"`
+	MaxLikes   *int                `json:"max_likes,omitempty"`
+	Limit      int                 `json:"limit,omitempty"`
+	Offset     int                 `json:"offset,omitempty"`
+	SortBy     string              `json:"sort_by,omitempty"`
+	SortOrder  string              `json:"sort_order,omitempty"`
 }

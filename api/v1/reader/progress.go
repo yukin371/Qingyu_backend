@@ -37,11 +37,12 @@ type UpdateReadingTimeRequest struct {
 }
 
 // GetReadingProgress 获取阅读进度
-// @Summary 获取阅读进度
-// @Tags 阅读器
-// @Param bookId path string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/{bookId} [get]
+//
+//	@Summary	获取阅读进度
+//	@Tags		阅读器
+//	@Param		bookId	path		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress/{bookId} [get]
 func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
 
@@ -62,11 +63,12 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 }
 
 // SaveReadingProgress 保存阅读进度
-// @Summary 保存阅读进度
-// @Tags 阅读器
-// @Param request body SaveProgressRequest true "保存进度请求"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress [post]
+//
+//	@Summary	保存阅读进度
+//	@Tags		阅读器
+//	@Param		request	body		SaveProgressRequest	true	"保存进度请求"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress [post]
 func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 	var req SaveProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -91,11 +93,12 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 }
 
 // UpdateReadingTime 更新阅读时长
-// @Summary 更新阅读时长
-// @Tags 阅读器
-// @Param request body UpdateReadingTimeRequest true "更新时长请求"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/reading-time [put]
+//
+//	@Summary	更新阅读时长
+//	@Tags		阅读器
+//	@Param		request	body		UpdateReadingTimeRequest	true	"更新时长请求"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress/reading-time [put]
 func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 	var req UpdateReadingTimeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -120,11 +123,12 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 }
 
 // GetRecentReading 获取最近阅读记录
-// @Summary 获取最近阅读记录
-// @Tags 阅读器
-// @Param limit query int false "数量限制" default(20)
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/recent [get]
+//
+//	@Summary	获取最近阅读记录
+//	@Tags		阅读器
+//	@Param		limit	query		int	false	"数量限制"	default(20)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress/recent [get]
 func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -145,12 +149,13 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 }
 
 // GetReadingHistory 获取阅读历史
-// @Summary 获取阅读历史
-// @Tags 阅读器
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/history [get]
+//
+//	@Summary	获取阅读历史
+//	@Tags		阅读器
+//	@Param		page	query		int	false	"页码"	default(1)
+//	@Param		size	query		int	false	"每页数量"	default(20)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress/history [get]
 func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -177,11 +182,12 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 }
 
 // GetReadingStats 获取阅读统计
-// @Summary 获取阅读统计
-// @Tags 阅读器
-// @Param period query string false "统计周期" default("all")
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/stats [get]
+//
+//	@Summary	获取阅读统计
+//	@Tags		阅读器
+//	@Param		period	query		string	false	"统计周期"	default("all")
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/progress/stats [get]
 func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -240,10 +246,11 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 }
 
 // GetUnfinishedBooks 获取未读完的书籍
-// @Summary 获取未读完的书籍
-// @Tags 阅读器
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/unfinished [get]
+//
+//	@Summary	获取未读完的书籍
+//	@Tags		阅读器
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/progress/unfinished [get]
 func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -262,10 +269,11 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 }
 
 // GetFinishedBooks 获取已读完的书籍
-// @Summary 获取已读完的书籍
-// @Tags 阅读器
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/progress/finished [get]
+//
+//	@Summary	获取已读完的书籍
+//	@Tags		阅读器
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/progress/finished [get]
 func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")

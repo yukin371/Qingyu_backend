@@ -99,10 +99,10 @@ type ListUsersRequest struct {
 // ListUsersResponse 列出用户响应
 type ListUsersResponse struct {
 	Users      []*usersModel.User `json:"users"`
-	Total      int64          `json:"total"`
-	Page       int            `json:"page"`
-	PageSize   int            `json:"page_size"`
-	TotalPages int            `json:"total_pages"`
+	Total      int64              `json:"total"`
+	Page       int                `json:"page"`
+	PageSize   int                `json:"page_size"`
+	TotalPages int                `json:"total_pages"`
 }
 
 // RegisterUserRequest 注册用户请求
@@ -115,7 +115,7 @@ type RegisterUserRequest struct {
 // RegisterUserResponse 注册用户响应
 type RegisterUserResponse struct {
 	User  *usersModel.User `json:"user"`
-	Token string       `json:"token,omitempty"`
+	Token string           `json:"token,omitempty"`
 }
 
 // LoginUserRequest 登录用户请求
@@ -127,7 +127,7 @@ type LoginUserRequest struct {
 // LoginUserResponse 登录用户响应
 type LoginUserResponse struct {
 	User  *usersModel.User `json:"user"`
-	Token string       `json:"token"`
+	Token string           `json:"token"`
 }
 
 // LogoutUserRequest 登出用户请求
@@ -148,7 +148,7 @@ type ValidateTokenRequest struct {
 // ValidateTokenResponse 验证令牌响应
 type ValidateTokenResponse struct {
 	User  *usersModel.User `json:"user,omitempty"`
-	Valid bool         `json:"valid"`
+	Valid bool             `json:"valid"`
 }
 
 // UpdateLastLoginRequest 更新最后登录时间请求

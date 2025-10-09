@@ -23,19 +23,20 @@ func NewStorageAPI(storageService storage.StorageService) *StorageAPI {
 }
 
 // UploadFile 上传文件
-// @Summary 上传文件
-// @Description 上传文件到存储服务
-// @Tags 存储
-// @Accept multipart/form-data
-// @Produce json
-// @Security ApiKeyAuth
-// @Param file formData file true "上传文件"
-// @Param path formData string false "存储路径"
-// @Success 200 {object} APIResponse{data=storage.FileInfo}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/upload [post]
+//
+//	@Summary		上传文件
+//	@Description	上传文件到存储服务
+//	@Tags			存储
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			file	formData	file	true	"上传文件"
+//	@Param			path	formData	string	false	"存储路径"
+//	@Success		200		{object}	APIResponse{data=storage.FileInfo}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/storage/upload [post]
 func (api *StorageAPI) UploadFile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -99,19 +100,20 @@ func (api *StorageAPI) UploadFile(c *gin.Context) {
 }
 
 // DownloadFile 下载文件
-// @Summary 下载文件
-// @Description 下载指定的文件
-// @Tags 存储
-// @Accept json
-// @Produce application/octet-stream
-// @Security ApiKeyAuth
-// @Param file_id path string true "文件ID"
-// @Success 200 {file} binary
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/download/{file_id} [get]
+//
+//	@Summary		下载文件
+//	@Description	下载指定的文件
+//	@Tags			存储
+//	@Accept			json
+//	@Produce		application/octet-stream
+//	@Security		ApiKeyAuth
+//	@Param			file_id	path		string	true	"文件ID"
+//	@Success		200		{file}		binary
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/storage/download/{file_id} [get]
 func (api *StorageAPI) DownloadFile(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
@@ -152,19 +154,20 @@ func (api *StorageAPI) DownloadFile(c *gin.Context) {
 }
 
 // DeleteFile 删除文件
-// @Summary 删除文件
-// @Description 删除指定的文件
-// @Tags 存储
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param file_id path string true "文件ID"
-// @Success 200 {object} APIResponse
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 403 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/files/{file_id} [delete]
+//
+//	@Summary		删除文件
+//	@Description	删除指定的文件
+//	@Tags			存储
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			file_id	path		string	true	"文件ID"
+//	@Success		200		{object}	APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		403		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/storage/files/{file_id} [delete]
 func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
@@ -200,19 +203,20 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 }
 
 // GetFileInfo 获取文件信息
-// @Summary 获取文件信息
-// @Description 获取指定文件的详细信息
-// @Tags 存储
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param file_id path string true "文件ID"
-// @Success 200 {object} APIResponse{data=storage.FileInfo}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/files/{file_id} [get]
+//
+//	@Summary		获取文件信息
+//	@Description	获取指定文件的详细信息
+//	@Tags			存储
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			file_id	path		string	true	"文件ID"
+//	@Success		200		{object}	APIResponse{data=storage.FileInfo}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		404		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/storage/files/{file_id} [get]
 func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
@@ -249,19 +253,20 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 }
 
 // ListFiles 列出文件
-// @Summary 列出文件
-// @Description 列出用户的文件列表
-// @Tags 存储
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Param path query string false "路径前缀"
-// @Success 200 {object} PaginatedResponse{data=[]storage.FileInfo}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/files [get]
+//
+//	@Summary		列出文件
+//	@Description	列出用户的文件列表
+//	@Tags			存储
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			page_size	query		int		false	"每页数量"	default(20)
+//	@Param			path		query		string	false	"路径前缀"
+//	@Success		200			{object}	PaginatedResponse{data=[]storage.FileInfo}
+//	@Failure		401			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/shared/storage/files [get]
 func (api *StorageAPI) ListFiles(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -303,19 +308,20 @@ func (api *StorageAPI) ListFiles(c *gin.Context) {
 }
 
 // GetFileURL 获取文件访问URL
-// @Summary 获取文件访问URL
-// @Description 获取文件的临时访问URL
-// @Tags 存储
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param file_id path string true "文件ID"
-// @Param expire query int false "过期时间(秒)" default(3600)
-// @Success 200 {object} APIResponse{data=string}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/storage/files/{file_id}/url [get]
+//
+//	@Summary		获取文件访问URL
+//	@Description	获取文件的临时访问URL
+//	@Tags			存储
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			file_id	path		string	true	"文件ID"
+//	@Param			expire	query		int		false	"过期时间(秒)"	default(3600)
+//	@Success		200		{object}	APIResponse{data=string}
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/storage/files/{file_id}/url [get]
 func (api *StorageAPI) GetFileURL(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {

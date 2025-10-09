@@ -41,11 +41,12 @@ type UpdateAnnotationRequest struct {
 }
 
 // CreateAnnotation 创建标注
-// @Summary 创建标注
-// @Tags 阅读器
-// @Param request body CreateAnnotationRequest true "创建标注请求"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations [post]
+//
+//	@Summary	创建标注
+//	@Tags		阅读器
+//	@Param		request	body		CreateAnnotationRequest	true	"创建标注请求"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations [post]
 func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	var req CreateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -80,12 +81,13 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 }
 
 // UpdateAnnotation 更新标注
-// @Summary 更新标注
-// @Tags 阅读器
-// @Param id path string true "标注ID"
-// @Param request body UpdateAnnotationRequest true "更新标注请求"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/{id} [put]
+//
+//	@Summary	更新标注
+//	@Tags		阅读器
+//	@Param		id		path		string					true	"标注ID"
+//	@Param		request	body		UpdateAnnotationRequest	true	"更新标注请求"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/{id} [put]
 func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
 
@@ -116,11 +118,12 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 }
 
 // DeleteAnnotation 删除标注
-// @Summary 删除标注
-// @Tags 阅读器
-// @Param id path string true "标注ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/{id} [delete]
+//
+//	@Summary	删除标注
+//	@Tags		阅读器
+//	@Param		id	path		string	true	"标注ID"
+//	@Success	200	{object}	response.Response
+//	@Router		/api/v1/reader/annotations/{id} [delete]
 func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
 
@@ -134,12 +137,13 @@ func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 }
 
 // GetAnnotationsByChapter 获取章节标注
-// @Summary 获取章节标注
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Param chapterId query string true "章节ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/chapter [get]
+//
+//	@Summary	获取章节标注
+//	@Tags		阅读器
+//	@Param		bookId		query		string	true	"书籍ID"
+//	@Param		chapterId	query		string	true	"章节ID"
+//	@Success	200			{object}	response.Response
+//	@Router		/api/v1/reader/annotations/chapter [get]
 func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -166,11 +170,12 @@ func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 }
 
 // GetAnnotationsByBook 获取书籍标注
-// @Summary 获取书籍标注
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/book [get]
+//
+//	@Summary	获取书籍标注
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/book [get]
 func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -195,11 +200,12 @@ func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 }
 
 // GetNotes 获取笔记
-// @Summary 获取笔记
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/notes [get]
+//
+//	@Summary	获取笔记
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/notes [get]
 func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -224,11 +230,12 @@ func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 }
 
 // SearchNotes 搜索笔记
-// @Summary 搜索笔记
-// @Tags 阅读器
-// @Param keyword query string true "搜索关键词"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/notes/search [get]
+//
+//	@Summary	搜索笔记
+//	@Tags		阅读器
+//	@Param		keyword	query		string	true	"搜索关键词"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/notes/search [get]
 func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -253,11 +260,12 @@ func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 }
 
 // GetBookmarks 获取书签
-// @Summary 获取书签
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/bookmarks [get]
+//
+//	@Summary	获取书签
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/bookmarks [get]
 func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -282,11 +290,12 @@ func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 }
 
 // GetLatestBookmark 获取最新书签
-// @Summary 获取最新书签
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/bookmarks/latest [get]
+//
+//	@Summary	获取最新书签
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/bookmarks/latest [get]
 func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -311,11 +320,12 @@ func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 }
 
 // GetHighlights 获取高亮
-// @Summary 获取高亮
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/highlights [get]
+//
+//	@Summary	获取高亮
+//	@Tags		阅读器
+//	@Param		bookId	query		string	true	"书籍ID"
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/highlights [get]
 func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -340,11 +350,12 @@ func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 }
 
 // GetRecentAnnotations 获取最近标注
-// @Summary 获取最近标注
-// @Tags 阅读器
-// @Param limit query int false "数量限制" default(20)
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/recent [get]
+//
+//	@Summary	获取最近标注
+//	@Tags		阅读器
+//	@Param		limit	query		int	false	"数量限制"	default(20)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/reader/annotations/recent [get]
 func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
@@ -365,12 +376,13 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 }
 
 // GetPublicAnnotations 获取公开标注
-// @Summary 获取公开标注
-// @Tags 阅读器
-// @Param bookId query string true "书籍ID"
-// @Param chapterId query string true "章节ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/reader/annotations/public [get]
+//
+//	@Summary	获取公开标注
+//	@Tags		阅读器
+//	@Param		bookId		query		string	true	"书籍ID"
+//	@Param		chapterId	query		string	true	"章节ID"
+//	@Success	200			{object}	response.Response
+//	@Router		/api/v1/reader/annotations/public [get]
 func (api *AnnotationsAPI) GetPublicAnnotations(c *gin.Context) {
 	bookID := c.Query("bookId")
 	chapterID := c.Query("chapterId")

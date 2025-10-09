@@ -295,7 +295,7 @@ func (r *MongoUserRepository) List(ctx context.Context, filter UserInterface.Use
 func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter UserInterface.UserFilter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[usersModel.User], error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
-	
+
 	// 添加过滤条件
 	if filter.ID != "" {
 		mongoFilter["_id"] = filter.ID
@@ -369,7 +369,7 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 		Page:       pagination.Page,
 		PageSize:   pagination.PageSize,
 		TotalPages: int((total + int64(pagination.PageSize) - 1) / int64(pagination.PageSize)),
-		HasNext:    pagination.Page < int((total + int64(pagination.PageSize) - 1) / int64(pagination.PageSize)),
+		HasNext:    pagination.Page < int((total+int64(pagination.PageSize)-1)/int64(pagination.PageSize)),
 		HasPrev:    pagination.Page > 1,
 	}
 	return pagedResult, nil
@@ -418,7 +418,7 @@ func (r *MongoUserRepository) Count(ctx context.Context, filter UserInterface.Us
 func (r *MongoUserRepository) Exists(ctx context.Context, filter UserInterface.UserFilter) (bool, error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
-	
+
 	// 添加过滤条件
 	if filter.ID != "" {
 		mongoFilter["_id"] = filter.ID
@@ -648,7 +648,7 @@ func (r *MongoUserRepository) BatchUpdate(ctx context.Context, filters []UserInt
 	var orConditions []bson.M
 	for _, filter := range filters {
 		condition := bson.M{}
-		
+
 		// 根据过滤器构建查询条件
 		if filter.Username != "" {
 			condition["username"] = filter.Username
@@ -659,7 +659,7 @@ func (r *MongoUserRepository) BatchUpdate(ctx context.Context, filters []UserInt
 		if filter.Status != "" {
 			condition["status"] = filter.Status
 		}
-		
+
 		if len(condition) > 0 {
 			orConditions = append(orConditions, condition)
 		}
@@ -813,7 +813,7 @@ func (r *MongoUserRepository) BatchCreate(ctx context.Context, users []*usersMod
 	return nil
 }
 
-	// 删除buildFilter方法，已在各方法中直接实现过滤器构建
+// 删除buildFilter方法，已在各方法中直接实现过滤器构建
 
 // ValidateUser 验证用户数据
 func (r *MongoUserRepository) ValidateUser(user usersModel.User) error {
@@ -938,11 +938,11 @@ func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter bas
 		Page:       pagination.Page,
 		PageSize:   pagination.PageSize,
 		TotalPages: int((total + int64(pagination.PageSize) - 1) / int64(pagination.PageSize)),
-		HasNext:    pagination.Page < int((total + int64(pagination.PageSize) - 1) / int64(pagination.PageSize)),
+		HasNext:    pagination.Page < int((total+int64(pagination.PageSize)-1)/int64(pagination.PageSize)),
 		HasPrev:    pagination.Page > 1,
 	}
 	return pagedResult, nil
 }
 
-	// 删除重复的Health方法
-	// 已在文件开头定义了Health方法
+// 删除重复的Health方法
+// 已在文件开头定义了Health方法

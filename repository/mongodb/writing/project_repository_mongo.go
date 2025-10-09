@@ -12,8 +12,8 @@ import (
 
 	"Qingyu_backend/models/document"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
-	mongodb "Qingyu_backend/repository/mongodb"
 	documentRepo "Qingyu_backend/repository/interfaces/writing"
+	mongodb "Qingyu_backend/repository/mongodb"
 )
 
 // MongoProjectRepository MongoDB项目仓储实现

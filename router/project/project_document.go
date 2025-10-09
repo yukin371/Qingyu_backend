@@ -14,7 +14,7 @@ func RegisterRoutes(r *gin.RouterGroup) {
 		// 文档相关路由
 		d := api.NewDocumentApi()
 		v := api.NewVersionApi()
-		
+
 		// 基础文档操作
 		docRouter.POST("/", d.Create)
 		docRouter.GET("/", d.List)

@@ -63,11 +63,11 @@ func (bs *BookStatistics) UpdateRating(rating int) {
 	if bs.RatingDistribution == nil {
 		bs.RatingDistribution = make(map[int]int64)
 	}
-	
+
 	// 增加对应星级的计数
 	bs.RatingDistribution[rating]++
 	bs.RatingCount++
-	
+
 	// 重新计算平均评分
 	bs.calculateAverageRating()
 	bs.BeforeUpdate()
@@ -78,13 +78,13 @@ func (bs *BookStatistics) RemoveRating(rating int) {
 	if bs.RatingDistribution == nil {
 		return
 	}
-	
+
 	if bs.RatingDistribution[rating] > 0 {
 		bs.RatingDistribution[rating]--
 		if bs.RatingCount > 0 {
 			bs.RatingCount--
 		}
-		
+
 		// 重新计算平均评分
 		bs.calculateAverageRating()
 		bs.BeforeUpdate()
@@ -97,22 +97,22 @@ func (bs *BookStatistics) calculateAverageRating() {
 		bs.AverageRating = 0
 		return
 	}
-	
+
 	totalScore := int64(0)
 	for rating, count := range bs.RatingDistribution {
 		totalScore += int64(rating) * count
 	}
-	
+
 	bs.AverageRating = float64(totalScore) / float64(bs.RatingCount)
 }
 
 // CalculateHotScore 计算热度分数
 func (bs *BookStatistics) CalculateHotScore() {
 	// 热度分数计算公式：浏览数*0.1 + 收藏数*0.5 + 评论数*0.3 + 分享数*0.2 + 平均评分*10
-	bs.HotScore = float64(bs.ViewCount)*0.1 + 
-		float64(bs.FavoriteCount)*0.5 + 
-		float64(bs.CommentCount)*0.3 + 
-		float64(bs.ShareCount)*0.2 + 
+	bs.HotScore = float64(bs.ViewCount)*0.1 +
+		float64(bs.FavoriteCount)*0.5 +
+		float64(bs.CommentCount)*0.3 +
+		float64(bs.ShareCount)*0.2 +
 		bs.AverageRating*10
 	bs.BeforeUpdate()
 }
