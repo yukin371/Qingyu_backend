@@ -587,3 +587,4 @@ func TestReaderService_GetReadingSettings_DefaultSettings(t *testing.T) {
 	assert.Equal(t, 16, settings.FontSize)        // 默认值
 	assert.Equal(t, "serif", settings.FontFamily) // 默认值
 }
+
