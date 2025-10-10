@@ -17,4 +17,3 @@ type Behavior struct {
 	OccurredAt   time.Time              `bson:"occurred_at" json:"occurredAt"`
 	CreatedAt    time.Time              `bson:"created_at" json:"createdAt"`
 }
-

@@ -10,4 +10,3 @@ type ProfileRepository interface {
 	Upsert(ctx context.Context, p *reco.UserProfile) error
 	GetByUserID(ctx context.Context, userID string) (*reco.UserProfile, error)
 }
-

@@ -14,4 +14,3 @@ type ItemFeature struct {
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updatedAt"`
 	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
 }
-

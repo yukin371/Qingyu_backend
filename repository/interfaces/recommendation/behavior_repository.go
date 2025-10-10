@@ -11,4 +11,3 @@ type BehaviorRepository interface {
 	BatchCreate(ctx context.Context, bs []*reco.Behavior) error
 	GetByUser(ctx context.Context, userID string, limit int) ([]*reco.Behavior, error)
 }
-
