@@ -2,6 +2,7 @@ package shared
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
