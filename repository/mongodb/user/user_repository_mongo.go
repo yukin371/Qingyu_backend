@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	usersModel "Qingyu_backend/models/users"
-	base "Qingyu_backend/repository/interfaces/infrastructure"
 	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 )
@@ -99,20 +98,16 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 }
 
 // GetByID 根据ID获取用户
-func (r *MongoUserRepository) GetByID(ctx context.Context, filter UserInterface.UserFilter) (*usersModel.User, error) {
+func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersModel.User, error) {
 	var user usersModel.User
 
 	// 构建查询条件
-	mongoFilter, err := r.queryBuilder.Build()
-	if err != nil {
-		return nil, UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeInternal,
-			"构建查询条件失败",
-			err,
-		)
+	mongoFilter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
 	}
 
-	err = r.collection.FindOne(ctx, mongoFilter).Decode(&user)
+	err := r.collection.FindOne(ctx, mongoFilter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -132,18 +127,14 @@ func (r *MongoUserRepository) GetByID(ctx context.Context, filter UserInterface.
 }
 
 // Update 更新用户信息
-func (r *MongoUserRepository) Update(ctx context.Context, filter UserInterface.UserFilter, updates map[string]interface{}) error {
+func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
 	// 构建更新条件
-	mongoFilter, err := r.queryBuilder.Build()
-	if err != nil {
-		return UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeInternal,
-			"构建查询条件失败",
-			err,
-		)
+	mongoFilter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": updates}
 
@@ -168,16 +159,12 @@ func (r *MongoUserRepository) Update(ctx context.Context, filter UserInterface.U
 }
 
 // Delete 软删除用户
-func (r *MongoUserRepository) Delete(ctx context.Context, filter UserInterface.UserFilter) error {
+func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 	now := time.Now()
 	// 构建查询条件
-	mongoFilter, err := r.queryBuilder.Build()
-	if err != nil {
-		return UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeInternal,
-			"构建查询条件失败",
-			err,
-		)
+	mongoFilter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}
 
@@ -226,31 +213,37 @@ func (r *MongoUserRepository) HardDelete(ctx context.Context, id string) error {
 }
 
 // List 获取用户列表
-func (r *MongoUserRepository) List(ctx context.Context, filter UserInterface.UserFilter) ([]*usersModel.User, error) {
+func (r *MongoUserRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*usersModel.User, error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 
+	// 尝试将 Filter 转换为 UserFilter 以使用特定字段
+	var userFilter UserInterface.UserFilter
+	if f, ok := filter.(UserInterface.UserFilter); ok {
+		userFilter = f
+	}
+
 	// 如果是UserFilter类型，使用自定义过滤条件
-	if filter.ID != "" {
-		mongoFilter["_id"] = filter.ID
+	if userFilter.ID != "" {
+		mongoFilter["_id"] = userFilter.ID
 	}
-	if filter.Username != "" {
-		mongoFilter["username"] = bson.M{"$regex": filter.Username, "$options": "i"}
+	if userFilter.Username != "" {
+		mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
 	}
-	if filter.Email != "" {
-		mongoFilter["email"] = bson.M{"$regex": filter.Email, "$options": "i"}
+	if userFilter.Email != "" {
+		mongoFilter["email"] = bson.M{"$regex": userFilter.Email, "$options": "i"}
 	}
-	if filter.Status != "" {
-		mongoFilter["status"] = filter.Status
+	if userFilter.Status != "" {
+		mongoFilter["status"] = userFilter.Status
 	}
 
 	// 构建查询选项
 	opts := options.Find()
-	if filter.Limit > 0 {
-		opts.SetLimit(filter.Limit)
+	if userFilter.Limit > 0 {
+		opts.SetLimit(userFilter.Limit)
 	}
-	if filter.Offset > 0 {
-		opts.SetSkip(filter.Offset)
+	if userFilter.Offset > 0 {
+		opts.SetSkip(userFilter.Offset)
 	}
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
@@ -376,31 +369,37 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 }
 
 // Count 统计用户数量
-func (r *MongoUserRepository) Count(ctx context.Context, filter UserInterface.UserFilter) (int64, error) {
+func (r *MongoUserRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 
+	// 尝试将 Filter 转换为 UserFilter 以使用特定字段
+	var userFilter UserInterface.UserFilter
+	if f, ok := filter.(UserInterface.UserFilter); ok {
+		userFilter = f
+	}
+
 	// 添加过滤条件
-	if filter.ID != "" {
-		mongoFilter["_id"] = filter.ID
+	if userFilter.ID != "" {
+		mongoFilter["_id"] = userFilter.ID
 	}
-	if filter.Username != "" {
-		mongoFilter["username"] = bson.M{"$regex": filter.Username, "$options": "i"}
+	if userFilter.Username != "" {
+		mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
 	}
-	if filter.Email != "" {
-		mongoFilter["email"] = bson.M{"$regex": filter.Email, "$options": "i"}
+	if userFilter.Email != "" {
+		mongoFilter["email"] = bson.M{"$regex": userFilter.Email, "$options": "i"}
 	}
-	if filter.Status != "" {
-		mongoFilter["status"] = filter.Status
+	if userFilter.Status != "" {
+		mongoFilter["status"] = userFilter.Status
 	}
-	if !filter.FromDate.IsZero() {
-		mongoFilter["created_at"] = bson.M{"$gte": filter.FromDate}
+	if !userFilter.FromDate.IsZero() {
+		mongoFilter["created_at"] = bson.M{"$gte": userFilter.FromDate}
 	}
-	if !filter.ToDate.IsZero() {
+	if !userFilter.ToDate.IsZero() {
 		if mongoFilter["created_at"] == nil {
 			mongoFilter["created_at"] = bson.M{}
 		}
-		mongoFilter["created_at"].(bson.M)["$lte"] = filter.ToDate
+		mongoFilter["created_at"].(bson.M)["$lte"] = userFilter.ToDate
 	}
 
 	count, err := r.collection.CountDocuments(ctx, mongoFilter)
@@ -415,22 +414,11 @@ func (r *MongoUserRepository) Count(ctx context.Context, filter UserInterface.Us
 }
 
 // Exists 检查用户是否存在
-func (r *MongoUserRepository) Exists(ctx context.Context, filter UserInterface.UserFilter) (bool, error) {
+func (r *MongoUserRepository) Exists(ctx context.Context, id string) (bool, error) {
 	// 构建MongoDB过滤器
-	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
-
-	// 添加过滤条件
-	if filter.ID != "" {
-		mongoFilter["_id"] = filter.ID
-	}
-	if filter.Username != "" {
-		mongoFilter["username"] = bson.M{"$regex": filter.Username, "$options": "i"}
-	}
-	if filter.Email != "" {
-		mongoFilter["email"] = bson.M{"$regex": filter.Email, "$options": "i"}
-	}
-	if filter.Status != "" {
-		mongoFilter["status"] = filter.Status
+	mongoFilter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
 	}
 
 	count, err := r.collection.CountDocuments(ctx, mongoFilter)
@@ -845,7 +833,7 @@ func (r *MongoUserRepository) ValidateUser(user usersModel.User) error {
 }
 
 // FindWithPagination 通用分页查询
-func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter base.Filter, pagination base.Pagination) (*base.PagedResult[usersModel.User], error) {
+func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[usersModel.User], error) {
 	// 构建MongoDB过滤器
 	mongoFilter := bson.M{"deleted_at": bson.M{"$exists": false}}
 
@@ -932,7 +920,7 @@ func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter bas
 	}
 
 	// 创建分页结果
-	pagedResult := &base.PagedResult[usersModel.User]{
+	pagedResult := &infrastructure.PagedResult[usersModel.User]{
 		Data:       users,
 		Total:      total,
 		Page:       pagination.Page,

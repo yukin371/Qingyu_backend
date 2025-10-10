@@ -1,4 +1,4 @@
-package mongodb
+package writing
 
 import (
 	"context"
@@ -72,6 +72,80 @@ func (r *MongoProjectRepository) Update(ctx context.Context, id string, updates 
 func (r *MongoProjectRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
+}
+
+// List 获取项目列表
+func (r *MongoProjectRepository) List(ctx context.Context, filter base.Filter) ([]*document.Project, error) {
+	// 构建MongoDB过滤器
+	mongoFilter := bson.M{}
+
+	// 如果提供了filter，使用其条件
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for key, value := range conditions {
+			mongoFilter[key] = value
+		}
+
+		// 添加排序
+		opts := options.Find()
+		if sortMap := filter.GetSort(); len(sortMap) > 0 {
+			sortDoc := bson.D{}
+			for key, order := range sortMap {
+				sortDoc = append(sortDoc, bson.E{Key: key, Value: order})
+			}
+			opts.SetSort(sortDoc)
+		}
+
+		cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		var projects []*document.Project
+		if err = cursor.All(ctx, &projects); err != nil {
+			return nil, err
+		}
+		return projects, nil
+	}
+
+	// 如果没有filter，返回所有项目
+	cursor, err := r.collection.Find(ctx, mongoFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var projects []*document.Project
+	if err = cursor.All(ctx, &projects); err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+// Count 统计项目数量
+func (r *MongoProjectRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
+	// 构建MongoDB过滤器
+	mongoFilter := bson.M{}
+
+	// 如果提供了filter，使用其条件
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for key, value := range conditions {
+			mongoFilter[key] = value
+		}
+	}
+
+	return r.collection.CountDocuments(ctx, mongoFilter)
+}
+
+// Exists 检查项目是否存在
+func (r *MongoProjectRepository) Exists(ctx context.Context, id string) (bool, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // Health 健康检查
