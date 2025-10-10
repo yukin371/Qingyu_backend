@@ -380,6 +380,8 @@ func TestReaderService_SaveReadingProgress(t *testing.T) {
 		nil, // annotationRepo不需要
 		nil, // settingsRepo不需要
 		mockEventBus,
+		nil, // cacheService不需要
+		nil, // vipService不需要
 	)
 
 	ctx := context.Background()
@@ -400,7 +402,7 @@ func TestReaderService_SaveReadingProgress(t *testing.T) {
 func TestReaderService_GetTotalReadingTime(t *testing.T) {
 	mockProgressRepo := new(MockProgressRepository)
 
-	service := reading.NewReaderService(nil, mockProgressRepo, nil, nil, nil)
+	service := reading.NewReaderService(nil, mockProgressRepo, nil, nil, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -421,7 +423,7 @@ func TestReaderService_CreateAnnotation(t *testing.T) {
 	mockAnnotationRepo := new(MockAnnotationRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := reading.NewReaderService(nil, nil, mockAnnotationRepo, nil, mockEventBus)
+	service := reading.NewReaderService(nil, nil, mockAnnotationRepo, nil, mockEventBus, nil, nil)
 
 	ctx := context.Background()
 
@@ -448,7 +450,7 @@ func TestReaderService_CreateAnnotation(t *testing.T) {
 
 // TestReaderService_ServiceInfo 测试服务信息方法
 func TestReaderService_ServiceInfo(t *testing.T) {
-	service := reading.NewReaderService(nil, nil, nil, nil, nil)
+	service := reading.NewReaderService(nil, nil, nil, nil, nil, nil, nil)
 
 	// 验证服务名称和版本
 	assert.Equal(t, "ReaderService", service.GetServiceName())
