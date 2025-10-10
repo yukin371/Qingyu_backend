@@ -9,12 +9,180 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"Qingyu_backend/models/reading/reader"
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/reading"
 )
 
 // ===========================
+// Mock实现 - 章节Repository
+// ===========================
+
+type MockChapterRepository struct {
+	mock.Mock
+}
+
+func (m *MockChapterRepository) Create(ctx context.Context, chapter *reader.Chapter) error {
+	args := m.Called(ctx, chapter)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) GetByID(ctx context.Context, id string) (*reader.Chapter, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) GetByBookID(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetByBookIDWithPagination(ctx context.Context, bookID string, limit, offset int64) ([]*reader.Chapter, error) {
+	args := m.Called(ctx, bookID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetByChapterNum(ctx context.Context, bookID string, chapterNum int) (*reader.Chapter, error) {
+	args := m.Called(ctx, bookID, chapterNum)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+	args := m.Called(ctx, bookID, currentChapterNum)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+	args := m.Called(ctx, bookID, currentChapterNum)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetFirstChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetLastChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetPublishedChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetVIPChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetFreeChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+	args := m.Called(ctx, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.Chapter), args.Error(1)
+}
+
+func (m *MockChapterRepository) CountByBookID(ctx context.Context, bookID string) (int64, error) {
+	args := m.Called(ctx, bookID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockChapterRepository) CountByStatus(ctx context.Context, bookID string, status int) (int64, error) {
+	args := m.Called(ctx, bookID, status)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockChapterRepository) CountVIPChapters(ctx context.Context, bookID string) (int64, error) {
+	args := m.Called(ctx, bookID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockChapterRepository) BatchCreate(ctx context.Context, chapters []*reader.Chapter) error {
+	args := m.Called(ctx, chapters)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) BatchUpdateStatus(ctx context.Context, chapterIDs []string, status int) error {
+	args := m.Called(ctx, chapterIDs, status)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) BatchDelete(ctx context.Context, chapterIDs []string) error {
+	args := m.Called(ctx, chapterIDs)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) CheckVIPAccess(ctx context.Context, chapterID string) (bool, error) {
+	args := m.Called(ctx, chapterID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetChapterPrice(ctx context.Context, chapterID string) (int64, error) {
+	args := m.Called(ctx, chapterID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockChapterRepository) GetChapterContent(ctx context.Context, chapterID string) (string, error) {
+	args := m.Called(ctx, chapterID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockChapterRepository) UpdateChapterContent(ctx context.Context, chapterID string, content string) error {
+	args := m.Called(ctx, chapterID, content)
+	return args.Error(0)
+}
+
+func (m *MockChapterRepository) Health(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+// ===========================
 // Mock实现 - 缓存服务
 // ===========================
+// 注意：MockEventBus 已在 reader_service_test.go 中定义
 
 type MockCacheService struct {
 	mock.Mock
@@ -181,6 +349,32 @@ func (m *MockSettingsRepository) ExistsByUserID(ctx context.Context, userID stri
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockSettingsRepository) CreateDefaultSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
+}
+
+func (m *MockSettingsRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*reader.ReadingSettings, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.ReadingSettings), args.Error(1)
+}
+
+func (m *MockSettingsRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockSettingsRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockSettingsRepository) Health(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
@@ -215,6 +409,7 @@ func TestReaderService_GetChapterContent_VIPAccess_Success(t *testing.T) {
 	mockVIPService.On("CheckVIPAccess", ctx, "user123", "vip_chapter", true).Return(true, nil)
 	mockChapterRepo.On("GetChapterContent", ctx, "vip_chapter").Return("VIP章节内容", nil)
 	mockCacheService.On("SetChapterContent", ctx, "vip_chapter", "VIP章节内容", mock.Anything).Return(nil)
+	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
 
 	// 执行测试
 	content, err := service.GetChapterContent(ctx, "user123", "vip_chapter")
@@ -280,6 +475,7 @@ func TestReaderService_GetChapterContent_FreeChapter(t *testing.T) {
 	mockChapterRepo.On("CheckVIPAccess", ctx, "free_chapter").Return(false, nil)
 	mockChapterRepo.On("GetChapterContent", ctx, "free_chapter").Return("免费章节内容", nil)
 	mockCacheService.On("SetChapterContent", ctx, "free_chapter", "免费章节内容", mock.Anything).Return(nil)
+	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
 
 	// 执行测试
 	content, err := service.GetChapterContent(ctx, "any_user", "free_chapter")
@@ -315,6 +511,7 @@ func TestReaderService_GetChapterContent_CacheHit(t *testing.T) {
 	// 场景：缓存命中，非VIP章节
 	mockCacheService.On("GetChapterContent", ctx, "chapter1").Return("缓存的内容", nil)
 	mockChapterRepo.On("CheckVIPAccess", ctx, "chapter1").Return(false, nil)
+	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
 
 	// 执行测试
 	content, err := service.GetChapterContent(ctx, "user123", "chapter1")
@@ -352,6 +549,7 @@ func TestReaderService_GetChapterContent_CacheMiss(t *testing.T) {
 	mockChapterRepo.On("CheckVIPAccess", ctx, "chapter2").Return(false, nil)
 	mockChapterRepo.On("GetChapterContent", ctx, "chapter2").Return("数据库内容", nil)
 	mockCacheService.On("SetChapterContent", ctx, "chapter2", "数据库内容", mock.Anything).Return(nil)
+	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
 
 	// 执行测试
 	content, err := service.GetChapterContent(ctx, "user123", "chapter2")
@@ -547,6 +745,7 @@ func TestReaderService_GetChapterContent_NilServices(t *testing.T) {
 	// 场景：没有缓存和VIP服务，应该直接查询数据库
 	mockChapterRepo.On("CheckVIPAccess", ctx, "chapter1").Return(false, nil)
 	mockChapterRepo.On("GetChapterContent", ctx, "chapter1").Return("直接从DB获取", nil)
+	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
 
 	// 执行测试
 	content, err := service.GetChapterContent(ctx, "user123", "chapter1")
@@ -587,4 +786,3 @@ func TestReaderService_GetReadingSettings_DefaultSettings(t *testing.T) {
 	assert.Equal(t, 16, settings.FontSize)        // 默认值
 	assert.Equal(t, "serif", settings.FontFamily) // 默认值
 }
-
