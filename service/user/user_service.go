@@ -105,8 +105,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, req *serviceInterfaces.Ge
 	}
 
 	// 2. 从数据库获取用户
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	user, err := s.userRepo.GetByID(ctx, filter)
+	user, err := s.userRepo.GetByID(ctx, req.ID)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
@@ -130,8 +129,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 2. 检查用户是否存在
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	exists, err := s.userRepo.Exists(ctx, filter)
+	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
@@ -140,7 +138,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 3. 更新用户信息
-	if err := s.userRepo.Update(ctx, filter, req.Updates); err != nil {
+	if err := s.userRepo.Update(ctx, req.ID, req.Updates); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户失败", err)
 	}
 
@@ -158,8 +156,7 @@ func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 2. 检查用户是否存在
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	exists, err := s.userRepo.Exists(ctx, filter)
+	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
@@ -168,7 +165,7 @@ func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 3. 删除用户
-	if err := s.userRepo.Delete(ctx, filter); err != nil {
+	if err := s.userRepo.Delete(ctx, req.ID); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "删除用户失败", err)
 	}
 
@@ -211,9 +208,7 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.
 
 	// 5. 转换用户列表类型
 	var userList []*usersModel.User
-	for _, user := range users {
-		userList = append(userList, user)
-	}
+	userList = append(userList, users...)
 
 	// 6. 计算总页数
 	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
@@ -356,8 +351,7 @@ func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *serviceInterf
 	}
 
 	// 2. 获取用户
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	user, err := s.userRepo.GetByID(ctx, filter)
+	user, err := s.userRepo.GetByID(ctx, req.ID)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)

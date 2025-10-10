@@ -13,22 +13,19 @@ import (
 	"Qingyu_backend/models/document"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	documentRepo "Qingyu_backend/repository/interfaces/writing"
-	mongodb "Qingyu_backend/repository/mongodb"
 )
 
 // MongoProjectRepository MongoDB项目仓储实现
 type MongoProjectRepository struct {
-	db           *mongo.Database
-	collection   *mongo.Collection
-	queryBuilder base.QueryBuilder
+	db         *mongo.Database
+	collection *mongo.Collection
 }
 
 // NewMongoProjectRepository 创建MongoDB项目仓储实例
 func NewMongoProjectRepository(db *mongo.Database) documentRepo.ProjectRepository {
 	return &MongoProjectRepository{
-		db:           db,
-		collection:   db.Collection("projects"),
-		queryBuilder: mongodb.NewMongoQueryBuilder(),
+		db:         db,
+		collection: db.Collection("projects"),
 	}
 }
 
