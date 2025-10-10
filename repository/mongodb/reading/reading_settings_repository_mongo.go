@@ -16,9 +16,8 @@ import (
 
 // MongoReadingSettingsRepository MongoDB阅读设置仓储实现
 type MongoReadingSettingsRepository struct {
-	db           *mongo.Database
-	collection   *mongo.Collection
-	queryBuilder base.QueryBuilder
+	db         *mongo.Database
+	collection *mongo.Collection
 }
 
 // NewMongoReadingSettingsRepository 创建MongoDB阅读设置仓储实例
@@ -26,7 +25,6 @@ func NewMongoReadingSettingsRepository(db *mongo.Database) ReadingInterfaces.Rea
 	return &MongoReadingSettingsRepository{
 		db:         db,
 		collection: db.Collection("reading_settings"),
-		// queryBuilder: mongodb.NewMongoQueryBuilder(), // 暂时注释掉，避免循环导入
 	}
 }
 

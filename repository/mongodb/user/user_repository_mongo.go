@@ -18,18 +18,16 @@ import (
 // MongoUserRepository MongoDB用户仓储实现
 // 基于新的架构设计，实现BaseRepository和UserRepository接口
 type MongoUserRepository struct {
-	db           *mongo.Database
-	collection   *mongo.Collection
-	queryBuilder infrastructure.QueryBuilder
+	db         *mongo.Database
+	collection *mongo.Collection
 }
 
 // NewMongoUserRepository 创建新的MongoDB用户仓储实例
 func NewMongoUserRepository(db *mongo.Database) UserInterface.UserRepository {
 	// 创建新的MongoDB用户仓储实例
 	return &MongoUserRepository{
-		db:           db,
-		collection:   db.Collection("users"),
-		queryBuilder: nil,
+		db:         db,
+		collection: db.Collection("users"),
 	}
 }
 
@@ -733,9 +731,8 @@ func (r *MongoUserRepository) Transaction(ctx context.Context,
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// 创建事务内的Repository实例
 		txRepo := &MongoUserRepository{
-			db:           r.db,
-			collection:   r.collection,
-			queryBuilder: nil,
+			db:         r.db,
+			collection: r.collection,
 		}
 
 		return nil, fn(sessCtx, txRepo)
