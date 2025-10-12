@@ -305,11 +305,15 @@
 Qingyu_backend/
 ├── cmd/
 │   └── server/
-│       └── main.go              # 应用入口
+│       └── main.go              # 应用入口 ✅
 ├── config/
 │   ├── config.go                # 配置定义
-│   ├── config.yaml              # 配置文件
-│   └── config.example.yaml      # 配置示例
+│   ├── config.yaml              # 配置文件 ✅
+│   ├── config.local.yaml        # 本地配置 ✅
+│   ├── config.docker.yaml       # Docker配置 ✅
+│   ├── database.go              # 数据库配置
+│   ├── jwt.go                   # JWT配置
+│   └── viper_integration.go     # Viper集成 ⭐
 ├── core/
 │   ├── init_db.go               # 数据库初始化
 │   └── server.go                # 服务器配置

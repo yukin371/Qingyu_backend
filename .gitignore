@@ -1,8 +1,9 @@
 # Cursor IDE 相关文件
 .cursor/
 
-config.yaml
-README.md
+# 注意：config.yaml 现在在 config/ 目录下，应该被提交
+# 但 config.local.yaml 包含本地配置，不应提交
+
 # 文档相关
 # doc/
 .obsidian/
@@ -80,6 +81,10 @@ coverage.html
 
 # 文档生成
 docs/_build/
+
+# Air 热重载工具
+tmp/
+.air.toml
 
 # 其他
 *.bak

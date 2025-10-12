@@ -5,7 +5,7 @@ APP_NAME := qingyu-backend
 GO_VERSION := 1.21
 DOCKER_IMAGE := $(APP_NAME):latest
 BUILD_DIR := ./build
-MAIN_FILE := ./cmd/main.go
+MAIN_FILE := ./cmd/server/main.go
 
 # 默认目标
 .DEFAULT_GOAL := help
