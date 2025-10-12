@@ -3,9 +3,6 @@ info:
   title: 青羽 Document API
   description: 青羽项目文档管理系统API接口规范
   version: 1.0.0
-  contact:
-    name: 青羽开发团队
-    email: dev@qingyu.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
