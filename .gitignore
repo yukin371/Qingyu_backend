@@ -41,10 +41,14 @@ vendor/
 logs/
 
 # 临时文件
+tempfile/
 *.tmp
 *.temp
 .DS_Store
 Thumbs.db
+
+# 弃用文件
+*.disabled
 
 # IDE 相关
 .vscode/

@@ -294,7 +294,9 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 	}
 
 	// 4. 更新最后登录时间
-	if err := s.userRepo.UpdateLastLogin(ctx, user.ID); err != nil {
+	// IP 地址应该从 context 中获取，这里暂时使用默认值
+	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
 		fmt.Printf("更新最后登录时间失败: %v\n", err)
 	}
@@ -334,7 +336,9 @@ func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *serviceInter
 	}
 
 	// 2. 更新最后登录时间
-	if err := s.userRepo.UpdateLastLogin(ctx, req.ID); err != nil {
+	// IP 地址应该从 context 中获取，这里暂时使用默认值
+	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	if err := s.userRepo.UpdateLastLogin(ctx, req.ID, ip); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新最后登录时间失败", err)
 	}
 

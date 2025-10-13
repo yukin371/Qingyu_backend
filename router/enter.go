@@ -50,7 +50,9 @@ func RegisterRoutes(r *gin.Engine) {
 	bookstoreRouterInstance.RegisterPrivateRoutes(v1)
 
 	// 注册系统路由（用户认证等）
-	userRouter.RegisterRoutes(v1)
+	// TODO: 初始化真实的UserService
+	// 暂时传入nil，等Day 5集成时再修复
+	userRouter.RegisterUserRoutes(v1, nil)
 
 	// 注册文档路由
 	projectRouter.RegisterRoutes(v1)
