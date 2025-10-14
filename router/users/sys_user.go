@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/system"
+	"Qingyu_backend/middleware"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
@@ -27,8 +28,7 @@ func RegisterUserRoutes(r *gin.RouterGroup, userService serviceInterfaces.UserSe
 	// 需要认证的路由
 	// =========================
 	authenticated := r.Group("")
-	// TODO: 添加JWT认证中间件
-	// authenticated.Use(middleware.JWTAuth())
+	authenticated.Use(middleware.JWTAuth()) // 启用JWT认证中间件
 	{
 		// 获取当前用户信息
 		authenticated.GET("/users/profile", userAPI.GetProfile)
@@ -44,9 +44,8 @@ func RegisterUserRoutes(r *gin.RouterGroup, userService serviceInterfaces.UserSe
 	// 管理员路由
 	// =========================
 	admin := r.Group("/admin/users")
-	// TODO: 添加JWT认证中间件和管理员权限中间件
-	// admin.Use(middleware.JWTAuth())
-	// admin.Use(middleware.AdminPermission())
+	admin.Use(middleware.JWTAuth())            // JWT认证
+	admin.Use(middleware.RequireRole("admin")) // 需要管理员角色
 	{
 		// 获取用户列表
 		admin.GET("", userAPI.ListUsers)

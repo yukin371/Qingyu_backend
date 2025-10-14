@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -251,6 +252,8 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
+		Role:     "user",                      // 默认角色
+		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 
 	// 4. 设置密码
@@ -263,8 +266,11 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 
-	// 6. 生成JWT令牌（这里简化处理，实际应该调用JWT服务）
-	token := "jwt_token_placeholder" // TODO: 实现JWT令牌生成
+	// 6. 生成JWT令牌
+	token, err := s.generateToken(user.ID, user.Username, user.Role)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
+	}
 
 	return &serviceInterfaces.RegisterUserResponse{
 		User:  user,
@@ -301,8 +307,11 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 		fmt.Printf("更新最后登录时间失败: %v\n", err)
 	}
 
-	// 5. 生成JWT令牌（这里简化处理，实际应该调用JWT服务）
-	token := "jwt_token_placeholder" // TODO: 实现JWT令牌生成
+	// 5. 生成JWT令牌
+	token, err := s.generateToken(user.ID, user.Username, user.Role)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
+	}
 
 	return &serviceInterfaces.LoginUserResponse{
 		User:  user,
@@ -496,4 +505,11 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *serviceInterfaces.U
 		return fmt.Errorf("新密码不能为空")
 	}
 	return nil
+}
+
+// generateToken 生成JWT令牌（辅助方法）
+func (s *UserServiceImpl) generateToken(userID, username, role string) (string, error) {
+	// 使用middleware包中的GenerateToken函数
+	// 导入: "Qingyu_backend/middleware"
+	return middleware.GenerateToken(userID, username, []string{role})
 }
