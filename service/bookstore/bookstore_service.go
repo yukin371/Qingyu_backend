@@ -155,6 +155,11 @@ func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pa
 
 // GetFeaturedBooks 获取精选书籍
 func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	// 检查repository是否为nil
+	if s.bookRepo == nil {
+		return []*bookstore.Book{}, nil
+	}
+
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetFeatured(ctx, pageSize, offset)
@@ -259,6 +264,11 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 
 // GetBookStats 获取书籍统计信息
 func (s *BookstoreServiceImpl) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+	// 检查repository是否为nil
+	if s.bookRepo == nil {
+		return &bookstore.BookStats{}, nil
+	}
+
 	stats, err := s.bookRepo.GetStats(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get book stats: %w", err)
@@ -342,6 +352,11 @@ func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookst
 
 // GetActiveBanners 获取激活的Banner列表
 func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+	// 检查repository是否为nil
+	if s.bannerRepo == nil {
+		return []*bookstore.Banner{}, nil
+	}
+
 	banners, err := s.bannerRepo.GetActive(ctx, limit, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active banners: %w", err)
@@ -498,12 +513,22 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 
 // GetRealtimeRanking 获取实时榜
 func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+	// 检查repository是否为nil
+	if s.rankingRepo == nil {
+		return []*bookstore.RankingItem{}, nil
+	}
+
 	period := bookstore.GetPeriodString(bookstore.RankingTypeRealtime, time.Now())
 	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore.RankingTypeRealtime, period, limit, 0)
 }
 
 // GetWeeklyRanking 获取周榜
 func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	// 检查repository是否为nil
+	if s.rankingRepo == nil {
+		return []*bookstore.RankingItem{}, nil
+	}
+
 	if period == "" {
 		period = bookstore.GetPeriodString(bookstore.RankingTypeWeekly, time.Now())
 	}
@@ -512,6 +537,11 @@ func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period stri
 
 // GetMonthlyRanking 获取月榜
 func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	// 检查repository是否为nil
+	if s.rankingRepo == nil {
+		return []*bookstore.RankingItem{}, nil
+	}
+
 	if period == "" {
 		period = bookstore.GetPeriodString(bookstore.RankingTypeMonthly, time.Now())
 	}
@@ -520,6 +550,11 @@ func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period str
 
 // GetNewbieRanking 获取新人榜
 func (s *BookstoreServiceImpl) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	// 检查repository是否为nil
+	if s.rankingRepo == nil {
+		return []*bookstore.RankingItem{}, nil
+	}
+
 	if period == "" {
 		period = bookstore.GetPeriodString(bookstore.RankingTypeNewbie, time.Now())
 	}

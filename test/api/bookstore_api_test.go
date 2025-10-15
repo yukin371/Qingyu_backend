@@ -1,6 +1,7 @@
-package test
+package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +16,126 @@ import (
 	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
+
+// MockBookstoreService 模拟书城服务
+type MockBookstoreService struct {
+	mock.Mock
+}
+
+func (m *MockBookstoreService) GetHomepageData(ctx context.Context) (*bookstoreService.HomepageData, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(*bookstoreService.HomepageData), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+	args := m.Called(ctx, limit)
+	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+	args := m.Called(ctx, categoryID, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]*bookstore.CategoryTree), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*bookstore.Category), args.Error(1)
+}
+
+func (m *MockBookstoreService) IncrementBookView(ctx context.Context, bookID string) error {
+	args := m.Called(ctx, bookID)
+	return args.Error(0)
+}
+
+func (m *MockBookstoreService) IncrementBannerClick(ctx context.Context, bannerID string) error {
+	args := m.Called(ctx, bannerID)
+	return args.Error(0)
+}
+
+func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, limit)
+	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period, limit)
+	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period, limit)
+	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, period, limit)
+	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+	args := m.Called(ctx, rankingType, period, limit)
+	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+	args := m.Called(ctx, keyword, page, pageSize)
+	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]*bookstore.Category), args.Error(1)
+}
+
+func (m *MockBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+	args := m.Called(ctx, rankingType, period)
+	return args.Error(0)
+}
+
+func (m *MockBookstoreService) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(*bookstore.BookStats), args.Error(1)
+}
 
 // setupTestRouter 设置测试路由
 func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
@@ -61,7 +182,12 @@ func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 		{
 			categories.GET("/tree", api.GetCategoryTree)
 			categories.GET("/:id", api.GetCategoryByID)
-			categories.GET("/:categoryId/books", api.GetBooksByCategory)
+		}
+
+		// 分类书籍路由（避免参数冲突）
+		categoryBooks := bookstoreGroup.Group("/category-books")
+		{
+			categoryBooks.GET("/:categoryId", api.GetBooksByCategory)
 		}
 	}
 
@@ -243,7 +369,7 @@ func TestGetRankingByType(t *testing.T) {
 		},
 	}
 
-	mockService.On("GetRankingByType", mock.Anything, bookstore.RankingTypeMonthly, "2024-01", 15).Return(rankingItems, nil)
+	mockService.On("GetMonthlyRanking", mock.Anything, "2024-01", 15).Return(rankingItems, nil)
 
 	// 发送请求
 	req, _ := http.NewRequest("GET", "/api/v1/bookstore/rankings/monthly?period=2024-01&limit=15", nil)
@@ -377,7 +503,7 @@ func TestSearchBooks(t *testing.T) {
 		},
 	}
 
-	mockService.On("SearchBooks", mock.Anything, "test", mock.AnythingOfType("*bookstore.BookFilter")).Return(books, nil)
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.AnythingOfType("*bookstore.BookFilter")).Return(books, int64(1), nil)
 
 	// 发送搜索请求
 	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search?keyword=test", nil)
@@ -413,6 +539,201 @@ func TestAPIErrorHandling(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.Code)
 	assert.Contains(t, response.Message, "获取实时榜失败")
+
+	mockService.AssertExpectations(t)
+}
+
+// TestGetBooksByCategory 测试根据分类获取书籍列表API
+func TestGetBooksByCategory(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	categoryID := primitive.NewObjectID().Hex()
+	books := []*bookstore.Book{
+		{
+			ID:     primitive.NewObjectID(),
+			Title:  "Category Book 1",
+			Author: "Author 1",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Title:  "Category Book 2",
+			Author: "Author 2",
+		},
+	}
+
+	mockService.On("GetBooksByCategory", mock.Anything, categoryID, 1, 20).Return(books, int64(2), nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/category-books/"+categoryID, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.PaginatedResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "获取分类书籍成功", response.Message)
+	assert.Equal(t, int64(2), response.Total)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestGetBooksByCategory_InvalidID 测试无效分类ID
+func TestGetBooksByCategory_InvalidID(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	// 使用无效的ObjectID格式
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/category-books/invalid-id", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response readingAPI.APIResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, 400, response.Code)
+	assert.Equal(t, "分类ID格式无效", response.Message)
+
+	mockService.AssertNotCalled(t, "GetBooksByCategory")
+}
+
+// TestGetRecommendedBooks 测试获取推荐书籍API
+func TestGetRecommendedBooks(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	books := []*bookstore.Book{
+		{
+			ID:     primitive.NewObjectID(),
+			Title:  "Recommended Book 1",
+			Author: "Author 1",
+		},
+	}
+
+	mockService.On("GetRecommendedBooks", mock.Anything, 1, 20).Return(books, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/recommended", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.PaginatedResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "获取推荐书籍成功", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestGetFeaturedBooks 测试获取精选书籍API
+func TestGetFeaturedBooks(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	books := []*bookstore.Book{
+		{
+			ID:     primitive.NewObjectID(),
+			Title:  "Featured Book 1",
+			Author: "Author 1",
+		},
+	}
+
+	mockService.On("GetFeaturedBooks", mock.Anything, 1, 20).Return(books, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/featured", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.PaginatedResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "获取精选书籍成功", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestGetCategoryTree 测试获取分类树API
+func TestGetCategoryTree(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	tree := []*bookstore.CategoryTree{
+		{
+			Category: bookstore.Category{
+				ID:   primitive.NewObjectID(),
+				Name: "分类1",
+			},
+			Children: []*bookstore.CategoryTree{},
+		},
+	}
+
+	mockService.On("GetCategoryTree", mock.Anything).Return(tree, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/categories/tree", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.APIResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "获取分类树成功", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestGetCategoryByID 测试获取分类详情API
+func TestGetCategoryByID(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	categoryID := primitive.NewObjectID().Hex()
+	category := &bookstore.Category{
+		ID:   primitive.NewObjectID(),
+		Name: "测试分类",
+	}
+
+	mockService.On("GetCategoryByID", mock.Anything, categoryID).Return(category, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/categories/"+categoryID, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.APIResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "获取分类详情成功", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestIncrementBookView 测试增加书籍浏览量API
+func TestIncrementBookView(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupTestRouter(mockService)
+
+	bookID := primitive.NewObjectID().Hex()
+	mockService.On("IncrementBookView", mock.Anything, bookID).Return(nil)
+
+	req, _ := http.NewRequest("POST", "/api/v1/bookstore/books/"+bookID+"/view", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response readingAPI.APIResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "浏览量增加成功", response.Message)
 
 	mockService.AssertExpectations(t)
 }
