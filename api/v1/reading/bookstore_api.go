@@ -138,7 +138,15 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 		return
 	}
 
-	// 解析分页参数
+	// 验证ObjectID格式
+	if _, err := primitive.ObjectIDFromHex(categoryID); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "分类ID格式无效",
+		})
+		return
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
@@ -153,14 +161,14 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "获取书籍列表失败: " + err.Error(),
+			Message: "获取分类书籍失败: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
-		Message: "获取书籍列表成功",
+		Message: "获取分类书籍成功",
 		Data:    books,
 		Total:   total,
 		Page:    page,

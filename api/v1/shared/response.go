@@ -41,6 +41,7 @@ type ErrorResponse struct {
 	Code      int    `json:"code"`
 	Message   string `json:"message"`
 	Error     string `json:"error,omitempty"`
+	Debug     string `json:"debug,omitempty"` // 调试信息，仅开发环境使用
 	Timestamp int64  `json:"timestamp"`
 	RequestID string `json:"request_id,omitempty"`
 }
