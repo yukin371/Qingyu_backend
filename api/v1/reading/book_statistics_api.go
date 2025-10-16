@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -57,11 +56,11 @@ func (api *BookStatisticsAPI) GetBookStatistics(c *gin.Context) {
 		return
 	}
 
-	statistics, err := api.BookStatisticsService.GetByBookID(c.Request.Context(), bookID)
+	statistics, err := api.BookStatisticsService.GetStatisticsByBookID(c.Request.Context(), bookID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{
 			Code:    404,
-			Message: "统计信息不存在",
+			Message: "统计信息不存在: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -227,7 +226,7 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	statistics, err := api.BookStatisticsService.GetTrendingBooks(c.Request.Context(), limit)
+	statistics, err := api.BookStatisticsService.GetTrendingBooks(c.Request.Context(), 0, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -426,7 +425,7 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 		limit = 10
 	}
 
-	statistics, err := api.BookStatisticsService.GetStatisticsByTimeRange(c.Request.Context(), startTime, endTime, page, limit)
+	statistics, err := api.BookStatisticsService.GetStatisticsByTimeRange(c.Request.Context(), startTime, endTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -480,7 +479,7 @@ func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	report, err := api.BookStatisticsService.GetDailyStatisticsReport(c.Request.Context(), date)
+	report, err := api.BookStatisticsService.GenerateDailyReport(c.Request.Context(), date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -542,7 +541,16 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	report, err := api.BookStatisticsService.GetWeeklyStatisticsReport(c.Request.Context(), year, week)
+	// 计算周的起始日期
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	// 找到第一个星期一
+	for startDate.Weekday() != time.Monday {
+		startDate = startDate.AddDate(0, 0, 1)
+	}
+	// 加上周数
+	startDate = startDate.AddDate(0, 0, (week-1)*7)
+
+	report, err := api.BookStatisticsService.GenerateWeeklyReport(c.Request.Context(), startDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -604,7 +612,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	report, err := api.BookStatisticsService.GetMonthlyStatisticsReport(c.Request.Context(), year, month)
+	report, err := api.BookStatisticsService.GenerateMonthlyReport(c.Request.Context(), year, month)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -655,7 +663,7 @@ func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 		limit = 10
 	}
 
-	statistics, err := api.BookStatisticsService.SearchByKeyword(c.Request.Context(), keyword, page, limit)
+	statistics, total, err := api.BookStatisticsService.SearchStatistics(c.Request.Context(), keyword, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -664,8 +672,6 @@ func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 		})
 		return
 	}
-
-	total := int64(len(statistics))
 
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
