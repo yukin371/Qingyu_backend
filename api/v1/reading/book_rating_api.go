@@ -56,7 +56,7 @@ func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 		return
 	}
 
-	rating, err := api.BookRatingService.GetByID(c.Request.Context(), id)
+	rating, err := api.BookRatingService.GetRatingByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{
 			Code:    404,
@@ -117,7 +117,7 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 		limit = 10
 	}
 
-	ratings, err := api.BookRatingService.GetByBookID(c.Request.Context(), bookID, page, limit)
+	ratings, total, err := api.BookRatingService.GetRatingsByBookID(c.Request.Context(), bookID, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -126,8 +126,6 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 		})
 		return
 	}
-
-	total, _ := api.BookRatingService.CountByBookID(c.Request.Context(), bookID)
 
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
@@ -183,7 +181,7 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 		limit = 10
 	}
 
-	ratings, err := api.BookRatingService.GetByUserID(c.Request.Context(), userID, page, limit)
+	ratings, total, err := api.BookRatingService.GetRatingsByUserID(c.Request.Context(), userID, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -192,8 +190,6 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 		})
 		return
 	}
-
-	total, _ := api.BookRatingService.CountByUserID(c.Request.Context(), userID)
 
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
@@ -325,11 +321,10 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 		return
 	}
 
-	createdRating, err := api.BookRatingService.Create(c.Request.Context(), &rating)
-	if err != nil {
+	if err := api.BookRatingService.CreateRating(c.Request.Context(), &rating); err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "创建评分失败",
+			Message: "创建评分失败: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -338,7 +333,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	c.JSON(http.StatusCreated, APIResponse{
 		Code:    201,
 		Message: "创建成功",
-		Data:    createdRating,
+		Data:    rating,
 	})
 }
 
@@ -387,11 +382,11 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	}
 
 	rating.ID = id
-	updatedRating, err := api.BookRatingService.Update(c.Request.Context(), &rating)
+	err = api.BookRatingService.UpdateRating(c.Request.Context(), &rating)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "更新评分失败",
+			Message: "更新评分失败: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -400,7 +395,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "更新成功",
-		Data:    updatedRating,
+		Data:    rating,
 	})
 }
 
@@ -437,11 +432,11 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 		return
 	}
 
-	err = api.BookRatingService.Delete(c.Request.Context(), id)
+	err = api.BookRatingService.DeleteRating(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "删除评分失败",
+			Message: "删除评分失败: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -486,11 +481,45 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 		return
 	}
 
-	err = api.BookRatingService.LikeRating(c.Request.Context(), id)
+	// 从上下文获取用户ID（假设已在中间件中设置）
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "用户未登录",
+			Data:    nil,
+		})
+		return
+	}
+
+	userObjID, ok := userID.(primitive.ObjectID)
+	if !ok {
+		// 尝试从string转换
+		userIDStr, ok := userID.(string)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "用户ID格式错误",
+				Data:    nil,
+			})
+			return
+		}
+		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "用户ID格式错误",
+				Data:    nil,
+			})
+			return
+		}
+	}
+
+	err = api.BookRatingService.LikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "点赞失败",
+			Message: "点赞失败: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -535,11 +564,45 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 		return
 	}
 
-	err = api.BookRatingService.UnlikeRating(c.Request.Context(), id)
+	// 从上下文获取用户ID（假设已在中间件中设置）
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, APIResponse{
+			Code:    401,
+			Message: "用户未登录",
+			Data:    nil,
+		})
+		return
+	}
+
+	userObjID, ok := userID.(primitive.ObjectID)
+	if !ok {
+		// 尝试从string转换
+		userIDStr, ok := userID.(string)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "用户ID格式错误",
+				Data:    nil,
+			})
+			return
+		}
+		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "用户ID格式错误",
+				Data:    nil,
+			})
+			return
+		}
+	}
+
+	err = api.BookRatingService.UnlikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "取消点赞失败",
+			Message: "取消点赞失败: " + err.Error(),
 			Data:    nil,
 		})
 		return
@@ -586,23 +649,13 @@ func (api *BookRatingAPI) SearchRatings(c *gin.Context) {
 		limit = 10
 	}
 
-	ratings, err := api.BookRatingService.SearchByKeyword(c.Request.Context(), keyword, page, limit)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "搜索评分失败",
-			Data:    nil,
-		})
-		return
-	}
-
-	total := int64(len(ratings))
-
+	// TODO: SearchByKeyword方法尚未在Service层实现
+	// 暂时返回空结果
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
-		Message: "搜索成功",
-		Data:    ratings,
-		Total:   total,
+		Message: "搜索功能开发中",
+		Data:    []bookstore.BookRating{},
+		Total:   0,
 		Page:    page,
 		Limit:   limit,
 	})

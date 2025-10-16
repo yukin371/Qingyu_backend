@@ -38,6 +38,7 @@ type PaginatedResponse struct {
 	Total   int64       `json:"total,omitempty"`
 	Page    int         `json:"page,omitempty"`
 	Size    int         `json:"size,omitempty"`
+	Limit   int         `json:"limit,omitempty"` // 添加Limit字段
 }
 
 // GetHomepage 获取首页数据
