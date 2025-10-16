@@ -13,6 +13,12 @@ import (
 	// aiService "Qingyu_backend/service/ai" // 临时禁用
 	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/shared/container"
+	userService "Qingyu_backend/service/user"
+
+	"Qingyu_backend/config"
+	"Qingyu_backend/global"
+	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
+	mongoUser "Qingyu_backend/repository/mongodb/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,10 +45,18 @@ func RegisterRoutes(r *gin.Engine) {
 	sharedRouter.RegisterRoutes(sharedGroup, sharedContainer)
 
 	// 注册书城路由
-	bookstoreSvc := bookstoreService.NewBookstoreService(nil,
-		nil,
-		nil,
-		nil) // TODO: 注入实际的依赖
+	// 初始化BookstoreRepositories
+	dbName := config.GlobalConfig.Database.Primary.MongoDB.Database
+	bookRepo := mongoBookstore.NewMongoBookRepository(global.MongoClient, dbName)
+	categoryRepo := mongoBookstore.NewMongoCategoryRepository(global.MongoClient, dbName)
+	bannerRepo := mongoBookstore.NewMongoBannerRepository(global.MongoClient, dbName)
+	// RankingRepository暂时传nil（已有nil检查）
+	bookstoreSvc := bookstoreService.NewBookstoreService(
+		bookRepo,
+		categoryRepo,
+		bannerRepo,
+		nil, // RankingRepository待实现
+	)
 	bookstoreAPI := readingAPI.NewBookstoreAPI(bookstoreSvc)
 	bookstoreRouterInstance := bookstoreRouter.NewBookstoreRouter(bookstoreAPI)
 	bookstoreRouterInstance.RegisterRoutes(v1)
@@ -50,9 +64,10 @@ func RegisterRoutes(r *gin.Engine) {
 	bookstoreRouterInstance.RegisterPrivateRoutes(v1)
 
 	// 注册系统路由（用户认证等）
-	// TODO: 初始化真实的UserService
-	// 暂时传入nil，等Day 5集成时再修复
-	userRouter.RegisterUserRoutes(v1, nil)
+	// 初始化UserRepository和UserService
+	userRepo := mongoUser.NewMongoUserRepository(global.DB)
+	userSvc := userService.NewUserService(userRepo)
+	userRouter.RegisterUserRoutes(v1, userSvc)
 
 	// 注册文档路由
 	projectRouter.RegisterRoutes(v1)

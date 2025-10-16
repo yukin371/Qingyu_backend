@@ -48,7 +48,8 @@ func InitDB() error {
 		return fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
-	// 设置全局数据库实例
+	// 设置全局客户端和数据库实例
+	global.MongoClient = client
 	global.DB = client.Database(mongoCfg.Database)
 
 	fmt.Printf("Successfully connected to MongoDB: %s/%s\n", mongoCfg.URI, mongoCfg.Database)
