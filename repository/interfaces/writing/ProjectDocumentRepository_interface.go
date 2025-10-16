@@ -76,6 +76,9 @@ type DocumentRepository interface {
 	// 继承基础Repository接口
 	base.CRUDRepository[*document.Document, string]
 
+	// 继承 HealthRepository 接口
+	base.HealthRepository
+
 	// 文档特定的查询方法
 	GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Document, error)
 	GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*document.Document, error)
