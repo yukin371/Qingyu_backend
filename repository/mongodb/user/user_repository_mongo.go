@@ -54,8 +54,10 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 		)
 	}
 
+	actualUser := *user
+
 	// 验证用户数据
-	if err := r.ValidateUser(*user); err != nil {
+	if err := r.ValidateUser(actualUser); err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
 			"用户数据验证失败",
@@ -65,16 +67,16 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 
 	// 设置创建时间
 	now := time.Now()
-	user.CreatedAt = now
-	user.UpdatedAt = now
+	actualUser.CreatedAt = now
+	actualUser.UpdatedAt = now
 
 	// 生成ObjectID
-	if user.ID == "" {
-		user.ID = primitive.NewObjectID().Hex()
+	if actualUser.ID == "" {
+		actualUser.ID = primitive.NewObjectID().Hex()
 	}
 
 	// 插入文档
-	_, err := r.collection.InsertOne(ctx, user)
+	_, err := r.collection.InsertOne(ctx, actualUser)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return UserInterface.NewUserRepositoryError(

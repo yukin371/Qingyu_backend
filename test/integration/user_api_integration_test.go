@@ -170,17 +170,7 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		router.ServeHTTP(resp, req)
 
-		// 打印响应以便调试
-		t.Logf("获取个人信息响应: %s", resp.Body.String())
-		t.Logf("响应状态码: %d", resp.Code)
-
 		// 验证响应
-		if resp.Code != http.StatusOK {
-			var response map[string]interface{}
-			json.Unmarshal(resp.Body.Bytes(), &response)
-			t.Logf("错误响应: %+v", response)
-		}
-
 		assert.Equal(t, http.StatusOK, resp.Code, "获取个人信息应该返回200")
 
 		var response map[string]interface{}
@@ -212,14 +202,7 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		router.ServeHTTP(resp, req)
 
-		// 打印响应以便调试
-		t.Logf("更新个人信息响应: %s", resp.Body.String())
-
 		// 验证响应
-		if resp.Code != http.StatusOK {
-			t.Logf("更新失败，状态码: %d", resp.Code)
-		}
-
 		assert.Equal(t, http.StatusOK, resp.Code, "更新个人信息应该返回200")
 
 		var response map[string]interface{}
@@ -228,11 +211,9 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		assert.Equal(t, float64(200), response["code"])
 
-		if response["data"] != nil {
-			data := response["data"].(map[string]interface{})
-			assert.Equal(t, "测试昵称", data["nickname"])
-			assert.Equal(t, "这是一个测试用户的个人简介", data["bio"])
-		}
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, "测试昵称", data["nickname"])
+		assert.Equal(t, "这是一个测试用户的个人简介", data["bio"])
 
 		t.Logf("✓ 更新个人信息成功")
 	})

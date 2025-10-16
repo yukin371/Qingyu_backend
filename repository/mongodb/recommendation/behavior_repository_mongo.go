@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -14,54 +13,31 @@ import (
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 )
 
-// BehaviorRepositoryMongo MongoDB用户行为仓储实现
-type BehaviorRepositoryMongo struct {
+// MongoBehaviorRepository 用户行为Repository的MongoDB实现
+type MongoBehaviorRepository struct {
 	collection *mongo.Collection
 }
 
-// NewBehaviorRepository 创建行为仓储实例
-func NewBehaviorRepository(db *mongo.Database) recoRepo.BehaviorRepository {
-	collection := db.Collection("user_behaviors")
-
-	// 创建索引
-	ctx := context.Background()
-	indexes := []mongo.IndexModel{
-		{
-			Keys: bson.D{
-				{Key: "user_id", Value: 1},
-				{Key: "occurred_at", Value: -1},
-			},
-		},
-		{
-			Keys: bson.D{
-				{Key: "item_id", Value: 1},
-				{Key: "behavior_type", Value: 1},
-			},
-		},
-		{
-			Keys: bson.D{
-				{Key: "occurred_at", Value: -1},
-			},
-		},
-	}
-
-	_, _ = collection.Indexes().CreateMany(ctx, indexes)
-
-	return &BehaviorRepositoryMongo{
-		collection: collection,
+// NewMongoBehaviorRepository 创建MongoBehaviorRepository实例
+func NewMongoBehaviorRepository(db *mongo.Database) recoRepo.BehaviorRepository {
+	return &MongoBehaviorRepository{
+		collection: db.Collection("user_behaviors"),
 	}
 }
 
-// Create 创建单个行为记录
-func (r *BehaviorRepositoryMongo) Create(ctx context.Context, b *reco.Behavior) error {
-	if b.ID == "" {
-		b.ID = primitive.NewObjectID().Hex()
+// Create 创建用户行为记录
+func (r *MongoBehaviorRepository) Create(ctx context.Context, b *reco.Behavior) error {
+	if b == nil {
+		return fmt.Errorf("behavior cannot be nil")
+	}
+
+	// 设置时间戳
+	now := time.Now()
+	if b.OccurredAt.IsZero() {
+		b.OccurredAt = now
 	}
 	if b.CreatedAt.IsZero() {
-		b.CreatedAt = time.Now()
-	}
-	if b.OccurredAt.IsZero() {
-		b.OccurredAt = time.Now()
+		b.CreatedAt = now
 	}
 
 	_, err := r.collection.InsertOne(ctx, b)
@@ -72,24 +48,21 @@ func (r *BehaviorRepositoryMongo) Create(ctx context.Context, b *reco.Behavior) 
 	return nil
 }
 
-// BatchCreate 批量创建行为记录
-func (r *BehaviorRepositoryMongo) BatchCreate(ctx context.Context, bs []*reco.Behavior) error {
+// BatchCreate 批量创建用户行为记录
+func (r *MongoBehaviorRepository) BatchCreate(ctx context.Context, bs []*reco.Behavior) error {
 	if len(bs) == 0 {
 		return nil
 	}
 
+	// 转换为interface{}切片
 	docs := make([]interface{}, len(bs))
 	now := time.Now()
-
 	for i, b := range bs {
-		if b.ID == "" {
-			b.ID = primitive.NewObjectID().Hex()
+		if b.OccurredAt.IsZero() {
+			b.OccurredAt = now
 		}
 		if b.CreatedAt.IsZero() {
 			b.CreatedAt = now
-		}
-		if b.OccurredAt.IsZero() {
-			b.OccurredAt = now
 		}
 		docs[i] = b
 	}
@@ -102,11 +75,15 @@ func (r *BehaviorRepositoryMongo) BatchCreate(ctx context.Context, bs []*reco.Be
 	return nil
 }
 
-// GetByUser 获取用户行为记录（最近N条）
-func (r *BehaviorRepositoryMongo) GetByUser(ctx context.Context, userID string, limit int) ([]*reco.Behavior, error) {
+// GetByUser 获取用户的行为记录
+func (r *MongoBehaviorRepository) GetByUser(ctx context.Context, userID string, limit int) ([]*reco.Behavior, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("userID cannot be empty")
+	}
+
 	filter := bson.M{"user_id": userID}
 	opts := options.Find().
-		SetSort(bson.D{{Key: "occurred_at", Value: -1}}).
+		SetSort(bson.D{{Key: "occurred_at", Value: -1}}). // 按时间倒序
 		SetLimit(int64(limit))
 
 	cursor, err := r.collection.Find(ctx, filter, opts)

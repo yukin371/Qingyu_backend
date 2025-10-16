@@ -23,6 +23,16 @@ func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.Recommen
 		}
 
 		// 不需要认证的路由（公开推荐）
+		// 首页推荐（混合推荐策略）
+		reco.GET("/homepage", api.GetHomepageRecommendations)
+
+		// 热门推荐
+		reco.GET("/hot", api.GetHotRecommendations)
+
+		// 分类推荐
+		reco.GET("/category", api.GetCategoryRecommendations)
+
+		// 相似物品推荐
 		reco.GET("/similar", api.GetSimilarItems)
 	}
 }

@@ -267,7 +267,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 	}
 
 	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID, user.Username, user.Role)
+	token, err := s.generateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -308,7 +308,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 	}
 
 	// 5. 生成JWT令牌
-	token, err := s.generateToken(user.ID, user.Username, user.Role)
+	token, err := s.generateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -508,8 +508,8 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *serviceInterfaces.U
 }
 
 // generateToken 生成JWT令牌（辅助方法）
-func (s *UserServiceImpl) generateToken(userID, username, role string) (string, error) {
+func (s *UserServiceImpl) generateToken(userID, role string) (string, error) {
 	// 使用middleware包中的GenerateToken函数
 	// 导入: "Qingyu_backend/middleware"
-	return middleware.GenerateToken(userID, username, []string{role})
+	return middleware.GenerateToken(userID, "", []string{role})
 }

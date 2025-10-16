@@ -153,7 +153,7 @@ func (api *UserAPI) Login(c *gin.Context) {
 //	@Router			/api/v1/users/profile [get]
 func (api *UserAPI) GetProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID（由JWT中间件设置）
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未认证")
 		return
@@ -217,7 +217,7 @@ func (api *UserAPI) GetProfile(c *gin.Context) {
 //	@Router			/api/v1/users/profile [put]
 func (api *UserAPI) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未认证")
 		return
@@ -285,7 +285,7 @@ func (api *UserAPI) UpdateProfile(c *gin.Context) {
 //	@Router			/api/v1/users/password [put]
 func (api *UserAPI) ChangePassword(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未认证")
 		return

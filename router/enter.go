@@ -12,14 +12,7 @@ import (
 	readingAPI "Qingyu_backend/api/v1/reading"
 	// aiService "Qingyu_backend/service/ai" // 临时禁用
 	bookstoreService "Qingyu_backend/service/bookstore"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
-	"Qingyu_backend/service/shared/auth"
 	"Qingyu_backend/service/shared/container"
-	userService "Qingyu_backend/service/user"
-
-	"Qingyu_backend/config"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
-	"Qingyu_backend/repository/mongodb"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,91 +23,36 @@ func RegisterRoutes(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 
 	// 注册共享服务路由（认证、钱包、存储、管理）
+	// 注意：SharedServiceContainer 的服务实现尚未完全就绪
+	// 当前路由已注册，但 API 调用可能会失败，因为服务为 nil
 	sharedContainer := container.NewSharedServiceContainer()
 
+	log.Println("警告: Shared 服务容器已创建，但服务尚未实现")
 	log.Println("Shared API 路由已注册到: /api/v1/shared/")
 	log.Println("  - /api/v1/shared/auth/*")
 	log.Println("  - /api/v1/shared/wallet/*")
 	log.Println("  - /api/v1/shared/storage/*")
 	log.Println("  - /api/v1/shared/admin/*")
 
-	// 初始化Repository工厂
-	mongoConfig := config.GlobalConfig.Database.Primary.MongoDB
-	repoFactory, err := mongodb.NewMongoRepositoryFactory(mongoConfig)
-	if err != nil {
-		log.Printf("警告: 创建Repository工厂失败: %v", err)
-		log.Println("书城服务将使用 nil repositories，部分功能可能不可用")
-	}
-
-	// 创建Repository实例（使用正确的接口类型）
-	var bookRepo bookstoreRepo.BookRepository
-	var categoryRepo bookstoreRepo.CategoryRepository
-	var bannerRepo bookstoreRepo.BannerRepository
-	var rankingRepo bookstoreRepo.RankingRepository
-
-	if repoFactory != nil {
-		bookRepo = repoFactory.CreateBookRepository()
-		categoryRepo = repoFactory.CreateCategoryRepository()
-		bannerRepo = repoFactory.CreateBannerRepository()
-		// rankingRepo 保持为 nil，因为暂未实现
-		log.Println("书城 Repository 已初始化")
-	}
-
-	// 注册书城路由
-	bookstoreSvc := bookstoreService.NewBookstoreService(
-		bookRepo,
-		categoryRepo,
-		bannerRepo,
-		rankingRepo) // RankingRepository 暂未实现，传入nil
-	bookstoreAPI := readingAPI.NewBookstoreAPI(bookstoreSvc)
-	bookstoreRouterInstance := bookstoreRouter.NewBookstoreRouter(bookstoreAPI)
-	// 只注册主路由（已包含所有功能）
-	bookstoreRouterInstance.RegisterRoutes(v1)
-
-	// 初始化用户服务
-	var userSvc serviceInterfaces.UserService
-	if repoFactory != nil {
-		userRepo := repoFactory.CreateUserRepository()
-		userSvc = userService.NewUserService(userRepo)
-		log.Println("用户服务已初始化")
-	} else {
-		log.Println("警告: 用户服务未初始化，用户认证功能将不可用")
-	}
-
-	// 初始化Shared认证服务
-	if repoFactory != nil && userSvc != nil {
-		// 创建AuthRepository
-		authRepo := repoFactory.CreateAuthRepository()
-
-		// 创建JWT配置
-		jwtConfig := config.GetJWTConfigEnhanced()
-
-		// 创建JWTService（暂时不使用Redis）
-		jwtService := auth.NewJWTService(jwtConfig, nil)
-
-		// 创建RoleService
-		roleService := auth.NewRoleService(authRepo)
-
-		// 创建PermissionService（暂时不使用Cache）
-		permissionService := auth.NewPermissionService(authRepo, nil)
-
-		// 创建AuthService
-		authService := auth.NewAuthService(jwtService, roleService, permissionService, authRepo, userSvc)
-
-		// 设置到SharedServiceContainer
-		sharedContainer.SetAuthService(authService)
-
-		log.Println("Shared认证服务已初始化")
-	} else {
-		log.Println("警告: Shared认证服务未初始化")
-	}
-
 	// 注册 shared API 路由组
 	sharedGroup := v1.Group("/shared")
 	sharedRouter.RegisterRoutes(sharedGroup, sharedContainer)
 
+	// 注册书城路由
+	bookstoreSvc := bookstoreService.NewBookstoreService(nil,
+		nil,
+		nil,
+		nil) // TODO: 注入实际的依赖
+	bookstoreAPI := readingAPI.NewBookstoreAPI(bookstoreSvc)
+	bookstoreRouterInstance := bookstoreRouter.NewBookstoreRouter(bookstoreAPI)
+	bookstoreRouterInstance.RegisterRoutes(v1)
+	bookstoreRouterInstance.RegisterPublicRoutes(v1)
+	bookstoreRouterInstance.RegisterPrivateRoutes(v1)
+
 	// 注册系统路由（用户认证等）
-	userRouter.RegisterUserRoutes(v1, userSvc)
+	// TODO: 初始化真实的UserService
+	// 暂时传入nil，等Day 5集成时再修复
+	userRouter.RegisterUserRoutes(v1, nil)
 
 	// 注册文档路由
 	projectRouter.RegisterRoutes(v1)

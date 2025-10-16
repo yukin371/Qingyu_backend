@@ -157,12 +157,22 @@ func (f *MongoRepositoryFactory) CreateBannerRepository() bookstoreRepo.BannerRe
 
 // CreateBehaviorRepository 创建行为Repository
 func (f *MongoRepositoryFactory) CreateBehaviorRepository() recoRepo.BehaviorRepository {
-	return mongoReco.NewBehaviorRepository(f.database)
+	return mongoReco.NewMongoBehaviorRepository(f.database)
 }
 
 // CreateProfileRepository 创建用户画像Repository
 func (f *MongoRepositoryFactory) CreateProfileRepository() recoRepo.ProfileRepository {
-	return mongoReco.NewProfileRepository(f.database)
+	return mongoReco.NewMongoProfileRepository(f.database)
+}
+
+// CreateItemFeatureRepository 创建物品特征Repository
+func (f *MongoRepositoryFactory) CreateItemFeatureRepository() recoRepo.ItemFeatureRepository {
+	return mongoReco.NewMongoItemFeatureRepository(f.database)
+}
+
+// CreateHotRecommendationRepository 创建热门推荐Repository
+func (f *MongoRepositoryFactory) CreateHotRecommendationRepository() recoRepo.HotRecommendationRepository {
+	return mongoReco.NewMongoHotRecommendationRepository(f.database)
 }
 
 // ========== Shared Module Repositories ==========
