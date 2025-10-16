@@ -710,3 +710,126 @@ func (s *ReaderService) publishAnnotationEvent(ctx context.Context, action strin
 
 	s.eventBus.PublishAsync(ctx, event)
 }
+
+// =========================
+// 批量操作方法
+// =========================
+
+// BatchCreateAnnotations 批量创建注记
+func (s *ReaderService) BatchCreateAnnotations(ctx context.Context, annotations []*reader.Annotation) error {
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	if len(annotations) > 50 {
+		return fmt.Errorf("批量创建注记数量不能超过50个")
+	}
+
+	// 批量创建
+	for _, annotation := range annotations {
+		if err := s.CreateAnnotation(ctx, annotation); err != nil {
+			return fmt.Errorf("批量创建注记失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// BatchDeleteAnnotations 批量删除注记
+func (s *ReaderService) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+	if len(annotationIDs) == 0 {
+		return nil
+	}
+
+	if len(annotationIDs) > 100 {
+		return fmt.Errorf("批量删除注记数量不能超过100个")
+	}
+
+	// 批量删除
+	for _, id := range annotationIDs {
+		if err := s.DeleteAnnotation(ctx, id); err != nil {
+			return fmt.Errorf("批量删除注记失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// GetAnnotationStats 获取注记统计
+func (s *ReaderService) GetAnnotationStats(ctx context.Context, userID, bookID string) (map[string]interface{}, error) {
+	annotations, err := s.GetAnnotationsByBook(ctx, userID, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("获取注记失败: %w", err)
+	}
+
+	stats := map[string]interface{}{
+		"totalCount":     len(annotations),
+		"bookmarkCount":  0,
+		"highlightCount": 0,
+		"noteCount":      0,
+	}
+
+	// 统计各类型注记数量
+	for _, ann := range annotations {
+		switch ann.Type {
+		case "bookmark":
+			stats["bookmarkCount"] = stats["bookmarkCount"].(int) + 1
+		case "highlight":
+			stats["highlightCount"] = stats["highlightCount"].(int) + 1
+		case "note":
+			stats["noteCount"] = stats["noteCount"].(int) + 1
+		}
+	}
+
+	return stats, nil
+}
+
+// SyncAnnotationsRequest 同步注记请求（内部使用）
+type SyncAnnotationsRequest struct {
+	BookID           string
+	LastSyncTime     int64
+	LocalAnnotations []*reader.Annotation
+}
+
+// SyncAnnotations 同步注记（多端同步）
+func (s *ReaderService) SyncAnnotations(ctx context.Context, userID string, req interface{}) (map[string]interface{}, error) {
+	// 类型断言
+	syncReq, ok := req.(*SyncAnnotationsRequest)
+	if !ok {
+		return nil, fmt.Errorf("无效的同步请求类型")
+	}
+
+	// 1. 获取服务器端的注记
+	serverAnnotations, err := s.GetAnnotationsByBook(ctx, userID, syncReq.BookID)
+	if err != nil {
+		return nil, fmt.Errorf("获取服务器注记失败: %w", err)
+	}
+
+	// 2. 过滤出需要下发的注记（比lastSyncTime更新的）
+	newAnnotations := make([]*reader.Annotation, 0)
+	for _, ann := range serverAnnotations {
+		if ann.CreatedAt.Unix() > syncReq.LastSyncTime {
+			newAnnotations = append(newAnnotations, ann)
+		}
+	}
+
+	// 3. 上传本地新增的注记
+	uploadedCount := 0
+	if len(syncReq.LocalAnnotations) > 0 {
+		for _, ann := range syncReq.LocalAnnotations {
+			ann.UserID = userID // 确保UserID正确
+			if err := s.CreateAnnotation(ctx, ann); err != nil {
+				// 记录错误但继续
+				continue
+			}
+			uploadedCount++
+		}
+	}
+
+	return map[string]interface{}{
+		"newAnnotations":  newAnnotations,
+		"syncTime":        time.Now().Unix(),
+		"uploadedCount":   uploadedCount,
+		"downloadedCount": len(newAnnotations),
+	}, nil
+}

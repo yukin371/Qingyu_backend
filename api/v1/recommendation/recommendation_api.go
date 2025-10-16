@@ -143,3 +143,114 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "记录成功", nil)
 }
+
+// GetHomepageRecommendations 获取首页推荐
+//
+//	@Summary	获取首页推荐（混合推荐策略）
+//	@Tags		推荐系统
+//	@Param		limit	query		int	false	"推荐数量"	default(20)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/recommendation/homepage [get]
+func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
+	// 获取用户ID（可选）
+	userID, _ := c.Get("userId")
+	userIDStr := ""
+	if userID != nil {
+		userIDStr = userID.(string)
+	}
+
+	// 获取limit参数
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	// 获取首页推荐
+	recommendations, err := api.recoService.GetHomepageRecommendations(c.Request.Context(), userIDStr, limit)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取首页推荐失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+		"recommendations": recommendations,
+		"count":           len(recommendations),
+	})
+}
+
+// GetHotRecommendations 获取热门推荐
+//
+//	@Summary	获取热门推荐
+//	@Tags		推荐系统
+//	@Param		limit	query		int	false	"推荐数量"	default(20)
+//	@Param		days	query		int	false	"统计天数"	default(7)
+//	@Success	200		{object}	response.Response
+//	@Router		/api/v1/recommendation/hot [get]
+func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
+	// 获取limit参数
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	// 获取days参数
+	days := 7
+	if daysStr := c.Query("days"); daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	// 获取热门推荐
+	recommendations, err := api.recoService.GetHotRecommendations(c.Request.Context(), limit, days)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取热门推荐失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+		"recommendations": recommendations,
+		"count":           len(recommendations),
+	})
+}
+
+// GetCategoryRecommendations 获取分类推荐
+//
+//	@Summary	获取分类推荐
+//	@Tags		推荐系统
+//	@Param		category	query		string	true	"分类名称"
+//	@Param		limit		query		int		false	"推荐数量"	default(20)
+//	@Success	200			{object}	response.Response
+//	@Router		/api/v1/recommendation/category [get]
+func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
+	category := c.Query("category")
+	if category == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "category参数不能为空")
+		return
+	}
+
+	// 获取limit参数
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	// 获取分类推荐
+	recommendations, err := api.recoService.GetCategoryRecommendations(c.Request.Context(), category, limit)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取分类推荐失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+		"recommendations": recommendations,
+		"count":           len(recommendations),
+		"category":        category,
+	})
+}
