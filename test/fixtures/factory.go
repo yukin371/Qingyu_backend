@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"Qingyu_backend/models/document"
-	"Qingyu_backend/models/reading"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -86,13 +85,13 @@ func NewProjectFactory() *ProjectFactory {
 func (f *ProjectFactory) Create(authorID string, opts ...func(*document.Project)) *document.Project {
 	f.counter++
 	project := &document.Project{
-		ID:          primitive.NewObjectID().Hex(),
-		Name:        fmt.Sprintf("测试项目 %d", f.counter),
-		Description: fmt.Sprintf("这是第%d个测试项目", f.counter),
-		AuthorID:    authorID,
-		Status:      "active",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:        primitive.NewObjectID().Hex(),
+		Title:     fmt.Sprintf("测试项目 %d", f.counter),
+		Summary:   fmt.Sprintf("这是第%d个测试项目", f.counter),
+		AuthorID:  authorID,
+		Status:    document.StatusDraft,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// 应用自定义选项
@@ -115,8 +114,8 @@ func (f *ProjectFactory) CreateBatch(authorID string, count int) []*document.Pro
 // CreateNovel 创建小说项目
 func (f *ProjectFactory) CreateNovel(authorID string) *document.Project {
 	return f.Create(authorID, func(p *document.Project) {
-		p.Name = fmt.Sprintf("小说项目 %d", f.counter)
-		p.Description = "这是一个小说项目"
+		p.Title = fmt.Sprintf("小说项目 %d", f.counter)
+		p.Summary = "这是一个小说项目"
 	})
 }
 
@@ -132,14 +131,16 @@ func NewDocumentFactory() *DocumentFactory {
 	return &DocumentFactory{counter: 0}
 }
 
-// Create 创建文档
+// Create 创建文档元数据
+// 注意：此方法只创建Document元数据，不包含内容
+// 如需创建文档内容，请使用CreateDocumentContent方法
 func (f *DocumentFactory) Create(projectID string, opts ...func(*document.Document)) *document.Document {
 	f.counter++
 	doc := &document.Document{
 		ID:        primitive.NewObjectID().Hex(),
 		ProjectID: projectID,
 		Title:     fmt.Sprintf("第%d章", f.counter),
-		Content:   fmt.Sprintf("这是第%d章的内容...", f.counter),
+		Type:      document.TypeChapter,
 		Status:    "draft",
 		WordCount: 1000 + f.counter*100,
 		CreatedAt: time.Now(),
@@ -152,6 +153,22 @@ func (f *DocumentFactory) Create(projectID string, opts ...func(*document.Docume
 	}
 
 	return doc
+}
+
+// CreateDocumentContent 创建文档内容
+func (f *DocumentFactory) CreateDocumentContent(documentID string) *document.DocumentContent {
+	return &document.DocumentContent{
+		ID:          primitive.NewObjectID().Hex(),
+		DocumentID:  documentID,
+		Content:     fmt.Sprintf("这是文档%s的内容...", documentID),
+		ContentType: "markdown",
+		WordCount:   1000,
+		CharCount:   1000,
+		Version:     1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		LastSavedAt: time.Now(),
+	}
 }
 
 // CreateBatch 批量创建文档
@@ -167,125 +184,6 @@ func (f *DocumentFactory) CreateBatch(projectID string, count int) []*document.D
 func (f *DocumentFactory) CreatePublished(projectID string) *document.Document {
 	return f.Create(projectID, func(d *document.Document) {
 		d.Status = "published"
-	})
-}
-
-// ============ BookFactory ============
-
-// BookFactory 书籍数据工厂
-type BookFactory struct {
-	counter int
-}
-
-// NewBookFactory 创建书籍工厂
-func NewBookFactory() *BookFactory {
-	return &BookFactory{counter: 0}
-}
-
-// Create 创建书籍
-func (f *BookFactory) Create(opts ...func(*reading.Book)) *reading.Book {
-	f.counter++
-	book := &reading.Book{
-		ID:          primitive.NewObjectID().Hex(),
-		Title:       fmt.Sprintf("测试书籍 %d", f.counter),
-		Author:      fmt.Sprintf("作者%d", f.counter),
-		Description: fmt.Sprintf("这是第%d本测试书籍", f.counter),
-		Status:      "published",
-		Category:    "fantasy",
-		Tags:        []string{"测试", "小说"},
-		WordCount:   100000 + f.counter*10000,
-		ViewCount:   f.counter * 100,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	// 应用自定义选项
-	for _, opt := range opts {
-		opt(book)
-	}
-
-	return book
-}
-
-// CreateBatch 批量创建书籍
-func (f *BookFactory) CreateBatch(count int) []*reading.Book {
-	result := make([]*reading.Book, count)
-	for i := 0; i < count; i++ {
-		result[i] = f.Create()
-	}
-	return result
-}
-
-// CreatePopular 创建热门书籍
-func (f *BookFactory) CreatePopular() *reading.Book {
-	return f.Create(func(b *reading.Book) {
-		b.ViewCount = 100000
-		b.Title = fmt.Sprintf("热门书籍 %d", f.counter)
-	})
-}
-
-// CreateByCategory 按分类创建书籍
-func (f *BookFactory) CreateByCategory(category string) *reading.Book {
-	return f.Create(func(b *reading.Book) {
-		b.Category = category
-	})
-}
-
-// ============ ChapterFactory ============
-
-// ChapterFactory 章节数据工厂
-type ChapterFactory struct {
-	counter int
-}
-
-// NewChapterFactory 创建章节工厂
-func NewChapterFactory() *ChapterFactory {
-	return &ChapterFactory{counter: 0}
-}
-
-// Create 创建章节
-func (f *ChapterFactory) Create(bookID string, opts ...func(*reading.Chapter)) *reading.Chapter {
-	f.counter++
-	chapter := &reading.Chapter{
-		ID:         primitive.NewObjectID().Hex(),
-		BookID:     bookID,
-		ChapterNum: f.counter,
-		Title:      fmt.Sprintf("第%d章", f.counter),
-		Content:    fmt.Sprintf("这是第%d章的内容...", f.counter),
-		WordCount:  2000 + f.counter*100,
-		IsFree:     f.counter <= 3, // 前3章免费
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
-
-	// 应用自定义选项
-	for _, opt := range opts {
-		opt(chapter)
-	}
-
-	return chapter
-}
-
-// CreateBatch 批量创建章节
-func (f *ChapterFactory) CreateBatch(bookID string, count int) []*reading.Chapter {
-	result := make([]*reading.Chapter, count)
-	for i := 0; i < count; i++ {
-		result[i] = f.Create(bookID)
-	}
-	return result
-}
-
-// CreateFree 创建免费章节
-func (f *ChapterFactory) CreateFree(bookID string) *reading.Chapter {
-	return f.Create(bookID, func(c *reading.Chapter) {
-		c.IsFree = true
-	})
-}
-
-// CreateVIP 创建VIP章节
-func (f *ChapterFactory) CreateVIP(bookID string) *reading.Chapter {
-	return f.Create(bookID, func(c *reading.Chapter) {
-		c.IsFree = false
 	})
 }
 

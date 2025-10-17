@@ -296,6 +296,121 @@ func (s *ProjectService) UpdateProjectStatistics(ctx context.Context, projectID 
 	return nil
 }
 
+// GetProjectByID 根据ID获取项目（别名方法，兼容API层调用）
+func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*document.Project, error) {
+	return s.GetProject(ctx, projectID)
+}
+
+// GetProjectList 获取项目列表（兼容API层调用）
+func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*document.Project, error) {
+	// 构建请求
+	req := &ListProjectsRequest{
+		Page:     int(offset/limit) + 1,
+		PageSize: int(limit),
+		Status:   status,
+	}
+
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	// 调用ListMyProjects
+	resp, err := s.ListMyProjects(ctxWithUser, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Projects, nil
+}
+
+// UpdateProjectByID 更新项目（兼容API层调用）
+func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userID string, req *document.Project) error {
+	// 构建更新请求
+	updateReq := &UpdateProjectRequest{
+		Title:    req.Title,
+		Summary:  req.Summary,
+		CoverURL: req.CoverURL,
+		Category: req.Category,
+		Tags:     req.Tags,
+		Status:   string(req.Status),
+	}
+
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	return s.UpdateProject(ctxWithUser, projectID, updateReq)
+}
+
+// DeleteProjectByID 删除项目（兼容API层调用）
+func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, userID string) error {
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	return s.DeleteProject(ctxWithUser, projectID)
+}
+
+// RestoreProjectByID 恢复已删除的项目
+func (s *ProjectService) RestoreProjectByID(ctx context.Context, projectID, userID string) error {
+	// 1. 查询项目（包括已删除的）
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	// 2. 权限检查（只有所有者可以恢复）
+	if !project.IsOwner(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "只有项目所有者可以恢复项目", "", nil)
+	}
+
+	// 3. 恢复项目
+	if err := s.projectRepo.Restore(ctx, projectID, userID); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "恢复项目失败", "", err)
+	}
+
+	// 4. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.restored",
+			EventData: map[string]interface{}{
+				"project_id": projectID,
+				"author_id":  project.AuthorID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}
+
+// DeleteHard 物理删除项目（永久删除）
+func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error {
+	// 注意：硬删除不需要权限检查，通常由管理员或系统调用
+	// 如果需要权限检查，应该在调用方（API层）进行
+
+	// 1. 物理删除项目
+	if err := s.projectRepo.HardDelete(ctx, projectID); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "物理删除项目失败", "", err)
+	}
+
+	// 2. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.hard_deleted",
+			EventData: map[string]interface{}{
+				"project_id": projectID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}
+
 // 私有方法
 func (s *ProjectService) validateCreateProjectRequest(req *CreateProjectRequest) error {
 	if req.Title == "" {

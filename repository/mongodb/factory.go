@@ -94,6 +94,16 @@ func (f *MongoRepositoryFactory) CreateProjectRepository() writingRepo.ProjectRe
 	return mongoWriting.NewMongoProjectRepository(f.database)
 }
 
+// CreateDocumentRepository 创建文档Repository
+func (f *MongoRepositoryFactory) CreateDocumentRepository() writingRepo.DocumentRepository {
+	return mongoWriting.NewMongoDocumentRepository(f.database)
+}
+
+// CreateDocumentContentRepository 创建文档内容Repository
+func (f *MongoRepositoryFactory) CreateDocumentContentRepository() writingRepo.DocumentContentRepository {
+	return mongoWriting.NewMongoDocumentContentRepository(f.database)
+}
+
 // ========== Reading Module Repositories ==========
 
 // CreateReadingSettingsRepository 创建阅读设置Repository

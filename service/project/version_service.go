@@ -16,12 +16,28 @@ import (
 )
 
 // VersionService 版本管理服务
+// 注意：这是遗留代码，使用旧的架构模式
+// TODO: 重构为使用依赖注入和Repository模式
 type VersionService struct{}
 
-func fileCol() *mongo.Collection   { return global.DB.Collection("novel_files") }    // 文件集合
-func revCol() *mongo.Collection    { return global.DB.Collection("file_revisions") } // 版本集合
-func patchCol() *mongo.Collection  { return global.DB.Collection("file_patches") }   // 补丁集合
-func commitCol() *mongo.Collection { return global.DB.Collection("commits") }        // 提交集合
+func fileCol() *mongo.Collection    { return global.DB.Collection("novel_files") }       // 文件集合（Document元数据）
+func contentCol() *mongo.Collection { return global.DB.Collection("document_contents") } // 文档内容集合
+func revCol() *mongo.Collection     { return global.DB.Collection("file_revisions") }    // 版本集合
+func patchCol() *mongo.Collection   { return global.DB.Collection("file_patches") }      // 补丁集合
+func commitCol() *mongo.Collection  { return global.DB.Collection("commits") }           // 提交集合
+
+// getDocumentContent 获取文档内容（辅助函数）
+func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*model.DocumentContent, error) {
+	var content model.DocumentContent
+	err := contentCol().FindOne(ctx, bson.M{"document_id": documentID}).Decode(&content)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("查询文档内容失败: %w", err)
+	}
+	return &content, nil
+}
 
 // EnsureIndexes 创建版本相关的 MongoDB 索引（幂等）
 func (s *VersionService) EnsureIndexes(ctx context.Context) error {
@@ -81,19 +97,31 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// 查询Document元数据
 	var f model.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
 
-	// 版本推进
-	next := f.Version + 1
-	if _, err := fileCol().UpdateOne(ctx, bson.M{"_id": f.ID}, bson.M{"$set": bson.M{"version": next, "updated_at": time.Now()}}); err != nil {
+	// 查询DocumentContent获取版本号和内容
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
+	// 版本推进（在DocumentContent中）
+	next := docContent.Version + 1
+	if _, err := contentCol().UpdateOne(ctx,
+		bson.M{"document_id": f.ID},
+		bson.M{"$set": bson.M{"version": next, "updated_at": time.Now()}}); err != nil {
 		return nil, err
 	}
 
 	// 使用快照存储策略
-	snapshot, storageRef, err := s.StoreSnapshot(f.Content, projectID, nodeID, next)
+	snapshot, storageRef, err := s.StoreSnapshot(docContent.Content, projectID, nodeID, next)
 	if err != nil {
 		return nil, err
 	}
@@ -169,14 +197,23 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 		return nil, fmt.Errorf("failed to retrieve snapshot: %w", err)
 	}
 
-	// 读取当前文档版本
+	// 读取当前文档
 	var f model.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
 
+	// 获取当前DocumentContent版本
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
 	// 使用乐观锁更新内容（期望为当前版本）
-	return s.UpdateContentWithVersion(projectID, nodeID, authorID, message, content, f.Version)
+	return s.UpdateContentWithVersion(projectID, nodeID, authorID, message, content, docContent.Version)
 }
 
 // CreatePatch 提交一个候选补丁（状态为 pending）
@@ -233,18 +270,27 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*mode
 		return nil, err
 	}
 
+	// 获取当前DocumentContent版本
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
 	// 简化：只支持完整替换的 diffFormat 为 "full"
 	if p.DiffFormat != "full" {
 		return nil, errors.New("only full diffFormat supported currently")
 	}
 
 	// 要求 baseVersion 匹配当前版本以直接应用
-	if p.BaseVersion != f.Version {
+	if p.BaseVersion != docContent.Version {
 		return nil, errors.New("version_conflict")
 	}
 
 	// 使用乐观锁更新内容
-	rev, err := s.UpdateContentWithVersion(projectID, p.NodeID, applierID, p.Preview, p.DiffPayload, f.Version)
+	rev, err := s.UpdateContentWithVersion(projectID, p.NodeID, applierID, p.Preview, p.DiffPayload, docContent.Version)
 	if err != nil {
 		return nil, err
 	}

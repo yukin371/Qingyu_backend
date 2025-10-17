@@ -344,11 +344,11 @@ func TestUserRepository_Concurrent(t *testing.T) {
 
 	t.Run("并发创建用户", func(t *testing.T) {
 		const goroutines = 10
-		users := userFactory.CreateBatch(goroutines)
+		usersToCreate := userFactory.CreateBatch(goroutines)
 
 		// 并发创建
 		errCh := make(chan error, goroutines)
-		for _, user := range users {
+		for _, user := range usersToCreate {
 			go func(u *users.User) {
 				errCh <- repo.Create(ctx, u)
 			}(user)

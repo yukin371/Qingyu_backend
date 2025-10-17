@@ -102,7 +102,9 @@ func (s *DocumentService) GetByID(id string) (*model.Document, error) {
 	return &doc, nil
 }
 
-// Update 更新文档（不更新 UserID 和 ID）
+// Update 更新文档元数据（不更新 UserID 和 ID）
+// 注意：此方法只更新Document元数据，不更新内容
+// 如需更新文档内容，请使用DocumentContentRepository
 func (s *DocumentService) Update(id string, update *model.Document) (*model.Document, error) {
 	if id == "" || update == nil {
 		return nil, errors.New("id 或 update 为空")
@@ -112,11 +114,22 @@ func (s *DocumentService) Update(id string, update *model.Document) (*model.Docu
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// 只更新元数据字段
 	updateDoc := bson.M{
 		"$set": bson.M{
 			"title":      update.Title,
-			"content":    update.Content,
-			"updated_at": update.UpdatedAt,
+			"status":     update.Status,
+			"word_count": update.WordCount,
+			// 可以添加其他元数据字段
+			"character_ids": update.CharacterIDs,
+			"location_ids":  update.LocationIDs,
+			"timeline_ids":  update.TimelineIDs,
+			"plot_threads":  update.PlotThreads,
+			"key_points":    update.KeyPoints,
+			"writing_hints": update.WritingHints,
+			"tags":          update.Tags,
+			"notes":         update.Notes,
+			"updated_at":    update.UpdatedAt,
 		},
 	}
 
