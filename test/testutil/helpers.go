@@ -62,7 +62,7 @@ func WithRole(role string) UserOption {
 // WithStatus 设置状态
 func WithStatus(status string) UserOption {
 	return func(u *users.User) {
-		u.Status = status
+		u.Status = users.UserStatus(status)
 	}
 }
 
@@ -95,13 +95,13 @@ type ProjectOption func(*document.Project)
 // CreateTestProject 创建测试项目
 func CreateTestProject(userID string, opts ...ProjectOption) *document.Project {
 	project := &document.Project{
-		ID:          primitive.NewObjectID().Hex(),
-		Name:        "测试项目",
-		Description: "这是一个测试项目",
-		AuthorID:    userID,
-		Status:      "active",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:        primitive.NewObjectID().Hex(),
+		Title:     "测试项目",
+		Summary:   "这是一个测试项目",
+		AuthorID:  userID,
+		Status:    document.StatusDraft,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// 应用选项
@@ -112,24 +112,24 @@ func CreateTestProject(userID string, opts ...ProjectOption) *document.Project {
 	return project
 }
 
-// WithProjectName 设置项目名称
+// WithProjectName 设置项目名称（使用Title字段）
 func WithProjectName(name string) ProjectOption {
 	return func(p *document.Project) {
-		p.Name = name
+		p.Title = name
 	}
 }
 
-// WithProjectDescription 设置项目描述
+// WithProjectDescription 设置项目描述（使用Summary字段）
 func WithProjectDescription(description string) ProjectOption {
 	return func(p *document.Project) {
-		p.Description = description
+		p.Summary = description
 	}
 }
 
 // WithProjectStatus 设置项目状态
 func WithProjectStatus(status string) ProjectOption {
 	return func(p *document.Project) {
-		p.Status = status
+		p.Status = document.ProjectStatus(status)
 	}
 }
 
@@ -148,8 +148,8 @@ func CreateTestProjects(userID string, count int) []*document.Project {
 // AssertProjectEqual 断言项目相等
 func AssertProjectEqual(t *testing.T, expected, actual *document.Project) {
 	assert.Equal(t, expected.ID, actual.ID)
-	assert.Equal(t, expected.Name, actual.Name)
-	assert.Equal(t, expected.Description, actual.Description)
+	assert.Equal(t, expected.Title, actual.Title)
+	assert.Equal(t, expected.Summary, actual.Summary)
 	assert.Equal(t, expected.AuthorID, actual.AuthorID)
 	assert.Equal(t, expected.Status, actual.Status)
 }
@@ -160,12 +160,14 @@ func AssertProjectEqual(t *testing.T, expected, actual *document.Project) {
 type DocumentOption func(*document.Document)
 
 // CreateTestDocument 创建测试文档
+// 注意：此方法只创建Document元数据，不包含内容
+// 如需创建文档内容，请使用CreateTestDocumentContent
 func CreateTestDocument(projectID string, opts ...DocumentOption) *document.Document {
 	doc := &document.Document{
 		ID:        primitive.NewObjectID().Hex(),
 		ProjectID: projectID,
 		Title:     "测试文档",
-		Content:   "这是测试内容",
+		Type:      document.TypeChapter,
 		Status:    "draft",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -179,6 +181,22 @@ func CreateTestDocument(projectID string, opts ...DocumentOption) *document.Docu
 	return doc
 }
 
+// CreateTestDocumentContent 创建测试文档内容
+func CreateTestDocumentContent(documentID string, content string) *document.DocumentContent {
+	return &document.DocumentContent{
+		ID:          primitive.NewObjectID().Hex(),
+		DocumentID:  documentID,
+		Content:     content,
+		ContentType: "markdown",
+		WordCount:   len([]rune(content)),
+		CharCount:   len(content),
+		Version:     1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		LastSavedAt: time.Now(),
+	}
+}
+
 // WithDocumentTitle 设置文档标题
 func WithDocumentTitle(title string) DocumentOption {
 	return func(d *document.Document) {
@@ -186,10 +204,13 @@ func WithDocumentTitle(title string) DocumentOption {
 	}
 }
 
-// WithDocumentContent 设置文档内容
+// WithDocumentContent 设置文档内容（已废弃）
+// 注意：Document模型不再包含Content字段
+// 请使用DocumentContent模型来处理文档内容
+// 此函数保留用于向后兼容，但实际上不会产生任何效果
 func WithDocumentContent(content string) DocumentOption {
 	return func(d *document.Document) {
-		d.Content = content
+		// 不再设置Content字段，保留函数签名用于兼容
 	}
 }
 

@@ -33,7 +33,8 @@ func NewService() *Service {
 	versionService := &documentService.VersionService{}
 
 	// 创建上下文服务
-	contextService := NewContextService(docService, projService, nodeService, versionService)
+	// TODO: 这里使用nil是因为旧架构没有依赖注入，需要重构为使用RepositoryFactory
+	contextService := NewContextService(docService, projService, nodeService, versionService, nil)
 
 	// 创建外部API服务
 	externalAPIService := NewExternalAPIService(cfg.AI)

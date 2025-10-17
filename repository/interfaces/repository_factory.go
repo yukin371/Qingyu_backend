@@ -21,6 +21,10 @@ type RepositoryFactory interface {
 	CreateProjectRepository() writing.ProjectRepository
 	CreateRoleRepository() UserInterface.RoleRepository
 
+	// 文档相关Repository
+	CreateDocumentRepository() writing.DocumentRepository
+	CreateDocumentContentRepository() writing.DocumentContentRepository
+
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository
 

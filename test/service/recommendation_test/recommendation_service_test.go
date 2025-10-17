@@ -14,6 +14,7 @@ import (
 
 // ===========================
 // Mock实现
+// 注意: MockItemFeatureRepo和MockHotRecommendationRepo在recommendation_service_enhanced_test.go中定义
 // ===========================
 
 type MockBehaviorRepo struct {
@@ -62,8 +63,10 @@ func (m *MockProfileRepo) GetByUserID(ctx context.Context, userID string) (*reco
 func TestRecommendationService_RecordBehavior(t *testing.T) {
 	mockBehaviorRepo := new(MockBehaviorRepo)
 	mockProfileRepo := new(MockProfileRepo)
+	mockItemFeatureRepo := new(MockItemFeatureRepo)
+	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo)
+	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("成功记录行为", func(t *testing.T) {
 		ctx := context.Background()
@@ -99,8 +102,10 @@ func TestRecommendationService_RecordBehavior(t *testing.T) {
 func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 	mockBehaviorRepo := new(MockBehaviorRepo)
 	mockProfileRepo := new(MockProfileRepo)
+	mockItemFeatureRepo := new(MockItemFeatureRepo)
+	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo)
+	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("获取推荐-用户有画像", func(t *testing.T) {
 		ctx := context.Background()
@@ -138,8 +143,10 @@ func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 func TestRecommendationService_GetSimilarItems(t *testing.T) {
 	mockBehaviorRepo := new(MockBehaviorRepo)
 	mockProfileRepo := new(MockProfileRepo)
+	mockItemFeatureRepo := new(MockItemFeatureRepo)
+	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo)
+	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("获取相似物品", func(t *testing.T) {
 		ctx := context.Background()
@@ -156,8 +163,10 @@ func TestRecommendationService_GetSimilarItems(t *testing.T) {
 func TestRecommendationService_ServiceInfo(t *testing.T) {
 	mockBehaviorRepo := new(MockBehaviorRepo)
 	mockProfileRepo := new(MockProfileRepo)
+	mockItemFeatureRepo := new(MockItemFeatureRepo)
+	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo)
+	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	name, version := service.ServiceInfo()
 

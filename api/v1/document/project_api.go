@@ -23,7 +23,7 @@ func NewProjectApi() *ProjectApi {
 // CreateProject 创建项目
 // POST /api/v1/document/project
 func (a *ProjectApi) CreateProject(c *gin.Context) {
-	var req model.Project
+	var req svc.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return

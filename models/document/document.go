@@ -16,13 +16,18 @@ type Document struct {
 	Order     int          `bson:"order" json:"order"`   // 同级排序
 	Status    string       `bson:"status" json:"status"` // planned | writing | completed
 
-	// 统计信息
-	WordCount int `bson:"word_count" json:"wordCount"` // 字数统计（从DocumentContent同步）
+	// 统计信息（从DocumentContent同步）
+	WordCount int `bson:"word_count" json:"wordCount"` // 字数统计
 
 	// 关联信息
 	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty"` // 关联角色
 	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty"`   // 关联地点
 	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty"`   // 关联时间线
+
+	// 写作辅助（AI上下文需要）
+	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty"`   // 情节线索
+	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty"`       // 关键点
+	WritingHints []string `bson:"writing_hints,omitempty" json:"writingHints,omitempty"` // 写作提示
 
 	// 标签和备注
 	Tags  []string `bson:"tags,omitempty" json:"tags,omitempty"`
