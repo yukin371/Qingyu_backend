@@ -47,26 +47,76 @@ clean: ## 清理构建文件
 
 # 测试相关命令
 .PHONY: test
-test: ## 运行所有测试
+test: ## 运行所有测试（带竞态检测）
 	@echo "运行测试..."
-	go test -v ./...
+	go test -v -race ./...
 
 .PHONY: test-unit
-test-unit: ## 运行单元测试
+test-unit: ## 运行单元测试（Service和Repository层）
 	@echo "运行单元测试..."
-	go test -v -short ./...
+	go test -v -short -race ./service/... ./repository/... ./test/service/... ./test/repository/...
 
 .PHONY: test-integration
 test-integration: ## 运行集成测试
 	@echo "运行集成测试..."
-	go test -v -tags=integration ./test/integration/...
+	go test -v -run Integration ./test/integration/...
+
+.PHONY: test-api
+test-api: ## 运行API测试
+	@echo "运行API测试..."
+	go test -v ./test/api/...
 
 .PHONY: test-coverage
 test-coverage: ## 运行测试并生成覆盖率报告
 	@echo "生成测试覆盖率报告..."
-	go test -v -coverprofile=coverage.out ./...
+	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "覆盖率报告已生成: coverage.html"
+	@go tool cover -func=coverage.out | grep total
+
+.PHONY: test-coverage-check
+test-coverage-check: ## 检查覆盖率是否达到80%
+	@echo "检查测试覆盖率..."
+	@go test -coverprofile=coverage.out ./... > /dev/null 2>&1
+	@coverage=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+	echo "总覆盖率: $${coverage}%"; \
+	threshold=80; \
+	result=$$(echo "$${coverage} >= $${threshold}" | bc -l 2>/dev/null || echo "0"); \
+	if [ "$$result" = "1" ]; then \
+		echo "✅ 覆盖率达标 (≥80%)"; \
+	else \
+		echo "❌ 覆盖率低于80%"; \
+		exit 1; \
+	fi
+
+.PHONY: test-gen
+test-gen: ## 为指定文件生成测试模板（需要安装gotests）
+	@if [ -z "$(file)" ]; then \
+		echo "用法: make test-gen file=path/to/file.go"; \
+		echo "示例: make test-gen file=service/user/user_service.go"; \
+		exit 1; \
+	fi
+	@if ! command -v gotests > /dev/null; then \
+		echo "正在安装 gotests..."; \
+		go install github.com/cweill/gotests/gotests@latest; \
+	fi
+	@echo "为 $(file) 生成测试..."
+	gotests -all -w $(file)
+	@echo "✅ 测试文件已生成"
+
+.PHONY: test-clean
+test-clean: ## 清理测试缓存和覆盖率文件
+	@echo "清理测试缓存和覆盖率文件..."
+	go clean -testcache
+	rm -f coverage.out coverage.html
+	@echo "✅ 清理完成"
+
+.PHONY: test-watch
+test-watch: ## 监视文件变化并自动运行测试
+	@echo "监视文件变化..."
+	@while true; do \
+		inotifywait -r -e modify . && clear && make test-unit; \
+	done
 
 # 代码质量相关命令
 .PHONY: lint

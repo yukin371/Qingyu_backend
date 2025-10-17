@@ -87,9 +87,9 @@
 - [阅读器设计](../design/reading/阅读器设计.md)
 
 ### 实施文档
-- [阅读端服务实施文档](../implementation/02阅读端服务/README.md)
-- [书城系统实施文档](../implementation/02阅读端服务/01书城系统/)
-- [阅读器系统实施文档](../implementation/02阅读端服务/02阅读器系统/)
+- [阅读端模块实施文档](../implementation/06阅读端模块/README.md)
+- [书城系统实施文档](../implementation/06阅读端模块/01书城系统/)
+- [阅读器系统实施文档](../implementation/06阅读端模块/02阅读器系统/)
 
 ### 测试文档
 - [阅读端测试文档](../testing/)
