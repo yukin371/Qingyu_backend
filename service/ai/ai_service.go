@@ -13,9 +13,8 @@ import (
 
 // Service AI服务
 type Service struct {
-	contextService     *ContextService
-	externalAPIService *ExternalAPIService
-	adapterManager     *adapter.AdapterManager
+	contextService *ContextService
+	adapterManager *adapter.AdapterManager
 }
 
 // NewService 创建AI服务
@@ -35,9 +34,6 @@ func NewService() *Service {
 	// 创建上下文服务
 	// TODO: 这里使用nil是因为旧架构没有依赖注入，需要重构为使用RepositoryFactory
 	contextService := NewContextService(docService, projService, nodeService, versionService, nil)
-
-	// 创建外部API服务
-	externalAPIService := NewExternalAPIService(cfg.AI)
 
 	// 创建适配器管理器 - 使用简化的配置
 	var adapterManager *adapter.AdapterManager
@@ -60,9 +56,8 @@ func NewService() *Service {
 	}
 
 	return &Service{
-		contextService:     contextService,
-		externalAPIService: externalAPIService,
-		adapterManager:     adapterManager,
+		contextService: contextService,
+		adapterManager: adapterManager,
 	}
 }
 

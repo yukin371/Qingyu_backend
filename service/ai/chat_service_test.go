@@ -7,6 +7,7 @@ import (
 	"time"
 
 	aiModels "Qingyu_backend/models/ai"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -71,27 +72,26 @@ func (m *MockAIService) GenerateContentStream(ctx context.Context, req *Generate
 func setupTestChatService() (*ChatService, *MockChatRepository, *MockAIService) {
 	mockRepo := &MockChatRepository{}
 	mockAI := &MockAIService{}
-	
+
 	service := &ChatService{
-		repository:           mockRepo,
-		aiService:           mockAI,
-		novelContextService: nil, // 暂时设为nil
+		repository: mockRepo,
+		aiService:  mockAI,
 	}
-	
+
 	return service, mockRepo, mockAI
 }
 
 // TestChatService_StartChat_NewSession 测试开始新聊天会话
 func TestChatService_StartChat_NewSession(t *testing.T) {
 	service, mockRepo, mockAI := setupTestChatService()
-	
+
 	ctx := context.Background()
 	req := &ChatRequest{
 		ProjectID:  "test-project",
 		Message:    "Hello, AI!",
 		UseContext: false,
 	}
-	
+
 	// Mock AI响应
 	aiResponse := &GenerateContentResponse{
 		Content:     "Hello! How can I help you?",
@@ -99,7 +99,7 @@ func TestChatService_StartChat_NewSession(t *testing.T) {
 		Model:       "gpt-3.5-turbo",
 		GeneratedAt: time.Now(),
 	}
-	
+
 	// 设置mock期望
 	mockRepo.On("GetSessionByID", ctx, mock.AnythingOfType("string")).Return((*aiModels.ChatSession)(nil), errors.New("session not found")).Maybe()
 	mockRepo.On("CreateSession", ctx, mock.MatchedBy(func(session *aiModels.ChatSession) bool {
@@ -114,10 +114,10 @@ func TestChatService_StartChat_NewSession(t *testing.T) {
 	mockRepo.On("UpdateSession", ctx, mock.MatchedBy(func(session *aiModels.ChatSession) bool {
 		return session != nil && session.ProjectID == "test-project"
 	})).Return(nil)
-	
+
 	// 执行测试
 	response, err := service.StartChat(ctx, req)
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.NotNil(t, response)
@@ -127,7 +127,7 @@ func TestChatService_StartChat_NewSession(t *testing.T) {
 	assert.Equal(t, 50, response.TokensUsed)
 	assert.Equal(t, "gpt-3.5-turbo", response.Model)
 	assert.False(t, response.ContextUsed)
-	
+
 	// 验证mock调用
 	mockRepo.AssertExpectations(t)
 	mockAI.AssertExpectations(t)
@@ -136,7 +136,7 @@ func TestChatService_StartChat_NewSession(t *testing.T) {
 // TestChatService_StartChat_ExistingSession 测试继续现有聊天会话
 func TestChatService_StartChat_ExistingSession(t *testing.T) {
 	service, mockRepo, mockAI := setupTestChatService()
-	
+
 	ctx := context.Background()
 	sessionID := primitive.NewObjectID()
 	req := &ChatRequest{
@@ -144,7 +144,7 @@ func TestChatService_StartChat_ExistingSession(t *testing.T) {
 		ProjectID: "test-project",
 		Message:   "Continue chat",
 	}
-	
+
 	// 准备现有会话
 	sessionObjID := primitive.NewObjectID()
 	projectObjID := primitive.NewObjectID()
@@ -166,14 +166,14 @@ func TestChatService_StartChat_ExistingSession(t *testing.T) {
 		CreatedAt: time.Now().Add(-time.Hour),
 		UpdatedAt: time.Now().Add(-time.Hour),
 	}
-	
+
 	aiResponse := &GenerateContentResponse{
 		Content:     "Continuing our conversation...",
 		TokensUsed:  30,
 		Model:       "gpt-3.5-turbo",
 		GeneratedAt: time.Now(),
 	}
-	
+
 	// 设置mock期望
 	mockRepo.On("GetSessionByID", ctx, sessionID.Hex()).Return(existingSession, nil)
 	mockAI.On("GenerateContent", ctx, mock.MatchedBy(func(req *GenerateContentRequest) bool {
@@ -185,17 +185,17 @@ func TestChatService_StartChat_ExistingSession(t *testing.T) {
 	mockRepo.On("UpdateSession", ctx, mock.MatchedBy(func(session *aiModels.ChatSession) bool {
 		return session != nil
 	})).Return(nil)
-	
+
 	// 执行测试
 	response, err := service.StartChat(ctx, req)
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, sessionID.Hex(), response.SessionID) // 使用请求中的SessionID
 	assert.Equal(t, "Continuing our conversation...", response.Message.Content)
 	assert.Equal(t, 30, response.TokensUsed) // 修正类型为int
-	
+
 	mockRepo.AssertExpectations(t)
 	mockAI.AssertExpectations(t)
 }
@@ -203,15 +203,15 @@ func TestChatService_StartChat_ExistingSession(t *testing.T) {
 // TestChatService_StartChat_EmptyMessage 测试空消息
 func TestChatService_StartChat_EmptyMessage(t *testing.T) {
 	service, _, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	req := &ChatRequest{
 		ProjectID: "test-project",
 		Message:   "", // 空消息
 	}
-	
+
 	response, err := service.StartChat(ctx, req)
-	
+
 	assert.Error(t, err)
 	assert.Nil(t, response)
 	assert.Contains(t, err.Error(), "消息内容不能为空")
@@ -220,13 +220,13 @@ func TestChatService_StartChat_EmptyMessage(t *testing.T) {
 // TestChatService_StartChat_AIServiceError 测试AI服务错误
 func TestChatService_StartChat_AIServiceError(t *testing.T) {
 	service, mockRepo, mockAI := setupTestChatService()
-	
+
 	ctx := context.Background()
 	req := &ChatRequest{
 		ProjectID: "test-project",
 		Message:   "Hello",
 	}
-	
+
 	// 设置mock期望
 	mockRepo.On("GetSessionByID", ctx, mock.AnythingOfType("string")).Return((*aiModels.ChatSession)(nil), errors.New("session not found")).Maybe()
 	mockRepo.On("CreateSession", ctx, mock.MatchedBy(func(session *aiModels.ChatSession) bool {
@@ -238,13 +238,13 @@ func TestChatService_StartChat_AIServiceError(t *testing.T) {
 	mockAI.On("GenerateContent", ctx, mock.MatchedBy(func(req *GenerateContentRequest) bool {
 		return req != nil && req.ProjectID == "test-project"
 	})).Return((*GenerateContentResponse)(nil), errors.New("AI service error"))
-	
+
 	response, err := service.StartChat(ctx, req)
-	
+
 	assert.Error(t, err)
 	assert.Nil(t, response)
 	assert.Contains(t, err.Error(), "AI service error")
-	
+
 	mockRepo.AssertExpectations(t)
 	mockAI.AssertExpectations(t)
 }
@@ -252,10 +252,10 @@ func TestChatService_StartChat_AIServiceError(t *testing.T) {
 // TestChatService_GetChatHistory_Success 测试获取聊天历史成功
 func TestChatService_GetChatHistory_Success(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	sessionID := "test-session-123"
-	
+
 	// 准备测试数据
 	sessionObjID := primitive.NewObjectID()
 	dbSession := &aiModels.ChatSession{
@@ -282,12 +282,12 @@ func TestChatService_GetChatHistory_Success(t *testing.T) {
 		CreatedAt: time.Now().Add(-time.Hour),
 		UpdatedAt: time.Now().Add(-time.Minute * 59),
 	}
-	
+
 	mockRepo.On("GetSessionByID", ctx, sessionID).Return(dbSession, nil)
-	
+
 	// 执行测试
 	result, err := service.GetChatHistory(ctx, sessionID)
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -299,37 +299,37 @@ func TestChatService_GetChatHistory_Success(t *testing.T) {
 	assert.Equal(t, "Hello", result.Messages[0].Content)
 	assert.Equal(t, "assistant", result.Messages[1].Role)
 	assert.Equal(t, "Hi there!", result.Messages[1].Content)
-	
+
 	mockRepo.AssertExpectations(t)
 }
 
 // TestChatService_GetChatHistory_NotFound 测试会话不存在
 func TestChatService_GetChatHistory_NotFound(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	sessionID := "non-existent-session"
-	
+
 	mockRepo.On("GetSessionByID", ctx, sessionID).Return((*aiModels.ChatSession)(nil), errors.New("session not found"))
-	
+
 	result, err := service.GetChatHistory(ctx, sessionID)
-	
+
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "session not found")
-	
+
 	mockRepo.AssertExpectations(t)
 }
 
 // TestChatService_ListChatSessions_Success 测试列出聊天会话成功
 func TestChatService_ListChatSessions_Success(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	projectID := "test-project"
 	limit := 10
 	offset := 0
-	
+
 	// 准备测试数据
 	dbSessions := []*aiModels.ChatSession{
 		{
@@ -355,12 +355,12 @@ func TestChatService_ListChatSessions_Success(t *testing.T) {
 			UpdatedAt: time.Now().Add(-time.Hour),
 		},
 	}
-	
+
 	mockRepo.On("GetSessionsByProjectID", ctx, projectID, limit, offset).Return(dbSessions, nil)
-	
+
 	// 执行测试
 	result, err := service.ListChatSessions(ctx, projectID, limit, offset)
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -369,39 +369,39 @@ func TestChatService_ListChatSessions_Success(t *testing.T) {
 	assert.Equal(t, "Chat 1", result[0].Title)
 	assert.Equal(t, "session-2", result[1].ID)
 	assert.Equal(t, "Chat 2", result[1].Title)
-	
+
 	mockRepo.AssertExpectations(t)
 }
 
 // TestChatService_ListChatSessions_Empty 测试空会话列表
 func TestChatService_ListChatSessions_Empty(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	projectID := "empty-project"
-	
+
 	mockRepo.On("GetSessionsByProjectID", ctx, projectID, 20, 0).Return([]*aiModels.ChatSession{}, nil)
-	
+
 	result, err := service.ListChatSessions(ctx, projectID, 20, 0)
-	
+
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Len(t, result, 0)
-	
+
 	mockRepo.AssertExpectations(t)
 }
 
 // TestChatService_DeleteChatSession_Success 测试删除聊天会话成功
 func TestChatService_DeleteChatSession_Success(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	sessionID := "test-session-123"
-	
+
 	mockRepo.On("DeleteSession", ctx, sessionID).Return(nil)
-	
+
 	err := service.DeleteChatSession(ctx, sessionID)
-	
+
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
@@ -409,14 +409,14 @@ func TestChatService_DeleteChatSession_Success(t *testing.T) {
 // TestChatService_DeleteChatSession_NotFound 测试删除不存在的会话
 func TestChatService_DeleteChatSession_NotFound(t *testing.T) {
 	service, mockRepo, _ := setupTestChatService()
-	
+
 	ctx := context.Background()
 	sessionID := "non-existent-session"
-	
+
 	mockRepo.On("DeleteSession", ctx, sessionID).Return(errors.New("session not found"))
-	
+
 	err := service.DeleteChatSession(ctx, sessionID)
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "session not found")
 	mockRepo.AssertExpectations(t)

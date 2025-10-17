@@ -1,5 +1,22 @@
 package ai
 
+// ⚠️ DEPRECATED: NovelContextService 已被弃用
+//
+// 弃用原因：
+// 1. 依赖的 VectorDatabase、MemoryStore、RetrievalService、SummaryService 接口尚未实现
+// 2. 多个方法为占位实现（generateEmbedding 返回空向量）
+// 3. 核心功能（addMemoryToContext、addContextToAIContext）未实现
+// 4. 该服务的使用方（ChatService）已移除相关代码
+//
+// 后续计划：
+// - 待向量数据库集成完成后重新实现
+// - 待嵌入模型API对接完成后启用
+// - 建议作为独立的上下文管理模块重新设计
+//
+// 迁移路径：2025-10-17 从 service/ai/ 移至 service/ai/_deprecated/
+//
+// 如需重新启用此功能，请参考：doc/implementation/AI服务代码清理报告.md
+
 import (
 	"context"
 	"fmt"
@@ -10,7 +27,7 @@ import (
 	documentService "Qingyu_backend/service/project"
 )
 
-// NovelContextService 小说上下文管理服务
+// NovelContextService 小说上下文管理服务（已弃用）
 type NovelContextService struct {
 	documentService *documentService.DocumentService
 	projectService  *documentService.ProjectService
