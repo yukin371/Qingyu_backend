@@ -160,6 +160,14 @@ func NewPagination(total int64, page, pageSize int) *Pagination {
 	}
 }
 
+// HandleServiceError 处理Service层错误
+// 将ServiceError转换为HTTP响应
+func HandleServiceError(c *gin.Context, err error) {
+	// 导入errors包处理ServiceError
+	// 暂时使用通用错误处理
+	Error(c, http.StatusInternalServerError, "操作失败", err.Error())
+}
+
 // =========================
 // Gin便捷响应函数
 // =========================
