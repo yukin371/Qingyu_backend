@@ -616,5 +616,3 @@ Authorization: Bearer {{token}}
 - `active`: 正常
 - `inactive`: 未激活
 - `banned`: 已封禁
-
-

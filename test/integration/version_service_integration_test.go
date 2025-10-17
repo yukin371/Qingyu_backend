@@ -1,4 +1,4 @@
-package project
+package integration_test
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
 	model "Qingyu_backend/models/document"
+	"Qingyu_backend/service/project"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -62,6 +63,22 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func fileCol() *mongo.Collection {
+	return global.DB.Collection("novel_files")
+}
+
+func contentCol() *mongo.Collection {
+	return global.DB.Collection("document_contents")
+}
+
+func revCol() *mongo.Collection {
+	return global.DB.Collection("file_revisions")
+}
+
+func patchCol() *mongo.Collection {
+	return global.DB.Collection("file_patches")
+}
+
 func cleanupCollections(t *testing.T, projectID string) {
 	ctx := context.Background()
 	global.DB.Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})
@@ -71,7 +88,7 @@ func cleanupCollections(t *testing.T, projectID string) {
 }
 
 func TestUpdateContentWithVersion_HappyPath(t *testing.T) {
-	svc := &VersionService{}
+	svc := &project.VersionService{}
 	projectID := "test_project"
 	nodeID := "node_update_1"
 	cleanupCollections(t, projectID)
@@ -128,7 +145,7 @@ func TestUpdateContentWithVersion_HappyPath(t *testing.T) {
 }
 
 func TestUpdateContentWithVersion_Conflict(t *testing.T) {
-	svc := &VersionService{}
+	svc := &project.VersionService{}
 	projectID := "test_project"
 	nodeID := "node_update_2"
 	cleanupCollections(t, projectID)
@@ -171,7 +188,7 @@ func TestUpdateContentWithVersion_Conflict(t *testing.T) {
 }
 
 func TestRollbackToVersion(t *testing.T) {
-	svc := &VersionService{}
+	svc := &project.VersionService{}
 	projectID := "test_project"
 	nodeID := "node_rb_1"
 	cleanupCollections(t, projectID)
@@ -237,7 +254,7 @@ func TestRollbackToVersion(t *testing.T) {
 }
 
 func TestCreateAndApplyPatch_Full(t *testing.T) {
-	svc := &VersionService{}
+	svc := &project.VersionService{}
 	projectID := "test_project"
 	nodeID := "node_patch_1"
 	cleanupCollections(t, projectID)

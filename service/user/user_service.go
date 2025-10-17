@@ -299,7 +299,41 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
 	}
 
-	// 4. 更新最后登录时间
+	// 4. 检查用户状态
+	switch user.Status {
+	case usersModel.UserStatusInactive:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号未激活，请先验证邮箱",
+			nil,
+		)
+	case usersModel.UserStatusBanned:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号已被封禁，请联系管理员",
+			nil,
+		)
+	case usersModel.UserStatusDeleted:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号已删除",
+			nil,
+		)
+	case usersModel.UserStatusActive:
+		// 允许登录，继续执行
+	default:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeInternal,
+			"未知的用户状态",
+			nil,
+		)
+	}
+
+	// 5. 更新最后登录时间
 	// IP 地址应该从 context 中获取，这里暂时使用默认值
 	ip := "unknown" // TODO: 从 context 中获取客户端 IP
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
@@ -307,7 +341,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 		fmt.Printf("更新最后登录时间失败: %v\n", err)
 	}
 
-	// 5. 生成JWT令牌
+	// 6. 生成JWT令牌
 	token, err := s.generateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
