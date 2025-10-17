@@ -13,10 +13,15 @@ import (
 
 // ContextService AI上下文服务
 type ContextService struct {
-	documentService     *documentService.DocumentService
-	projectService      *documentService.ProjectService
-	nodeService         *documentService.NodeService
-	versionService      *documentService.VersionService
+	documentService *documentService.DocumentService
+	projectService  *documentService.ProjectService
+	nodeService     *documentService.NodeService
+	versionService  *documentService.VersionService
+
+	// documentContentRepo: 临时架构债务
+	// TODO(架构重构): 当前使用 nil 是因为 ai_service.go 中采用了旧的直接实例化方式
+	// 而非依赖注入。待整体架构迁移到 Repository Factory 模式后统一解决。
+	// 相关讨论: doc/architecture/架构设计规范.md - 依赖注入原则
 	documentContentRepo writing.DocumentContentRepository
 }
 
@@ -82,7 +87,7 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 	}
 
 	// 获取章节内容
-	// TODO: 临时处理nil repository（旧架构遗留问题）
+	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
 	var docContent *document.DocumentContent
 	if s.documentContentRepo != nil {
 		var err error
@@ -133,22 +138,22 @@ func (s *ContextService) buildPreviousChaptersSummary(ctx context.Context, proje
 }
 
 // generateChapterSummary 生成章节摘要
-// 注意：这个方法现在需要通过DocumentContentRepository获取内容
+// 注意: 此方法依赖 documentContentRepo，如果为 nil 则降级使用 KeyPoints
 // 建议调用方直接使用 buildChapterInfo，它已经包含了摘要生成逻辑
 func (s *ContextService) generateChapterSummary(ctx context.Context, doc *document.Document) string {
-	// TODO: 临时处理nil repository（旧架构遗留问题）
+	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
 	if s.documentContentRepo == nil {
-		// 如果repository为nil，尝试从KeyPoints生成摘要
+		// 降级方案：从 KeyPoints 生成摘要
 		if len(doc.KeyPoints) > 0 {
 			return strings.Join(doc.KeyPoints, "; ")
 		}
 		return ""
 	}
 
-	// 通过DocumentContentRepository获取内容
+	// 通过 DocumentContentRepository 获取内容
 	docContent, err := s.documentContentRepo.GetByDocumentID(ctx, doc.ID)
 	if err != nil || docContent == nil {
-		// 如果获取失败，尝试从KeyPoints生成摘要
+		// 降级方案：从 KeyPoints 生成摘要
 		if len(doc.KeyPoints) > 0 {
 			return strings.Join(doc.KeyPoints, "; ")
 		}
