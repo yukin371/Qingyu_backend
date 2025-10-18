@@ -47,12 +47,14 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 
 	// 3. 创建项目对象
 	project := &document.Project{
-		AuthorID: userID,
-		Title:    req.Title,
-		Summary:  req.Summary,
-		CoverURL: req.CoverURL,
-		Category: req.Category,
-		Tags:     req.Tags,
+		AuthorID:   userID,
+		Title:      req.Title,
+		Summary:    req.Summary,
+		CoverURL:   req.CoverURL,
+		Category:   req.Category,
+		Tags:       req.Tags,
+		Status:     document.StatusDraft,       // 默认状态为草稿
+		Visibility: document.VisibilityPrivate, // 默认为私密
 	}
 
 	// 4. 保存到数据库

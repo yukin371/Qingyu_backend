@@ -77,13 +77,13 @@ type MockSystemConfig struct {
 
 // MockDataStats 模拟数据统计模型
 type MockDataStats struct {
-	ID         primitive.ObjectID    `bson:"_id,omitempty" json:"id"`
-	Type       string                `bson:"type" json:"type"`
-	Date       string                `bson:"date" json:"date"`
-	Metrics    map[string]int64      `bson:"metrics" json:"metrics"`
-	Dimensions map[string]string     `bson:"dimensions" json:"dimensions"`
-	CreatedAt  time.Time             `bson:"created_at" json:"createdAt"`
-	UpdatedAt  time.Time             `bson:"updated_at" json:"updatedAt"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Type       string             `bson:"type" json:"type"`
+	Date       string             `bson:"date" json:"date"`
+	Metrics    map[string]int64   `bson:"metrics" json:"metrics"`
+	Dimensions map[string]string  `bson:"dimensions" json:"dimensions"`
+	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // MockAdminUserRepository 模拟管理员用户仓储
@@ -215,10 +215,10 @@ func (m *MockDataStatsRepository) GetByTypeAndDateRange(ctx context.Context, sta
 
 // MockAdminService 模拟管理后台服务
 type MockAdminService struct {
-	adminUserRepo   *MockAdminUserRepository
+	adminUserRepo    *MockAdminUserRepository
 	operationLogRepo *MockOperationLogRepository
 	systemConfigRepo *MockSystemConfigRepository
-	dataStatsRepo   *MockDataStatsRepository
+	dataStatsRepo    *MockDataStatsRepository
 }
 
 func NewMockAdminService(
@@ -382,10 +382,10 @@ func (s *MockAdminService) GetDashboardStats(ctx context.Context, dateRange stri
 
 	// 获取用户统计
 	userStats, _ := s.dataStatsRepo.GetByTypeAndDateRange(ctx, "user", startDate, endDate)
-	
+
 	// 获取内容统计
 	contentStats, _ := s.dataStatsRepo.GetByTypeAndDateRange(ctx, "content", startDate, endDate)
-	
+
 	// 获取订单统计
 	orderStats, _ := s.dataStatsRepo.GetByTypeAndDateRange(ctx, "order", startDate, endDate)
 
@@ -550,11 +550,20 @@ func TestAdminService_UpdateAdminUser_Success(t *testing.T) {
 		Status:   "active",
 	}
 
-	expectedUpdates := map[string]interface{}{
-		"real_name":  "新管理员",
-		"status":     "inactive",
-		"updated_at": mock.AnythingOfType("time.Time"),
-	}
+	// 使用 mock.MatchedBy 来匹配包含 time.Time 的 map
+	expectedUpdates := mock.MatchedBy(func(updates map[string]interface{}) bool {
+		if updates["real_name"] != "新管理员" {
+			return false
+		}
+		if updates["status"] != "inactive" {
+			return false
+		}
+		// 检查是否有 updated_at 字段且为 time.Time 类型
+		if _, ok := updates["updated_at"]; !ok {
+			return false
+		}
+		return true
+	})
 
 	// Mock 设置
 	adminUserRepo.On("GetByID", ctx, userID).Return(existingUser, nil)
@@ -724,7 +733,7 @@ func TestAdminService_GetDashboardStats_Success(t *testing.T) {
 	// 断言
 	assert.NoError(t, err)
 	assert.NotNil(t, dashboard)
-	
+
 	overview := dashboard["overview"].(map[string]interface{})
 	assert.Equal(t, int64(12560), overview["totalUsers"])
 	assert.Equal(t, int64(8900), overview["activeUsers"])

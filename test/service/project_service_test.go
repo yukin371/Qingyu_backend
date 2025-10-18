@@ -162,7 +162,7 @@ func TestProjectService_CreateProject(t *testing.T) {
 		proj.ID = "project123"
 		proj.CreatedAt = time.Now()
 	})
-	mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return()
+	mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return(nil)
 
 	// 4. 执行测试
 	t.Run("正常创建项目", func(t *testing.T) {
@@ -375,7 +375,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
 		mockProjectRepo.On("Update", mock.Anything, "project123", mock.Anything).Return(nil).Once()
-		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return()
+		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return(nil)
 
 		req := &project.UpdateProjectRequest{
 			Title: "新标题",
@@ -426,7 +426,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
 		mockProjectRepo.On("Update", mock.Anything, "project123", mock.Anything).Return(nil).Once()
-		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return()
+		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return(nil)
 
 		req := &project.UpdateProjectRequest{
 			Title: "新标题",
@@ -459,7 +459,7 @@ func TestProjectService_DeleteProject(t *testing.T) {
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
 		mockProjectRepo.On("SoftDelete", mock.Anything, "project123", "user123").Return(nil).Once()
-		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return()
+		mockEventBus.On("PublishAsync", mock.Anything, mock.Anything).Return(nil)
 
 		err := service.DeleteProject(ctx, "project123")
 

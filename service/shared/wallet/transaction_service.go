@@ -32,16 +32,20 @@ func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionSe
 // ============ 交易操作 ============
 
 // Recharge 充值
+// 注意：walletID实际上在当前实现中被当作userID使用
 func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, amount float64, method, orderNo string) (*Transaction, error) {
 	// 1. 验证金额
 	if amount <= 0 {
 		return nil, fmt.Errorf("充值金额必须大于0")
 	}
 
-	// 2. 获取钱包
+	// 2. 获取钱包（这里walletID实际上是userID，因为repository的GetWallet接受userID）
 	wallet, err := s.walletRepo.GetWallet(ctx, walletID)
 	if err != nil {
 		return nil, fmt.Errorf("钱包不存在: %w", err)
+	}
+	if wallet == nil {
+		return nil, fmt.Errorf("钱包不存在")
 	}
 
 	// 3. 检查钱包状态

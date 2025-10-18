@@ -13,7 +13,7 @@ func TestUnifiedWalletService_CreateWallet(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_create_test"
 	wallet, err := service.CreateWallet(ctx, userID)
 
 	if err != nil {
@@ -39,7 +39,7 @@ func TestUnifiedWalletService_Recharge(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_recharge_test"
 
 	// 先创建钱包
 	_, err := service.CreateWallet(ctx, userID)
@@ -79,7 +79,7 @@ func TestUnifiedWalletService_Consume(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_consume_test"
 
 	// 创建钱包并充值
 	_, _ = service.CreateWallet(ctx, userID)
@@ -111,8 +111,8 @@ func TestUnifiedWalletService_Transfer(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	fromUserID := "user123"
-	toUserID := "user456"
+	fromUserID := "user_transfer_from"
+	toUserID := "user_transfer_to"
 
 	// 创建两个钱包
 	_, _ = service.CreateWallet(ctx, fromUserID)
@@ -154,7 +154,7 @@ func TestUnifiedWalletService_FreezeAndUnfreeze(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_freeze_test"
 
 	// 创建钱包
 	_, _ = service.CreateWallet(ctx, userID)
@@ -190,7 +190,7 @@ func TestUnifiedWalletService_RequestWithdraw(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_withdraw_test"
 
 	// 创建钱包并充值
 	_, _ = service.CreateWallet(ctx, userID)
@@ -230,7 +230,7 @@ func TestUnifiedWalletService_WithdrawFlow(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_withdrawflow_test"
 	adminID := "admin001"
 
 	// 创建钱包并充值
@@ -274,7 +274,7 @@ func TestUnifiedWalletService_ListTransactions(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
-	userID := "user123"
+	userID := "user_listtx_test"
 
 	// 创建钱包并进行多次交易
 	_, _ = service.CreateWallet(ctx, userID)

@@ -56,9 +56,11 @@ func (m *MockWalletRepositoryV2) UpdateWallet(ctx context.Context, walletID stri
 }
 
 // UpdateBalance 更新余额
+// 注意：在当前实现中，walletID参数实际上可以是userID或wallet.ID
 func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID string, amount float64) error {
 	for _, wallet := range m.wallets {
-		if wallet.ID == walletID {
+		// 支持通过wallet.ID或userID查找
+		if wallet.ID == walletID || wallet.UserID == walletID {
 			wallet.Balance += amount
 			wallet.UpdatedAt = time.Now()
 			return nil
