@@ -154,3 +154,24 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "删除成功", nil)
 }
+
+// UpdateProjectStatistics 更新项目统计信息
+// @Summary 更新项目统计信息
+// @Description 更新项目的统计信息（字数、章节数等）
+// @Tags 项目管理
+// @Accept json
+// @Produce json
+// @Param id path string true "项目ID"
+// @Success 200 {object} shared.Response
+// @Router /api/v1/projects/{id}/statistics [put]
+func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
+	projectID := c.Param("id")
+
+	// 调用Service计算并更新统计信息
+	if err := api.projectService.RecalculateProjectStatistics(c.Request.Context(), projectID); err != nil {
+		shared.Error(c, http.StatusInternalServerError, "更新统计失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "更新成功", nil)
+}

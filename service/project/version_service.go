@@ -734,3 +734,222 @@ func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, no
 	// 在实际项目中，这里需要实现更智能的合并算法
 	return content, nil
 }
+
+// GetVersionHistory 获取版本历史
+func (s *VersionService) GetVersionHistory(ctx context.Context, documentID string, page, pageSize int) (*VersionHistoryResponse, error) {
+	// 计算偏移量
+	offset := (page - 1) * pageSize
+
+	// 查询版本历史
+	filter := bson.M{"node_id": documentID}
+	opts := options.Find().
+		SetSort(bson.D{{Key: "version", Value: -1}}).
+		SetSkip(int64(offset)).
+		SetLimit(int64(pageSize))
+
+	cursor, err := revCol().Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询版本历史失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var revisions []model.FileRevision
+	if err := cursor.All(ctx, &revisions); err != nil {
+		return nil, fmt.Errorf("解析版本历史失败: %w", err)
+	}
+
+	// 统计总数
+	total, err := revCol().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("统计版本数量失败: %w", err)
+	}
+
+	// 转换为响应格式
+	versions := make([]*VersionInfo, 0, len(revisions))
+	for _, rev := range revisions {
+		versions = append(versions, &VersionInfo{
+			VersionID: rev.ID,
+			Version:   rev.Version,
+			Message:   rev.Message,
+			CreatedAt: rev.CreatedAt,
+			CreatedBy: rev.AuthorID,
+			WordCount: 0, // TODO: 从快照中获取字数
+		})
+	}
+
+	return &VersionHistoryResponse{
+		Versions: versions,
+		Total:    int(total),
+		Page:     page,
+		PageSize: pageSize,
+	}, nil
+}
+
+// GetVersion 获取特定版本
+func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID string) (*VersionDetail, error) {
+	// 查询版本 - versionID直接是string类型
+	var revision model.FileRevision
+	err := revCol().FindOne(ctx, bson.M{"_id": versionID, "node_id": documentID}).Decode(&revision)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("版本不存在")
+		}
+		return nil, fmt.Errorf("查询版本失败: %w", err)
+	}
+
+	// 获取内容
+	content, err := s.RetrieveSnapshot(revision.Snapshot, revision.StorageRef)
+	if err != nil {
+		return nil, fmt.Errorf("获取版本内容失败: %w", err)
+	}
+
+	return &VersionDetail{
+		VersionID:  revision.ID,
+		DocumentID: revision.NodeID,
+		Version:    revision.Version,
+		Content:    content,
+		Message:    revision.Message,
+		CreatedAt:  revision.CreatedAt,
+		CreatedBy:  revision.AuthorID,
+		WordCount:  len(content), // 简单字数统计
+	}, nil
+}
+
+// CompareVersions 比较两个版本
+func (s *VersionService) CompareVersions(ctx context.Context, documentID, fromVersionID, toVersionID string) (*VersionDiff, error) {
+	// 获取两个版本
+	fromVersion, err := s.GetVersion(ctx, documentID, fromVersionID)
+	if err != nil {
+		return nil, fmt.Errorf("获取源版本失败: %w", err)
+	}
+
+	toVersion, err := s.GetVersion(ctx, documentID, toVersionID)
+	if err != nil {
+		return nil, fmt.Errorf("获取目标版本失败: %w", err)
+	}
+
+	// 简单的行差异比较
+	fromLines := splitLines(fromVersion.Content)
+	toLines := splitLines(toVersion.Content)
+
+	changes := make([]ChangeItem, 0)
+	addedLines := 0
+	deletedLines := 0
+
+	// 简单的差异算法（实际应该使用更好的diff算法）
+	maxLen := len(fromLines)
+	if len(toLines) > maxLen {
+		maxLen = len(toLines)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		fromLine := ""
+		toLine := ""
+		if i < len(fromLines) {
+			fromLine = fromLines[i]
+		}
+		if i < len(toLines) {
+			toLine = toLines[i]
+		}
+
+		if fromLine != toLine {
+			if fromLine == "" {
+				// 新增行
+				changes = append(changes, ChangeItem{
+					Type:    "added",
+					Line:    i + 1,
+					Content: toLine,
+				})
+				addedLines++
+			} else if toLine == "" {
+				// 删除行
+				changes = append(changes, ChangeItem{
+					Type:    "deleted",
+					Line:    i + 1,
+					Content: fromLine,
+				})
+				deletedLines++
+			} else {
+				// 修改行
+				changes = append(changes, ChangeItem{
+					Type:    "modified",
+					Line:    i + 1,
+					Content: toLine,
+				})
+			}
+		}
+	}
+
+	return &VersionDiff{
+		FromVersion:  fromVersionID,
+		ToVersion:    toVersionID,
+		Changes:      changes,
+		AddedLines:   addedLines,
+		DeletedLines: deletedLines,
+	}, nil
+}
+
+// RestoreVersion 恢复到特定版本
+func (s *VersionService) RestoreVersion(ctx context.Context, documentID, versionID string) error {
+	// 获取要恢复的版本
+	version, err := s.GetVersion(ctx, documentID, versionID)
+	if err != nil {
+		return fmt.Errorf("获取版本失败: %w", err)
+	}
+
+	// 获取文档当前内容
+	currentContent, err := s.getDocumentContent(ctx, documentID)
+	if err != nil {
+		return fmt.Errorf("获取当前文档失败: %w", err)
+	}
+
+	// 更新文档内容
+	if currentContent == nil {
+		// 创建新内容
+		_, err = contentCol().InsertOne(ctx, bson.M{
+			"document_id": documentID,
+			"content":     version.Content,
+			"updated_at":  time.Now(),
+		})
+	} else {
+		// 更新现有内容
+		_, err = contentCol().UpdateOne(ctx,
+			bson.M{"document_id": documentID},
+			bson.M{
+				"$set": bson.M{
+					"content":    version.Content,
+					"updated_at": time.Now(),
+				},
+			},
+		)
+	}
+
+	if err != nil {
+		return fmt.Errorf("更新文档内容失败: %w", err)
+	}
+
+	// TODO: 创建一个新的版本记录，标记为恢复操作
+
+	return nil
+}
+
+// splitLines 将文本按行分割
+func splitLines(text string) []string {
+	if text == "" {
+		return []string{}
+	}
+	lines := []string{}
+	currentLine := ""
+	for _, ch := range text {
+		if ch == '\n' {
+			lines = append(lines, currentLine)
+			currentLine = ""
+		} else {
+			currentLine += string(ch)
+		}
+	}
+	if currentLine != "" {
+		lines = append(lines, currentLine)
+	}
+	return lines
+}
