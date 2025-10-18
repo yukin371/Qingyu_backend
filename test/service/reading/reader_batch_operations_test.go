@@ -264,14 +264,9 @@ func TestBatchDeleteAnnotations_Success(t *testing.T) {
 
 	annotationIDs := []string{"ann-1", "ann-2", "ann-3"}
 
-	// 设置Mock期望 - 使用mock.Anything匹配任何context
+	// 设置Mock期望 - BatchDeleteAnnotations只调用Delete，不调用GetByID
 	for _, id := range annotationIDs {
-		annotation := &reader.Annotation{
-			ID:     id,
-			UserID: "user-123",
-		}
-		mockRepo.On("GetByID", mock.Anything, id).Return(annotation, nil)
-		mockRepo.On("Delete", mock.Anything, id).Return(nil)
+		mockRepo.On("Delete", mock.Anything, id).Return(nil).Once()
 	}
 
 	// 执行批量删除
