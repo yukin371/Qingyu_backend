@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 // ============ 测试用例 ============
@@ -360,7 +361,9 @@ func TestSharedServiceContainer_Health(t *testing.T) {
 		ctx := context.Background()
 
 		// 只注册部分服务
-		container.SetAuthService(new(MockAuthService))
+		mockAuth := new(MockAuthService)
+		mockAuth.On("Health", mock.Anything).Return(nil)
+		container.SetAuthService(mockAuth)
 
 		// 执行健康检查
 		err := container.Health(ctx)
