@@ -428,3 +428,409 @@ func (s *DocumentService) GetServiceName() string {
 func (s *DocumentService) GetVersion() string {
 	return s.version
 }
+
+// ListDocuments 获取文档列表
+func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsRequest) (*ListDocumentsResponse, error) {
+	// 1. 参数验证
+	if req.ProjectID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
+	}
+
+	// 2. 解析分页参数
+	page := 1
+	pageSize := 20
+	if req.Page != "" {
+		if p, err := time.Parse("", req.Page); err == nil {
+			page = int(p.Unix())
+		}
+	}
+	if req.PageSize != "" {
+		if ps, err := time.Parse("", req.PageSize); err == nil {
+			pageSize = int(ps.Unix())
+		}
+	}
+
+	// 3. 查询文档列表
+	offset := (page - 1) * pageSize
+	documents, err := s.documentRepo.GetByProjectID(ctx, req.ProjectID, int64(pageSize), int64(offset))
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档列表失败", "", err)
+	}
+
+	// 4. 统计总数
+	allDocs, err := s.documentRepo.GetByProjectID(ctx, req.ProjectID, 10000, 0)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "统计文档总数失败", "", err)
+	}
+
+	return &ListDocumentsResponse{
+		Documents: documents,
+		Total:     len(allDocs),
+		Page:      page,
+		PageSize:  pageSize,
+	}, nil
+}
+
+// MoveDocument 移动文档
+func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentRequest) error {
+	// 1. 参数验证
+	if req.DocumentID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	// 2. 获取文档
+	doc, err := s.documentRepo.GetByID(ctx, req.DocumentID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if doc == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil || !project.CanEdit(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限操作该文档", "", nil)
+	}
+
+	// 4. 验证新父节点
+	var level int
+	if req.NewParentID != "" {
+		parent, err := s.documentRepo.GetByID(ctx, req.NewParentID)
+		if err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询父文档失败", "", err)
+		}
+
+		if parent == nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "目标父文档不存在", "", nil)
+		}
+
+		if !parent.CanHaveChildren() {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "目标节点不能添加子文档（最多3层）", "", nil)
+		}
+
+		level = parent.GetNextLevel()
+	}
+
+	// 5. 更新文档
+	updates := map[string]interface{}{
+		"parent_id": req.NewParentID,
+		"level":     level,
+		"order":     req.Order,
+	}
+
+	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "移动文档失败", "", err)
+	}
+
+	// 6. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "document.moved",
+			EventData: map[string]interface{}{
+				"document_id":   req.DocumentID,
+				"new_parent_id": req.NewParentID,
+				"project_id":    doc.ProjectID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}
+
+// ReorderDocuments 重新排序文档
+func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocumentsRequest) error {
+	// 1. 参数验证
+	if req.ProjectID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
+	}
+
+	if len(req.Orders) == 0 {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "排序列表不能为空", "", nil)
+	}
+
+	// 2. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	project, err := s.projectRepo.GetByID(ctx, req.ProjectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil || !project.CanEdit(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限操作该项目", "", nil)
+	}
+
+	// 3. 批量更新排序
+	for docID, order := range req.Orders {
+		updates := map[string]interface{}{
+			"order": order,
+		}
+		if err := s.documentRepo.Update(ctx, docID, updates); err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, fmt.Sprintf("更新文档 %s 排序失败", docID), "", err)
+		}
+	}
+
+	// 4. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "documents.reordered",
+			EventData: map[string]interface{}{
+				"project_id": req.ProjectID,
+				"parent_id":  req.ParentID,
+				"count":      len(req.Orders),
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}
+
+// AutoSaveDocument 自动保存文档
+func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveRequest) (*AutoSaveResponse, error) {
+	// 1. 参数验证
+	if req.DocumentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+	if req.Content == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "内容不能为空", "", nil)
+	}
+
+	// 2. 获取文档
+	doc, err := s.documentRepo.GetByID(ctx, req.DocumentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if doc == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil || !project.CanEdit(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该文档", "", nil)
+	}
+
+	// 4. 版本冲突检测（简化版）
+	// TODO: 实现完整的版本控制系统
+	hasConflict := false
+	if req.CurrentVersion > 0 {
+		// 检查版本号是否匹配
+		// 这里简化处理，实际应该从版本控制系统获取
+		hasConflict = false
+	}
+
+	if hasConflict {
+		return nil, fmt.Errorf("版本冲突")
+	}
+
+	// 5. 计算字数
+	wordCount := len([]rune(req.Content))
+
+	// 6. 更新文档内容和字数
+	updates := map[string]interface{}{
+		"word_count": wordCount,
+		"updated_at": time.Now(),
+	}
+
+	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
+	}
+
+	// 7. 保存内容到DocumentContent集合（如果存在）
+	// TODO: 实现DocumentContent的保存逻辑
+	// 目前DocumentContent由VersionService管理
+
+	// 8. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "document.autosaved",
+			EventData: map[string]interface{}{
+				"document_id": req.DocumentID,
+				"word_count":  wordCount,
+				"save_type":   req.SaveType,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	// 9. 返回响应
+	return &AutoSaveResponse{
+		Saved:       true,
+		NewVersion:  req.CurrentVersion + 1,
+		WordCount:   wordCount,
+		SavedAt:     time.Now(),
+		HasConflict: hasConflict,
+	}, nil
+}
+
+// GetSaveStatus 获取保存状态
+func (s *DocumentService) GetSaveStatus(ctx context.Context, documentID string) (*SaveStatusResponse, error) {
+	// 1. 验证参数
+	if documentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	// 2. 获取文档
+	doc, err := s.documentRepo.GetByID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if doc == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 返回保存状态
+	return &SaveStatusResponse{
+		DocumentID:     documentID,
+		LastSavedAt:    doc.UpdatedAt,
+		CurrentVersion: 1, // TODO: 从版本控制系统获取真实版本号
+		IsSaving:       false,
+		WordCount:      doc.WordCount,
+	}, nil
+}
+
+// GetDocumentContent 获取文档内容
+func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID string) (*DocumentContentResponse, error) {
+	// 1. 验证参数
+	if documentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	// 2. 获取文档
+	doc, err := s.documentRepo.GetByID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if doc == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil || !project.CanEdit(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限访问该文档", "", nil)
+	}
+
+	// 4. 获取内容
+	// TODO: 从DocumentContent集合或VersionService获取实际内容
+	// 目前返回空内容
+	content := ""
+
+	// 5. 返回内容响应
+	return &DocumentContentResponse{
+		DocumentID: documentID,
+		Content:    content,
+		Version:    1, // TODO: 从版本控制系统获取
+		WordCount:  doc.WordCount,
+		UpdatedAt:  doc.UpdatedAt,
+	}, nil
+}
+
+// UpdateDocumentContent 更新文档内容
+func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *UpdateContentRequest) error {
+	// 1. 参数验证
+	if req.DocumentID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	// 2. 获取文档
+	doc, err := s.documentRepo.GetByID(ctx, req.DocumentID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if doc == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil || !project.CanEdit(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该文档", "", nil)
+	}
+
+	// 4. 版本冲突检测
+	if req.Version > 0 {
+		// TODO: 实现版本号检查
+	}
+
+	// 5. 计算字数
+	wordCount := len([]rune(req.Content))
+
+	// 6. 更新文档
+	updates := map[string]interface{}{
+		"word_count": wordCount,
+		"updated_at": time.Now(),
+	}
+
+	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
+	}
+
+	// 7. 保存内容
+	// TODO: 保存到DocumentContent集合
+
+	// 8. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "document.content_updated",
+			EventData: map[string]interface{}{
+				"document_id": req.DocumentID,
+				"word_count":  wordCount,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}

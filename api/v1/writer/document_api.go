@@ -140,3 +140,93 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "删除成功", nil)
 }
+
+// ListDocuments 获取文档列表
+// @Summary 获取文档列表
+// @Description 获取项目下的文档列表（支持分页）
+// @Tags 文档管理
+// @Accept json
+// @Produce json
+// @Param projectId path string true "项目ID"
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(20)
+// @Success 200 {object} shared.Response{data=document.ListDocumentsResponse}
+// @Router /api/v1/projects/{projectId}/documents [get]
+func (api *DocumentApi) ListDocuments(c *gin.Context) {
+	projectID := c.Param("projectId")
+
+	page, _ := c.GetQuery("page")
+	pageSize, _ := c.GetQuery("pageSize")
+
+	req := &document.ListDocumentsRequest{
+		ProjectID: projectID,
+		Page:      page,
+		PageSize:  pageSize,
+	}
+
+	resp, err := api.documentService.ListDocuments(c.Request.Context(), req)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", resp)
+}
+
+// MoveDocument 移动文档
+// @Summary 移动文档
+// @Description 移动文档到新的父节点
+// @Tags 文档管理
+// @Accept json
+// @Produce json
+// @Param id path string true "文档ID"
+// @Param request body document.MoveDocumentRequest true "移动文档请求"
+// @Success 200 {object} shared.Response
+// @Router /api/v1/documents/{id}/move [put]
+func (api *DocumentApi) MoveDocument(c *gin.Context) {
+	documentID := c.Param("id")
+
+	var req document.MoveDocumentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		return
+	}
+
+	req.DocumentID = documentID
+
+	if err := api.documentService.MoveDocument(c.Request.Context(), &req); err != nil {
+		shared.Error(c, http.StatusInternalServerError, "移动失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "移动成功", nil)
+}
+
+// ReorderDocuments 重新排序文档
+// @Summary 重新排序文档
+// @Description 批量更新同级文档的顺序
+// @Tags 文档管理
+// @Accept json
+// @Produce json
+// @Param projectId path string true "项目ID"
+// @Param request body document.ReorderDocumentsRequest true "排序请求"
+// @Success 200 {object} shared.Response
+// @Router /api/v1/projects/{projectId}/documents/reorder [put]
+func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
+	projectID := c.Param("projectId")
+
+	var req document.ReorderDocumentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		return
+	}
+
+	req.ProjectID = projectID
+
+	if err := api.documentService.ReorderDocuments(c.Request.Context(), &req); err != nil {
+		shared.Error(c, http.StatusInternalServerError, "排序失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "排序成功", nil)
+}
