@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	walletModel "Qingyu_backend/models/shared/wallet"
@@ -13,6 +14,7 @@ type MockWalletRepositoryV2 struct {
 	wallets          map[string]*walletModel.Wallet
 	transactions     map[string]*walletModel.Transaction
 	withdrawRequests map[string]*walletModel.WithdrawRequest
+	txCounter        int // 交易ID计数器，确保唯一性
 }
 
 // NewMockWalletRepositoryV2 创建Mock Repository
@@ -71,7 +73,9 @@ func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID str
 
 // CreateTransaction 创建交易
 func (m *MockWalletRepositoryV2) CreateTransaction(ctx context.Context, transaction *walletModel.Transaction) error {
-	transaction.ID = "tx_" + time.Now().Format("20060102150405")
+	// 使用计数器和时间戳确保ID唯一性
+	m.txCounter++
+	transaction.ID = fmt.Sprintf("tx_%s_%d", time.Now().Format("20060102150405"), m.txCounter)
 	transaction.CreatedAt = time.Now()
 	transaction.TransactionTime = time.Now()
 	m.transactions[transaction.ID] = transaction
@@ -95,6 +99,29 @@ func (m *MockWalletRepositoryV2) ListTransactions(ctx context.Context, filter *s
 		}
 		result = append(result, tx)
 	}
+
+	// 按时间倒序排序（最新的在前）
+	for i := 0; i < len(result)-1; i++ {
+		for j := i + 1; j < len(result); j++ {
+			if result[i].CreatedAt.Before(result[j].CreatedAt) {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+	}
+
+	// 应用分页
+	if filter.Limit > 0 {
+		start := int(filter.Offset)
+		end := start + int(filter.Limit)
+		if start > len(result) {
+			return []*walletModel.Transaction{}, nil
+		}
+		if end > len(result) {
+			end = len(result)
+		}
+		result = result[start:end]
+	}
+
 	return result, nil
 }
 

@@ -118,6 +118,46 @@ test-watch: ## 监视文件变化并自动运行测试
 		inotifywait -r -e modify . && clear && make test-unit; \
 	done
 
+.PHONY: test-fix
+test-fix: ## 只运行之前失败的测试
+	@echo "运行上次失败的测试..."
+	@if [ -f ".test-failures" ]; then \
+		while IFS= read -r pkg; do \
+			echo "重新测试: $$pkg"; \
+			go test -v "$$pkg"; \
+		done < ".test-failures"; \
+		rm -f ".test-failures"; \
+	else \
+		echo "没有记录的失败测试"; \
+	fi
+
+.PHONY: test-quick
+test-quick: ## 快速测试（排除慢速测试，不使用race检测）
+	@echo "运行快速测试..."
+	go test -short ./...
+
+.PHONY: test-report
+test-report: ## 生成详细的测试报告（JSON格式）
+	@echo "生成测试报告..."
+	@mkdir -p test_reports
+	go test -json -coverprofile=coverage.out ./... > test_reports/test-output.json
+	go tool cover -func=coverage.out > test_reports/coverage.txt
+	go tool cover -html=coverage.out -o test_reports/coverage.html
+	@echo "✅ 测试报告已生成在 test_reports/ 目录"
+	@echo "  - test-output.json: JSON格式的测试结果"
+	@echo "  - coverage.txt: 文本格式的覆盖率报告"
+	@echo "  - coverage.html: HTML格式的覆盖率报告"
+
+.PHONY: test-verbose
+test-verbose: ## 运行测试并显示详细输出
+	@echo "运行详细测试..."
+	go test -v -cover -coverprofile=coverage.out ./... 2>&1 | tee test.log
+
+.PHONY: test-bench
+test-bench: ## 运行基准测试
+	@echo "运行基准测试..."
+	go test -bench=. -benchmem ./...
+
 # 代码质量相关命令
 .PHONY: lint
 lint: ## 运行代码检查
