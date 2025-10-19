@@ -274,7 +274,7 @@ POST /api/v1/reader/annotations
 ## 📞 技术支持
 
 ### 联系方式
-- **邮箱**: dev@qingyu.com
+
 - **文档Issues**: GitHub仓库Issues区
 - **在线支持**: 工作日 9:00-18:00
 
