@@ -2,7 +2,6 @@ package writer
 
 import (
 	"Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/service/container"
 	statsService "Qingyu_backend/service/stats"
 
 	"github.com/gin-gonic/gin"
