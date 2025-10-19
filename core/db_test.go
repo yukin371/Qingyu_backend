@@ -16,7 +16,7 @@ func TestMongoDBConnection(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping test: cannot load config: %v", err)
 	}
-	
+
 	// 初始化MongoDB连接
 	err = InitDB()
 	if err != nil {
@@ -35,7 +35,7 @@ func TestMongoDBConnection(t *testing.T) {
 	// 测试数据库连接
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	result := global.MongoClient.Database("admin").RunCommand(ctx, map[string]interface{}{"ping": 1})
 	if result.Err() != nil {
 		t.Fatalf("Failed to ping MongoDB: %v", result.Err())

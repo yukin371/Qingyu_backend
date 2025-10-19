@@ -139,9 +139,9 @@ func (m *MockWithdrawRepository) UpdateStatus(ctx context.Context, id primitive.
 
 // MockWalletService 模拟钱包服务
 type MockWalletService struct {
-	walletRepo     *MockWalletRepository
+	walletRepo      *MockWalletRepository
 	transactionRepo *MockTransactionRepository
-	withdrawRepo   *MockWithdrawRepository
+	withdrawRepo    *MockWithdrawRepository
 }
 
 func NewMockWalletService(walletRepo *MockWalletRepository, transactionRepo *MockTransactionRepository, withdrawRepo *MockWithdrawRepository) *MockWalletService {

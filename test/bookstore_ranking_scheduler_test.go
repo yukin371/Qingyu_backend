@@ -408,5 +408,3 @@ func TestRankingScheduler_Cleanup(t *testing.T) {
 	// 测试通过说明清理任务已经成功添加到调度器
 	assert.True(t, true, "清理任务测试通过")
 }
-
-

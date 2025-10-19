@@ -318,4 +318,3 @@ func BenchmarkShortcutService_ValidateShortcuts(b *testing.B) {
 		service.UpdateUserShortcuts(ctx, "user123", shortcuts)
 	}
 }
-
