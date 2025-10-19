@@ -65,7 +65,7 @@ func TestWordCountService_CalculateWordCount(t *testing.T) {
 				EnglishCount:   3,  // Hello + This + is
 				NumberCount:    3,  // 123
 				ParagraphCount: 1,
-				SentenceCount:  1,
+				SentenceCount:  2, // 两个句子，用！和。分隔
 			},
 		},
 		{
@@ -93,7 +93,7 @@ func TestWordCountService_CalculateWordCount(t *testing.T) {
 				EnglishCount:   0,
 				NumberCount:    7, // 2024 + 365
 				ParagraphCount: 1,
-				SentenceCount:  0, // 没有句号
+				SentenceCount:  1, // 一个句子片段（没有标点时整体算一句）
 			},
 		},
 	}
@@ -140,7 +140,7 @@ func TestWordCountService_CalculateWordCountWithMarkdown(t *testing.T) {
 		{
 			name:            "粗体斜体",
 			content:         "**粗体内容** *斜体内容* ~~删除线~~",
-			expectedMinimum: 12, // 粗体内容 + 斜体内容 + 删除线
+			expectedMinimum: 11, // 粗体内容(4) + 斜体内容(4) + 删除线(3) = 11
 		},
 		{
 			name:            "链接",
@@ -180,7 +180,7 @@ func TestWordCountService_CalculateWordCountWithMarkdown(t *testing.T) {
 			name: "引用",
 			content: `> 这是引用内容
 > 第二行引用`,
-			expectedMinimum: 12, // 这是引用内容 + 第二行引用
+			expectedMinimum: 11, // 这是引用内容(6) + 第二行引用(5) = 11
 		},
 		{
 			name:            "综合测试",

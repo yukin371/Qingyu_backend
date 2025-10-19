@@ -92,6 +92,11 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 		)
 	}
 
+	// 将生成的ID和时间戳设置回原始对象
+	user.ID = actualUser.ID
+	user.CreatedAt = actualUser.CreatedAt
+	user.UpdatedAt = actualUser.UpdatedAt
+
 	return nil
 }
 
