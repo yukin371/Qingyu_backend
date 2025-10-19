@@ -112,8 +112,8 @@ func (s *ShortcutService) validateShortcuts(shortcuts map[string]document.Shortc
 			return pkgErrors.NewServiceError(
 				s.serviceName,
 				pkgErrors.ServiceErrorValidation,
-				"快捷键冲突",
-				"按键 "+shortcut.Key+" 已被 "+existingAction+" 使用",
+				"快捷键冲突: 按键 "+shortcut.Key+" 已被 "+existingAction+" 使用",
+				"",
 				nil,
 			)
 		}
