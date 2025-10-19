@@ -324,3 +324,38 @@ func RandomEmail() string {
 func RandomInt(min, max int) int {
 	return min + int(time.Now().UnixNano()%(int64(max-min)))
 }
+
+// ============ Repository Filter 助手 ============
+
+// SimpleFilter 简单的Filter实现，用于测试
+type SimpleFilter struct {
+	Conditions map[string]interface{}
+	SortFields map[string]int
+	Fields     []string
+}
+
+// GetConditions 返回筛选条件
+func (f *SimpleFilter) GetConditions() map[string]interface{} {
+	if f.Conditions == nil {
+		return make(map[string]interface{})
+	}
+	return f.Conditions
+}
+
+// GetSort 返回排序字段
+func (f *SimpleFilter) GetSort() map[string]int {
+	if f.SortFields == nil {
+		return map[string]int{"createdAt": -1}
+	}
+	return f.SortFields
+}
+
+// GetFields 返回字段选择
+func (f *SimpleFilter) GetFields() []string {
+	return f.Fields
+}
+
+// Validate 验证过滤器
+func (f *SimpleFilter) Validate() error {
+	return nil // 简单实现，测试用
+}

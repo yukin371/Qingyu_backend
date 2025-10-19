@@ -16,10 +16,17 @@ import (
 func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 	t.Helper()
 
-	// 加载配置
-	cfg, err := config.LoadConfig("../../config/config.yaml")
+	// 加载配置 - 使用相对于项目根目录的路径
+	cfg, err := config.LoadConfig("config/config.yaml")
 	if err != nil {
-		t.Fatalf("加载配置失败: %v", err)
+		// 如果失败，尝试使用相对路径
+		cfg, err = config.LoadConfig("../../config/config.yaml")
+		if err != nil {
+			cfg, err = config.LoadConfig("../../../config/config.yaml")
+			if err != nil {
+				t.Fatalf("加载配置失败: %v", err)
+			}
+		}
 	}
 
 	// 初始化全局配置
@@ -42,6 +49,11 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = global.DB.Collection("item_features").Drop(ctx)
 		_ = global.DB.Collection("book_statistics").Drop(ctx)
 		_ = global.DB.Collection("books").Drop(ctx)
+
+		// Writing相关测试集合
+		_ = global.DB.Collection("projects").Drop(ctx)
+		_ = global.DB.Collection("documents").Drop(ctx)
+		_ = global.DB.Collection("document_contents").Drop(ctx)
 	}
 
 	return global.DB, cleanup
