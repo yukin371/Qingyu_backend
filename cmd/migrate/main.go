@@ -119,7 +119,7 @@ func registerMigrations(manager *migration.Manager) {
 
 // runSeeds 运行种子数据
 func runSeeds(ctx context.Context, db *mongo.Database) error {
-	fmt.Println("\n=== Running Seeds ===\n")
+	fmt.Println("\n=== Running Seeds ===")
 
 	// 运行用户种子
 	if err := seeds.SeedUsers(ctx, db); err != nil {

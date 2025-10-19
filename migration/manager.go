@@ -173,7 +173,7 @@ func (m *Manager) Status(ctx context.Context) error {
 	// 排序迁移
 	m.sortMigrations()
 
-	fmt.Println("\n=== Migration Status ===\n")
+	fmt.Println("\n=== Migration Status ===")
 	fmt.Printf("%-20s %-10s %-50s\n", "VERSION", "STATUS", "DESCRIPTION")
 	fmt.Println("--------------------------------------------------------------------------------")
 
