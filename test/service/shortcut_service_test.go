@@ -30,8 +30,8 @@ func TestShortcutService_GetUserShortcuts(t *testing.T) {
 		config, err := service.GetUserShortcuts(ctx, "user123")
 
 		require.NoError(t, err)
-		// 应该有33个默认快捷键
-		assert.Equal(t, 33, len(config.Shortcuts))
+		// 应该有34个默认快捷键
+		assert.Equal(t, 34, len(config.Shortcuts))
 	})
 
 	t.Run("验证常用快捷键存在", func(t *testing.T) {
@@ -215,7 +215,7 @@ func TestShortcutService_DefaultShortcuts(t *testing.T) {
 			categoryCount[shortcut.Category]++
 		}
 
-		// 验证分类数量
+		// 验证分类数量 (总计34个快捷键)
 		assert.Equal(t, 4, categoryCount["文件"], "文件分类应该有4个快捷键")
 		assert.Equal(t, 8, categoryCount["编辑"], "编辑分类应该有8个快捷键")
 		assert.Equal(t, 7, categoryCount["格式"], "格式分类应该有7个快捷键")

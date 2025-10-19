@@ -193,6 +193,9 @@ func (m *MockUserRepository) Count(ctx context.Context, filter infrastructure.Fi
 // 测试活跃用户可以成功登录
 func TestUserService_LoginUser_ActiveStatus_Success(t *testing.T) {
 	// Arrange
+	// 初始化JWT配置（测试需要）
+	testutil.InitTestConfig()
+
 	mockRepo := new(MockUserRepository)
 	service := user.NewUserService(mockRepo)
 	ctx := context.Background()
