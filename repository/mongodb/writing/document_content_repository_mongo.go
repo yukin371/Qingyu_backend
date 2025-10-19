@@ -56,12 +56,8 @@ func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *do
 // GetByID 根据ID获取文档内容
 func (r *MongoDocumentContentRepository) GetByID(ctx context.Context, id string) (*document.DocumentContent, error) {
 	var content document.DocumentContent
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, fmt.Errorf("无效的内容ID: %w", err)
-	}
 
-	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&content)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -88,13 +84,8 @@ func (r *MongoDocumentContentRepository) GetByDocumentID(ctx context.Context, do
 
 // Update 更新文档内容
 func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("无效的内容ID: %w", err)
-	}
-
 	updates["updated_at"] = time.Now()
-	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": updates})
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("更新文档内容失败: %w", err)
 	}
@@ -137,12 +128,7 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 
 // Delete 删除文档内容
 func (r *MongoDocumentContentRepository) Delete(ctx context.Context, id string) error {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("无效的内容ID: %w", err)
-	}
-
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objID})
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("删除文档内容失败: %w", err)
 	}
@@ -181,12 +167,7 @@ func (r *MongoDocumentContentRepository) Count(ctx context.Context, filter infra
 
 // Exists 检查文档内容是否存在
 func (r *MongoDocumentContentRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return false, fmt.Errorf("无效的内容ID: %w", err)
-	}
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objID})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, fmt.Errorf("检查文档内容存在性失败: %w", err)
 	}
