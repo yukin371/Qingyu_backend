@@ -13,29 +13,29 @@ import (
 
 // MockUserBehavior 模拟用户行为模型
 type MockUserBehavior struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID     primitive.ObjectID `bson:"user_id" json:"userId"`
-	ContentID  primitive.ObjectID `bson:"content_id" json:"contentId"`
-	Action     string             `bson:"action" json:"action"`
-	Duration   int64              `bson:"duration" json:"duration"`
-	Rating     float64            `bson:"rating" json:"rating"`
-	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID    primitive.ObjectID `bson:"user_id" json:"userId"`
+	ContentID primitive.ObjectID `bson:"content_id" json:"contentId"`
+	Action    string             `bson:"action" json:"action"`
+	Duration  int64              `bson:"duration" json:"duration"`
+	Rating    float64            `bson:"rating" json:"rating"`
+	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // MockContentFeature 模拟内容特征模型
 type MockContentFeature struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ContentID   primitive.ObjectID `bson:"content_id" json:"contentId"`
-	Title       string             `bson:"title" json:"title"`
-	Category    string             `bson:"category" json:"category"`
-	Tags        []string           `bson:"tags" json:"tags"`
-	Author      string             `bson:"author" json:"author"`
-	WordCount   int64              `bson:"word_count" json:"wordCount"`
-	Rating      float64            `bson:"rating" json:"rating"`
-	ViewCount   int64              `bson:"view_count" json:"viewCount"`
-	Features    map[string]float64 `bson:"features" json:"features"`
-	CreatedAt   time.Time          `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time          `bson:"updated_at" json:"updatedAt"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ContentID primitive.ObjectID `bson:"content_id" json:"contentId"`
+	Title     string             `bson:"title" json:"title"`
+	Category  string             `bson:"category" json:"category"`
+	Tags      []string           `bson:"tags" json:"tags"`
+	Author    string             `bson:"author" json:"author"`
+	WordCount int64              `bson:"word_count" json:"wordCount"`
+	Rating    float64            `bson:"rating" json:"rating"`
+	ViewCount int64              `bson:"view_count" json:"viewCount"`
+	Features  map[string]float64 `bson:"features" json:"features"`
+	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // MockUserProfile 模拟用户画像模型
@@ -53,14 +53,14 @@ type MockUserProfile struct {
 
 // MockRecommendResult 模拟推荐结果模型
 type MockRecommendResult struct {
-	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	UserID      primitive.ObjectID   `bson:"user_id" json:"userId"`
-	ContentIDs  []primitive.ObjectID `bson:"content_ids" json:"contentIds"`
-	Scores      []float64            `bson:"scores" json:"scores"`
-	Algorithm   string               `bson:"algorithm" json:"algorithm"`
-	Context     map[string]string    `bson:"context" json:"context"`
-	ExpiresAt   time.Time            `bson:"expires_at" json:"expiresAt"`
-	CreatedAt   time.Time            `bson:"created_at" json:"createdAt"`
+	ID         primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
+	UserID     primitive.ObjectID   `bson:"user_id" json:"userId"`
+	ContentIDs []primitive.ObjectID `bson:"content_ids" json:"contentIds"`
+	Scores     []float64            `bson:"scores" json:"scores"`
+	Algorithm  string               `bson:"algorithm" json:"algorithm"`
+	Context    map[string]string    `bson:"context" json:"context"`
+	ExpiresAt  time.Time            `bson:"expires_at" json:"expiresAt"`
+	CreatedAt  time.Time            `bson:"created_at" json:"createdAt"`
 }
 
 // MockBehaviorRepository 模拟用户行为仓储

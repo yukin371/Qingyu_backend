@@ -87,8 +87,3 @@ func (m *AddUserIndexes) Down(ctx context.Context, db *mongo.Database) error {
 
 	return nil
 }
-
-
-
-
-

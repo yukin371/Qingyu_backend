@@ -25,13 +25,13 @@ func NewViperConfigManager() *ViperConfigManager {
 func (m *ViperConfigManager) LoadFromFile(configPath string) error {
 	m.viper.SetConfigName("config")
 	m.viper.SetConfigType("yaml")
-	
+
 	// 添加多个可能的配置文件路径
 	if configPath != "" {
 		m.viper.AddConfigPath(configPath)
 	}
-	m.viper.AddConfigPath("./config")      // 从项目根目录
-	m.viper.AddConfigPath("../../config")  // 从cmd/server/运行
+	m.viper.AddConfigPath("./config")     // 从项目根目录
+	m.viper.AddConfigPath("../../config") // 从cmd/server/运行
 	m.viper.AddConfigPath(".")
 
 	// 设置环境变量支持
