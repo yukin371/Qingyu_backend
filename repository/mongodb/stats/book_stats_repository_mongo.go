@@ -2,8 +2,8 @@ package stats
 
 import (
 	"Qingyu_backend/models/stats"
-	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"context"
 	"time"
 
@@ -32,7 +32,7 @@ func (r *MongoBookStatsRepository) Create(ctx context.Context, bookStats *stats.
 	bookStats.ID = primitive.NewObjectID().Hex()
 	bookStats.CreatedAt = time.Now()
 	bookStats.UpdatedAt = time.Now()
-	
+
 	_, err := r.collection.InsertOne(ctx, bookStats)
 	return err
 }
@@ -77,18 +77,18 @@ func (r *MongoBookStatsRepository) GetByAuthorID(ctx context.Context, authorID s
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "total_views", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"author_id": authorID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var bookStats []*stats.BookStats
 	if err = cursor.All(ctx, &bookStats); err != nil {
 		return nil, err
 	}
-	
+
 	return bookStats, nil
 }
 
@@ -101,18 +101,18 @@ func (r *MongoBookStatsRepository) GetByDateRange(ctx context.Context, bookID st
 			"$lte": endDate,
 		},
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var bookStats []*stats.BookStats
 	if err = cursor.All(ctx, &bookStats); err != nil {
 		return nil, err
 	}
-	
+
 	return bookStats, nil
 }
 
@@ -121,7 +121,7 @@ func (r *MongoBookStatsRepository) CreateDailyStats(ctx context.Context, dailySt
 	dailyStats.ID = primitive.NewObjectID().Hex()
 	dailyStats.CreatedAt = time.Now()
 	dailyStats.UpdatedAt = time.Now()
-	
+
 	_, err := r.dailyCollection.InsertOne(ctx, dailyStats)
 	return err
 }
@@ -148,19 +148,19 @@ func (r *MongoBookStatsRepository) GetDailyStatsRange(ctx context.Context, bookI
 			"$lte": endDate.Truncate(24 * time.Hour),
 		},
 	}
-	
+
 	opts := options.Find().SetSort(bson.D{{Key: "date", Value: 1}})
 	cursor, err := r.dailyCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var dailyStats []*stats.BookStatsDaily
 	if err = cursor.All(ctx, &dailyStats); err != nil {
 		return nil, err
 	}
-	
+
 	return dailyStats, nil
 }
 
@@ -175,25 +175,25 @@ func (r *MongoBookStatsRepository) GetRevenueBreakdown(ctx context.Context, book
 			},
 		}}},
 		{{Key: "$group", Value: bson.M{
-			"_id": nil,
+			"_id":               nil,
 			"chapter_revenue":   bson.M{"$sum": "$chapter_revenue"},
 			"subscribe_revenue": bson.M{"$sum": "$subscribe_revenue"},
 			"reward_revenue":    bson.M{"$sum": "$reward_revenue"},
 			"total_revenue":     bson.M{"$sum": "$total_revenue"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []stats.RevenueBreakdown
 	if err = cursor.All(ctx, &result); err != nil {
 		return nil, err
 	}
-	
+
 	if len(result) == 0 {
 		return &stats.RevenueBreakdown{
 			BookID:    bookID,
@@ -201,12 +201,12 @@ func (r *MongoBookStatsRepository) GetRevenueBreakdown(ctx context.Context, book
 			EndDate:   endDate,
 		}, nil
 	}
-	
+
 	breakdown := &result[0]
 	breakdown.BookID = bookID
 	breakdown.StartDate = startDate
 	breakdown.EndDate = endDate
-	
+
 	return breakdown, nil
 }
 
@@ -219,22 +219,22 @@ func (r *MongoBookStatsRepository) CalculateTotalRevenue(ctx context.Context, bo
 			"total_revenue": bson.M{"$sum": "$total_revenue"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	totalRevenue, _ := result[0]["total_revenue"].(float64)
 	return totalRevenue, nil
 }
@@ -248,22 +248,22 @@ func (r *MongoBookStatsRepository) CalculateRevenueByType(ctx context.Context, b
 			"revenue": bson.M{"$sum": "$" + revenueType},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	revenue, _ := result[0]["revenue"].(float64)
 	return revenue, nil
 }
@@ -286,37 +286,37 @@ func (r *MongoBookStatsRepository) AnalyzeViewTrend(ctx context.Context, bookID 
 	// 获取最近N天的每日统计
 	endDate := time.Now()
 	startDate := endDate.AddDate(0, 0, -days)
-	
+
 	dailyStats, err := r.GetDailyStatsRange(ctx, bookID, startDate, endDate)
 	if err != nil {
 		return stats.TrendStable, err
 	}
-	
+
 	if len(dailyStats) < 2 {
 		return stats.TrendStable, nil
 	}
-	
+
 	// 简单趋势分析：比较前半段和后半段的平均值
 	mid := len(dailyStats) / 2
 	var firstHalfAvg, secondHalfAvg int64
-	
+
 	for i := 0; i < mid; i++ {
 		firstHalfAvg += dailyStats[i].DailyViews
 	}
 	firstHalfAvg /= int64(mid)
-	
+
 	for i := mid; i < len(dailyStats); i++ {
 		secondHalfAvg += dailyStats[i].DailyViews
 	}
 	secondHalfAvg /= int64(len(dailyStats) - mid)
-	
+
 	// 判断趋势
 	if secondHalfAvg > firstHalfAvg*11/10 { // 增长超过10%
 		return stats.TrendUp, nil
 	} else if secondHalfAvg < firstHalfAvg*9/10 { // 下降超过10%
 		return stats.TrendDown, nil
 	}
-	
+
 	return stats.TrendStable, nil
 }
 
@@ -325,37 +325,37 @@ func (r *MongoBookStatsRepository) AnalyzeRevenueTrend(ctx context.Context, book
 	// 获取最近N天的每日统计
 	endDate := time.Now()
 	startDate := endDate.AddDate(0, 0, -days)
-	
+
 	dailyStats, err := r.GetDailyStatsRange(ctx, bookID, startDate, endDate)
 	if err != nil {
 		return stats.TrendStable, err
 	}
-	
+
 	if len(dailyStats) < 2 {
 		return stats.TrendStable, nil
 	}
-	
+
 	// 简单趋势分析：比较前半段和后半段的平均值
 	mid := len(dailyStats) / 2
 	var firstHalfAvg, secondHalfAvg float64
-	
+
 	for i := 0; i < mid; i++ {
 		firstHalfAvg += dailyStats[i].DailyRevenue
 	}
 	firstHalfAvg /= float64(mid)
-	
+
 	for i := mid; i < len(dailyStats); i++ {
 		secondHalfAvg += dailyStats[i].DailyRevenue
 	}
 	secondHalfAvg /= float64(len(dailyStats) - mid)
-	
+
 	// 判断趋势
 	if secondHalfAvg > firstHalfAvg*1.1 { // 增长超过10%
 		return stats.TrendUp, nil
 	} else if secondHalfAvg < firstHalfAvg*0.9 { // 下降超过10%
 		return stats.TrendDown, nil
 	}
-	
+
 	return stats.TrendStable, nil
 }
 
@@ -368,22 +368,22 @@ func (r *MongoBookStatsRepository) CalculateAvgCompletionRate(ctx context.Contex
 			"avg_completion_rate": bson.M{"$avg": "$avg_completion_rate"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	avgRate, _ := result[0]["avg_completion_rate"].(float64)
 	return avgRate, nil
 }
@@ -393,26 +393,26 @@ func (r *MongoBookStatsRepository) CalculateAvgDropOffRate(ctx context.Context, 
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{"book_id": bookID}}},
 		{{Key: "$group", Value: bson.M{
-			"_id":              nil,
+			"_id":               nil,
 			"avg_drop_off_rate": bson.M{"$avg": "$avg_drop_off_rate"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	avgRate, _ := result[0]["avg_drop_off_rate"].(float64)
 	return avgRate, nil
 }
@@ -426,22 +426,22 @@ func (r *MongoBookStatsRepository) CalculateAvgReadingDuration(ctx context.Conte
 			"avg_reading_duration": bson.M{"$avg": "$avg_reading_duration"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	avgDuration, _ := result[0]["avg_reading_duration"].(float64)
 	return avgDuration, nil
 }
@@ -451,18 +451,18 @@ func (r *MongoBookStatsRepository) GetTopBooksByViews(ctx context.Context, limit
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSort(bson.D{{Key: "total_views", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var bookStats []*stats.BookStats
 	if err = cursor.All(ctx, &bookStats); err != nil {
 		return nil, err
 	}
-	
+
 	return bookStats, nil
 }
 
@@ -471,18 +471,18 @@ func (r *MongoBookStatsRepository) GetTopBooksByRevenue(ctx context.Context, lim
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSort(bson.D{{Key: "total_revenue", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var bookStats []*stats.BookStats
 	if err = cursor.All(ctx, &bookStats); err != nil {
 		return nil, err
 	}
-	
+
 	return bookStats, nil
 }
 
@@ -491,18 +491,18 @@ func (r *MongoBookStatsRepository) GetTopBooksByCompletion(ctx context.Context, 
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSort(bson.D{{Key: "avg_completion_rate", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var bookStats []*stats.BookStats
 	if err = cursor.All(ctx, &bookStats); err != nil {
 		return nil, err
 	}
-	
+
 	return bookStats, nil
 }
 
@@ -511,7 +511,7 @@ func (r *MongoBookStatsRepository) BatchCreate(ctx context.Context, bookStats []
 	if len(bookStats) == 0 {
 		return nil
 	}
-	
+
 	docs := make([]interface{}, len(bookStats))
 	for i, stat := range bookStats {
 		stat.ID = primitive.NewObjectID().Hex()
@@ -519,7 +519,7 @@ func (r *MongoBookStatsRepository) BatchCreate(ctx context.Context, bookStats []
 		stat.UpdatedAt = time.Now()
 		docs[i] = stat
 	}
-	
+
 	_, err := r.collection.InsertMany(ctx, docs)
 	return err
 }
@@ -544,4 +544,3 @@ func (r *MongoBookStatsRepository) CountByAuthor(ctx context.Context, authorID s
 func (r *MongoBookStatsRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
 }
-

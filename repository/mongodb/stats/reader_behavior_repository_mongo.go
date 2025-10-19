@@ -2,8 +2,8 @@ package stats
 
 import (
 	"Qingyu_backend/models/stats"
-	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"context"
 	"time"
 
@@ -15,8 +15,8 @@ import (
 
 // MongoReaderBehaviorRepository MongoDB实现
 type MongoReaderBehaviorRepository struct {
-	collection        *mongo.Collection
-	sessionCollection *mongo.Collection
+	collection          *mongo.Collection
+	sessionCollection   *mongo.Collection
 	retentionCollection *mongo.Collection
 }
 
@@ -33,7 +33,7 @@ func NewMongoReaderBehaviorRepository(db *mongo.Database) statsInterface.ReaderB
 func (r *MongoReaderBehaviorRepository) Create(ctx context.Context, behavior *stats.ReaderBehavior) error {
 	behavior.ID = primitive.NewObjectID().Hex()
 	behavior.CreatedAt = time.Now()
-	
+
 	_, err := r.collection.InsertOne(ctx, behavior)
 	return err
 }
@@ -60,18 +60,18 @@ func (r *MongoReaderBehaviorRepository) GetByUserID(ctx context.Context, userID 
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "read_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"user_id": userID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var behaviors []*stats.ReaderBehavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, err
 	}
-	
+
 	return behaviors, nil
 }
 
@@ -81,18 +81,18 @@ func (r *MongoReaderBehaviorRepository) GetByBookID(ctx context.Context, bookID 
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "read_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var behaviors []*stats.ReaderBehavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, err
 	}
-	
+
 	return behaviors, nil
 }
 
@@ -102,18 +102,18 @@ func (r *MongoReaderBehaviorRepository) GetByChapterID(ctx context.Context, chap
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "read_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"chapter_id": chapterID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var behaviors []*stats.ReaderBehavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, err
 	}
-	
+
 	return behaviors, nil
 }
 
@@ -123,18 +123,18 @@ func (r *MongoReaderBehaviorRepository) GetByBehaviorType(ctx context.Context, b
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "read_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"behavior_type": behaviorType}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var behaviors []*stats.ReaderBehavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, err
 	}
-	
+
 	return behaviors, nil
 }
 
@@ -147,18 +147,18 @@ func (r *MongoReaderBehaviorRepository) GetByDateRange(ctx context.Context, book
 			"$lte": endDate,
 		},
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var behaviors []*stats.ReaderBehavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, err
 	}
-	
+
 	return behaviors, nil
 }
 
@@ -171,22 +171,22 @@ func (r *MongoReaderBehaviorRepository) CountUniqueReaders(ctx context.Context, 
 		}}},
 		{{Key: "$count", Value: "unique_readers"}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	count, _ := result[0]["unique_readers"].(int32)
 	return int64(count), nil
 }
@@ -200,22 +200,22 @@ func (r *MongoReaderBehaviorRepository) CountUniqueReadersByChapter(ctx context.
 		}}},
 		{{Key: "$count", Value: "unique_readers"}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	count, _ := result[0]["unique_readers"].(int32)
 	return int64(count), nil
 }
@@ -225,26 +225,26 @@ func (r *MongoReaderBehaviorRepository) CalculateAvgReadTime(ctx context.Context
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{"chapter_id": chapterID}}},
 		{{Key: "$group", Value: bson.M{
-			"_id": nil,
+			"_id":           nil,
 			"avg_read_time": bson.M{"$avg": "$read_duration"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var result []bson.M
 	if err = cursor.All(ctx, &result); err != nil {
 		return 0, err
 	}
-	
+
 	if len(result) == 0 {
 		return 0, nil
 	}
-	
+
 	avgTime, _ := result[0]["avg_read_time"].(float64)
 	return avgTime, nil
 }
@@ -255,11 +255,11 @@ func (r *MongoReaderBehaviorRepository) CalculateCompletionRate(ctx context.Cont
 	if err != nil {
 		return 0, err
 	}
-	
+
 	if totalCount == 0 {
 		return 0, nil
 	}
-	
+
 	completeCount, err := r.collection.CountDocuments(ctx, bson.M{
 		"chapter_id":    chapterID,
 		"behavior_type": stats.BehaviorTypeComplete,
@@ -267,7 +267,7 @@ func (r *MongoReaderBehaviorRepository) CalculateCompletionRate(ctx context.Cont
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return float64(completeCount) / float64(totalCount), nil
 }
 
@@ -277,11 +277,11 @@ func (r *MongoReaderBehaviorRepository) CalculateDropOffRate(ctx context.Context
 	if err != nil {
 		return 0, err
 	}
-	
+
 	if totalCount == 0 {
 		return 0, nil
 	}
-	
+
 	dropOffCount, err := r.collection.CountDocuments(ctx, bson.M{
 		"chapter_id":    chapterID,
 		"behavior_type": stats.BehaviorTypeDropOff,
@@ -289,7 +289,7 @@ func (r *MongoReaderBehaviorRepository) CalculateDropOffRate(ctx context.Context
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return float64(dropOffCount) / float64(totalCount), nil
 }
 
@@ -314,18 +314,18 @@ func (r *MongoReaderBehaviorRepository) GetUserSessions(ctx context.Context, use
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSort(bson.D{{Key: "start_time", Value: -1}})
-	
+
 	cursor, err := r.sessionCollection.Find(ctx, bson.M{"user_id": userID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var sessions []*stats.ReadingSession
 	if err = cursor.All(ctx, &sessions); err != nil {
 		return nil, err
 	}
-	
+
 	return sessions, nil
 }
 
@@ -351,7 +351,7 @@ func (r *MongoReaderBehaviorRepository) GetRetentionByBookID(ctx context.Context
 func (r *MongoReaderBehaviorRepository) CalculateRetention(ctx context.Context, bookID string, days int) (float64, error) {
 	// 简化实现：计算N天前的读者在今天还活跃的比例
 	targetDate := time.Now().AddDate(0, 0, -days)
-	
+
 	// 统计N天前的读者数
 	targetReaders, err := r.collection.Distinct(ctx, "user_id", bson.M{
 		"book_id": bookID,
@@ -363,11 +363,11 @@ func (r *MongoReaderBehaviorRepository) CalculateRetention(ctx context.Context, 
 	if err != nil {
 		return 0, err
 	}
-	
+
 	if len(targetReaders) == 0 {
 		return 0, nil
 	}
-	
+
 	// 统计这些读者今天还活跃的数量
 	today := time.Now().Truncate(24 * time.Hour)
 	activeCount, err := r.collection.CountDocuments(ctx, bson.M{
@@ -378,7 +378,7 @@ func (r *MongoReaderBehaviorRepository) CalculateRetention(ctx context.Context, 
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return float64(activeCount) / float64(len(targetReaders)), nil
 }
 
@@ -387,14 +387,14 @@ func (r *MongoReaderBehaviorRepository) BatchCreate(ctx context.Context, behavio
 	if len(behaviors) == 0 {
 		return nil
 	}
-	
+
 	docs := make([]interface{}, len(behaviors))
 	for i, behavior := range behaviors {
 		behavior.ID = primitive.NewObjectID().Hex()
 		behavior.CreatedAt = time.Now()
 		docs[i] = behavior
 	}
-	
+
 	_, err := r.collection.InsertMany(ctx, docs)
 	return err
 }
@@ -413,4 +413,3 @@ func (r *MongoReaderBehaviorRepository) CountByBehaviorType(ctx context.Context,
 func (r *MongoReaderBehaviorRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
 }
-
