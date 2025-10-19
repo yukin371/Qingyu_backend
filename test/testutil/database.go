@@ -54,6 +54,17 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = global.DB.Collection("projects").Drop(ctx)
 		_ = global.DB.Collection("documents").Drop(ctx)
 		_ = global.DB.Collection("document_contents").Drop(ctx)
+
+		// Shared相关测试集合
+		_ = global.DB.Collection("wallets").Drop(ctx)
+		_ = global.DB.Collection("transactions").Drop(ctx)
+		_ = global.DB.Collection("withdraw_requests").Drop(ctx)
+
+		// Reading相关测试集合
+		_ = global.DB.Collection("reading_settings").Drop(ctx)
+		_ = global.DB.Collection("reading_progress").Drop(ctx)
+		_ = global.DB.Collection("annotations").Drop(ctx)
+		_ = global.DB.Collection("chapters").Drop(ctx)
 	}
 
 	return global.DB, cleanup
