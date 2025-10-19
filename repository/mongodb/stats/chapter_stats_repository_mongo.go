@@ -2,8 +2,8 @@ package stats
 
 import (
 	"Qingyu_backend/models/stats"
-	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	statsInterface "Qingyu_backend/repository/interfaces/stats"
 	"context"
 	"fmt"
 	"time"
@@ -31,7 +31,7 @@ func (r *MongoChapterStatsRepository) Create(ctx context.Context, chapterStats *
 	chapterStats.ID = primitive.NewObjectID().Hex()
 	chapterStats.CreatedAt = time.Now()
 	chapterStats.UpdatedAt = time.Now()
-	
+
 	_, err := r.collection.InsertOne(ctx, chapterStats)
 	return err
 }
@@ -75,18 +75,18 @@ func (r *MongoChapterStatsRepository) GetByBookID(ctx context.Context, bookID st
 		SetLimit(limit).
 		SetSkip(offset).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var chapterStats []*stats.ChapterStats
 	if err = cursor.All(ctx, &chapterStats); err != nil {
 		return nil, err
 	}
-	
+
 	return chapterStats, nil
 }
 
@@ -99,18 +99,18 @@ func (r *MongoChapterStatsRepository) GetByDateRange(ctx context.Context, bookID
 			"$lte": endDate,
 		},
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var chapterStats []*stats.ChapterStats
 	if err = cursor.All(ctx, &chapterStats); err != nil {
 		return nil, err
 	}
-	
+
 	return chapterStats, nil
 }
 
@@ -119,37 +119,37 @@ func (r *MongoChapterStatsRepository) GetChapterStatsAggregate(ctx context.Conte
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{"book_id": bookID}}},
 		{{Key: "$group", Value: bson.M{
-			"_id": "$chapter_id",
-			"title": bson.M{"$first": "$title"},
-			"view_count": bson.M{"$sum": "$view_count"},
-			"unique_viewers": bson.M{"$sum": "$unique_viewers"},
+			"_id":             "$chapter_id",
+			"title":           bson.M{"$first": "$title"},
+			"view_count":      bson.M{"$sum": "$view_count"},
+			"unique_viewers":  bson.M{"$sum": "$unique_viewers"},
 			"completion_rate": bson.M{"$avg": "$completion_rate"},
-			"drop_off_rate": bson.M{"$avg": "$drop_off_rate"},
-			"revenue": bson.M{"$sum": "$revenue"},
+			"drop_off_rate":   bson.M{"$avg": "$drop_off_rate"},
+			"revenue":         bson.M{"$sum": "$revenue"},
 		}}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_id": "$_id",
-			"title": 1,
-			"view_count": 1,
-			"unique_viewers": 1,
+			"chapter_id":      "$_id",
+			"title":           1,
+			"view_count":      1,
+			"unique_viewers":  1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
-			"revenue": 1,
-			"_id": 0,
+			"drop_off_rate":   1,
+			"revenue":         1,
+			"_id":             0,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.ChapterStatsAggregate
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -160,27 +160,27 @@ func (r *MongoChapterStatsRepository) GetTopViewedChapters(ctx context.Context, 
 		{{Key: "$sort", Value: bson.D{{Key: "view_count", Value: -1}}}},
 		{{Key: "$limit", Value: limit}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_id": 1,
-			"title": 1,
-			"view_count": 1,
-			"unique_viewers": 1,
+			"chapter_id":      1,
+			"title":           1,
+			"view_count":      1,
+			"unique_viewers":  1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
-			"revenue": 1,
+			"drop_off_rate":   1,
+			"revenue":         1,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.ChapterStatsAggregate
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -191,27 +191,27 @@ func (r *MongoChapterStatsRepository) GetTopRevenueChapters(ctx context.Context,
 		{{Key: "$sort", Value: bson.D{{Key: "revenue", Value: -1}}}},
 		{{Key: "$limit", Value: limit}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_id": 1,
-			"title": 1,
-			"view_count": 1,
-			"unique_viewers": 1,
+			"chapter_id":      1,
+			"title":           1,
+			"view_count":      1,
+			"unique_viewers":  1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
-			"revenue": 1,
+			"drop_off_rate":   1,
+			"revenue":         1,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.ChapterStatsAggregate
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -222,27 +222,27 @@ func (r *MongoChapterStatsRepository) GetLowestCompletionChapters(ctx context.Co
 		{{Key: "$sort", Value: bson.D{{Key: "completion_rate", Value: 1}}}},
 		{{Key: "$limit", Value: limit}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_id": 1,
-			"title": 1,
-			"view_count": 1,
-			"unique_viewers": 1,
+			"chapter_id":      1,
+			"title":           1,
+			"view_count":      1,
+			"unique_viewers":  1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
-			"revenue": 1,
+			"drop_off_rate":   1,
+			"revenue":         1,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.ChapterStatsAggregate
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -253,27 +253,27 @@ func (r *MongoChapterStatsRepository) GetHighestDropOffChapters(ctx context.Cont
 		{{Key: "$sort", Value: bson.D{{Key: "drop_off_rate", Value: -1}}}},
 		{{Key: "$limit", Value: limit}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_id": 1,
-			"title": 1,
-			"view_count": 1,
-			"unique_viewers": 1,
+			"chapter_id":      1,
+			"title":           1,
+			"view_count":      1,
+			"unique_viewers":  1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
-			"revenue": 1,
+			"drop_off_rate":   1,
+			"revenue":         1,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.ChapterStatsAggregate
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -283,25 +283,25 @@ func (r *MongoChapterStatsRepository) GenerateHeatmap(ctx context.Context, bookI
 		{{Key: "$match", Value: bson.M{"book_id": bookID}}},
 		{{Key: "$sort", Value: bson.D{{Key: "chapter_num", Value: 1}}}},
 		{{Key: "$project", Value: bson.M{
-			"chapter_num": 1,
-			"chapter_id": 1,
-			"view_count": 1,
+			"chapter_num":     1,
+			"chapter_id":      1,
+			"view_count":      1,
 			"completion_rate": 1,
-			"drop_off_rate": 1,
+			"drop_off_rate":   1,
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []*stats.HeatmapPoint
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	return results, nil
 }
 
@@ -316,37 +316,37 @@ func (r *MongoChapterStatsRepository) GetTimeRangeStats(ctx context.Context, boo
 			},
 		}}},
 		{{Key: "$group", Value: bson.M{
-			"_id": nil,
-			"total_views": bson.M{"$sum": "$view_count"},
+			"_id":                  nil,
+			"total_views":          bson.M{"$sum": "$view_count"},
 			"total_unique_viewers": bson.M{"$sum": "$unique_viewers"},
-			"avg_completion_rate": bson.M{"$avg": "$completion_rate"},
-			"avg_drop_off_rate": bson.M{"$avg": "$drop_off_rate"},
-			"total_revenue": bson.M{"$sum": "$revenue"},
+			"avg_completion_rate":  bson.M{"$avg": "$completion_rate"},
+			"avg_drop_off_rate":    bson.M{"$avg": "$drop_off_rate"},
+			"total_revenue":        bson.M{"$sum": "$revenue"},
 		}}},
 	}
-	
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var results []stats.TimeRangeStats
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	
+
 	if len(results) == 0 {
 		return &stats.TimeRangeStats{
 			StartDate: startDate,
 			EndDate:   endDate,
 		}, nil
 	}
-	
+
 	result := &results[0]
 	result.StartDate = startDate
 	result.EndDate = endDate
-	
+
 	return result, nil
 }
 
@@ -355,7 +355,7 @@ func (r *MongoChapterStatsRepository) BatchCreate(ctx context.Context, chapterSt
 	if len(chapterStats) == 0 {
 		return nil
 	}
-	
+
 	docs := make([]interface{}, len(chapterStats))
 	for i, stat := range chapterStats {
 		stat.ID = primitive.NewObjectID().Hex()
@@ -363,7 +363,7 @@ func (r *MongoChapterStatsRepository) BatchCreate(ctx context.Context, chapterSt
 		stat.UpdatedAt = time.Now()
 		docs[i] = stat
 	}
-	
+
 	_, err := r.collection.InsertMany(ctx, docs)
 	return err
 }
@@ -389,4 +389,3 @@ func (r *MongoChapterStatsRepository) CountByBook(ctx context.Context, bookID st
 func (r *MongoChapterStatsRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
 }
-
