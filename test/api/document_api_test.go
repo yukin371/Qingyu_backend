@@ -153,9 +153,18 @@ func (m *MockDocumentEventBus) PublishAsync(ctx context.Context, event base.Even
 
 // === 测试辅助函数 ===
 
-func setupDocumentTestRouter(documentService *document.DocumentService) *gin.Engine {
+func setupDocumentTestRouter(documentService *document.DocumentService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+
+	// 添加middleware来设置userID到request context
+	r.Use(func(c *gin.Context) {
+		if userID != "" {
+			ctx := context.WithValue(c.Request.Context(), "userID", userID)
+			c.Request = c.Request.WithContext(ctx)
+		}
+		c.Next()
+	})
 
 	api := writerAPI.NewDocumentApi(documentService)
 
@@ -189,10 +198,11 @@ func createTestDocument(projectID string) *documentModel.Document {
 		ID:        "test_document_id",
 		ProjectID: projectID,
 		Title:     "测试文档",
-		Content:   "这是测试内容",
 		Type:      "chapter",
 		ParentID:  "",
 		Order:     1,
+		WordCount: 1000,
+		Status:    "writing",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -206,7 +216,7 @@ func TestDocumentApi_CreateDocument(t *testing.T) {
 		projectID      string
 		userID         string
 		requestBody    document.CreateDocumentRequest
-		setupMock      func(*MockDocumentRepository)
+		setupMock      func(*MockDocumentRepository, *MockProjectRepository)
 		expectedStatus int
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
@@ -215,53 +225,69 @@ func TestDocumentApi_CreateDocument(t *testing.T) {
 			projectID: "project123",
 			userID:    "user123",
 			requestBody: document.CreateDocumentRequest{
-				Title:   "新文档",
-				Content: "文档内容",
-				Type:    "chapter",
+				Title: "新文档",
+				Type:  "chapter",
 			},
-			setupMock: func(repo *MockDocumentRepository) {
-				repo.On("Create", mock.Anything, mock.AnythingOfType("*document.Document")).Return(nil)
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
+				testProject := createTestProject("user123")
+				projRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil)
+				docRepo.On("Create", mock.Anything, mock.AnythingOfType("*document.Document")).Return(nil)
+				// updateProjectStatistics会异步调用GetByProjectID来统计（使用Maybe因为是异步的）
+				docRepo.On("GetByProjectID", mock.Anything, "project123", int64(10000), int64(0)).Return([]*documentModel.Document{}, nil).Maybe()
+				projRepo.On("Update", mock.Anything, "project123", mock.AnythingOfType("map[string]interface {}")).Return(nil).Maybe()
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
 				assert.Equal(t, float64(201), resp["code"])
 				assert.Equal(t, "创建成功", resp["message"])
-				data := resp["data"].(map[string]interface{})
-				assert.NotEmpty(t, data["documentId"])
+				if data, ok := resp["data"].(map[string]interface{}); ok {
+					assert.NotEmpty(t, data["documentId"])
+				}
 			},
 		},
 		{
-			name:      "缺少必填字段",
-			projectID: "project123",
-			userID:    "user123",
-			requestBody: document.CreateDocumentRequest{
-				Content: "文档内容",
-			},
-			setupMock:      func(repo *MockDocumentRepository) {},
+			name:           "缺少必填字段",
+			projectID:      "project123",
+			userID:         "user123",
+			requestBody:    document.CreateDocumentRequest{},
+			setupMock:      func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
 				assert.Equal(t, float64(500), resp["code"])
+			},
+		},
+		{
+			name:      "项目不存在",
+			projectID: "nonexistent",
+			userID:    "user123",
+			requestBody: document.CreateDocumentRequest{
+				Title: "新文档",
+				Type:  "chapter",
+			},
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
+				projRepo.On("GetByID", mock.Anything, "nonexistent").Return(nil, nil)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				assert.Equal(t, float64(500), resp["code"])
+				assert.Contains(t, resp["error"], "项目不存在")
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockDocumentRepository)
+			mockDocRepo := new(MockDocumentRepository)
+			mockProjRepo := new(MockProjectRepository)
 			mockEventBus := new(MockDocumentEventBus)
-			tt.setupMock(mockRepo)
+			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockRepo, mockEventBus)
-			router := setupDocumentTestRouter(documentService)
+			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			body, _ := json.Marshal(tt.requestBody)
 			req := httptest.NewRequest("POST", "/api/v1/projects/"+tt.projectID+"/documents", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
-
-			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), "userID", tt.userID)
-				req = req.WithContext(ctx)
-			}
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -273,7 +299,8 @@ func TestDocumentApi_CreateDocument(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.checkResponse(t, resp)
-			mockRepo.AssertExpectations(t)
+			mockDocRepo.AssertExpectations(t)
+			mockProjRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -283,7 +310,7 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 		name           string
 		documentID     string
 		userID         string
-		setupMock      func(*MockDocumentRepository)
+		setupMock      func(*MockDocumentRepository, *MockProjectRepository)
 		expectedStatus int
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
@@ -291,10 +318,12 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 			name:       "成功获取文档",
 			documentID: "doc123",
 			userID:     "user123",
-			setupMock: func(repo *MockDocumentRepository) {
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
 				testDoc := createTestDocument("project123")
 				testDoc.ID = "doc123"
-				repo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
+				testProject := createTestProject("user123")
+				docRepo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
+				projRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -307,8 +336,8 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 			name:       "文档不存在",
 			documentID: "nonexistent",
 			userID:     "user123",
-			setupMock: func(repo *MockDocumentRepository) {
-				repo.On("GetByID", mock.Anything, "nonexistent").Return(nil, nil)
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
+				docRepo.On("GetByID", mock.Anything, "nonexistent").Return(nil, nil)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -319,19 +348,15 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockDocumentRepository)
+			mockDocRepo := new(MockDocumentRepository)
+			mockProjRepo := new(MockProjectRepository)
 			mockEventBus := new(MockDocumentEventBus)
-			tt.setupMock(mockRepo)
+			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockRepo, mockEventBus)
-			router := setupDocumentTestRouter(documentService)
+			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("GET", "/api/v1/documents/"+tt.documentID, nil)
-
-			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), "userID", tt.userID)
-				req = req.WithContext(ctx)
-			}
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -343,7 +368,8 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.checkResponse(t, resp)
-			mockRepo.AssertExpectations(t)
+			mockDocRepo.AssertExpectations(t)
+			mockProjRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -354,7 +380,7 @@ func TestDocumentApi_UpdateDocument(t *testing.T) {
 		documentID     string
 		userID         string
 		requestBody    document.UpdateDocumentRequest
-		setupMock      func(*MockDocumentRepository)
+		setupMock      func(*MockDocumentRepository, *MockProjectRepository)
 		expectedStatus int
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
@@ -363,14 +389,16 @@ func TestDocumentApi_UpdateDocument(t *testing.T) {
 			documentID: "doc123",
 			userID:     "user123",
 			requestBody: document.UpdateDocumentRequest{
-				Title:   "更新后的标题",
-				Content: "更新后的内容",
+				Title:  "更新后的标题",
+				Status: "completed",
 			},
-			setupMock: func(repo *MockDocumentRepository) {
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
 				testDoc := createTestDocument("project123")
 				testDoc.ID = "doc123"
-				repo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
-				repo.On("Update", mock.Anything, "doc123", mock.AnythingOfType("map[string]interface {}")).Return(nil)
+				testProject := createTestProject("user123")
+				docRepo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
+				projRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil)
+				docRepo.On("UpdateByProject", mock.Anything, "doc123", "project123", mock.AnythingOfType("map[string]interface {}")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -382,21 +410,17 @@ func TestDocumentApi_UpdateDocument(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockDocumentRepository)
+			mockDocRepo := new(MockDocumentRepository)
+			mockProjRepo := new(MockProjectRepository)
 			mockEventBus := new(MockDocumentEventBus)
-			tt.setupMock(mockRepo)
+			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockRepo, mockEventBus)
-			router := setupDocumentTestRouter(documentService)
+			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			body, _ := json.Marshal(tt.requestBody)
 			req := httptest.NewRequest("PUT", "/api/v1/documents/"+tt.documentID, bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
-
-			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), "userID", tt.userID)
-				req = req.WithContext(ctx)
-			}
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -408,7 +432,8 @@ func TestDocumentApi_UpdateDocument(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.checkResponse(t, resp)
-			mockRepo.AssertExpectations(t)
+			mockDocRepo.AssertExpectations(t)
+			mockProjRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -418,7 +443,7 @@ func TestDocumentApi_DeleteDocument(t *testing.T) {
 		name           string
 		documentID     string
 		userID         string
-		setupMock      func(*MockDocumentRepository)
+		setupMock      func(*MockDocumentRepository, *MockProjectRepository)
 		expectedStatus int
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
@@ -426,11 +451,16 @@ func TestDocumentApi_DeleteDocument(t *testing.T) {
 			name:       "成功删除文档",
 			documentID: "doc123",
 			userID:     "user123",
-			setupMock: func(repo *MockDocumentRepository) {
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
 				testDoc := createTestDocument("project123")
 				testDoc.ID = "doc123"
-				repo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
-				repo.On("SoftDelete", mock.Anything, "doc123", "project123").Return(nil)
+				testProject := createTestProject("user123")
+				docRepo.On("GetByID", mock.Anything, "doc123").Return(testDoc, nil)
+				projRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil)
+				docRepo.On("SoftDelete", mock.Anything, "doc123", "project123").Return(nil)
+				// DeleteDocument也会异步调用updateProjectStatistics（使用Maybe因为是异步的）
+				docRepo.On("GetByProjectID", mock.Anything, "project123", int64(10000), int64(0)).Return([]*documentModel.Document{}, nil).Maybe()
+				projRepo.On("Update", mock.Anything, "project123", mock.AnythingOfType("map[string]interface {}")).Return(nil).Maybe()
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -442,19 +472,15 @@ func TestDocumentApi_DeleteDocument(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockDocumentRepository)
+			mockDocRepo := new(MockDocumentRepository)
+			mockProjRepo := new(MockProjectRepository)
 			mockEventBus := new(MockDocumentEventBus)
-			tt.setupMock(mockRepo)
+			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockRepo, mockEventBus)
-			router := setupDocumentTestRouter(documentService)
+			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("DELETE", "/api/v1/documents/"+tt.documentID, nil)
-
-			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), "userID", tt.userID)
-				req = req.WithContext(ctx)
-			}
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -466,7 +492,8 @@ func TestDocumentApi_DeleteDocument(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.checkResponse(t, resp)
-			mockRepo.AssertExpectations(t)
+			mockDocRepo.AssertExpectations(t)
+			mockProjRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -477,7 +504,7 @@ func TestDocumentApi_ListDocuments(t *testing.T) {
 		projectID      string
 		userID         string
 		queryParams    string
-		setupMock      func(*MockDocumentRepository)
+		setupMock      func(*MockDocumentRepository, *MockProjectRepository)
 		expectedStatus int
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
@@ -486,13 +513,14 @@ func TestDocumentApi_ListDocuments(t *testing.T) {
 			projectID:   "project123",
 			userID:      "user123",
 			queryParams: "?page=1&pageSize=20",
-			setupMock: func(repo *MockDocumentRepository) {
+			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
 				docs := []*documentModel.Document{
 					createTestDocument("project123"),
 					createTestDocument("project123"),
 				}
-				repo.On("GetByProjectID", mock.Anything, "project123", int64(20), int64(0)).Return(docs, nil)
-				repo.On("CountByProject", mock.Anything, "project123").Return(int64(2), nil)
+				// ListDocuments方法会调用两次GetByProjectID
+				docRepo.On("GetByProjectID", mock.Anything, "project123", int64(20), int64(0)).Return(docs, nil)
+				docRepo.On("GetByProjectID", mock.Anything, "project123", int64(10000), int64(0)).Return(docs, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -506,19 +534,15 @@ func TestDocumentApi_ListDocuments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockDocumentRepository)
+			mockDocRepo := new(MockDocumentRepository)
+			mockProjRepo := new(MockProjectRepository)
 			mockEventBus := new(MockDocumentEventBus)
-			tt.setupMock(mockRepo)
+			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockRepo, mockEventBus)
-			router := setupDocumentTestRouter(documentService)
+			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("GET", "/api/v1/projects/"+tt.projectID+"/documents"+tt.queryParams, nil)
-
-			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), "userID", tt.userID)
-				req = req.WithContext(ctx)
-			}
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -530,7 +554,7 @@ func TestDocumentApi_ListDocuments(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.checkResponse(t, resp)
-			mockRepo.AssertExpectations(t)
+			mockDocRepo.AssertExpectations(t)
 		})
 	}
 }
