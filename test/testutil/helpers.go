@@ -5,12 +5,41 @@ import (
 	"testing"
 	"time"
 
+	"Qingyu_backend/config"
 	"Qingyu_backend/models/document"
 	"Qingyu_backend/models/users"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// ============ 测试配置助手 ============
+
+// InitTestConfig 初始化测试配置
+func InitTestConfig() {
+	if config.GlobalConfig == nil {
+		config.GlobalConfig = &config.Config{
+			JWT: &config.JWTConfig{
+				Secret:          "test-secret-key-for-testing-only",
+				ExpirationHours: 24,
+			},
+			Database: &config.DatabaseConfig{
+				Type: "mongodb",
+				Primary: config.DatabaseConnection{
+					Type: config.DatabaseTypeMongoDB,
+					MongoDB: &config.MongoDBConfig{
+						URI:      "mongodb://localhost:27017",
+						Database: "qingyu_test",
+					},
+				},
+			},
+			Server: &config.ServerConfig{
+				Port: ":8080",
+				Mode: "test",
+			},
+		}
+	}
+}
 
 // ============ 用户相关测试助手 ============
 

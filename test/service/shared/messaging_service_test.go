@@ -545,7 +545,7 @@ func TestMessagingService_SubscribeToTopic_Success(t *testing.T) {
 	topicRepo.On("GetByName", ctx, topic).Return(existingTopic, nil)
 	consumerRepo.On("GetGroup", ctx, groupID).Return(nil, errors.New("not found"))
 	consumerRepo.On("CreateGroup", ctx, mock.AnythingOfType("*shared.MockConsumerGroup")).Return(nil)
-	broker.On("Subscribe", ctx, topic, groupID, handler).Return(nil)
+	broker.On("Subscribe", ctx, topic, groupID, mock.AnythingOfType("shared.MockMessageHandler")).Return(nil)
 
 	// 执行测试
 	err := service.SubscribeToTopic(ctx, topic, groupID, handler)

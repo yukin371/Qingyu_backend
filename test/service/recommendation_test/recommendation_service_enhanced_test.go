@@ -162,19 +162,20 @@ func TestRecommendationService_GetHotRecommendations(t *testing.T) {
 // ===========================
 
 func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testing.T) {
-	mockBehaviorRepo := new(MockBehaviorRepo)
-	mockProfileRepo := new(MockProfileRepo)
-	mockItemFeatureRepo := new(MockItemFeatureRepo)
-	mockHotRepo := new(MockHotRecommendationRepo)
-
-	service := recommendation.NewRecommendationService(
-		mockBehaviorRepo,
-		mockProfileRepo,
-		mockItemFeatureRepo,
-		mockHotRepo,
-	)
-
 	t.Run("有画像用户-基于标签推荐", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock实例
+		mockBehaviorRepo := new(MockBehaviorRepo)
+		mockProfileRepo := new(MockProfileRepo)
+		mockItemFeatureRepo := new(MockItemFeatureRepo)
+		mockHotRepo := new(MockHotRecommendationRepo)
+
+		service := recommendation.NewRecommendationService(
+			mockBehaviorRepo,
+			mockProfileRepo,
+			mockItemFeatureRepo,
+			mockHotRepo,
+		)
+
 		ctx := context.Background()
 		userID := "user_with_profile"
 
@@ -223,6 +224,19 @@ func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testin
 	})
 
 	t.Run("无画像用户-冷启动策略", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock实例
+		mockBehaviorRepo := new(MockBehaviorRepo)
+		mockProfileRepo := new(MockProfileRepo)
+		mockItemFeatureRepo := new(MockItemFeatureRepo)
+		mockHotRepo := new(MockHotRecommendationRepo)
+
+		service := recommendation.NewRecommendationService(
+			mockBehaviorRepo,
+			mockProfileRepo,
+			mockItemFeatureRepo,
+			mockHotRepo,
+		)
+
 		ctx := context.Background()
 		userID := "new_user"
 		hotBooks := []string{"hot1", "hot2", "hot3"}
@@ -239,6 +253,19 @@ func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testin
 	})
 
 	t.Run("画像为空-冷启动策略", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock实例
+		mockBehaviorRepo := new(MockBehaviorRepo)
+		mockProfileRepo := new(MockProfileRepo)
+		mockItemFeatureRepo := new(MockItemFeatureRepo)
+		mockHotRepo := new(MockHotRecommendationRepo)
+
+		service := recommendation.NewRecommendationService(
+			mockBehaviorRepo,
+			mockProfileRepo,
+			mockItemFeatureRepo,
+			mockHotRepo,
+		)
+
 		ctx := context.Background()
 		userID := "user_empty_profile"
 		hotBooks := []string{"hot1", "hot2"}
