@@ -1,12 +1,13 @@
+# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.jsonschema.json
+# vim: set filetype=yaml:
+
 linters-settings:
   govet:
-    check-shadowing: true
-  golint:
-    min-confidence: 0
+    enable-all: true
+    disable:
+      - fieldalignment
   gocyclo:
     min-complexity: 15
-  maligned:
-    suggest-new: true
   dupl:
     threshold: 100
   goconst:
@@ -33,22 +34,17 @@ linters-settings:
       - wrapperFunc
 
 linters:
-  disable-all: true
   enable:
     - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
     - dupl
     - errcheck
-    - exportloopref
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -60,40 +56,38 @@ linters:
     - noctx
     - nolintlint
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
+    - revive
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - goconst
         - dupl
         - lll
-    
+        - gosec
+
     - path: cmd/
       linters:
-        - gomnd
-    
+        - mnd
+
     - path: migration/
       linters:
-        - gomnd
+        - mnd
         - goconst
 
   max-issues-per-linter: 0
   max-same-issues: 0
-  new: false
 
 run:
   timeout: 5m
-  issues-exit-code: 1
   tests: true
   skip-dirs:
     - vendor
@@ -109,4 +103,3 @@ output:
   print-linter-name: true
   uniq-by-line: true
   sort-results: true
-
