@@ -486,7 +486,11 @@ func (r *MongoChapterRepository) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
 }
 
+// 全局ID计数器，用于避免并发时的ID冲突
+var idCounter int64
+
 // generateID 生成唯一ID (简化实现，实际应使用更可靠的ID生成方案)
 func generateID() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
+	idCounter++
+	return fmt.Sprintf("%d_%d", time.Now().UnixNano(), idCounter)
 }
