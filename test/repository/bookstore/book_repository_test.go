@@ -2,305 +2,455 @@ package bookstore_test
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reading/bookstore"
-	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
-// ============ Mock Repository Tests ============
+// MockBookRepository Mock实现
+type MockBookRepository struct {
+	mock.Mock
+	bookstoreRepo.BookRepository // 嵌入接口避免实现所有方法
+}
 
-// 这些是Repository逻辑测试，不需要真实数据库
-// 主要测试输入验证、数据转换等逻辑
+func (m *MockBookRepository) Create(ctx context.Context, book *bookstore.Book) error {
+	args := m.Called(ctx, book)
+	return args.Error(0)
+}
 
-func TestBookRepository_ValidateBookData(t *testing.T) {
-	tests := []struct {
-		name    string
-		book    *bookstore.Book
-		wantErr bool
-	}{
-		{
-			name: "有效的书籍数据",
-			book: &bookstore.Book{
-				Title:  "测试书籍",
-				Author: "测试作者",
-				Status: bookstore.BookStatusPublished,
-			},
-			wantErr: false,
-		},
-		{
-			name: "空标题",
-			book: &bookstore.Book{
-				Title:  "",
-				Author: "测试作者",
-				Status: bookstore.BookStatusPublished,
-			},
-			wantErr: true,
-		},
-		{
-			name: "空作者",
-			book: &bookstore.Book{
-				Title:  "测试书籍",
-				Author: "",
-				Status: bookstore.BookStatusPublished,
-			},
-			wantErr: true,
-		},
+func (m *MockBookRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Book, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
+	return args.Get(0).(*bookstore.Book), args.Error(1)
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// 验证逻辑
-			err := validateBook(tt.book)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
+func (m *MockBookRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) List(ctx context.Context, filter interface{}) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetByCategory(ctx context.Context, categoryID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, categoryID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, status, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, keyword, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetRecommended(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetFeatured(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetHotBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) CountByCategory(ctx context.Context, categoryID primitive.ObjectID) (int64, error) {
+	args := m.Called(ctx, categoryID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockBookRepository) CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
+	args := m.Called(ctx, status)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
+	args := m.Called(ctx, bookIDs, status)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+	args := m.Called(ctx, bookID)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) GetStats(ctx context.Context) (*bookstore.BookStats, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*bookstore.BookStats), args.Error(1)
+}
+
+// 测试助手函数
+func createTestBook(id primitive.ObjectID, title, author string) *bookstore.Book {
+	now := time.Now()
+	return &bookstore.Book{
+		ID:            id,
+		Title:         title,
+		Author:        author,
+		Introduction:  "测试简介",
+		Cover:         "https://example.com/cover.jpg",
+		Status:        bookstore.BookStatusPublished,
+		WordCount:     100000,
+		ChapterCount:  100,
+		Price:         19.99,
+		IsFree:        false,
+		IsRecommended: false,
+		IsFeatured:    false,
+		IsHot:         false,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 }
 
-func TestBookRepository_StatusValidation(t *testing.T) {
-	validStatuses := []bookstore.BookStatus{
-		bookstore.BookStatusDraft,
-		bookstore.BookStatusPublished,
-		bookstore.BookStatusOngoing,
-		bookstore.BookStatusCompleted,
-		bookstore.BookStatusPaused,
-	}
+// TestBookRepository_Create 测试创建书籍
+func TestBookRepository_Create(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-	for _, status := range validStatuses {
-		t.Run(string(status), func(t *testing.T) {
-			book := &bookstore.Book{
-				Title:  "测试",
-				Author: "测试",
-				Status: status,
-			}
-			err := validateBook(book)
-			assert.NoError(t, err)
-		})
-	}
+	book := createTestBook(primitive.NewObjectID(), "测试书籍", "测试作者")
+
+	// 设置Mock期望
+	mockRepo.On("Create", ctx, book).Return(nil)
+
+	// 执行测试
+	err := mockRepo.Create(ctx, book)
+
+	// 验证结果
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
 }
 
-func TestBookRepository_IDGeneration(t *testing.T) {
-	// 测试ObjectID生成
-	id1 := primitive.NewObjectID()
-	id2 := primitive.NewObjectID()
+// TestBookRepository_GetByID_Success 测试根据ID获取书籍成功
+func TestBookRepository_GetByID_Success(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-	assert.NotEqual(t, id1, id2, "生成的ID应该是唯一的")
-	assert.NotEmpty(t, id1.Hex(), "ID的Hex表示不应为空")
+	bookID := primitive.NewObjectID()
+	expectedBook := createTestBook(bookID, "测试书籍", "测试作者")
+
+	// 设置Mock期望
+	mockRepo.On("GetByID", ctx, bookID).Return(expectedBook, nil)
+
+	// 执行测试
+	book, err := mockRepo.GetByID(ctx, bookID)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, book)
+	assert.Equal(t, expectedBook.ID, book.ID)
+	assert.Equal(t, expectedBook.Title, book.Title)
+	mockRepo.AssertExpectations(t)
 }
 
-func TestBookFilter_BuildQuery(t *testing.T) {
-	tests := []struct {
-		name   string
-		filter *bookstore.BookFilter
-		want   int // 预期的查询条件数量
-	}{
-		{
-			name:   "空过滤器",
-			filter: &bookstore.BookFilter{},
-			want:   0,
-		},
-		{
-			name: "按状态过滤",
-			filter: &bookstore.BookFilter{
-				Status: ptrBookStatus(bookstore.BookStatusPublished),
-			},
-			want: 1,
-		},
-		{
-			name: "按作者过滤",
-			filter: &bookstore.BookFilter{
-				Author: ptrString("测试作者"),
-			},
-			want: 1,
-		},
-		{
-			name: "多条件过滤",
-			filter: &bookstore.BookFilter{
-				Status: ptrBookStatus(bookstore.BookStatusPublished),
-				Author: ptrString("测试作者"),
-				IsFree: ptrBool(true),
-			},
-			want: 3,
-		},
-	}
+// TestBookRepository_GetByID_NotFound 测试根据ID获取书籍不存在
+func TestBookRepository_GetByID_NotFound(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			query := buildQueryFromFilter(tt.filter)
-			assert.Equal(t, tt.want, len(query))
-		})
-	}
+	bookID := primitive.NewObjectID()
+
+	// 设置Mock期望：书籍不存在
+	mockRepo.On("GetByID", ctx, bookID).Return(nil, errors.New("book not found"))
+
+	// 执行测试
+	book, err := mockRepo.GetByID(ctx, bookID)
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, book)
+	mockRepo.AssertExpectations(t)
 }
 
-func TestCategoryTree_BuildStructure(t *testing.T) {
-	// 测试分类树构建逻辑
-	categories := []*bookstore.Category{
-		{
-			ID:       primitive.NewObjectID(),
-			Name:     "小说",
-			Level:    0,
-			ParentID: nil,
-		},
-		{
-			ID:       primitive.NewObjectID(),
-			Name:     "玄幻",
-			Level:    1,
-			ParentID: nil, // 在实际中会设置为"小说"的ID
-		},
+// TestBookRepository_GetByCategory 测试根据分类获取书籍列表
+func TestBookRepository_GetByCategory(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	categoryID := primitive.NewObjectID()
+	books := []*bookstore.Book{
+		createTestBook(primitive.NewObjectID(), "书籍1", "作者1"),
+		createTestBook(primitive.NewObjectID(), "书籍2", "作者2"),
 	}
 
-	// 验证根分类
-	rootCategories := filterRootCategories(categories)
-	assert.NotEmpty(t, rootCategories)
-	assert.Equal(t, 0, rootCategories[0].Level)
+	// 设置Mock期望
+	mockRepo.On("GetByCategory", ctx, categoryID, 10, 0).Return(books, nil)
+
+	// 执行测试
+	result, err := mockRepo.GetByCategory(ctx, categoryID, 10, 0)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 2, len(result))
+	mockRepo.AssertExpectations(t)
 }
 
-func TestBanner_ActiveFilter(t *testing.T) {
-	tests := []struct {
-		name     string
-		banner   *bookstore.Banner
-		isActive bool
-	}{
-		{
-			name: "活动的Banner",
-			banner: &bookstore.Banner{
-				IsActive: true,
-			},
-			isActive: true,
-		},
-		{
-			name: "非活动的Banner",
-			banner: &bookstore.Banner{
-				IsActive: false,
-			},
-			isActive: false,
-		},
+// TestBookRepository_GetByStatus 测试根据状态获取书籍列表
+func TestBookRepository_GetByStatus(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	books := []*bookstore.Book{
+		createTestBook(primitive.NewObjectID(), "已发布书籍", "作者1"),
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.isActive, tt.banner.IsActive)
-		})
-	}
+	// 设置Mock期望
+	mockRepo.On("GetByStatus", ctx, bookstore.BookStatusPublished, 10, 0).Return(books, nil)
+
+	// 执行测试
+	result, err := mockRepo.GetByStatus(ctx, bookstore.BookStatusPublished, 10, 0)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 1, len(result))
+	assert.Equal(t, bookstore.BookStatusPublished, result[0].Status)
+	mockRepo.AssertExpectations(t)
 }
 
-// ============ Repository Constructor Tests ============
+// TestBookRepository_Search 测试搜索书籍
+func TestBookRepository_Search(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-func TestNewMongoBookRepository(t *testing.T) {
-	// 这个测试不需要真实数据库连接
-	// 只测试构造函数是否正确创建Repository实例
+	keyword := "测试"
+	books := []*bookstore.Book{
+		createTestBook(primitive.NewObjectID(), "测试书籍1", "作者1"),
+		createTestBook(primitive.NewObjectID(), "测试书籍2", "作者2"),
+	}
 
-	// 注意: 这里我们无法直接创建Repository，因为需要MongoDB连接
-	// 但我们可以验证Repository的接口设计
+	// 设置Mock期望
+	mockRepo.On("Search", ctx, keyword, 10, 0).Return(books, nil)
 
-	// 验证Repository接口方法
-	var _ interface {
-		Create(ctx context.Context, book *bookstore.Book) error
-		GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Book, error)
-		Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error
-		Delete(ctx context.Context, id primitive.ObjectID) error
-	} = (*bookstoreRepo.MongoBookRepository)(nil)
+	// 执行测试
+	result, err := mockRepo.Search(ctx, keyword, 10, 0)
 
-	// 这只是编译时检查，确保接口正确实现
-	assert.True(t, true, "Repository接口正确实现")
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 2, len(result))
+	mockRepo.AssertExpectations(t)
 }
 
-// ============ Helper Functions ============
+// TestBookRepository_GetRecommended 测试获取推荐书籍
+func TestBookRepository_GetRecommended(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-func validateBook(book *bookstore.Book) error {
-	if book.Title == "" {
-		return assert.AnError
-	}
-	if book.Author == "" {
-		return assert.AnError
-	}
-	return nil
+	recommendedBook := createTestBook(primitive.NewObjectID(), "推荐书籍", "推荐作者")
+	recommendedBook.IsRecommended = true
+	books := []*bookstore.Book{recommendedBook}
+
+	// 设置Mock期望
+	mockRepo.On("GetRecommended", ctx, 10, 0).Return(books, nil)
+
+	// 执行测试
+	result, err := mockRepo.GetRecommended(ctx, 10, 0)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 1, len(result))
+	assert.True(t, result[0].IsRecommended)
+	mockRepo.AssertExpectations(t)
 }
 
-func buildQueryFromFilter(filter *bookstore.BookFilter) map[string]interface{} {
-	query := make(map[string]interface{})
+// TestBookRepository_GetFeatured 测试获取精选书籍
+func TestBookRepository_GetFeatured(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-	if filter.Status != nil {
-		query["status"] = *filter.Status
-	}
-	if filter.Author != nil {
-		query["author"] = *filter.Author
-	}
-	if filter.IsFree != nil {
-		query["is_free"] = *filter.IsFree
-	}
+	featuredBook := createTestBook(primitive.NewObjectID(), "精选书籍", "精选作者")
+	featuredBook.IsFeatured = true
+	books := []*bookstore.Book{featuredBook}
 
-	return query
+	// 设置Mock期望
+	mockRepo.On("GetFeatured", ctx, 10, 0).Return(books, nil)
+
+	// 执行测试
+	result, err := mockRepo.GetFeatured(ctx, 10, 0)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 1, len(result))
+	assert.True(t, result[0].IsFeatured)
+	mockRepo.AssertExpectations(t)
 }
 
-func filterRootCategories(categories []*bookstore.Category) []*bookstore.Category {
-	var roots []*bookstore.Category
-	for _, cat := range categories {
-		if cat.ParentID == nil || cat.Level == 0 {
-			roots = append(roots, cat)
-		}
+// TestBookRepository_GetHotBooks 测试获取热门书籍
+func TestBookRepository_GetHotBooks(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	hotBook := createTestBook(primitive.NewObjectID(), "热门书籍", "热门作者")
+	hotBook.IsHot = true
+	books := []*bookstore.Book{hotBook}
+
+	// 设置Mock期望
+	mockRepo.On("GetHotBooks", ctx, 10, 0).Return(books, nil)
+
+	// 执行测试
+	result, err := mockRepo.GetHotBooks(ctx, 10, 0)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 1, len(result))
+	assert.True(t, result[0].IsHot)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestBookRepository_CountByCategory 测试统计分类下的书籍数量
+func TestBookRepository_CountByCategory(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	categoryID := primitive.NewObjectID()
+	expectedCount := int64(25)
+
+	// 设置Mock期望
+	mockRepo.On("CountByCategory", ctx, categoryID).Return(expectedCount, nil)
+
+	// 执行测试
+	count, err := mockRepo.CountByCategory(ctx, categoryID)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, expectedCount, count)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestBookRepository_CountByStatus 测试统计指定状态的书籍数量
+func TestBookRepository_CountByStatus(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	expectedCount := int64(150)
+
+	// 设置Mock期望
+	mockRepo.On("CountByStatus", ctx, bookstore.BookStatusPublished).Return(expectedCount, nil)
+
+	// 执行测试
+	count, err := mockRepo.CountByStatus(ctx, bookstore.BookStatusPublished)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, expectedCount, count)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestBookRepository_BatchUpdateStatus 测试批量更新书籍状态
+func TestBookRepository_BatchUpdateStatus(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
+
+	bookIDs := []primitive.ObjectID{
+		primitive.NewObjectID(),
+		primitive.NewObjectID(),
+		primitive.NewObjectID(),
 	}
-	return roots
+	newStatus := bookstore.BookStatusCompleted
+
+	// 设置Mock期望
+	mockRepo.On("BatchUpdateStatus", ctx, bookIDs, newStatus).Return(nil)
+
+	// 执行测试
+	err := mockRepo.BatchUpdateStatus(ctx, bookIDs, newStatus)
+
+	// 验证结果
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
 }
 
-// ============ Helper Pointer Functions ============
+// TestBookRepository_IncrementViewCount 测试增加书籍浏览次数
+func TestBookRepository_IncrementViewCount(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-func ptrString(s string) *string {
-	return &s
+	bookID := primitive.NewObjectID()
+
+	// 设置Mock期望
+	mockRepo.On("IncrementViewCount", ctx, bookID).Return(nil)
+
+	// 执行测试
+	err := mockRepo.IncrementViewCount(ctx, bookID)
+
+	// 验证结果
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
 }
 
-func ptrBool(b bool) *bool {
-	return &b
-}
+// TestBookRepository_GetStats 测试获取书籍统计信息
+func TestBookRepository_GetStats(t *testing.T) {
+	mockRepo := new(MockBookRepository)
+	ctx := context.Background()
 
-func ptrBookStatus(status bookstore.BookStatus) *bookstore.BookStatus {
-	return &status
-}
-
-// ============ Benchmark Tests ============
-
-func BenchmarkBuildQueryFromFilter(b *testing.B) {
-	filter := &bookstore.BookFilter{
-		Status: ptrBookStatus(bookstore.BookStatusPublished),
-		Author: ptrString("测试作者"),
-		IsFree: ptrBool(true),
+	expectedStats := &bookstore.BookStats{
+		TotalBooks:       1000,
+		PublishedBooks:   800,
+		DraftBooks:       200,
+		RecommendedBooks: 50,
+		FeaturedBooks:    30,
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		buildQueryFromFilter(filter)
-	}
+	// 设置Mock期望
+	mockRepo.On("GetStats", ctx).Return(expectedStats, nil)
+
+	// 执行测试
+	stats, err := mockRepo.GetStats(ctx)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, stats)
+	assert.Equal(t, expectedStats.TotalBooks, stats.TotalBooks)
+	assert.Equal(t, expectedStats.PublishedBooks, stats.PublishedBooks)
+	mockRepo.AssertExpectations(t)
 }
-
-// ============ Table-Driven Tests ============
-
-func TestBookRepository_PaginationCalculation(t *testing.T) {
-	tests := []struct {
-		name     string
-		page     int
-		pageSize int
-		offset   int
-		limit    int
-	}{
-		{"第1页", 1, 10, 0, 10},
-		{"第2页", 2, 10, 10, 10},
-		{"第5页", 5, 20, 80, 20},
-		{"默认分页", 1, 50, 0, 50},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			offset := (tt.page - 1) * tt.pageSize
-			assert.Equal(t, tt.offset, offset)
-			assert.Equal(t, tt.limit, tt.pageSize)
-		})
-	}
-}
-
