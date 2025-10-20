@@ -50,12 +50,12 @@ func RegisterRoutes(r *gin.Engine) {
 	bookRepo := mongoBookstore.NewMongoBookRepository(global.MongoClient, dbName)
 	categoryRepo := mongoBookstore.NewMongoCategoryRepository(global.MongoClient, dbName)
 	bannerRepo := mongoBookstore.NewMongoBannerRepository(global.MongoClient, dbName)
-	// RankingRepository暂时传nil（已有nil检查）
+	rankingRepo := mongoBookstore.NewMongoRankingRepository(global.MongoClient, dbName)
 	bookstoreSvc := bookstoreService.NewBookstoreService(
 		bookRepo,
 		categoryRepo,
 		bannerRepo,
-		nil, // RankingRepository待实现
+		rankingRepo,
 	)
 	bookstoreAPI := readingAPI.NewBookstoreAPI(bookstoreSvc)
 	bookstoreRouterInstance := bookstoreRouter.NewBookstoreRouter(bookstoreAPI)

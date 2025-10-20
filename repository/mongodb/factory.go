@@ -163,6 +163,11 @@ func (f *MongoRepositoryFactory) CreateBannerRepository() bookstoreRepo.BannerRe
 	return mongoBookstore.NewMongoBannerRepository(f.client, f.config.Database)
 }
 
+// CreateRankingRepository 创建榜单Repository
+func (f *MongoRepositoryFactory) CreateRankingRepository() bookstoreRepo.RankingRepository {
+	return mongoBookstore.NewMongoRankingRepository(f.client, f.config.Database)
+}
+
 // ========== Recommendation Module Repositories ==========
 
 // CreateBehaviorRepository 创建行为Repository
