@@ -401,10 +401,10 @@ func (api *UserAPI) GetUser(c *gin.Context) {
 //	@Param			page		query		int						false	"页码"				default(1)
 //	@Param			page_size	query		int						false	"每页数量"			default(10)
 //	@Param			username	query		string					false	"用户名筛选"
-//	@Param			email		query		string					false	"邮箱筛选"
-//	@Param			role		query		string					false	"角色筛选"
-//	@Param			status		query		usersModel.UserStatus	false	"状态筛选"
-//	@Success		200			{object}	shared.PaginatedResponse{data=[]UserProfileResponse}
+//	@Param			email		query		string	false	"邮箱筛选"
+//	@Param			role		query		string	false	"角色筛选"
+//	@Param			status		query		string	false	"状态筛选"
+//	@Success		200			{object}	shared.PaginatedResponse
 //	@Failure		400			{object}	shared.ErrorResponse
 //	@Failure		401			{object}	shared.ErrorResponse
 //	@Failure		403			{object}	shared.ErrorResponse

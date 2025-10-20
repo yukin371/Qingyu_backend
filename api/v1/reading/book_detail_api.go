@@ -1,4 +1,4 @@
-﻿package reading
+package reading
 
 import (
 	"net/http"
@@ -579,7 +579,7 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success 200 {object} APIResponse}
+//	@Success		200	{object}	APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/books/{id}/statistics [get]

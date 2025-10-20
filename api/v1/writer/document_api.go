@@ -1,4 +1,4 @@
-﻿package writer
+package writer
 
 import (
 	"net/http"
@@ -29,8 +29,8 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body document.CreateDocumentRequest true "创建文档请求"
-// @Success 201 {object} shared.Response{data=document.CreateDocumentResponse}
-// @Failure 400 {object} shared.Response
+// @Success 201 {object} shared.APIResponse{data=document.CreateDocumentResponse}
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/projects/{projectId}/documents [post]
 func (api *DocumentApi) CreateDocument(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -59,7 +59,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.Response{data=document.Document}
+// @Success 200 {object} shared.APIResponse{data=document.Document}
 // @Router /api/v1/documents/{id} [get]
 func (api *DocumentApi) GetDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -80,7 +80,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} shared.Response{data=document.DocumentTreeResponse}
+// @Success 200 {object} shared.APIResponse{data=document.DocumentTreeResponse}
 // @Router /api/v1/projects/{projectId}/documents/tree [get]
 func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -102,7 +102,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body document.UpdateDocumentRequest true "更新文档请求"
-// @Success 200 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id} [put]
 func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -128,7 +128,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id} [delete]
 func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -150,7 +150,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 // @Param projectId path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.Response{data=document.ListDocumentsResponse}
+// @Success 200 {object} shared.APIResponse{data=document.ListDocumentsResponse}
 // @Router /api/v1/projects/{projectId}/documents [get]
 func (api *DocumentApi) ListDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -181,7 +181,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body document.MoveDocumentRequest true "移动文档请求"
-// @Success 200 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/move [put]
 func (api *DocumentApi) MoveDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -210,7 +210,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body document.ReorderDocumentsRequest true "排序请求"
-// @Success 200 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/projects/{projectId}/documents/reorder [put]
 func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")

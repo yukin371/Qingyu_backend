@@ -38,7 +38,7 @@ type UpdateSettingsRequest struct {
 //
 //	@Summary	获取阅读设置
 //	@Tags		阅读器
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object}	shared.APIResponse
 //	@Router		/api/v1/reader/settings [get]
 func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 获取用户ID
@@ -62,7 +62,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 //	@Summary	保存阅读设置
 //	@Tags		阅读器
 //	@Param		request	body		reader.ReadingSettings	true	"阅读设置"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/settings [post]
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 获取用户ID
@@ -94,7 +94,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 //	@Summary	更新阅读设置
 //	@Tags		阅读器
 //	@Param		request	body		UpdateSettingsRequest	true	"更新设置请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/settings [put]
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 获取用户ID

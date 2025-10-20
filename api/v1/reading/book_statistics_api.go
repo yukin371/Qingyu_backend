@@ -1,4 +1,4 @@
-﻿package reading
+package reading
 
 import (
 	"net/http"
@@ -347,7 +347,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 // @Tags 图书统计
 // @Accept json
 // @Produce json
-// @Success 200 {object} APIResponse} "成功"
+// @Success		200	{object}	APIResponse
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/aggregated [get]
 func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
@@ -454,7 +454,7 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param date query string true "日期" format(date)
-// @Success 200 {object} APIResponse} "成功"
+// @Success		200	{object}	APIResponse
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/daily-report [get]
@@ -504,7 +504,7 @@ func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 // @Produce json
 // @Param year query int true "年份"
 // @Param week query int true "周数"
-// @Success 200 {object} APIResponse} "成功"
+// @Success		200	{object}	APIResponse
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/weekly-report [get]
@@ -575,7 +575,7 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 // @Produce json
 // @Param year query int true "年份"
 // @Param month query int true "月份"
-// @Success 200 {object} APIResponse} "成功"
+// @Success		200	{object}	APIResponse
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/monthly-report [get]

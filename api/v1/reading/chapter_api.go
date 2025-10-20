@@ -1,4 +1,4 @@
-﻿package reading
+package reading
 
 import (
 	"net/http"
@@ -641,7 +641,7 @@ func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success 200 {object} APIResponse}
+//	@Success		200	{object}	APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -761,7 +761,7 @@ func (api *ChapterAPI) SearchChapters(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			book_id	path		string	true	"书籍ID"
-//	@Success 200 {object} APIResponse}
+//	@Success		200	{object}	APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters/statistics [get]

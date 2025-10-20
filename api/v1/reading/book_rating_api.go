@@ -1,4 +1,4 @@
-﻿package reading
+package reading
 
 import (
 	"net/http"

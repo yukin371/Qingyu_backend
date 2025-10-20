@@ -1,4 +1,4 @@
-﻿package writer
+package writer
 
 import (
 	"time"
@@ -155,4 +155,46 @@ type AuditIssue struct {
 	Position    int    `json:"position"` // 在文本中的位置
 	Severity    string `json:"severity"` // low, medium, high
 	Suggestion  string `json:"suggestion"`
+}
+
+// CheckContentRequest 检测内容请求
+type CheckContentRequest struct {
+	Content string `json:"content" validate:"required,min=1,max=100000"`
+}
+
+// AuditDocumentRequest 审核文档请求
+type AuditDocumentRequest struct {
+	DocumentID string `json:"documentId" validate:"required"`
+	Content    string `json:"content" validate:"required"`
+}
+
+// UpdateAuditResultRequest 更新审核结果请求
+type UpdateAuditResultRequest struct {
+	Status  string `json:"status" validate:"required,oneof=approved rejected"`
+	Comment string `json:"comment,omitempty"`
+}
+
+// AddSensitiveWordRequest 添加敏感词请求
+type AddSensitiveWordRequest struct {
+	Word     string   `json:"word" validate:"required"`
+	Category string   `json:"category" validate:"required"`
+	Level    string   `json:"level" validate:"required,oneof=low medium high"`
+	Tags     []string `json:"tags,omitempty"`
+}
+
+// SubmitAppealRequest 申诉请求
+type SubmitAppealRequest struct {
+	Reason string `json:"reason" validate:"required,min=10,max=500"`
+}
+
+// ReviewAuditRequest 复核请求
+type ReviewAuditRequest struct {
+	Approved bool   `json:"approved"`
+	Note     string `json:"note" validate:"max=500"`
+}
+
+// ReviewAppealRequest 复核申诉请求
+type ReviewAppealRequest struct {
+	Approved bool   `json:"approved"`
+	Note     string `json:"note" validate:"max=500"`
 }
