@@ -13,9 +13,9 @@ from datetime import datetime
 
 try:
     from datasets import load_dataset
-    print("✓ datasets 库已加载")
+    print("[OK] datasets 库已加载")
 except ImportError:
-    print("错误: 请先安装 datasets 库")
+    print("[ERROR] 请先安装 datasets 库")
     print("运行命令: pip install datasets")
     exit(1)
 
@@ -175,6 +175,36 @@ class NovelImporter:
 
         return True
 
+    def _validate_novel_with_reason(self, novel: Dict[str, Any]) -> str:
+        """
+        验证小说数据并返回失败原因
+
+        Args:
+            novel: 小说数据
+
+        Returns:
+            验证失败原因，如果验证通过则返回空字符串
+        """
+        # 必须有标题和内容
+        if not novel.get('title'):
+            return "标题为空"
+        if not novel.get('content'):
+            return "内容为空"
+
+        # 标题长度验证
+        title_len = len(novel['title'])
+        if title_len < 1:
+            return "标题过短"
+        if title_len > 100:
+            return f"标题过长({title_len}字符)"
+
+        # 内容长度验证（至少1000字）
+        content_len = len(novel.get('content', ''))
+        if content_len < 1000:
+            return f"内容过短({content_len}字符，需要至少1000字符)"
+
+        return ""
+
     def load_and_process(self) -> List[Dict[str, Any]]:
         """
         加载并处理数据集
@@ -182,37 +212,50 @@ class NovelImporter:
         Returns:
             处理后的小说列表
         """
-        print(f"开始加载 CNNovel125K 数据集...")
+        print(f"开始加载 CNNovel125K 数据集（流式模式）...")
         print(f"最大导入数量: {self.max_novels} 本")
 
         try:
-            # 加载数据集
-            ds = load_dataset("RyokoAI/CNNovel125K", split="train")
-            print(f"✓ 数据集加载成功，总计 {len(ds)} 本小说")
+            # 使用流式加载，避免下载整个数据集
+            ds = load_dataset("RyokoAI/CNNovel125K", split="train", streaming=True)
+            print(f"[OK] 数据集连接成功，开始流式处理...")
         except Exception as e:
-            print(f"✗ 加载数据集失败: {e}")
+            print(f"[ERROR] 加载数据集失败: {e}")
             return []
 
         processed_novels = []
         processed_count = 0
         skipped_count = 0
 
-        for i, item in enumerate(ds):
+        # 流式数据集，取出需要的数量（考虑可能有无效数据，多取一些）
+        max_fetch = self.max_novels * 2  # 多取一倍以应对无效数据
+
+        for i, item in enumerate(ds.take(max_fetch)):
             if processed_count >= self.max_novels:
                 break
 
-            # 提取字段
+            # 第一条数据时打印字段信息
+            if i == 0:
+                print(f"\n数据字段: {list(item.keys())}")
+                meta = item.get('meta', {})
+                print(f"meta字段: {list(meta.keys()) if isinstance(meta, dict) else 'not a dict'}")
+
+            # 提取字段 - 数据在 meta 和 text 中
+            meta = item.get('meta', {}) if isinstance(item.get('meta'), dict) else {}
             novel_data = {
-                'title': item.get('title', '').strip(),
-                'author': item.get('author', '佚名').strip(),
-                'content': item.get('content', ''),
-                'category': item.get('category', '其他'),
-                'word_count': item.get('word_count', 0),
-                'rating': item.get('rating', 0.0),
+                'title': meta.get('title', meta.get('书名', '')).strip(),
+                'author': meta.get('author', meta.get('作者', '佚名')).strip(),
+                'content': item.get('text', ''),
+                'category': meta.get('category', meta.get('分类', '其他')),
+                'word_count': meta.get('word_count', meta.get('字数', 0)),
+                'rating': float(meta.get('rating', meta.get('评分', 0.0) or 0.0)),
             }
 
             # 验证数据
-            if not self._validate_novel(novel_data):
+            validation_error = self._validate_novel_with_reason(novel_data)
+            if validation_error:
+                if i < 5:  # 只打印前5个错误
+                    print(f"  跳过第{i+1}本: {validation_error}")
                 skipped_count += 1
                 continue
 
@@ -259,8 +302,8 @@ class NovelImporter:
                 print(f"已处理 {processed_count} 本小说...")
 
         print(f"\n处理完成:")
-        print(f"  ✓ 成功处理: {processed_count} 本")
-        print(f"  ✗ 跳过无效: {skipped_count} 本")
+        print(f"  [OK] 成功处理: {processed_count} 本")
+        print(f"  [SKIP] 跳过无效: {skipped_count} 本")
         print(f"  总章节数: {sum(novel['chapter_count'] for novel in processed_novels)}")
 
         return processed_novels
@@ -282,7 +325,7 @@ class NovelImporter:
                 'source': 'CNNovel125K',
                 'total_novels': len(novels),
                 'total_chapters': sum(novel['chapter_count'] for novel in novels),
-                'generated_at': datetime.now().isoformat(),
+                'generated_at': datetime.now().isoformat() + 'Z',  # 添加UTC时区标识
                 'chapter_size': self.chapter_size,
             },
             'novels': novels,
@@ -291,7 +334,7 @@ class NovelImporter:
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, ensure_ascii=False, indent=2)
 
-        print(f"\n✓ 数据已保存到: {output_file}")
+        print(f"\n[OK] 数据已保存到: {output_file}")
         print(f"  文件大小: {os.path.getsize(output_file) / 1024 / 1024:.2f} MB")
 
 
@@ -316,7 +359,7 @@ def main():
     novels = importer.load_and_process()
 
     if not novels:
-        print("✗ 没有处理任何小说数据")
+        print("[ERROR] 没有处理任何小说数据")
         return
 
     # 保存为 JSON
