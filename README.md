@@ -1,8 +1,7 @@
-# 青语智能写作系统 (Qingyu Backend)
+# 青羽阅读-写作一体系统 (Qingyu Backend)
 
-[![CI Pipeline](https://github.com/yourusername/Qingyu_backend/workflows/CI%20Pipeline/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/ci.yml)
-[![Docker Build](https://github.com/yourusername/Qingyu_backend/workflows/Docker%20Build%20and%20Push/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/docker-build.yml)
-[![CodeQL](https://github.com/yourusername/Qingyu_backend/workflows/CodeQL%20Analysis/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/codeql.yml)
+[![CI](https://github.com/yukin371/Qingyu_backend/workflows/Simple%20CI/badge.svg)](https://github.com/yukin371/Qingyu_backend/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/yukin371/Qingyu_backend/workflows/CodeQL%20Analysis/badge.svg)](https://github.com/yukin371/Qingyu_backend/actions/workflows/codeql.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -333,17 +332,18 @@ make ci-local
 
 ### CI/CD
 
-项目使用 GitHub Actions 进行持续集成和部署：
+项目使用简化的 GitHub Actions 进行持续集成：
 
-- **CI Pipeline**: 自动运行代码检查、测试、构建
-- **Docker Build**: 自动构建和推送 Docker 镜像
-- **PR Check**: Pull Request 额外检查和验证
-- **Release**: 自动发布和打包二进制文件
-- **CodeQL**: 代码安全分析
+- **代码检查**: golangci-lint 代码质量检查
+- **安全扫描**: gosec 和 govulncheck 安全检查
+- **单元测试**: 快速单元测试（不需要外部依赖）
+- **集成测试**: 完整的集成测试（使用 MongoDB）
+- **API 测试**: API 端点测试
+- **CodeQL**: 自动化代码安全分析
 
 详细信息请参考：
-- [CI/CD 配置指南](doc/ops/CI_CD配置指南.md)
-- [CI/CD 问题解决方案](doc/ops/CI_CD问题解决方案.md)
+- [CI 修复总结](CI_FIX_SUMMARY.md)
+- [快速参考 - CI/CD 命令](doc/ops/快速参考-CI_CD命令.md)
 - [GitHub Actions 工作流说明](.github/workflows/README.md)
 
 ## 部署

@@ -351,7 +351,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					userRepo := txCtx.GetRepositoryFactory().CreateUserRepository(txCtx)
 
 					// 检查用户是否已存在
-					exists, err := userRepo.ExistsByEmail(txCtx, userReq.Email)
+					exists, err := userRepo.ExistsByEmail(txCtx.GetContext(), userReq.Email)
 					if err != nil {
 						return fmt.Errorf("检查用户邮箱失败: %w", err)
 					}
@@ -368,19 +368,21 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 						UpdatedAt: time.Now(),
 					}
 
-					return userRepo.Create(txCtx, user)
+					// Note: 实际实现中需要调用 userRepo.Create 方法
+					return userRepo.Create(txCtx.GetContext(), user)
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					userRepo := txCtx.GetRepositoryFactory().CreateUserRepository(txCtx)
 
 					// 查找用户
-					user, err := userRepo.GetByEmail(txCtx, userReq.Email)
+					user, err := userRepo.GetByEmail(txCtx.GetContext(), userReq.Email)
 					if err != nil {
 						return fmt.Errorf("获取用户失败: %w", err) // 用户不存在，无需补偿
 					}
 
 					// 删除用户
-					return userRepo.Delete(txCtx, usersModel.UserFilter{ID: user.ID})
+					filter := usersModel.UserFilter{ID: user.ID}
+					return userRepo.Delete(txCtx.GetContext(), filter)
 				},
 			},
 			{
@@ -390,19 +392,19 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					roleRepo := txCtx.GetRepositoryFactory().CreateRoleRepository(txCtx)
 
 					// 获取用户
-					user, err := userRepo.GetByEmail(txCtx, userReq.Email)
+					user, err := userRepo.GetByEmail(txCtx.GetContext(), userReq.Email)
 					if err != nil {
 						return fmt.Errorf("获取用户失败: %w", err)
 					}
 
 					// 获取默认角色
-					defaultRole, err := roleRepo.GetDefaultRole(txCtx)
+					defaultRole, err := roleRepo.GetDefaultRole(txCtx.GetContext())
 					if err != nil {
 						return fmt.Errorf("获取默认角色失败: %w", err)
 					}
 
 					// 分配角色
-					return roleRepo.AssignRole(txCtx, user.ID, defaultRole.ID)
+					return roleRepo.AssignRole(txCtx.GetContext(), user.ID, defaultRole.ID)
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					// 角色分配的补偿操作
