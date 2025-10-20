@@ -1,5 +1,11 @@
 # 青语智能写作系统 (Qingyu Backend)
 
+[![CI Pipeline](https://github.com/yourusername/Qingyu_backend/workflows/CI%20Pipeline/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/yourusername/Qingyu_backend/workflows/Docker%20Build%20and%20Push/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/docker-build.yml)
+[![CodeQL](https://github.com/yourusername/Qingyu_backend/workflows/CodeQL%20Analysis/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/codeql.yml)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ## 项目简介
 
 青语智能写作系统是一个基于Go语言开发的智能写作平台后端服务，集成了先进的AI技术，为用户提供智能写作辅助、内容生成、文本分析等功能。
@@ -216,7 +222,22 @@ Qingyu_backend/
 - 添加必要的注释和文档
 - 编写单元测试
 
+### 开发工具安装
+
+```bash
+# 安装所有开发工具
+make install-tools
+
+# 安装 golangci-lint
+make install-lint
+
+# 初始化开发环境
+make init
+```
+
 ### 提交规范
+
+本项目遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
 
 ```bash
 # 功能开发
@@ -227,20 +248,103 @@ git commit -m "fix: 修复用户认证问题"
 
 # 文档更新
 git commit -m "docs: 更新API文档"
+
+# 性能优化
+git commit -m "perf: 优化数据库查询性能"
+
+# 重构
+git commit -m "refactor: 重构用户服务层"
+
+# 测试
+git commit -m "test: 添加AI服务单元测试"
+
+# 构建/CI
+git commit -m "ci: 更新GitHub Actions配置"
+```
+
+### 本地开发流程
+
+```bash
+# 1. 启动开发服务器
+make run
+
+# 2. 启动热重载模式
+make dev
+
+# 3. 代码检查
+make check
+
+# 4. 运行测试
+make test
+
+# 5. 查看测试覆盖率
+make test-coverage
+
+# 6. 提交前检查
+make pr-check
 ```
 
 ### 测试
 
 ```bash
 # 运行所有测试
-go test ./...
+make test
 
-# 运行特定包的测试
-go test ./service/ai
+# 运行单元测试
+make test-unit
+
+# 运行集成测试
+make test-integration
+
+# 运行API测试
+make test-api
 
 # 生成测试覆盖率报告
-go test -cover ./...
+make test-coverage
+
+# 快速测试（跳过慢速测试）
+make test-quick
+
+# 检查覆盖率是否达标（>=60%）
+make test-coverage-check
 ```
+
+### 代码质量检查
+
+```bash
+# 运行 linter
+make lint
+
+# 代码格式化
+make fmt
+
+# 安全扫描
+make security
+
+# 依赖漏洞检查
+make vuln-check
+
+# 代码复杂度检查
+make complexity
+
+# 完整的 CI 检查（本地模拟）
+make ci-local
+```
+
+### CI/CD
+
+项目使用 GitHub Actions 进行持续集成和部署：
+
+- **CI Pipeline**: 自动运行代码检查、测试、构建
+- **Docker Build**: 自动构建和推送 Docker 镜像
+- **PR Check**: Pull Request 额外检查和验证
+- **Release**: 自动发布和打包二进制文件
+- **CodeQL**: 代码安全分析
+
+详细信息请参考：
+- [CI/CD 配置指南](doc/ops/CI_CD配置指南.md)
+- [CI/CD 问题解决方案](doc/ops/CI_CD问题解决方案.md)
+- [GitHub Actions 工作流说明](.github/workflows/README.md)
 
 ## 部署
 
