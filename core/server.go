@@ -8,6 +8,8 @@ import (
 	"Qingyu_backend/router"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // InitServer 初始化服务器
@@ -30,6 +32,9 @@ func InitServer() (*gin.Engine, error) {
 
 	// 注册路由
 	router.RegisterRoutes(r)
+
+	// Swagger文档路由
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r, nil
 }

@@ -1,4 +1,4 @@
-package reading
+﻿package reading
 
 import (
 	"net/http"
@@ -32,7 +32,7 @@ func NewChapterAPI(service bookstoreService.ChapterService) *ChapterAPI {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -89,7 +89,7 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 //	@Param			book_id	path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters [get]
@@ -150,7 +150,7 @@ func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 //	@Produce		json
 //	@Param			book_id		path		string	true	"书籍ID"
 //	@Param			chapter_num	path		int		true	"章节号"
-//	@Success		200			{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
@@ -217,7 +217,7 @@ func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 //	@Param			book_id	path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters/free [get]
@@ -279,7 +279,7 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 //	@Param			book_id	path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters/paid [get]
@@ -341,7 +341,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 //	@Param			book_id	path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters/published [get]
@@ -401,7 +401,7 @@ func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"当前章节ID"
-//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -466,7 +466,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"当前章节ID"
-//	@Success		200	{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -531,7 +531,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			book_id	path		string	true	"书籍ID"
-//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		404		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -586,7 +586,7 @@ func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			book_id	path		string	true	"书籍ID"
-//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		404		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -641,7 +641,7 @@ func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success		200	{object}	APIResponse{data=map[string]interface{}}
+//	@Success 200 {object} APIResponse}
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -710,7 +710,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 //	@Param			book_id	query		string	false	"书籍ID(可选)"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/chapters/search [get]
@@ -761,7 +761,7 @@ func (api *ChapterAPI) SearchChapters(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			book_id	path		string	true	"书籍ID"
-//	@Success		200		{object}	APIResponse{data=map[string]interface{}}
+//	@Success 200 {object} APIResponse}
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters/statistics [get]
@@ -844,7 +844,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
-//	@Success		201		{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 201 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/chapters [post]
@@ -882,7 +882,7 @@ func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string				true	"章节ID"
 //	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
-//	@Success		200		{object}	APIResponse{data=bookstore.Chapter}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		404		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
