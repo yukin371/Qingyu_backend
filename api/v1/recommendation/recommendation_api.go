@@ -1,4 +1,4 @@
-﻿package recommendation
+package recommendation
 
 import (
 	"net/http"
@@ -28,7 +28,7 @@ func NewRecommendationAPI(recoService recommendation.RecommendationService) *Rec
 //	@Summary	获取个性化推荐
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(10)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/personalized [get]
 func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
@@ -65,7 +65,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		itemId	query		string	true	"物品ID（书籍ID）"
 //	@Param		limit	query		int		false	"推荐数量"	default(10)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/similar [get]
 func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	itemID := c.Query("itemId")
@@ -100,7 +100,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 //	@Summary	记录用户行为
 //	@Tags		推荐系统
 //	@Param		body	body		object	true	"行为数据"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/behavior [post]
 func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
@@ -149,7 +149,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 //	@Summary	获取首页推荐（混合推荐策略）
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(20)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/homepage [get]
 func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 	// 获取用户ID（可选）
@@ -186,7 +186,7 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(20)
 //	@Param		days	query		int	false	"统计天数"	default(7)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/hot [get]
 func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 	// 获取limit参数
@@ -224,7 +224,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		category	query		string	true	"分类名称"
 //	@Param		limit		query		int		false	"推荐数量"	default(20)
-//	@Success	200			{object}	response.Response
+//	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/category [get]
 func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	category := c.Query("category")
