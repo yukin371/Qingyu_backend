@@ -41,7 +41,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -50,7 +50,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -60,20 +60,20 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
+				Code:    http.StatusNotFound,
 				Message: "书籍不存在",
 			})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取书籍详情失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    book,
 	})
@@ -97,7 +97,7 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 	title := c.Query("title")
 	if title == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍标题不能为空",
 		})
 		return
@@ -116,14 +116,14 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 	books, total, err := api.service.GetBooksByTitle(c.Request.Context(), title, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "搜索书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "搜索成功",
 		Data:    books,
 		Total:   total,
@@ -150,7 +150,7 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 	author := c.Query("author")
 	if author == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "作者名称不能为空",
 		})
 		return
@@ -169,14 +169,14 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 	books, total, err := api.service.GetBooksByAuthor(c.Request.Context(), author, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "搜索书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "搜索成功",
 		Data:    books,
 		Total:   total,
@@ -203,7 +203,7 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 	category := c.Query("category")
 	if category == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "分类名称不能为空",
 		})
 		return
@@ -222,14 +222,14 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), category, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取分类书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 		Total:   total,
@@ -256,7 +256,7 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 	status := c.Query("status")
 	if status == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍状态不能为空",
 		})
 		return
@@ -273,7 +273,7 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 	}
 	if !isValid {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍状态",
 		})
 		return
@@ -292,14 +292,14 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 	books, total, err := api.service.GetBooksByStatus(c.Request.Context(), status, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 		Total:   total,
@@ -326,7 +326,7 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 	tagsStr := c.Query("tags")
 	if tagsStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "标签不能为空",
 		})
 		return
@@ -350,14 +350,14 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 	books, total, err := api.service.GetBooksByTags(c.Request.Context(), tags, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 		Total:   total,
@@ -384,7 +384,7 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "搜索关键词不能为空",
 		})
 		return
@@ -403,14 +403,14 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 	books, total, err := api.service.SearchBooks(c.Request.Context(), keyword, page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "搜索书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "搜索成功",
 		Data:    books,
 		Total:   total,
@@ -439,14 +439,14 @@ func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 	books, err := api.service.GetRecommendedBooks(c.Request.Context(), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取推荐书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 	})
@@ -469,7 +469,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -478,7 +478,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -492,14 +492,14 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 	books, err := api.service.GetSimilarBooks(c.Request.Context(), id, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取相似书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 	})
@@ -525,14 +525,14 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 	books, err := api.service.GetPopularBooks(c.Request.Context(), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取热门书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 	})
@@ -558,14 +558,14 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 	books, err := api.service.GetLatestBooks(c.Request.Context(), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取最新书籍失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    books,
 	})
@@ -587,7 +587,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -596,7 +596,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -606,7 +606,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	totalCount, err := api.service.CountBooksByCategory(c.Request.Context(), "")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "获取统计信息失败",
 		})
 		return
@@ -619,7 +619,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "获取成功",
 		Data:    statistics,
 	})
@@ -641,7 +641,7 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 	var book bookstore.BookDetail
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "请求参数格式错误",
 		})
 		return
@@ -649,14 +649,14 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 
 	if err := api.service.CreateBookDetail(c.Request.Context(), &book); err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "创建书籍详情失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusCreated, APIResponse{
-		Code:    201,
+		Code:    http.StatusCreated,
 		Message: "创建成功",
 		Data:    book,
 	})
@@ -680,7 +680,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -689,7 +689,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -698,7 +698,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	var book bookstore.BookDetail
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "请求参数格式错误",
 		})
 		return
@@ -709,20 +709,20 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	if err := api.service.UpdateBookDetail(c.Request.Context(), &book); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
+				Code:    http.StatusNotFound,
 				Message: "书籍不存在",
 			})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "更新书籍详情失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "更新成功",
 		Data:    book,
 	})
@@ -745,7 +745,7 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -754,7 +754,7 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -763,20 +763,20 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 	if err := api.service.DeleteBookDetail(c.Request.Context(), id); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
+				Code:    http.StatusNotFound,
 				Message: "书籍不存在",
 			})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "删除书籍详情失败",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "书籍详情删除成功",
 	})
 }
@@ -798,7 +798,7 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -807,7 +807,7 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -816,14 +816,14 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	err = api.service.IncrementViewCount(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "增加浏览量失败: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "浏览量增加成功",
 	})
 }
@@ -844,7 +844,7 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -853,7 +853,7 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -862,14 +862,14 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 	err = api.service.IncrementLikeCount(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "增加点赞数失败: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "点赞成功",
 	})
 }
@@ -890,7 +890,7 @@ func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "书籍ID不能为空",
 		})
 		return
@@ -899,7 +899,7 @@ func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
+			Code:    http.StatusBadRequest,
 			Message: "无效的书籍ID格式",
 		})
 		return
@@ -908,14 +908,14 @@ func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 	err = api.service.DecrementLikeCount(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "取消点赞失败: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "取消点赞成功",
 	})
 }

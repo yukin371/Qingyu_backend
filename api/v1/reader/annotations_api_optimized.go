@@ -241,7 +241,7 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 }
 
 // 导出为JSON格式
-func (api *AnnotationsAPI) exportAsJSON(annotations []*reader.Annotation) string {
+func (api *AnnotationsAPI) exportAsJSON(_ []*reader.Annotation) string {
 	// 简单实现，实际可以使用json.Marshal
 	return `{"annotations": []}`
 }
