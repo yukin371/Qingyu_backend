@@ -91,7 +91,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     services:
       mongodb:
         image: mongo:6.0
@@ -141,7 +141,7 @@ jobs:
     name: API Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     services:
       mongodb:
         image: mongo:6.0

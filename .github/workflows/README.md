@@ -129,9 +129,9 @@ ENVIRONMENT=test
 在 README 中添加状态徽章：
 
 ```markdown
-[![CI](https://github.com/yourusername/Qingyu_backend/workflows/CI%20Pipeline/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/ci.yml)
-[![Docker](https://github.com/yourusername/Qingyu_backend/workflows/Docker%20Build%20and%20Push/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/docker-build.yml)
-[![CodeQL](https://github.com/yourusername/Qingyu_backend/workflows/CodeQL%20Analysis/badge.svg)](https://github.com/yourusername/Qingyu_backend/actions/workflows/codeql.yml)
+[![CI](https://github.com/yukin371/Qingyu_backend/workflows/CI%20Pipeline/badge.svg)](https://github.com/yukin371/Qingyu_backend/actions/workflows/ci.yml)
+[![Docker](https://github.com/yukin371/Qingyu_backend/workflows/Docker%20Build%20and%20Push/badge.svg)](https://github.com/yukin371/Qingyu_backend/actions/workflows/docker-build.yml)
+[![CodeQL](https://github.com/yukin371/Qingyu_backend/workflows/CodeQL%20Analysis/badge.svg)](https://github.com/yukin371/Qingyu_backend/actions/workflows/codeql.yml)
 ```
 
 ## 本地调试
