@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build binaries
+        run: |
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -o qingyu_backend_linux_amd64 -ldflags="-s -w" ./cmd/server
+
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -o qingyu_backend_linux_arm64 -ldflags="-s -w" ./cmd/server
+
+          # Darwin AMD64
+          GOOS=darwin GOARCH=amd64 go build -o qingyu_backend_darwin_amd64 -ldflags="-s -w" ./cmd/server
+
+          # Darwin ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -o qingyu_backend_darwin_arm64 -ldflags="-s -w" ./cmd/server
+
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -o qingyu_backend_windows_amd64.exe -ldflags="-s -w" ./cmd/server
+
+      - name: Create checksums
+        run: |
+          sha256sum qingyu_backend_* > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            qingyu_backend_*
+            checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

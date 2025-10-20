@@ -1,0 +1,180 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+
+      - name: Check for large files
+        run: |
+          # 检查是否有大于 5MB 的文件
+          large_files=$(find . -type f -size +5M -not -path "./.git/*" -not -path "./vendor/*")
+          if [ -n "$large_files" ]; then
+            echo "❌ Found large files (>5MB):"
+            echo "$large_files"
+            echo ""
+            echo "Please consider using Git LFS for large files."
+            exit 1
+          fi
+          echo "✅ No large files found"
+
+      - name: Check for sensitive data
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Check code complexity
+        run: |
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+          # 检查复杂度大于 15 的函数
+          gocyclo -over 15 . || true
+
+      - name: Check test coverage
+        run: |
+          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+          coverage=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Test coverage: ${coverage}%"
+
+          # 要求至少 60% 的覆盖率
+          if (( $(echo "$coverage < 60" | bc -l) )); then
+            echo "❌ Test coverage is below 60%"
+            exit 1
+          fi
+          echo "✅ Test coverage is acceptable"
+
+  changed-files:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      go_files: ${{ steps.changes.outputs.go_files }}
+      docker_files: ${{ steps.changes.outputs.docker_files }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed files
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            go_files:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+            docker_files:
+              - 'docker/**'
+              - 'Dockerfile*'
+
+  test-go-changes:
+    name: Test Go Changes
+    needs: changed-files
+    if: needs.changed-files.outputs.go_files == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Run affected tests
+        run: |
+          # 运行受影响的测试
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+            grep '\.go$' | \
+            xargs -I {} dirname {} | \
+            sort -u | \
+            xargs -I {} go test -v -race ./{}
+
+  test-docker-changes:
+    name: Test Docker Changes
+    needs: changed-files
+    if: needs.changed-files.outputs.docker_files == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.prod
+          push: false
+          tags: qingyu_backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  auto-label:
+    name: Auto Label PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+

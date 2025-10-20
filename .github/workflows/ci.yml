@@ -1,465 +1,302 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, develop ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, develop ]
 
 env:
   GO_VERSION: '1.21'
   MONGODB_VERSION: '6.0'
 
 jobs:
-  # 代码质量检查
+  # 代码检查和格式化
   lint:
-    name: Lint Check
+    name: Code Linting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-      - name: golangci-lint (Action)
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          args: --timeout=5m --config=.golangci.yml
-        continue-on-error: true  # 如果 action 失败，使用本地安装
-
-      - name: golangci-lint (Fallback)
-        if: failure()  # 只在上一步失败时运行
+      - name: Install golangci-lint
         run: |
-          echo "golangci-lint action 失败，使用本地安装..."
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
-          $(go env GOPATH)/bin/golangci-lint run --timeout=5m --config=.golangci.yml
 
-  # 单元测试
-  test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=10m --verbose
 
-    services:
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })' || mongo --eval 'db.adminCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 10
-          --health-start-period 40s
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-        continue-on-error: true  # 缓存失败不影响构建
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Wait for MongoDB
+      - name: Check code formatting
         run: |
-          echo "等待 MongoDB 启动..."
-          for i in {1..60}; do
-            if mongosh --host localhost:27017 --username admin --password password --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
-              echo "✅ MongoDB is ready"
-              mongosh --host localhost:27017 --username admin --password password --eval "db.version()"
-              break
-            fi
-            if [ $i -eq 60 ]; then
-              echo "❌ MongoDB failed to start after 120 seconds"
-              docker ps -a
-              docker logs $(docker ps -aq --filter ancestor=mongo:6.0) || true
-              exit 1
-            fi
-            echo "⏳ Waiting for MongoDB... ($i/60)"
-            sleep 2
-          done
-
-      - name: Create test config
-        run: |
-          cat > config/config.test.yaml << EOF
-          server:
-            port: ":8080"
-            mode: test
-
-          mongodb:
-            uri: "mongodb://admin:password@localhost:27017"
-            database: "qingyu_test"
-            timeout: 30
-
-          redis:
-            addr: "localhost:6379"
-            password: ""
-            db: 0
-
-          jwt:
-            secret: "test-secret-key-for-ci"
-            expire: 7200
-          EOF
-
-      - name: Run unit tests
-        run: |
-          echo "📊 运行单元测试（Service和Repository层）..."
-          go test -v -race -coverprofile=coverage_unit.out -covermode=atomic ./service/... ./repository/... 2>&1 | tee test_unit.log
-          echo "✅ 单元测试完成"
-        env:
-          CONFIG_PATH: config/config.test.yaml
-          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017
-          TEST_REDIS_ADDR: localhost:6379
-
-      - name: Run all tests with coverage
-        run: |
-          echo "📊 运行完整测试套件..."
-          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./... 2>&1 | tee test_full.log
-          echo "✅ 所有测试完成"
-        env:
-          CONFIG_PATH: config/config.test.yaml
-          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017
-          TEST_REDIS_ADDR: localhost:6379
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.txt
-          flags: unittests
-          name: codecov-umbrella
-          token: ${{ secrets.CODECOV_TOKEN }}
-        continue-on-error: true
-
-      - name: Generate coverage report
-        run: |
-          go tool cover -html=coverage.txt -o coverage.html
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.html
-        continue-on-error: true
-
-      - name: Upload test logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-logs
-          path: |
-            test_unit.log
-            test_full.log
-            coverage_unit.out
-            coverage.txt
-          retention-days: 30
-          if-no-files-found: warn  # 如果没有文件只警告，不失败
-        continue-on-error: true
-
-  # 集成测试
-  integration-test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-
-    services:
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })' || mongo --eval 'db.adminCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 10
-          --health-start-period 40s
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Wait for services
-        run: |
-          echo "⏳ 等待 MongoDB 和 Redis..."
-          for i in {1..30}; do
-            if mongosh --host localhost:27017 --username admin --password password --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
-              echo "✅ MongoDB is ready"
-              break
-            fi
-            echo "Waiting for MongoDB... ($i/30)"
-            sleep 2
-          done
-
-          for i in {1..10}; do
-            if redis-cli -h localhost ping > /dev/null 2>&1; then
-              echo "✅ Redis is ready"
-              break
-            fi
-            echo "Waiting for Redis... ($i/10)"
-            sleep 1
-          done
-
-      - name: Run integration tests
-        run: |
-          echo "🧪 运行集成测试..."
-          go test -v -tags=integration ./test/integration/... 2>&1 | tee test_integration.log || true
-          echo "集成测试完成"
-        env:
-          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017
-          TEST_REDIS_ADDR: localhost:6379
-        continue-on-error: true  # 集成测试失败不阻塞流程
-
-  # 构建测试
-  build:
-    name: Build Test
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Build application
-        run: |
-          go build -v -o qingyu_backend ./cmd/server/main.go
-
-      - name: Build migrations
-        run: |
-          go build -v -o qingyu_migrate ./cmd/migrate/main.go
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            qingyu_backend
-            qingyu_migrate
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -d .
+            exit 1
+          fi
 
   # 安全扫描
   security:
     name: Security Scan
     runs-on: ubuntu-latest
-    needs: [lint]
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: '-no-fail -fmt sarif -out results.sarif ./...'
-
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: results.sarif
-
-  # 代码质量分析
-  code-quality:
-    name: Code Quality Analysis
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # 获取完整历史用于SonarQube分析
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Run gocyclo (Cyclomatic Complexity)
+      # 使用本地安装的 gosec 而不是 Docker 镜像
+      - name: Install gosec
         run: |
-          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-          gocyclo -over 15 . || true
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
 
-      - name: Run gocognit (Cognitive Complexity)
+      - name: Run gosec security scanner
         run: |
-          go install github.com/uudashr/gocognit/cmd/gocognit@latest
-          gocognit -over 15 . || true
+          gosec -fmt json -out gosec-report.json -no-fail ./...
+        continue-on-error: true
 
-      - name: Check code formatting
+      - name: Display gosec results
         run: |
-          # 排除 vendor 目录
-          UNFORMATTED=$(gofmt -s -l $(find . -type f -name '*.go' -not -path "./vendor/*"))
-          if [ -n "$UNFORMATTED" ]; then
-            echo "❌ Code is not formatted. Please run 'go fmt ./...'"
-            echo "Unformatted files:"
-            echo "$UNFORMATTED"
-            # 不在 CI 中自动退出，仅警告
-            echo "::warning::Code formatting issues found"
-          else
-            echo "✅ Code formatting check passed"
+          if [ -f gosec-report.json ]; then
+            cat gosec-report.json
           fi
 
-  # 性能测试
-  benchmark:
-    name: Performance Benchmarks
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Upload gosec report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gosec-report
+          path: gosec-report.json
+          retention-days: 30
 
+  # 单元测试
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-      - name: Run benchmarks
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run unit tests
         run: |
-          go test -bench=. -benchmem -run=^$ ./... > benchmark.txt 2>&1
-          cat benchmark.txt
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic \
+            $(go list ./... | grep -v /test/integration | grep -v /test/api)
 
-      - name: Upload benchmark results
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.txt
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
+
+  # 集成测试（需要 MongoDB）
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 40s
+
+    env:
+      MONGODB_URI: mongodb://admin:password@localhost:27017
+      MONGODB_DATABASE: qingyu_test
+      ENVIRONMENT: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Wait for MongoDB
+        run: |
+          timeout 60 bash -c 'until mongosh --host localhost:27017 -u admin -p password --eval "db.adminCommand({ping: 1})" --quiet; do sleep 2; done'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run integration tests
+        run: |
+          go test -v -race -timeout 10m \
+            -coverprofile=coverage-integration.txt \
+            -covermode=atomic \
+            ./test/integration/...
+
+      - name: Upload integration coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage-integration.txt
+          flags: integration
+          name: codecov-integration
+        continue-on-error: true
+
+  # API测试
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      MONGODB_URI: mongodb://admin:password@localhost:27017
+      MONGODB_DATABASE: qingyu_test
+      ENVIRONMENT: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Wait for MongoDB
+        run: |
+          timeout 60 bash -c 'until mongosh --host localhost:27017 -u admin -p password --eval "db.adminCommand({ping: 1})" --quiet; do sleep 2; done'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run API tests
+        run: |
+          go test -v -race -timeout 10m \
+            ./test/api/...
+
+  # 构建测试
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build application
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            go build -v -o qingyu_backend_${{ matrix.os }}_${{ matrix.arch }}.exe ./cmd/server
+          else
+            go build -v -o qingyu_backend_${{ matrix.os }}_${{ matrix.arch }} ./cmd/server
+          fi
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results
-          path: benchmark.txt
+          name: qingyu_backend_${{ matrix.os }}_${{ matrix.arch }}
+          path: qingyu_backend_*
+          retention-days: 7
 
-  # Docker构建测试
-  docker:
-    name: Docker Build
+  # 依赖检查
+  dependency-check:
+    name: Dependency Check
     runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event_name == 'push'
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          context: .
-          file: ./docker/Dockerfile.prod
-          push: false
-          tags: qingyu-backend:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-  # 部署到测试环境（仅dev分支）
-  deploy-dev:
-    name: Deploy to Dev
-    runs-on: ubuntu-latest
-    needs: [test, integration-test, build, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy notification
+      - name: Check for vulnerabilities
         run: |
-          echo "🚀 Deploying to development environment..."
-          echo "Branch: ${{ github.ref }}"
-          echo "Commit: ${{ github.sha }}"
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+        continue-on-error: true
 
-      # TODO: 添加实际的部署步骤
-      # - name: Deploy to dev server
-      #   run: |
-      #     # 部署脚本
+      - name: Verify dependencies
+        run: |
+          go mod verify
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
-  # 生成测试报告
-  report:
-    name: Generate Report
+  # 所有检查通过
+  all-checks-passed:
+    name: All Checks Passed
+    needs: [lint, security, unit-tests, integration-tests, api-tests, build, dependency-check]
     runs-on: ubuntu-latest
-    needs: [lint, test, integration-test, security, code-quality]
     if: always()
-
     steps:
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report
-        continue-on-error: true
-
-      - name: Download test logs
-        uses: actions/download-artifact@v4
-        with:
-          name: test-logs
-        continue-on-error: true
-
-      - name: Generate summary
+      - name: Check all jobs status
         run: |
-          echo "## CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Author**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Unit Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Integration Tests: ${{ needs.integration-test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Security Scan: ${{ needs.security.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
-
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.integration-tests.result }}" != "success" ] || \
+             [ "${{ needs.api-tests.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.dependency-check.result }}" != "success" ]; then
+            echo "One or more checks failed"
+            exit 1
+          fi
+          echo "All checks passed successfully!"
