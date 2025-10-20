@@ -302,19 +302,22 @@ func (ni *NovelImporter) CreateIndexes(ctx context.Context) error {
 	// 书籍索引
 	bookIndexes := []mongo.IndexModel{
 		{
-			Keys: primitive.M{"title": "text", "author": "text"},
+			Keys: primitive.D{
+				{Key: "title", Value: "text"},
+				{Key: "author", Value: "text"},
+			},
 		},
 		{
-			Keys: primitive.M{"categories": 1},
+			Keys: primitive.D{{Key: "categories", Value: 1}},
 		},
 		{
-			Keys: primitive.M{"status": 1},
+			Keys: primitive.D{{Key: "status", Value: 1}},
 		},
 		{
-			Keys: primitive.M{"is_recommended": 1},
+			Keys: primitive.D{{Key: "is_recommended", Value: 1}},
 		},
 		{
-			Keys: primitive.M{"created_at": -1},
+			Keys: primitive.D{{Key: "created_at", Value: -1}},
 		},
 	}
 
@@ -325,10 +328,13 @@ func (ni *NovelImporter) CreateIndexes(ctx context.Context) error {
 	// 章节索引
 	chapterIndexes := []mongo.IndexModel{
 		{
-			Keys: primitive.M{"book_id": 1, "chapter_num": 1},
+			Keys: primitive.D{
+				{Key: "book_id", Value: 1},
+				{Key: "chapter_num", Value: 1},
+			},
 		},
 		{
-			Keys: primitive.M{"book_id": 1},
+			Keys: primitive.D{{Key: "book_id", Value: 1}},
 		},
 	}
 

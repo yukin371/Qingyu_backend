@@ -1,0 +1,22 @@
+{
+  "code": 200,
+  "message": "获取首页数据成功",
+  "data": {
+    "banners": null,
+    "recommendedBooks": null,
+    "featuredBooks": null,
+    "categories": null,
+    "stats": {
+      "totalBooks": 100,
+      "publishedBooks": 0,
+      "draftBooks": 0,
+      "recommendedBooks": 0,
+      "featuredBooks": 0
+    },
+    "rankings": {
+      "monthly": null,
+      "realtime": null,
+      "weekly": null
+    }
+  }
+}
