@@ -14,12 +14,15 @@ type BatchCreateAnnotationsRequest struct {
 	Annotations []CreateAnnotationRequest `json:"annotations" binding:"required,min=1,max=50"`
 }
 
+// AnnotationUpdate 单个注记更新
+type AnnotationUpdate struct {
+	ID      string                  `json:"id" binding:"required"`
+	Updates UpdateAnnotationRequest `json:"updates"`
+}
+
 // BatchUpdateAnnotationsRequest 批量更新注记请求
 type BatchUpdateAnnotationsRequest struct {
-	Updates []struct {
-		ID      string                  `json:"id" binding:"required"`
-		Updates UpdateAnnotationRequest `json:"updates"`
-	} `json:"updates" binding:"required,min=1,max=50"`
+	Updates []AnnotationUpdate `json:"updates" binding:"required,min=1,max=50"`
 }
 
 // BatchDeleteAnnotationsRequest 批量删除注记请求
@@ -56,11 +59,17 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		return
+	}
+
 	// 转换为注记模型
 	annotations := make([]*reader.Annotation, len(req.Annotations))
 	for i, annReq := range req.Annotations {
 		annotations[i] = &reader.Annotation{
-			UserID:    userID.(string),
+			UserID:    userIDStr,
 			BookID:    annReq.BookID,
 			ChapterID: annReq.ChapterID,
 			Type:      annReq.Type,
@@ -164,6 +173,12 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		return
+	}
+
 	bookID := c.Query("bookId")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
@@ -171,7 +186,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	}
 
 	// 获取统计数据
-	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userID.(string), bookID)
+	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取注记统计失败", err.Error())
 		return
@@ -196,6 +211,12 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		return
+	}
+
 	bookID := c.Query("bookId")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
@@ -209,7 +230,7 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	}
 
 	// 获取注记数据
-	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userID.(string), bookID)
+	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取注记失败", err.Error())
 		return
@@ -293,6 +314,12 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		return
+	}
+
 	var req SyncAnnotationsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
@@ -300,7 +327,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	}
 
 	// 执行同步逻辑
-	result, err := api.readerService.SyncAnnotations(c.Request.Context(), userID.(string), &req)
+	result, err := api.readerService.SyncAnnotations(c.Request.Context(), userIDStr, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "同步注记失败", err.Error())
 		return
