@@ -20,7 +20,7 @@ func setupUserTest(t *testing.T) context.Context {
 
 	// 清空测试数据
 	_ = global.DB.Collection("users").Drop(ctx)
-	
+
 	return ctx
 }
 
@@ -46,7 +46,7 @@ func TestUserRepository_Create(t *testing.T) {
 
 	t.Run("成功创建用户", func(t *testing.T) {
 		user := createTestUser("testuser", "test@example.com")
-		
+
 		err := repo.Create(ctx, user)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, user.ID)
@@ -56,11 +56,11 @@ func TestUserRepository_Create(t *testing.T) {
 
 	t.Run("邮箱已存在", func(t *testing.T) {
 		_ = global.DB.Collection("users").Drop(ctx)
-		
+
 		user1 := createTestUser("user1", "duplicate@example.com")
 		err := repo.Create(ctx, user1)
 		require.NoError(t, err)
-		
+
 		user2 := createTestUser("user2", "duplicate@example.com")
 		err = repo.Create(ctx, user2)
 		// 注意：可能不会报错，因为MongoDB没有建立email唯一索引
@@ -85,7 +85,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 		testUser := createTestUser("gettest", "get@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		found, err := repo.GetByID(ctx, testUser.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
@@ -108,12 +108,12 @@ func TestUserRepository_Update(t *testing.T) {
 		testUser := createTestUser("updatetest", "update@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		updates := map[string]interface{}{
 			"nickname": "Updated Nickname",
 			"bio":      "Updated bio",
 		}
-		
+
 		err = repo.Update(ctx, testUser.ID, updates)
 		assert.NoError(t, err)
 
@@ -139,10 +139,10 @@ func TestUserRepository_Delete(t *testing.T) {
 		testUser := createTestUser("deletetest", "delete@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		err = repo.Delete(ctx, testUser.ID)
 		assert.NoError(t, err)
-		
+
 		// 验证软删除后无法再获取
 		_, err = repo.GetByID(ctx, testUser.ID)
 		assert.Error(t, err)
@@ -166,7 +166,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 		testUser := createTestUser("usernametest", "username@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		found, err := repo.GetByUsername(ctx, "usernametest")
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
@@ -188,7 +188,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		testUser := createTestUser("emailtest", "emailtest@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		found, err := repo.GetByEmail(ctx, "emailtest@example.com")
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
@@ -211,7 +211,7 @@ func TestUserRepository_GetByPhone(t *testing.T) {
 		testUser.Phone = "13800138000"
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		found, err := repo.GetByPhone(ctx, "13800138000")
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
@@ -235,7 +235,7 @@ func TestUserRepository_ExistsByUsername(t *testing.T) {
 		testUser := createTestUser("existsuser", "exists@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		exists, err := repo.ExistsByUsername(ctx, "existsuser")
 		assert.NoError(t, err)
 		assert.True(t, exists)
@@ -256,7 +256,7 @@ func TestUserRepository_ExistsByEmail(t *testing.T) {
 		testUser := createTestUser("emailexists", "emailexists@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		exists, err := repo.ExistsByEmail(ctx, "emailexists@example.com")
 		assert.NoError(t, err)
 		assert.True(t, exists)
@@ -278,7 +278,7 @@ func TestUserRepository_ExistsByPhone(t *testing.T) {
 		testUser.Phone = "13800138001"
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		exists, err := repo.ExistsByPhone(ctx, "13800138001")
 		assert.NoError(t, err)
 		assert.True(t, exists)
@@ -301,10 +301,10 @@ func TestUserRepository_UpdateLastLogin(t *testing.T) {
 		testUser := createTestUser("logintest", "login@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		err = repo.UpdateLastLogin(ctx, testUser.ID, "192.168.1.1")
 		assert.NoError(t, err)
-		
+
 		// 验证更新
 		found, _ := repo.GetByID(ctx, testUser.ID)
 		assert.False(t, found.LastLoginAt.IsZero())
@@ -326,11 +326,11 @@ func TestUserRepository_UpdatePassword(t *testing.T) {
 		testUser := createTestUser("pwdtest", "pwd@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		newPassword := "new_hashed_password"
 		err = repo.UpdatePassword(ctx, testUser.ID, newPassword)
 		assert.NoError(t, err)
-		
+
 		// 验证更新
 		found, _ := repo.GetByID(ctx, testUser.ID)
 		assert.Equal(t, newPassword, found.Password)
@@ -351,10 +351,10 @@ func TestUserRepository_UpdateStatus(t *testing.T) {
 		testUser := createTestUser("statustest", "status@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		err = repo.UpdateStatus(ctx, testUser.ID, usersModel.UserStatusInactive)
 		assert.NoError(t, err)
-		
+
 		// 验证更新
 		found, _ := repo.GetByID(ctx, testUser.ID)
 		assert.Equal(t, usersModel.UserStatusInactive, found.Status)
@@ -377,7 +377,7 @@ func TestUserRepository_SetEmailVerified(t *testing.T) {
 		testUser := createTestUser("emailverify", "emailverify@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		err = repo.SetEmailVerified(ctx, testUser.ID, true)
 		assert.NoError(t, err)
 
@@ -401,7 +401,7 @@ func TestUserRepository_SetPhoneVerified(t *testing.T) {
 		testUser := createTestUser("phoneverify", "phoneverify@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		err = repo.SetPhoneVerified(ctx, testUser.ID, true)
 		assert.NoError(t, err)
 
@@ -431,17 +431,17 @@ func TestUserRepository_GetActiveUsers(t *testing.T) {
 			err := repo.Create(ctx, user)
 			require.NoError(t, err)
 		}
-		
+
 		// 创建非活跃用户
 		inactiveUser := createTestUser("inactive", "inactive@example.com")
 		inactiveUser.Status = usersModel.UserStatusInactive
 		err := repo.Create(ctx, inactiveUser)
 		require.NoError(t, err)
-		
+
 		users, err := repo.GetActiveUsers(ctx, 10)
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, len(users), 3)
-		
+
 		// 验证都是活跃用户
 		for _, u := range users {
 			assert.Equal(t, usersModel.UserStatusActive, u.Status)
@@ -459,16 +459,16 @@ func TestUserRepository_GetUsersByRole(t *testing.T) {
 		adminUser.Role = "admin"
 		err := repo.Create(ctx, adminUser)
 		require.NoError(t, err)
-		
+
 		normalUser := createTestUser("user1", "user1@example.com")
 		normalUser.Role = "user"
 		err = repo.Create(ctx, normalUser)
 		require.NoError(t, err)
-		
+
 		admins, err := repo.GetUsersByRole(ctx, "admin", 10)
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, len(admins), 1)
-		
+
 		// 验证都是admin角色
 		for _, u := range admins {
 			assert.Equal(t, "admin", u.Role)
@@ -491,11 +491,11 @@ func TestUserRepository_BatchUpdateStatus(t *testing.T) {
 			require.NoError(t, err)
 			userIDs = append(userIDs, user.ID)
 		}
-		
+
 		// 批量更新为inactive
 		err := repo.BatchUpdateStatus(ctx, userIDs, usersModel.UserStatusInactive)
 		assert.NoError(t, err)
-		
+
 		// 验证所有用户状态已更新
 		for _, id := range userIDs {
 			found, _ := repo.GetByID(ctx, id)
@@ -522,11 +522,11 @@ func TestUserRepository_BatchDelete(t *testing.T) {
 			require.NoError(t, err)
 			userIDs = append(userIDs, user.ID)
 		}
-		
+
 		// 批量删除
 		err := repo.BatchDelete(ctx, userIDs)
 		assert.NoError(t, err)
-		
+
 		// 验证所有用户已被软删除
 		for _, id := range userIDs {
 			_, err := repo.GetByID(ctx, id)
@@ -553,12 +553,12 @@ func TestUserRepository_SearchUsers(t *testing.T) {
 		user1.Nickname = "SearchNickname"
 		err := repo.Create(ctx, user1)
 		require.NoError(t, err)
-		
+
 		// 按用户名搜索
 		users, err := repo.SearchUsers(ctx, "searchtest", 10)
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, len(users), 1)
-		
+
 		// 按昵称搜索
 		users, err = repo.SearchUsers(ctx, "SearchNick", 10)
 		assert.NoError(t, err)
@@ -584,7 +584,7 @@ func TestUserRepository_CountByRole(t *testing.T) {
 			err := repo.Create(ctx, user)
 			require.NoError(t, err)
 		}
-		
+
 		count, err := repo.CountByRole(ctx, "author")
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, count, int64(3))
@@ -603,7 +603,7 @@ func TestUserRepository_CountByStatus(t *testing.T) {
 			err := repo.Create(ctx, user)
 			require.NoError(t, err)
 		}
-		
+
 		count, err := repo.CountByStatus(ctx, usersModel.UserStatusBanned)
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, count, int64(2))
@@ -632,7 +632,7 @@ func TestUserRepository_Exists(t *testing.T) {
 		testUser := createTestUser("existsidtest", "existsid@example.com")
 		err := repo.Create(ctx, testUser)
 		require.NoError(t, err)
-		
+
 		exists, err := repo.Exists(ctx, testUser.ID)
 		assert.NoError(t, err)
 		assert.True(t, exists)
