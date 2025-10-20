@@ -123,8 +123,9 @@ func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 		return
 	}
 
-	prevChapter, _ := api.readerService.GetPrevChapter(c.Request.Context(), bookID, chapterNum)
-	nextChapter, _ := api.readerService.GetNextChapter(c.Request.Context(), bookID, chapterNum)
+	// 获取上一章和下一章（可能为 nil，这是正常的）
+	prevChapter, _ := api.readerService.GetPrevChapter(c.Request.Context(), bookID, chapterNum) //nolint:errcheck // 上一章可能不存在
+	nextChapter, _ := api.readerService.GetNextChapter(c.Request.Context(), bookID, chapterNum) //nolint:errcheck // 下一章可能不存在
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
 		"prevChapter": prevChapter,

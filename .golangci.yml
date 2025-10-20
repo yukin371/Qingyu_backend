@@ -36,6 +36,8 @@ linters-settings:
   govet:
     check-shadowing: false
     enable-all: true
+    disable:
+      - fieldalignment  # 禁用字段对齐检查，保持代码可读性
 
   gofmt:
     simplify: true

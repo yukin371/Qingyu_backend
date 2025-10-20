@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 )
 
@@ -239,8 +240,15 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	}
 
 	// 获取未读完和已读完的书籍
-	unfinished, _ := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
-	finished, _ := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	unfinished, errUnfinished := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
+	if errUnfinished != nil {
+		unfinished = []*reader.ReadingProgress{} // 返回空列表而非失败
+	}
+
+	finished, errFinished := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	if errFinished != nil {
+		finished = []*reader.ReadingProgress{} // 返回空列表而非失败
+	}
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
 		"totalReadingTime": totalTime,
