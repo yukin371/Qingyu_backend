@@ -11,6 +11,11 @@ import (
 	"Qingyu_backend/service/reading"
 )
 
+const (
+	hoursPerDay = 24
+	daysPerWeek = 7
+)
+
 // ProgressAPI 阅读进度API
 type ProgressAPI struct {
 	readerService *reading.ReaderService
@@ -204,18 +209,18 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	switch period {
 	case "today":
 		// 今天
-		start := time.Now().Truncate(24 * time.Hour)
-		end := start.Add(24 * time.Hour)
+		start := time.Now().Truncate(hoursPerDay * time.Hour)
+		end := start.Add(hoursPerDay * time.Hour)
 		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
 	case "week":
 		// 本周
 		now := time.Now()
 		weekday := int(now.Weekday())
 		if weekday == 0 {
-			weekday = 7
+			weekday = daysPerWeek
 		}
-		start := now.AddDate(0, 0, -(weekday - 1)).Truncate(24 * time.Hour)
-		end := start.AddDate(0, 0, 7)
+		start := now.AddDate(0, 0, -(weekday - 1)).Truncate(hoursPerDay * time.Hour)
+		end := start.AddDate(0, 0, daysPerWeek)
 		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
 	case "month":
 		// 本月

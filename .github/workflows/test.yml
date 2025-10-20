@@ -10,7 +10,7 @@ jobs:
   test:
     name: 测试和覆盖率
     runs-on: ubuntu-latest
-    
+
     services:
       # MongoDB测试服务
       mongodb:
@@ -25,7 +25,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
+
       # Redis测试服务
       redis:
         image: redis:6.2-alpine
@@ -108,10 +108,10 @@ jobs:
           echo "生成覆盖率报告..."
           go tool cover -html=coverage.out -o coverage.html
           go tool cover -func=coverage.out -o coverage.txt
-          
+
           echo "📊 覆盖率统计："
           cat coverage.txt | grep total
-          
+
           # 提取总覆盖率
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "总覆盖率: ${COVERAGE}%"
@@ -121,11 +121,11 @@ jobs:
         run: |
           THRESHOLD=80
           COVERAGE=${{ env.COVERAGE }}
-          
+
           echo "覆盖率检查："
           echo "  当前覆盖率: ${COVERAGE}%"
           echo "  目标阈值: ${THRESHOLD}%"
-          
+
           # 使用bc进行浮点数比较
           if command -v bc &> /dev/null; then
             RESULT=$(echo "${COVERAGE} >= ${THRESHOLD}" | bc -l)
@@ -141,13 +141,15 @@ jobs:
 
       # ========== 上传报告 ==========
       - name: 📤 上传覆盖率报告到Codecov (可选)
-        if: false  # 暂时禁用，需要配置CODECOV_TOKEN
-        uses: codecov/codecov-action@v3
+        if: github.event_name == 'push' && github.repository == 'your-org/Qingyu_backend'
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
           flags: unittests
           name: codecov-qingyu
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+        continue-on-error: true
 
       - name: 📤 上传测试结果为Artifact
         if: always()
@@ -171,7 +173,7 @@ jobs:
           script: |
             const fs = require('fs');
             const coverage = process.env.COVERAGE;
-            
+
             // 读取覆盖率详情（前20行）
             let coverageDetails = '';
             try {
@@ -180,26 +182,26 @@ jobs:
             } catch (error) {
               coverageDetails = '无法读取覆盖率详情';
             }
-            
+
             const comment = `## 🧪 测试覆盖率报告
-            
+
             ### 📊 总体覆盖率: **${coverage}%**
-            
+
             ${parseFloat(coverage) >= 80 ? '✅' : '⚠️'} 目标阈值: 80%
-            
+
             <details>
             <summary>📄 详细覆盖率（前20个包）</summary>
-            
+
             \`\`\`
             ${coverageDetails}
             \`\`\`
-            
+
             </details>
-            
+
             ---
             🔗 完整报告请查看 [Actions Artifacts](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

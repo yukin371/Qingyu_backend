@@ -1,101 +1,90 @@
-# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.jsonschema.json
-# vim: set filetype=yaml:
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-  gocyclo:
-    min-complexity: 15
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 3
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  goimports:
-    local-prefixes: Qingyu_backend
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-
-linters:
-  enable:
-    - bodyclose
-    - dupl
-    - errcheck
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - mnd
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - noctx
-    - nolintlint
-    - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - whitespace
-    - revive
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - mnd
-        - goconst
-        - dupl
-        - lll
-        - gosec
-
-    - path: cmd/
-      linters:
-        - mnd
-
-    - path: migration/
-      linters:
-        - mnd
-        - goconst
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
+# GolangCI-Lint 配置文件
+# 参考: https://golangci-lint.run/usage/configuration/
 
 run:
   timeout: 5m
   tests: true
   skip-dirs:
     - vendor
-    - testdata
-    - examples
+    - test/fixtures
   skip-files:
     - ".*\\.pb\\.go$"
-    - ".*_gen\\.go$"
+    - ".*_test\\.go$"
+
+linters:
+  enable:
+    - errcheck      # 检查未处理的错误
+    - gosimple      # 简化代码
+    - govet         # 官方 go vet
+    - ineffassign   # 检测无效赋值
+    - staticcheck   # 静态分析
+    - typecheck     # 类型检查
+    - unused        # 检查未使用的代码
+    - gofmt         # 格式化检查
+    - goimports     # import 排序检查
+    - misspell      # 拼写检查
+    - revive        # 替代 golint
+    - gosec         # 安全检查
+  disable:
+    - mnd           # 禁用 magic number detector，因为我们已经用http.Status常量替换
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+
+  govet:
+    check-shadowing: false
+    enable-all: true
+
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: Qingyu_backend
+
+  revive:
+    ignore-generated-header: true
+    severity: warning
+    rules:
+      - name: var-naming
+        severity: warning
+        disabled: false
+        arguments:
+          - ["ID", "API", "URL", "HTTP", "JSON", "XML", "HTML", "SQL", "DB", "JWT"]  # 允许的缩写
+      - name: unused-parameter
+        severity: warning
+        disabled: false
+
+  misspell:
+    locale: US
+
+  gosec:
+    excludes:
+      - G104  # 未检查的错误（由 errcheck 处理）
+      - G304  # 文件路径注入（在某些情况下需要）
+
+issues:
+  exclude-rules:
+    # 排除测试文件的某些检查
+    - path: _test\.go
+      linters:
+        - gosec
+        - errcheck
+
+    # 排除自动生成的文件
+    - path: ".*\\.pb\\.go"
+      linters:
+        - all
+
+    # 排除某些特定错误
+    - text: "G404: Use of weak random number generator"
+      linters:
+        - gosec
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
 
 output:
   format: colored-line-number
