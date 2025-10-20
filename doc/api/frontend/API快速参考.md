@@ -91,26 +91,115 @@
 
 ---
 
+## 写作系统
+
+### 项目管理
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 创建项目 | POST | `/projects` | ✅ | `{title, description, category}` |
+| 获取项目列表 | GET | `/projects` | ✅ | `page, pageSize, status, category` |
+| 获取项目详情 | GET | `/projects/:id` | ✅ | - |
+| 更新项目 | PUT | `/projects/:id` | ✅ | `{title?, description?, status?}` |
+| 删除项目 | DELETE | `/projects/:id` | ✅ | - |
+| 更新项目统计 | PUT | `/projects/:id/statistics` | ✅ | - |
+
+### 文档管理
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 创建文档 | POST | `/projects/:projectId/documents` | ✅ | `{title, content, parentId}` |
+| 获取文档列表 | GET | `/projects/:projectId/documents` | ✅ | `page, pageSize` |
+| 获取文档树 | GET | `/projects/:projectId/documents/tree` | ✅ | - |
+| 获取文档详情 | GET | `/documents/:id` | ✅ | - |
+| 更新文档 | PUT | `/documents/:id` | ✅ | `{title?, content?, status?}` |
+| 删除文档 | DELETE | `/documents/:id` | ✅ | - |
+| 移动文档 | PUT | `/documents/:id/move` | ✅ | `{newParentId, newOrder}` |
+| 重新排序 | PUT | `/projects/:projectId/documents/reorder` | ✅ | `{orders}` |
+
+### 编辑器
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 自动保存 | POST | `/documents/:id/autosave` | ✅ | `{content, version}` |
+| 获取保存状态 | GET | `/documents/:id/save-status` | ✅ | - |
+| 获取文档内容 | GET | `/documents/:id/content` | ✅ | - |
+| 更新文档内容 | PUT | `/documents/:id/content` | ✅ | `{content}` |
+| 计算字数 | POST | `/documents/:id/word-count` | ✅ | `{content, filterMarkdown}` |
+| 获取快捷键配置 | GET | `/user/shortcuts` | ✅ | - |
+| 更新快捷键 | PUT | `/user/shortcuts` | ✅ | `{shortcuts}` |
+| 重置快捷键 | POST | `/user/shortcuts/reset` | ✅ | - |
+
+### 内容审核
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 实时检测 | POST | `/audit/check` | ✅ | `{content}` |
+| 全文审核 | POST | `/documents/:id/audit` | ✅ | `{content}` |
+| 获取审核结果 | GET | `/documents/:id/audit-result` | ✅ | `targetType` |
+| 提交申诉 | POST | `/audit/:id/appeal` | ✅ | `{reason}` |
+| 获取违规记录 | GET | `/users/:userId/violations` | ✅ | - |
+| 获取违规统计 | GET | `/users/:userId/violation-summary` | ✅ | - |
+
+### 数据统计
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 获取作品统计 | GET | `/writer/books/:book_id/stats` | ✅ | - |
+| 获取章节统计 | GET | `/writer/chapters/:chapter_id/stats` | ✅ | - |
+| 获取阅读热力图 | GET | `/writer/books/:book_id/heatmap` | ✅ | - |
+| 获取收入统计 | GET | `/writer/books/:book_id/revenue` | ✅ | `start_date, end_date` |
+| 获取热门章节 | GET | `/writer/books/:book_id/top-chapters` | ✅ | - |
+| 获取每日统计 | GET | `/writer/books/:book_id/daily-stats` | ✅ | `days` |
+| 获取跳出点分析 | GET | `/writer/books/:book_id/drop-off-points` | ✅ | - |
+| 获取留存率 | GET | `/writer/books/:book_id/retention` | ✅ | `days` |
+
+### 版本管理
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 获取版本历史 | GET | `/documents/:documentId/versions` | ✅ | `page, pageSize` |
+| 获取特定版本 | GET | `/documents/:documentId/versions/:versionId` | ✅ | - |
+| 比较版本 | GET | `/documents/:documentId/versions/compare` | ✅ | `fromVersion, toVersion` |
+| 恢复版本 | POST | `/documents/:documentId/versions/:versionId/restore` | ✅ | - |
+
+---
+
 ## 共享服务
 
 ### 钱包
 
-| 功能 | 方法 | 路径 | 需认证 |
-|------|------|------|--------|
-| 查询余额 | GET | `/shared/wallet/balance` | ✅ |
-| 获取钱包信息 | GET | `/shared/wallet` | ✅ |
-| 充值 | POST | `/shared/wallet/recharge` | ✅ |
-| 消费 | POST | `/shared/wallet/consume` | ✅ |
-| 交易历史 | GET | `/shared/wallet/transactions` | ✅ |
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 查询余额 | GET | `/shared/wallet/balance` | ✅ | - |
+| 获取钱包信息 | GET | `/shared/wallet` | ✅ | - |
+| 充值 | POST | `/shared/wallet/recharge` | ✅ | `{amount, method}` |
+| 消费 | POST | `/shared/wallet/consume` | ✅ | `{amount, reason}` |
+| 转账 | POST | `/shared/wallet/transfer` | ✅ | `{to_user_id, amount, reason}` |
+| 交易历史 | GET | `/shared/wallet/transactions` | ✅ | `page, page_size, type` |
+| 申请提现 | POST | `/shared/wallet/withdraw` | ✅ | `{amount, account}` |
+| 查询提现申请 | GET | `/shared/wallet/withdrawals` | ✅ | `page, page_size, status` |
 
 ### 存储
 
-| 功能 | 方法 | 路径 | 需认证 |
-|------|------|------|--------|
-| 上传文件 | POST | `/shared/storage/upload` | ✅ |
-| 下载文件 | GET | `/shared/storage/download/:fileId` | ✅ |
-| 删除文件 | DELETE | `/shared/storage/:fileId` | ✅ |
-| 文件列表 | GET | `/shared/storage/files` | ✅ |
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 上传文件 | POST | `/shared/storage/upload` | ✅ | `file, path` |
+| 下载文件 | GET | `/shared/storage/download/:fileId` | ✅ | - |
+| 删除文件 | DELETE | `/shared/storage/files/:fileId` | ✅ | - |
+| 获取文件信息 | GET | `/shared/storage/files/:fileId` | ✅ | - |
+| 文件列表 | GET | `/shared/storage/files` | ✅ | `page, page_size, category` |
+| 获取文件URL | GET | `/shared/storage/files/:fileId/url` | ✅ | `expire` |
+
+### 管理员
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 获取待审核内容 | GET | `/shared/admin/reviews/pending` | ✅🔑 | `content_type` |
+| 审核内容 | POST | `/shared/admin/reviews` | ✅🔑 | `{content_id, action, reason}` |
+| 审核提现 | POST | `/shared/admin/withdraw/review` | ✅🔑 | `{withdraw_id, approved, reason}` |
+| 获取用户统计 | GET | `/shared/admin/users/:user_id/statistics` | ✅🔑 | - |
+| 获取操作日志 | GET | `/shared/admin/operation-logs` | ✅🔑 | `page, page_size, admin_id, operation` |
 
 ---
 
@@ -259,6 +348,83 @@ export function uploadFile(file) {
 }
 ```
 
+### 创建项目
+
+```javascript
+// 创建写作项目
+export async function createProject(title, description, category) {
+  const response = await request.post('/projects', {
+    title,
+    description,
+    category,
+    type: 'novel'
+  });
+  return response;
+}
+
+// 获取项目列表
+export function getProjects(page = 1, pageSize = 10) {
+  return request.get('/projects', {
+    params: { page, pageSize }
+  });
+}
+```
+
+### 编辑器自动保存
+
+```javascript
+// 自动保存（每30秒）
+let autoSaveTimer = null;
+
+export function enableAutoSave(documentId, getContent, getVersion) {
+  autoSaveTimer = setInterval(async () => {
+    try {
+      await request.post(`/documents/${documentId}/autosave`, {
+        content: getContent(),
+        version: getVersion()
+      });
+      console.log('自动保存成功');
+    } catch (error) {
+      if (error.response?.status === 409) {
+        alert('文档已被修改，请刷新页面');
+      }
+    }
+  }, 30000); // 30秒
+}
+
+export function disableAutoSave() {
+  if (autoSaveTimer) {
+    clearInterval(autoSaveTimer);
+  }
+}
+```
+
+### 钱包操作
+
+```javascript
+// 查询余额
+export async function getBalance() {
+  const response = await request.get('/shared/wallet/balance');
+  return response.balance;
+}
+
+// 充值
+export async function recharge(amount, method = 'alipay') {
+  return request.post('/shared/wallet/recharge', {
+    amount,
+    method
+  });
+}
+
+// 消费
+export async function consume(amount, reason) {
+  return request.post('/shared/wallet/consume', {
+    amount,
+    reason
+  });
+}
+```
+
 ### 错误处理
 
 ```javascript
@@ -317,9 +483,13 @@ try {
 - [前端集成指南](./前端集成指南.md) - 详细集成步骤
 - [用户系统 API](./用户系统API参考.md) - 完整接口文档
 - [书城系统 API](./书城API参考.md) - 完整接口文档
+- [阅读器 API](./阅读器API参考.md) - 阅读器完整接口
+- [推荐系统 API](./推荐系统API参考.md) - 推荐系统完整接口
+- [写作系统 API](./写作系统API参考.md) - 写作系统完整接口（项目、文档、编辑器、审核、统计）
+- [共享服务 API](./共享服务API参考.md) - 共享服务完整接口（钱包、存储、认证、管理员）
 
 ---
 
-**最后更新**: 2025-10-18  
+**最后更新**: 2025-10-20  
 **维护者**: 青羽后端团队
 
