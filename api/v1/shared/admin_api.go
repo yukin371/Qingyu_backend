@@ -1,4 +1,4 @@
-package shared
+﻿package shared
 
 import (
 	"net/http"
@@ -30,7 +30,7 @@ func NewAdminAPI(adminService admin.AdminService) *AdminAPI {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			content_type	query		string	false	"内容类型"
-//	@Success		200				{object}	APIResponse{data=[]admin.AuditRecord}
+//	@Success		200				{object}	APIResponse
 //	@Failure		401				{object}	APIResponse
 //	@Failure		403				{object}	APIResponse
 //	@Failure		500				{object}	APIResponse
@@ -205,7 +205,7 @@ func (api *AdminAPI) ReviewWithdraw(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			user_id	path		string	true	"用户ID"
-//	@Success		200		{object}	APIResponse{data=admin.UserStatistics}
+//	@Success 200 {object} APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		403		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -258,7 +258,7 @@ func (api *AdminAPI) GetUserStatistics(c *gin.Context) {
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			admin_id	query		string	false	"管理员ID"
 //	@Param			operation	query		string	false	"操作类型"
-//	@Success		200			{object}	PaginatedResponse{data=[]admin.AdminLog}
+//	@Success		200			{object}	PaginatedResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		403			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse

@@ -1,4 +1,4 @@
-package reading
+﻿package reading
 
 import (
 	"net/http"
@@ -32,7 +32,7 @@ func NewBookDetailAPI(service bookstoreService.BookDetailService) *BookDetailAPI
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse{data=bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -89,7 +89,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 //	@Param			title	query		string	true	"书籍标题"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/search/title [get]
@@ -142,7 +142,7 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 //	@Param			author	query		string	true	"作者名称"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/search/author [get]
@@ -195,7 +195,7 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 //	@Param			category	query		string	true	"分类名称"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			size		query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/books/category [get]
@@ -248,7 +248,7 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 //	@Param			status	query		string	true	"书籍状态(serializing/completed/paused)"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/status [get]
@@ -318,7 +318,7 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 //	@Param			tags	query		string	true	"标签列表(逗号分隔)"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/tags [get]
@@ -376,7 +376,7 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 //	@Param			keyword	query		string	true	"搜索关键词"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	PaginatedResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/search [get]
@@ -427,7 +427,7 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/recommended [get]
 func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
@@ -461,7 +461,7 @@ func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"书籍ID"
 //	@Param			limit	query		int		false	"数量限制"	default(10)
-//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{id}/similar [get]
@@ -513,7 +513,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/popular [get]
 func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
@@ -546,7 +546,7 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success		200		{object}	APIResponse{data=[]bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/latest [get]
 func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
@@ -579,7 +579,7 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse{data=map[string]interface{}}
+//	@Success 200 {object} APIResponse}
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/books/{id}/statistics [get]
@@ -633,7 +633,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
-//	@Success		201		{object}	APIResponse{data=bookstore.BookDetail}
+//	@Success 201 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books [post]
@@ -671,7 +671,7 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string					true	"书籍ID"
 //	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
-//	@Success		200		{object}	APIResponse{data=bookstore.BookDetail}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		404		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse

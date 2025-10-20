@@ -1,4 +1,4 @@
-package reading
+﻿package reading
 
 import (
 	"net/http"
@@ -30,7 +30,7 @@ func NewBookStatisticsAPI(bookStatisticsService bookstoreService.BookStatisticsS
 // @Accept json
 // @Produce json
 // @Param book_id path string true "图书ID"
-// @Success 200 {object} APIResponse{data=bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "统计信息不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
@@ -80,7 +80,7 @@ func (api *BookStatisticsAPI) GetBookStatistics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "返回数量" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/top-viewed [get]
@@ -114,7 +114,7 @@ func (api *BookStatisticsAPI) GetTopViewedBooks(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "返回数量" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/top-favorited [get]
@@ -148,7 +148,7 @@ func (api *BookStatisticsAPI) GetTopFavoritedBooks(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "返回数量" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/top-rated [get]
@@ -182,7 +182,7 @@ func (api *BookStatisticsAPI) GetTopRatedBooks(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "返回数量" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/hottest [get]
@@ -216,7 +216,7 @@ func (api *BookStatisticsAPI) GetHottestBooks(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "返回数量" default(10)
-// @Success 200 {object} APIResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/trending [get]
@@ -347,7 +347,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 // @Tags 图书统计
 // @Accept json
 // @Produce json
-// @Success 200 {object} APIResponse{data=map[string]interface{}} "成功"
+// @Success 200 {object} APIResponse} "成功"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/aggregated [get]
 func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
@@ -378,7 +378,7 @@ func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
 // @Param end_time query string true "结束时间" format(date-time)
 // @Param page query int false "页码" default(1)
 // @Param limit query int false "每页数量" default(10)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/time-range [get]
@@ -454,7 +454,7 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param date query string true "日期" format(date)
-// @Success 200 {object} APIResponse{data=map[string]interface{}} "成功"
+// @Success 200 {object} APIResponse} "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/daily-report [get]
@@ -504,7 +504,7 @@ func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 // @Produce json
 // @Param year query int true "年份"
 // @Param week query int true "周数"
-// @Success 200 {object} APIResponse{data=map[string]interface{}} "成功"
+// @Success 200 {object} APIResponse} "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/weekly-report [get]
@@ -575,7 +575,7 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 // @Produce json
 // @Param year query int true "年份"
 // @Param month query int true "月份"
-// @Success 200 {object} APIResponse{data=map[string]interface{}} "成功"
+// @Success 200 {object} APIResponse} "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/monthly-report [get]
@@ -638,7 +638,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 // @Param keyword query string true "搜索关键词"
 // @Param page query int false "页码" default(1)
 // @Param limit query int false "每页数量" default(10)
-// @Success 200 {object} PaginatedResponse{data=[]bookstore.BookStatistics} "成功"
+// @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/statistics/search [get]

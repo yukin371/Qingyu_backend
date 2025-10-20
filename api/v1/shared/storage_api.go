@@ -1,4 +1,4 @@
-package shared
+﻿package shared
 
 import (
 	"net/http"
@@ -32,7 +32,7 @@ func NewStorageAPI(storageService storage.StorageService) *StorageAPI {
 //	@Security		ApiKeyAuth
 //	@Param			file	formData	file	true	"上传文件"
 //	@Param			path	formData	string	false	"存储路径"
-//	@Success		200		{object}	APIResponse{data=storage.FileInfo}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -211,7 +211,7 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			file_id	path		string	true	"文件ID"
-//	@Success		200		{object}	APIResponse{data=storage.FileInfo}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		404		{object}	APIResponse
@@ -263,7 +263,7 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			path		query		string	false	"路径前缀"
-//	@Success		200			{object}	PaginatedResponse{data=[]storage.FileInfo}
+//	@Success 200 {object} APIResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/storage/files [get]
@@ -317,7 +317,7 @@ func (api *StorageAPI) ListFiles(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			file_id	path		string	true	"文件ID"
 //	@Param			expire	query		int		false	"过期时间(秒)"	default(3600)
-//	@Success		200		{object}	APIResponse{data=string}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
