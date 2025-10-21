@@ -1,3 +1,20 @@
+> ⚠️ **文档状态**: 已过时（2025-10-21）
+> 
+> 本文档基于三层架构（project-node-document），已被四层架构取代。
+> 
+> **替代文档**：[项目四层架构CRUD设计](./项目四层架构CRUD设计.md)
+> 
+> **过时原因**：
+> - 缺少Content层设计（不支持GridFS大文本存储）
+> - 未区分Document（元数据）和DocumentContent（实际内容）
+> - 性能设计不适合大规模文档管理
+> 
+> **新架构**：Project → Node → Document → Content
+> 
+> 详见：[数据模型设计说明](../writing/数据模型设计说明.md)
+
+---
+
 # 项目节点文档CRUD设计
 
 ## 1. 需求概述
