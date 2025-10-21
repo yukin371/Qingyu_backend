@@ -42,20 +42,42 @@
 
 ### 核心架构设计
 
-#### 1. [Python AI Agent系统架构设计](./07.Python_AI_Agent系统架构设计.md)
+#### 1. [Agent框架技术选型对比](./agent/Agent框架技术选型对比.md) 🔥 **推荐阅读**
 **文档内容**：
-- Agent框架设计（LangChain集成）
+- LangChain vs **LangGraph** vs AutoGen vs CrewAI vs MetaGPT vs Semantic Kernel 详细对比
+- **最终推荐：LangGraph** 作为青羽平台的Agent引擎 🏆
+  - ✅ 图状工作流（StateGraph）完美支持复杂创作流程
+  - ✅ 继承LangChain全部生态（工具、RAG、LLM适配器）
+  - ✅ 显式状态管理，便于调试和持久化
+- 各框架优劣势分析（GitHub星数、生态、适用场景）
+- 青羽项目需求匹配度评估
+- 为什么LangGraph优于纯LangChain
+
+**适用场景**：
+- 技术选型决策参考
+- 理解框架差异和适用场景
+- 团队技术培训
+
+#### 2. [Python AI Agent系统架构设计](./agent/07.Python_AI_Agent系统架构设计.md) 🔥 **已更新为LangGraph**
+**文档内容**：
+- **Agent框架设计（基于LangGraph）** ✅
+  - StateGraph状态图工作流
+  - 条件路由、循环控制、分支逻辑
+  - ToolNode工具调用集成
+  - Checkpointer状态持久化
 - 专业Agent（创作、分析、审核、助手）
-- 工具调用框架
-- Agent协作机制
-- Agent记忆系统
+- 工具调用框架（继承LangChain工具生态）
+- Agent协作机制（子图嵌套）
+- Agent记忆系统（State + Checkpointer）
+- **附录：LangGraph完整实现示例** 📖
 
 **适用场景**：
 - Python AI服务整体架构设计
-- Agent系统开发
+- LangGraph开发实战
+- 复杂工作流编排
 - 工具系统集成
 
-#### 2. [Go AI代理层设计](./08.Go_AI代理层设计.md)
+#### 3. [Go AI代理层设计](./agent/08.Go_AI代理层设计.md)
 **文档内容**：
 - Go代理服务架构
 - gRPC客户端设计
@@ -68,7 +90,7 @@
 - 流式接口实现
 - 性能优化和容错
 
-#### 3. [Agent工具调用集成设计](./09.Agent工具调用集成设计.md)
+#### 4. [Agent工具调用集成设计](./agent/09.Agent工具调用集成设计.md)
 **文档内容**：
 - 工具注册框架
 - 写作工具集成（大纲、角色卡、时间线等）
@@ -83,7 +105,7 @@
 
 ### RAG检索增强系统
 
-#### 4. [RAG检索增强系统设计](./10.RAG检索增强系统设计.md)
+#### 5. [RAG检索增强系统设计](./rag/10.RAG检索增强系统设计.md)
 **文档内容**：
 - 向量化引擎（文本预处理、分块、编码）
 - 知识库管理（用户私有、平台公共、外部知识）
@@ -96,7 +118,7 @@
 - 知识库建设
 - 智能检索实现
 
-#### 5. [RAG事件驱动索引设计](./11.RAG事件驱动索引设计.md)
+#### 6. [RAG事件驱动索引设计](./rag/11.RAG事件驱动索引设计.md)
 **文档内容**：
 - 事件触发机制（文档创建、角色更新等）
 - 异步向量化队列（RabbitMQ）
@@ -110,7 +132,7 @@
 
 ### 接口规范
 
-#### 6. [AI流式接口规范](./12.AI流式接口规范.md)
+#### 7. [AI流式接口规范](./streaming/12.AI流式接口规范.md)
 **文档内容**：
 - 强制流式接口规范
 - SSE实现规范
@@ -235,9 +257,13 @@ async def intelligent_writing(request: WritingRequest):
 - **熔断器**：hystrix-go / gobreaker
 - **限流器**：golang.org/x/time/rate
 
-### Python技术栈
+### Python技术栈 🔥 **已更新**
 - **Web框架**：FastAPI
-- **Agent框架**：LangChain
+- **Agent框架**：**LangGraph** 🏆（图状工作流 + 继承LangChain全部生态）
+  - StateGraph：状态图工作流引擎
+  - ToolNode：工具调用节点
+  - Checkpointer：状态持久化
+  - 完全兼容LangChain工具、RAG、LLM适配器
 - **向量数据库**：Milvus / Qdrant
 - **向量模型**：BGE-large-zh-v1.5 / OpenAI Embeddings
 - **异步处理**：asyncio、RabbitMQ
