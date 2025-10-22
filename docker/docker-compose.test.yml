@@ -1,0 +1,46 @@
+# CI/测试环境 Docker Compose 配置
+version: '3.8'
+
+services:
+  # MongoDB数据库（测试专用）
+  mongodb-test:
+    image: mongo:6.0
+    container_name: qingyu-mongodb-test
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: qingyu_test
+    networks:
+      - test-network
+    healthcheck:
+      # 使用更兼容的健康检查方式
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    tmpfs:
+      - /data/db  # 使用内存存储，测试结束自动清理
+
+  # Redis缓存（测试专用）
+  redis-test:
+    image: redis:7-alpine
+    container_name: qingyu-redis-test
+    ports:
+      - "6379:6379"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+    tmpfs:
+      - /data  # 使用内存存储
+
+networks:
+  test-network:
+    driver: bridge
+
