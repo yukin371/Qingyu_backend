@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	readingAPI "Qingyu_backend/api/v1/reading"
+	bookstoreAPI "Qingyu_backend/api/v1/bookstore"
 	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -142,7 +142,7 @@ func setupTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	api := readingAPI.NewBookstoreAPI(service)
+	api := bookstoreAPI.NewBookstoreAPI(service)
 
 	v1 := router.Group("/api/v1")
 	bookstoreGroup := v1.Group("/bookstore")
@@ -235,7 +235,7 @@ func TestGetHomepage(t *testing.T) {
 	// 验证响应
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -284,7 +284,7 @@ func TestGetRealtimeRankingApi(t *testing.T) {
 	// 验证响应
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -348,7 +348,7 @@ func TestGetWeeklyRankingApi(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取周榜成功", response.Message)
@@ -392,7 +392,7 @@ func TestGetRankingByType_InvalidType(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -424,7 +424,7 @@ func TestGetBookByID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取书籍详情成功", response.Message)
@@ -459,7 +459,7 @@ func TestGetActiveBanners(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取Banner列表成功", response.Message)
@@ -482,7 +482,7 @@ func TestIncrementBannerClick(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "点击次数增加成功", response.Message)
@@ -512,7 +512,7 @@ func TestSearchBooks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "搜索书籍成功", response.Message)
@@ -534,7 +534,7 @@ func TestAPIErrorHandling(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.Code)
@@ -570,7 +570,7 @@ func TestGetBooksByCategory(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取分类书籍成功", response.Message)
@@ -591,7 +591,7 @@ func TestGetBooksByCategory_InvalidID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -621,7 +621,7 @@ func TestGetRecommendedBooks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取推荐书籍成功", response.Message)
@@ -650,7 +650,7 @@ func TestGetFeaturedBooks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取精选书籍成功", response.Message)
@@ -681,7 +681,7 @@ func TestGetCategoryTree(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取分类树成功", response.Message)
@@ -708,7 +708,7 @@ func TestGetCategoryByID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取分类详情成功", response.Message)
@@ -730,7 +730,7 @@ func TestIncrementBookView(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "浏览量增加成功", response.Message)

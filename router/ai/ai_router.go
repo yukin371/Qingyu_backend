@@ -11,15 +11,19 @@ import (
 // InitAIRouter 初始化AI路由
 func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService) {
 	// 创建API实例
-	aiApiHandler := aiApi.NewAIApi(aiService, chatService, quotaService)
+	writingApiHandler := aiApi.NewWritingApi(aiService, quotaService)
+	chatApiHandler := aiApi.NewChatApi(chatService, quotaService)
+	systemApiHandler := aiApi.NewSystemApi(aiService)
 	quotaApiHandler := aiApi.NewQuotaApi(quotaService)
 
 	// AI主路由组
 	aiGroup := r.Group("/ai")
 	aiGroup.Use(middleware.JWTAuth()) // 需要认证
 	{
-		// 健康检查（不需要配额）
-		aiGroup.GET("/health", aiApiHandler.HealthCheck)
+		// 系统功能（不需要配额）
+		aiGroup.GET("/health", systemApiHandler.HealthCheck)
+		aiGroup.GET("/providers", systemApiHandler.GetProviders)
+		aiGroup.GET("/models", systemApiHandler.GetModels)
 
 		// 配额管理（不需要配额检查）
 		quotaGroup := aiGroup.Group("/quota")
@@ -35,23 +39,23 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 		writingGroup.Use(middleware.QuotaCheckMiddleware(quotaService))
 		{
 			// 智能续写
-			writingGroup.POST("/continue", aiApiHandler.ContinueWriting)
-			writingGroup.POST("/continue/stream", aiApiHandler.ContinueWritingStream)
+			writingGroup.POST("/continue", writingApiHandler.ContinueWriting)
+			writingGroup.POST("/continue/stream", writingApiHandler.ContinueWritingStream)
 
 			// 内容改写
-			writingGroup.POST("/rewrite", aiApiHandler.RewriteText)
-			writingGroup.POST("/rewrite/stream", aiApiHandler.RewriteTextStream)
+			writingGroup.POST("/rewrite", writingApiHandler.RewriteText)
+			writingGroup.POST("/rewrite/stream", writingApiHandler.RewriteTextStream)
 		}
 
 		// AI聊天功能（轻量级配额检查）
 		chatGroup := aiGroup.Group("/chat")
 		chatGroup.Use(middleware.LightQuotaCheckMiddleware(quotaService))
 		{
-			chatGroup.POST("", aiApiHandler.Chat)
-			chatGroup.POST("/stream", aiApiHandler.ChatStream)
-			chatGroup.GET("/sessions", aiApiHandler.GetChatSessions)
-			chatGroup.GET("/sessions/:sessionId", aiApiHandler.GetChatHistory)
-			chatGroup.DELETE("/sessions/:sessionId", aiApiHandler.DeleteChatSession)
+			chatGroup.POST("", chatApiHandler.Chat)
+			chatGroup.POST("/stream", chatApiHandler.ChatStream)
+			chatGroup.GET("/sessions", chatApiHandler.GetChatSessions)
+			chatGroup.GET("/sessions/:sessionId", chatApiHandler.GetChatHistory)
+			chatGroup.DELETE("/sessions/:sessionId", chatApiHandler.DeleteChatSession)
 		}
 	}
 

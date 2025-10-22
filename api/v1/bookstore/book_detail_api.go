@@ -1,4 +1,4 @@
-package reading
+package bookstore
 
 import (
 	"net/http"
