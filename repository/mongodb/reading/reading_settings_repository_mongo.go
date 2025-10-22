@@ -2,6 +2,7 @@ package reading
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,9 +16,8 @@ import (
 
 // MongoReadingSettingsRepository MongoDB阅读设置仓储实现
 type MongoReadingSettingsRepository struct {
-	db           *mongo.Database
-	collection   *mongo.Collection
-	queryBuilder base.QueryBuilder
+	db         *mongo.Database
+	collection *mongo.Collection
 }
 
 // NewMongoReadingSettingsRepository 创建MongoDB阅读设置仓储实例
@@ -25,18 +25,13 @@ func NewMongoReadingSettingsRepository(db *mongo.Database) ReadingInterfaces.Rea
 	return &MongoReadingSettingsRepository{
 		db:         db,
 		collection: db.Collection("reading_settings"),
-		// queryBuilder: mongodb.NewMongoQueryBuilder(), // 暂时注释掉，避免循环导入
 	}
 }
 
 // Create 创建阅读设置
 func (r *MongoReadingSettingsRepository) Create(ctx context.Context, settings *reader.ReadingSettings) error {
 	if settings == nil {
-		return base.NewRepositoryError(
-			base.ErrorTypeValidation,
-			"阅读设置对象不能为空",
-			nil,
-		)
+		return errors.New("阅读设置对象不能为空")
 	}
 
 	settings.CreatedAt = time.Now()
@@ -74,7 +69,7 @@ func (r *MongoReadingSettingsRepository) Delete(ctx context.Context, id string) 
 }
 
 // List 获取阅读设置列表
-func (r *MongoReadingSettingsRepository) List(ctx context.Context, filter base.Filter) ([]**reader.ReadingSettings, error) {
+func (r *MongoReadingSettingsRepository) List(ctx context.Context, filter base.Filter) ([]*reader.ReadingSettings, error) {
 	mongoFilter := filter.GetConditions()
 
 	cursor, err := r.collection.Find(ctx, mongoFilter)
@@ -88,13 +83,7 @@ func (r *MongoReadingSettingsRepository) List(ctx context.Context, filter base.F
 		return nil, err
 	}
 
-	// 转换为双指针类型
-	result := make([]**reader.ReadingSettings, len(settings))
-	for i, setting := range settings {
-		result[i] = &setting
-	}
-
-	return result, nil
+	return settings, nil
 }
 
 // Count 统计阅读设置数量
@@ -168,28 +157,23 @@ func (r *MongoReadingSettingsRepository) ExistsByUserID(ctx context.Context, use
 }
 
 // BatchCreate 批量创建阅读设置
-func (r *MongoReadingSettingsRepository) BatchCreate(ctx context.Context, settings []**reader.ReadingSettings) error {
+func (r *MongoReadingSettingsRepository) BatchCreate(ctx context.Context, settings []*reader.ReadingSettings) error {
 	if len(settings) == 0 {
 		return nil
 	}
 
-	// 验证设置对象
-	for _, setting := range settings {
-		if setting == nil || *setting == nil {
-			continue
-		}
-	}
+	// 验证设置对象（已通过参数类型保证非空）
 
 	// 准备批量插入的文档
 	var documents []interface{}
 	now := time.Now()
 	for _, setting := range settings {
-		if setting == nil || *setting == nil {
+		if setting == nil {
 			continue
 		}
-		(*setting).CreatedAt = now
-		(*setting).UpdatedAt = now
-		documents = append(documents, *setting)
+		setting.CreatedAt = now
+		setting.UpdatedAt = now
+		documents = append(documents, setting)
 	}
 
 	if len(documents) == 0 {

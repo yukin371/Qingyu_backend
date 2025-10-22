@@ -5,13 +5,14 @@ import (
 	"errors"
 	"testing"
 	"time"
-	
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	
+
 	"Qingyu_backend/models/reading/bookstore"
-	"Qingyu_backend/service/bookstore"
+	"Qingyu_backend/repository/interfaces/infrastructure"
+	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // MockBookRepository 模拟书籍仓储
@@ -59,7 +60,7 @@ func (m *MockBookRepository) GetByCategory(ctx context.Context, categoryID primi
 	return args.Get(0).([]*bookstore.Book), args.Error(1)
 }
 
-func (m *MockBookRepository) GetByStatus(ctx context.Context, status string, limit, offset int) ([]*bookstore.Book, error) {
+func (m *MockBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
 	args := m.Called(ctx, status, limit, offset)
 	return args.Get(0).([]*bookstore.Book), args.Error(1)
 }
@@ -71,11 +72,6 @@ func (m *MockBookRepository) GetRecommended(ctx context.Context, limit, offset i
 
 func (m *MockBookRepository) GetFeatured(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
 	args := m.Called(ctx, limit, offset)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
-}
-
-func (m *MockBookRepository) Search(ctx context.Context, keyword string, filter *bookstore.BookFilter) ([]*bookstore.Book, error) {
-	args := m.Called(ctx, keyword, filter)
 	return args.Get(0).([]*bookstore.Book), args.Error(1)
 }
 
@@ -94,7 +90,7 @@ func (m *MockBookRepository) CountByAuthor(ctx context.Context, author string) (
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBookRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+func (m *MockBookRepository) CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
 	args := m.Called(ctx, status)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -124,7 +120,7 @@ func (m *MockBookRepository) UpdateRating(ctx context.Context, bookID primitive.
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status string) error {
+func (m *MockBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
 	args := m.Called(ctx, bookIDs, status)
 	return args.Error(0)
 }
@@ -137,6 +133,76 @@ func (m *MockBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs []
 func (m *MockBookRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	args := m.Called(ctx, fn)
 	return args.Error(0)
+}
+
+func (m *MockBookRepository) BatchUpdateFeatured(ctx context.Context, bookIDs []primitive.ObjectID, isFeatured bool) error {
+	args := m.Called(ctx, bookIDs, isFeatured)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) BatchUpdateRecommended(ctx context.Context, bookIDs []primitive.ObjectID, isRecommended bool) error {
+	args := m.Called(ctx, bookIDs, isRecommended)
+	return args.Error(0)
+}
+
+func (m *MockBookRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockBookRepository) CountByFilter(ctx context.Context, filter *bookstore.BookFilter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockBookRepository) GetHot(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetNewReleases(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetFree(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, keyword, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, authorID, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetByPriceRange(ctx context.Context, minPrice, maxPrice float64, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, minPrice, maxPrice, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetFreeBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetHotBooks(ctx context.Context, limit, offset int) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstore.Book, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).([]*bookstore.Book), args.Error(1)
 }
 
 // MockCategoryRepository 模拟分类仓储
@@ -232,6 +298,21 @@ func (m *MockCategoryRepository) Transaction(ctx context.Context, fn func(ctx co
 	return args.Error(0)
 }
 
+func (m *MockCategoryRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockCategoryRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (m *MockCategoryRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstore.Category, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).([]*bookstore.Category), args.Error(1)
+}
+
 // MockBannerRepository 模拟Banner仓储
 type MockBannerRepository struct {
 	mock.Mock
@@ -300,6 +381,21 @@ func (m *MockBannerRepository) Transaction(ctx context.Context, fn func(ctx cont
 	return args.Error(0)
 }
 
+func (m *MockBannerRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockBannerRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (m *MockBannerRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstore.Banner, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+}
+
 // 测试用例
 
 func TestBookstoreService_GetBookByID(t *testing.T) {
@@ -311,24 +407,24 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 		Author: "测试作者",
 		Status: "published",
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(expectedBook, nil)
-	
-	// 创建 MockRankingRepository
+
+	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
-	
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetBookByID(context.Background(), bookID.Hex())
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBook, result)
@@ -338,24 +434,24 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 func TestBookstoreService_GetBookByID_NotFound(t *testing.T) {
 	// 准备测试数据
 	bookID := primitive.NewObjectID()
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望 - 返回nil表示未找到
 	mockBookRepo.On("GetByID", mock.Anything, bookID).Return((*bookstore.Book)(nil), nil)
-	
-	// 创建 MockRankingRepository
+
+	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
-	
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetBookByID(context.Background(), bookID.Hex())
-	
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -368,16 +464,16 @@ func TestBookstoreService_GetBookByID_InvalidID(t *testing.T) {
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
-	// 创建 MockRankingRepository
+
+	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
-	
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试 - 使用无效ID
 	result, err := service.GetBookByID(context.Background(), "invalid-id")
-	
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -402,21 +498,24 @@ func TestBookstoreService_GetRecommendedBooks(t *testing.T) {
 			IsRecommended: true,
 		},
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockBookRepo.On("GetRecommended", mock.Anything, 20, 0).Return(expectedBooks, nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetRecommendedBooks(context.Background(), 1, 20)
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBooks, result)
@@ -431,22 +530,25 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 		Title:  "测试书籍",
 		Status: "published",
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(book, nil)
 	mockBookRepo.On("IncrementViewCount", mock.Anything, bookID).Return(nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	err := service.IncrementBookView(context.Background(), bookID.Hex())
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	mockBookRepo.AssertExpectations(t)
@@ -460,21 +562,24 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 		Title:  "测试书籍",
 		Status: "draft", // 未发布状态
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(book, nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	err := service.IncrementBookView(context.Background(), bookID.Hex())
-	
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "book not available")
@@ -489,21 +594,24 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 		Name:     "测试分类",
 		IsActive: true,
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockCategoryRepo.On("GetByID", mock.Anything, categoryID).Return(expectedCategory, nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.Equal(t, expectedCategory, result)
@@ -518,21 +626,24 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 		Name:     "测试分类",
 		IsActive: false, // 未激活
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockCategoryRepo.On("GetByID", mock.Anything, categoryID).Return(category, nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
-	
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -543,10 +654,6 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 func TestBookstoreService_SearchBooks(t *testing.T) {
 	// 准备测试数据
 	keyword := "测试"
-	filter := &bookstore.BookFilter{
-		Limit:  10,
-		Offset: 0,
-	}
 	expectedBooks := []*bookstore.Book{
 		{
 			ID:     primitive.NewObjectID(),
@@ -555,26 +662,31 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 			Status: "published",
 		},
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+	mockRankingRepo := new(MockRankingRepository)
+
 	// 设置Mock期望
-	mockBookRepo.On("Search", mock.Anything, keyword, mock.MatchedBy(func(f *bookstore.BookFilter) bool {
-		return f.Status != nil && *f.Status == "published"
-	})).Return(expectedBooks, nil)
-	
+	mockBookRepo.On("Search", mock.Anything, keyword, 10, 0).Return(expectedBooks, nil)
+	publishedStatus := bookstore.BookStatusPublished
+	keywordPtr := keyword
+	mockBookRepo.On("CountByFilter", mock.Anything, mock.MatchedBy(func(f *bookstore.BookFilter) bool {
+		return f.Status != nil && *f.Status == publishedStatus && f.Keyword != nil && *f.Keyword == keywordPtr
+	})).Return(int64(1), nil)
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
-	result, err := service.SearchBooks(context.Background(), keyword, filter)
-	
+	result, total, err := service.SearchBooks(context.Background(), keyword, 1, 10)
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBooks, result)
+	assert.Equal(t, int64(1), total)
 	mockBookRepo.AssertExpectations(t)
 }
 
@@ -583,20 +695,21 @@ func TestBookstoreService_SearchBooks_EmptyKeywordAndFilter(t *testing.T) {
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
-	// 创建 MockRankingRepository
+
+	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
-	
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
-	
-	// 执行测试 - 空关键词和过滤器
-	result, err := service.SearchBooks(context.Background(), "", nil)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
+	// 执行测试 - 空关键词
+	result, total, err := service.SearchBooks(context.Background(), "", 1, 10)
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "keyword or filter is required")
+	assert.Equal(t, int64(0), total)
+	assert.Contains(t, err.Error(), "keyword is required")
 }
 
 func TestBookstoreService_GetHomepageData(t *testing.T) {
@@ -627,25 +740,30 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 		TotalBooks:     100,
 		PublishedBooks: 80,
 	}
-	
+
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
+
 	// 设置Mock期望
 	mockBannerRepo.On("GetActive", mock.Anything, 5, 0).Return(expectedBanners, nil)
 	mockBookRepo.On("GetRecommended", mock.Anything, 10, 0).Return(expectedBooks, nil)
 	mockBookRepo.On("GetFeatured", mock.Anything, 10, 0).Return(expectedBooks, nil)
 	mockCategoryRepo.On("GetRootCategories", mock.Anything).Return(expectedCategories, nil)
 	mockBookRepo.On("GetStats", mock.Anything).Return(expectedStats, nil)
-	
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+	// 设置榜单Mock期望
+	mockRankingRepo.On("GetByTypeWithBooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore.RankingItem)(nil), nil).Maybe()
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetHomepageData(context.Background())
-	
+
 	// 验证结果
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -654,7 +772,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 	assert.Equal(t, expectedBooks, result.FeaturedBooks)
 	assert.Equal(t, expectedCategories, result.Categories)
 	assert.Equal(t, expectedStats, result.Stats)
-	
+
 	// 验证所有Mock调用
 	mockBannerRepo.AssertExpectations(t)
 	mockBookRepo.AssertExpectations(t)
@@ -666,170 +784,28 @@ func TestBookstoreService_GetHomepageData_PartialFailure(t *testing.T) {
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
-	
-	// 设置Mock期望 - Banner获取失败
+
+	// 设置Mock期望 - Banner获取失败，但其他方法也需要设置（因为可能并发调用）
 	mockBannerRepo.On("GetActive", mock.Anything, 5, 0).Return(([]*bookstore.Banner)(nil), errors.New("banner error"))
-	
+	mockBookRepo.On("GetRecommended", mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore.Book)(nil), nil).Maybe()
+	mockBookRepo.On("GetFeatured", mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore.Book)(nil), nil).Maybe()
+	mockCategoryRepo.On("GetRootCategories", mock.Anything).Return(([]*bookstore.Category)(nil), nil).Maybe()
+	mockBookRepo.On("GetStats", mock.Anything).Return((*bookstore.BookStats)(nil), nil).Maybe()
+
+	// 创建 MockRankingRepository
+	mockRankingRepo := new(MockRankingRepository)
+	// 设置榜单Mock期望（因为可能并发调用）
+	mockRankingRepo.On("GetByTypeWithBooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore.RankingItem)(nil), nil).Maybe()
+
 	// 创建服务
-	service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo)
-	
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+
 	// 执行测试
 	result, err := service.GetHomepageData(context.Background())
-	
+
 	// 验证结果
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "failed to get banners")
 	mockBannerRepo.AssertExpectations(t)
 }
-
-// RankingRepository 的 Mock 实现
-type MockRankingRepository struct {
-	mock.Mock
-}
-
-func (m *MockRankingRepository) Create(ctx context.Context, entity *bookstore.RankingItem) error {
-	args := m.Called(ctx, entity)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.RankingItem, error) {
-	args := m.Called(ctx, id)
-	if v := args.Get(0); v != nil {
-		return v.(*bookstore.RankingItem), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockRankingRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
-	args := m.Called(ctx, id, updates)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) GetByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, rankingType, period, limit, offset)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) GetByTypeWithBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, rankingType, period, limit, offset)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID, rankingType bookstore.RankingType, period string) (*bookstore.RankingItem, error) {
-	args := m.Called(ctx, bookID, rankingType, period)
-	if v := args.Get(0); v != nil {
-		return v.(*bookstore.RankingItem), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockRankingRepository) GetByPeriod(ctx context.Context, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, period, limit, offset)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) GetRankingStats(ctx context.Context, rankingType bookstore.RankingType, period string) (*bookstore.RankingStats, error) {
-	args := m.Called(ctx, rankingType, period)
-	if v := args.Get(0); v != nil {
-		return v.(*bookstore.RankingStats), args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockRankingRepository) CountByType(ctx context.Context, rankingType bookstore.RankingType, period string) (int64, error) {
-	args := m.Called(ctx, rankingType, period)
-	return args.Get(0).(int64), args.Error(1)
-}
-
-func (m *MockRankingRepository) GetTopBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, rankingType, period, limit)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) UpsertRankingItem(ctx context.Context, item *bookstore.RankingItem) error {
-	args := m.Called(ctx, item)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) BatchUpsertRankingItems(ctx context.Context, items []*bookstore.RankingItem) error {
-	args := m.Called(ctx, items)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem) error {
-	args := m.Called(ctx, rankingType, period, items)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) DeleteByPeriod(ctx context.Context, period string) error {
-	args := m.Called(ctx, period)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) DeleteByType(ctx context.Context, rankingType bookstore.RankingType) error {
-	args := m.Called(ctx, rankingType)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error {
-	args := m.Called(ctx, beforeDate)
-	return args.Error(0)
-}
-
-func (m *MockRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if v := args.Get(0); v != nil {
-		return v.([]*bookstore.RankingItem), args.Error(1)
-	}
-	return []*bookstore.RankingItem{}, args.Error(1)
-}
-
-func (m *MockRankingRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	args := m.Called(ctx, fn)
-	return args.Error(0)
-}
-// 创建 rankingRepo
-mockRankingRepo := new(MockRankingRepository)
-service := bookstore.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)

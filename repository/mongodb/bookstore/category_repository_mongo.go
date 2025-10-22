@@ -168,7 +168,7 @@ func (r *MongoCategoryRepository) GetByParent(ctx context.Context, parentID prim
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"sort_order", 1}, {"created_at", 1}})
+		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"parent_id": parentID}, opts)
 	if err != nil {
@@ -189,7 +189,7 @@ func (r *MongoCategoryRepository) GetByLevel(ctx context.Context, level int, lim
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"sort_order", 1}, {"created_at", 1}})
+		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"level": level}, opts)
 	if err != nil {
@@ -207,7 +207,7 @@ func (r *MongoCategoryRepository) GetByLevel(ctx context.Context, level int, lim
 
 // GetRootCategories 获取根分类列表
 func (r *MongoCategoryRepository) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
-	opts := options.Find().SetSort(bson.D{{"sort_order", 1}, {"created_at", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"level": 0, "is_active": true}, opts)
 	if err != nil {
@@ -226,7 +226,7 @@ func (r *MongoCategoryRepository) GetRootCategories(ctx context.Context) ([]*boo
 // GetCategoryTree 获取分类树
 func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
 	// 获取所有激活的分类
-	opts := options.Find().SetSort(bson.D{{"level", 1}, {"sort_order", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "level", Value: 1}, {Key: "sort_order", Value: 1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"is_active": true}, opts)
 	if err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryI
 
 // GetChildren 获取子分类
 func (r *MongoCategoryRepository) GetChildren(ctx context.Context, parentID primitive.ObjectID) ([]*bookstore.Category, error) {
-	opts := options.Find().SetSort(bson.D{{"sort_order", 1}, {"created_at", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"parent_id": parentID, "is_active": true}, opts)
 	if err != nil {
 		return nil, err

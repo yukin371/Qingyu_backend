@@ -79,20 +79,40 @@ func (f UserFilter) Validate() error {
 // 继承BaseRepository的通用CRUD操作，并添加用户特定的业务方法
 type UserRepository interface {
 	// 继承CRUDRepository接口
-	base.CRUDRepository[*usersModel.User, UserFilter]
+	base.CRUDRepository[*usersModel.User, string]
 	// 继承 HealthRepository 接口
 	base.HealthRepository
 
 	// 用户特定的查询方法
 	GetByUsername(ctx context.Context, username string) (*usersModel.User, error)
 	GetByEmail(ctx context.Context, email string) (*usersModel.User, error)
+	GetByPhone(ctx context.Context, phone string) (*usersModel.User, error)
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	ExistsByPhone(ctx context.Context, phone string) (bool, error)
 
 	// 用户状态管理
-	UpdateLastLogin(ctx context.Context, id string) error
+	UpdateLastLogin(ctx context.Context, id string, ip string) error
 	UpdatePassword(ctx context.Context, id string, hashedPassword string) error
+	UpdateStatus(ctx context.Context, id string, status usersModel.UserStatus) error
 	GetActiveUsers(ctx context.Context, limit int64) ([]*usersModel.User, error)
+	GetUsersByRole(ctx context.Context, role string, limit int64) ([]*usersModel.User, error)
+
+	// 验证状态管理
+	SetEmailVerified(ctx context.Context, id string, verified bool) error
+	SetPhoneVerified(ctx context.Context, id string, verified bool) error
+
+	// 批量操作
+	BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error
+	BatchDelete(ctx context.Context, ids []string) error
+
+	// 高级查询
+	FindWithFilter(ctx context.Context, filter *usersModel.UserFilter) ([]*usersModel.User, int64, error)
+	SearchUsers(ctx context.Context, keyword string, limit int) ([]*usersModel.User, error)
+
+	// 统计
+	CountByRole(ctx context.Context, role string) (int64, error)
+	CountByStatus(ctx context.Context, status usersModel.UserStatus) (int64, error)
 
 	// 事务操作
 	Transaction(ctx context.Context,

@@ -62,22 +62,22 @@ func TestAdapterManager_GetAdapter(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// 创建适配器管理器
 	manager := &AdapterManager{
 		adapters: make(map[string]AIAdapter),
 		config:   cfg,
 	}
-	
+
 	// 添加测试适配器
 	mockAdapter := &MockAIAdapter{}
 	manager.adapters["openai"] = mockAdapter
-	
+
 	// 测试获取存在的适配器
 	adapter, err := manager.GetAdapter("openai")
 	assert.NoError(t, err)
 	assert.Equal(t, mockAdapter, adapter)
-	
+
 	// 测试获取不存在的适配器
 	_, err = manager.GetAdapter("non-existent")
 	assert.Error(t, err)
@@ -88,7 +88,7 @@ func TestAdapterManager_GetAdapter(t *testing.T) {
 func TestAdapterManager_TextGeneration(t *testing.T) {
 	// 创建模拟适配器
 	mockAdapter := new(MockAIAdapter)
-	
+
 	// 创建测试请求和响应
 	testReq := &TextGenerationRequest{
 		Model:       "test-model",
@@ -138,7 +138,7 @@ func TestAdapterManager_TextGeneration(t *testing.T) {
 func TestAdapterManager_ChatCompletion(t *testing.T) {
 	// 创建模拟适配器
 	mockAdapter := new(MockAIAdapter)
-	
+
 	// 创建测试请求和响应
 	testReq := &ChatCompletionRequest{
 		Model: "test-model",
@@ -284,28 +284,28 @@ func TestGetAvailableAdapters(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// 创建适配器管理器
 	manager := &AdapterManager{
 		adapters: make(map[string]AIAdapter),
 		config:   cfg,
 	}
-	
+
 	// 添加测试适配器
 	mockAdapter1 := &MockAIAdapter{}
 	mockAdapter2 := &MockAIAdapter{}
-	
+
 	manager.adapters["openai"] = mockAdapter1
 	manager.adapters["claude"] = mockAdapter2
-	
+
 	// 获取可用适配器
 	adapters := manager.GetAvailableAdapters()
-	
+
 	// 验证结果
 	assert.Len(t, adapters, 2)
 	assert.Contains(t, adapters, "openai")
 	assert.Contains(t, adapters, "claude")
-	
+
 	// 验证排序（按优先级）
 	assert.Equal(t, "openai", adapters[0])
 	assert.Equal(t, "claude", adapters[1])
@@ -328,34 +328,34 @@ func TestGetSupportedModels(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// 创建适配器管理器
 	manager := &AdapterManager{
 		adapters: make(map[string]AIAdapter),
 		config:   cfg,
 	}
-	
+
 	// 创建模拟适配器
 	mockAdapter1 := &MockAIAdapter{}
 	mockAdapter2 := &MockAIAdapter{}
-	
+
 	// 设置模拟期望
 	mockAdapter1.On("GetSupportedModels").Return([]string{"gpt-3.5-turbo", "gpt-4"})
 	mockAdapter2.On("GetSupportedModels").Return([]string{"claude-3-sonnet", "claude-3-opus"})
-	
+
 	manager.adapters["openai"] = mockAdapter1
 	manager.adapters["claude"] = mockAdapter2
-	
+
 	// 获取支持的模型
 	models := manager.GetSupportedModels()
-	
+
 	// 验证结果
 	assert.Len(t, models, 2)
 	assert.Contains(t, models, "openai")
 	assert.Contains(t, models, "claude")
 	assert.Equal(t, []string{"gpt-3.5-turbo", "gpt-4"}, models["openai"])
 	assert.Equal(t, []string{"claude-3-sonnet", "claude-3-opus"}, models["claude"])
-	
+
 	// 验证模拟调用
 	mockAdapter1.AssertExpectations(t)
 	mockAdapter2.AssertExpectations(t)

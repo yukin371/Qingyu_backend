@@ -32,10 +32,10 @@ func NewOpenAIAdapter(apiKey, baseURL string) *OpenAIAdapter {
 	retryConfig := DefaultRetryConfig()
 	errorHandler := NewErrorHandler(
 		retryConfig,
-		5,                    // 最大失败次数
-		30*time.Second,       // 熔断器重置时间
-		100,                  // 限流容量
-		time.Second/10,       // 限流补充速率 (10 QPS)
+		5,              // 最大失败次数
+		30*time.Second, // 熔断器重置时间
+		100,            // 限流容量
+		time.Second/10, // 限流补充速率 (10 QPS)
 	)
 
 	return &OpenAIAdapter{
@@ -88,21 +88,21 @@ type OpenAIMessage struct {
 
 // OpenAIResponse OpenAI响应结构
 type OpenAIResponse struct {
-	ID      string           `json:"id"`
-	Object  string           `json:"object"`
-	Created int64            `json:"created"`
-	Model   string           `json:"model"`
-	Choices []OpenAIChoice   `json:"choices"`
-	Usage   OpenAIUsage      `json:"usage"`
-	Error   *OpenAIError     `json:"error,omitempty"`
+	ID      string         `json:"id"`
+	Object  string         `json:"object"`
+	Created int64          `json:"created"`
+	Model   string         `json:"model"`
+	Choices []OpenAIChoice `json:"choices"`
+	Usage   OpenAIUsage    `json:"usage"`
+	Error   *OpenAIError   `json:"error,omitempty"`
 }
 
 // OpenAIChoice OpenAI选择结构
 type OpenAIChoice struct {
-	Index        int           `json:"index"`
+	Index        int            `json:"index"`
 	Message      *OpenAIMessage `json:"message,omitempty"`
-	Text         string        `json:"text,omitempty"`
-	FinishReason string        `json:"finish_reason"`
+	Text         string         `json:"text,omitempty"`
+	FinishReason string         `json:"finish_reason"`
 }
 
 // OpenAIUsage OpenAI使用量结构
@@ -121,13 +121,13 @@ type OpenAIError struct {
 
 // OpenAIStreamResponse OpenAI流式响应结构
 type OpenAIStreamResponse struct {
-	ID      string                `json:"id"`
-	Object  string                `json:"object"`
-	Created int64                 `json:"created"`
-	Model   string                `json:"model"`
-	Choices []OpenAIStreamChoice  `json:"choices"`
-	Usage   *OpenAIUsage          `json:"usage,omitempty"`
-	Error   *OpenAIError          `json:"error,omitempty"`
+	ID      string               `json:"id"`
+	Object  string               `json:"object"`
+	Created int64                `json:"created"`
+	Model   string               `json:"model"`
+	Choices []OpenAIStreamChoice `json:"choices"`
+	Usage   *OpenAIUsage         `json:"usage,omitempty"`
+	Error   *OpenAIError         `json:"error,omitempty"`
 }
 
 // OpenAIStreamChoice OpenAI流式选择结构
@@ -247,8 +247,8 @@ func (a *OpenAIAdapter) doChatCompletion(ctx context.Context, req *ChatCompletio
 	}
 
 	return &ChatCompletionResponse{
-		ID:           resp.ID,
-		Message:      message,
+		ID:      resp.ID,
+		Message: message,
 		Usage: Usage{
 			PromptTokens:     resp.Usage.PromptTokens,
 			CompletionTokens: resp.Usage.CompletionTokens,
@@ -265,11 +265,11 @@ func (a *OpenAIAdapter) TextGenerationStream(ctx context.Context, req *TextGener
 	result, err := ExecuteWithResult(ctx, a.errorHandler.retryer, func(ctx context.Context) (interface{}, error) {
 		return a.doTextGenerationStream(ctx, req)
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return result.(<-chan *TextGenerationResponse), nil
 }
 
@@ -277,7 +277,7 @@ func (a *OpenAIAdapter) TextGenerationStream(ctx context.Context, req *TextGener
 func (a *OpenAIAdapter) doTextGenerationStream(ctx context.Context, req *TextGenerationRequest) (<-chan *TextGenerationResponse, error) {
 	// 创建响应通道
 	responseChan := make(chan *TextGenerationResponse, 10)
-	
+
 	// 构建OpenAI请求
 	openaiReq := &OpenAIRequest{
 		Model:       req.Model,
@@ -289,11 +289,11 @@ func (a *OpenAIAdapter) doTextGenerationStream(ctx context.Context, req *TextGen
 		Stop:        req.Stop,
 		User:        req.User,
 	}
-	
+
 	// 发起流式请求
 	go func() {
 		defer close(responseChan)
-		
+
 		if err := a.sendStreamRequest(ctx, "completions", openaiReq, responseChan); err != nil {
 			// 发送错误到通道
 			select {
@@ -309,7 +309,7 @@ func (a *OpenAIAdapter) doTextGenerationStream(ctx context.Context, req *TextGen
 			}
 		}
 	}()
-	
+
 	return responseChan, nil
 }
 
@@ -320,33 +320,33 @@ func (a *OpenAIAdapter) sendStreamRequest(ctx context.Context, endpoint string, 
 	if err != nil {
 		return fmt.Errorf("序列化请求失败: %w", err)
 	}
-	
+
 	// 创建HTTP请求
 	url := fmt.Sprintf("%s/%s", a.baseURL, endpoint)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return fmt.Errorf("创建请求失败: %w", err)
 	}
-	
+
 	// 设置请求头
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+a.apiKey)
 	httpReq.Header.Set("Accept", "text/event-stream")
 	httpReq.Header.Set("Cache-Control", "no-cache")
-	
+
 	// 发送请求
 	resp, err := a.client.Do(httpReq)
 	if err != nil {
 		return fmt.Errorf("发送请求失败: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// 检查响应状态
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return a.handleHTTPError(resp.StatusCode, string(body))
 	}
-	
+
 	// 处理流式响应
 	return a.processStreamResponse(ctx, resp.Body, responseChan, req.Model)
 }
@@ -356,25 +356,25 @@ func (a *OpenAIAdapter) processStreamResponse(ctx context.Context, body io.Reade
 	scanner := bufio.NewScanner(body)
 	var fullText strings.Builder
 	var totalTokens int
-	
+
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
-		
+
 		line := scanner.Text()
-		
+
 		// 跳过空行和注释行
 		if line == "" || strings.HasPrefix(line, ":") {
 			continue
 		}
-		
+
 		// 处理SSE数据行
 		if strings.HasPrefix(line, "data: ") {
 			data := strings.TrimPrefix(line, "data: ")
-			
+
 			// 检查结束标记
 			if data == "[DONE]" {
 				// 发送最终响应
@@ -391,26 +391,26 @@ func (a *OpenAIAdapter) processStreamResponse(ctx context.Context, body io.Reade
 				}
 				break
 			}
-			
+
 			// 解析JSON数据
 			var streamResp OpenAIStreamResponse
 			if err := json.Unmarshal([]byte(data), &streamResp); err != nil {
 				continue // 跳过无法解析的数据
 			}
-			
+
 			// 处理错误
 			if streamResp.Error != nil {
 				return a.handleAPIError(400, streamResp.Error)
 			}
-			
+
 			// 处理选择
 			if len(streamResp.Choices) > 0 {
 				choice := streamResp.Choices[0]
-				
+
 				// 处理增量内容
 				if choice.Delta != nil && choice.Delta.Content != "" {
 					fullText.WriteString(choice.Delta.Content)
-					
+
 					// 发送增量响应
 					select {
 					case responseChan <- &TextGenerationResponse{
@@ -425,7 +425,7 @@ func (a *OpenAIAdapter) processStreamResponse(ctx context.Context, body io.Reade
 						return ctx.Err()
 					}
 				}
-				
+
 				// 检查完成原因
 				if choice.FinishReason != nil && *choice.FinishReason != "" {
 					// 更新token使用量
@@ -436,11 +436,11 @@ func (a *OpenAIAdapter) processStreamResponse(ctx context.Context, body io.Reade
 			}
 		}
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("读取流式响应失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -459,9 +459,9 @@ func (a *OpenAIAdapter) ImageGeneration(ctx context.Context, req *ImageGeneratio
 func (a *OpenAIAdapter) doImageGeneration(ctx context.Context, req *ImageGenerationRequest) (*ImageGenerationResponse, error) {
 	// TODO: 实现图像生成逻辑
 	return &ImageGenerationResponse{
-		ID:     "openai_img_" + primitive.NewObjectID().Hex(),
-		Images: []ImageData{{URL: "https://example.com/generated-image.png"}},
-		Model:  req.Model,
+		ID:        "openai_img_" + primitive.NewObjectID().Hex(),
+		Images:    []ImageData{{URL: "https://example.com/generated-image.png"}},
+		Model:     req.Model,
 		CreatedAt: time.Now(),
 	}, nil
 }
@@ -489,13 +489,13 @@ func (a *OpenAIAdapter) doHealthCheck(ctx context.Context) error {
 func (a *OpenAIAdapter) sendRequest(ctx context.Context, endpoint string, req *OpenAIRequest) (*OpenAIResponse, error) {
 	jsonData, err := json.Marshal(req)
 	if err != nil {
-		return nil, NewAdapterError("openai", ErrorTypeInvalidRequest, 
+		return nil, NewAdapterError("openai", ErrorTypeInvalidRequest,
 			fmt.Sprintf("序列化请求失败: %v", err), "REQUEST_MARSHAL_ERROR", 0, false)
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, NewAdapterError("openai", ErrorTypeNetworkError, 
+		return nil, NewAdapterError("openai", ErrorTypeNetworkError,
 			"创建请求失败", "REQUEST_CREATE_ERROR", 0, true)
 	}
 
@@ -504,20 +504,20 @@ func (a *OpenAIAdapter) sendRequest(ctx context.Context, endpoint string, req *O
 
 	httpResp, err := a.client.Do(httpReq)
 	if err != nil {
-		return nil, NewAdapterError("openai", ErrorTypeNetworkError, 
+		return nil, NewAdapterError("openai", ErrorTypeNetworkError,
 			fmt.Sprintf("发送请求失败: %v", err), "REQUEST_SEND_ERROR", 0, true)
 	}
 	defer httpResp.Body.Close()
 
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
-		return nil, NewAdapterError("openai", ErrorTypeInvalidResponse, 
+		return nil, NewAdapterError("openai", ErrorTypeInvalidResponse,
 			fmt.Sprintf("读取响应失败: %v", err), "RESPONSE_READ_ERROR", httpResp.StatusCode, false)
 	}
 
 	var resp OpenAIResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, NewAdapterError("openai", ErrorTypeInvalidResponse, 
+		return nil, NewAdapterError("openai", ErrorTypeInvalidResponse,
 			fmt.Sprintf("解析响应失败: %v", err), "RESPONSE_PARSE_ERROR", httpResp.StatusCode, false)
 	}
 
@@ -560,7 +560,7 @@ func (a *OpenAIAdapter) handleAPIError(statusCode int, apiErr *OpenAIError) erro
 		isRetryable = false
 	}
 
-	return NewAdapterError("openai", errorType, apiErr.Message, 
+	return NewAdapterError("openai", errorType, apiErr.Message,
 		apiErr.Code, statusCode, isRetryable)
 }
 
@@ -599,6 +599,6 @@ func (a *OpenAIAdapter) handleHTTPError(statusCode int, body string) error {
 		isRetryable = true
 	}
 
-	return NewAdapterError("openai", errorType, message, 
+	return NewAdapterError("openai", errorType, message,
 		fmt.Sprintf("HTTP_%d", statusCode), statusCode, isRetryable)
 }

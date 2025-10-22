@@ -20,20 +20,20 @@ const (
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Type        string                 `yaml:"type" json:"type" mapstructure:"type"`
-	Primary     DatabaseConnection     `yaml:"primary" json:"primary" mapstructure:"primary"`
-	Replicas    []DatabaseConnection   `yaml:"replicas" json:"replicas" mapstructure:"replicas"`
-	Indexing    IndexingConfig         `yaml:"indexing" json:"indexing" mapstructure:"indexing"`
-	Validation  ValidationConfig       `yaml:"validation" json:"validation" mapstructure:"validation"`
-	Sync        SynchronizationConfig  `yaml:"sync" json:"sync" mapstructure:"sync"`
+	Type       string                `yaml:"type" json:"type" mapstructure:"type"`
+	Primary    DatabaseConnection    `yaml:"primary" json:"primary" mapstructure:"primary"`
+	Replicas   []DatabaseConnection  `yaml:"replicas" json:"replicas" mapstructure:"replicas"`
+	Indexing   IndexingConfig        `yaml:"indexing" json:"indexing" mapstructure:"indexing"`
+	Validation ValidationConfig      `yaml:"validation" json:"validation" mapstructure:"validation"`
+	Sync       SynchronizationConfig `yaml:"sync" json:"sync" mapstructure:"sync"`
 }
 
 // DatabaseConnection 数据库连接配置
 type DatabaseConnection struct {
-	Type     DatabaseType `yaml:"type" json:"type" mapstructure:"type"`
-	MongoDB  *MongoDBConfig `yaml:"mongodb,omitempty" json:"mongodb,omitempty" mapstructure:"mongodb,omitempty"`
+	Type       DatabaseType      `yaml:"type" json:"type" mapstructure:"type"`
+	MongoDB    *MongoDBConfig    `yaml:"mongodb,omitempty" json:"mongodb,omitempty" mapstructure:"mongodb,omitempty"`
 	PostgreSQL *PostgreSQLConfig `yaml:"postgresql,omitempty" json:"postgresql,omitempty" mapstructure:"postgresql,omitempty"`
-	MySQL    *MySQLConfig `yaml:"mysql,omitempty" json:"mysql,omitempty" mapstructure:"mysql,omitempty"`
+	MySQL      *MySQLConfig      `yaml:"mysql,omitempty" json:"mysql,omitempty" mapstructure:"mysql,omitempty"`
 }
 
 // MongoDBConfig MongoDB配置
@@ -57,7 +57,7 @@ type PostgreSQLConfig struct {
 	MaxOpenConns int           `yaml:"max_open_conns" json:"max_open_conns"`
 	MaxIdleConns int           `yaml:"max_idle_conns" json:"max_idle_conns"`
 	ConnTimeout  time.Duration `yaml:"conn_timeout" json:"conn_timeout"`
-	
+
 	// 迁移配置
 	MigrationsPath string `yaml:"migrations_path" json:"migrations_path"`
 }
@@ -92,10 +92,6 @@ type SynchronizationConfig struct {
 	Enabled  bool          `yaml:"enabled" json:"enabled" mapstructure:"enabled"`
 	Interval time.Duration `yaml:"interval" json:"interval" mapstructure:"interval"`
 }
-
-
-
-
 
 // LoadDatabaseConfig 加载数据库配置
 func LoadDatabaseConfig(configPath string) (*DatabaseConfig, error) {

@@ -20,25 +20,25 @@ type Location struct {
 
 // LocationRelation 地点关系（如：相邻、包含等）
 type LocationRelation struct {
-	ID        string       `bson:"_id,omitempty" json:"id"`
-	ProjectID string       `bson:"project_id" json:"projectId"`
-	FromID    string       `bson:"from_id" json:"fromId"`
-	ToID      string       `bson:"to_id" json:"toId"`
+	ID        string               `bson:"_id,omitempty" json:"id"`
+	ProjectID string               `bson:"project_id" json:"projectId"`
+	FromID    string               `bson:"from_id" json:"fromId"`
+	ToID      string               `bson:"to_id" json:"toId"`
 	Type      LocationRelationType `bson:"type" json:"type"`
-	Distance  string       `bson:"distance,omitempty" json:"distance,omitempty"` // 距离描述
-	Notes     string       `bson:"notes,omitempty" json:"notes,omitempty"`
-	CreatedAt time.Time    `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time    `bson:"updated_at" json:"updatedAt"`
+	Distance  string               `bson:"distance,omitempty" json:"distance,omitempty"` // 距离描述
+	Notes     string               `bson:"notes,omitempty" json:"notes,omitempty"`
+	CreatedAt time.Time            `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time            `bson:"updated_at" json:"updatedAt"`
 }
 
 // LocationRelationType 地点关系类型
 type LocationRelationType string
 
 const (
-	LocationRelationAdjacent LocationRelationType = "adjacent" // 相邻
-	LocationRelationContains LocationRelationType = "contains" // 包含
-	LocationRelationNear     LocationRelationType = "near"     // 附近
-	LocationRelationFar      LocationRelationType = "far"      // 远离
+	LocationRelationAdjacent  LocationRelationType = "adjacent"  // 相邻
+	LocationRelationContains  LocationRelationType = "contains"  // 包含
+	LocationRelationNear      LocationRelationType = "near"      // 附近
+	LocationRelationFar       LocationRelationType = "far"       // 远离
 	LocationRelationConnected LocationRelationType = "connected" // 连通
 )
 

@@ -1,4 +1,4 @@
-package readding
+package reading
 
 import (
 	"context"

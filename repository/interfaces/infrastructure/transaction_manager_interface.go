@@ -68,7 +68,7 @@ type TransactionRepositoryFactory interface {
 
 // TransactionUserRepository 用户事务接口（简化版，用于事务上下文）
 type TransactionUserRepository interface {
-	CRUDRepository[*usersModel.User, usersModel.UserFilter]
+	CRUDRepository[*usersModel.User, string]
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	GetByEmail(ctx context.Context, email string) (*usersModel.User, error)
 }
@@ -368,6 +368,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 						UpdatedAt: time.Now(),
 					}
 
+					// Note: 实际实现中需要调用 userRepo.Create 方法
 					return userRepo.Create(txCtx, user)
 				},
 				Compensate: func(txCtx TransactionContext) error {
@@ -380,7 +381,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 删除用户
-					return userRepo.Delete(txCtx, usersModel.UserFilter{ID: user.ID})
+					return userRepo.Delete(txCtx, user.ID)
 				},
 			},
 			{

@@ -1,8 +1,6 @@
-# Cursor IDE 相关文件
-.cursor/
+# 注意：config.yaml 现在在 config/ 目录下，应该被提交
+# 但 config.local.yaml 包含本地配置，不应提交
 
-config.yaml
-README.md
 # 文档相关
 # doc/
 .obsidian/
@@ -15,7 +13,9 @@ README.md
 *.so
 *.dylib
 
-# 测试二进制文件
+# 测试文件
+test_results/
+test_data/
 *.test
 
 # 输出目录
@@ -40,14 +40,21 @@ vendor/
 logs/
 
 # 临时文件
+tempfile/
 *.tmp
 *.temp
 .DS_Store
 Thumbs.db
 
+# 弃用文件
+*.disabled
+
 # IDE 相关
+
 .vscode/
 .idea/
+.cursor/
+.trae/
 *.swp
 *.swo
 *~
@@ -80,6 +87,10 @@ coverage.html
 
 # 文档生成
 docs/_build/
+
+# Air 热重载工具
+tmp/
+.air.toml
 
 # 其他
 *.bak

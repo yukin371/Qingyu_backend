@@ -1,8 +1,55 @@
 package document
 
 import (
+	"fmt"
 	"time"
 )
+
+// Version 文档版本
+// 用于存储文档的历史版本（新架构）
+type Version struct {
+	ID          string    `bson:"_id,omitempty" json:"id"`
+	DocumentID  string    `bson:"document_id" json:"documentId" validate:"required"`
+	VersionNum  int       `bson:"version_num" json:"versionNum"`                 // 版本号
+	Content     string    `bson:"content" json:"content"`                        // 版本内容
+	GridFSID    string    `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
+	ContentType string    `bson:"content_type" json:"contentType"`               // 内容类型
+	WordCount   int       `bson:"word_count" json:"wordCount"`                   // 字数
+	Comment     string    `bson:"comment,omitempty" json:"comment,omitempty"`    // 版本说明
+	CreatedBy   string    `bson:"created_by" json:"createdBy"`                   // 创建人
+	CreatedAt   time.Time `bson:"created_at" json:"createdAt"`                   // 创建时间
+	IsAutoSave  bool      `bson:"is_auto_save" json:"isAutoSave"`                // 是否自动保存
+}
+
+// GetVersionLabel 获取版本标签
+func (v *Version) GetVersionLabel() string {
+	if v.IsAutoSave {
+		return fmt.Sprintf("v%d (自动保存)", v.VersionNum)
+	}
+	return fmt.Sprintf("v%d", v.VersionNum)
+}
+
+// Validate 验证版本数据
+func (v *Version) Validate() error {
+	if v.DocumentID == "" {
+		return fmt.Errorf("文档ID不能为空")
+	}
+	if v.VersionNum <= 0 {
+		return fmt.Errorf("版本号必须大于0")
+	}
+	return nil
+}
+
+// TouchForCreate 设置创建时的默认值
+func (v *Version) TouchForCreate() {
+	if v.CreatedAt.IsZero() {
+		v.CreatedAt = time.Now()
+	}
+}
+
+// ================================================
+// 以下是旧的版本控制结构（保留用于兼容）
+// ================================================
 
 // Commit 表示一次批量提交，可包含多个文件的修改
 type Commit struct {

@@ -76,6 +76,9 @@ type DocumentRepository interface {
 	// 继承基础Repository接口
 	base.CRUDRepository[*document.Document, string]
 
+	// 继承 HealthRepository 接口
+	base.HealthRepository
+
 	// 文档特定的查询方法
 	GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Document, error)
 	GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*document.Document, error)
@@ -93,4 +96,33 @@ type DocumentRepository interface {
 
 	// 事务支持
 	CreateWithTransaction(ctx context.Context, document *document.Document, callback func(ctx context.Context) error) error
+}
+
+// DocumentContentRepository 文档内容仓储接口
+// 用于管理文档的实际内容，与Document元数据分离
+type DocumentContentRepository interface {
+	// 继承基础Repository接口
+	base.CRUDRepository[*document.DocumentContent, string]
+
+	// 继承 HealthRepository 接口
+	base.HealthRepository
+
+	// 通过DocumentID查询内容
+	GetByDocumentID(ctx context.Context, documentID string) (*document.DocumentContent, error)
+
+	// 带版本号的更新（乐观锁）
+	UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error
+
+	// 批量更新
+	BatchUpdateContent(ctx context.Context, updates map[string]string) error
+
+	// 内容统计
+	GetContentStats(ctx context.Context, documentID string) (wordCount, charCount int, err error)
+
+	// 大文件支持
+	StoreToGridFS(ctx context.Context, documentID string, content []byte) (gridFSID string, err error)
+	LoadFromGridFS(ctx context.Context, gridFSID string) (content []byte, err error)
+
+	// 事务支持
+	CreateWithTransaction(ctx context.Context, content *document.DocumentContent, callback func(ctx context.Context) error) error
 }

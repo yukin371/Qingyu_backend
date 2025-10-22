@@ -13,9 +13,8 @@ import (
 
 // Service AI服务
 type Service struct {
-	contextService     *ContextService
-	externalAPIService *ExternalAPIService
-	adapterManager     *adapter.AdapterManager
+	contextService *ContextService
+	adapterManager *adapter.AdapterManager
 }
 
 // NewService 创建AI服务
@@ -25,19 +24,17 @@ func NewService() *Service {
 	if cfg == nil {
 		panic("GlobalConfig is not initialized")
 	}
-	
+
 	// 创建document服务实例
 	docService := &documentService.DocumentService{}
 	projService := &documentService.ProjectService{}
 	nodeService := &documentService.NodeService{}
 	versionService := &documentService.VersionService{}
-	
+
 	// 创建上下文服务
-	contextService := NewContextService(docService, projService, nodeService, versionService)
-	
-	// 创建外部API服务
-	externalAPIService := NewExternalAPIService(cfg.AI)
-	
+	// TODO: 这里使用nil是因为旧架构没有依赖注入，需要重构为使用RepositoryFactory
+	contextService := NewContextService(docService, projService, nodeService, versionService, nil)
+
 	// 创建适配器管理器 - 使用简化的配置
 	var adapterManager *adapter.AdapterManager
 	if cfg.AI != nil {
@@ -57,20 +54,19 @@ func NewService() *Service {
 		}
 		adapterManager = adapter.NewAdapterManager(externalAPIConfig)
 	}
-	
+
 	return &Service{
-		contextService:     contextService,
-		externalAPIService: externalAPIService,
-		adapterManager:     adapterManager,
+		contextService: contextService,
+		adapterManager: adapterManager,
 	}
 }
 
 // GenerateContentRequest 生成内容请求
 type GenerateContentRequest struct {
-	ProjectID string                `json:"projectId"`
-	ChapterID string                `json:"chapterId,omitempty"`
-	Prompt    string                `json:"prompt"`
-	Options   *ai.GenerateOptions   `json:"options,omitempty"`
+	ProjectID string              `json:"projectId"`
+	ChapterID string              `json:"chapterId,omitempty"`
+	Prompt    string              `json:"prompt"`
+	Options   *ai.GenerateOptions `json:"options,omitempty"`
 }
 
 // GenerateContentResponse 生成内容响应
@@ -159,7 +155,7 @@ func (s *Service) GenerateContentStream(ctx context.Context, req *GenerateConten
 	// 转换流式响应格式
 	go func() {
 		defer close(responseChan)
-		
+
 		for result := range streamChan {
 			if result == nil {
 				continue
@@ -191,18 +187,18 @@ type AnalyzeContentRequest struct {
 
 // AnalyzeContentResponse 分析内容响应
 type AnalyzeContentResponse struct {
-	Type        string    `json:"type"`
-	Analysis    string    `json:"analysis"`
-	TokensUsed  int       `json:"tokensUsed"`
-	Model       string    `json:"model"`
-	AnalyzedAt  time.Time `json:"analyzedAt"`
+	Type       string    `json:"type"`
+	Analysis   string    `json:"analysis"`
+	TokensUsed int       `json:"tokensUsed"`
+	Model      string    `json:"model"`
+	AnalyzedAt time.Time `json:"analyzedAt"`
 }
 
 // AnalyzeContent 分析内容
 func (s *Service) AnalyzeContent(ctx context.Context, req *AnalyzeContentRequest) (*AnalyzeContentResponse, error) {
 	// 构建分析提示词
 	prompt := fmt.Sprintf("请对以下内容进行%s分析：\n\n%s", req.AnalysisType, req.Content)
-	
+
 	// 使用适配器管理器生成分析
 	adapterReq := &adapter.TextGenerationRequest{
 		Prompt:      prompt,
@@ -228,18 +224,18 @@ func (s *Service) AnalyzeContent(ctx context.Context, req *AnalyzeContentRequest
 
 // ContinueWritingRequest 续写请求
 type ContinueWritingRequest struct {
-	ProjectID     string              `json:"projectId"`
-	ChapterID     string              `json:"chapterId"`
-	CurrentText   string              `json:"currentText"`
-	ContinueLength int                `json:"continueLength,omitempty"` // 续写长度（字数）
-	Options       *ai.GenerateOptions `json:"options,omitempty"`
+	ProjectID      string              `json:"projectId"`
+	ChapterID      string              `json:"chapterId"`
+	CurrentText    string              `json:"currentText"`
+	ContinueLength int                 `json:"continueLength,omitempty"` // 续写长度（字数）
+	Options        *ai.GenerateOptions `json:"options,omitempty"`
 }
 
 // ContinueWriting 续写内容
 func (s *Service) ContinueWriting(ctx context.Context, req *ContinueWritingRequest) (*GenerateContentResponse, error) {
 	// 构建续写提示词
 	prompt := fmt.Sprintf("请基于以下内容进行续写，保持风格和情节的连贯性：\n\n%s", req.CurrentText)
-	
+
 	if req.ContinueLength > 0 {
 		prompt += fmt.Sprintf("\n\n请续写约%d字的内容。", req.ContinueLength)
 	}
@@ -257,12 +253,12 @@ func (s *Service) ContinueWriting(ctx context.Context, req *ContinueWritingReque
 
 // OptimizeTextRequest 文本优化请求
 type OptimizeTextRequest struct {
-	ProjectID      string              `json:"projectId"`
-	ChapterID      string              `json:"chapterId,omitempty"`
-	OriginalText   string              `json:"originalText"`
-	OptimizeType   string              `json:"optimizeType"`   // grammar, style, flow, dialogue
-	Instructions   string              `json:"instructions,omitempty"` // 具体优化指示
-	Options        *ai.GenerateOptions `json:"options,omitempty"`
+	ProjectID    string              `json:"projectId"`
+	ChapterID    string              `json:"chapterId,omitempty"`
+	OriginalText string              `json:"originalText"`
+	OptimizeType string              `json:"optimizeType"`           // grammar, style, flow, dialogue
+	Instructions string              `json:"instructions,omitempty"` // 具体优化指示
+	Options      *ai.GenerateOptions `json:"options,omitempty"`
 }
 
 // OptimizeText 优化文本
@@ -312,7 +308,7 @@ type GenerateOutlineRequest struct {
 // GenerateOutline 生成大纲
 func (s *Service) GenerateOutline(ctx context.Context, req *GenerateOutlineRequest) (*GenerateContentResponse, error) {
 	// 构建大纲生成提示词
-	prompt := fmt.Sprintf("请为以下小说创作一个详细的大纲：\n\n主题：%s\n类型：%s\n长度：%s", 
+	prompt := fmt.Sprintf("请为以下小说创作一个详细的大纲：\n\n主题：%s\n类型：%s\n长度：%s",
 		req.Theme, req.Genre, req.Length)
 
 	if len(req.KeyElements) > 0 {

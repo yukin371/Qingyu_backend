@@ -5,25 +5,31 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
-	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
-	UserInterface "Qingyu_backend/repository/interfaces/user"
-	WritingInterfaces "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/config"
-	base "Qingyu_backend/repository/interfaces/infrastructure"
-	mongoUser "Qingyu_backend/repository/mongodb/user"
+	"Qingyu_backend/repository/interfaces"
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	userRepo "Qingyu_backend/repository/interfaces/user"
+	writingRepo "Qingyu_backend/repository/interfaces/writing"
+
+	// 导入各个子包的具体实现
+	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
+	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
+	mongoShared "Qingyu_backend/repository/mongodb/shared"
+	mongoUser "Qingyu_backend/repository/mongodb/user"
+	mongoWriting "Qingyu_backend/repository/mongodb/writing"
 )
 
 // MongoRepositoryFactory MongoDB仓储工厂实现
 type MongoRepositoryFactory struct {
 	client   *mongo.Client
+	db       *mongo.Database // 也保留别名以兼容旧代码
 	database *mongo.Database
 	config   *config.MongoDBConfig
 }
@@ -62,30 +68,156 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 
 	return &MongoRepositoryFactory{
 		client:   client,
+		db:       database,
 		database: database,
 		config:   config,
 	}, nil
 }
 
+// ========== User Module Repositories ==========
+
 // CreateUserRepository 创建用户Repository
-func (f *MongoRepositoryFactory) CreateUserRepository() UserInterface.UserRepository {
+func (f *MongoRepositoryFactory) CreateUserRepository() userRepo.UserRepository {
 	return mongoUser.NewMongoUserRepository(f.database)
 }
 
-// CreateProjectRepository 创建项目Repository
-func (f *MongoRepositoryFactory) CreateProjectRepository() UserInterface.ProjectRepository {
-	return NewMongoProjectRepositoryNew(f.database)
+// CreateRoleRepository 创建角色Repository
+// 注意：目前使用 AuthRepository 作为临时实现
+// TODO: 创建专门的 RoleRepository 实现或适配器
+func (f *MongoRepositoryFactory) CreateRoleRepository() userRepo.RoleRepository {
+	// 暂时返回 nil，需要实现正确的 RoleRepository
+	// return mongoShared.NewAuthRepository(f.database)
+	return nil // TODO: 实现 RoleRepository
 }
 
+// ========== Writing Module Repositories ==========
+
+// CreateProjectRepository 创建项目Repository
+func (f *MongoRepositoryFactory) CreateProjectRepository() writingRepo.ProjectRepository {
+	return mongoWriting.NewMongoProjectRepository(f.database)
+}
+
+// CreateDocumentRepository 创建文档Repository
+func (f *MongoRepositoryFactory) CreateDocumentRepository() writingRepo.DocumentRepository {
+	return mongoWriting.NewMongoDocumentRepository(f.database)
+}
+
+// CreateDocumentContentRepository 创建文档内容Repository
+func (f *MongoRepositoryFactory) CreateDocumentContentRepository() writingRepo.DocumentContentRepository {
+	return mongoWriting.NewMongoDocumentContentRepository(f.database)
+}
+
+// ========== Reading Module Repositories ==========
+
 // CreateReadingSettingsRepository 创建阅读设置Repository
-func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository {
+func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() readingRepo.ReadingSettingsRepository {
 	return mongoReading.NewMongoReadingSettingsRepository(f.database)
 }
 
-// CreateRoleRepository 创建角色Repository
-func (f *MongoRepositoryFactory) CreateRoleRepository() UserInterface.RoleRepository {
-	return NewMongoRoleRepository(f.database)
+// CreateChapterRepository 创建章节Repository
+func (f *MongoRepositoryFactory) CreateChapterRepository() readingRepo.ChapterRepository {
+	return mongoReading.NewMongoChapterRepository(f.database)
 }
+
+// CreateReadingProgressRepository 创建阅读进度Repository
+func (f *MongoRepositoryFactory) CreateReadingProgressRepository() readingRepo.ReadingProgressRepository {
+	return mongoReading.NewMongoReadingProgressRepository(f.database)
+}
+
+// CreateAnnotationRepository 创建注记Repository
+func (f *MongoRepositoryFactory) CreateAnnotationRepository() readingRepo.AnnotationRepository {
+	return mongoReading.NewMongoAnnotationRepository(f.database)
+}
+
+// ========== Bookstore Module Repositories ==========
+
+// CreateBookRepository 创建书籍Repository
+func (f *MongoRepositoryFactory) CreateBookRepository() bookstoreRepo.BookRepository {
+	return mongoBookstore.NewMongoBookRepository(f.client, f.config.Database)
+}
+
+// CreateBookDetailRepository 创建书籍详情Repository
+func (f *MongoRepositoryFactory) CreateBookDetailRepository() bookstoreRepo.BookDetailRepository {
+	return mongoBookstore.NewMongoBookDetailRepository(f.client, f.config.Database)
+}
+
+// CreateCategoryRepository 创建分类Repository
+func (f *MongoRepositoryFactory) CreateCategoryRepository() bookstoreRepo.CategoryRepository {
+	return mongoBookstore.NewMongoCategoryRepository(f.client, f.config.Database)
+}
+
+// CreateBookStatisticsRepository 创建书籍统计Repository
+func (f *MongoRepositoryFactory) CreateBookStatisticsRepository() bookstoreRepo.BookStatisticsRepository {
+	return mongoBookstore.NewMongoBookStatisticsRepository(f.client, f.config.Database)
+}
+
+// CreateBookRatingRepository 创建书籍评分Repository
+func (f *MongoRepositoryFactory) CreateBookRatingRepository() bookstoreRepo.BookRatingRepository {
+	return mongoBookstore.NewMongoBookRatingRepository(f.client, f.config.Database)
+}
+
+// CreateBookstoreChapterRepository 创建书城章节Repository
+func (f *MongoRepositoryFactory) CreateBookstoreChapterRepository() bookstoreRepo.ChapterRepository {
+	return mongoBookstore.NewMongoChapterRepository(f.client, f.config.Database)
+}
+
+// CreateBannerRepository 创建横幅Repository
+func (f *MongoRepositoryFactory) CreateBannerRepository() bookstoreRepo.BannerRepository {
+	return mongoBookstore.NewMongoBannerRepository(f.client, f.config.Database)
+}
+
+// CreateRankingRepository 创建榜单Repository
+func (f *MongoRepositoryFactory) CreateRankingRepository() bookstoreRepo.RankingRepository {
+	return mongoBookstore.NewMongoRankingRepository(f.client, f.config.Database)
+}
+
+// ========== Recommendation Module Repositories ==========
+
+// CreateBehaviorRepository 创建行为Repository
+func (f *MongoRepositoryFactory) CreateBehaviorRepository() recoRepo.BehaviorRepository {
+	return mongoReco.NewMongoBehaviorRepository(f.database)
+}
+
+// CreateProfileRepository 创建用户画像Repository
+func (f *MongoRepositoryFactory) CreateProfileRepository() recoRepo.ProfileRepository {
+	return mongoReco.NewMongoProfileRepository(f.database)
+}
+
+// CreateItemFeatureRepository 创建物品特征Repository
+func (f *MongoRepositoryFactory) CreateItemFeatureRepository() recoRepo.ItemFeatureRepository {
+	return mongoReco.NewMongoItemFeatureRepository(f.database)
+}
+
+// CreateHotRecommendationRepository 创建热门推荐Repository
+func (f *MongoRepositoryFactory) CreateHotRecommendationRepository() recoRepo.HotRecommendationRepository {
+	return mongoReco.NewMongoHotRecommendationRepository(f.database)
+}
+
+// ========== Shared Module Repositories ==========
+
+// CreateAuthRepository 创建认证Repository
+func (f *MongoRepositoryFactory) CreateAuthRepository() sharedRepo.AuthRepository {
+	return mongoShared.NewAuthRepository(f.database)
+}
+
+// CreateWalletRepository 创建钱包Repository
+func (f *MongoRepositoryFactory) CreateWalletRepository() sharedRepo.WalletRepository {
+	return mongoShared.NewWalletRepository(f.database)
+}
+
+// CreateRecommendationRepository 创建推荐Repository
+func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.RecommendationRepository {
+	return mongoShared.NewRecommendationRepository(f.database)
+}
+
+// ========== AI Module Repositories ==========
+
+// CreateQuotaRepository 创建配额Repository
+func (f *MongoRepositoryFactory) CreateQuotaRepository() interfaces.QuotaRepository {
+	return NewMongoQuotaRepository(f.database)
+}
+
+// ========== Factory Management Methods ==========
 
 // Close 关闭数据库连接
 func (f *MongoRepositoryFactory) Close() error {
@@ -115,846 +247,20 @@ func (f *MongoRepositoryFactory) GetDatabaseType() string {
 	return "mongodb"
 }
 
-// MongoProjectRepositoryNew 新的MongoDB项目仓储实现
-type MongoProjectRepositoryNew struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+// GetDatabase 获取数据库实例（用于事务等高级操作）
+func (f *MongoRepositoryFactory) GetDatabase() *mongo.Database {
+	return f.database
 }
 
-// NewMongoProjectRepositoryNew 创建新的MongoDB项目仓储实例
-func NewMongoProjectRepositoryNew(db *mongo.Database) UserInterface.ProjectRepository {
-	return &MongoProjectRepositoryNew{
-		db:         db,
-		collection: db.Collection("projects"),
-	}
+// GetClient 获取客户端实例（用于事务等高级操作）
+func (f *MongoRepositoryFactory) GetClient() *mongo.Client {
+	return f.client
 }
 
-// Create 创建项目
-func (r *MongoProjectRepositoryNew) Create(ctx context.Context, project *interface{}) error {
-	if project == nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeValidation,
-			"项目对象不能为空",
-			nil,
-		)
-	}
-
-	_, err := r.collection.InsertOne(ctx, *project)
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"创建项目失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// GetByID 根据ID获取项目
-func (r *MongoProjectRepositoryNew) GetByID(ctx context.Context, id interface{}) (*interface{}, error) {
-	var project interface{}
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&project)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeNotFound,
-				fmt.Sprintf("项目ID %v 不存在", id),
-				err,
-			)
-		}
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询项目失败",
-			err,
-		)
-	}
-	return &project, nil
-}
-
-// Update 更新项目
-func (r *MongoProjectRepositoryNew) Update(ctx context.Context, id interface{}, updates map[string]interface{}) error {
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"更新项目失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// Delete 软删除项目
-func (r *MongoProjectRepositoryNew) Delete(ctx context.Context, id interface{}) error {
-	updates := map[string]interface{}{
-		"deleted_at": time.Now(),
-		"is_deleted": true,
-	}
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"删除项目失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// HardDelete 硬删除项目
-func (r *MongoProjectRepositoryNew) HardDelete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"删除项目失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// List 获取项目列表
-func (r *MongoProjectRepositoryNew) List(ctx context.Context, filter infrastructure.Filter) ([]*interface{}, error) {
-	cursor, err := r.collection.Find(ctx, filter.GetConditions())
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询项目列表失败",
-			err,
-		)
-	}
-	defer cursor.Close(ctx)
-
-	var projects []*interface{}
-	for cursor.Next(ctx) {
-		var project interface{}
-		if err := cursor.Decode(&project); err != nil {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeInternal,
-				"解析项目数据失败",
-				err,
-			)
-		}
-		projects = append(projects, &project)
-	}
-	return projects, nil
-}
-
-// ListWithPagination 分页获取项目列表
-func (r *MongoProjectRepositoryNew) ListWithPagination(ctx context.Context, filter interface{}, pagination infrastructure.Pagination) (*infrastructure.PagedResult[interface{}], error) {
-	// 实现分页逻辑
-	return nil, nil
-}
-
-// FindWithPagination 分页查找项目
-func (r *MongoProjectRepositoryNew) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[interface{}], error) {
-	// 构建查询条件
-	conditions := filter.GetConditions()
-	
-	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, conditions)
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"统计项目总数失败",
-			err,
-		)
-	}
-
-	// 构建查询选项
-	opts := options.Find()
-	if pagination.Skip > 0 {
-		opts.SetSkip(int64(pagination.Skip))
-	}
-	if pagination.PageSize > 0 {
-		opts.SetLimit(int64(pagination.PageSize))
-	}
-
-	// 执行查询
-	cursor, err := r.collection.Find(ctx, conditions, opts)
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询项目失败",
-			err,
-		)
-	}
-	defer cursor.Close(ctx)
-
-	// 解析结果
-	var projects []interface{}
-	for cursor.Next(ctx) {
-		var project interface{}
-		if err := cursor.Decode(&project); err != nil {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeInternal,
-				"解析项目数据失败",
-				err,
-			)
-		}
-		projects = append(projects, project)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"遍历项目数据失败",
-			err,
-		)
-	}
-
-	// 创建分页结果
-	return infrastructure.NewPagedResult[interface{}](projects, total, pagination), nil
-}
-
-// Count 统计项目数量
-func (r *MongoProjectRepositoryNew) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, filter.GetConditions())
-	if err != nil {
-		return 0, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"统计项目数量失败",
-			err,
-		)
-	}
-	return count, nil
-}
-
-// Exists 检查项目是否存在
-func (r *MongoProjectRepositoryNew) Exists(ctx context.Context, id interface{}) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
-	if err != nil {
-		return false, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"检查项目存在性失败",
-			err,
-		)
-	}
-	return count > 0, nil
-}
-
-// GetByCreatorID 根据创建者ID获取项目
-func (r *MongoProjectRepositoryNew) GetByCreatorID(ctx context.Context, creatorID string) ([]interface{}, error) {
-	// 创建一个简单的Filter实现
-	filter := &infrastructure.BaseFilter{
-		Conditions: map[string]interface{}{"creator_id": creatorID},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter.GetConditions())
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var projects []interface{}
-	for cursor.Next(ctx) {
-		var project interface{}
-		if err := cursor.Decode(&project); err != nil {
-			return nil, err
-		}
-		projects = append(projects, project)
-	}
-	return projects, nil
-}
-
-// ArchiveByCreatorID 根据创建者ID归档项目
-func (r *MongoProjectRepositoryNew) ArchiveByCreatorID(ctx context.Context, creatorID string) error {
-	updates := map[string]interface{}{
-		"archived_at": time.Now(),
-		"is_archived": true,
-	}
-	_, err := r.collection.UpdateMany(ctx, bson.M{"creator_id": creatorID}, bson.M{"$set": updates})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"归档项目失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// BatchUpdate 批量更新项目
-func (r *MongoProjectRepositoryNew) BatchUpdate(ctx context.Context, ids []interface{}, updates map[string]interface{}) error {
-	if len(ids) == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeValidation,
-			"项目ID列表不能为空", nil)
-	}
-	if len(updates) == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeValidation,
-			"更新数据不能为空", nil)
-	}
-
-	filter := bson.M{"_id": bson.M{"$in": ids}}
-	update := bson.M{"$set": updates}
-
-	result, err := r.collection.UpdateMany(ctx, filter, update)
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"批量更新项目失败",
-			err,
-		)
-	}
-
-	if result.MatchedCount == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeNotFound,
-			"没有找到匹配的项目", nil)
-	}
-
-	return nil
-}
-
-// BatchCreate 批量创建项目
-func (r *MongoProjectRepositoryNew) BatchCreate(ctx context.Context, projects []*interface{}) error {
-	if len(projects) == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeValidation,
-			"项目列表不能为空", nil)
-	}
-
-	// 转换为[]interface{}类型
-	docs := make([]interface{}, len(projects))
-	for i, project := range projects {
-		if project == nil {
-			return infrastructure.NewRepositoryError(infrastructure.ErrorTypeDuplicate,
-				fmt.Sprintf("第%d个项目对象不能为空", i+1), nil)
-		}
-		docs[i] = *project
-	}
-
-	_, err := r.collection.InsertMany(ctx, docs)
-	if err != nil {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeInternal,
-			"批量创建项目失败", err)
-	}
-
-	return nil
-}
-
-// BatchDelete 批量删除项目
-func (r *MongoProjectRepositoryNew) BatchDelete(ctx context.Context, ids []interface{}) error {
-	if len(ids) == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeValidation,
-			"项目ID列表不能为空", nil)
-	}
-	if len(ids) > 100 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeValidation,
-			"批量删除数量不能超过100个", nil)
-	}
-
-	filter := bson.M{"_id": bson.M{"$in": ids}}
-	updates := bson.M{"$set": bson.M{
-		"deleted_at": time.Now(),
-		"is_deleted": true,
-	}}
-
-	result, err := r.collection.UpdateMany(ctx, filter, updates)
-	if err != nil {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeInternal,
-			"批量删除项目失败", err)
-	}
-
-	if result.MatchedCount == 0 {
-		return infrastructure.NewRepositoryError(infrastructure.ErrorTypeNotFound,
-			"没有找到匹配的项目", nil)
-	}
-
-	return nil
-}
-
-// Health 健康检查
-func (r *MongoProjectRepositoryNew) Health(ctx context.Context) error {
-	return r.db.Client().Ping(ctx, nil)
-}
-
-// MongoRoleRepository 新的MongoDB角色仓储实现
-type MongoRoleRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
-}
-
-// NewMongoRoleRepository 创建新的MongoDB角色仓储实例
-func NewMongoRoleRepository(db *mongo.Database) UserInterface.RoleRepository {
-	return &MongoRoleRepository{
-		db:         db,
-		collection: db.Collection("roles"),
-	}
-}
-
-// Create 创建角色
-func (r *MongoRoleRepository) Create(ctx context.Context, role *interface{}) error {
-	if role == nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeValidation,
-			"角色对象不能为空",
-			nil,
-		)
-	}
-
-	_, err := r.collection.InsertOne(ctx, *role)
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"创建角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// GetByID 根据ID获取角色
-func (r *MongoRoleRepository) GetByID(ctx context.Context, id interface{}) (*interface{}, error) {
-	var role interface{}
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&role)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeNotFound,
-				fmt.Sprintf("角色ID %v 不存在", id),
-				err,
-			)
-		}
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询角色失败",
-			err,
-		)
-	}
-	return &role, nil
-}
-
-// Update 更新角色
-func (r *MongoRoleRepository) Update(ctx context.Context, id interface{}, updates map[string]interface{}) error {
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"更新角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// Delete 软删除角色
-func (r *MongoRoleRepository) Delete(ctx context.Context, id interface{}) error {
-	updates := map[string]interface{}{
-		"deleted_at": time.Now(),
-		"is_deleted": true,
-	}
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"删除角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// HardDelete 硬删除角色
-func (r *MongoRoleRepository) HardDelete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"删除角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// List 获取角色列表
-func (r *MongoRoleRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*interface{}, error) {
-	cursor, err := r.collection.Find(ctx, filter.GetConditions())
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询角色列表失败",
-			err,
-		)
-	}
-	defer cursor.Close(ctx)
-
-	var roles []*interface{}
-	for cursor.Next(ctx) {
-		var role interface{}
-		if err := cursor.Decode(&role); err != nil {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeInternal,
-				"解析角色数据失败",
-				err,
-			)
-		}
-		roles = append(roles, &role)
-	}
-	return roles, nil
-}
-
-// ListWithPagination 分页获取角色列表
-func (r *MongoRoleRepository) ListWithPagination(ctx context.Context, filter interface{}, pagination infrastructure.Pagination) (*infrastructure.PagedResult[interface{}], error) {
-	// 实现分页逻辑
-	return nil, nil
-}
-
-// FindWithPagination 分页查找角色
-func (r *MongoRoleRepository) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[interface{}], error) {
-	// 构建查询条件
-	conditions := filter.GetConditions()
-	
-	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, conditions)
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"统计角色总数失败",
-			err,
-		)
-	}
-
-	// 构建查询选项
-	opts := options.Find()
-	if pagination.Skip > 0 {
-		opts.SetSkip(int64(pagination.Skip))
-	}
-	if pagination.PageSize > 0 {
-		opts.SetLimit(int64(pagination.PageSize))
-	}
-
-	// 执行查询
-	cursor, err := r.collection.Find(ctx, conditions, opts)
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询角色失败",
-			err,
-		)
-	}
-	defer cursor.Close(ctx)
-
-	// 解析结果
-	var roles []interface{}
-	for cursor.Next(ctx) {
-		var role interface{}
-		if err := cursor.Decode(&role); err != nil {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeInternal,
-				"解析角色数据失败",
-				err,
-			)
-		}
-		roles = append(roles, role)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"遍历角色数据失败",
-			err,
-		)
-	}
-
-	// 创建分页结果
-	return infrastructure.NewPagedResult[interface{}](roles, total, pagination), nil
-}
-
-// Count 统计角色数量
-func (r *MongoRoleRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, filter.GetConditions())
-	if err != nil {
-		return 0, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"统计角色数量失败",
-			err,
-		)
-	}
-	return count, nil
-}
-
-// Exists 检查角色是否存在
-func (r *MongoRoleRepository) Exists(ctx context.Context, id interface{}) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
-	if err != nil {
-		return false, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"检查角色存在性失败",
-			err,
-		)
-	}
-	return count > 0, nil
-}
-
-// GetByName 根据名称获取角色
-func (r *MongoRoleRepository) GetByName(ctx context.Context, name string) (interface{}, error) {
-	var role interface{}
-	err := r.collection.FindOne(ctx, map[string]interface{}{"name": name}).Decode(&role)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeNotFound,
-				fmt.Sprintf("角色名称 %s 不存在", name),
-				err,
-			)
-		}
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询角色失败",
-			err,
-		)
-	}
-	return role, nil
-}
-
-// GetDefaultRole 获取默认角色
-func (r *MongoRoleRepository) GetDefaultRole(ctx context.Context) (interface{}, error) {
-	var role interface{}
-	err := r.collection.FindOne(ctx, map[string]interface{}{"is_default": true}).Decode(&role)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeNotFound,
-				"默认角色不存在",
-				err,
-			)
-		}
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询默认角色失败",
-			err,
-		)
-	}
-	return role, nil
-}
-
-// GetUserRoles 获取用户角色
-func (r *MongoRoleRepository) GetUserRoles(ctx context.Context, userID string) ([]interface{}, error) {
-	// 这里需要查询用户角色关联表
-	userRolesCollection := r.db.Collection("user_roles")
-	cursor, err := userRolesCollection.Find(ctx, map[string]interface{}{"user_id": userID})
-	if err != nil {
-		return nil, infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"查询用户角色失败",
-			err,
-		)
-	}
-	defer cursor.Close(ctx)
-
-	var roleIDs []string
-	for cursor.Next(ctx) {
-		var userRole map[string]interface{}
-		if err := cursor.Decode(&userRole); err != nil {
-			return nil, infrastructure.NewRepositoryError(
-				infrastructure.ErrorTypeInternal,
-				"解析用户角色数据失败",
-				err,
-			)
-		}
-		if roleID, ok := userRole["role_id"].(string); ok {
-			roleIDs = append(roleIDs, roleID)
-		}
-	}
-
-	// 根据角色ID查询角色详情
-	if len(roleIDs) == 0 {
-		return []interface{}{}, nil
-	}
-
-	// 创建一个简单的Filter实现
-	filter := &infrastructure.BaseFilter{
-		Conditions: map[string]interface{}{"_id": map[string]interface{}{"$in": roleIDs}},
-	}
-
-	// 调用List方法并转换返回类型
-	rolePointers, err := r.List(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	// 将[]*interface{}转换为[]interface{}
-	roles := make([]interface{}, len(rolePointers))
-	for i, rolePtr := range rolePointers {
-		if rolePtr != nil {
-			roles[i] = *rolePtr
-		}
-	}
-
-	return roles, nil
-}
-
-// AssignRole 分配角色
-func (r *MongoRoleRepository) AssignRole(ctx context.Context, userID, roleID string) error {
-	userRolesCollection := r.db.Collection("user_roles")
-	userRole := map[string]interface{}{
-		"user_id":    userID,
-		"role_id":    roleID,
-		"created_at": time.Now(),
-	}
-
-	_, err := userRolesCollection.InsertOne(ctx, userRole)
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"分配角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// RemoveRole 移除角色
-func (r *MongoRoleRepository) RemoveRole(ctx context.Context, userID, roleID string) error {
-	userRolesCollection := r.db.Collection("user_roles")
-	_, err := userRolesCollection.DeleteOne(ctx, map[string]interface{}{
-		"user_id": userID,
-		"role_id": roleID,
-	})
-	if err != nil {
-		return infrastructure.NewRepositoryError(
-			infrastructure.ErrorTypeInternal,
-			"移除角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// GetUserPermissions 获取用户权限
-func (r *MongoRoleRepository) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
-	// 获取用户角色
-	roles, err := r.GetUserRoles(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// 收集所有权限
-	permissionSet := make(map[string]bool)
-	for _, role := range roles {
-		if roleMap, ok := role.(map[string]interface{}); ok {
-			if permissions, ok := roleMap["permissions"].([]interface{}); ok {
-				for _, perm := range permissions {
-					if permStr, ok := perm.(string); ok {
-						permissionSet[permStr] = true
-					}
-				}
-			}
-		}
-	}
-
-	// 转换为切片
-	var permissions []string
-	for perm := range permissionSet {
-		permissions = append(permissions, perm)
-	}
-
-	return permissions, nil
-}
-
-// BatchUpdate 批量更新角色
-func (r *MongoRoleRepository) BatchUpdate(ctx context.Context, ids []interface{}, updates map[string]interface{}) error {
-	if len(ids) == 0 {
-		return nil
-	}
-
-	// 转换ID为ObjectID
-	objectIDs := make([]primitive.ObjectID, 0, len(ids))
-	for _, id := range ids {
-		idStr, ok := id.(string)
-		if !ok {
-			return base.NewRepositoryError(base.ErrorTypeValidation,
-				"角色ID必须是字符串类型", nil)
-		}
-		objectID, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
-			return base.NewRepositoryError(base.ErrorTypeValidation,
-				"无效的角色ID", err)
-		}
-		objectIDs = append(objectIDs, objectID)
-	}
-
-	updates["updated_at"] = time.Now()
-	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
-	update := bson.M{"$set": updates}
-
-	_, err := r.collection.UpdateMany(ctx, filter, update)
-	if err != nil {
-		return base.NewRepositoryError(
-			base.ErrorTypeInternal,
-			"批量更新角色失败",
-			err,
-		)
-	}
-	return nil
-}
-
-// BatchCreate 批量创建角色
-func (r *MongoRoleRepository) BatchCreate(ctx context.Context, roles []*interface{}) error {
-	if len(roles) == 0 {
-		return nil
-	}
-
-	// 转换为实际的角色对象
-	actualRoles := make([]interface{}, len(roles))
-	for i, role := range roles {
-		if role == nil {
-			return base.NewRepositoryError(base.ErrorTypeValidation,
-				"角色对象不能为空", nil)
-		}
-		actualRoles[i] = *role
-	}
-
-	// 批量插入
-	_, err := r.collection.InsertMany(ctx, actualRoles)
-	if err != nil {
-		if mongo.IsDuplicateKeyError(err) {
-			return base.NewRepositoryError(base.ErrorTypeDuplicate,
-				"角色已存在", err)
-		}
-		return base.NewRepositoryError(base.ErrorTypeInternal,
-			"批量创建角色失败", err)
-	}
-
-	return nil
-}
-
-// BatchDelete 批量删除角色
-func (r *MongoRoleRepository) BatchDelete(ctx context.Context, ids []interface{}) error {
-	if len(ids) == 0 {
-		return nil
-	}
-
-	// 转换ID为ObjectID
-	objectIDs := make([]primitive.ObjectID, 0, len(ids))
-	for _, id := range ids {
-		idStr, ok := id.(string)
-		if !ok {
-			return base.NewRepositoryError(base.ErrorTypeValidation,
-				"角色ID必须是字符串类型", nil)
-		}
-		objectID, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
-			return base.NewRepositoryError(base.ErrorTypeValidation,
-				"无效的角色ID", err)
-		}
-		objectIDs = append(objectIDs, objectID)
-	}
-
-	// 批量删除
-	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
-	_, err := r.collection.DeleteMany(ctx, filter)
-	if err != nil {
-		return base.NewRepositoryError(base.ErrorTypeInternal,
-			"批量删除角色失败", err)
-	}
-
-	return nil
-}
-
-// Health 健康检查
-func (r *MongoRoleRepository) Health(ctx context.Context) error {
-	// 执行简单的ping操作来检查连接
-	return r.db.Client().Ping(ctx, nil)
+// GetDatabaseName 获取数据库名称
+func (f *MongoRepositoryFactory) GetDatabaseName() string {
+	if f.config != nil {
+		return f.config.Database
+	}
+	return ""
 }

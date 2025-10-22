@@ -15,29 +15,29 @@ import (
 
 // LoggerConfig 日志中间件配置
 type LoggerConfig struct {
-	EnableColor      bool          `json:"enable_color" yaml:"enable_color"`
-	EnableReqBody    bool          `json:"enable_req_body" yaml:"enable_req_body"`
-	EnableRespBody   bool          `json:"enable_resp_body" yaml:"enable_resp_body"`
-	MaxReqBodySize   int           `json:"max_req_body_size" yaml:"max_req_body_size"`
-	MaxRespBodySize  int           `json:"max_resp_body_size" yaml:"max_resp_body_size"`
-	SkipPaths        []string      `json:"skip_paths" yaml:"skip_paths"`
-	SlowThreshold    time.Duration `json:"slow_threshold" yaml:"slow_threshold"`
-	EnablePerformance bool         `json:"enable_performance" yaml:"enable_performance"`
+	EnableColor       bool          `json:"enable_color" yaml:"enable_color"`
+	EnableReqBody     bool          `json:"enable_req_body" yaml:"enable_req_body"`
+	EnableRespBody    bool          `json:"enable_resp_body" yaml:"enable_resp_body"`
+	MaxReqBodySize    int           `json:"max_req_body_size" yaml:"max_req_body_size"`
+	MaxRespBodySize   int           `json:"max_resp_body_size" yaml:"max_resp_body_size"`
+	SkipPaths         []string      `json:"skip_paths" yaml:"skip_paths"`
+	SlowThreshold     time.Duration `json:"slow_threshold" yaml:"slow_threshold"`
+	EnablePerformance bool          `json:"enable_performance" yaml:"enable_performance"`
 }
 
 // RequestInfo 请求信息
 type RequestInfo struct {
-	Method      string            `json:"method"`
-	Path        string            `json:"path"`
-	Query       string            `json:"query,omitempty"`
-	Headers     map[string]string `json:"headers,omitempty"`
-	Body        string            `json:"body,omitempty"`
-	ClientIP    string            `json:"client_ip"`
-	UserAgent   string            `json:"user_agent"`
-	UserID      string            `json:"user_id,omitempty"`
-	RequestID   string            `json:"request_id"`
-	Timestamp   time.Time         `json:"timestamp"`
-	BodySize    int64             `json:"body_size"`
+	Method    string            `json:"method"`
+	Path      string            `json:"path"`
+	Query     string            `json:"query,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	Body      string            `json:"body,omitempty"`
+	ClientIP  string            `json:"client_ip"`
+	UserAgent string            `json:"user_agent"`
+	UserID    string            `json:"user_id,omitempty"`
+	RequestID string            `json:"request_id"`
+	Timestamp time.Time         `json:"timestamp"`
+	BodySize  int64             `json:"body_size"`
 }
 
 // ResponseInfo 响应信息
@@ -80,7 +80,7 @@ func Logger() gin.HandlerFunc {
 func LoggerWithConfig(config LoggerConfig) gin.HandlerFunc {
 	// 初始化zap日志器
 	logger := initZapLogger()
-	
+
 	return func(c *gin.Context) {
 		// 检查是否跳过日志记录
 		if shouldSkipLogging(c.Request.URL.Path, config.SkipPaths) {
@@ -90,7 +90,7 @@ func LoggerWithConfig(config LoggerConfig) gin.HandlerFunc {
 
 		// 记录开始时间
 		start := time.Now()
-		
+
 		// 生成请求ID
 		requestID := generateRequestID()
 		c.Set("request_id", requestID)
@@ -106,7 +106,7 @@ func LoggerWithConfig(config LoggerConfig) gin.HandlerFunc {
 		if config.EnableRespBody {
 			respWriter = &responseWriter{
 				ResponseWriter: c.Writer,
-				body:          bytes.NewBuffer([]byte{}),
+				body:           bytes.NewBuffer([]byte{}),
 			}
 			c.Writer = respWriter
 		}
@@ -129,13 +129,13 @@ func LoggerWithConfig(config LoggerConfig) gin.HandlerFunc {
 
 		// 计算处理时间
 		duration := time.Since(start)
-		
+
 		// 构建响应信息
 		respInfo := buildResponseInfo(c, respWriter, duration, config)
 
 		// 记录请求完成
 		logLevel := determineLogLevel(respInfo.StatusCode, duration, config.SlowThreshold)
-		
+
 		fields := []zap.Field{
 			zap.String("request_id", requestID),
 			zap.String("method", reqInfo.Method),
@@ -188,12 +188,12 @@ func initZapLogger() *zap.Logger {
 	cfg.ErrorOutputPaths = []string{"stderr"}
 	cfg.EncoderConfig.TimeKey = "timestamp"
 	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	
+
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to initialize zap logger: %v", err))
 	}
-	
+
 	return logger
 }
 
@@ -217,16 +217,16 @@ func readRequestBody(c *gin.Context, maxSize int64) string {
 	if c.Request.Body == nil {
 		return ""
 	}
-	
+
 	// 限制读取大小
 	body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxSize))
 	if err != nil {
 		return ""
 	}
-	
+
 	// 重新设置请求体，以便后续处理
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-	
+
 	return string(body)
 }
 
@@ -238,7 +238,7 @@ func buildRequestInfo(c *gin.Context, reqBody, requestID string, start time.Time
 			userID = userCtx.UserID
 		}
 	}
-	
+
 	return RequestInfo{
 		RequestID: requestID,
 		Method:    c.Request.Method,
@@ -257,18 +257,18 @@ func buildRequestInfo(c *gin.Context, reqBody, requestID string, start time.Time
 func buildResponseInfo(c *gin.Context, respWriter *responseWriter, duration time.Duration, config LoggerConfig) ResponseInfo {
 	respBody := ""
 	respBodySize := int64(0)
-	
+
 	if config.EnableRespBody && respWriter != nil {
 		respBody = respWriter.body.String()
 		respBodySize = int64(len(respBody))
 	}
-	
+
 	// 获取错误信息
 	errorMsg := ""
 	if len(c.Errors) > 0 {
 		errorMsg = c.Errors.String()
 	}
-	
+
 	return ResponseInfo{
 		StatusCode: c.Writer.Status(),
 		Body:       respBody,

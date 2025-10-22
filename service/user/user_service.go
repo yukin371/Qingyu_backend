@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -105,8 +106,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, req *serviceInterfaces.Ge
 	}
 
 	// 2. 从数据库获取用户
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	user, err := s.userRepo.GetByID(ctx, filter)
+	user, err := s.userRepo.GetByID(ctx, req.ID)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
@@ -130,8 +130,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 2. 检查用户是否存在
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	exists, err := s.userRepo.Exists(ctx, filter)
+	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
@@ -140,7 +139,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 3. 更新用户信息
-	if err := s.userRepo.Update(ctx, filter, req.Updates); err != nil {
+	if err := s.userRepo.Update(ctx, req.ID, req.Updates); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户失败", err)
 	}
 
@@ -158,8 +157,7 @@ func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 2. 检查用户是否存在
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	exists, err := s.userRepo.Exists(ctx, filter)
+	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
@@ -168,7 +166,7 @@ func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces
 	}
 
 	// 3. 删除用户
-	if err := s.userRepo.Delete(ctx, filter); err != nil {
+	if err := s.userRepo.Delete(ctx, req.ID); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "删除用户失败", err)
 	}
 
@@ -211,9 +209,7 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.
 
 	// 5. 转换用户列表类型
 	var userList []*usersModel.User
-	for _, user := range users {
-		userList = append(userList, user)
-	}
+	userList = append(userList, users...)
 
 	// 6. 计算总页数
 	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
@@ -256,6 +252,8 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
+		Role:     "user",                      // 默认角色
+		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 
 	// 4. 设置密码
@@ -268,8 +266,11 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 
-	// 6. 生成JWT令牌（这里简化处理，实际应该调用JWT服务）
-	token := "jwt_token_placeholder" // TODO: 实现JWT令牌生成
+	// 6. 生成JWT令牌
+	token, err := s.generateToken(user.ID, user.Role)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
+	}
 
 	return &serviceInterfaces.RegisterUserResponse{
 		User:  user,
@@ -298,14 +299,53 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
 	}
 
-	// 4. 更新最后登录时间
-	if err := s.userRepo.UpdateLastLogin(ctx, user.ID); err != nil {
+	// 4. 检查用户状态
+	switch user.Status {
+	case usersModel.UserStatusInactive:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号未激活，请先验证邮箱",
+			nil,
+		)
+	case usersModel.UserStatusBanned:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号已被封禁，请联系管理员",
+			nil,
+		)
+	case usersModel.UserStatusDeleted:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeUnauthorized,
+			"账号已删除",
+			nil,
+		)
+	case usersModel.UserStatusActive:
+		// 允许登录，继续执行
+	default:
+		return nil, serviceInterfaces.NewServiceError(
+			s.name,
+			serviceInterfaces.ErrorTypeInternal,
+			"未知的用户状态",
+			nil,
+		)
+	}
+
+	// 5. 更新最后登录时间
+	// IP 地址应该从 context 中获取，这里暂时使用默认值
+	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
 		fmt.Printf("更新最后登录时间失败: %v\n", err)
 	}
 
-	// 5. 生成JWT令牌（这里简化处理，实际应该调用JWT服务）
-	token := "jwt_token_placeholder" // TODO: 实现JWT令牌生成
+	// 6. 生成JWT令牌
+	token, err := s.generateToken(user.ID, user.Role)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
+	}
 
 	return &serviceInterfaces.LoginUserResponse{
 		User:  user,
@@ -339,7 +379,9 @@ func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *serviceInter
 	}
 
 	// 2. 更新最后登录时间
-	if err := s.userRepo.UpdateLastLogin(ctx, req.ID); err != nil {
+	// IP 地址应该从 context 中获取，这里暂时使用默认值
+	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	if err := s.userRepo.UpdateLastLogin(ctx, req.ID, ip); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新最后登录时间失败", err)
 	}
 
@@ -356,8 +398,7 @@ func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *serviceInterf
 	}
 
 	// 2. 获取用户
-	filter := repoInterfaces.UserFilter{ID: req.ID}
-	user, err := s.userRepo.GetByID(ctx, filter)
+	user, err := s.userRepo.GetByID(ctx, req.ID)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
@@ -498,4 +539,11 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *serviceInterfaces.U
 		return fmt.Errorf("新密码不能为空")
 	}
 	return nil
+}
+
+// generateToken 生成JWT令牌（辅助方法）
+func (s *UserServiceImpl) generateToken(userID, role string) (string, error) {
+	// 使用middleware包中的GenerateToken函数
+	// 导入: "Qingyu_backend/middleware"
+	return middleware.GenerateToken(userID, "", []string{role})
 }

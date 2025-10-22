@@ -16,12 +16,28 @@ import (
 )
 
 // VersionService 版本管理服务
+// 注意：这是遗留代码，使用旧的架构模式
+// TODO: 重构为使用依赖注入和Repository模式
 type VersionService struct{}
 
-func fileCol() *mongo.Collection   { return global.DB.Collection("novel_files") }    // 文件集合
-func revCol() *mongo.Collection    { return global.DB.Collection("file_revisions") } // 版本集合
-func patchCol() *mongo.Collection  { return global.DB.Collection("file_patches") }   // 补丁集合
-func commitCol() *mongo.Collection { return global.DB.Collection("commits") }        // 提交集合
+func fileCol() *mongo.Collection    { return global.DB.Collection("novel_files") }       // 文件集合（Document元数据）
+func contentCol() *mongo.Collection { return global.DB.Collection("document_contents") } // 文档内容集合
+func revCol() *mongo.Collection     { return global.DB.Collection("file_revisions") }    // 版本集合
+func patchCol() *mongo.Collection   { return global.DB.Collection("file_patches") }      // 补丁集合
+func commitCol() *mongo.Collection  { return global.DB.Collection("commits") }           // 提交集合
+
+// getDocumentContent 获取文档内容（辅助函数）
+func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*model.DocumentContent, error) {
+	var content model.DocumentContent
+	err := contentCol().FindOne(ctx, bson.M{"document_id": documentID}).Decode(&content)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("查询文档内容失败: %w", err)
+	}
+	return &content, nil
+}
 
 // EnsureIndexes 创建版本相关的 MongoDB 索引（幂等）
 func (s *VersionService) EnsureIndexes(ctx context.Context) error {
@@ -81,19 +97,31 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// 查询Document元数据
 	var f model.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
 
-	// 版本推进
-	next := f.Version + 1
-	if _, err := fileCol().UpdateOne(ctx, bson.M{"_id": f.ID}, bson.M{"$set": bson.M{"version": next, "updated_at": time.Now()}}); err != nil {
+	// 查询DocumentContent获取版本号和内容
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
+	// 版本推进（在DocumentContent中）
+	next := docContent.Version + 1
+	if _, err := contentCol().UpdateOne(ctx,
+		bson.M{"document_id": f.ID},
+		bson.M{"$set": bson.M{"version": next, "updated_at": time.Now()}}); err != nil {
 		return nil, err
 	}
 
 	// 使用快照存储策略
-	snapshot, storageRef, err := s.StoreSnapshot(f.Content, projectID, nodeID, next)
+	snapshot, storageRef, err := s.StoreSnapshot(docContent.Content, projectID, nodeID, next)
 	if err != nil {
 		return nil, err
 	}
@@ -169,14 +197,23 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 		return nil, fmt.Errorf("failed to retrieve snapshot: %w", err)
 	}
 
-	// 读取当前文档版本
+	// 读取当前文档
 	var f model.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
 
+	// 获取当前DocumentContent版本
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
 	// 使用乐观锁更新内容（期望为当前版本）
-	return s.UpdateContentWithVersion(projectID, nodeID, authorID, message, content, f.Version)
+	return s.UpdateContentWithVersion(projectID, nodeID, authorID, message, content, docContent.Version)
 }
 
 // CreatePatch 提交一个候选补丁（状态为 pending）
@@ -233,18 +270,27 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*mode
 		return nil, err
 	}
 
+	// 获取当前DocumentContent版本
+	docContent, err := s.getDocumentContent(ctx, f.ID)
+	if err != nil {
+		return nil, fmt.Errorf("获取文档内容失败: %w", err)
+	}
+	if docContent == nil {
+		return nil, errors.New("文档内容不存在")
+	}
+
 	// 简化：只支持完整替换的 diffFormat 为 "full"
 	if p.DiffFormat != "full" {
 		return nil, errors.New("only full diffFormat supported currently")
 	}
 
 	// 要求 baseVersion 匹配当前版本以直接应用
-	if p.BaseVersion != f.Version {
+	if p.BaseVersion != docContent.Version {
 		return nil, errors.New("version_conflict")
 	}
 
 	// 使用乐观锁更新内容
-	rev, err := s.UpdateContentWithVersion(projectID, p.NodeID, applierID, p.Preview, p.DiffPayload, f.Version)
+	rev, err := s.UpdateContentWithVersion(projectID, p.NodeID, applierID, p.Preview, p.DiffPayload, docContent.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -687,4 +733,223 @@ func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, no
 	// 简化的合并策略：返回最新版本的内容
 	// 在实际项目中，这里需要实现更智能的合并算法
 	return content, nil
+}
+
+// GetVersionHistory 获取版本历史
+func (s *VersionService) GetVersionHistory(ctx context.Context, documentID string, page, pageSize int) (*VersionHistoryResponse, error) {
+	// 计算偏移量
+	offset := (page - 1) * pageSize
+
+	// 查询版本历史
+	filter := bson.M{"node_id": documentID}
+	opts := options.Find().
+		SetSort(bson.D{{Key: "version", Value: -1}}).
+		SetSkip(int64(offset)).
+		SetLimit(int64(pageSize))
+
+	cursor, err := revCol().Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询版本历史失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var revisions []model.FileRevision
+	if err := cursor.All(ctx, &revisions); err != nil {
+		return nil, fmt.Errorf("解析版本历史失败: %w", err)
+	}
+
+	// 统计总数
+	total, err := revCol().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("统计版本数量失败: %w", err)
+	}
+
+	// 转换为响应格式
+	versions := make([]*VersionInfo, 0, len(revisions))
+	for _, rev := range revisions {
+		versions = append(versions, &VersionInfo{
+			VersionID: rev.ID,
+			Version:   rev.Version,
+			Message:   rev.Message,
+			CreatedAt: rev.CreatedAt,
+			CreatedBy: rev.AuthorID,
+			WordCount: 0, // TODO: 从快照中获取字数
+		})
+	}
+
+	return &VersionHistoryResponse{
+		Versions: versions,
+		Total:    int(total),
+		Page:     page,
+		PageSize: pageSize,
+	}, nil
+}
+
+// GetVersion 获取特定版本
+func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID string) (*VersionDetail, error) {
+	// 查询版本 - versionID直接是string类型
+	var revision model.FileRevision
+	err := revCol().FindOne(ctx, bson.M{"_id": versionID, "node_id": documentID}).Decode(&revision)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("版本不存在")
+		}
+		return nil, fmt.Errorf("查询版本失败: %w", err)
+	}
+
+	// 获取内容
+	content, err := s.RetrieveSnapshot(revision.Snapshot, revision.StorageRef)
+	if err != nil {
+		return nil, fmt.Errorf("获取版本内容失败: %w", err)
+	}
+
+	return &VersionDetail{
+		VersionID:  revision.ID,
+		DocumentID: revision.NodeID,
+		Version:    revision.Version,
+		Content:    content,
+		Message:    revision.Message,
+		CreatedAt:  revision.CreatedAt,
+		CreatedBy:  revision.AuthorID,
+		WordCount:  len(content), // 简单字数统计
+	}, nil
+}
+
+// CompareVersions 比较两个版本
+func (s *VersionService) CompareVersions(ctx context.Context, documentID, fromVersionID, toVersionID string) (*VersionDiff, error) {
+	// 获取两个版本
+	fromVersion, err := s.GetVersion(ctx, documentID, fromVersionID)
+	if err != nil {
+		return nil, fmt.Errorf("获取源版本失败: %w", err)
+	}
+
+	toVersion, err := s.GetVersion(ctx, documentID, toVersionID)
+	if err != nil {
+		return nil, fmt.Errorf("获取目标版本失败: %w", err)
+	}
+
+	// 简单的行差异比较
+	fromLines := splitLines(fromVersion.Content)
+	toLines := splitLines(toVersion.Content)
+
+	changes := make([]ChangeItem, 0)
+	addedLines := 0
+	deletedLines := 0
+
+	// 简单的差异算法（实际应该使用更好的diff算法）
+	maxLen := len(fromLines)
+	if len(toLines) > maxLen {
+		maxLen = len(toLines)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		fromLine := ""
+		toLine := ""
+		if i < len(fromLines) {
+			fromLine = fromLines[i]
+		}
+		if i < len(toLines) {
+			toLine = toLines[i]
+		}
+
+		if fromLine != toLine {
+			if fromLine == "" {
+				// 新增行
+				changes = append(changes, ChangeItem{
+					Type:    "added",
+					Line:    i + 1,
+					Content: toLine,
+				})
+				addedLines++
+			} else if toLine == "" {
+				// 删除行
+				changes = append(changes, ChangeItem{
+					Type:    "deleted",
+					Line:    i + 1,
+					Content: fromLine,
+				})
+				deletedLines++
+			} else {
+				// 修改行
+				changes = append(changes, ChangeItem{
+					Type:    "modified",
+					Line:    i + 1,
+					Content: toLine,
+				})
+			}
+		}
+	}
+
+	return &VersionDiff{
+		FromVersion:  fromVersionID,
+		ToVersion:    toVersionID,
+		Changes:      changes,
+		AddedLines:   addedLines,
+		DeletedLines: deletedLines,
+	}, nil
+}
+
+// RestoreVersion 恢复到特定版本
+func (s *VersionService) RestoreVersion(ctx context.Context, documentID, versionID string) error {
+	// 获取要恢复的版本
+	version, err := s.GetVersion(ctx, documentID, versionID)
+	if err != nil {
+		return fmt.Errorf("获取版本失败: %w", err)
+	}
+
+	// 获取文档当前内容
+	currentContent, err := s.getDocumentContent(ctx, documentID)
+	if err != nil {
+		return fmt.Errorf("获取当前文档失败: %w", err)
+	}
+
+	// 更新文档内容
+	if currentContent == nil {
+		// 创建新内容
+		_, err = contentCol().InsertOne(ctx, bson.M{
+			"document_id": documentID,
+			"content":     version.Content,
+			"updated_at":  time.Now(),
+		})
+	} else {
+		// 更新现有内容
+		_, err = contentCol().UpdateOne(ctx,
+			bson.M{"document_id": documentID},
+			bson.M{
+				"$set": bson.M{
+					"content":    version.Content,
+					"updated_at": time.Now(),
+				},
+			},
+		)
+	}
+
+	if err != nil {
+		return fmt.Errorf("更新文档内容失败: %w", err)
+	}
+
+	// TODO: 创建一个新的版本记录，标记为恢复操作
+
+	return nil
+}
+
+// splitLines 将文本按行分割
+func splitLines(text string) []string {
+	if text == "" {
+		return []string{}
+	}
+	lines := []string{}
+	currentLine := ""
+	for _, ch := range text {
+		if ch == '\n' {
+			lines = append(lines, currentLine)
+			currentLine = ""
+		} else {
+			currentLine += string(ch)
+		}
+	}
+	if currentLine != "" {
+		lines = append(lines, currentLine)
+	}
+	return lines
 }

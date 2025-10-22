@@ -202,7 +202,7 @@ func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sha
 	}
 
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSort(bson.D{bson.E{Key: "created_at", Value: -1}}).
 		SetLimit(filter.Limit)
 
 	if filter.Offset > 0 {
@@ -341,7 +341,7 @@ func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter 
 	}
 
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSort(bson.D{bson.E{Key: "created_at", Value: -1}}).
 		SetLimit(filter.Limit)
 
 	if filter.Offset > 0 {

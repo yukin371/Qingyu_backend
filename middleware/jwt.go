@@ -108,7 +108,7 @@ func JWTAuthWithConfig(config AuthConfig) gin.HandlerFunc {
 		c.Set("userId", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("userRoles", claims.Roles)
-		
+
 		c.Next()
 	}
 }
@@ -247,12 +247,12 @@ func ParseToken(tokenString string) (*JWTClaims, error) {
 		if claims.UserID == "" {
 			return nil, errors.New("invalid token: missing user ID")
 		}
-		
+
 		// 检查令牌是否过期
 		if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
 			return nil, errors.New("token has expired")
 		}
-		
+
 		return claims, nil
 	}
 
@@ -265,12 +265,12 @@ func GetUserFromContext(c *gin.Context) (*UserContext, error) {
 	if !exists {
 		return nil, errors.New("user not found in context")
 	}
-	
+
 	userContext, ok := user.(UserContext)
 	if !ok {
 		return nil, errors.New("invalid user context type")
 	}
-	
+
 	return &userContext, nil
 }
 
@@ -280,13 +280,13 @@ func HasRole(c *gin.Context, role string) bool {
 	if err != nil {
 		return false
 	}
-	
+
 	for _, userRole := range user.Roles {
 		if userRole == role {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -296,7 +296,7 @@ func HasAnyRole(c *gin.Context, roles ...string) bool {
 	if err != nil {
 		return false
 	}
-	
+
 	for _, userRole := range user.Roles {
 		for _, role := range roles {
 			if userRole == role {
@@ -304,6 +304,6 @@ func HasAnyRole(c *gin.Context, roles ...string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }

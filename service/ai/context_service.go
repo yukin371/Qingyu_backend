@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/models/document"
+	"Qingyu_backend/repository/interfaces/writing"
 	documentService "Qingyu_backend/service/project"
 )
 
@@ -16,6 +17,12 @@ type ContextService struct {
 	projectService  *documentService.ProjectService
 	nodeService     *documentService.NodeService
 	versionService  *documentService.VersionService
+
+	// documentContentRepo: 临时架构债务
+	// TODO(架构重构): 当前使用 nil 是因为 ai_service.go 中采用了旧的直接实例化方式
+	// 而非依赖注入。待整体架构迁移到 Repository Factory 模式后统一解决。
+	// 相关讨论: doc/architecture/架构设计规范.md - 依赖注入原则
+	documentContentRepo writing.DocumentContentRepository
 }
 
 // NewContextService 创建AI上下文服务
@@ -24,12 +31,14 @@ func NewContextService(
 	projectService *documentService.ProjectService,
 	nodeService *documentService.NodeService,
 	versionService *documentService.VersionService,
+	documentContentRepo writing.DocumentContentRepository,
 ) *ContextService {
 	return &ContextService{
-		documentService: documentService,
-		projectService:  projectService,
-		nodeService:     nodeService,
-		versionService:  versionService,
+		documentService:     documentService,
+		projectService:      projectService,
+		nodeService:         nodeService,
+		versionService:      versionService,
+		documentContentRepo: documentContentRepo,
 	}
 }
 
@@ -68,7 +77,7 @@ func (s *ContextService) BuildContext(ctx context.Context, projectID string, cha
 
 // buildChapterInfo 构建章节信息
 func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string, chapterID string) (*ai.ChapterInfo, error) {
-	// 获取章节文档
+	// 获取章节文档元数据
 	doc, err := s.documentService.GetByID(chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节文档失败: %w", err)
@@ -77,17 +86,45 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 		return nil, fmt.Errorf("章节不存在")
 	}
 
+	// 获取章节内容
+	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
+	var docContent *document.DocumentContent
+	if s.documentContentRepo != nil {
+		var err error
+		docContent, err = s.documentContentRepo.GetByDocumentID(ctx, chapterID)
+		if err != nil {
+			return nil, fmt.Errorf("获取章节内容失败: %w", err)
+		}
+	}
+
+	// 提取摘要（从内容中提取前200字符）
+	summary := ""
+	if docContent != nil && docContent.Content != "" {
+		content := strings.TrimSpace(docContent.Content)
+		if len(content) > 200 {
+			summary = content[:200] + "..."
+		} else {
+			summary = content
+		}
+	}
+
+	// 获取实际内容
+	content := ""
+	if docContent != nil {
+		content = docContent.Content
+	}
+
 	chapterInfo := &ai.ChapterInfo{
 		ID:           chapterID,
 		Title:        doc.Title,
-		Summary:      "", // Document模型没有Summary字段，可以从Content中提取或留空
-		Content:      doc.Content,
-		CharacterIDs: doc.CharacterIDs, // 使用Document中的CharacterIDs字段
-		LocationIDs:  doc.LocationIDs,  // 使用Document中的LocationIDs字段
-		TimelineIDs:  doc.TimelineIDs,  // 使用Document中的TimelineIDs字段
-		PlotThreads:  doc.PlotThreads,  // 使用Document中的PlotThreads字段
-		KeyPoints:    doc.KeyPoints,    // 使用Document中的KeyPoints字段
-		WritingHints: doc.WritingHints, // 使用Document中的WritingHints字段
+		Summary:      summary,
+		Content:      content,
+		CharacterIDs: doc.CharacterIDs,                     // 使用Document中的CharacterIDs字段
+		LocationIDs:  doc.LocationIDs,                      // 使用Document中的LocationIDs字段
+		TimelineIDs:  doc.TimelineIDs,                      // 使用Document中的TimelineIDs字段
+		PlotThreads:  doc.PlotThreads,                      // 使用Document中的PlotThreads字段
+		KeyPoints:    doc.KeyPoints,                        // 使用Document中的KeyPoints字段
+		WritingHints: strings.Join(doc.WritingHints, "\n"), // 将字符串数组转换为单个字符串
 	}
 
 	return chapterInfo, nil
@@ -101,9 +138,30 @@ func (s *ContextService) buildPreviousChaptersSummary(ctx context.Context, proje
 }
 
 // generateChapterSummary 生成章节摘要
-func (s *ContextService) generateChapterSummary(doc *document.Document) string {
-	// 如果没有关键点，从内容中提取前200字符作为摘要
-	content := strings.TrimSpace(doc.Content)
+// 注意: 此方法依赖 documentContentRepo，如果为 nil 则降级使用 KeyPoints
+// 建议调用方直接使用 buildChapterInfo，它已经包含了摘要生成逻辑
+func (s *ContextService) generateChapterSummary(ctx context.Context, doc *document.Document) string {
+	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
+	if s.documentContentRepo == nil {
+		// 降级方案：从 KeyPoints 生成摘要
+		if len(doc.KeyPoints) > 0 {
+			return strings.Join(doc.KeyPoints, "; ")
+		}
+		return ""
+	}
+
+	// 通过 DocumentContentRepository 获取内容
+	docContent, err := s.documentContentRepo.GetByDocumentID(ctx, doc.ID)
+	if err != nil || docContent == nil {
+		// 降级方案：从 KeyPoints 生成摘要
+		if len(doc.KeyPoints) > 0 {
+			return strings.Join(doc.KeyPoints, "; ")
+		}
+		return ""
+	}
+
+	// 从内容中提取前200字符作为摘要
+	content := strings.TrimSpace(docContent.Content)
 	if len(content) > 200 {
 		return content[:200] + "..."
 	}

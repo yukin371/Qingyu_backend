@@ -1,10 +1,12 @@
 package interfaces
 
 import (
+	"context"
+
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
+	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/repository/interfaces/writing"
-	"context"
 )
 
 // ProjectInterface 项目仓储接口
@@ -19,8 +21,18 @@ type RepositoryFactory interface {
 	CreateProjectRepository() writing.ProjectRepository
 	CreateRoleRepository() UserInterface.RoleRepository
 
+	// 文档相关Repository
+	CreateDocumentRepository() writing.DocumentRepository
+	CreateDocumentContentRepository() writing.DocumentContentRepository
+
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository
+
+	// 推荐系统相关Repository
+	CreateBehaviorRepository() RecommendationInterfaces.BehaviorRepository
+	CreateProfileRepository() RecommendationInterfaces.ProfileRepository
+	CreateItemFeatureRepository() RecommendationInterfaces.ItemFeatureRepository
+	CreateHotRecommendationRepository() RecommendationInterfaces.HotRecommendationRepository
 
 	// 基础设施方法
 	Health(ctx context.Context) error

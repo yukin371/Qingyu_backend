@@ -1,153 +1,92 @@
-package reading
+package bookstore
 
 import (
+	bookstoreApi "Qingyu_backend/api/v1/bookstore"
+	"Qingyu_backend/middleware"
+	"Qingyu_backend/service/bookstore"
+
 	"github.com/gin-gonic/gin"
-	
-	readingAPI "Qingyu_backend/api/v1/reading"
 )
 
-// BookstoreRouter 书城路由组
-type BookstoreRouter struct {
-	api *readingAPI.BookstoreAPI
-}
+// InitBookstoreRouter 初始化书店路由
+func InitBookstoreRouter(
+	r *gin.RouterGroup,
+	bookstoreService bookstore.BookstoreService,
+	bookDetailService interface{}, // TODO: 改为具体类型
+	ratingService interface{}, // TODO: 改为具体类型
+	statisticsService interface{}, // TODO: 改为具体类型
+) {
+	// 创建API实例
+	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService)
 
-// NewBookstoreRouter 创建书城路由实例
-func NewBookstoreRouter(api *readingAPI.BookstoreAPI) *BookstoreRouter {
-	return &BookstoreRouter{
-		api: api,
-	}
-}
+	// TODO: 当其他服务实现后，取消注释
+	// if bookDetailService != nil {
+	// 	bookDetailApiHandler := bookstoreApi.NewBookDetailAPI(bookDetailService.(bookstore.BookDetailService))
+	// }
+	// if ratingService != nil {
+	// 	ratingApiHandler := bookstoreApi.NewBookRatingAPI(ratingService.(bookstore.RatingService))
+	// }
+	// if statisticsService != nil {
+	// 	statisticsApiHandler := bookstoreApi.NewBookStatisticsAPI(statisticsService.(bookstore.StatisticsService))
+	// }
+	// chapterApiHandler := bookstoreApi.NewChapterAPI(...)
 
-// RegisterRoutes 注册书城相关路由
-func (r *BookstoreRouter) RegisterRoutes(rg *gin.RouterGroup) {
-	// 书城路由组
-	bookstore := rg.Group("/bookstore")
+	// 书店主路由组
+	bookstoreGroup := r.Group("/bookstore")
 	{
-		// 首页数据
-		bookstore.GET("/homepage", r.api.GetHomepage)
-		
-		// 书籍相关路由
-		books := bookstore.Group("/books")
+		// 公开接口（不需要认证）
+		public := bookstoreGroup.Group("")
 		{
-			// 获取书籍详情
-			books.GET("/:id", r.api.GetBookByID)
-			
-			// 获取推荐书籍
-			books.GET("/recommended", r.api.GetRecommendedBooks)
-			
-			// 获取精选书籍
-			books.GET("/featured", r.api.GetFeaturedBooks)
-			
-			// 搜索书籍
-			books.GET("/search", r.api.SearchBooks)
-		}
-		
-		// 分类相关路由
-		categories := bookstore.Group("/categories")
-		{
-			// 获取分类树
-			categories.GET("/tree", r.api.GetCategoryTree)
-			
-			// 获取分类详情
-			categories.GET("/:id", r.api.GetCategoryByID)
-			
-			// 根据分类获取书籍列表
-			categories.GET("/:id/books", r.api.GetBooksByCategory)
-		}
-		
-		// 榜单相关路由
-		rankings := bookstore.Group("/rankings")
-		{
-			// 获取实时榜
-			rankings.GET("/realtime", r.api.GetRealtimeRanking)
-			
-			// 获取周榜
-			rankings.GET("/weekly", r.api.GetWeeklyRanking)
-			
-			// 获取月榜
-			rankings.GET("/monthly", r.api.GetMonthlyRanking)
-			
-			// 获取新人榜
-			rankings.GET("/newbie", r.api.GetNewbieRanking)
-			
-			// 根据类型获取榜单
-			rankings.GET("/:type", r.api.GetRankingByType)
-		}
-		
-		// Banner相关路由
-		banners := bookstore.Group("/banners")
-		{
-			// 获取激活的Banner列表
-			banners.GET("", r.api.GetActiveBanners)
-		}
-	}
-}
+			// 书城首页
+			public.GET("/homepage", bookstoreApiHandler.GetHomepage)
 
-// RegisterPublicRoutes 注册公开路由（不需要认证）
-func (r *BookstoreRouter) RegisterPublicRoutes(rg *gin.RouterGroup) {
-	// 公开的书城路由
-	public := rg.Group("/public/bookstore")
-	{
-		// 首页数据（公开访问）
-		public.GET("/homepage", r.api.GetHomepage)
-		
-		// 书籍相关公开路由
-		books := public.Group("/books")
-		{
-			// 获取书籍详情（公开访问）
-			books.GET("/:id", r.api.GetBookByID)
-			
-			// 获取推荐书籍（公开访问）
-			books.GET("/recommended", r.api.GetRecommendedBooks)
-			
-			// 获取精选书籍（公开访问）
-			books.GET("/featured", r.api.GetFeaturedBooks)
-			
-			// 搜索书籍（公开访问）
-			books.GET("/search", r.api.SearchBooks)
-		}
-		
-		// 分类相关公开路由
-		categories := public.Group("/categories")
-		{
-			// 获取分类树（公开访问）
-			categories.GET("/tree", r.api.GetCategoryTree)
-			
-			// 获取分类详情（公开访问）
-			categories.GET("/:id", r.api.GetCategoryByID)
-			
-			// 根据分类获取书籍列表（公开访问）
-			categories.GET("/:id/books", r.api.GetBooksByCategory)
-		}
-		
-		// Banner相关公开路由
-		banners := public.Group("/banners")
-		{
-			// 获取激活的Banner列表（公开访问）
-			banners.GET("", r.api.GetActiveBanners)
-		}
-	}
-}
+			// 书籍列表和搜索
+			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
+			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
 
-// RegisterPrivateRoutes 注册需要认证的路由
-func (r *BookstoreRouter) RegisterPrivateRoutes(rg *gin.RouterGroup) {
-	// 需要认证的书城路由
-	private := rg.Group("/bookstore")
-	// 这里可以添加认证中间件
-	// private.Use(middleware.AuthRequired())
-	{
-		// 书籍相关私有路由
-		books := private.Group("/books")
-		{
-			// 增加书籍浏览量（需要认证以防刷量）
-			books.POST("/:id/view", r.api.IncrementBookView)
+			// 推荐和精选
+			public.GET("/recommended", bookstoreApiHandler.GetRecommendedBooks)
+			public.GET("/featured", bookstoreApiHandler.GetFeaturedBooks)
+
+			// 分类
+			public.GET("/categories", bookstoreApiHandler.GetCategoryTree)
+			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
+			public.GET("/categories/:id/books", bookstoreApiHandler.GetBooksByCategory)
+
+			// Banner
+			public.GET("/banners", bookstoreApiHandler.GetActiveBanners)
+
+			// 排行榜
+			public.GET("/rankings/realtime", bookstoreApiHandler.GetRealtimeRanking)
+			public.GET("/rankings/weekly", bookstoreApiHandler.GetWeeklyRanking)
+			public.GET("/rankings/monthly", bookstoreApiHandler.GetMonthlyRanking)
+			public.GET("/rankings/newbie", bookstoreApiHandler.GetNewbieRanking)
+			public.GET("/rankings/:type", bookstoreApiHandler.GetRankingByType)
+
+			// TODO: 当BookDetailAPI实现后添加
+			// public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
+			// public.GET("/books/:id/similar", bookDetailApiHandler.GetSimilarBooks)
+			// public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
+
+			// TODO: 当ChapterAPI实现后添加
+			// public.GET("/chapters/:id", chapterApiHandler.GetChapter)
+			// public.GET("/chapters/book/:id", chapterApiHandler.GetChaptersByBookID)
 		}
-		
-		// Banner相关私有路由
-		banners := private.Group("/banners")
+
+		// 需要认证的接口
+		authenticated := bookstoreGroup.Group("")
+		authenticated.Use(middleware.JWTAuth())
 		{
-			// 增加Banner点击次数（需要认证以防刷量）
-			banners.POST("/:id/click", r.api.IncrementBannerClick)
+			// 统计点击
+			authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
+			authenticated.POST("/banners/:id/click", bookstoreApiHandler.IncrementBannerClick)
+
+			// TODO: 当RatingAPI实现后添加
+			// authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)
+			// authenticated.POST("/books/:id/rating", ratingApiHandler.CreateRating)
+			// authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
+			// authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
+			// authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
 		}
 	}
 }

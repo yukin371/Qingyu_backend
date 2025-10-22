@@ -1,0 +1,361 @@
+package testutil
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"Qingyu_backend/config"
+	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/users"
+
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// ============ 测试配置助手 ============
+
+// InitTestConfig 初始化测试配置
+func InitTestConfig() {
+	if config.GlobalConfig == nil {
+		config.GlobalConfig = &config.Config{
+			JWT: &config.JWTConfig{
+				Secret:          "test-secret-key-for-testing-only",
+				ExpirationHours: 24,
+			},
+			Database: &config.DatabaseConfig{
+				Type: "mongodb",
+				Primary: config.DatabaseConnection{
+					Type: config.DatabaseTypeMongoDB,
+					MongoDB: &config.MongoDBConfig{
+						URI:      "mongodb://localhost:27017",
+						Database: "qingyu_test",
+					},
+				},
+			},
+			Server: &config.ServerConfig{
+				Port: ":8080",
+				Mode: "test",
+			},
+		}
+	}
+}
+
+// ============ 用户相关测试助手 ============
+
+// UserOption 用户选项函数类型
+type UserOption func(*users.User)
+
+// CreateTestUser 创建测试用户
+func CreateTestUser(opts ...UserOption) *users.User {
+	user := &users.User{
+		ID:        primitive.NewObjectID().Hex(),
+		Username:  "testuser",
+		Email:     "test@example.com",
+		Password:  "hashed_password_123",
+		Role:      "user",
+		Status:    "active",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// 应用选项
+	for _, opt := range opts {
+		opt(user)
+	}
+
+	return user
+}
+
+// WithUsername 设置用户名
+func WithUsername(username string) UserOption {
+	return func(u *users.User) {
+		u.Username = username
+	}
+}
+
+// WithEmail 设置邮箱
+func WithEmail(email string) UserOption {
+	return func(u *users.User) {
+		u.Email = email
+	}
+}
+
+// WithRole 设置角色
+func WithRole(role string) UserOption {
+	return func(u *users.User) {
+		u.Role = role
+	}
+}
+
+// WithStatus 设置状态
+func WithStatus(status string) UserOption {
+	return func(u *users.User) {
+		u.Status = users.UserStatus(status)
+	}
+}
+
+// CreateTestUsers 批量创建测试用户
+func CreateTestUsers(count int) []*users.User {
+	result := make([]*users.User, count)
+	for i := 0; i < count; i++ {
+		result[i] = CreateTestUser(
+			WithUsername("testuser"+string(rune(i))),
+			WithEmail("test"+string(rune(i))+"@example.com"),
+		)
+	}
+	return result
+}
+
+// AssertUserEqual 断言用户相等
+func AssertUserEqual(t *testing.T, expected, actual *users.User) {
+	assert.Equal(t, expected.ID, actual.ID)
+	assert.Equal(t, expected.Username, actual.Username)
+	assert.Equal(t, expected.Email, actual.Email)
+	assert.Equal(t, expected.Role, actual.Role)
+	assert.Equal(t, expected.Status, actual.Status)
+}
+
+// ============ 项目相关测试助手 ============
+
+// ProjectOption 项目选项函数类型
+type ProjectOption func(*document.Project)
+
+// CreateTestProject 创建测试项目
+func CreateTestProject(userID string, opts ...ProjectOption) *document.Project {
+	project := &document.Project{
+		ID:        primitive.NewObjectID().Hex(),
+		Title:     "测试项目",
+		Summary:   "这是一个测试项目",
+		AuthorID:  userID,
+		Status:    document.StatusDraft,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// 应用选项
+	for _, opt := range opts {
+		opt(project)
+	}
+
+	return project
+}
+
+// WithProjectName 设置项目名称（使用Title字段）
+func WithProjectName(name string) ProjectOption {
+	return func(p *document.Project) {
+		p.Title = name
+	}
+}
+
+// WithProjectDescription 设置项目描述（使用Summary字段）
+func WithProjectDescription(description string) ProjectOption {
+	return func(p *document.Project) {
+		p.Summary = description
+	}
+}
+
+// WithProjectStatus 设置项目状态
+func WithProjectStatus(status string) ProjectOption {
+	return func(p *document.Project) {
+		p.Status = document.ProjectStatus(status)
+	}
+}
+
+// CreateTestProjects 批量创建测试项目
+func CreateTestProjects(userID string, count int) []*document.Project {
+	result := make([]*document.Project, count)
+	for i := 0; i < count; i++ {
+		result[i] = CreateTestProject(
+			userID,
+			WithProjectName("测试项目"+string(rune(i))),
+		)
+	}
+	return result
+}
+
+// AssertProjectEqual 断言项目相等
+func AssertProjectEqual(t *testing.T, expected, actual *document.Project) {
+	assert.Equal(t, expected.ID, actual.ID)
+	assert.Equal(t, expected.Title, actual.Title)
+	assert.Equal(t, expected.Summary, actual.Summary)
+	assert.Equal(t, expected.AuthorID, actual.AuthorID)
+	assert.Equal(t, expected.Status, actual.Status)
+}
+
+// ============ 文档相关测试助手 ============
+
+// DocumentOption 文档选项函数类型
+type DocumentOption func(*document.Document)
+
+// CreateTestDocument 创建测试文档
+// 注意：此方法只创建Document元数据，不包含内容
+// 如需创建文档内容，请使用CreateTestDocumentContent
+func CreateTestDocument(projectID string, opts ...DocumentOption) *document.Document {
+	doc := &document.Document{
+		ID:        primitive.NewObjectID().Hex(),
+		ProjectID: projectID,
+		Title:     "测试文档",
+		Type:      document.TypeChapter,
+		Status:    "draft",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// 应用选项
+	for _, opt := range opts {
+		opt(doc)
+	}
+
+	return doc
+}
+
+// CreateTestDocumentContent 创建测试文档内容
+func CreateTestDocumentContent(documentID string, content string) *document.DocumentContent {
+	return &document.DocumentContent{
+		ID:          primitive.NewObjectID().Hex(),
+		DocumentID:  documentID,
+		Content:     content,
+		ContentType: "markdown",
+		WordCount:   len([]rune(content)),
+		CharCount:   len(content),
+		Version:     1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		LastSavedAt: time.Now(),
+	}
+}
+
+// WithDocumentTitle 设置文档标题
+func WithDocumentTitle(title string) DocumentOption {
+	return func(d *document.Document) {
+		d.Title = title
+	}
+}
+
+// WithDocumentContent 设置文档内容（已废弃）
+// 注意：Document模型不再包含Content字段
+// 请使用DocumentContent模型来处理文档内容
+// 此函数保留用于向后兼容，但实际上不会产生任何效果
+func WithDocumentContent(content string) DocumentOption {
+	return func(d *document.Document) {
+		// 不再设置Content字段，保留函数签名用于兼容
+	}
+}
+
+// WithDocumentStatus 设置文档状态
+func WithDocumentStatus(status string) DocumentOption {
+	return func(d *document.Document) {
+		d.Status = status
+	}
+}
+
+// ============ 上下文助手 ============
+
+// CreateTestContext 创建测试上下文
+func CreateTestContext() context.Context {
+	return context.Background()
+}
+
+// CreateTestContextWithUser 创建带用户信息的测试上下文
+func CreateTestContextWithUser(userID string) context.Context {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "user_id", userID)
+	return ctx
+}
+
+// CreateTestContextWithTimeout 创建带超时的测试上下文
+func CreateTestContextWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
+}
+
+// ============ 通用断言助手 ============
+
+// AssertNoErrorWithMessage 断言无错误并输出自定义消息
+func AssertNoErrorWithMessage(t *testing.T, err error, message string) {
+	if err != nil {
+		t.Fatalf("%s: %v", message, err)
+	}
+}
+
+// AssertErrorContains 断言错误包含指定字符串
+func AssertErrorContains(t *testing.T, err error, substr string) {
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), substr)
+}
+
+// AssertTimeAlmostEqual 断言时间几乎相等（允许1秒误差）
+func AssertTimeAlmostEqual(t *testing.T, expected, actual time.Time) {
+	diff := expected.Sub(actual)
+	if diff < 0 {
+		diff = -diff
+	}
+	assert.True(t, diff < time.Second, "时间差异超过1秒: %v", diff)
+}
+
+// ============ 数据清理助手 ============
+
+// CleanupFunc 清理函数类型
+type CleanupFunc func()
+
+// RegisterCleanup 注册清理函数
+func RegisterCleanup(t *testing.T, cleanup CleanupFunc) {
+	t.Cleanup(cleanup)
+}
+
+// ============ 随机数据生成助手 ============
+
+// RandomString 生成随机字符串
+func RandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+	}
+	return string(result)
+}
+
+// RandomEmail 生成随机邮箱
+func RandomEmail() string {
+	return RandomString(10) + "@test.com"
+}
+
+// RandomInt 生成随机整数
+func RandomInt(min, max int) int {
+	return min + int(time.Now().UnixNano()%(int64(max-min)))
+}
+
+// ============ Repository Filter 助手 ============
+
+// SimpleFilter 简单的Filter实现，用于测试
+type SimpleFilter struct {
+	Conditions map[string]interface{}
+	SortFields map[string]int
+	Fields     []string
+}
+
+// GetConditions 返回筛选条件
+func (f *SimpleFilter) GetConditions() map[string]interface{} {
+	if f.Conditions == nil {
+		return make(map[string]interface{})
+	}
+	return f.Conditions
+}
+
+// GetSort 返回排序字段
+func (f *SimpleFilter) GetSort() map[string]int {
+	if f.SortFields == nil {
+		return map[string]int{"createdAt": -1}
+	}
+	return f.SortFields
+}
+
+// GetFields 返回字段选择
+func (f *SimpleFilter) GetFields() []string {
+	return f.Fields
+}
+
+// Validate 验证过滤器
+func (f *SimpleFilter) Validate() error {
+	return nil // 简单实现，测试用
+}

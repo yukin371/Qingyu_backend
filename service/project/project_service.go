@@ -2,347 +2,456 @@ package project
 
 import (
 	"context"
+	"fmt"
+	"time"
 
-	model "Qingyu_backend/models/document"
-	"Qingyu_backend/pkg/errors"
-	documentRepo "Qingyu_backend/repository/interfaces/writing"
+	"Qingyu_backend/models/document"
+	pkgErrors "Qingyu_backend/pkg/errors"
+	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	"Qingyu_backend/service/base"
 )
 
 // ProjectService 项目服务
 type ProjectService struct {
-	projectRepo  documentRepo.ProjectRepository
-	indexManager documentRepo.ProjectIndexManager
-	serviceName  string
-	version      string
+	projectRepo writingRepo.ProjectRepository
+	eventBus    base.EventBus
+	serviceName string
+	version     string
 }
 
 // NewProjectService 创建项目服务
-func NewProjectService(projectRepo documentRepo.ProjectRepository, indexManager documentRepo.ProjectIndexManager) *ProjectService {
+func NewProjectService(
+	projectRepo writingRepo.ProjectRepository,
+	eventBus base.EventBus,
+) *ProjectService {
 	return &ProjectService{
-		projectRepo:  projectRepo,
-		indexManager: indexManager,
-		serviceName:  "ProjectService",
-		version:      "1.0.0",
+		projectRepo: projectRepo,
+		eventBus:    eventBus,
+		serviceName: "ProjectService",
+		version:     "1.0.0",
 	}
-}
-
-// Initialize 初始化服务
-func (s *ProjectService) Initialize(ctx context.Context) error {
-	// 确保数据库索引
-	if err := s.indexManager.EnsureIndexes(ctx); err != nil {
-		return errors.ProjectFactory.InternalError("INIT_INDEX_FAILED", "初始化索引失败", err).
-			WithOperation("Initialize")
-	}
-
-	// 检查Repository健康状态
-	if err := s.Health(ctx); err != nil {
-		return errors.ProjectFactory.InternalError("HEALTH_CHECK_FAILED", "项目Repository健康检查失败", err).
-			WithOperation("Initialize")
-	}
-
-	return nil
-}
-
-// Health 健康检查
-func (s *ProjectService) Health(ctx context.Context) error {
-	return s.Health(ctx)
-}
-
-// Close 关闭服务
-func (s *ProjectService) Close(ctx context.Context) error {
-	return nil
-}
-
-// GetServiceName 获取服务名称
-func (s *ProjectService) GetServiceName() string {
-	return s.serviceName
-}
-
-// GetVersion 获取服务版本
-func (s *ProjectService) GetVersion() string {
-	return s.version
 }
 
 // CreateProject 创建项目
-func (s *ProjectService) CreateProject(ctx context.Context, p *model.Project) (*model.Project, error) {
-	if p.Name == "" {
-		return nil, errors.ProjectFactory.ValidationError("PROJECT_NAME_REQUIRED", "项目名称不能为空").
-			WithOperation("CreateProject").
-			WithMetadata(map[string]interface{}{
-				"owner_id": p.OwnerID,
-			})
+func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*CreateProjectResponse, error) {
+	// 1. 参数验证
+	if err := s.validateCreateProjectRequest(req); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
 	}
 
-	if p.OwnerID == "" {
-		return nil, errors.ProjectFactory.ValidationError("PROJECT_OWNER_REQUIRED", "项目所有者不能为空").
-			WithOperation("CreateProject").
-			WithMetadata(map[string]interface{}{
-				"name": p.Name,
-			})
+	// 2. 获取用户ID
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	err := s.projectRepo.Create(ctx, p)
-	if err != nil {
-		return nil, errors.ProjectFactory.InternalError("CREATE_PROJECT_FAILED", "创建项目失败", err).
-			WithOperation("CreateProject").
-			WithMetadata(map[string]interface{}{
-				"name":     p.Name,
-				"owner_id": p.OwnerID,
-			})
+	// 3. 创建项目对象
+	project := &document.Project{
+		AuthorID:   userID,
+		Title:      req.Title,
+		Summary:    req.Summary,
+		CoverURL:   req.CoverURL,
+		Category:   req.Category,
+		Tags:       req.Tags,
+		Status:     document.StatusDraft,       // 默认状态为草稿
+		Visibility: document.VisibilityPrivate, // 默认为私密
 	}
 
-	return p, nil
+	// 4. 保存到数据库
+	if err := s.projectRepo.Create(ctx, project); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建项目失败", "", err)
+	}
+
+	// 5. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.created",
+			EventData: map[string]interface{}{
+				"project_id": project.ID,
+				"author_id":  project.AuthorID,
+				"title":      project.Title,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	// 6. 返回响应
+	return &CreateProjectResponse{
+		ProjectID: project.ID,
+		Title:     project.Title,
+		Status:    string(project.Status),
+		CreatedAt: project.CreatedAt,
+	}, nil
 }
 
-// GetProjectByID 根据项目ID获取项目详情
-func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*model.Project, error) {
-	if projectID == "" {
-		return nil, errors.ProjectFactory.ValidationError("PROJECT_ID_REQUIRED", "项目ID不能为空").
-			WithOperation("GetProjectByID")
-	}
-
+// GetProject 获取项目详情
+func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*document.Project, error) {
+	// 1. 查询项目
 	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
-		return nil, errors.ProjectFactory.InternalError("GET_PROJECT_FAILED", "获取项目失败", err).
-			WithOperation("GetProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-			})
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
 
 	if project == nil {
-		return nil, errors.ProjectFactory.NotFoundError("project", projectID).
-			WithOperation("GetProjectByID")
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	// 2. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanView(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限查看该项目", "", nil)
 	}
 
 	return project, nil
 }
 
-// GetProjectList 获取项目列表
-func (s *ProjectService) GetProjectList(ctx context.Context, ownerID string, status string, limit, offset int64) ([]*model.Project, error) {
-	if limit <= 0 {
-		limit = 10 // 默认限制
+// ListMyProjects 获取我的项目列表
+func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRequest) (*ListProjectsResponse, error) {
+	// 1. 获取用户ID
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	if limit > 100 {
-		limit = 100 // 最大限制
+	// 2. 设置默认分页参数
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 10
 	}
 
-	var projects []*model.Project
+	// 3. 计算偏移量
+	offset := int64((req.Page - 1) * req.PageSize)
+	limit := int64(req.PageSize)
+
+	// 4. 查询项目列表
+	var projects []*document.Project
 	var err error
 
-	if ownerID != "" {
-		projects, err = s.projectRepo.GetByOwnerAndStatus(ctx, ownerID, status, limit, offset)
+	if req.Status != "" {
+		// 按状态查询
+		projects, err = s.projectRepo.GetByOwnerAndStatus(ctx, userID, req.Status, limit, offset)
 	} else {
-		// 如果没有指定所有者，使用通用查询（管理员功能）
-		filter := make(map[string]interface{})
-		if status != "" {
-			filter["status"] = status
-		}
-		// 这里需要扩展Repository接口支持通用过滤
-		return nil, errors.ProjectFactory.BusinessError("OWNER_REQUIRED", "需要指定项目所有者").
-			WithOperation("GetProjectList").
-			WithMetadata(map[string]interface{}{
-				"status": status,
-				"limit":  limit,
-				"offset": offset,
-			})
+		// 查询所有项目
+		projects, err = s.projectRepo.GetListByOwnerID(ctx, userID, limit, offset)
 	}
 
 	if err != nil {
-		return nil, errors.ProjectFactory.InternalError("LIST_PROJECTS_FAILED", "获取项目列表失败", err).
-			WithOperation("GetProjectList").
-			WithMetadata(map[string]interface{}{
-				"owner_id": ownerID,
-				"status":   status,
-				"limit":    limit,
-				"offset":   offset,
-			})
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目列表失败", "", err)
 	}
 
-	return projects, nil
+	// 5. 统计总数
+	total, err := s.projectRepo.CountByOwner(ctx, userID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "统计项目数失败", "", err)
+	}
+
+	// 6. 返回响应
+	return &ListProjectsResponse{
+		Projects: projects,
+		Total:    total,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
 }
 
-// UpdateProjectByID 更新项目
-func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, ownerID string, upd *model.Project) error {
-	if projectID == "" || ownerID == "" {
-		return errors.ProjectFactory.ValidationError("PROJECT_OWNER_ID_REQUIRED", "项目ID和所有者ID不能为空").
-			WithOperation("UpdateProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
+// UpdateProject 更新项目
+func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, req *UpdateProjectRequest) error {
+	// 1. 查询项目
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
 
-	if upd == nil {
-		return errors.ProjectFactory.ValidationError("UPDATE_DATA_REQUIRED", "更新信息不能为空").
-			WithOperation("UpdateProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
 	}
 
-	// 构建更新字段
+	// 2. 权限检查
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanEdit(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该项目", "", nil)
+	}
+
+	// 3. 构建更新数据
 	updates := make(map[string]interface{})
-	if upd.Name != "" {
-		updates["name"] = upd.Name
+
+	if req.Title != "" {
+		updates["title"] = req.Title
 	}
-	if upd.Description != "" {
-		updates["description"] = upd.Description
+	if req.Summary != "" {
+		updates["summary"] = req.Summary
 	}
-	if upd.Status != "" {
-		updates["status"] = upd.Status
+	if req.CoverURL != "" {
+		updates["cover_url"] = req.CoverURL
+	}
+	if req.Category != "" {
+		updates["category"] = req.Category
+	}
+	if req.Tags != nil {
+		updates["tags"] = req.Tags
+	}
+	if req.Status != "" {
+		// 验证状态值
+		status := document.ProjectStatus(req.Status)
+		if !status.IsValid() {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目状态", "", nil)
+		}
+		updates["status"] = req.Status
 	}
 
-	if len(updates) == 0 {
-		return errors.ProjectFactory.ValidationError("NO_FIELDS_TO_UPDATE", "没有需要更新的字段").
-			WithOperation("UpdateProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
+	// 4. 更新项目
+	if err := s.projectRepo.Update(ctx, projectID, updates); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新项目失败", "", err)
 	}
 
-	err := s.projectRepo.UpdateByOwner(ctx, projectID, ownerID, updates)
-	if err != nil {
-		return errors.ProjectFactory.InternalError("UPDATE_PROJECT_FAILED", "更新项目失败", err).
-			WithOperation("UpdateProjectByID").
-			WithMetadata(map[string]interface{}{
+	// 5. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.updated",
+			EventData: map[string]interface{}{
 				"project_id": projectID,
-				"owner_id":   ownerID,
 				"updates":    updates,
-			})
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
 	}
 
 	return nil
 }
 
-// DeleteProjectByID 软删除项目
-func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, ownerID string) error {
-	if projectID == "" || ownerID == "" {
-		return errors.ProjectFactory.ValidationError("PROJECT_OWNER_ID_REQUIRED", "项目ID和所有者ID不能为空").
-			WithOperation("DeleteProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
-	}
-
-	err := s.projectRepo.SoftDelete(ctx, projectID, ownerID)
+// DeleteProject 删除项目
+func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) error {
+	// 1. 查询项目
+	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
-		return errors.ProjectFactory.InternalError("DELETE_PROJECT_FAILED", "删除项目失败", err).
-			WithOperation("DeleteProjectByID").
-			WithMetadata(map[string]interface{}{
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	// 2. 权限检查（只有所有者可以删除）
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.IsOwner(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "只有项目所有者可以删除项目", "", nil)
+	}
+
+	// 3. 软删除项目
+	if err := s.projectRepo.SoftDelete(ctx, projectID, userID); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "删除项目失败", "", err)
+	}
+
+	// 4. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.deleted",
+			EventData: map[string]interface{}{
 				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
+				"author_id":  project.AuthorID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
 	}
 
 	return nil
 }
 
-// RestoreProjectByID 恢复项目
-func (s *ProjectService) RestoreProjectByID(ctx context.Context, projectID, ownerID string) error {
-	if projectID == "" || ownerID == "" {
-		return errors.ProjectFactory.ValidationError("PROJECT_OWNER_ID_REQUIRED", "项目ID和所有者ID不能为空").
-			WithOperation("RestoreProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
-	}
-
-	err := s.projectRepo.Restore(ctx, projectID, ownerID)
+// UpdateProjectStatistics 更新项目统计
+func (s *ProjectService) UpdateProjectStatistics(ctx context.Context, projectID string, stats *document.ProjectStats) error {
+	// 1. 验证项目存在
+	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
-		return errors.ProjectFactory.InternalError("RESTORE_PROJECT_FAILED", "恢复项目失败", err).
-			WithOperation("RestoreProjectByID").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"owner_id":   ownerID,
-			})
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	// 2. 更新统计
+	updates := map[string]interface{}{
+		"statistics": stats,
+	}
+
+	if err := s.projectRepo.Update(ctx, projectID, updates); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新统计失败", "", err)
 	}
 
 	return nil
 }
 
-// DeleteHard 硬删除项目（管理员功能）
+// RecalculateProjectStatistics 重新计算项目统计信息
+func (s *ProjectService) RecalculateProjectStatistics(ctx context.Context, projectID string) error {
+	// Note: 这需要DocumentService来计算，这里返回成功
+	// 实际计算逻辑应该由DocumentService的updateProjectStatistics方法触发
+	// TODO: 重构统计逻辑，将DocumentService注入到ProjectService中
+	stats := &document.ProjectStats{
+		LastUpdateAt: time.Now(),
+	}
+	return s.UpdateProjectStatistics(ctx, projectID, stats)
+}
+
+// GetProjectByID 根据ID获取项目（别名方法，兼容API层调用）
+func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*document.Project, error) {
+	return s.GetProject(ctx, projectID)
+}
+
+// GetProjectList 获取项目列表（兼容API层调用）
+func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*document.Project, error) {
+	// 构建请求
+	req := &ListProjectsRequest{
+		Page:     int(offset/limit) + 1,
+		PageSize: int(limit),
+		Status:   status,
+	}
+
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	// 调用ListMyProjects
+	resp, err := s.ListMyProjects(ctxWithUser, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Projects, nil
+}
+
+// UpdateProjectByID 更新项目（兼容API层调用）
+func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userID string, req *document.Project) error {
+	// 构建更新请求
+	updateReq := &UpdateProjectRequest{
+		Title:    req.Title,
+		Summary:  req.Summary,
+		CoverURL: req.CoverURL,
+		Category: req.Category,
+		Tags:     req.Tags,
+		Status:   string(req.Status),
+	}
+
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	return s.UpdateProject(ctxWithUser, projectID, updateReq)
+}
+
+// DeleteProjectByID 删除项目（兼容API层调用）
+func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, userID string) error {
+	// 使用上下文注入用户ID
+	ctxWithUser := context.WithValue(ctx, "userID", userID)
+
+	return s.DeleteProject(ctxWithUser, projectID)
+}
+
+// RestoreProjectByID 恢复已删除的项目
+func (s *ProjectService) RestoreProjectByID(ctx context.Context, projectID, userID string) error {
+	// 1. 查询项目（包括已删除的）
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	// 2. 权限检查（只有所有者可以恢复）
+	if !project.IsOwner(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "只有项目所有者可以恢复项目", "", nil)
+	}
+
+	// 3. 恢复项目
+	if err := s.projectRepo.Restore(ctx, projectID, userID); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "恢复项目失败", "", err)
+	}
+
+	// 4. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.restored",
+			EventData: map[string]interface{}{
+				"project_id": projectID,
+				"author_id":  project.AuthorID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
+}
+
+// DeleteHard 物理删除项目（永久删除）
 func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error {
-	if projectID == "" {
-		return errors.ProjectFactory.ValidationError("PROJECT_ID_REQUIRED", "项目ID不能为空").
-			WithOperation("DeleteHard").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-			})
+	// 注意：硬删除不需要权限检查，通常由管理员或系统调用
+	// 如果需要权限检查，应该在调用方（API层）进行
+
+	// 1. 物理删除项目
+	if err := s.projectRepo.HardDelete(ctx, projectID); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "物理删除项目失败", "", err)
 	}
 
-	err := s.projectRepo.HardDelete(ctx, projectID)
-	if err != nil {
-		return errors.ProjectFactory.InternalError("HARD_DELETE_FAILED", "硬删除项目失败", err).
-			WithOperation("DeleteHard").
-			WithMetadata(map[string]interface{}{
+	// 2. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+			EventType: "project.hard_deleted",
+			EventData: map[string]interface{}{
 				"project_id": projectID,
-			})
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
 	}
 
 	return nil
 }
 
-// IsOwner 判断用户是否为项目所有者
-func (s *ProjectService) IsOwner(ctx context.Context, projectID, userID string) (bool, error) {
-	if projectID == "" || userID == "" {
-		return false, errors.ProjectFactory.ValidationError("PROJECT_USER_ID_REQUIRED", "项目ID和用户ID不能为空").
-			WithOperation("IsOwner").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"user_id":    userID,
-			})
+// 私有方法
+func (s *ProjectService) validateCreateProjectRequest(req *CreateProjectRequest) error {
+	if req.Title == "" {
+		return fmt.Errorf("项目标题不能为空")
 	}
-
-	isOwner, err := s.projectRepo.IsOwner(ctx, projectID, userID)
-	if err != nil {
-		return false, errors.ProjectFactory.InternalError("CHECK_OWNER_FAILED", "检查所有者权限失败", err).
-			WithOperation("IsOwner").
-			WithMetadata(map[string]interface{}{
-				"project_id": projectID,
-				"user_id":    userID,
-			})
+	if len(req.Title) > 100 {
+		return fmt.Errorf("项目标题不能超过100字符")
 	}
-
-	return isOwner, nil
+	return nil
 }
 
-// CreateWithRootNode 创建项目并初始化根节点（事务操作）
-func (s *ProjectService) CreateWithRootNode(ctx context.Context, p *model.Project, rootNode *model.Node) error {
-	if p == nil || rootNode == nil {
-		return errors.ProjectFactory.ValidationError("PROJECT_NODE_REQUIRED", "项目和根节点信息不能为空").
-			WithOperation("CreateWithRootNode").
-			WithMetadata(map[string]interface{}{
-				"project_nil":   p == nil,
-				"root_node_nil": rootNode == nil,
-			})
-	}
-
-	err := s.projectRepo.CreateWithTransaction(ctx, p, func(txCtx context.Context) error {
-		// 在事务中创建根节点
-		rootNode.ProjectID = p.ID
-		rootNode.TouchForCreate()
-
-		// 这里需要注入NodeRepository来创建根节点
-		// 为了保持示例简单，暂时返回nil
-		// 实际实现中应该通过依赖注入获取NodeRepository
-		return nil
-	})
-
-	if err != nil {
-		return errors.ProjectFactory.InternalError("CREATE_WITH_ROOT_FAILED", "创建项目和根节点失败", err).
-			WithOperation("CreateWithRootNode").
-			WithMetadata(map[string]interface{}{
-				"project_id":   p.ID,
-				"project_name": p.Name,
-				"owner_id":     p.OwnerID,
-			})
-	}
-
+// BaseService接口实现
+func (s *ProjectService) Initialize(ctx context.Context) error {
 	return nil
+}
+
+func (s *ProjectService) Health(ctx context.Context) error {
+	return s.projectRepo.Health(ctx)
+}
+
+func (s *ProjectService) Close(ctx context.Context) error {
+	return nil
+}
+
+func (s *ProjectService) GetServiceName() string {
+	return s.serviceName
+}
+
+func (s *ProjectService) GetVersion() string {
+	return s.version
 }

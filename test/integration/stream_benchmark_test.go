@@ -47,7 +47,7 @@ func BenchmarkOpenAIStream(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			
+
 			responseChan, err := openaiAdapter.TextGenerationStream(ctx, req)
 			if err != nil {
 				b.Fatalf("流式请求失败: %v", err)
@@ -103,7 +103,7 @@ func BenchmarkClaudeStream(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			
+
 			responseChan, err := claudeAdapter.TextGenerationStream(ctx, req)
 			if err != nil {
 				b.Fatalf("流式请求失败: %v", err)
@@ -159,7 +159,7 @@ func BenchmarkGeminiStream(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			
+
 			responseChan, err := geminiAdapter.TextGenerationStream(ctx, req)
 			if err != nil {
 				b.Fatalf("流式请求失败: %v", err)
@@ -217,7 +217,7 @@ func BenchmarkStreamResponseProcessing(b *testing.B) {
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			
+
 			responseChan, err := openaiAdapter.TextGenerationStream(ctx, req)
 			if err != nil {
 				b.Fatalf("流式请求失败: %v", err)
@@ -289,7 +289,7 @@ func BenchmarkConcurrentStreams(b *testing.B) {
 
 					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 					defer cancel()
-					
+
 					responseChan, err := openaiAdapter.TextGenerationStream(ctx, req)
 					if err != nil {
 						return

@@ -9,19 +9,20 @@ import (
 	"Qingyu_backend/models/ai"
 	aiModels "Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
+	"Qingyu_backend/service/ai/dto"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ChatRepositoryInterface 聊天仓库接口
 type ChatRepositoryInterface interface {
-	CreateSession(ctx context.Context, session *aiModels.ChatSession) error // 创建会话
-	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error) // 获取会话
-	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error // 更新会话
-	DeleteSession(ctx context.Context, sessionID string) error // 删除会话
+	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 创建会话
+	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                              // 获取会话
+	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 更新会话
+	DeleteSession(ctx context.Context, sessionID string) error                                                        // 删除会话
 	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error) // 获取项目会话列表
-	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error // 创建消息
-	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error) // 获取会话统计信息
+	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                           // 创建消息
+	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                              // 获取会话统计信息
 }
 
 // AIServiceInterface AI服务接口
@@ -32,61 +33,39 @@ type AIServiceInterface interface {
 
 // ChatService AI聊天服务
 type ChatService struct {
-	aiService           AIServiceInterface
-	adapterManager      *adapter.AdapterManager
-	novelContextService *NovelContextService
-	repository          ChatRepositoryInterface
+	aiService      AIServiceInterface
+	adapterManager *adapter.AdapterManager
+	repository     ChatRepositoryInterface
 }
 
 // NewChatService 创建聊天服务
 func NewChatService(aiService *Service, repository ChatRepositoryInterface) *ChatService {
 	return &ChatService{
-		aiService:           aiService,
-		adapterManager:      aiService.adapterManager,
-		novelContextService: nil, // 暂时设为nil，避免循环依赖
-		repository:          repository,
+		aiService:      aiService,
+		adapterManager: aiService.adapterManager,
+		repository:     repository,
 	}
-}
-
-// ChatMessage 聊天消息
-type ChatMessage struct {
-	ID        string                 `json:"id"`
-	Role      string                 `json:"role"` // user, assistant, system
-	Content   string                 `json:"content"`
-	Timestamp time.Time              `json:"timestamp"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// ChatSession 聊天会话
-type ChatSession struct {
-	ID        string         `json:"id"`
-	ProjectID string         `json:"projectId,omitempty"`
-	Title     string         `json:"title"`
-	Messages  []*ChatMessage `json:"messages"`
-	Context   *ai.AIContext  `json:"context,omitempty"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
 }
 
 // ChatRequest 聊天请求
 type ChatRequest struct {
-	SessionID   string                 `json:"sessionId,omitempty"`
-	ProjectID   string                 `json:"projectId,omitempty"`
-	Message     string                 `json:"message" binding:"required"`
-	UseContext  bool                   `json:"useContext"`
-	ContextType string                 `json:"contextType,omitempty"` // novel, general
-	Options     *ai.GenerateOptions    `json:"options,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	SessionID   string                    `json:"sessionId,omitempty"`
+	ProjectID   string                    `json:"projectId,omitempty"`
+	Message     string                    `json:"message" binding:"required"`
+	UseContext  bool                      `json:"useContext"`
+	ContextType string                    `json:"contextType,omitempty"` // novel, general
+	Options     *aiModels.GenerateOptions `json:"options,omitempty"`
+	Metadata    map[string]interface{}    `json:"metadata,omitempty"`
 }
 
 // ChatResponse 聊天响应
 type ChatResponse struct {
-	SessionID    string        `json:"sessionId"`
-	Message      *ChatMessage  `json:"message"`
-	TokensUsed   int           `json:"tokensUsed"`
-	Model        string        `json:"model"`
-	ContextUsed  bool          `json:"contextUsed"`
-	ResponseTime time.Duration `json:"responseTime"`
+	SessionID    string              `json:"sessionId"`
+	Message      *dto.ChatMessageDTO `json:"message"`
+	TokensUsed   int                 `json:"tokensUsed"`
+	Model        string              `json:"model"`
+	ContextUsed  bool                `json:"contextUsed"`
+	ResponseTime time.Duration       `json:"responseTime"`
 }
 
 // StreamChatResponse 流式聊天响应
@@ -115,9 +94,8 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		return nil, fmt.Errorf("获取会话失败: %w", err)
 	}
 
-	// 构建聊天上下文 - 转换为服务层类型
-	serviceSession := convertToServiceChatSession(session)
-	context, err := s.buildChatContext(ctx, serviceSession, req)
+	// 构建聊天上下文
+	context, err := s.buildChatContext(ctx, session, req)
 	if err != nil {
 		return nil, fmt.Errorf("构建上下文失败: %w", err)
 	}
@@ -125,7 +103,7 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 	// 添加用户消息到会话
 	userMessage := &aiModels.ChatMessage{
 		ID:        primitive.NewObjectID(),
-		SessionID: session.SessionID, // 使用SessionID字段
+		SessionID: session.SessionID,
 		Role:      "user",
 		Content:   req.Message,
 		Timestamp: time.Now(),
@@ -139,19 +117,19 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 
 	// 调用AI生成响应
 	startTime := time.Now()
-	
+
 	// 准备AI请求 - 使用GenerateContentRequest
 	aiRequest := &GenerateContentRequest{
 		ProjectID: req.ProjectID,
 		Prompt:    req.Message,
 		Options:   req.Options,
 	}
-	
+
 	aiResponse, err := s.aiService.GenerateContent(ctx, aiRequest)
 	if err != nil {
 		return nil, fmt.Errorf("生成AI响应失败: %w", err)
 	}
-	
+
 	responseTime := time.Since(startTime)
 
 	// 添加AI响应到会话
@@ -179,8 +157,8 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 
 	// 构建响应
 	response := &ChatResponse{
-		SessionID:    session.SessionID, // 使用SessionID字段
-		Message:      convertToChatMessage(assistantMessage),
+		SessionID:    session.SessionID,
+		Message:      dto.ToMessageDTO(assistantMessage),
 		TokensUsed:   aiResponse.TokensUsed,
 		Model:        aiResponse.Model,
 		ContextUsed:  len(context) > 1, // 如果有系统消息则表示使用了上下文
@@ -203,9 +181,8 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		return nil, fmt.Errorf("获取会话失败: %w", err)
 	}
 
-	// 构建聊天上下文 - 转换为服务层类型
-	serviceSession := convertToServiceChatSession(session)
-	context, err := s.buildChatContext(ctx, serviceSession, req)
+	// 构建聊天上下文
+	context, err := s.buildChatContext(ctx, session, req)
 	if err != nil {
 		return nil, fmt.Errorf("构建上下文失败: %w", err)
 	}
@@ -231,9 +208,9 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 	// 启动流式生成
 	go func() {
 		defer close(responseChan)
-		
+
 		startTime := time.Now()
-		
+
 		// 准备AI请求
 		aiRequest := &GenerateContentRequest{
 			ProjectID: req.ProjectID,
@@ -341,38 +318,22 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 }
 
 // buildChatContext 构建对话上下文
-func (s *ChatService) buildChatContext(ctx context.Context, session *ChatSession, req *ChatRequest) ([]*ChatMessage, error) {
-	messages := make([]*ChatMessage, 0)
+func (s *ChatService) buildChatContext(ctx context.Context, session *aiModels.ChatSession, req *ChatRequest) ([]*aiModels.ChatMessage, error) {
+	messages := make([]*aiModels.ChatMessage, 0)
 
 	// 添加系统提示
 	systemPrompt := s.buildSystemPrompt(req.ContextType, req.ProjectID)
 	if systemPrompt != "" {
-		messages = append(messages, &ChatMessage{
-			Role:    "system",
-			Content: systemPrompt,
+		messages = append(messages, &aiModels.ChatMessage{
+			ID:        primitive.NewObjectID(),
+			Role:      "system",
+			Content:   systemPrompt,
+			Timestamp: time.Now(),
 		})
 	}
 
-	// 如果需要使用小说上下文
-	if req.UseContext && req.ProjectID != "" && s.novelContextService != nil {
-		contextReq := &ai.ContextBuildRequest{
-			ProjectID:       req.ProjectID,
-			CurrentPosition: req.Message, // 使用用户消息作为当前位置
-			MaxTokens:       1000,        // 为上下文预留token
-		}
-
-		contextResp, err := s.novelContextService.BuildContext(ctx, contextReq)
-		if err == nil && contextResp.Context != nil {
-			// 将上下文信息转换为系统消息
-			contextMessage := s.convertContextToMessage(contextResp.Context)
-			if contextMessage != "" {
-				messages = append(messages, &ChatMessage{
-					Role:    "system",
-					Content: contextMessage,
-				})
-			}
-		}
-	}
+	// 注意: NovelContextService 功能已禁用（未完成）
+	// 如需使用小说上下文，请等待该功能完全实现后再启用
 
 	// 添加历史对话（保留最近的对话）
 	historyLimit := 10 // 保留最近10轮对话
@@ -382,7 +343,7 @@ func (s *ChatService) buildChatContext(ctx context.Context, session *ChatSession
 	}
 
 	for i := startIndex; i < len(session.Messages); i++ {
-		messages = append(messages, session.Messages[i])
+		messages = append(messages, &session.Messages[i])
 	}
 
 	return messages, nil
@@ -472,66 +433,6 @@ func (s *ChatService) getOrCreateSession(ctx context.Context, sessionID, project
 	return session, nil
 }
 
-// getSession 获取会话（占位实现）
-func (s *ChatService) getSession(ctx context.Context, sessionID string) (*ChatSession, error) {
-	// 这里需要从数据库获取会话
-	// 暂时返回错误，表示会话不存在
-	return nil, fmt.Errorf("会话不存在")
-}
-
-// saveSession 保存会话（占位实现）
-func (s *ChatService) saveSession(ctx context.Context, session *ChatSession) error {
-	// 这里需要保存会话到数据库
-	// 暂时返回nil，表示保存成功
-	return nil
-}
-
-// convertToChatMessage 转换为服务层ChatMessage
-func convertToChatMessage(msg *aiModels.ChatMessage) *ChatMessage {
-	return &ChatMessage{
-		ID:        msg.ID.Hex(),
-		Role:      msg.Role,
-		Content:   msg.Content,
-		Timestamp: msg.Timestamp,
-		Metadata:  make(map[string]interface{}),
-	}
-}
-
-// convertToServiceChatSession 转换为服务层ChatSession
-func convertToServiceChatSession(session *aiModels.ChatSession) *ChatSession {
-	messages := make([]*ChatMessage, len(session.Messages))
-	for i, msg := range session.Messages {
-		messages[i] = &ChatMessage{
-			ID:        msg.ID.Hex(),
-			Role:      msg.Role,
-			Content:   msg.Content,
-			Timestamp: msg.Timestamp,
-			Metadata:  make(map[string]interface{}),
-		}
-	}
-	
-	return &ChatSession{
-		ID:        session.SessionID,
-		ProjectID: session.ProjectID,
-		Title:     session.Title,
-		Messages:  messages,
-		CreatedAt: session.CreatedAt,
-		UpdatedAt: session.UpdatedAt,
-	}
-}
-
-// convertToAdapterMessages 转换消息格式
-func convertToAdapterMessages(messages []*ChatMessage) []adapter.Message {
-	adapterMessages := make([]adapter.Message, len(messages))
-	for i, msg := range messages {
-		adapterMessages[i] = adapter.Message{
-			Role:    msg.Role,
-			Content: msg.Content,
-		}
-	}
-	return adapterMessages
-}
-
 // generateSessionID 生成会话ID
 func generateSessionID() string {
 	return fmt.Sprintf("session_%d", time.Now().UnixNano())
@@ -543,27 +444,27 @@ func generateMessageID() string {
 }
 
 // GetChatHistory 获取聊天历史
-func (s *ChatService) GetChatHistory(ctx context.Context, sessionID string) (*ChatSession, error) {
+func (s *ChatService) GetChatHistory(ctx context.Context, sessionID string) (*dto.ChatSessionDTO, error) {
 	session, err := s.repository.GetSessionByID(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	
-	return convertToServiceChatSession(session), nil
+
+	return dto.ToSessionDTO(session), nil
 }
 
 // ListChatSessions 获取会话列表
-func (s *ChatService) ListChatSessions(ctx context.Context, projectID string, limit, offset int) ([]*ChatSession, error) {
+func (s *ChatService) ListChatSessions(ctx context.Context, projectID string, limit, offset int) ([]*dto.ChatSessionDTO, error) {
 	sessions, err := s.repository.GetSessionsByProjectID(ctx, projectID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
-	
-	result := make([]*ChatSession, len(sessions))
+
+	result := make([]*dto.ChatSessionDTO, len(sessions))
 	for i, session := range sessions {
-		result[i] = convertToServiceChatSession(session)
+		result[i] = dto.ToSessionDTO(session)
 	}
-	
+
 	return result, nil
 }
 

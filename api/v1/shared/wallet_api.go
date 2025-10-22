@@ -22,16 +22,17 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 }
 
 // GetBalance 查询余额
-// @Summary 查询余额
-// @Description 查询用户钱包余额
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse{data=float64}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/balance [get]
+//
+//	@Summary		查询余额
+//	@Description	查询用户钱包余额
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success 200 {object} APIResponse
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/balance [get]
 func (api *WalletAPI) GetBalance(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -59,16 +60,17 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 }
 
 // GetWallet 获取钱包信息
-// @Summary 获取钱包信息
-// @Description 获取用户完整钱包信息
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} APIResponse{data=wallet.Wallet}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet [get]
+//
+//	@Summary		获取钱包信息
+//	@Description	获取用户完整钱包信息
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success 200 {object} APIResponse
+//	@Failure		401	{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
+//	@Router			/api/v1/shared/wallet [get]
 func (api *WalletAPI) GetWallet(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -102,18 +104,19 @@ type RechargeRequest struct {
 }
 
 // Recharge 充值
-// @Summary 钱包充值
-// @Description 用户钱包充值
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body RechargeRequest true "充值信息"
-// @Success 200 {object} APIResponse{data=wallet.Transaction}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/recharge [post]
+//
+//	@Summary		钱包充值
+//	@Description	用户钱包充值
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		RechargeRequest	true	"充值信息"
+//	@Success 200 {object} APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/recharge [post]
 func (api *WalletAPI) Recharge(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -152,18 +155,19 @@ type ConsumeRequest struct {
 }
 
 // Consume 消费
-// @Summary 钱包消费
-// @Description 用户钱包消费
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body ConsumeRequest true "消费信息"
-// @Success 200 {object} APIResponse{data=wallet.Transaction}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/consume [post]
+//
+//	@Summary		钱包消费
+//	@Description	用户钱包消费
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		ConsumeRequest	true	"消费信息"
+//	@Success 200 {object} APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/consume [post]
 func (api *WalletAPI) Consume(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -203,18 +207,19 @@ type TransferRequest struct {
 }
 
 // Transfer 转账
-// @Summary 用户转账
-// @Description 向其他用户转账
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body TransferRequest true "转账信息"
-// @Success 200 {object} APIResponse{data=wallet.Transaction}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/transfer [post]
+//
+//	@Summary		用户转账
+//	@Description	向其他用户转账
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		TransferRequest	true	"转账信息"
+//	@Success 200 {object} APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/transfer [post]
 func (api *WalletAPI) Transfer(c *gin.Context) {
 	fromUserID, exists := c.Get("user_id")
 	if !exists {
@@ -247,19 +252,20 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 }
 
 // GetTransactions 查询交易记录
-// @Summary 查询交易记录
-// @Description 查询用户交易记录列表
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Param type query string false "交易类型"
-// @Success 200 {object} PaginatedResponse{data=[]wallet.Transaction}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/transactions [get]
+//
+//	@Summary		查询交易记录
+//	@Description	查询用户交易记录列表
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			page_size	query		int		false	"每页数量"	default(20)
+//	@Param			type		query		string	false	"交易类型"
+//	@Success 200 {object} APIResponse
+//	@Failure		401			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/transactions [get]
 func (api *WalletAPI) GetTransactions(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -306,18 +312,19 @@ type WithdrawRequest struct {
 }
 
 // RequestWithdraw 申请提现
-// @Summary 申请提现
-// @Description 用户申请提现
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param request body WithdrawRequest true "提现信息"
-// @Success 200 {object} APIResponse{data=wallet.WithdrawRequest}
-// @Failure 400 {object} APIResponse
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/withdraw [post]
+//
+//	@Summary		申请提现
+//	@Description	用户申请提现
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		WithdrawRequest	true	"提现信息"
+//	@Success 200 {object} APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		401		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/withdraw [post]
 func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -350,19 +357,20 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 }
 
 // GetWithdrawRequests 查询提现申请
-// @Summary 查询提现申请
-// @Description 查询用户提现申请列表
-// @Tags 钱包
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Param status query string false "状态"
-// @Success 200 {object} PaginatedResponse{data=[]wallet.WithdrawRequest}
-// @Failure 401 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /api/v1/shared/wallet/withdrawals [get]
+//
+//	@Summary		查询提现申请
+//	@Description	查询用户提现申请列表
+//	@Tags			钱包
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			page_size	query		int		false	"每页数量"	default(20)
+//	@Param			status		query		string	false	"状态"
+//	@Success 200 {object} APIResponse
+//	@Failure		401			{object}	APIResponse
+//	@Failure		500			{object}	APIResponse
+//	@Router			/api/v1/shared/wallet/withdrawals [get]
 func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
