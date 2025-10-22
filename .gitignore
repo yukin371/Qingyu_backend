@@ -1,6 +1,3 @@
-# Cursor IDE 相关文件
-.cursor/
-
 # 注意：config.yaml 现在在 config/ 目录下，应该被提交
 # 但 config.local.yaml 包含本地配置，不应提交
 
@@ -51,6 +48,8 @@ Thumbs.db
 *.disabled
 
 # IDE 相关
+
+.trae/
 .vscode/
 .idea/
 *.swp

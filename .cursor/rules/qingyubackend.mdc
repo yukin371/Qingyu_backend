@@ -1,1258 +1,247 @@
 ---
-description: Qingyu Backend 项目开发规则和分层架构指导 v2.0
+description: Qingyu Backend 项目开发规则和分层架构指导 v2.1
 globs:
 alwaysApply: true
 ---
 
-# Qingyu Backend 项目开发规则 v2.0
+# Qingyu Backend 项目开发规则 v2.1
 
-> **版本更新说明**：本规则基于最新的架构重构,反映了当前项目采用的Repository模式、依赖注入、事件驱动等现代化架构设计。
+> **快速参考指南**：本文档提供核心开发规则和架构原则概览。详细设计和实现请参考 `doc/` 目录下的文档。
 
 ## 项目介绍
 
 **项目名称**：青羽写作后端服务（Qingyu Backend）
 
-青羽写作后端服务是为 AI 辅助写作应用提供核心支持的高性能 API 项目。该项目采用现代化的分层架构和设计模式，提供稳定、安全、可扩展的后端服务，支持用户管理、文档存储、AI 文本生成、阅读社区等核心功能。
+青羽写作后端服务是为 AI 辅助写作应用提供核心支持的高性能 API 项目。采用现代化分层架构和设计模式，支持用户管理、文档存储、AI 文本生成、阅读社区等核心功能。
 
 ### 技术栈
 
 **核心技术**
 - **编程语言**：Go 1.21+
-- **Web框架**：Gin（高性能 RESTful API）
-- **数据库**：MongoDB（文档存储）+ 支持多数据库扩展
-- **认证授权**：JWT + RBAC（基于角色的访问控制）
-- **配置管理**：Viper（支持多环境配置）
+- **Web框架**：Gin（RESTful API）
+- **数据库**：MongoDB + 支持多数据库扩展
+- **认证授权**：JWT + RBAC
+- **配置管理**：Viper（多环境配置）
 - **日志系统**：Zap（结构化日志）
-- **缓存**：Redis（高性能缓存）
+- **缓存**：Redis
 - **容器化**：Docker + Docker Compose
-- **验证框架**：validator（请求参数验证）
 
 **架构模式**
-- **分层架构**：Router -> API -> Service -> Repository -> Model
+- **分层架构**：Router → API → Service → Repository → Model
 - **依赖注入**：接口驱动、服务容器管理
-- **事件驱动**：事件总线（EventBus）
-- **工厂模式**：Repository工厂
-- **策略模式**：多提供商适配器（AI服务等）
+- **事件驱动**：EventBus
+- **工厂模式**：Repository 工厂
+- **策略模式**：多提供商适配器
 
 ## 核心架构原则
 
 ### 1. 分层架构原则
 
-本项目采用严格的分层架构，各层职责清晰，依赖关系单向：
+项目采用严格的五层架构，各层职责清晰，单向依赖：
 
-```
-┌──────────────────────────────────────────┐
-│         Router Layer (路由层)             │  ← 路由定义、中间件配置
-├──────────────────────────────────────────┤
-│          API Layer (接口层)               │  ← HTTP请求处理、参数验证、响应构建
-├──────────────────────────────────────────┤
-│       Service Layer (业务逻辑层)          │  ← 业务规则、流程控制、事件发布
-├──────────────────────────────────────────┤
-│     Repository Layer (数据访问层)         │  ← 数据持久化、查询封装、缓存管理
-├──────────────────────────────────────────┤
-│        Model Layer (数据模型层)           │  ← 数据结构定义、字段标签
-└──────────────────────────────────────────┘
-```
-
-**依赖关系链**：
 ```
 Router → API → Service → Repository → Model
 ```
 
-**核心原则**：
-- ✅ 上层可以依赖下层
-- ❌ 下层绝不能依赖上层
-- ✅ 同层之间可以通过接口交互
-- ✅ 依赖接口而非具体实现（依赖倒置原则）
-- ✅ 每层有明确的错误处理机制
+**核心规则**：
+- ✅ 上层依赖下层（通过接口）
+- ❌ 下层不能依赖上层
+- ✅ 同层通过接口交互
+- ✅ 依赖接口而非具体实现
 
 ### 2. 依赖注入原则
 
-所有服务通过依赖注入方式组织，避免硬编码依赖：
-
-```go
-// ✅ 正确：依赖接口
-type UserService struct {
-    userRepo repository.UserRepository  // Repository接口
-    eventBus base.EventBus              // 事件总线接口
-    validator base.Validator            // 验证器接口
-}
-
-func NewUserService(
-    userRepo repository.UserRepository,
-    eventBus base.EventBus,
-) *UserService {
-    return &UserService{
-        userRepo:  userRepo,
-        eventBus:  eventBus,
-        validator: base.NewBaseValidator(),
-    }
-}
-
-// ❌ 错误：直接依赖具体实现
-type UserService struct {
-    db *mongo.Database  // 直接依赖数据库
-}
-```
+- 所有服务通过构造函数注入依赖
+- 依赖接口而非具体实现
+- 使用 ServiceContainer 管理服务生命周期
+- 通过 RepositoryFactory 创建数据访问层
 
 ### 3. 接口优先原则
 
-所有跨层依赖必须通过接口定义：
+- 所有跨层依赖必须定义接口
+- Repository 层提供数据库无关的抽象
+- Service 层定义业务能力接口
+- 便于 Mock 测试和多实现扩展
 
-```go
-// Repository接口定义（interfaces/user/UserRepository_interface.go）
-type UserRepository interface {
-    Create(ctx context.Context, user *models.User) error
-    GetByID(ctx context.Context, id string) (*models.User, error)
-    GetByEmail(ctx context.Context, email string) (*models.User, error)
-    Update(ctx context.Context, id string, updates map[string]interface{}) error
-    Delete(ctx context.Context, id string) error
-    // ... 其他方法
-}
-
-// MongoDB具体实现（mongodb/user/user_repository_mongo.go）
-type MongoUserRepository struct {
-    collection *mongo.Collection
-    queryBuilder infrastructure.QueryBuilder
-}
-
-func (r *MongoUserRepository) Create(ctx context.Context, user *models.User) error {
-    // 具体实现
-}
-```
+> **详细说明**：参见 `doc/architecture/架构设计规范.md`
 
 ---
 
-## 各层级详细说明
+## 各层级职责说明
 
 ### 1. Model 层 (`models/`)
 
-**职责**：
-- ✅ 定义数据结构（struct）
-- ✅ 数据字段标签（bson, json, validate）
-- ✅ 基础数据方法（格式化、转换等）
-- ❌ 不包含业务逻辑
-- ❌ 不直接操作数据库
-- ❌ 不处理HTTP请求
+**核心职责**：
+- ✅ 定义数据结构和字段标签（bson, json, validate）
+- ✅ 提供基础数据方法（格式化、转换）
+- ❌ 不包含业务逻辑、数据库操作、HTTP 处理
 
-**文件组织**：
-```
-models/
-├── users/              # 用户相关模型
-│   ├── user.go
-│   ├── role.go
-│   └── user_filter.go
-├── document/           # 文档相关模型
-│   ├── project.go
-│   ├── character.go
-│   ├── location.go
-│   └── timeline.go
-├── ai/                 # AI相关模型
-│   ├── aimodel.go
-│   ├── chat_session.go
-│   ├── context.go
-│   └── provider.go
-├── reading/            # 阅读相关模型
-│   ├── bookstore/
-│   ├── reader/
-│   └── recommendation/
-├── shared/             # 共享模型
-│   ├── auth/
-│   ├── wallet/
-│   └── storage/
-└── enter.go           # 模型入口
-```
+**组织结构**：按业务域分包（users, document, ai, reading, shared 等）
 
-**示例代码**：
-```go
-// models/users/user.go
-package users
-
-import "time"
-
-type User struct {
-    ID        string    `bson:"_id,omitempty" json:"id"`
-    Username  string    `bson:"username" json:"username" validate:"required,min=3,max=50"`
-    Email     string    `bson:"email" json:"email" validate:"required,email"`
-    Password  string    `bson:"password" json:"-"`
-    Role      string    `bson:"role" json:"role" validate:"required"`
-    Status    string    `bson:"status" json:"status"`
-    CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
-    UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-}
-
-// 基础数据方法
-func (u *User) IsActive() bool {
-    return u.Status == "active"
-}
-
-func (u *User) GetDisplayName() string {
-    if u.Username != "" {
-        return u.Username
-    }
-    return u.Email
-}
-```
+> **详细说明**：参见实际代码 `models/` 目录
 
 ---
 
 ### 2. Repository 层 (`repository/`)
 
-**职责**：
-- ✅ 数据持久化操作
-- ✅ 查询封装和优化
-- ✅ 事务管理
-- ✅ 缓存策略
-- ✅ 数据库无关的接口定义
-- ❌ 不包含业务逻辑
-- ❌ 不处理HTTP请求
+**核心职责**：
+- ✅ 数据持久化和查询封装
+- ✅ 事务管理和缓存策略
+- ✅ 提供数据库无关的接口抽象
+- ❌ 不包含业务逻辑、HTTP 处理
 
-**文件组织**：
-```
-repository/
-├── interfaces/                    # Repository接口定义
-│   ├── infrastructure/            # 基础设施接口
-│   │   ├── base_interface.go      # 基础CRUD接口
-│   │   ├── queryBuilder_interface.go
-│   │   └── transaction_manager_interface.go
-│   ├── user/                      # 用户Repository接口
-│   │   ├── UserRepository_interface.go
-│   │   └── RoleRepository_interface.go
-│   ├── writing/                   # 写作Repository接口
-│   │   └── ProjectDocumentRepository_interface.go
-│   ├── bookstore/                 # 书店Repository接口
-│   ├── reading/                   # 阅读Repository接口
-│   ├── shared/                    # 共享Repository接口
-│   └── repository_factory.go      # Repository工厂接口
-├── mongodb/                       # MongoDB实现
-│   ├── user/
-│   │   └── user_repository_mongo.go
-│   ├── writing/
-│   │   └── project_repository_mongo.go
-│   ├── bookstore/
-│   ├── reading/
-│   ├── shared/
-│   ├── factory.go                 # MongoDB工厂实现
-│   └── MongoQueryBuilder.go       # MongoDB查询构建器
-└── Mock/                          # Mock实现（用于测试）
-```
+**组织结构**：
+- `interfaces/` - 接口定义（按业务域分包）
+- `mongodb/` - MongoDB 具体实现
+- `Mock/` - Mock 实现（测试用）
 
-**核心接口设计**：
+**核心模式**：
+- **Factory 模式**：通过 RepositoryFactory 创建实例
+- **接口抽象**：基础 CRUD + 业务特定查询
+- **QueryBuilder**：复杂查询条件构建器
 
-#### 2.1 基础CRUD接口
+**最佳实践**：
+- ✅ 所有数据库操作必须在 Repository 层
+- ✅ 使用接口定义，便于多实现和测试
+- ✅ 统一错误处理，支持健康检查
+- ❌ 不处理业务逻辑
 
-```go
-// repository/interfaces/infrastructure/base_interface.go
-package infrastructure
-
-type CRUDRepository[T any, ID comparable] interface {
-    Create(ctx context.Context, entity T) error
-    GetByID(ctx context.Context, id ID) (T, error)
-    Update(ctx context.Context, id ID, updates map[string]interface{}) error
-    Delete(ctx context.Context, id ID) error
-    List(ctx context.Context, filter Filter) ([]T, error)
-    Count(ctx context.Context, filter Filter) (int64, error)
-    Exists(ctx context.Context, id ID) (bool, error)
-}
-
-// 批量操作接口
-type BatchRepository[T any, ID comparable] interface {
-    BatchCreate(ctx context.Context, entities []T) error
-    BatchUpdate(ctx context.Context, ids []ID, updates map[string]interface{}) error
-    BatchDelete(ctx context.Context, ids []ID) error
-}
-
-// 健康检查接口
-type HealthRepository interface {
-    Health(ctx context.Context) error
-}
-```
-
-#### 2.2 业务Repository接口
-
-```go
-// repository/interfaces/user/UserRepository_interface.go
-package user
-
-type UserRepository interface {
-    // 基础CRUD操作
-    Create(ctx context.Context, user *models.User) error
-    GetByID(ctx context.Context, id string) (*models.User, error)
-    Update(ctx context.Context, id string, updates map[string]interface{}) error
-    Delete(ctx context.Context, id string) error
-    
-    // 业务特定查询
-    GetByUsername(ctx context.Context, username string) (*models.User, error)
-    GetByEmail(ctx context.Context, email string) (*models.User, error)
-    ExistsByUsername(ctx context.Context, username string) (bool, error)
-    ExistsByEmail(ctx context.Context, email string) (bool, error)
-    
-    // 复杂查询
-    List(ctx context.Context, filter infrastructure.Filter) ([]*models.User, error)
-    FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[models.User], error)
-    
-    // 业务操作
-    UpdateLastLogin(ctx context.Context, id string) error
-    UpdatePassword(ctx context.Context, id string, hashedPassword string) error
-    GetActiveUsers(ctx context.Context, limit int64) ([]*models.User, error)
-    
-    // 健康检查
-    Health(ctx context.Context) error
-}
-```
-
-#### 2.3 Repository工厂模式
-
-```go
-// repository/interfaces/repository_factory.go
-package interfaces
-
-type RepositoryFactory interface {
-    // 用户相关Repository
-    CreateUserRepository() user.UserRepository
-    CreateRoleRepository() user.RoleRepository
-    
-    // 项目相关Repository
-    CreateProjectRepository() writing.ProjectRepository
-    
-    // 阅读相关Repository
-    CreateReadingSettingsRepository() reading.ReadingSettingsRepository
-    
-    // 基础设施方法
-    Health(ctx context.Context) error
-    Close() error
-    GetDatabaseType() string
-}
-```
-
-#### 2.4 MongoDB实现示例
-
-```go
-// repository/mongodb/user/user_repository_mongo.go
-package user
-
-type MongoUserRepository struct {
-    collection   *mongo.Collection
-    queryBuilder infrastructure.QueryBuilder
-}
-
-func NewMongoUserRepository(db *mongo.Database) UserRepository {
-    return &MongoUserRepository{
-        collection:   db.Collection("users"),
-        queryBuilder: mongodb.NewMongoQueryBuilder(),
-    }
-}
-
-func (r *MongoUserRepository) Create(ctx context.Context, user *models.User) error {
-    user.ID = primitive.NewObjectID().Hex()
-    user.CreatedAt = time.Now()
-    user.UpdatedAt = time.Now()
-    
-    _, err := r.collection.InsertOne(ctx, user)
-    if err != nil {
-        if mongo.IsDuplicateKeyError(err) {
-            return infrastructure.NewValidationError("用户已存在")
-        }
-        return fmt.Errorf("创建用户失败: %w", err)
-    }
-    
-    return nil
-}
-
-func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-    var user models.User
-    err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            return nil, nil // 用户不存在
-        }
-        return nil, fmt.Errorf("查询用户失败: %w", err)
-    }
-    return &user, nil
-}
-
-func (r *MongoUserRepository) FindWithPagination(
-    ctx context.Context,
-    filter infrastructure.Filter,
-    pagination infrastructure.Pagination,
-) (*infrastructure.PagedResult[models.User], error) {
-    // 计算分页参数
-    pagination.CalculatePagination()
-    
-    // 构建查询条件
-    mongoFilter := r.queryBuilder.BuildFilter(filter.GetConditions())
-    
-    // 查询总数
-    total, err := r.collection.CountDocuments(ctx, mongoFilter)
-    if err != nil {
-        return nil, fmt.Errorf("统计用户数量失败: %w", err)
-    }
-    
-    // 查询数据
-    opts := options.Find().
-        SetSkip(int64(pagination.Skip)).
-        SetLimit(int64(pagination.PageSize)).
-        SetSort(filter.GetSort())
-    
-    cursor, err := r.collection.Find(ctx, mongoFilter, opts)
-    if err != nil {
-        return nil, fmt.Errorf("查询用户列表失败: %w", err)
-    }
-    defer cursor.Close(ctx)
-    
-    var users []*models.User
-    if err = cursor.All(ctx, &users); err != nil {
-        return nil, fmt.Errorf("解析用户数据失败: %w", err)
-    }
-    
-    return infrastructure.NewPagedResult(users, total, pagination), nil
-}
-```
-
-**Repository层最佳实践**：
-1. ✅ 所有数据库操作必须在Repository层
-2. ✅ 使用接口定义，具体实现分离
-3. ✅ 统一错误处理和日志记录
-4. ✅ 支持事务操作
-5. ✅ 实现健康检查
-6. ✅ 复杂查询使用QueryBuilder封装
-7. ❌ 不在Repository层处理业务逻辑
+> **详细说明**：参见 `doc/architecture/repository层设计规范.md`
 
 ---
 
 ### 3. Service 层 (`service/`)
 
-**职责**：
-- ✅ 业务逻辑处理
-- ✅ 业务规则验证
-- ✅ 流程控制
-- ✅ 事务协调
-- ✅ 事件发布
-- ✅ 调用Repository进行数据操作
-- ❌ 不直接操作数据库
-- ❌ 不处理HTTP请求细节
-- ❌ 不操作gin.Context
+**核心职责**：
+- ✅ 业务逻辑处理和规则验证
+- ✅ 流程控制和事务协调
+- ✅ 事件发布（EventBus）
+- ✅ 调用 Repository 进行数据操作
+- ❌ 不直接操作数据库、不处理 HTTP 请求、不操作 gin.Context
 
-**文件组织**：
-```
-service/
-├── base/                      # 基础服务
-│   └── base_service.go        # 服务基类和接口
-├── interfaces/                # Service接口定义
-│   ├── base_service.go
-│   ├── user_service.go
-│   ├── ai_service.go
-│   └── adapter_manager.go
-├── container/                 # 服务容器
-│   └── service_container.go
-├── user/                      # 用户服务实现
-│   ├── user_service.go
-│   ├── role_service.go
-│   └── auth_service.go
-├── ai/                        # AI服务实现
-│   ├── ai_service.go
-│   ├── chat_service.go
-│   ├── context_service.go
-│   └── adapter/               # 多提供商适配器
-├── project/                   # 项目服务实现
-│   ├── project_service.go
-│   ├── document_service.go
-│   └── version_service.go
-├── bookstore/                 # 书店服务实现
-├── reading/                   # 阅读服务实现
-├── shared/                    # 共享服务
-│   ├── auth/
-│   ├── wallet/
-│   └── storage/
-└── enter.go                   # 服务入口
-```
+**组织结构**：
+- `base/` - 基础服务接口
+- `interfaces/` - Service 接口定义
+- `container/` - 服务容器（依赖注入）
+- 业务服务包：user, ai, project, bookstore, reading, shared 等
 
-**核心接口设计**：
+**核心模式**：
+- **BaseService 接口**：Initialize, Health, Close, GetServiceName, GetVersion
+- **依赖注入**：通过构造函数注入 Repository 接口和 EventBus
+- **ServiceContainer**：管理服务注册、获取和初始化
+- **事件驱动**：业务操作后发布事件
 
-#### 3.1 基础Service接口
+**最佳实践**：
+- ✅ 所有业务逻辑必须在 Service 层
+- ✅ 通过 Repository 接口访问数据
+- ✅ 使用 EventBus 发布业务事件
+- ✅ 统一的参数验证和错误处理
+- ❌ 不直接操作数据库和 HTTP
 
-```go
-// service/base/base_service.go
-package base
-
-type BaseService interface {
-    // 初始化服务
-    Initialize(ctx context.Context) error
-    
-    // 健康检查
-    Health(ctx context.Context) error
-    
-    // 关闭服务
-    Close(ctx context.Context) error
-    
-    // 获取服务名称
-    GetServiceName() string
-    
-    // 获取服务版本
-    GetVersion() string
-}
-```
-
-#### 3.2 业务Service实现
-
-```go
-// service/user/user_service.go
-package user
-
-type UserService struct {
-    userRepo     repository.UserRepository    // Repository接口
-    roleRepo     repository.RoleRepository
-    eventBus     base.EventBus                // 事件总线
-    validator    base.Validator               // 验证器
-    serviceName  string
-    version      string
-}
-
-func NewUserService(
-    userRepo repository.UserRepository,
-    roleRepo repository.RoleRepository,
-    eventBus base.EventBus,
-) *UserService {
-    return &UserService{
-        userRepo:    userRepo,
-        roleRepo:    roleRepo,
-        eventBus:    eventBus,
-        validator:   base.NewBaseValidator(),
-        serviceName: "UserService",
-        version:     "1.0.0",
-    }
-}
-
-// 实现BaseService接口
-func (s *UserService) Initialize(ctx context.Context) error {
-    // 初始化逻辑
-    return nil
-}
-
-func (s *UserService) Health(ctx context.Context) error {
-    // 检查依赖的Repository健康状态
-    return s.userRepo.Health(ctx)
-}
-
-func (s *UserService) Close(ctx context.Context) error {
-    // 清理资源
-    return nil
-}
-
-func (s *UserService) GetServiceName() string {
-    return s.serviceName
-}
-
-func (s *UserService) GetVersion() string {
-    return s.version
-}
-
-// 业务方法示例
-func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
-    // 1. 参数验证
-    if err := s.validateCreateUserRequest(req); err != nil {
-        return nil, errors.NewValidationError("参数验证失败").WithDetails(err.Error())
-    }
-    
-    // 2. 业务规则检查
-    exists, err := s.userRepo.ExistsByEmail(ctx, req.Email)
-    if err != nil {
-        return nil, errors.NewInternalError("检查邮箱失败").WithCause(err)
-    }
-    if exists {
-        return nil, errors.NewValidationError("邮箱已被注册")
-    }
-    
-    // 3. 数据处理
-    hashedPassword, err := s.hashPassword(req.Password)
-    if err != nil {
-        return nil, errors.NewInternalError("密码加密失败").WithCause(err)
-    }
-    
-    user := &models.User{
-        Username: req.Username,
-        Email:    req.Email,
-        Password: hashedPassword,
-        Role:     "user",
-        Status:   "active",
-    }
-    
-    // 4. 通过Repository保存
-    if err := s.userRepo.Create(ctx, user); err != nil {
-        return nil, errors.NewInternalError("创建用户失败").WithCause(err)
-    }
-    
-    // 5. 发布事件
-    event := &base.BaseEvent{
-        EventType: "user.created",
-        EventData: map[string]interface{}{
-            "user_id": user.ID,
-            "email":   user.Email,
-        },
-        Timestamp: time.Now(),
-        Source:    s.serviceName,
-    }
-    s.eventBus.PublishAsync(ctx, event)
-    
-    // 6. 返回响应
-    return &CreateUserResponse{
-        UserID:   user.ID,
-        Username: user.Username,
-        Email:    user.Email,
-    }, nil
-}
-
-// 私有验证方法
-func (s *UserService) validateCreateUserRequest(req *CreateUserRequest) error {
-    if req.Username == "" {
-        return fmt.Errorf("用户名不能为空")
-    }
-    if req.Email == "" {
-        return fmt.Errorf("邮箱不能为空")
-    }
-    if req.Password == "" || len(req.Password) < 6 {
-        return fmt.Errorf("密码长度不能少于6位")
-    }
-    return nil
-}
-
-func (s *UserService) hashPassword(password string) (string, error) {
-    hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    if err != nil {
-        return "", err
-    }
-    return string(hashed), nil
-}
-```
-
-#### 3.3 服务容器
-
-```go
-// service/container/service_container.go
-package container
-
-type ServiceContainer struct {
-    repositoryFactory interfaces.RepositoryFactory
-    services          map[string]base.BaseService
-    eventBus          base.EventBus
-    initialized       bool
-}
-
-func NewServiceContainer(repositoryFactory interfaces.RepositoryFactory) *ServiceContainer {
-    return &ServiceContainer{
-        repositoryFactory: repositoryFactory,
-        services:          make(map[string]base.BaseService),
-        eventBus:          base.NewSimpleEventBus(),
-        initialized:       false,
-    }
-}
-
-func (c *ServiceContainer) RegisterService(name string, service base.BaseService) error {
-    if c.services[name] != nil {
-        return fmt.Errorf("服务 %s 已存在", name)
-    }
-    c.services[name] = service
-    return nil
-}
-
-func (c *ServiceContainer) GetService(name string) (base.BaseService, error) {
-    service, exists := c.services[name]
-    if !exists {
-        return nil, fmt.Errorf("服务 %s 不存在", name)
-    }
-    return service, nil
-}
-
-func (c *ServiceContainer) Initialize(ctx context.Context) error {
-    if c.initialized {
-        return nil
-    }
-    
-    for name, service := range c.services {
-        if err := service.Initialize(ctx); err != nil {
-            return fmt.Errorf("初始化服务 %s 失败: %w", name, err)
-        }
-    }
-    
-    c.initialized = true
-    return nil
-}
-```
-
-**Service层最佳实践**：
-1. ✅ 所有业务逻辑必须在Service层
-2. ✅ 通过Repository接口访问数据
-3. ✅ 使用事件总线发布业务事件
-4. ✅ 统一的参数验证
-5. ✅ 统一的错误处理
-6. ✅ 支持依赖注入和单元测试
-7. ❌ 不直接操作数据库
-8. ❌ 不处理HTTP请求
+> **详细说明**：参见 `doc/architecture/架构设计规范.md`
 
 ---
 
 ### 4. API 层 (`api/v1/`)
 
-**职责**：
-- ✅ HTTP请求处理
-- ✅ 参数绑定和验证
-- ✅ 调用Service处理业务
-- ✅ 构建HTTP响应
-- ✅ 错误转换（Service错误 → HTTP状态码）
+**核心职责**：
+- ✅ HTTP 请求处理：参数绑定和验证
+- ✅ 调用 Service 层处理业务
+- ✅ 构建 HTTP 响应和错误转换
+- ❌ 不包含业务逻辑、不直接操作数据库、不直接调用 Repository
+
+**组织结构**：按业务域分包（system, document, ai, reading, reader, recommendation, shared, writer 等）
+
+**核心模式**：
+- **统一响应格式**：Success, Error, ValidationError
+- **错误转换**：Service 层错误 → HTTP 状态码
+- **上下文获取**：从 gin.Context 获取用户信息（由中间件注入）
+
+**最佳实践**：
+- ✅ 只处理 HTTP 协议相关逻辑
+- ✅ 参数绑定后调用 Service 层
+- ✅ 统一响应格式和错误处理
 - ❌ 不包含业务逻辑
-- ❌ 不直接操作数据库
-- ❌ 不直接调用Repository
 
-**文件组织**：
-```
-api/v1/
-├── system/                    # 系统相关API
-│   └── sys_user.go
-├── document/                  # 文档相关API
-│   ├── document_api.go
-│   ├── project_api.go
-│   └── version_api.go
-├── ai/                        # AI相关API
-│   ├── ai_api.go
-│   ├── chat_api.go
-│   ├── image_api.go
-│   └── novel_context_api.go
-├── reading/                   # 阅读相关API
-│   ├── bookstore_api.go
-│   ├── book_detail_api.go
-│   ├── book_rating_api.go
-│   └── chapter_api.go
-├── reader/                    # 阅读器API
-├── recommendation/            # 推荐API
-├── shared/                    # 共享API
-│   ├── auth_api.go
-│   ├── admin_api.go
-│   ├── wallet_api.go
-│   ├── storage_api.go
-│   ├── request_validator.go
-│   └── response.go
-└── writer/                    # 写作相关API
-```
-
-**API实现示例**：
-
-```go
-// api/v1/system/sys_user.go
-package system
-
-type UserApi struct {
-    userService service.UserService
-    validator   *validator.Validate
-}
-
-func NewUserApi(userService service.UserService) *UserApi {
-    return &UserApi{
-        userService: userService,
-        validator:   validator.New(),
-    }
-}
-
-// 注册用户
-func (api *UserApi) Register(c *gin.Context) {
-    // 1. 参数绑定
-    var req service.CreateUserRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        response.Error(c, http.StatusBadRequest, "参数格式错误", err.Error())
-        return
-    }
-    
-    // 2. 参数验证
-    if err := api.validator.Struct(&req); err != nil {
-        response.ValidationError(c, err)
-        return
-    }
-    
-    // 3. 调用Service层处理业务
-    resp, err := api.userService.CreateUser(c.Request.Context(), &req)
-    if err != nil {
-        // 4. 错误处理
-        api.handleError(c, err)
-        return
-    }
-    
-    // 5. 成功响应
-    response.Success(c, http.StatusCreated, "用户注册成功", resp)
-}
-
-// 用户登录
-func (api *UserApi) Login(c *gin.Context) {
-    var req service.LoginRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        response.Error(c, http.StatusBadRequest, "参数格式错误", err.Error())
-        return
-    }
-    
-    // 调用Service层
-    resp, err := api.userService.Login(c.Request.Context(), &req)
-    if err != nil {
-        api.handleError(c, err)
-        return
-    }
-    
-    response.Success(c, http.StatusOK, "登录成功", resp)
-}
-
-// 获取用户信息
-func (api *UserApi) GetProfile(c *gin.Context) {
-    // 从中间件获取用户ID
-    userID, exists := c.Get("userId")
-    if !exists {
-        response.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
-        return
-    }
-    
-    user, err := api.userService.GetUserByID(c.Request.Context(), userID.(string))
-    if err != nil {
-        api.handleError(c, err)
-        return
-    }
-    
-    response.Success(c, http.StatusOK, "获取成功", user)
-}
-
-// 错误处理
-func (api *UserApi) handleError(c *gin.Context, err error) {
-    // 转换Service层错误为HTTP响应
-    if unifiedErr, ok := err.(*errors.UnifiedError); ok {
-        response.Error(c, unifiedErr.GetHTTPStatus(), unifiedErr.Message, unifiedErr.Details)
-        return
-    }
-    
-    // 默认错误响应
-    response.Error(c, http.StatusInternalServerError, "内部服务器错误", err.Error())
-}
-```
-
-**统一响应格式**：
-
-```go
-// api/v1/shared/response.go
-package shared
-
-type Response struct {
-    Code    int         `json:"code"`
-    Message string      `json:"message"`
-    Data    interface{} `json:"data,omitempty"`
-    Error   string      `json:"error,omitempty"`
-}
-
-func Success(c *gin.Context, code int, message string, data interface{}) {
-    c.JSON(code, Response{
-        Code:    code,
-        Message: message,
-        Data:    data,
-    })
-}
-
-func Error(c *gin.Context, code int, message string, errorDetail string) {
-    c.JSON(code, Response{
-        Code:    code,
-        Message: message,
-        Error:   errorDetail,
-    })
-}
-
-func ValidationError(c *gin.Context, err error) {
-    c.JSON(http.StatusBadRequest, Response{
-        Code:    http.StatusBadRequest,
-        Message: "参数验证失败",
-        Error:   err.Error(),
-    })
-}
-```
-
-**API层最佳实践**：
-1. ✅ 只处理HTTP协议相关逻辑
-2. ✅ 参数绑定和基础验证
-3. ✅ 调用Service层处理业务
-4. ✅ 统一的响应格式
-5. ✅ 统一的错误处理
-6. ✅ 从context获取用户信息
-7. ❌ 不包含业务逻辑
-8. ❌ 不直接调用Repository
+> **详细说明**：参见 `doc/api/API设计规范.md`
 
 ---
 
 ### 5. Router 层 (`router/`)
 
-**职责**：
+**核心职责**：
 - ✅ 路由定义和注册
-- ✅ 中间件配置
-- ✅ API版本管理
-- ✅ 路由分组
+- ✅ 中间件配置（认证、权限、限流等）
+- ✅ API 版本管理和路由分组
+- ❌ 不处理业务逻辑、不处理请求参数
+
+**组织结构**：
+- `enter.go` - 路由入口和全局中间件
+- 业务路由包：users, project, ai, bookstore, reading, shared, writer 等
+
+**核心模式**：
+- **路由分组**：public（公开）、authenticated（需认证）、admin（管理员）
+- **中间件链**：Logger → CORS → Recovery → JWTAuth → Permission
+- **RESTful 风格**：GET/POST/PUT/DELETE + 资源路径
+
+**最佳实践**：
+- ✅ 清晰的路由分组和版本管理
+- ✅ RESTful 风格的路径设计
+- ✅ 合理的中间件顺序
+- ✅ 基于角色的访问控制
 - ❌ 不处理业务逻辑
-- ❌ 不处理请求参数
 
-**文件组织**：
-```
-router/
-├── users/                     # 用户路由
-│   └── sys_user.go
-├── project/                   # 项目路由
-│   ├── project.go
-│   └── project_document.go
-├── ai/                        # AI路由
-│   └── ai_router.go
-├── bookstore/                 # 书店路由
-│   └── bookstore_router.go
-├── reading/                   # 阅读路由
-├── shared/                    # 共享路由
-│   └── shared_router.go
-└── enter.go                   # 路由入口
-```
-
-**路由实现示例**：
-
-```go
-// router/enter.go
-package router
-
-func InitRoutes(r *gin.Engine, container *service.ServiceContainer) {
-    // 全局中间件
-    r.Use(middleware.Logger())
-    r.Use(middleware.CORS())
-    r.Use(middleware.Recovery())
-    
-    // API版本分组
-    v1 := r.Group("/api/v1")
-    {
-        // 公开路由（无需认证）
-        public := v1.Group("/")
-        {
-            // 用户认证相关
-            authApi := api.NewAuthApi(container)
-            public.POST("/register", authApi.Register)
-            public.POST("/login", authApi.Login)
-        }
-        
-        // 需要认证的路由
-        authenticated := v1.Group("/")
-        authenticated.Use(middleware.JWTAuth())
-        {
-            // 用户相关路由
-            users.InitUserRouter(authenticated, container)
-            
-            // 文档相关路由
-            project.InitProjectRouter(authenticated, container)
-            
-            // AI相关路由
-            ai.InitAIRouter(authenticated, container)
-            
-            // 书店相关路由
-            bookstore.InitBookstoreRouter(authenticated, container)
-            
-            // 共享服务路由
-            shared.InitSharedRouter(authenticated, container)
-        }
-        
-        // 管理员路由
-        admin := v1.Group("/admin")
-        admin.Use(middleware.JWTAuth())
-        admin.Use(middleware.AdminPermission())
-        {
-            // 管理员相关路由
-            shared.InitAdminRouter(admin, container)
-        }
-    }
-    
-    // 健康检查
-    r.GET("/health", func(c *gin.Context) {
-        if err := container.Health(c.Request.Context()); err != nil {
-            c.JSON(http.StatusServiceUnavailable, gin.H{
-                "status": "unhealthy",
-                "error":  err.Error(),
-            })
-            return
-        }
-        c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-    })
-}
-```
-
-```go
-// router/users/sys_user.go
-package users
-
-func InitUserRouter(r *gin.RouterGroup, container *service.ServiceContainer) {
-    userService, _ := container.GetService("UserService")
-    userApi := api.NewUserApi(userService.(service.UserService))
-    
-    userGroup := r.Group("/users")
-    {
-        // 用户信息
-        userGroup.GET("/profile", userApi.GetProfile)
-        userGroup.PUT("/profile", userApi.UpdateProfile)
-        userGroup.PUT("/password", userApi.ChangePassword)
-        
-        // 用户管理（需要管理员权限）
-        adminGroup := userGroup.Group("")
-        adminGroup.Use(middleware.AdminPermission())
-        {
-            adminGroup.GET("", userApi.ListUsers)
-            adminGroup.GET("/:id", userApi.GetUser)
-            adminGroup.PUT("/:id", userApi.UpdateUser)
-            adminGroup.DELETE("/:id", userApi.DeleteUser)
-        }
-    }
-}
-```
-
-**Router层最佳实践**：
-1. ✅ 清晰的路由分组
-2. ✅ RESTful风格的路径设计
-3. ✅ 合理的中间件顺序
-4. ✅ 统一的路径命名
-5. ✅ 基于角色的访问控制
-6. ❌ 不在路由层处理业务逻辑
+> **详细说明**：参见 `doc/architecture/路由层设计规范.md`
 
 ---
 
 ## 统一错误处理
 
-### 错误分类
+**错误分类**：
+- `CategoryValidation` - 参数验证错误（400）
+- `CategoryBusiness` - 业务逻辑错误（409/404）
+- `CategoryAuth` - 认证授权错误（401/403）
+- `CategorySystem` - 系统错误（500）
+- `CategoryDatabase` - 数据库错误
+- `CategoryExternal` - 外部服务错误
 
-```go
-// pkg/errors/unified_error.go
-package errors
+**UnifiedError 结构**：包含 Code, Category, Message, Details, Service, Operation, HTTPStatus 等字段
 
-type ErrorCategory string
+**创建函数**：
+- `NewValidationError()` - 参数验证错误
+- `NewBusinessError()` - 业务错误
+- `NewNotFoundError()` - 资源未找到
+- `NewInternalError()` - 内部错误
+- `NewAuthError()` - 认证错误
 
-const (
-    CategoryValidation ErrorCategory = "validation"  // 参数验证错误
-    CategoryBusiness   ErrorCategory = "business"    // 业务逻辑错误
-    CategorySystem     ErrorCategory = "system"      // 系统错误
-    CategoryExternal   ErrorCategory = "external"    // 外部服务错误
-    CategoryNetwork    ErrorCategory = "network"     // 网络错误
-    CategoryAuth       ErrorCategory = "auth"        // 认证授权错误
-    CategoryDatabase   ErrorCategory = "database"    // 数据库错误
-    CategoryCache      ErrorCategory = "cache"       // 缓存错误
-)
+**使用规范**：
+- **Repository 层**：返回基础错误或特定错误类型
+- **Service 层**：使用 UnifiedError 包装，添加业务上下文
+- **API 层**：转换为 HTTP 状态码和响应
 
-type UnifiedError struct {
-    ID         string                 `json:"id"`
-    Code       string                 `json:"code"`
-    Category   ErrorCategory          `json:"category"`
-    Message    string                 `json:"message"`
-    Details    string                 `json:"details,omitempty"`
-    Service    string                 `json:"service,omitempty"`
-    Operation  string                 `json:"operation,omitempty"`
-    Cause      error                  `json:"-"`
-    Metadata   map[string]interface{} `json:"metadata,omitempty"`
-    HTTPStatus int                    `json:"http_status"`
-    Retryable  bool                   `json:"retryable"`
-    Timestamp  time.Time              `json:"timestamp"`
-}
-```
-
-### 错误创建函数
-
-```go
-// 验证错误
-func NewValidationError(message string) *UnifiedError {
-    return &UnifiedError{
-        Code:       "VALIDATION_ERROR",
-        Category:   CategoryValidation,
-        Message:    message,
-        HTTPStatus: http.StatusBadRequest,
-        Timestamp:  time.Now(),
-    }
-}
-
-// 业务错误
-func NewBusinessError(message string) *UnifiedError {
-    return &UnifiedError{
-        Code:       "BUSINESS_ERROR",
-        Category:   CategoryBusiness,
-        Message:    message,
-        HTTPStatus: http.StatusConflict,
-        Timestamp:  time.Now(),
-    }
-}
-
-// 未找到错误
-func NewNotFoundError(message string) *UnifiedError {
-    return &UnifiedError{
-        Code:       "NOT_FOUND",
-        Category:   CategoryBusiness,
-        Message:    message,
-        HTTPStatus: http.StatusNotFound,
-        Timestamp:  time.Now(),
-    }
-}
-
-// 内部错误
-func NewInternalError(message string) *UnifiedError {
-    return &UnifiedError{
-        Code:       "INTERNAL_ERROR",
-        Category:   CategorySystem,
-        Message:    message,
-        HTTPStatus: http.StatusInternalServerError,
-        Timestamp:  time.Now(),
-    }
-}
-
-// 认证错误
-func NewAuthError(message string) *UnifiedError {
-    return &UnifiedError{
-        Code:       "AUTH_ERROR",
-        Category:   CategoryAuth,
-        Message:    message,
-        HTTPStatus: http.StatusUnauthorized,
-        Timestamp:  time.Now(),
-    }
-}
-```
-
-### 错误使用示例
-
-```go
-// Service层
-func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
-    // 参数验证错误
-    if req.Email == "" {
-        return nil, errors.NewValidationError("邮箱不能为空")
-    }
-    
-    // 业务错误
-    exists, _ := s.userRepo.ExistsByEmail(ctx, req.Email)
-    if exists {
-        return nil, errors.NewBusinessError("邮箱已被注册")
-    }
-    
-    // 内部错误
-    if err := s.userRepo.Create(ctx, user); err != nil {
-        return nil, errors.NewInternalError("创建用户失败").
-            WithCause(err).
-            WithService(s.serviceName, "CreateUser")
-    }
-    
-    return resp, nil
-}
-
-// API层
-func (api *UserApi) Register(c *gin.Context) {
-    resp, err := api.userService.CreateUser(c.Request.Context(), &req)
-    if err != nil {
-        if unifiedErr, ok := err.(*errors.UnifiedError); ok {
-            c.JSON(unifiedErr.GetHTTPStatus(), gin.H{
-                "code":    unifiedErr.Code,
-                "message": unifiedErr.Message,
-                "details": unifiedErr.Details,
-            })
-            return
-        }
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "code":    "INTERNAL_ERROR",
-            "message": "内部服务器错误",
-        })
-        return
-    }
-    
-    response.Success(c, http.StatusCreated, "注册成功", resp)
-}
-```
+> **详细说明**：参见 `pkg/errors/` 包实现
 
 ---
 
 ## 事件驱动架构
 
-### 事件总线
+**核心接口**：
+- `Event` - 事件接口（GetEventType, GetEventData, GetTimestamp, GetSource）
+- `EventHandler` - 事件处理器接口（Handle, GetHandlerName, GetSupportedEventTypes）
+- `EventBus` - 事件总线接口（Subscribe, Unsubscribe, Publish, PublishAsync）
 
-```go
-// service/base/base_service.go
-package base
+**使用流程**：
+1. **定义事件**：定义事件数据结构
+2. **发布事件**：Service 层在业务操作后通过 EventBus 发布
+3. **订阅事件**：实现 EventHandler 接口
+4. **注册处理器**：在应用启动时注册到 EventBus
 
-// 事件接口
-type Event interface {
-    GetEventType() string
-    GetEventData() interface{}
-    GetTimestamp() time.Time
-    GetSource() string
-}
+**典型场景**：
+- 用户注册后发送欢迎邮件
+- 订单创建后更新库存
+- 文档更新后同步搜索索引
 
-// 事件处理器接口
-type EventHandler interface {
-    Handle(ctx context.Context, event Event) error
-    GetHandlerName() string
-    GetSupportedEventTypes() []string
-}
-
-// 事件总线接口
-type EventBus interface {
-    Subscribe(eventType string, handler EventHandler) error
-    Unsubscribe(eventType string, handlerName string) error
-    Publish(ctx context.Context, event Event) error
-    PublishAsync(ctx context.Context, event Event) error
-}
-```
-
-### 事件使用示例
-
-```go
-// 1. 定义事件
-type UserCreatedEvent struct {
-    UserID    string    `json:"user_id"`
-    Username  string    `json:"username"`
-    Email     string    `json:"email"`
-    Timestamp time.Time `json:"timestamp"`
-}
-
-// 2. 发布事件（Service层）
-func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
-    // ... 创建用户逻辑
-    
-    // 发布用户创建事件
-    event := &base.BaseEvent{
-        EventType: "user.created",
-        EventData: UserCreatedEvent{
-            UserID:    user.ID,
-            Username:  user.Username,
-            Email:     user.Email,
-            Timestamp: time.Now(),
-        },
-        Timestamp: time.Now(),
-        Source:    "UserService",
-    }
-    
-    // 异步发布
-    s.eventBus.PublishAsync(ctx, event)
-    
-    return resp, nil
-}
-
-// 3. 订阅和处理事件
-type WelcomeEmailHandler struct {
-    emailService EmailService
-}
-
-func (h *WelcomeEmailHandler) Handle(ctx context.Context, event base.Event) error {
-    data := event.GetEventData().(UserCreatedEvent)
-    
-    // 发送欢迎邮件
-    return h.emailService.SendWelcomeEmail(data.Email, data.Username)
-}
-
-func (h *WelcomeEmailHandler) GetHandlerName() string {
-    return "WelcomeEmailHandler"
-}
-
-func (h *WelcomeEmailHandler) GetSupportedEventTypes() []string {
-    return []string{"user.created"}
-}
-
-// 4. 注册事件处理器
-func initEventHandlers(eventBus base.EventBus) {
-    welcomeHandler := &WelcomeEmailHandler{
-        emailService: email.NewEmailService(),
-    }
-    eventBus.Subscribe("user.created", welcomeHandler)
-}
-```
+> **详细说明**：参见 `service/base/` 包实现
 
 ---
 
@@ -1260,378 +249,161 @@ func initEventHandlers(eventBus base.EventBus) {
 
 ### 1. 命名规范
 
-**文件命名**
-- 使用小写字母和下划线：`user_service.go`、`user_repository_mongo.go`
+**文件命名**：
+- 小写字母 + 下划线：`user_service.go`、`user_repository_mongo.go`
 - 测试文件：`user_service_test.go`
 - 接口文件：`UserRepository_interface.go`
 
-**包名命名**
-- 与目录名一致
-- 使用小写单数形式：`user`、`project`、`ai`
+**包名/结构体/方法命名**：
+- **包名**：小写单数（user, project, ai）
+- **结构体**：大驼峰（UserService, MongoUserRepository, UserApi）
+- **接口**：名词 + 功能（UserRepository, UserService），不用 Interface 后缀
+- **方法**：动词开头（CreateUser, GetUserByID），私有方法小写开头（validateUser）
+- **变量**：小驼峰（userRepo, eventBus），缩写一致（userID 不是 userId）
 
-**结构体命名**
-- 使用大驼峰：`UserService`、`MongoUserRepository`
-- Service实现：`UserService`、`AIService`
-- Repository实现：`MongoUserRepository`、`PostgresUserRepository`
-- API：`UserApi`、`ProjectApi`
-
-**接口命名**
-- 使用名词+接口功能：`UserRepository`、`UserService`
-- 不使用`Interface`后缀（在文件名中体现）
-
-**方法命名**
-- 使用动词开头：`CreateUser`、`GetUserByID`、`UpdateUser`
-- API方法可以简化：`Register`、`Login`、`GetProfile`
-- 私有方法使用小写开头：`validateUser`、`hashPassword`
-
-**变量命名**
-- 使用小驼峰：`userRepo`、`eventBus`
-- 缩写保持一致：`userID`（不是`userId`）
+> **详细规范**：参见 `doc/engineering/软件工程规范_v2.0.md`
 
 ### 2. 注释规范
 
-**包注释**
-```go
-// Package user 提供用户管理相关的业务逻辑
-// 包括用户注册、登录、信息管理等功能
-package user
-```
-
-**结构体注释**
-```go
-// UserService 用户服务
-// 负责处理用户相关的业务逻辑
-type UserService struct {
-    userRepo  repository.UserRepository
-    eventBus  base.EventBus
-    validator base.Validator
-}
-```
-
-**方法注释**
-```go
-// CreateUser 创建新用户
-// 参数:
-//   ctx: 上下文
-//   req: 创建用户请求
-// 返回:
-//   resp: 创建用户响应
-//   error: 错误信息
-func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
-    // 实现
-}
-```
+- **包注释**：说明包的功能和用途
+- **结构体注释**：说明结构体职责
+- **方法注释**：说明功能、参数、返回值
 
 ### 3. 错误处理规范
 
-**Repository层**
-```go
-func (r *MongoUserRepository) Create(ctx context.Context, user *models.User) error {
-    _, err := r.collection.InsertOne(ctx, user)
-    if err != nil {
-        if mongo.IsDuplicateKeyError(err) {
-            return infrastructure.NewValidationError("用户已存在")
-        }
-        return fmt.Errorf("创建用户失败: %w", err)
-    }
-    return nil
-}
-```
-
-**Service层**
-```go
-func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
-    // 业务验证
-    if err := s.validateCreateUserRequest(req); err != nil {
-        return nil, errors.NewValidationError("参数验证失败").WithDetails(err.Error())
-    }
-    
-    // 调用Repository
-    if err := s.userRepo.Create(ctx, user); err != nil {
-        return nil, errors.NewInternalError("创建用户失败").
-            WithCause(err).
-            WithService(s.serviceName, "CreateUser")
-    }
-    
-    return resp, nil
-}
-```
-
-**API层**
-```go
-func (api *UserApi) Register(c *gin.Context) {
-    resp, err := api.userService.CreateUser(c.Request.Context(), &req)
-    if err != nil {
-        api.handleError(c, err)
-        return
-    }
-    response.Success(c, http.StatusCreated, "注册成功", resp)
-}
-```
+- **Repository 层**：使用基础错误或 infrastructure 错误类型
+- **Service 层**：使用 UnifiedError 包装，添加上下文
+- **API 层**：转换为 HTTP 响应
 
 ### 4. 测试规范
 
-**单元测试**
-```go
-// service/user/user_service_test.go
-func TestUserService_CreateUser(t *testing.T) {
-    // 1. 创建Mock依赖
-    mockUserRepo := &MockUserRepository{}
-    mockEventBus := &MockEventBus{}
-    
-    // 2. 创建Service实例
-    service := NewUserService(mockUserRepo, nil, mockEventBus)
-    
-    // 3. 设置Mock期望
-    mockUserRepo.On("ExistsByEmail", mock.Anything, "test@example.com").Return(false, nil)
-    mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Return(nil)
-    
-    // 4. 执行测试
-    req := &CreateUserRequest{
-        Username: "testuser",
-        Email:    "test@example.com",
-        Password: "password123",
-    }
-    
-    resp, err := service.CreateUser(context.Background(), req)
-    
-    // 5. 验证结果
-    assert.NoError(t, err)
-    assert.NotNil(t, resp)
-    assert.Equal(t, "testuser", resp.Username)
-    
-    // 6. 验证Mock调用
-    mockUserRepo.AssertExpectations(t)
-}
-```
+- **单元测试**：使用 Mock Repository 和 EventBus
+- **集成测试**：使用真实 MongoDB 连接
+- **测试组织**：按层级组织（`test/repository/`, `test/service/`, `test/api/`）
 
-**集成测试**
-```go
-func TestUserServiceIntegration(t *testing.T) {
-    // 1. 初始化真实依赖
-    config := &interfaces.MongoConfig{
-        URI:      "mongodb://localhost:27017",
-        Database: "test_db",
-        Timeout:  30 * time.Second,
-    }
-    
-    factory, err := mongodb.NewMongoRepositoryFactory(config)
-    require.NoError(t, err)
-    defer factory.Close()
-    
-    userRepo := factory.CreateUserRepository()
-    eventBus := base.NewSimpleEventBus()
-    
-    // 2. 创建Service
-    service := NewUserService(userRepo, nil, eventBus)
-    err = service.Initialize(context.Background())
-    require.NoError(t, err)
-    
-    // 3. 执行测试
-    // ...
-}
-```
+> **详细说明**：参见 `test/` 目录和 `doc/testing/`
 
 ### 5. 日志规范
 
-```go
-import "github.com/sirupsen/logrus"
+使用结构化日志（logrus），包含 service, operation, request_id 等字段
 
-// 结构化日志
-log.WithFields(logrus.Fields{
-    "service":    "UserService",
-    "operation":  "CreateUser",
-    "user_email": req.Email,
-    "request_id": ctx.Value("request_id"),
-}).Info("开始创建用户")
-
-// 错误日志
-log.WithFields(logrus.Fields{
-    "service":   "UserService",
-    "operation": "CreateUser",
-    "error":     err.Error(),
-}).Error("创建用户失败")
-```
+> **详细说明**：参见 `doc/engineering/软件工程规范_v2.0.md`
 
 ---
 
 ## 项目初始化流程
 
-```go
-// main.go
-func main() {
-    // 1. 加载配置
-    cfg, err := config.LoadConfig()
-    if err != nil {
-        log.Fatal("加载配置失败:", err)
-    }
-    
-    // 2. 初始化数据库
-    mongoConfig := &interfaces.MongoConfig{
-        URI:      cfg.MongoDB.URI,
-        Database: cfg.MongoDB.Database,
-        Timeout:  30 * time.Second,
-    }
-    
-    // 3. 创建Repository工厂
-    repositoryFactory, err := mongodb.NewMongoRepositoryFactory(mongoConfig)
-    if err != nil {
-        log.Fatal("创建Repository工厂失败:", err)
-    }
-    defer repositoryFactory.Close()
-    
-    // 4. 创建服务容器
-    container := service.NewServiceContainer(repositoryFactory)
-    
-    // 5. 注册服务
-    userRepo := repositoryFactory.CreateUserRepository()
-    roleRepo := repositoryFactory.CreateRoleRepository()
-    
-    userService := user.NewUserService(userRepo, roleRepo, container.GetEventBus())
-    container.RegisterService("UserService", userService)
-    
-    projectRepo := repositoryFactory.CreateProjectRepository()
-    projectService := project.NewProjectService(projectRepo, container.GetEventBus())
-    container.RegisterService("ProjectService", projectService)
-    
-    // ... 注册其他服务
-    
-    // 6. 初始化所有服务
-    ctx := context.Background()
-    if err := container.Initialize(ctx); err != nil {
-        log.Fatal("初始化服务容器失败:", err)
-    }
-    
-    // 7. 初始化Gin引擎
-    r := gin.New()
-    r.Use(gin.Logger())
-    r.Use(gin.Recovery())
-    
-    // 8. 注册路由
-    router.InitRoutes(r, container)
-    
-    // 9. 启动服务器
-    log.Printf("服务器启动在端口 %s", cfg.Server.Port)
-    if err := r.Run(cfg.Server.Port); err != nil {
-        log.Fatal("启动服务器失败:", err)
-    }
-}
-```
+1. **加载配置**：使用 Viper 加载多环境配置
+2. **初始化数据库**：创建 MongoDB 连接
+3. **创建 Repository 工厂**：初始化 RepositoryFactory
+4. **创建服务容器**：初始化 ServiceContainer
+5. **注册服务**：通过工厂创建 Repository，注入到 Service，注册到容器
+6. **初始化服务**：调用 container.Initialize()
+7. **初始化 Gin 引擎**：配置中间件
+8. **注册路由**：调用 router.InitRoutes()
+9. **启动服务器**：运行 HTTP 服务器
+
+> **详细说明**：参见 `cmd/server/main.go`
 
 ---
 
 ## 架构检查清单
 
-### Repository层检查清单
-- [ ] 实现了统一的Repository接口
-- [ ] 使用Repository工厂模式
+### Repository 层
+- [ ] 实现统一 Repository 接口
+- [ ] 使用 Repository 工厂模式
 - [ ] 不包含业务逻辑
-- [ ] 统一的错误处理
-- [ ] 支持事务操作
-- [ ] 实现健康检查方法
-- [ ] 查询使用QueryBuilder封装
+- [ ] 统一错误处理和健康检查
+- [ ] 查询使用 QueryBuilder 封装
 
-### Service层检查清单
-- [ ] 实现BaseService接口
-- [ ] 使用依赖注入
-- [ ] 通过Repository接口访问数据
+### Service 层
+- [ ] 实现 BaseService 接口
+- [ ] 使用依赖注入，通过 Repository 接口访问数据
 - [ ] 不直接操作数据库
-- [ ] 统一的参数验证
-- [ ] 统一的错误处理
-- [ ] 发布业务事件
-- [ ] 支持单元测试
+- [ ] 统一参数验证和错误处理
+- [ ] 发布业务事件，支持单元测试
 
-### API层检查清单
-- [ ] 只处理HTTP请求响应
+### API 层
+- [ ] 只处理 HTTP 请求响应
 - [ ] 不包含业务逻辑
-- [ ] 参数绑定和验证
-- [ ] 调用Service层处理业务
-- [ ] 统一的响应格式
-- [ ] 统一的错误转换
-- [ ] 不直接调用Repository
+- [ ] 参数绑定后调用 Service 层
+- [ ] 统一响应格式和错误转换
+- [ ] 不直接调用 Repository
 
-### Router层检查清单
-- [ ] 清晰的路由分组
-- [ ] RESTful风格
+### Router 层
+- [ ] 清晰的路由分组和 RESTful 风格
 - [ ] 合理的中间件顺序
-- [ ] 统一的路径命名
 - [ ] 基于角色的访问控制
 - [ ] 不处理业务逻辑
 
-### 代码质量检查清单
-- [ ] 遵循命名规范
-- [ ] 适当的注释
-- [ ] 统一的错误处理
-- [ ] 单元测试覆盖
-- [ ] 集成测试验证
+### 代码质量
+- [ ] 遵循命名规范和注释规范
+- [ ] 统一错误处理
+- [ ] 单元测试和集成测试覆盖
 - [ ] 代码审查通过
 
 ---
 
 ## 常见问题解答
 
-### Q1: 为什么要使用Repository模式？
-**A**: Repository模式提供了数据访问的抽象层，使得：
+**Q1: 为什么使用 Repository 模式？**
 - 业务逻辑与数据访问分离
-- 便于单元测试（可以Mock Repository）
-- 支持多种数据库实现
-- 提高代码的可维护性和可扩展性
+- 便于单元测试（Mock Repository）
+- 支持多数据库实现
+- 提高可维护性和可扩展性
 
-### Q2: Service层应该包含哪些内容？
-**A**: Service层应该包含：
-- 业务逻辑处理
-- 参数验证
-- 业务规则检查
-- 事务协调
-- 事件发布
-- 不应该包含数据库操作和HTTP处理
+**Q2: Service 层应包含什么？**
+- ✅ 业务逻辑、参数验证、业务规则检查、事务协调、事件发布
+- ❌ 不包含数据库操作和 HTTP 处理
 
-### Q3: 如何处理跨Service的事务？
-**A**: 可以通过以下方式处理：
-- 在Repository层提供事务支持
+**Q3: 如何处理跨 Service 事务？**
+- Repository 层提供事务支持
 - 使用事件驱动架构
-- 使用Saga模式
+- 使用 Saga 模式
 - 考虑最终一致性
 
-### Q4: 如何进行依赖注入？
-**A**: 使用ServiceContainer管理服务依赖：
-- 在应用启动时创建Repository工厂
-- 创建Service实例时注入Repository接口
-- 使用服务容器管理所有服务
-- 通过接口注入依赖，便于测试
-
-### Q5: 如何保证代码质量？
-**A**: 代码质量保证措施：
-- 编写单元测试和集成测试
-- 进行代码审查
-- 使用静态代码分析工具
-- 遵循编码规范
-- 持续集成和持续部署
+**Q4: 如何进行依赖注入？**
+- 使用 ServiceContainer 管理服务依赖
+- 通过构造函数注入 Repository 接口
+- 通过接口注入，便于测试
 
 ---
 
-## 参考资料
+## 参考文档
 
-- [Clean Architecture - Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Repository Pattern - Martin Fowler](https://martinfowler.com/eaaCatalog/repository.html)
-- [Go语言设计模式](https://github.com/tmrts/go-patterns)
-- [MongoDB Go Driver文档](https://pkg.go.dev/go.mongodb.org/mongo-driver)
-- [Gin Web Framework](https://gin-gonic.com/docs/)
-- [Testify测试框架](https://github.com/stretchr/testify)
-- 项目架构文档：`doc/architecture/架构设计规范.md`
-- Repository层设计规范：`doc/architecture/repository层设计规范.md`
-- 架构迁移指南：`doc/migration/architecture_migration_guide.md`
+**架构设计**：
+- `doc/architecture/架构设计规范.md` - 完整架构设计说明
+- `doc/architecture/repository层设计规范.md` - Repository 层详细设计
+- `doc/architecture/路由层设计规范.md` - Router 层设计规范
+- `doc/architecture/项目开发规则.md` - 项目开发规则
+
+**工程规范**：
+- `doc/engineering/软件工程规范_v2.0.md` - 编码规范和最佳实践
+- `doc/engineering/需求分析文档_v2.0.md` - 需求分析文档
+
+**API 文档**：
+- `doc/api/API设计规范.md` - API 设计规范
+- `doc/api/` - 各业务模块 API 文档
+
+**测试文档**：
+- `doc/testing/` - 测试规范和测试报告
+- `test/README.md` - 测试运行指南
+
+**部署运维**：
+- `doc/ops/` - 部署和运维文档
+- `docker/README.md` - Docker 环境说明
 
 ---
 
 ## 版本历史
 
-| 版本 | 日期 | 变更内容 | 作者 |
-|------|------|----------|------|
-| 1.0 | 2025-04-25 | 初始版本，基础分层架构 | null |
-| 2.0 | 2025-10-06 | 重构版本，反映Repository模式、依赖注入、事件驱动等架构升级 | 青羽后端架构 |
+| 版本 | 日期 | 变更内容 |
+|------|------|----------|
+| 2.1 | 2025-10-22 | 简化文档，详细内容指向 doc/ 目录 |
+| 2.0 | 2025-10-06 | 重构版本，Repository 模式、依赖注入、事件驱动 |
+| 1.0 | 2025-04-25 | 初始版本，基础分层架构 |
 
 ---
 
-**最后更新**: 2025-10-06
-**维护者**: 青羽后端架构
+**最后更新**：2025-10-22
+**维护者**：青羽后端架构团队
