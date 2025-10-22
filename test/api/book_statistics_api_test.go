@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	readingAPI "Qingyu_backend/api/v1/reading"
+	bookstoreAPI "Qingyu_backend/api/v1/bookstore"
 	"Qingyu_backend/models/reading/bookstore"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
@@ -212,7 +212,7 @@ func setupStatisticsTestRouter(service bookstoreService.BookStatisticsService) *
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	api := readingAPI.NewBookStatisticsAPI(service)
+	api := bookstoreAPI.NewBookStatisticsAPI(service)
 
 	v1 := router.Group("/api/v1/reading")
 	{
@@ -260,7 +260,7 @@ func TestGetBookStatistics(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -280,7 +280,7 @@ func TestGetBookStatistics_InvalidID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -315,7 +315,7 @@ func TestGetTopViewedBooks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -363,7 +363,7 @@ func TestGetTopFavoritedBooks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -450,7 +450,7 @@ func TestIncrementViewCount(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "增加浏览量成功", response.Message)
@@ -485,7 +485,7 @@ func TestIncrementFavoriteCount(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "增加收藏量成功", response.Message)
@@ -513,7 +513,7 @@ func TestGetAggregatedStatistics(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -538,7 +538,7 @@ func TestGetStatisticsByTimeRange(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -557,7 +557,7 @@ func TestGetStatisticsByTimeRange_InvalidTime(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "开始时间格式错误", response.Message)
@@ -584,7 +584,7 @@ func TestGetDailyStatisticsReport(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -603,7 +603,7 @@ func TestGetDailyStatisticsReport_InvalidDate(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "日期格式错误", response.Message)
@@ -629,7 +629,7 @@ func TestGetWeeklyStatisticsReport(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -648,7 +648,7 @@ func TestGetWeeklyStatisticsReport_MissingParams(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "年份和周数不能为空", response.Message)
@@ -674,7 +674,7 @@ func TestGetMonthlyStatisticsReport(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -699,7 +699,7 @@ func TestSearchStatistics(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "搜索成功", response.Message)
@@ -718,7 +718,7 @@ func TestSearchStatistics_EmptyKeyword(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "搜索关键词不能为空", response.Message)
@@ -739,7 +739,7 @@ func TestGetTopViewedBooks_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.Code)
@@ -762,7 +762,7 @@ func TestIncrementViewCount_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.Code)
@@ -781,7 +781,7 @@ func TestGetStatisticsByTimeRange_MissingParams(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "开始时间和结束时间不能为空", response.Message)

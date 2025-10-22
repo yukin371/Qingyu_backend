@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
-	"time"
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
@@ -15,18 +13,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// AIApi AI服务API
-type AIApi struct {
+// WritingApi AI写作API
+type WritingApi struct {
 	aiService    *aiService.Service
-	chatService  *aiService.ChatService
 	quotaService *aiService.QuotaService
 }
 
-// NewAIApi 创建AI API实例
-func NewAIApi(aiService *aiService.Service, chatService *aiService.ChatService, quotaService *aiService.QuotaService) *AIApi {
-	return &AIApi{
+// NewWritingApi 创建AI写作API实例
+func NewWritingApi(aiService *aiService.Service, quotaService *aiService.QuotaService) *WritingApi {
+	return &WritingApi{
 		aiService:    aiService,
-		chatService:  chatService,
 		quotaService: quotaService,
 	}
 }
@@ -48,8 +44,8 @@ type ContinueWritingRequest struct {
 // @Produce json
 // @Param request body ContinueWritingRequest true "续写请求"
 // @Success 200 {object} response.Response{data=aiService.GenerateContentResponse}
-// @Router /api/v1/ai/continue [post]
-func (api *AIApi) ContinueWriting(c *gin.Context) {
+// @Router /api/v1/ai/writing/continue [post]
+func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
@@ -92,8 +88,8 @@ func (api *AIApi) ContinueWriting(c *gin.Context) {
 // @Produce text/event-stream
 // @Param request body ContinueWritingRequest true "续写请求"
 // @Success 200 {string} string "SSE流"
-// @Router /api/v1/ai/continue/stream [post]
-func (api *AIApi) ContinueWritingStream(c *gin.Context) {
+// @Router /api/v1/ai/writing/continue/stream [post]
+func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
@@ -204,8 +200,8 @@ type RewriteTextRequest struct {
 // @Produce json
 // @Param request body RewriteTextRequest true "改写请求"
 // @Success 200 {object} response.Response{data=aiService.GenerateContentResponse}
-// @Router /api/v1/ai/rewrite [post]
-func (api *AIApi) RewriteText(c *gin.Context) {
+// @Router /api/v1/ai/writing/rewrite [post]
+func (api *WritingApi) RewriteText(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
@@ -262,8 +258,8 @@ func (api *AIApi) RewriteText(c *gin.Context) {
 // @Produce text/event-stream
 // @Param request body RewriteTextRequest true "改写请求"
 // @Success 200 {string} string "SSE流"
-// @Router /api/v1/ai/rewrite/stream [post]
-func (api *AIApi) RewriteTextStream(c *gin.Context) {
+// @Router /api/v1/ai/writing/rewrite/stream [post]
+func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
@@ -363,249 +359,4 @@ func (api *AIApi) RewriteTextStream(c *gin.Context) {
 			return true
 		}
 	})
-}
-
-// ChatRequest 聊天请求
-type ChatRequest struct {
-	SessionID  string              `json:"sessionId"`
-	ProjectID  string              `json:"projectId"`
-	Message    string              `json:"message" binding:"required"`
-	UseContext bool                `json:"useContext"`
-	Options    *ai.GenerateOptions `json:"options"`
-}
-
-// Chat 聊天
-// @Summary AI聊天
-// @Description 与AI助手进行对话
-// @Tags AI聊天
-// @Accept json
-// @Produce json
-// @Param request body ChatRequest true "聊天请求"
-// @Success 200 {object} response.Response{data=aiService.ChatResponse}
-// @Router /api/v1/ai/chat [post]
-func (api *AIApi) Chat(c *gin.Context) {
-	var req ChatRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
-		return
-	}
-
-	// 转换为Service请求
-	serviceReq := &aiService.ChatRequest{
-		SessionID:  req.SessionID,
-		ProjectID:  req.ProjectID,
-		Message:    req.Message,
-		UseContext: req.UseContext,
-		Options:    req.Options,
-	}
-
-	// 调用聊天服务
-	result, err := api.chatService.StartChat(c.Request.Context(), serviceReq)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "聊天失败", err.Error())
-		return
-	}
-
-	// 设置Token使用信息
-	c.Set("tokensUsed", result.TokensUsed)
-	c.Set("aiModel", result.Model)
-	c.Set("requestID", uuid.New().String())
-	c.Set("aiService", "chat")
-
-	shared.Success(c, http.StatusOK, "聊天成功", result)
-}
-
-// ChatStream 聊天（流式）
-// @Summary AI聊天（流式）
-// @Description 与AI助手进行对话，流式返回结果
-// @Tags AI聊天
-// @Accept json
-// @Produce text/event-stream
-// @Param request body ChatRequest true "聊天请求"
-// @Success 200 {string} string "SSE流"
-// @Router /api/v1/ai/chat/stream [post]
-func (api *AIApi) ChatStream(c *gin.Context) {
-	var req ChatRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
-		return
-	}
-
-	// 设置SSE响应头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("X-Accel-Buffering", "no")
-	c.Header("Access-Control-Allow-Origin", "*")
-
-	// 转换为Service请求
-	serviceReq := &aiService.ChatRequest{
-		SessionID:  req.SessionID,
-		ProjectID:  req.ProjectID,
-		Message:    req.Message,
-		UseContext: req.UseContext,
-		Options:    req.Options,
-	}
-
-	// 获取流式响应通道
-	streamChan, err := api.chatService.StartChatStream(c.Request.Context(), serviceReq)
-	if err != nil {
-		c.SSEvent("error", gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	// 流式推送
-	c.Stream(func(w io.Writer) bool {
-		select {
-		case <-c.Request.Context().Done():
-			return false
-
-		case chunk, ok := <-streamChan:
-			if !ok {
-				return false
-			}
-
-			if chunk.IsComplete {
-				c.SSEvent("done", gin.H{
-					"sessionId":  chunk.SessionID,
-					"messageId":  chunk.MessageID,
-					"content":    chunk.Content,
-					"tokensUsed": chunk.TokensUsed,
-					"model":      chunk.Model,
-				})
-
-				// 异步消费配额
-				go func() {
-					userID, _ := c.Get("userId")
-					_ = api.quotaService.ConsumeQuota(
-						c.Request.Context(),
-						userID.(string),
-						chunk.TokensUsed,
-						"chat",
-						chunk.Model,
-						chunk.MessageID,
-					)
-				}()
-
-				return false
-			}
-
-			c.SSEvent("message", gin.H{
-				"sessionId": chunk.SessionID,
-				"messageId": chunk.MessageID,
-				"delta":     chunk.Delta,
-				"content":   chunk.Content,
-				"tokens":    chunk.TokensUsed,
-			})
-
-			return true
-		}
-	})
-}
-
-// GetChatSessions 获取聊天会话列表
-// @Summary 获取聊天会话列表
-// @Description 获取用户的聊天会话列表
-// @Tags AI聊天
-// @Accept json
-// @Produce json
-// @Param projectId query string false "项目ID"
-// @Param limit query int false "每页数量" default(20)
-// @Param offset query int false "偏移量" default(0)
-// @Success 200 {object} response.Response{data=[]dto.ChatSessionDTO}
-// @Router /api/v1/ai/sessions [get]
-func (api *AIApi) GetChatSessions(c *gin.Context) {
-	projectID := c.Query("projectId")
-
-	// 获取分页参数
-	limit := 20
-	offset := 0
-	if l, ok := c.GetQuery("limit"); ok {
-		if n, err := strconv.Atoi(l); err == nil && n > 0 {
-			limit = n
-		}
-	}
-	if o, ok := c.GetQuery("offset"); ok {
-		if n, err := strconv.Atoi(o); err == nil && n >= 0 {
-			offset = n
-		}
-	}
-
-	sessions, err := api.chatService.ListChatSessions(c.Request.Context(), projectID, limit, offset)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取会话列表失败", err.Error())
-		return
-	}
-
-	shared.Success(c, http.StatusOK, "获取成功", sessions)
-}
-
-// GetChatHistory 获取聊天历史
-// @Summary 获取聊天历史
-// @Description 获取指定会话的聊天历史
-// @Tags AI聊天
-// @Accept json
-// @Produce json
-// @Param sessionId path string true "会话ID"
-// @Success 200 {object} response.Response{data=dto.ChatSessionDTO}
-// @Router /api/v1/ai/sessions/:sessionId [get]
-func (api *AIApi) GetChatHistory(c *gin.Context) {
-	sessionID := c.Param("sessionId")
-	if sessionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
-		return
-	}
-
-	session, err := api.chatService.GetChatHistory(c.Request.Context(), sessionID)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取聊天历史失败", err.Error())
-		return
-	}
-
-	shared.Success(c, http.StatusOK, "获取成功", session)
-}
-
-// DeleteChatSession 删除聊天会话
-// @Summary 删除聊天会话
-// @Description 删除指定的聊天会话
-// @Tags AI聊天
-// @Accept json
-// @Produce json
-// @Param sessionId path string true "会话ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/ai/sessions/:sessionId [delete]
-func (api *AIApi) DeleteChatSession(c *gin.Context) {
-	sessionID := c.Param("sessionId")
-	if sessionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
-		return
-	}
-
-	err := api.chatService.DeleteChatSession(c.Request.Context(), sessionID)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除会话失败", err.Error())
-		return
-	}
-
-	shared.Success(c, http.StatusOK, "删除成功", nil)
-}
-
-// HealthCheck 健康检查
-// @Summary 健康检查
-// @Description 检查AI服务状态
-// @Tags AI系统
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response
-// @Router /api/v1/ai/health [get]
-func (api *AIApi) HealthCheck(c *gin.Context) {
-	status := gin.H{
-		"status":    "healthy",
-		"timestamp": time.Now().Unix(),
-		"service":   "ai",
-	}
-
-	shared.Success(c, http.StatusOK, "服务正常", status)
 }
