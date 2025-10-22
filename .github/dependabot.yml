@@ -12,10 +12,6 @@ updates:
       time: "09:00"
       timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
-    reviewers:
-      - "your-github-username"  # 替换为实际的 GitHub 用户名
-    assignees:
-      - "your-github-username"  # 替换为实际的 GitHub 用户名
     commit-message:
       prefix: "deps"
       include: "scope"

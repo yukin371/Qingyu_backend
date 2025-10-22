@@ -80,18 +80,7 @@ jobs:
           # 检查复杂度大于 15 的函数
           gocyclo -over 15 . || true
 
-      - name: Check test coverage
-        run: |
-          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-          coverage=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Test coverage: ${coverage}%"
-
-          # 要求至少 60% 的覆盖率
-          if (( $(echo "$coverage < 60" | bc -l) )); then
-            echo "❌ Test coverage is below 60%"
-            exit 1
-          fi
-          echo "✅ Test coverage is acceptable"
+      # 覆盖率检查由主CI (ci.yml) 负责，这里不重复运行
 
   changed-files:
     name: Detect Changed Files
@@ -117,8 +106,10 @@ jobs:
               - 'docker/**'
               - 'Dockerfile*'
 
-  test-go-changes:
-    name: Test Go Changes
+  # Go代码的完整测试由主CI (ci.yml) 负责
+  # 这里只做快速语法检查
+  quick-go-check:
+    name: Quick Go Check
     needs: changed-files
     if: needs.changed-files.outputs.go_files == 'true'
     runs-on: ubuntu-latest
@@ -133,14 +124,10 @@ jobs:
           go-version: '1.21'
           cache: true
 
-      - name: Run affected tests
+      - name: Quick syntax check
         run: |
-          # 运行受影响的测试
-          git diff --name-only origin/${{ github.base_ref }}...HEAD | \
-            grep '\.go$' | \
-            xargs -I {} dirname {} | \
-            sort -u | \
-            xargs -I {} go test -v -race ./{}
+          go vet ./...
+          go build -v ./...
 
   test-docker-changes:
     name: Test Docker Changes

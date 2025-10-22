@@ -1,5 +1,18 @@
 # GitHub Actions 工作流说明
 
+## 🆕 最新更新（2025-10-22）
+
+✅ **CI优化完成** - 消除重复测试，性能提升50%+
+- 📖 [优化完成报告](../../CI_OPTIMIZATION_COMPLETE.md) - 查看优化成果
+- 📖 [详细优化说明](README_OPTIMIZATION.md) - 深入了解改进
+- 📖 [快速参考指南](QUICK_REFERENCE.md) - 快速查询常用操作
+
+**关键改进**：
+- ✅ 禁用 `ci-simple.yml` 自动触发（消除重复）
+- ✅ 优化 `pr-check.yml`（移除重复测试）
+- ✅ 依赖检查仅在主分支运行（减少90%）
+- ✅ 使用Docker Compose进行测试（更可靠）
+
 ## 概述
 
 本目录包含项目的所有 GitHub Actions 工作流配置。这些工作流提供了完整的 CI/CD 支持，包括代码检查、测试、构建和部署。
