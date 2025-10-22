@@ -194,14 +194,14 @@ func (r *RecommendationRepositoryImpl) GetUserPreferences(ctx context.Context, u
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.D{
-			{Key: "user_id", Value: userID},
-			{Key: "created_at", Value: bson.D{{Key: "$gte", Value: thirtyDaysAgo}}},
+		bson.D{bson.E{Key: "$match", Value: bson.D{
+			bson.E{Key: "user_id", Value: userID},
+			bson.E{Key: "created_at", Value: bson.D{bson.E{Key: "$gte", Value: thirtyDaysAgo}}},
 		}}},
-		{{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$item_type"},
-			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
-			{Key: "total_duration", Value: bson.D{{Key: "$sum", Value: "$duration"}}},
+		bson.D{bson.E{Key: "$group", Value: bson.D{
+			bson.E{Key: "_id", Value: "$item_type"},
+			bson.E{Key: "count", Value: bson.D{bson.E{Key: "$sum", Value: 1}}},
+			bson.E{Key: "total_duration", Value: bson.D{bson.E{Key: "$sum", Value: "$duration"}}},
 		}}},
 	}
 
