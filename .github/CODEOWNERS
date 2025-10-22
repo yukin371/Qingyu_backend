@@ -1,0 +1,51 @@
+# CODEOWNERS 文件
+# 自动为 Pull Request 分配审查者
+# 详细文档: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ==========================================
+# 早期项目配置 - 仅关键文件需要审查
+# ==========================================
+# 注意：自动添加审查者不等于强制审查批准
+# 只有配合分支保护才会强制要求批准
+
+# ==========================================
+# 重要配置文件（建议审查）
+# ==========================================
+# CI/CD 配置
+.github/workflows/* @yukin371
+.github/dependabot.yml @yukin371
+
+# Docker 生产配置
+docker/Dockerfile.prod @yukin371
+docker/docker-compose.prod.yml @yukin371
+
+# ==========================================
+# 安全相关（强烈建议审查）
+# ==========================================
+# 中间件和认证
+middleware/auth*.go @yukin371
+middleware/jwt*.go @yukin371
+middleware/permission*.go @yukin371
+
+# ==========================================
+# 依赖管理（可选审查）
+# ==========================================
+# 如果不想审查每次依赖更新，可以注释掉下面两行
+# go.mod @yukin371
+# go.sum @yukin371
+
+# ==========================================
+# 说明
+# ==========================================
+# 早期项目配置说明：
+# 1. 只对关键文件（CI/CD、生产配置、安全代码）要求审查
+# 2. 日常代码开发不会触发审查通知
+# 3. Dependabot 依赖更新已注释，不会频繁打扰
+# 4. 随着项目成熟，可以逐步添加更多规则
+#
+# 如需完全禁用自动审查，可以：
+# - 删除本文件
+# - 或重命名为 CODEOWNERS.disabled
+# - 或注释掉所有规则
+#
+# 如需启用更多审查，参考：.github/CODEOWNERS.disabled
