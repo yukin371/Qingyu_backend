@@ -29,7 +29,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/yourusername/Qingyu_backend.git
+git clone https://github.com/yukin371/Qingyu_backend.git
 cd Qingyu_backend
 
 # 启动服务
@@ -1270,7 +1270,7 @@ package main
 
 import (
     "fmt"
-    "github.com/yourusername/qingyu-go-sdk"
+    "github.com/yukin371/qingyu-go-sdk"
 )
 
 func main() {

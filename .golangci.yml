@@ -1,96 +1,170 @@
-# GolangCI-Lint 配置文件
-# 参考: https://golangci-lint.run/usage/configuration/
+# golangci-lint 配置文件
+# 详细文档: https://golangci-lint.run/usage/configuration/
 
 run:
-  timeout: 5m
+  timeout: 10m
   tests: true
   skip-dirs:
     - vendor
     - test/fixtures
   skip-files:
     - ".*\\.pb\\.go$"
-    - ".*_test\\.go$"
-
-linters:
-  enable:
-    - errcheck      # 检查未处理的错误
-    - gosimple      # 简化代码
-    - govet         # 官方 go vet
-    - ineffassign   # 检测无效赋值
-    - staticcheck   # 静态分析
-    - typecheck     # 类型检查
-    - unused        # 检查未使用的代码
-    - gofmt         # 格式化检查
-    - goimports     # import 排序检查
-    - misspell      # 拼写检查
-    - revive        # 替代 golint
-    - gosec         # 安全检查
-  disable:
-    - mnd           # 禁用 magic number detector，因为我们已经用http.Status常量替换
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
-
-  govet:
-    check-shadowing: false
-    enable-all: true
-    disable:
-      - fieldalignment  # 禁用字段对齐检查，保持代码可读性
-
-  gofmt:
-    simplify: true
-
-  goimports:
-    local-prefixes: Qingyu_backend
-
-  revive:
-    ignore-generated-header: true
-    severity: warning
-    rules:
-      - name: var-naming
-        severity: warning
-        disabled: false
-        arguments:
-          - ["ID", "API", "URL", "HTTP", "JSON", "XML", "HTML", "SQL", "DB", "JWT"]  # 允许的缩写
-      - name: unused-parameter
-        severity: warning
-        disabled: false
-
-  misspell:
-    locale: US
-
-  gosec:
-    excludes:
-      - G104  # 未检查的错误（由 errcheck 处理）
-      - G304  # 文件路径注入（在某些情况下需要）
-
-issues:
-  exclude-rules:
-    # 排除测试文件的某些检查
-    - path: _test\.go
-      linters:
-        - gosec
-        - errcheck
-
-    # 排除自动生成的文件
-    - path: ".*\\.pb\\.go"
-      linters:
-        - all
-
-    # 排除某些特定错误
-    - text: "G404: Use of weak random number generator"
-      linters:
-        - gosec
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  new: false
+    - ".*_gen\\.go$"
 
 output:
   format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
-  sort-results: true
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    check-shadowing: true
+    enable-all: true
+
+  gocyclo:
+    min-complexity: 15
+
+  dupl:
+    threshold: 100
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  lll:
+    line-length: 140
+    tab-width: 4
+
+  unused:
+    check-exported: false
+
+  unparam:
+    check-exported: false
+
+  nakedret:
+    max-func-lines: 30
+
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - whyNoLint
+      - unnamedResult
+
+  funlen:
+    lines: 100
+    statements: 50
+
+  goimports:
+    local-prefixes: github.com/yukin371/Qingyu_backend
+
+  revive:
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck       # 检查未处理的错误
+    - gosimple       # 简化代码建议
+    - govet          # 检查常见错误
+    - ineffassign    # 检查无效赋值
+    - staticcheck    # 静态分析检查
+    - typecheck      # 类型检查
+    - unused         # 检查未使用的常量、变量、函数等
+    - gocyclo        # 检查函数复杂度
+    - gofmt          # 检查代码格式
+    - goimports      # 检查导入顺序
+    - misspell       # 检查拼写错误
+    - goconst        # 检查可以用常量替换的字符串
+    - dupl           # 检查重复代码
+    - lll            # 检查行长度
+    - nakedret       # 检查裸返回
+    - prealloc       # 检查切片预分配
+    - revive         # 替代 golint
+    - unconvert      # 检查不必要的类型转换
+    - unparam        # 检查未使用的函数参数
+    - gosec          # 安全检查
+    - bodyclose      # 检查 HTTP body 是否关闭
+    - noctx          # 检查是否使用了 context
+    - rowserrcheck   # 检查数据库查询错误
+    - sqlclosecheck  # 检查 SQL rows/stmt 是否关闭
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    # 排除测试文件的某些检查
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+        - goconst
+        - funlen
+
+    # 排除生成的文件
+    - path: ".*\\.pb\\.go"
+      linters:
+        - all
+
+    # 排除 main 函数的某些检查
+    - path: cmd/
+      linters:
+        - funlen
+        - gocyclo
+
+    # 允许在某些地方使用长行
+    - path: models/
+      linters:
+        - lll
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - dupl
+        - goconst
+      severity: warning

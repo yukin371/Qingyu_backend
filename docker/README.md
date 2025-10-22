@@ -6,15 +6,16 @@
 
 ```
 Qingyu_backend/docker/
-├── Dockerfile.dev           # 开发环境Dockerfile
-├── Dockerfile.prod          # 生产环境Dockerfile
-├── .dockerignore            # Docker忽略文件
-├── .air.toml                # Air热重载配置
-├── docker-compose.dev.yml   # 开发环境编排（含数据库）
-├── docker-compose.prod.yml  # 生产环境编排
-├── dev.bat                  # 开发环境启动脚本
-├── stop.bat                 # 停止服务脚本
-└── README.md                # 本文件
+├── Dockerfile.dev              # 开发环境Dockerfile
+├── Dockerfile.prod             # 生产环境Dockerfile
+├── docker-compose.dev.yml      # 开发环境编排（含数据库）
+├── docker-compose.prod.yml     # 生产环境编排
+├── docker-compose.db-only.yml  # 仅数据库服务
+├── docker-compose.test.yml     # 测试环境编排（CI/CD）
+├── dev.bat                     # 开发环境启动脚本
+├── stop.bat                    # 停止服务脚本
+├── README.md                   # 本文件
+└── README_TEST.md              # 测试环境使用指南
 ```
 
 ## 🚀 快速开始
@@ -38,6 +39,25 @@ docker-compose -f docker-compose.dev.yml up -d
 - MongoDB（数据库）
 - Redis（缓存）
 - Backend（Go服务，支持热重载）
+
+### 测试环境
+
+运行测试使用专用的测试环境（详见 [README_TEST.md](README_TEST.md)）：
+
+```bash
+# 使用自动化脚本（推荐）
+./scripts/run_tests_with_docker.sh   # Linux/Mac
+scripts\run_tests_with_docker.bat    # Windows
+
+# 或手动启动测试环境
+docker-compose -f docker-compose.test.yml up -d
+```
+
+测试环境特点：
+- ✅ 使用内存存储（tmpfs），测试结束自动清理
+- ✅ 完全隔离，不影响开发环境
+- ✅ 快速启动和清理
+- ✅ CI/CD友好
 
 ### 生产环境
 
@@ -162,6 +182,6 @@ ports:
 
 ## 📚 相关文档
 
-- [主项目文档](../../README.md)
-- [前端Docker配置](../../Qingyu/docker/README.md)
-- [Docker使用指南](../../README.Docker.md)
+- [测试环境使用指南](README_TEST.md) - Docker测试环境详细说明
+- [主项目文档](../README.md)
+- [CI/CD配置](../.github/workflows/ci.yml)
