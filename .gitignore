@@ -13,7 +13,9 @@
 *.so
 *.dylib
 
-# 测试二进制文件
+# 测试文件
+test_results/
+test_data/
 *.test
 
 # 输出目录
@@ -49,9 +51,10 @@ Thumbs.db
 
 # IDE 相关
 
-.trae/
 .vscode/
 .idea/
+.cursor/
+.trae/
 *.swp
 *.swo
 *~
