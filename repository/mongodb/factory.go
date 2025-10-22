@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/config"
+	"Qingyu_backend/repository/interfaces"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
@@ -28,6 +29,7 @@ import (
 // MongoRepositoryFactory MongoDB仓储工厂实现
 type MongoRepositoryFactory struct {
 	client   *mongo.Client
+	db       *mongo.Database // 也保留别名以兼容旧代码
 	database *mongo.Database
 	config   *config.MongoDBConfig
 }
@@ -66,6 +68,7 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 
 	return &MongoRepositoryFactory{
 		client:   client,
+		db:       database,
 		database: database,
 		config:   config,
 	}, nil
@@ -205,6 +208,13 @@ func (f *MongoRepositoryFactory) CreateWalletRepository() sharedRepo.WalletRepos
 // CreateRecommendationRepository 创建推荐Repository
 func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.RecommendationRepository {
 	return mongoShared.NewRecommendationRepository(f.database)
+}
+
+// ========== AI Module Repositories ==========
+
+// CreateQuotaRepository 创建配额Repository
+func (f *MongoRepositoryFactory) CreateQuotaRepository() interfaces.QuotaRepository {
+	return NewMongoQuotaRepository(f.database)
 }
 
 // ========== Factory Management Methods ==========

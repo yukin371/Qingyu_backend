@@ -3,20 +3,21 @@ package router
 import (
 	"log"
 
-	// "Qingyu_backend/router/ai" // 临时禁用
+	aiRouter "Qingyu_backend/router/ai"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	projectRouter "Qingyu_backend/router/project"
 	sharedRouter "Qingyu_backend/router/shared"
 	userRouter "Qingyu_backend/router/users"
 
 	readingAPI "Qingyu_backend/api/v1/reading"
-	// aiService "Qingyu_backend/service/ai" // 临时禁用
+	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/shared/container"
 	userService "Qingyu_backend/service/user"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
+	"Qingyu_backend/repository/mongodb"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoUser "Qingyu_backend/repository/mongodb/user"
 
@@ -72,10 +73,26 @@ func RegisterRoutes(r *gin.Engine) {
 	// 注册文档路由
 	projectRouter.RegisterRoutes(v1)
 
-	// 注册AI路由 (临时禁用)
-	// aiSvc := aiService.NewService()
-	// aiRouter := ai.NewAIRouter(aiSvc)
-	// aiRouter.InitAIRouter(v1)
+	// 注册AI路由
+	aiSvc := aiService.NewService()
+
+	// 创建AI相关Repository
+	quotaRepo := mongodb.NewMongoQuotaRepository(global.DB)
+
+	// 创建聊天Repository（使用临时实现）
+	chatRepo := aiService.NewInMemoryChatRepository()
+
+	// 创建AI服务
+	quotaService := aiService.NewQuotaService(quotaRepo)
+	chatService := aiService.NewChatService(aiSvc, chatRepo)
+
+	// 注册AI路由
+	aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService)
+
+	log.Println("AI服务路由已注册到: /api/v1/ai/")
+	log.Println("  - /api/v1/ai/writing/* (续写、改写)")
+	log.Println("  - /api/v1/ai/chat/* (聊天)")
+	log.Println("  - /api/v1/ai/quota/* (配额管理)")
 
 	// 健康检查
 	r.GET("/ping", func(c *gin.Context) {
