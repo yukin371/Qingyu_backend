@@ -157,7 +157,7 @@ func TestProjectService_CreateProject(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "userID", "user123")
 
 	// 3. 设置Mock期望
-	mockProjectRepo.On("Create", mock.Anything, mock.AnythingOfType("*document.Project")).Return(nil).Run(func(args mock.Arguments) {
+	mockProjectRepo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Project")).Return(nil).Run(func(args mock.Arguments) {
 		proj := args.Get(1).(*writer.Project)
 		proj.ID = "project123"
 		proj.CreatedAt = time.Now()

@@ -231,7 +231,7 @@ func TestDocumentApi_CreateDocument(t *testing.T) {
 			setupMock: func(docRepo *MockDocumentRepository, projRepo *MockProjectRepository) {
 				testProject := createTestProject("user123")
 				projRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil)
-				docRepo.On("Create", mock.Anything, mock.AnythingOfType("*document.Document")).Return(nil)
+				docRepo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Document")).Return(nil)
 				// updateProjectStatistics会异步调用GetByProjectID来统计（使用Maybe因为是异步的）
 				docRepo.On("GetByProjectID", mock.Anything, "project123", int64(10000), int64(0)).Return([]*documentModel.Document{}, nil).Maybe()
 				projRepo.On("Update", mock.Anything, "project123", mock.AnythingOfType("map[string]interface {}")).Return(nil).Maybe()

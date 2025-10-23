@@ -65,7 +65,7 @@ func TestProjectApi_CreateProject(t *testing.T) {
 				Tags:     []string{"科幻", "冒险"},
 			},
 			setupMock: func(repo *MockProjectRepository) {
-				repo.On("Create", mock.Anything, mock.AnythingOfType("*document.Project")).Return(nil)
+				repo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Project")).Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {

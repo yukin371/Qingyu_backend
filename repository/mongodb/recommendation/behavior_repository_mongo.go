@@ -31,6 +31,11 @@ func (r *MongoBehaviorRepository) Create(ctx context.Context, b *reco.Behavior) 
 		return fmt.Errorf("behavior cannot be nil")
 	}
 
+	// 生成ID（如果为空）
+	if b.ID == "" {
+		b.ID = generateID()
+	}
+
 	// 设置时间戳
 	now := time.Now()
 	if b.OccurredAt.IsZero() {
@@ -83,7 +88,10 @@ func (r *MongoBehaviorRepository) GetByUser(ctx context.Context, userID string, 
 
 	filter := bson.M{"user_id": userID}
 	opts := options.Find().
-		SetSort(bson.D{{Key: "occurred_at", Value: -1}}). // 按时间倒序
+		SetSort(bson.D{
+			{Key: "occurred_at", Value: -1}, // 按时间倒序
+			{Key: "_id", Value: -1},         // 时间相同时按ID倒序，确保排序稳定
+		}).
 		SetLimit(int64(limit))
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
@@ -98,4 +106,9 @@ func (r *MongoBehaviorRepository) GetByUser(ctx context.Context, userID string, 
 	}
 
 	return behaviors, nil
+}
+
+// generateID 生成唯一ID（使用雪花算法生成的时间戳+随机数）
+func generateID() string {
+	return fmt.Sprintf("beh_%d", time.Now().UnixNano())
 }
