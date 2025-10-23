@@ -1,6 +1,7 @@
 package recommendation_test
 
 import (
+	recommendation2 "Qingyu_backend/models/recommendation"
 	"context"
 	"testing"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	"Qingyu_backend/service/recommendation"
 )
 
@@ -20,46 +20,46 @@ type MockItemFeatureRepo struct {
 	mock.Mock
 }
 
-func (m *MockItemFeatureRepo) Create(ctx context.Context, feature *reco.ItemFeature) error {
+func (m *MockItemFeatureRepo) Create(ctx context.Context, feature *recommendation2.ItemFeature) error {
 	args := m.Called(ctx, feature)
 	return args.Error(0)
 }
 
-func (m *MockItemFeatureRepo) Upsert(ctx context.Context, feature *reco.ItemFeature) error {
+func (m *MockItemFeatureRepo) Upsert(ctx context.Context, feature *recommendation2.ItemFeature) error {
 	args := m.Called(ctx, feature)
 	return args.Error(0)
 }
 
-func (m *MockItemFeatureRepo) GetByItemID(ctx context.Context, itemID string) (*reco.ItemFeature, error) {
+func (m *MockItemFeatureRepo) GetByItemID(ctx context.Context, itemID string) (*recommendation2.ItemFeature, error) {
 	args := m.Called(ctx, itemID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reco.ItemFeature), args.Error(1)
+	return args.Get(0).(*recommendation2.ItemFeature), args.Error(1)
 }
 
-func (m *MockItemFeatureRepo) BatchGetByItemIDs(ctx context.Context, itemIDs []string) ([]*reco.ItemFeature, error) {
+func (m *MockItemFeatureRepo) BatchGetByItemIDs(ctx context.Context, itemIDs []string) ([]*recommendation2.ItemFeature, error) {
 	args := m.Called(ctx, itemIDs)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reco.ItemFeature), args.Error(1)
+	return args.Get(0).([]*recommendation2.ItemFeature), args.Error(1)
 }
 
-func (m *MockItemFeatureRepo) GetByCategory(ctx context.Context, category string, limit int) ([]*reco.ItemFeature, error) {
+func (m *MockItemFeatureRepo) GetByCategory(ctx context.Context, category string, limit int) ([]*recommendation2.ItemFeature, error) {
 	args := m.Called(ctx, category, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reco.ItemFeature), args.Error(1)
+	return args.Get(0).([]*recommendation2.ItemFeature), args.Error(1)
 }
 
-func (m *MockItemFeatureRepo) GetByTags(ctx context.Context, tags map[string]float64, limit int) ([]*reco.ItemFeature, error) {
+func (m *MockItemFeatureRepo) GetByTags(ctx context.Context, tags map[string]float64, limit int) ([]*recommendation2.ItemFeature, error) {
 	args := m.Called(ctx, tags, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reco.ItemFeature), args.Error(1)
+	return args.Get(0).([]*recommendation2.ItemFeature), args.Error(1)
 }
 
 func (m *MockItemFeatureRepo) Delete(ctx context.Context, itemID string) error {
@@ -180,7 +180,7 @@ func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testin
 		userID := "user_with_profile"
 
 		// 用户画像
-		profile := &reco.UserProfile{
+		profile := &recommendation2.UserProfile{
 			UserID: userID,
 			Tags: map[string]float64{
 				"玄幻": 0.8,
@@ -192,7 +192,7 @@ func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testin
 		}
 
 		// Mock物品特征
-		itemFeatures := []*reco.ItemFeature{
+		itemFeatures := []*recommendation2.ItemFeature{
 			{
 				ItemID: "book1",
 				Tags: map[string]float64{
@@ -271,7 +271,7 @@ func TestRecommendationService_GetPersonalizedRecommendations_Enhanced(t *testin
 		hotBooks := []string{"hot1", "hot2"}
 
 		// 空画像
-		emptyProfile := &reco.UserProfile{
+		emptyProfile := &recommendation2.UserProfile{
 			UserID:     userID,
 			Tags:       map[string]float64{},
 			Categories: map[string]float64{},
@@ -310,7 +310,7 @@ func TestRecommendationService_GetSimilarItems_Enhanced(t *testing.T) {
 		targetItemID := "book1"
 
 		// 目标物品特征
-		targetFeature := &reco.ItemFeature{
+		targetFeature := &recommendation2.ItemFeature{
 			ItemID: targetItemID,
 			Tags: map[string]float64{
 				"玄幻": 0.9,
@@ -321,7 +321,7 @@ func TestRecommendationService_GetSimilarItems_Enhanced(t *testing.T) {
 		}
 
 		// 相似物品
-		similarFeatures := []*reco.ItemFeature{
+		similarFeatures := []*recommendation2.ItemFeature{
 			{
 				ItemID: "book2",
 				Tags: map[string]float64{
@@ -393,11 +393,11 @@ func TestRecommendationService_GetHomepageRecommendations(t *testing.T) {
 		userID := "user123"
 
 		// Mock个性化推荐
-		profile := &reco.UserProfile{
+		profile := &recommendation2.UserProfile{
 			UserID: userID,
 			Tags:   map[string]float64{"玄幻": 0.8},
 		}
-		itemFeatures := []*reco.ItemFeature{
+		itemFeatures := []*recommendation2.ItemFeature{
 			{ItemID: "personal1", Tags: map[string]float64{"玄幻": 0.9}},
 		}
 
@@ -498,7 +498,7 @@ func TestRecommendationService_RecordBehavior_Enhanced(t *testing.T) {
 
 	t.Run("成功记录完整行为", func(t *testing.T) {
 		ctx := context.Background()
-		behavior := &reco.Behavior{
+		behavior := &recommendation2.Behavior{
 			UserID:       "user123",
 			ItemID:       "book456",
 			ChapterID:    "chapter789",
@@ -520,7 +520,7 @@ func TestRecommendationService_RecordBehavior_Enhanced(t *testing.T) {
 
 	t.Run("记录行为-缺少UserID", func(t *testing.T) {
 		ctx := context.Background()
-		behavior := &reco.Behavior{
+		behavior := &recommendation2.Behavior{
 			ItemID:       "book456",
 			BehaviorType: "read",
 		}
@@ -533,7 +533,7 @@ func TestRecommendationService_RecordBehavior_Enhanced(t *testing.T) {
 
 	t.Run("记录行为-缺少ItemID", func(t *testing.T) {
 		ctx := context.Background()
-		behavior := &reco.Behavior{
+		behavior := &recommendation2.Behavior{
 			UserID:       "user123",
 			BehaviorType: "read",
 		}

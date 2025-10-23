@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/global"
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/repository/mongodb/reading"
 	"Qingyu_backend/test/testutil"
 )

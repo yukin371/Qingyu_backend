@@ -1,10 +1,10 @@
 package fixtures
 
 import (
+	"Qingyu_backend/models/writer"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -82,14 +82,14 @@ func NewProjectFactory() *ProjectFactory {
 }
 
 // Create 创建项目
-func (f *ProjectFactory) Create(authorID string, opts ...func(*document.Project)) *document.Project {
+func (f *ProjectFactory) Create(authorID string, opts ...func(*writer.Project)) *writer.Project {
 	f.counter++
-	project := &document.Project{
+	project := &writer.Project{
 		ID:        primitive.NewObjectID().Hex(),
 		Title:     fmt.Sprintf("测试项目 %d", f.counter),
 		Summary:   fmt.Sprintf("这是第%d个测试项目", f.counter),
 		AuthorID:  authorID,
-		Status:    document.StatusDraft,
+		Status:    writer.StatusDraft,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -103,8 +103,8 @@ func (f *ProjectFactory) Create(authorID string, opts ...func(*document.Project)
 }
 
 // CreateBatch 批量创建项目
-func (f *ProjectFactory) CreateBatch(authorID string, count int) []*document.Project {
-	result := make([]*document.Project, count)
+func (f *ProjectFactory) CreateBatch(authorID string, count int) []*writer.Project {
+	result := make([]*writer.Project, count)
 	for i := 0; i < count; i++ {
 		result[i] = f.Create(authorID)
 	}
@@ -112,8 +112,8 @@ func (f *ProjectFactory) CreateBatch(authorID string, count int) []*document.Pro
 }
 
 // CreateNovel 创建小说项目
-func (f *ProjectFactory) CreateNovel(authorID string) *document.Project {
-	return f.Create(authorID, func(p *document.Project) {
+func (f *ProjectFactory) CreateNovel(authorID string) *writer.Project {
+	return f.Create(authorID, func(p *writer.Project) {
 		p.Title = fmt.Sprintf("小说项目 %d", f.counter)
 		p.Summary = "这是一个小说项目"
 	})
@@ -134,13 +134,13 @@ func NewDocumentFactory() *DocumentFactory {
 // Create 创建文档元数据
 // 注意：此方法只创建Document元数据，不包含内容
 // 如需创建文档内容，请使用CreateDocumentContent方法
-func (f *DocumentFactory) Create(projectID string, opts ...func(*document.Document)) *document.Document {
+func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document)) *writer.Document {
 	f.counter++
-	doc := &document.Document{
+	doc := &writer.Document{
 		ID:        primitive.NewObjectID().Hex(),
 		ProjectID: projectID,
 		Title:     fmt.Sprintf("第%d章", f.counter),
-		Type:      document.TypeChapter,
+		Type:      writer.TypeChapter,
 		Status:    "draft",
 		WordCount: 1000 + f.counter*100,
 		CreatedAt: time.Now(),
@@ -156,8 +156,8 @@ func (f *DocumentFactory) Create(projectID string, opts ...func(*document.Docume
 }
 
 // CreateDocumentContent 创建文档内容
-func (f *DocumentFactory) CreateDocumentContent(documentID string) *document.DocumentContent {
-	return &document.DocumentContent{
+func (f *DocumentFactory) CreateDocumentContent(documentID string) *writer.DocumentContent {
+	return &writer.DocumentContent{
 		ID:          primitive.NewObjectID().Hex(),
 		DocumentID:  documentID,
 		Content:     fmt.Sprintf("这是文档%s的内容...", documentID),
@@ -172,8 +172,8 @@ func (f *DocumentFactory) CreateDocumentContent(documentID string) *document.Doc
 }
 
 // CreateBatch 批量创建文档
-func (f *DocumentFactory) CreateBatch(projectID string, count int) []*document.Document {
-	result := make([]*document.Document, count)
+func (f *DocumentFactory) CreateBatch(projectID string, count int) []*writer.Document {
+	result := make([]*writer.Document, count)
 	for i := 0; i < count; i++ {
 		result[i] = f.Create(projectID)
 	}
@@ -181,8 +181,8 @@ func (f *DocumentFactory) CreateBatch(projectID string, count int) []*document.D
 }
 
 // CreatePublished 创建已发布文档
-func (f *DocumentFactory) CreatePublished(projectID string) *document.Document {
-	return f.Create(projectID, func(d *document.Document) {
+func (f *DocumentFactory) CreatePublished(projectID string) *writer.Document {
+	return f.Create(projectID, func(d *writer.Document) {
 		d.Status = "published"
 	})
 }

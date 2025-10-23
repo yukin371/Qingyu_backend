@@ -1,13 +1,13 @@
 package infrastructure
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/models/document"
 	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -81,8 +81,8 @@ type TransactionAIRepository interface {
 
 // TransactionDocumentRepository 文档事务Repository接口
 type TransactionDocumentRepository interface {
-	CRUDRepository[*document.Document, string]
-	GetByProjectID(ctx context.Context, projectID string) ([]*document.Document, error)
+	CRUDRepository[*writer.Document, string]
+	GetByProjectID(ctx context.Context, projectID string) ([]*writer.Document, error)
 }
 
 // TransactionRoleRepository 角色事务Repository接口

@@ -1,6 +1,7 @@
 package reader
 
 import (
+	"Qingyu_backend/models/reader"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 )
 

@@ -1,7 +1,7 @@
 package bookstore
 
 import (
-	"Qingyu_backend/models/reading/bookstore"
+	"Qingyu_backend/models/bookstore"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	"context"
 

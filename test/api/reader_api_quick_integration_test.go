@@ -1,6 +1,7 @@
 package api
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	readerAPI "Qingyu_backend/api/v1/reader"
-	readerModel "Qingyu_backend/models/reading/reader"
 	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	"Qingyu_backend/service/base"
@@ -29,42 +29,42 @@ func (s *stubEventBus) PublishAsync(ctx context.Context, event base.Event) error
 
 type mockChapterRepo struct{ contentByID map[string]string }
 
-func (m *mockChapterRepo) Create(ctx context.Context, chapter *readerModel.Chapter) error { return nil }
-func (m *mockChapterRepo) GetByID(ctx context.Context, id string) (*readerModel.Chapter, error) {
-	return &readerModel.Chapter{ID: id, BookID: "book1", Title: "第一章", ChapterNum: 1}, nil
+func (m *mockChapterRepo) Create(ctx context.Context, chapter *reader.Chapter) error { return nil }
+func (m *mockChapterRepo) GetByID(ctx context.Context, id string) (*reader.Chapter, error) {
+	return &reader.Chapter{ID: id, BookID: "book1", Title: "第一章", ChapterNum: 1}, nil
 }
 func (m *mockChapterRepo) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	return nil
 }
 func (m *mockChapterRepo) Delete(ctx context.Context, id string) error { return nil }
-func (m *mockChapterRepo) GetByBookID(ctx context.Context, bookID string) ([]*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetByBookID(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetByBookIDWithPagination(ctx context.Context, bookID string, limit, offset int64) ([]*readerModel.Chapter, error) {
-	return []*readerModel.Chapter{{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: 1}}, nil
+func (m *mockChapterRepo) GetByBookIDWithPagination(ctx context.Context, bookID string, limit, offset int64) ([]*reader.Chapter, error) {
+	return []*reader.Chapter{{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: 1}}, nil
 }
-func (m *mockChapterRepo) GetByChapterNum(ctx context.Context, bookID string, chapterNum int) (*readerModel.Chapter, error) {
-	return &readerModel.Chapter{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: chapterNum}, nil
+func (m *mockChapterRepo) GetByChapterNum(ctx context.Context, bookID string, chapterNum int) (*reader.Chapter, error) {
+	return &reader.Chapter{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: chapterNum}, nil
 }
-func (m *mockChapterRepo) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetFirstChapter(ctx context.Context, bookID string) (*readerModel.Chapter, error) {
-	return &readerModel.Chapter{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: 1}, nil
+func (m *mockChapterRepo) GetFirstChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+	return &reader.Chapter{ID: "c1", BookID: bookID, Title: "第一章", ChapterNum: 1}, nil
 }
-func (m *mockChapterRepo) GetLastChapter(ctx context.Context, bookID string) (*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetLastChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetPublishedChapters(ctx context.Context, bookID string) ([]*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetPublishedChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetVIPChapters(ctx context.Context, bookID string) ([]*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetVIPChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
 	return nil, nil
 }
-func (m *mockChapterRepo) GetFreeChapters(ctx context.Context, bookID string) ([]*readerModel.Chapter, error) {
+func (m *mockChapterRepo) GetFreeChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
 	return nil, nil
 }
 func (m *mockChapterRepo) CountByBookID(ctx context.Context, bookID string) (int64, error) {
@@ -76,7 +76,7 @@ func (m *mockChapterRepo) CountByStatus(ctx context.Context, bookID string, stat
 func (m *mockChapterRepo) CountVIPChapters(ctx context.Context, bookID string) (int64, error) {
 	return 0, nil
 }
-func (m *mockChapterRepo) BatchCreate(ctx context.Context, chapters []*readerModel.Chapter) error {
+func (m *mockChapterRepo) BatchCreate(ctx context.Context, chapters []*reader.Chapter) error {
 	return nil
 }
 func (m *mockChapterRepo) BatchUpdateStatus(ctx context.Context, chapterIDs []string, status int) error {
@@ -111,22 +111,22 @@ type mockAnnotationRepo struct {
 
 type mockSettingsRepo struct{}
 
-func (m *mockSettingsRepo) Create(ctx context.Context, settings *readerModel.ReadingSettings) error {
+func (m *mockSettingsRepo) Create(ctx context.Context, settings *reader.ReadingSettings) error {
 	return nil
 }
-func (m *mockSettingsRepo) GetByID(ctx context.Context, id string) (*readerModel.ReadingSettings, error) {
+func (m *mockSettingsRepo) GetByID(ctx context.Context, id string) (*reader.ReadingSettings, error) {
 	return nil, nil
 }
-func (m *mockSettingsRepo) GetByUserID(ctx context.Context, userID string) (*readerModel.ReadingSettings, error) {
-	return &readerModel.ReadingSettings{UserID: userID, FontSize: 16, FontFamily: "serif", LineHeight: 1.8, Theme: "light"}, nil
+func (m *mockSettingsRepo) GetByUserID(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+	return &reader.ReadingSettings{UserID: userID, FontSize: 16, FontFamily: "serif", LineHeight: 1.8, Theme: "light"}, nil
 }
-func (m *mockSettingsRepo) CreateDefaultSettings(ctx context.Context, userID string) (*readerModel.ReadingSettings, error) {
-	return &readerModel.ReadingSettings{UserID: userID, FontSize: 16, FontFamily: "serif", LineHeight: 1.8, Theme: "light"}, nil
+func (m *mockSettingsRepo) CreateDefaultSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+	return &reader.ReadingSettings{UserID: userID, FontSize: 16, FontFamily: "serif", LineHeight: 1.8, Theme: "light"}, nil
 }
 func (m *mockSettingsRepo) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *mockSettingsRepo) UpdateByUserID(ctx context.Context, userID string, settings *readerModel.ReadingSettings) error {
+func (m *mockSettingsRepo) UpdateByUserID(ctx context.Context, userID string, settings *reader.ReadingSettings) error {
 	return nil
 }
 func (m *mockSettingsRepo) Delete(ctx context.Context, id string) error { return nil }
@@ -136,8 +136,8 @@ func (m *mockSettingsRepo) ExistsByUserID(ctx context.Context, userID string) (b
 func (m *mockSettingsRepo) Health(ctx context.Context) error { return nil }
 
 // implement base CRUDRepository extra methods: List, Count, Exists
-func (m *mockSettingsRepo) List(ctx context.Context, filter infrastructure.Filter) ([]*readerModel.ReadingSettings, error) {
-	return []*readerModel.ReadingSettings{}, nil
+func (m *mockSettingsRepo) List(ctx context.Context, filter infrastructure.Filter) ([]*reader.ReadingSettings, error) {
+	return []*reader.ReadingSettings{}, nil
 }
 func (m *mockSettingsRepo) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	return 0, nil
@@ -157,26 +157,26 @@ func (n *noCache) SetChapterContent(ctx context.Context, chapterID string, conte
 
 // match interface name InvalidateChapterContent
 func (n *noCache) InvalidateChapterContent(ctx context.Context, chapterID string) error { return nil }
-func (n *noCache) GetReadingSettings(ctx context.Context, userID string) (*readerModel.ReadingSettings, error) {
+func (n *noCache) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
 	return nil, nil
 }
-func (n *noCache) SetReadingSettings(ctx context.Context, userID string, settings *readerModel.ReadingSettings, expiration time.Duration) error {
+func (n *noCache) SetReadingSettings(ctx context.Context, userID string, settings *reader.ReadingSettings, expiration time.Duration) error {
 	return nil
 }
 func (n *noCache) InvalidateReadingSettings(ctx context.Context, userID string) error { return nil }
 
 // complete ReaderCacheService methods used by interface
-func (n *noCache) GetChapter(ctx context.Context, chapterID string) (*readerModel.Chapter, error) {
+func (n *noCache) GetChapter(ctx context.Context, chapterID string) (*reader.Chapter, error) {
 	return nil, nil
 }
-func (n *noCache) SetChapter(ctx context.Context, chapterID string, chapter *readerModel.Chapter, expiration time.Duration) error {
+func (n *noCache) SetChapter(ctx context.Context, chapterID string, chapter *reader.Chapter, expiration time.Duration) error {
 	return nil
 }
 func (n *noCache) InvalidateChapter(ctx context.Context, chapterID string) error { return nil }
-func (n *noCache) GetReadingProgress(ctx context.Context, userID, bookID string) (*readerModel.ReadingProgress, error) {
+func (n *noCache) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
 	return nil, nil
 }
-func (n *noCache) SetReadingProgress(ctx context.Context, userID, bookID string, progress *readerModel.ReadingProgress, expiration time.Duration) error {
+func (n *noCache) SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader.ReadingProgress, expiration time.Duration) error {
 	return nil
 }
 func (n *noCache) InvalidateReadingProgress(ctx context.Context, userID, bookID string) error {

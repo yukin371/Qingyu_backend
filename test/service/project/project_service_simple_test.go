@@ -1,13 +1,13 @@
 package project_test
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/models/document"
 	base_infra "Qingyu_backend/repository/interfaces/infrastructure"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/base"
@@ -22,33 +22,33 @@ type MockProjectRepo struct {
 	writingRepo.ProjectRepository
 }
 
-func (m *MockProjectRepo) Create(ctx context.Context, project *document.Project) error {
+func (m *MockProjectRepo) Create(ctx context.Context, project *writer.Project) error {
 	args := m.Called(ctx, project)
 	return args.Error(0)
 }
 
-func (m *MockProjectRepo) GetByID(ctx context.Context, id string) (*document.Project, error) {
+func (m *MockProjectRepo) GetByID(ctx context.Context, id string) (*writer.Project, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*document.Project), args.Error(1)
+	return args.Get(0).(*writer.Project), args.Error(1)
 }
 
-func (m *MockProjectRepo) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*document.Project, error) {
+func (m *MockProjectRepo) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*writer.Project, error) {
 	args := m.Called(ctx, ownerID, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Project), args.Error(1)
+	return args.Get(0).([]*writer.Project), args.Error(1)
 }
 
-func (m *MockProjectRepo) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*document.Project, error) {
+func (m *MockProjectRepo) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*writer.Project, error) {
 	args := m.Called(ctx, ownerID, status, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Project), args.Error(1)
+	return args.Get(0).([]*writer.Project), args.Error(1)
 }
 
 func (m *MockProjectRepo) CountByOwner(ctx context.Context, ownerID string) (int64, error) {
@@ -94,13 +94,13 @@ func createContext(userID string) context.Context {
 	return context.WithValue(ctx, "userID", userID)
 }
 
-func createProject(id, title, authorID string) *document.Project {
-	return &document.Project{
+func createProject(id, title, authorID string) *writer.Project {
+	return &writer.Project{
 		ID:         id,
 		Title:      title,
 		AuthorID:   authorID,
-		Status:     document.StatusDraft,
-		Visibility: document.VisibilityPrivate,
+		Status:     writer.StatusDraft,
+		Visibility: writer.VisibilityPrivate,
 	}
 }
 
@@ -211,7 +211,7 @@ func TestListMyProjects_Success(t *testing.T) {
 	userID := "user123"
 	ctx := createContext(userID)
 
-	projects := []*document.Project{
+	projects := []*writer.Project{
 		createProject("proj1", "项目1", userID),
 		createProject("proj2", "项目2", userID),
 	}
@@ -235,7 +235,7 @@ func TestListMyProjects_WithStatus(t *testing.T) {
 	userID := "user123"
 	ctx := createContext(userID)
 
-	projects := []*document.Project{
+	projects := []*writer.Project{
 		createProject("proj1", "草稿项目", userID),
 	}
 

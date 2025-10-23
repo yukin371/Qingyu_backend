@@ -1,9 +1,8 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // ChapterRepository 章节仓储接口

@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"fmt"
 	"time"
@@ -8,8 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // MongoAnnotationRepository 标注仓储MongoDB实现

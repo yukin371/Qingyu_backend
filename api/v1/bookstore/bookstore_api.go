@@ -1,13 +1,13 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -283,7 +283,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
 
 	// 构建过滤器
-	filter := &bookstore.BookFilter{}
+	filter := &bookstore2.BookFilter{}
 
 	if categoryID := c.Query("categoryId"); categoryID != "" {
 		// 这里需要转换为ObjectID，简化处理
@@ -700,7 +700,7 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 //	@Router			/api/v1/bookstore/rankings/{type} [get]
 func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 	rankingType := c.Param("type")
-	if !bookstore.IsValidRankingType(rankingType) {
+	if !bookstore2.IsValidRankingType(rankingType) {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
 			Message: "无效的榜单类型",
@@ -714,7 +714,7 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 		limit = 20
 	}
 
-	rankings, err := api.service.GetRankingByType(c.Request.Context(), bookstore.RankingType(rankingType), period, limit)
+	rankings, err := api.service.GetRankingByType(c.Request.Context(), bookstore2.RankingType(rankingType), period, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,

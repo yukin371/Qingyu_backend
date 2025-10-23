@@ -1,6 +1,7 @@
 package recommendation
 
 import (
+	reco "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 )
 

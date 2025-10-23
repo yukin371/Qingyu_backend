@@ -1,12 +1,11 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"Qingyu_backend/models/reading/reader"
 
 	"github.com/redis/go-redis/v9"
 )

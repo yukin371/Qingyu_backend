@@ -1,10 +1,9 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"time"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // ReadingProgressRepository 阅读进度仓储接口

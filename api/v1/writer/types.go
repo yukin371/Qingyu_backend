@@ -1,9 +1,8 @@
 package writer
 
 import (
+	"Qingyu_backend/models/writer"
 	"time"
-
-	"Qingyu_backend/models/document"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -23,10 +22,10 @@ type ProjectDetailResponse struct {
 	LastUpdateTime time.Time                `json:"lastUpdateTime"`
 	CreatedAt      time.Time                `json:"createdAt"`
 	UpdatedAt      time.Time                `json:"updatedAt"`
-	Documents      []DocumentSummary        `json:"documents"`
-	Characters     []document.Character     `json:"characters"`
-	Locations      []document.Location      `json:"locations"`
-	Timeline       []document.TimelineEvent `json:"timeline"`
+	Documents      []DocumentSummary      `json:"documents"`
+	Characters     []writer.Character     `json:"characters"`
+	Locations      []writer.Location      `json:"locations"`
+	Timeline       []writer.TimelineEvent `json:"timeline"`
 }
 
 // DocumentSummary 文档摘要

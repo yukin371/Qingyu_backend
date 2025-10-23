@@ -1,10 +1,10 @@
 package service
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"testing"
 
-	"Qingyu_backend/models/document"
 	documentService "Qingyu_backend/service/document"
 
 	"github.com/stretchr/testify/assert"
@@ -74,7 +74,7 @@ func TestShortcutService_UpdateUserShortcuts(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("成功更新快捷键", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"save": {
 				Action:      "save",
 				Key:         "Ctrl+Shift+S",
@@ -90,7 +90,7 @@ func TestShortcutService_UpdateUserShortcuts(t *testing.T) {
 	})
 
 	t.Run("空用户ID返回错误", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"save": {Action: "save", Key: "Ctrl+S"},
 		}
 
@@ -101,14 +101,14 @@ func TestShortcutService_UpdateUserShortcuts(t *testing.T) {
 	})
 
 	t.Run("空快捷键配置返回错误", func(t *testing.T) {
-		err := service.UpdateUserShortcuts(ctx, "user123", map[string]document.Shortcut{})
+		err := service.UpdateUserShortcuts(ctx, "user123", map[string]writer.Shortcut{})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "快捷键配置不能为空")
 	})
 
 	t.Run("快捷键冲突检测", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"save": {
 				Action: "save",
 				Key:    "Ctrl+S",
@@ -126,7 +126,7 @@ func TestShortcutService_UpdateUserShortcuts(t *testing.T) {
 	})
 
 	t.Run("空按键返回错误", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"save": {
 				Action: "save",
 				Key:    "", // 空按键
@@ -207,7 +207,7 @@ func TestShortcutService_GetShortcutHelp(t *testing.T) {
 
 func TestShortcutService_DefaultShortcuts(t *testing.T) {
 	t.Run("验证所有默认快捷键", func(t *testing.T) {
-		shortcuts := document.GetDefaultShortcuts()
+		shortcuts := writer.GetDefaultShortcuts()
 
 		// 按分类统计
 		categoryCount := make(map[string]int)
@@ -226,11 +226,11 @@ func TestShortcutService_DefaultShortcuts(t *testing.T) {
 
 	t.Run("验证默认快捷键不可变", func(t *testing.T) {
 		// 获取两次默认配置
-		shortcuts1 := document.GetDefaultShortcuts()
-		shortcuts2 := document.GetDefaultShortcuts()
+		shortcuts1 := writer.GetDefaultShortcuts()
+		shortcuts2 := writer.GetDefaultShortcuts()
 
 		// 修改第一个
-		shortcuts1["save"] = document.Shortcut{
+		shortcuts1["save"] = writer.Shortcut{
 			Action: "save",
 			Key:    "Modified",
 		}
@@ -246,7 +246,7 @@ func TestShortcutService_ValidationLogic(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("允许多个动作有不同按键", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"save": {
 				Action: "save",
 				Key:    "Ctrl+S",
@@ -263,7 +263,7 @@ func TestShortcutService_ValidationLogic(t *testing.T) {
 	})
 
 	t.Run("检测按键完全相同的冲突", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"action1": {
 				Action: "action1",
 				Key:    "Ctrl+K",
@@ -282,7 +282,7 @@ func TestShortcutService_ValidationLogic(t *testing.T) {
 	})
 
 	t.Run("允许单个快捷键", func(t *testing.T) {
-		shortcuts := map[string]document.Shortcut{
+		shortcuts := map[string]writer.Shortcut{
 			"only_one": {
 				Action:      "only_one",
 				Key:         "F1",
@@ -311,7 +311,7 @@ func BenchmarkShortcutService_ValidateShortcuts(b *testing.B) {
 	service := documentService.NewShortcutService()
 	ctx := context.Background()
 
-	shortcuts := document.GetDefaultShortcuts()
+	shortcuts := writer.GetDefaultShortcuts()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

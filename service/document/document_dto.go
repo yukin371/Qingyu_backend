@@ -1,9 +1,8 @@
 package document
 
 import (
+	"Qingyu_backend/models/writer"
 	"time"
-
-	"Qingyu_backend/models/document"
 )
 
 // CreateDocumentRequest 创建文档请求
@@ -30,7 +29,7 @@ type CreateDocumentResponse struct {
 
 // DocumentTreeNode 文档树节点
 type DocumentTreeNode struct {
-	*document.Document
+	*writer.Document
 	Children []*DocumentTreeNode `json:"children"`
 }
 
@@ -74,8 +73,8 @@ type ListDocumentsRequest struct {
 
 // ListDocumentsResponse 文档列表响应
 type ListDocumentsResponse struct {
-	Documents []*document.Document `json:"documents"`
-	Total     int                  `json:"total"`
+	Documents []*writer.Document `json:"documents"`
+	Total     int                `json:"total"`
 	Page      int                  `json:"page"`
 	PageSize  int                  `json:"pageSize"`
 }

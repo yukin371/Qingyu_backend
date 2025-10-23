@@ -1,6 +1,7 @@
 package api
 
 import (
+	documentModel "Qingyu_backend/models/writer"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	writerAPI "Qingyu_backend/api/v1/writer"
-	documentModel "Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/base"
 	"Qingyu_backend/service/document"

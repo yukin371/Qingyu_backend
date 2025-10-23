@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
@@ -35,7 +35,7 @@ func NewMongoRankingRepository(client *mongo.Client, database string) BookstoreI
 // ========== 基础CRUD方法 ==========
 
 // Create 创建榜单项
-func (r *MongoRankingRepository) Create(ctx context.Context, item *bookstore.RankingItem) error {
+func (r *MongoRankingRepository) Create(ctx context.Context, item *bookstore2.RankingItem) error {
 	if item == nil {
 		return errors.New("ranking item cannot be nil")
 	}
@@ -53,8 +53,8 @@ func (r *MongoRankingRepository) Create(ctx context.Context, item *bookstore.Ran
 }
 
 // GetByID 根据ID获取榜单项
-func (r *MongoRankingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.RankingItem, error) {
-	var item bookstore.RankingItem
+func (r *MongoRankingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.RankingItem, error) {
+	var item bookstore2.RankingItem
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&item)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -100,7 +100,7 @@ func (r *MongoRankingRepository) Delete(ctx context.Context, id primitive.Object
 }
 
 // List 查询榜单项列表
-func (r *MongoRankingRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore2.RankingItem, error) {
 	var query bson.M
 	if filter != nil {
 		query = bson.M(filter.GetConditions())
@@ -114,7 +114,7 @@ func (r *MongoRankingRepository) List(ctx context.Context, filter infra.Filter) 
 	}
 	defer cursor.Close(ctx)
 
-	var items []*bookstore.RankingItem
+	var items []*bookstore2.RankingItem
 	if err = cursor.All(ctx, &items); err != nil {
 		return nil, fmt.Errorf("failed to decode ranking items: %w", err)
 	}
@@ -150,7 +150,7 @@ func (r *MongoRankingRepository) Health(ctx context.Context) error {
 // ========== 榜单特定查询方法 ==========
 
 // GetByType 根据榜单类型获取榜单项
-func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit, offset int) ([]*bookstore2.RankingItem, error) {
 	filter := bson.M{
 		"type":   rankingType,
 		"period": period,
@@ -167,7 +167,7 @@ func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType book
 	}
 	defer cursor.Close(ctx)
 
-	var items []*bookstore.RankingItem
+	var items []*bookstore2.RankingItem
 	if err = cursor.All(ctx, &items); err != nil {
 		return nil, fmt.Errorf("failed to decode ranking items: %w", err)
 	}
@@ -176,7 +176,7 @@ func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType book
 }
 
 // GetByTypeWithBooks 根据榜单类型获取榜单项（包含书籍信息）
-func (r *MongoRankingRepository) GetByTypeWithBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) GetByTypeWithBooks(ctx context.Context, rankingType bookstore2.RankingType, period string, limit, offset int) ([]*bookstore2.RankingItem, error) {
 	// 先获取榜单项
 	items, err := r.GetByType(ctx, rankingType, period, limit, offset)
 	if err != nil {
@@ -201,13 +201,13 @@ func (r *MongoRankingRepository) GetByTypeWithBooks(ctx context.Context, ranking
 	}
 	defer cursor.Close(ctx)
 
-	var books []*bookstore.Book
+	var books []*bookstore2.Book
 	if err = cursor.All(ctx, &books); err != nil {
 		return items, nil
 	}
 
 	// 创建书籍ID到书籍的映射
-	bookMap := make(map[primitive.ObjectID]*bookstore.Book)
+	bookMap := make(map[primitive.ObjectID]*bookstore2.Book)
 	for _, book := range books {
 		bookMap[book.ID] = book
 	}
@@ -223,14 +223,14 @@ func (r *MongoRankingRepository) GetByTypeWithBooks(ctx context.Context, ranking
 }
 
 // GetByBookID 根据书籍ID获取榜单项
-func (r *MongoRankingRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID, rankingType bookstore.RankingType, period string) (*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID, rankingType bookstore2.RankingType, period string) (*bookstore2.RankingItem, error) {
 	filter := bson.M{
 		"book_id": bookID,
 		"type":    rankingType,
 		"period":  period,
 	}
 
-	var item bookstore.RankingItem
+	var item bookstore2.RankingItem
 	err := r.collection.FindOne(ctx, filter).Decode(&item)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -243,7 +243,7 @@ func (r *MongoRankingRepository) GetByBookID(ctx context.Context, bookID primiti
 }
 
 // GetByPeriod 根据周期获取榜单项
-func (r *MongoRankingRepository) GetByPeriod(ctx context.Context, period string, limit, offset int) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) GetByPeriod(ctx context.Context, period string, limit, offset int) ([]*bookstore2.RankingItem, error) {
 	filter := bson.M{"period": period}
 
 	opts := options.Find().
@@ -257,7 +257,7 @@ func (r *MongoRankingRepository) GetByPeriod(ctx context.Context, period string,
 	}
 	defer cursor.Close(ctx)
 
-	var items []*bookstore.RankingItem
+	var items []*bookstore2.RankingItem
 	if err = cursor.All(ctx, &items); err != nil {
 		return nil, fmt.Errorf("failed to decode ranking items: %w", err)
 	}
@@ -268,7 +268,7 @@ func (r *MongoRankingRepository) GetByPeriod(ctx context.Context, period string,
 // ========== 榜单统计方法 ==========
 
 // GetRankingStats 获取榜单统计信息
-func (r *MongoRankingRepository) GetRankingStats(ctx context.Context, rankingType bookstore.RankingType, period string) (*bookstore.RankingStats, error) {
+func (r *MongoRankingRepository) GetRankingStats(ctx context.Context, rankingType bookstore2.RankingType, period string) (*bookstore2.RankingStats, error) {
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
 			"type":   rankingType,
@@ -303,13 +303,13 @@ func (r *MongoRankingRepository) GetRankingStats(ctx context.Context, rankingTyp
 	}
 
 	if len(results) == 0 {
-		return &bookstore.RankingStats{
+		return &bookstore2.RankingStats{
 			Type:   rankingType,
 			Period: period,
 		}, nil
 	}
 
-	return &bookstore.RankingStats{
+	return &bookstore2.RankingStats{
 		Type:          rankingType,
 		Period:        period,
 		TotalBooks:    results[0].TotalBooks,
@@ -321,7 +321,7 @@ func (r *MongoRankingRepository) GetRankingStats(ctx context.Context, rankingTyp
 }
 
 // CountByType 统计某类型榜单的数量
-func (r *MongoRankingRepository) CountByType(ctx context.Context, rankingType bookstore.RankingType, period string) (int64, error) {
+func (r *MongoRankingRepository) CountByType(ctx context.Context, rankingType bookstore2.RankingType, period string) (int64, error) {
 	filter := bson.M{
 		"type":   rankingType,
 		"period": period,
@@ -330,14 +330,14 @@ func (r *MongoRankingRepository) CountByType(ctx context.Context, rankingType bo
 }
 
 // GetTopBooks 获取榜单前N本书
-func (r *MongoRankingRepository) GetTopBooks(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) GetTopBooks(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	return r.GetByType(ctx, rankingType, period, limit, 0)
 }
 
 // ========== 榜单更新方法 ==========
 
 // UpsertRankingItem 插入或更新榜单项
-func (r *MongoRankingRepository) UpsertRankingItem(ctx context.Context, item *bookstore.RankingItem) error {
+func (r *MongoRankingRepository) UpsertRankingItem(ctx context.Context, item *bookstore2.RankingItem) error {
 	if item == nil {
 		return errors.New("ranking item cannot be nil")
 	}
@@ -369,7 +369,7 @@ func (r *MongoRankingRepository) UpsertRankingItem(ctx context.Context, item *bo
 }
 
 // BatchUpsertRankingItems 批量插入或更新榜单项
-func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, items []*bookstore.RankingItem) error {
+func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, items []*bookstore2.RankingItem) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -415,7 +415,7 @@ func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, it
 }
 
 // UpdateRankings 更新榜单（删除旧数据并插入新数据）
-func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem) error {
+func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem) error {
 	// 开启事务
 	session, err := r.client.StartSession()
 	if err != nil {
@@ -476,7 +476,7 @@ func (r *MongoRankingRepository) DeleteByPeriod(ctx context.Context, period stri
 }
 
 // DeleteByType 删除指定类型的榜单
-func (r *MongoRankingRepository) DeleteByType(ctx context.Context, rankingType bookstore.RankingType) error {
+func (r *MongoRankingRepository) DeleteByType(ctx context.Context, rankingType bookstore2.RankingType) error {
 	_, err := r.collection.DeleteMany(ctx, bson.M{"type": rankingType})
 	if err != nil {
 		return fmt.Errorf("failed to delete rankings by type: %w", err)
@@ -501,13 +501,13 @@ func (r *MongoRankingRepository) DeleteExpiredRankings(ctx context.Context, befo
 // ========== 实时榜单计算方法 ==========
 
 // CalculateRealtimeRanking 计算实时榜单
-func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
 	// 实时榜：基于最近24小时的浏览量和点赞数
 	// 这里使用books表的统计数据进行计算
 	pipeline := mongo.Pipeline{
 		// 只筛选已发布的书籍
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore.BookStatusPublished,
+			"status": bookstore2.BookStatusPublished,
 		}}},
 		// 计算综合分数：浏览量权重70%，点赞数权重30%
 		{{Key: "$addFields", Value: bson.M{
@@ -549,11 +549,11 @@ func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, p
 	}
 
 	// 转换为榜单项
-	items := make([]*bookstore.RankingItem, len(results))
+	items := make([]*bookstore2.RankingItem, len(results))
 	for i, result := range results {
-		items[i] = &bookstore.RankingItem{
+		items[i] = &bookstore2.RankingItem{
 			BookID:    result.BookID,
-			Type:      bookstore.RankingTypeRealtime,
+			Type:      bookstore2.RankingTypeRealtime,
 			Rank:      i + 1,
 			Score:     result.Score,
 			ViewCount: result.ViewCount,
@@ -566,12 +566,12 @@ func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, p
 }
 
 // CalculateWeeklyRanking 计算周榜
-func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
 	// 周榜：基于本周的更新频率和阅读量
 	// 简化实现：使用最近更新时间和浏览量
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore.BookStatusPublished,
+			"status": bookstore2.BookStatusPublished,
 		}}},
 		{{Key: "$addFields", Value: bson.M{
 			"weekly_score": bson.M{
@@ -608,11 +608,11 @@ func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, per
 		return nil, fmt.Errorf("failed to decode ranking results: %w", err)
 	}
 
-	items := make([]*bookstore.RankingItem, len(results))
+	items := make([]*bookstore2.RankingItem, len(results))
 	for i, result := range results {
-		items[i] = &bookstore.RankingItem{
+		items[i] = &bookstore2.RankingItem{
 			BookID:    result.BookID,
-			Type:      bookstore.RankingTypeWeekly,
+			Type:      bookstore2.RankingTypeWeekly,
 			Rank:      i + 1,
 			Score:     result.Score,
 			ViewCount: result.ViewCount,
@@ -625,11 +625,11 @@ func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, per
 }
 
 // CalculateMonthlyRanking 计算月榜
-func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
 	// 月榜：基于本月的综合表现
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore.BookStatusPublished,
+			"status": bookstore2.BookStatusPublished,
 		}}},
 		{{Key: "$addFields", Value: bson.M{
 			"monthly_score": bson.M{
@@ -667,11 +667,11 @@ func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, pe
 		return nil, fmt.Errorf("failed to decode ranking results: %w", err)
 	}
 
-	items := make([]*bookstore.RankingItem, len(results))
+	items := make([]*bookstore2.RankingItem, len(results))
 	for i, result := range results {
-		items[i] = &bookstore.RankingItem{
+		items[i] = &bookstore2.RankingItem{
 			BookID:    result.BookID,
-			Type:      bookstore.RankingTypeMonthly,
+			Type:      bookstore2.RankingTypeMonthly,
 			Rank:      i + 1,
 			Score:     result.Score,
 			ViewCount: result.ViewCount,
@@ -684,13 +684,13 @@ func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, pe
 }
 
 // CalculateNewbieRanking 计算新人榜
-func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error) {
+func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
 	// 新人榜：筛选最近3个月内创建的书籍
 	threeMonthsAgo := time.Now().AddDate(0, -3, 0)
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status":     bookstore.BookStatusPublished,
+			"status":     bookstore2.BookStatusPublished,
 			"created_at": bson.M{"$gte": threeMonthsAgo},
 		}}},
 		{{Key: "$addFields", Value: bson.M{
@@ -728,11 +728,11 @@ func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, per
 		return nil, fmt.Errorf("failed to decode ranking results: %w", err)
 	}
 
-	items := make([]*bookstore.RankingItem, len(results))
+	items := make([]*bookstore2.RankingItem, len(results))
 	for i, result := range results {
-		items[i] = &bookstore.RankingItem{
+		items[i] = &bookstore2.RankingItem{
 			BookID:    result.BookID,
-			Type:      bookstore.RankingTypeNewbie,
+			Type:      bookstore2.RankingTypeNewbie,
 			Rank:      i + 1,
 			Score:     result.Score,
 			ViewCount: result.ViewCount,

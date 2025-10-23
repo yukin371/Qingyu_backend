@@ -1,6 +1,7 @@
 package reading
 
 import (
+	reader2 "Qingyu_backend/models/reader"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/reading"
 )
@@ -21,17 +21,17 @@ type MockChapterRepository struct {
 	mock.Mock
 }
 
-func (m *MockChapterRepository) Create(ctx context.Context, chapter *reader.Chapter) error {
+func (m *MockChapterRepository) Create(ctx context.Context, chapter *reader2.Chapter) error {
 	args := m.Called(ctx, chapter)
 	return args.Error(0)
 }
 
-func (m *MockChapterRepository) GetByID(ctx context.Context, id string) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetByID(ctx context.Context, id string) (*reader2.Chapter, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
 func (m *MockChapterRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -44,84 +44,84 @@ func (m *MockChapterRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockChapterRepository) GetByBookID(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+func (m *MockChapterRepository) GetByBookID(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Chapter), args.Error(1)
+	return args.Get(0).([]*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetByBookIDWithPagination(ctx context.Context, bookID string, limit, offset int64) ([]*reader.Chapter, error) {
+func (m *MockChapterRepository) GetByBookIDWithPagination(ctx context.Context, bookID string, limit, offset int64) ([]*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Chapter), args.Error(1)
+	return args.Get(0).([]*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetByChapterNum(ctx context.Context, bookID string, chapterNum int) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetByChapterNum(ctx context.Context, bookID string, chapterNum int) (*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID, chapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID, currentChapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID, currentChapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetFirstChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetFirstChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetLastChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+func (m *MockChapterRepository) GetLastChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetPublishedChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+func (m *MockChapterRepository) GetPublishedChapters(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Chapter), args.Error(1)
+	return args.Get(0).([]*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetVIPChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+func (m *MockChapterRepository) GetVIPChapters(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Chapter), args.Error(1)
+	return args.Get(0).([]*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockChapterRepository) GetFreeChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+func (m *MockChapterRepository) GetFreeChapters(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Chapter), args.Error(1)
+	return args.Get(0).([]*reader2.Chapter), args.Error(1)
 }
 
 func (m *MockChapterRepository) CountByBookID(ctx context.Context, bookID string) (int64, error) {
@@ -139,7 +139,7 @@ func (m *MockChapterRepository) CountVIPChapters(ctx context.Context, bookID str
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockChapterRepository) BatchCreate(ctx context.Context, chapters []*reader.Chapter) error {
+func (m *MockChapterRepository) BatchCreate(ctx context.Context, chapters []*reader2.Chapter) error {
 	args := m.Called(ctx, chapters)
 	return args.Error(0)
 }
@@ -203,15 +203,15 @@ func (m *MockCacheService) InvalidateChapterContent(ctx context.Context, chapter
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetChapter(ctx context.Context, chapterID string) (*reader.Chapter, error) {
+func (m *MockCacheService) GetChapter(ctx context.Context, chapterID string) (*reader2.Chapter, error) {
 	args := m.Called(ctx, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Chapter), args.Error(1)
+	return args.Get(0).(*reader2.Chapter), args.Error(1)
 }
 
-func (m *MockCacheService) SetChapter(ctx context.Context, chapterID string, chapter *reader.Chapter, expiration time.Duration) error {
+func (m *MockCacheService) SetChapter(ctx context.Context, chapterID string, chapter *reader2.Chapter, expiration time.Duration) error {
 	args := m.Called(ctx, chapterID, chapter, expiration)
 	return args.Error(0)
 }
@@ -221,15 +221,15 @@ func (m *MockCacheService) InvalidateChapter(ctx context.Context, chapterID stri
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+func (m *MockCacheService) GetReadingSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
+	return args.Get(0).(*reader2.ReadingSettings), args.Error(1)
 }
 
-func (m *MockCacheService) SetReadingSettings(ctx context.Context, userID string, settings *reader.ReadingSettings, expiration time.Duration) error {
+func (m *MockCacheService) SetReadingSettings(ctx context.Context, userID string, settings *reader2.ReadingSettings, expiration time.Duration) error {
 	args := m.Called(ctx, userID, settings, expiration)
 	return args.Error(0)
 }
@@ -239,15 +239,15 @@ func (m *MockCacheService) InvalidateReadingSettings(ctx context.Context, userID
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
+func (m *MockCacheService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).(*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockCacheService) SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader.ReadingProgress, expiration time.Duration) error {
+func (m *MockCacheService) SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader2.ReadingProgress, expiration time.Duration) error {
 	args := m.Called(ctx, userID, bookID, progress, expiration)
 	return args.Error(0)
 }
@@ -308,25 +308,25 @@ type MockSettingsRepository struct {
 	mock.Mock
 }
 
-func (m *MockSettingsRepository) Create(ctx context.Context, settings *reader.ReadingSettings) error {
+func (m *MockSettingsRepository) Create(ctx context.Context, settings *reader2.ReadingSettings) error {
 	args := m.Called(ctx, settings)
 	return args.Error(0)
 }
 
-func (m *MockSettingsRepository) GetByID(ctx context.Context, id string) (*reader.ReadingSettings, error) {
+func (m *MockSettingsRepository) GetByID(ctx context.Context, id string) (*reader2.ReadingSettings, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
+	return args.Get(0).(*reader2.ReadingSettings), args.Error(1)
 }
 
-func (m *MockSettingsRepository) GetByUserID(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+func (m *MockSettingsRepository) GetByUserID(ctx context.Context, userID string) (*reader2.ReadingSettings, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
+	return args.Get(0).(*reader2.ReadingSettings), args.Error(1)
 }
 
 func (m *MockSettingsRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -334,7 +334,7 @@ func (m *MockSettingsRepository) Update(ctx context.Context, id string, updates 
 	return args.Error(0)
 }
 
-func (m *MockSettingsRepository) UpdateByUserID(ctx context.Context, userID string, settings *reader.ReadingSettings) error {
+func (m *MockSettingsRepository) UpdateByUserID(ctx context.Context, userID string, settings *reader2.ReadingSettings) error {
 	args := m.Called(ctx, userID, settings)
 	return args.Error(0)
 }
@@ -349,20 +349,20 @@ func (m *MockSettingsRepository) ExistsByUserID(ctx context.Context, userID stri
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockSettingsRepository) CreateDefaultSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+func (m *MockSettingsRepository) CreateDefaultSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
+	return args.Get(0).(*reader2.ReadingSettings), args.Error(1)
 }
 
-func (m *MockSettingsRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*reader.ReadingSettings, error) {
+func (m *MockSettingsRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*reader2.ReadingSettings, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingSettings), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingSettings), args.Error(1)
 }
 
 func (m *MockSettingsRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
@@ -616,7 +616,7 @@ func TestReaderService_GetReadingSettings_CacheHit(t *testing.T) {
 	ctx := context.Background()
 
 	// 准备缓存数据
-	cachedSettings := &reader.ReadingSettings{
+	cachedSettings := &reader2.ReadingSettings{
 		UserID:     "user123",
 		FontSize:   18,
 		FontFamily: "Arial",
@@ -657,7 +657,7 @@ func TestReaderService_GetReadingSettings_CacheMiss(t *testing.T) {
 	ctx := context.Background()
 
 	// 准备数据库数据
-	dbSettings := &reader.ReadingSettings{
+	dbSettings := &reader2.ReadingSettings{
 		UserID:     "user123",
 		FontSize:   16,
 		FontFamily: "Microsoft YaHei",
@@ -699,7 +699,7 @@ func TestReaderService_SaveReadingSettings_UpdateCache(t *testing.T) {
 
 	ctx := context.Background()
 
-	newSettings := &reader.ReadingSettings{
+	newSettings := &reader2.ReadingSettings{
 		UserID:     "user123",
 		FontSize:   20,
 		FontFamily: "SimSun",
