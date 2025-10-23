@@ -16,6 +16,8 @@ type AuthServiceImpl struct {
 	permissionService PermissionService
 	authRepo          sharedRepo.AuthRepository
 	userService       userServiceInterface.UserService // 依赖User服务
+	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
+	passwordValidator *PasswordValidator               // MVP: 密码强度验证
 }
 
 // NewAuthService 创建Auth服务
@@ -25,6 +27,7 @@ func NewAuthService(
 	permissionService PermissionService,
 	authRepo sharedRepo.AuthRepository,
 	userService userServiceInterface.UserService,
+	sessionService SessionService,
 ) AuthService {
 	return &AuthServiceImpl{
 		jwtService:        jwtService,
@@ -32,6 +35,8 @@ func NewAuthService(
 		permissionService: permissionService,
 		authRepo:          authRepo,
 		userService:       userService,
+		sessionService:    sessionService,
+		passwordValidator: NewPasswordValidator(), // MVP: 使用默认密码验证规则
 	}
 }
 
@@ -39,6 +44,11 @@ func NewAuthService(
 
 // Register 用户注册
 func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
+	// 0. MVP: 验证密码强度
+	if err := s.passwordValidator.ValidatePassword(req.Password); err != nil {
+		return nil, fmt.Errorf("密码不符合要求: %w", err)
+	}
+
 	// 1. 调用User服务创建用户
 	createUserReq := &userServiceInterface.CreateUserRequest{
 		Username: req.Username,
@@ -116,11 +126,24 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 		roleNames = []string{"reader"}
 	}
 
+	// 2.5. MVP: 检查多端登录限制（最多5台设备）
+	if err := s.sessionService.CheckDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
+		return nil, fmt.Errorf("登录失败: %w", err)
+	}
+
 	// 3. 生成JWT Token
 	token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID, roleNames)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
+
+	// 3.5. MVP: 创建会话
+	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
+	if err != nil {
+		// 会话创建失败不影响登录（降级处理）
+		fmt.Printf("[Auth] 创建会话失败: %v\n", err)
+	}
+	_ = session // 暂时不使用，后续可添加到响应中
 
 	// 4. 返回响应
 	return &LoginResponse{
