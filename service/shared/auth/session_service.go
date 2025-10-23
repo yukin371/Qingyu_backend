@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	authModel "Qingyu_backend/models/shared/auth"
@@ -63,11 +65,20 @@ func (s *SessionServiceImpl) GetSession(ctx context.Context, sessionID string) (
 	}
 
 	// 2. 解析会话数据
-	var userID string
-	var createdAt, expiresAt int64
-	_, err = fmt.Sscanf(value, "%s|%d|%d", &userID, &createdAt, &expiresAt)
+	// 修复: 使用strings.Split替代fmt.Sscanf，因为%s会读取到空格而不是止于|
+	parts := strings.Split(value, "|")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("会话数据格式无效")
+	}
+
+	userID := parts[0]
+	createdAt, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("解析会话数据失败: %w", err)
+		return nil, fmt.Errorf("解析创建时间失败: %w", err)
+	}
+	expiresAt, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("解析过期时间失败: %w", err)
 	}
 
 	// 3. 构建会话对象

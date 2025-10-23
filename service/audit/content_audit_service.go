@@ -176,13 +176,20 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 	}
 
 	// 4. 确定审核状态和结果
+	// 修复: 优先根据风险等级判断，高风险直接拒绝
 	if checkResult.IsSafe {
 		record.Status = audit.StatusApproved
 		record.Result = audit.ResultPass
+	} else if checkResult.RiskLevel >= audit.LevelHigh {
+		// 高风险（Level≥3）直接拒绝
+		record.Status = audit.StatusRejected
+		record.Result = audit.ResultReject
 	} else if checkResult.NeedsReview {
+		// 中等风险需要人工复审
 		record.Status = audit.StatusPending
 		record.Result = audit.ResultManual
 	} else if checkResult.CanPublish {
+		// 低风险警告但可发布
 		record.Status = audit.StatusWarning
 		record.Result = audit.ResultWarning
 	} else {
@@ -609,6 +616,12 @@ func (s *ContentAuditService) publishAuditEvent(ctx context.Context, record *aud
 
 // loadDefaultRules 加载默认规则
 func (s *ContentAuditService) loadDefaultRules() {
-	// 加载默认规则到规则引擎
-	// 这里可以从配置文件或数据库加载
+	// 加载所有默认规则
+	s.ruleEngine.AddRule(NewPhoneNumberRule())
+	s.ruleEngine.AddRule(NewURLRule())
+	s.ruleEngine.AddRule(NewWeChatRule())
+	s.ruleEngine.AddRule(NewQQRule())
+	s.ruleEngine.AddRule(NewExcessiveRepetitionRule())
+	// 内容长度规则可选，根据需要启用
+	// s.ruleEngine.AddRule(NewContentLengthRule())
 }
