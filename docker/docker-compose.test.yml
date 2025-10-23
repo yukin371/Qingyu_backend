@@ -4,7 +4,7 @@ version: '3.8'
 services:
   # MongoDB数据库（测试专用）
   mongodb-test:
-    image: mongo:6.0
+    image: mongo:7.0
     container_name: qingyu-mongodb-test
     ports:
       - "27017:27017"

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -468,6 +469,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 		errChan <- nil
 	}()
 
+	// 使用mutex保护并发写入map
+	var mu sync.Mutex
+
 	// 获取实时榜
 	go func() {
 		rankings, err := s.GetRealtimeRanking(ctx, 10)
@@ -475,7 +479,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get realtime ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["realtime"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
@@ -486,7 +492,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get weekly ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["weekly"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
@@ -497,7 +505,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get monthly ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["monthly"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
