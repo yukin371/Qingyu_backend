@@ -61,4 +61,15 @@ const (
 	PermAdminAccess = "admin.access"
 	PermAdminReview = "admin.review"
 	PermAdminManage = "admin.manage"
+
+	// 文档权限
+	PermDocumentRead    = "document.read"
+	PermDocumentWrite   = "document.write"
+	PermDocumentDelete  = "document.delete"
+	PermDocumentPublish = "document.publish"
+
+	// 评论权限
+	PermCommentRead   = "comment.read"
+	PermCommentWrite  = "comment.write"
+	PermCommentDelete = "comment.delete"
 )
