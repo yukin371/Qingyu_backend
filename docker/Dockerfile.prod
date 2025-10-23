@@ -1,6 +1,6 @@
 # 后端生产环境 Dockerfile - 多阶段构建
 # 构建阶段
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN go mod download
 COPY . .
 
 # 构建二进制文件
-RUN go build -ldflags="-s -w" -o main .
+RUN go build -ldflags="-s -w" -o main ./cmd/server/main.go
 
 # 生产阶段
 FROM alpine:latest
@@ -40,11 +40,14 @@ ENV TZ=Asia/Shanghai
 # 复制二进制文件
 COPY --from=builder /app/main .
 
-# 复制配置文件
-COPY --from=builder /app/config.yaml .
+# 复制配置文件（使用docker配置覆盖默认配置）
+COPY --from=builder /app/config/config.docker.yaml ./config/config.yaml
 
 # 暴露端口
 EXPOSE 8080
+
+# 设置配置文件环境变量
+ENV CONFIG_FILE=config/config.docker.yaml
 
 # 启动应用
 CMD ["./main"]

@@ -75,10 +75,12 @@ func LoadConfig(configPath string) (*Config, error) {
 		v.SetConfigFile(configPath)
 	} else {
 		// 配置Viper
-		v.SetConfigName("config")   // 配置文件名（不带扩展名）
-		v.SetConfigType("yaml")     // 配置文件类型
-		v.AddConfigPath(configPath) // 配置文件路径
-		v.AddConfigPath(".")        // 当前目录
+		v.SetConfigName("config")       // 配置文件名（不带扩展名）
+		v.SetConfigType("yaml")         // 配置文件类型
+		v.AddConfigPath(configPath)     // 配置文件路径
+		v.AddConfigPath("./config")     // config子目录
+		v.AddConfigPath("../../config") // 从cmd/server运行时
+		v.AddConfigPath(".")            // 当前目录
 	}
 
 	v.AutomaticEnv()                                   // 读取环境变量

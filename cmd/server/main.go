@@ -47,18 +47,30 @@ import (
 
 func main() {
 	// 获取配置文件路径
-	configPath := os.Getenv("CONFIG_PATH")
+	// Docker环境使用绝对路径，本地开发使用环境变量或当前目录
+	configPath := os.Getenv("CONFIG_FILE")
 	if configPath == "" {
-		// 默认使用当前目录
-		configPath = "."
+		configPath = os.Getenv("CONFIG_PATH")
+	}
+	if configPath == "" {
+		// 默认尝试 /app/config/config.yaml（Docker环境）
+		if _, err := os.Stat("/app/config/config.yaml"); err == nil {
+			configPath = "/app/config/config.yaml"
+		} else {
+			// 否则使用当前目录（本地环境）
+			configPath = "."
+		}
 	}
 	configPath = filepath.Clean(configPath)
+
+	log.Printf("[Main] Loading configuration from: %s", configPath)
 
 	// 加载配置
 	_, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+	log.Println("[Main] Configuration loaded successfully")
 
 	// 注册配置重载处理器
 	config.RegisterReloadHandler("database", func() {
