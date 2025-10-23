@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/repository/interfaces"
+	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
@@ -18,6 +18,7 @@ import (
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 
 	// 导入各个子包的具体实现
+	mongoAI "Qingyu_backend/repository/mongodb/ai"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
@@ -213,8 +214,8 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 // ========== AI Module Repositories ==========
 
 // CreateQuotaRepository 创建配额Repository
-func (f *MongoRepositoryFactory) CreateQuotaRepository() interfaces.QuotaRepository {
-	return NewMongoQuotaRepository(f.database)
+func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository {
+	return mongoAI.NewMongoQuotaRepository(f.database)
 }
 
 // ========== Factory Management Methods ==========

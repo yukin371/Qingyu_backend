@@ -6,18 +6,18 @@ import (
 	"time"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/repository/interfaces"
+	aiRepo "Qingyu_backend/repository/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // QuotaService 配额服务
 type QuotaService struct {
-	quotaRepo interfaces.QuotaRepository
+	quotaRepo aiRepo.QuotaRepository
 }
 
 // NewQuotaService 创建配额服务
-func NewQuotaService(quotaRepo interfaces.QuotaRepository) *QuotaService {
+func NewQuotaService(quotaRepo aiRepo.QuotaRepository) *QuotaService {
 	return &QuotaService{
 		quotaRepo: quotaRepo,
 	}
@@ -168,7 +168,7 @@ func (s *QuotaService) GetAllQuotas(ctx context.Context, userID string) ([]*ai.U
 }
 
 // GetQuotaStatistics 获取配额统计
-func (s *QuotaService) GetQuotaStatistics(ctx context.Context, userID string) (*interfaces.QuotaStatistics, error) {
+func (s *QuotaService) GetQuotaStatistics(ctx context.Context, userID string) (*aiRepo.QuotaStatistics, error) {
 	return s.quotaRepo.GetQuotaStatistics(ctx, userID)
 }
 
