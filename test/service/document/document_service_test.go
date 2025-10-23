@@ -83,6 +83,11 @@ func (m *MockProjectRepository) UpdateTotalWords(ctx context.Context, id string,
 	return args.Error(0)
 }
 
+func (m *MockProjectRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
 // MockEventBus Mock事件总线
 type MockEventBus struct {
 	mock.Mock
@@ -131,10 +136,13 @@ func TestDocumentService_CreateDocument_Success(t *testing.T) {
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
 	// Mock document creation
-	mockDocRepo.On("Create", ctx, mock.AnythingOfType("*document.Document")).Return(nil)
+	mockDocRepo.On("Create", ctx, mock.AnythingOfType("*writer.Document")).Return(nil)
 
 	// Mock GetByProjectID for statistics update (async)
 	mockDocRepo.On("GetByProjectID", mock.Anything, projectID, mock.AnythingOfType("int64"), mock.AnythingOfType("int64")).Return([]*writer.Document{}, nil).Maybe()
+
+	// Mock project update for statistics (async)
+	mockProjectRepo.On("Update", mock.Anything, projectID, mock.Anything).Return(nil).Maybe()
 
 	// Mock event publishing
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Maybe()
@@ -238,13 +246,14 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 
 	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
 
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
 
 	// Mock document exists
 	mockDoc := &writer.Document{
 		ID:        docID,
-		ProjectID: primitive.NewObjectID().Hex(),
+		ProjectID: projectID,
 		Title:     "Test Document",
 		Type:      "chapter",
 		WordCount: 100,
@@ -253,6 +262,15 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	mockDocRepo.On("GetByID", ctx, docID).Return(mockDoc, nil)
+
+	// Mock project exists and user has permission
+	mockProject := &writer.Project{
+		ID:       projectID,
+		Title:    "Test Project",
+		AuthorID: "test-user-id",
+		Status:   "active",
+	}
+	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
 	// Execute
 	resp, err := service.GetDocument(ctx, docID)

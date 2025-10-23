@@ -1,4 +1,4 @@
-package recommendation_test
+package recommendation
 
 import (
 	reco "Qingyu_backend/models/recommendation"

@@ -117,7 +117,7 @@ func TestCreateProject_Success(t *testing.T) {
 		Summary: "简介",
 	}
 
-	mockRepo.On("Create", ctx, mock.AnythingOfType("*document.Project")).Return(nil)
+	mockRepo.On("Create", ctx, mock.AnythingOfType("*writer.Project")).Return(nil)
 	mockEventBus.On("PublishAsync", ctx, mock.AnythingOfType("*base.BaseEvent")).Return(nil)
 
 	// Act
