@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/ai"
+	authModel "Qingyu_backend/models/shared/auth"
 	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -87,8 +88,8 @@ type TransactionDocumentRepository interface {
 
 // TransactionRoleRepository 角色事务Repository接口
 type TransactionRoleRepository interface {
-	CRUDRepository[*usersModel.Role, string]
-	GetDefaultRole(ctx context.Context) (*usersModel.Role, error)
+	CRUDRepository[*authModel.Role, string]
+	GetDefaultRole(ctx context.Context) (*authModel.Role, error)
 	AssignRole(ctx context.Context, userID, roleID string) error
 }
 
