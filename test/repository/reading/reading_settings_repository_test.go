@@ -1,7 +1,7 @@
 package reading_test
 
 import (
-	"Qingyu_backend/models/reading/reader"
+	"Qingyu_backend/models/reader"
 	readingInterfaces "Qingyu_backend/repository/interfaces/reading"
 	"Qingyu_backend/repository/mongodb/reading"
 	"Qingyu_backend/test/testutil"

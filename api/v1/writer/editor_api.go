@@ -1,12 +1,12 @@
 package writer
 
 import (
+	documentModel "Qingyu_backend/models/writer"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	documentModel "Qingyu_backend/models/document"
 	"Qingyu_backend/service/document"
 )
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	bookstoreAPI "Qingyu_backend/api/v1/bookstore"
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 

@@ -1,12 +1,11 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"Qingyu_backend/models/reading/bookstore"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -27,32 +26,32 @@ type CacheService interface {
 	SetHomepageData(ctx context.Context, data *HomepageData, expiration time.Duration) error
 
 	// 榜单缓存
-	GetRanking(ctx context.Context, rankingType bookstore.RankingType, period string) ([]*bookstore.RankingItem, error)
-	SetRanking(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem, expiration time.Duration) error
+	GetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error)
+	SetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem, expiration time.Duration) error
 
 	// Banner缓存
-	GetActiveBanners(ctx context.Context) ([]*bookstore.Banner, error)
-	SetActiveBanners(ctx context.Context, banners []*bookstore.Banner, expiration time.Duration) error
+	GetActiveBanners(ctx context.Context) ([]*bookstore2.Banner, error)
+	SetActiveBanners(ctx context.Context, banners []*bookstore2.Banner, expiration time.Duration) error
 
 	// 书籍缓存
-	GetBook(ctx context.Context, bookID string) (*bookstore.Book, error)
-	SetBook(ctx context.Context, bookID string, book *bookstore.Book, expiration time.Duration) error
+	GetBook(ctx context.Context, bookID string) (*bookstore2.Book, error)
+	SetBook(ctx context.Context, bookID string, book *bookstore2.Book, expiration time.Duration) error
 
 	// 书籍详情缓存
-	GetBookDetail(ctx context.Context, bookID string) (*bookstore.BookDetail, error)
-	SetBookDetail(ctx context.Context, bookID string, bookDetail *bookstore.BookDetail, expiration time.Duration) error
+	GetBookDetail(ctx context.Context, bookID string) (*bookstore2.BookDetail, error)
+	SetBookDetail(ctx context.Context, bookID string, bookDetail *bookstore2.BookDetail, expiration time.Duration) error
 
 	// 章节缓存
-	GetChapter(ctx context.Context, chapterID string) (*bookstore.Chapter, error)
-	SetChapter(ctx context.Context, chapterID string, chapter *bookstore.Chapter, expiration time.Duration) error
+	GetChapter(ctx context.Context, chapterID string) (*bookstore2.Chapter, error)
+	SetChapter(ctx context.Context, chapterID string, chapter *bookstore2.Chapter, expiration time.Duration) error
 
 	// 分类缓存
-	GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error)
-	SetCategoryTree(ctx context.Context, tree []*bookstore.CategoryTree, expiration time.Duration) error
+	GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error)
+	SetCategoryTree(ctx context.Context, tree []*bookstore2.CategoryTree, expiration time.Duration) error
 
 	// 书籍评分缓存
-	GetBookRating(ctx context.Context, key string) (*bookstore.BookRating, error)
-	SetBookRating(ctx context.Context, key string, rating *bookstore.BookRating, expiration time.Duration) error
+	GetBookRating(ctx context.Context, key string) (*bookstore2.BookRating, error)
+	SetBookRating(ctx context.Context, key string, rating *bookstore2.BookRating, expiration time.Duration) error
 	GetBookAverageRating(ctx context.Context, bookID string) (float64, error)
 	SetBookAverageRating(ctx context.Context, bookID string, rating float64, expiration time.Duration) error
 	InvalidateBookRatingCache(ctx context.Context, bookID string) error
@@ -64,21 +63,21 @@ type CacheService interface {
 	InvalidateTopFavoritedBooksCache(ctx context.Context) error
 
 	// 书籍统计缓存
-	GetBookStatistics(ctx context.Context, bookID string) (*bookstore.BookStatistics, error)
-	SetBookStatistics(ctx context.Context, bookID string, stats *bookstore.BookStatistics, expiration time.Duration) error
+	GetBookStatistics(ctx context.Context, bookID string) (*bookstore2.BookStatistics, error)
+	SetBookStatistics(ctx context.Context, bookID string, stats *bookstore2.BookStatistics, expiration time.Duration) error
 	InvalidateBookStatisticsCache(ctx context.Context, bookID string) error
-	GetTopViewedBooks(ctx context.Context) ([]*bookstore.Book, error)
-	SetTopViewedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error
-	GetTopFavoritedBooks(ctx context.Context) ([]*bookstore.Book, error)
-	SetTopFavoritedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error
-	GetTopRatedBooks(ctx context.Context) ([]*bookstore.Book, error)
-	SetTopRatedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error
-	GetHottestBooks(ctx context.Context) ([]*bookstore.Book, error)
-	SetHottestBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error
+	GetTopViewedBooks(ctx context.Context) ([]*bookstore2.Book, error)
+	SetTopViewedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error
+	GetTopFavoritedBooks(ctx context.Context) ([]*bookstore2.Book, error)
+	SetTopFavoritedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error
+	GetTopRatedBooks(ctx context.Context) ([]*bookstore2.Book, error)
+	SetTopRatedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error
+	GetHottestBooks(ctx context.Context) ([]*bookstore2.Book, error)
+	SetHottestBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error
 
 	// 缓存清理
 	InvalidateHomepageCache(ctx context.Context) error
-	InvalidateRankingCache(ctx context.Context, rankingType bookstore.RankingType, period string) error
+	InvalidateRankingCache(ctx context.Context, rankingType bookstore2.RankingType, period string) error
 	InvalidateBannerCache(ctx context.Context) error
 	InvalidateBookCache(ctx context.Context, bookID string) error
 	InvalidateBookDetailCache(ctx context.Context, bookID string) error
@@ -144,7 +143,7 @@ func (c *RedisCacheService) SetHomepageData(ctx context.Context, data *HomepageD
 }
 
 // GetRanking 获取榜单缓存
-func (c *RedisCacheService) GetRanking(ctx context.Context, rankingType bookstore.RankingType, period string) ([]*bookstore.RankingItem, error) {
+func (c *RedisCacheService) GetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error) {
 	key := c.getKey(fmt.Sprintf("ranking:%s:%s", rankingType, period))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -154,7 +153,7 @@ func (c *RedisCacheService) GetRanking(ctx context.Context, rankingType bookstor
 		return nil, fmt.Errorf("failed to get ranking cache: %w", err)
 	}
 
-	var items []*bookstore.RankingItem
+	var items []*bookstore2.RankingItem
 	if err := json.Unmarshal([]byte(data), &items); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal ranking data: %w", err)
 	}
@@ -163,7 +162,7 @@ func (c *RedisCacheService) GetRanking(ctx context.Context, rankingType bookstor
 }
 
 // SetRanking 设置榜单缓存
-func (c *RedisCacheService) SetRanking(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem, expiration time.Duration) error {
+func (c *RedisCacheService) SetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("ranking:%s:%s", rankingType, period))
 	jsonData, err := json.Marshal(items)
 	if err != nil {
@@ -174,7 +173,7 @@ func (c *RedisCacheService) SetRanking(ctx context.Context, rankingType bookstor
 }
 
 // GetActiveBanners 获取Banner缓存
-func (c *RedisCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore.Banner, error) {
+func (c *RedisCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore2.Banner, error) {
 	key := c.getKey("banners:active")
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -184,7 +183,7 @@ func (c *RedisCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore.
 		return nil, fmt.Errorf("failed to get banners cache: %w", err)
 	}
 
-	var banners []*bookstore.Banner
+	var banners []*bookstore2.Banner
 	if err := json.Unmarshal([]byte(data), &banners); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal banners data: %w", err)
 	}
@@ -193,7 +192,7 @@ func (c *RedisCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore.
 }
 
 // SetActiveBanners 设置Banner缓存
-func (c *RedisCacheService) SetActiveBanners(ctx context.Context, banners []*bookstore.Banner, expiration time.Duration) error {
+func (c *RedisCacheService) SetActiveBanners(ctx context.Context, banners []*bookstore2.Banner, expiration time.Duration) error {
 	key := c.getKey("banners:active")
 	jsonData, err := json.Marshal(banners)
 	if err != nil {
@@ -204,7 +203,7 @@ func (c *RedisCacheService) SetActiveBanners(ctx context.Context, banners []*boo
 }
 
 // GetBook 获取书籍缓存
-func (c *RedisCacheService) GetBook(ctx context.Context, bookID string) (*bookstore.Book, error) {
+func (c *RedisCacheService) GetBook(ctx context.Context, bookID string) (*bookstore2.Book, error) {
 	key := c.getKey(fmt.Sprintf("book:%s", bookID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -214,7 +213,7 @@ func (c *RedisCacheService) GetBook(ctx context.Context, bookID string) (*bookst
 		return nil, fmt.Errorf("failed to get book cache: %w", err)
 	}
 
-	var book bookstore.Book
+	var book bookstore2.Book
 	if err := json.Unmarshal([]byte(data), &book); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal book data: %w", err)
 	}
@@ -223,7 +222,7 @@ func (c *RedisCacheService) GetBook(ctx context.Context, bookID string) (*bookst
 }
 
 // SetBook 设置书籍缓存
-func (c *RedisCacheService) SetBook(ctx context.Context, bookID string, book *bookstore.Book, expiration time.Duration) error {
+func (c *RedisCacheService) SetBook(ctx context.Context, bookID string, book *bookstore2.Book, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("book:%s", bookID))
 	jsonData, err := json.Marshal(book)
 	if err != nil {
@@ -234,7 +233,7 @@ func (c *RedisCacheService) SetBook(ctx context.Context, bookID string, book *bo
 }
 
 // GetCategoryTree 获取分类树缓存
-func (c *RedisCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (c *RedisCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	key := c.getKey("categories:tree")
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -244,7 +243,7 @@ func (c *RedisCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore.C
 		return nil, fmt.Errorf("failed to get category tree cache: %w", err)
 	}
 
-	var tree []*bookstore.CategoryTree
+	var tree []*bookstore2.CategoryTree
 	if err := json.Unmarshal([]byte(data), &tree); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal category tree data: %w", err)
 	}
@@ -253,7 +252,7 @@ func (c *RedisCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore.C
 }
 
 // SetCategoryTree 设置分类树缓存
-func (c *RedisCacheService) SetCategoryTree(ctx context.Context, tree []*bookstore.CategoryTree, expiration time.Duration) error {
+func (c *RedisCacheService) SetCategoryTree(ctx context.Context, tree []*bookstore2.CategoryTree, expiration time.Duration) error {
 	key := c.getKey("categories:tree")
 	jsonData, err := json.Marshal(tree)
 	if err != nil {
@@ -270,7 +269,7 @@ func (c *RedisCacheService) InvalidateHomepageCache(ctx context.Context) error {
 }
 
 // InvalidateRankingCache 清除榜单缓存
-func (c *RedisCacheService) InvalidateRankingCache(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (c *RedisCacheService) InvalidateRankingCache(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	key := c.getKey(fmt.Sprintf("ranking:%s:%s", rankingType, period))
 	return c.client.Del(ctx, key).Err()
 }
@@ -294,7 +293,7 @@ func (c *RedisCacheService) InvalidateCategoryCache(ctx context.Context, categor
 }
 
 // GetBookDetail 获取书籍详情缓存
-func (c *RedisCacheService) GetBookDetail(ctx context.Context, bookID string) (*bookstore.BookDetail, error) {
+func (c *RedisCacheService) GetBookDetail(ctx context.Context, bookID string) (*bookstore2.BookDetail, error) {
 	key := c.getKey(fmt.Sprintf("book_detail:%s", bookID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -304,7 +303,7 @@ func (c *RedisCacheService) GetBookDetail(ctx context.Context, bookID string) (*
 		return nil, fmt.Errorf("failed to get book detail cache: %w", err)
 	}
 
-	var bookDetail bookstore.BookDetail
+	var bookDetail bookstore2.BookDetail
 	if err := json.Unmarshal([]byte(data), &bookDetail); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal book detail data: %w", err)
 	}
@@ -313,7 +312,7 @@ func (c *RedisCacheService) GetBookDetail(ctx context.Context, bookID string) (*
 }
 
 // SetBookDetail 设置书籍详情缓存
-func (c *RedisCacheService) SetBookDetail(ctx context.Context, bookID string, bookDetail *bookstore.BookDetail, expiration time.Duration) error {
+func (c *RedisCacheService) SetBookDetail(ctx context.Context, bookID string, bookDetail *bookstore2.BookDetail, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("book_detail:%s", bookID))
 	jsonData, err := json.Marshal(bookDetail)
 	if err != nil {
@@ -324,7 +323,7 @@ func (c *RedisCacheService) SetBookDetail(ctx context.Context, bookID string, bo
 }
 
 // GetChapter 获取章节缓存
-func (c *RedisCacheService) GetChapter(ctx context.Context, chapterID string) (*bookstore.Chapter, error) {
+func (c *RedisCacheService) GetChapter(ctx context.Context, chapterID string) (*bookstore2.Chapter, error) {
 	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -334,7 +333,7 @@ func (c *RedisCacheService) GetChapter(ctx context.Context, chapterID string) (*
 		return nil, fmt.Errorf("failed to get chapter cache: %w", err)
 	}
 
-	var chapter bookstore.Chapter
+	var chapter bookstore2.Chapter
 	if err := json.Unmarshal([]byte(data), &chapter); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal chapter data: %w", err)
 	}
@@ -343,7 +342,7 @@ func (c *RedisCacheService) GetChapter(ctx context.Context, chapterID string) (*
 }
 
 // SetChapter 设置章节缓存
-func (c *RedisCacheService) SetChapter(ctx context.Context, chapterID string, chapter *bookstore.Chapter, expiration time.Duration) error {
+func (c *RedisCacheService) SetChapter(ctx context.Context, chapterID string, chapter *bookstore2.Chapter, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
 	jsonData, err := json.Marshal(chapter)
 	if err != nil {
@@ -378,7 +377,7 @@ func (c *RedisCacheService) InvalidateAuthorCache(ctx context.Context, author st
 }
 
 // GetBookRating 获取书籍评分缓存
-func (r *RedisCacheService) GetBookRating(ctx context.Context, key string) (*bookstore.BookRating, error) {
+func (r *RedisCacheService) GetBookRating(ctx context.Context, key string) (*bookstore2.BookRating, error) {
 	cacheKey := fmt.Sprintf("book_rating:%s", key)
 	data, err := r.client.Get(ctx, cacheKey).Result()
 	if err != nil {
@@ -388,7 +387,7 @@ func (r *RedisCacheService) GetBookRating(ctx context.Context, key string) (*boo
 		return nil, err
 	}
 
-	var rating bookstore.BookRating
+	var rating bookstore2.BookRating
 	if err := json.Unmarshal([]byte(data), &rating); err != nil {
 		return nil, err
 	}
@@ -397,7 +396,7 @@ func (r *RedisCacheService) GetBookRating(ctx context.Context, key string) (*boo
 }
 
 // SetBookRating 设置书籍评分缓存
-func (r *RedisCacheService) SetBookRating(ctx context.Context, key string, rating *bookstore.BookRating, expiration time.Duration) error {
+func (r *RedisCacheService) SetBookRating(ctx context.Context, key string, rating *bookstore2.BookRating, expiration time.Duration) error {
 	cacheKey := fmt.Sprintf("book_rating:%s", key)
 	data, err := json.Marshal(rating)
 	if err != nil {
@@ -444,7 +443,7 @@ func (r *RedisCacheService) InvalidateBookRatingCache(ctx context.Context, bookI
 }
 
 // GetBookStatistics 获取书籍统计缓存
-func (r *RedisCacheService) GetBookStatistics(ctx context.Context, bookID string) (*bookstore.BookStatistics, error) {
+func (r *RedisCacheService) GetBookStatistics(ctx context.Context, bookID string) (*bookstore2.BookStatistics, error) {
 	cacheKey := fmt.Sprintf("book_statistics:%s", bookID)
 	data, err := r.client.Get(ctx, cacheKey).Result()
 	if err != nil {
@@ -454,7 +453,7 @@ func (r *RedisCacheService) GetBookStatistics(ctx context.Context, bookID string
 		return nil, err
 	}
 
-	var stats bookstore.BookStatistics
+	var stats bookstore2.BookStatistics
 	if err := json.Unmarshal([]byte(data), &stats); err != nil {
 		return nil, err
 	}
@@ -463,7 +462,7 @@ func (r *RedisCacheService) GetBookStatistics(ctx context.Context, bookID string
 }
 
 // SetBookStatistics 设置书籍统计缓存
-func (r *RedisCacheService) SetBookStatistics(ctx context.Context, bookID string, stats *bookstore.BookStatistics, expiration time.Duration) error {
+func (r *RedisCacheService) SetBookStatistics(ctx context.Context, bookID string, stats *bookstore2.BookStatistics, expiration time.Duration) error {
 	cacheKey := fmt.Sprintf("book_statistics:%s", bookID)
 	data, err := json.Marshal(stats)
 	if err != nil {
@@ -498,14 +497,14 @@ func (r *RedisCacheService) InvalidateBookAverageRatingCache(ctx context.Context
 }
 
 // GetTopViewedBooks 获取热门浏览书籍缓存
-func (r *RedisCacheService) GetTopViewedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (r *RedisCacheService) GetTopViewedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	cacheKey := "top_viewed_books"
 	result := r.client.Get(ctx, cacheKey)
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
 
-	var books []*bookstore.Book
+	var books []*bookstore2.Book
 	if err := json.Unmarshal([]byte(result.Val()), &books); err != nil {
 		return nil, err
 	}
@@ -514,7 +513,7 @@ func (r *RedisCacheService) GetTopViewedBooks(ctx context.Context) ([]*bookstore
 }
 
 // SetTopViewedBooks 设置热门浏览书籍缓存
-func (r *RedisCacheService) SetTopViewedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (r *RedisCacheService) SetTopViewedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	cacheKey := "top_viewed_books"
 	data, err := json.Marshal(books)
 	if err != nil {
@@ -525,14 +524,14 @@ func (r *RedisCacheService) SetTopViewedBooks(ctx context.Context, books []*book
 }
 
 // GetTopFavoritedBooks 获取热门收藏书籍缓存
-func (r *RedisCacheService) GetTopFavoritedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (r *RedisCacheService) GetTopFavoritedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	cacheKey := "top_favorited_books"
 	result := r.client.Get(ctx, cacheKey)
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
 
-	var books []*bookstore.Book
+	var books []*bookstore2.Book
 	if err := json.Unmarshal([]byte(result.Val()), &books); err != nil {
 		return nil, err
 	}
@@ -541,7 +540,7 @@ func (r *RedisCacheService) GetTopFavoritedBooks(ctx context.Context) ([]*bookst
 }
 
 // SetTopFavoritedBooks 设置热门收藏书籍缓存
-func (r *RedisCacheService) SetTopFavoritedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (r *RedisCacheService) SetTopFavoritedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	cacheKey := "top_favorited_books"
 	data, err := json.Marshal(books)
 	if err != nil {
@@ -552,14 +551,14 @@ func (r *RedisCacheService) SetTopFavoritedBooks(ctx context.Context, books []*b
 }
 
 // GetTopRatedBooks 获取热门评分书籍缓存
-func (r *RedisCacheService) GetTopRatedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (r *RedisCacheService) GetTopRatedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	cacheKey := "top_rated_books"
 	result := r.client.Get(ctx, cacheKey)
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
 
-	var books []*bookstore.Book
+	var books []*bookstore2.Book
 	if err := json.Unmarshal([]byte(result.Val()), &books); err != nil {
 		return nil, err
 	}
@@ -568,7 +567,7 @@ func (r *RedisCacheService) GetTopRatedBooks(ctx context.Context) ([]*bookstore.
 }
 
 // SetTopRatedBooks 设置热门评分书籍缓存
-func (r *RedisCacheService) SetTopRatedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (r *RedisCacheService) SetTopRatedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	cacheKey := "top_rated_books"
 	data, err := json.Marshal(books)
 	if err != nil {
@@ -579,14 +578,14 @@ func (r *RedisCacheService) SetTopRatedBooks(ctx context.Context, books []*books
 }
 
 // GetHottestBooks 获取最热门书籍缓存
-func (r *RedisCacheService) GetHottestBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (r *RedisCacheService) GetHottestBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	cacheKey := "hottest_books"
 	result := r.client.Get(ctx, cacheKey)
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
 
-	var books []*bookstore.Book
+	var books []*bookstore2.Book
 	if err := json.Unmarshal([]byte(result.Val()), &books); err != nil {
 		return nil, err
 	}
@@ -595,7 +594,7 @@ func (r *RedisCacheService) GetHottestBooks(ctx context.Context) ([]*bookstore.B
 }
 
 // SetHottestBooks 设置最热门书籍缓存
-func (r *RedisCacheService) SetHottestBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (r *RedisCacheService) SetHottestBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	cacheKey := "hottest_books"
 	data, err := json.Marshal(books)
 	if err != nil {

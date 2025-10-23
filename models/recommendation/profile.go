@@ -1,4 +1,4 @@
-package reco
+package recommendation
 
 import "time"
 

@@ -1,12 +1,12 @@
 package project
 
 import (
+	model "Qingyu_backend/models/writer"
 	"context"
 	"errors"
 	"time"
 
 	"Qingyu_backend/global"
-	model "Qingyu_backend/models/document"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

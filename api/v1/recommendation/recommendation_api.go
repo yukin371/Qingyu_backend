@@ -1,13 +1,13 @@
 package recommendation
 
 import (
+	reco "Qingyu_backend/models/recommendation"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	reco "Qingyu_backend/models/recommendation/reco"
 	"Qingyu_backend/service/recommendation"
 )
 

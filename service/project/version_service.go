@@ -1,13 +1,13 @@
 package project
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"Qingyu_backend/global"
-	model "Qingyu_backend/models/document"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,8 +27,8 @@ func patchCol() *mongo.Collection   { return global.DB.Collection("file_patches"
 func commitCol() *mongo.Collection  { return global.DB.Collection("commits") }           // 提交集合
 
 // getDocumentContent 获取文档内容（辅助函数）
-func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*model.DocumentContent, error) {
-	var content model.DocumentContent
+func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*writer.DocumentContent, error) {
+	var content writer.DocumentContent
 	err := contentCol().FindOne(ctx, bson.M{"document_id": documentID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -90,7 +90,7 @@ func (s *VersionService) EnsureIndexes(ctx context.Context) error {
 }
 
 // BumpVersionAndCreateRevision 创建新版本并记录修订
-func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorID, message string) (*model.FileRevision, error) {
+func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorID, message string) (*writer.FileRevision, error) {
 	if s == nil {
 		return nil, errors.New("VersionService is nil")
 	}
@@ -98,7 +98,7 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	defer cancel()
 
 	// 查询Document元数据
-	var f model.Document
+	var f writer.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 		return nil, err
 	}
 
-	rev := &model.FileRevision{
+	rev := &writer.FileRevision{
 		ProjectID:  projectID,
 		NodeID:     nodeID,
 		Version:    next,
@@ -154,7 +154,7 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 }
 
 // UpdateContentWithVersion 使用乐观并发控制更新内容，成功后创建新版本
-func (s *VersionService) UpdateContentWithVersion(projectID, nodeID, authorID, message, newContent string, expectedVersion int) (*model.FileRevision, error) {
+func (s *VersionService) UpdateContentWithVersion(projectID, nodeID, authorID, message, newContent string, expectedVersion int) (*writer.FileRevision, error) {
 	if projectID == "" || nodeID == "" {
 		return nil, errors.New("invalid arguments")
 	}
@@ -178,7 +178,7 @@ func (s *VersionService) UpdateContentWithVersion(projectID, nodeID, authorID, m
 }
 
 // RollbackToVersion 回滚到指定的历史版本（通过创建新版本实现回滚）
-func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersion int, authorID, message string) (*model.FileRevision, error) {
+func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersion int, authorID, message string) (*writer.FileRevision, error) {
 	if projectID == "" || nodeID == "" || targetVersion <= 0 {
 		return nil, errors.New("invalid arguments")
 	}
@@ -186,7 +186,7 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 	defer cancel()
 
 	// 找到目标修订
-	var rev model.FileRevision
+	var rev writer.FileRevision
 	if err := revCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID, "version": targetVersion}).Decode(&rev); err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 	}
 
 	// 读取当前文档
-	var f model.Document
+	var f writer.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": nodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 }
 
 // CreatePatch 提交一个候选补丁（状态为 pending）
-func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, diffFormat, diffPayload, createdBy, message string) (*model.FilePatch, error) {
+func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, diffFormat, diffPayload, createdBy, message string) (*writer.FilePatch, error) {
 	if projectID == "" || nodeID == "" {
 		return nil, errors.New("invalid arguments")
 	}
@@ -226,7 +226,7 @@ func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, 
 
 	// 使用字符串 id（Hex）来避免类型不一致
 	id := primitive.NewObjectID().Hex()
-	p := &model.FilePatch{
+	p := &writer.FilePatch{
 		ID:          id,
 		ProjectID:   projectID,
 		NodeID:      nodeID,
@@ -248,7 +248,7 @@ func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, 
 }
 
 // ApplyPatch 审核并应用补丁（仅在 baseVersion 匹配时直接应用）
-func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*model.FileRevision, error) {
+func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*writer.FileRevision, error) {
 	if projectID == "" || patchID == "" {
 		return nil, errors.New("invalid arguments")
 	}
@@ -256,7 +256,7 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*mode
 	defer cancel()
 
 	// 查找补丁
-	var p model.FilePatch
+	var p writer.FilePatch
 	if err := patchCol().FindOne(ctx, bson.M{"_id": patchID, "project_id": projectID}).Decode(&p); err != nil {
 		return nil, err
 	}
@@ -265,7 +265,7 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*mode
 	}
 
 	// 获取当前文档
-	var f model.Document
+	var f writer.Document
 	if err := fileCol().FindOne(ctx, bson.M{"project_id": projectID, "node_id": p.NodeID}).Decode(&f); err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*mode
 }
 
 // ListRevisions 列表修订（按版本倒序）
-func (s *VersionService) ListRevisions(ctx context.Context, projectID, nodeID string, limit, offset int64) ([]*model.FileRevision, error) {
+func (s *VersionService) ListRevisions(ctx context.Context, projectID, nodeID string, limit, offset int64) ([]*writer.FileRevision, error) {
 	if projectID == "" || nodeID == "" {
 		return nil, errors.New("invalid arguments")
 	}
@@ -320,9 +320,9 @@ func (s *VersionService) ListRevisions(ctx context.Context, projectID, nodeID st
 		return nil, err
 	}
 	defer cur.Close(ctx)
-	var res []*model.FileRevision
+	var res []*writer.FileRevision
 	for cur.Next(ctx) {
-		var r model.FileRevision
+		var r writer.FileRevision
 		if err := cur.Decode(&r); err != nil {
 			return nil, err
 		}
@@ -335,7 +335,7 @@ func (s *VersionService) ListRevisions(ctx context.Context, projectID, nodeID st
 }
 
 // DetectConflicts 检测文件的版本冲突
-func (s *VersionService) DetectConflicts(ctx context.Context, projectID, nodeID string, expectedVersion int) (*model.ConflictInfo, error) {
+func (s *VersionService) DetectConflicts(ctx context.Context, projectID, nodeID string, expectedVersion int) (*writer.ConflictInfo, error) {
 	if projectID == "" || nodeID == "" {
 		return nil, errors.New("invalid arguments")
 	}
@@ -355,7 +355,7 @@ func (s *VersionService) DetectConflicts(ctx context.Context, projectID, nodeID 
 
 	// 如果版本匹配，没有冲突
 	if currentFile.Version == expectedVersion {
-		return &model.ConflictInfo{
+		return &writer.ConflictInfo{
 			HasConflict:     false,
 			CurrentVersion:  currentFile.Version,
 			ExpectedVersion: expectedVersion,
@@ -376,12 +376,12 @@ func (s *VersionService) DetectConflicts(ctx context.Context, projectID, nodeID 
 	}
 	defer cursor.Close(ctx)
 
-	var conflictingRevisions []model.FileRevision
+	var conflictingRevisions []writer.FileRevision
 	if err := cursor.All(ctx, &conflictingRevisions); err != nil {
 		return nil, err
 	}
 
-	return &model.ConflictInfo{
+	return &writer.ConflictInfo{
 		HasConflict:          true,
 		CurrentVersion:       currentFile.Version,
 		ExpectedVersion:      expectedVersion,
@@ -394,15 +394,15 @@ func (s *VersionService) DetectConflicts(ctx context.Context, projectID, nodeID 
 func (s *VersionService) BatchDetectConflicts(ctx context.Context, projectID string, files []struct {
 	NodeID          string `json:"node_id"`
 	ExpectedVersion int    `json:"expected_version"`
-}) (*model.BatchConflictResult, error) {
+}) (*writer.BatchConflictResult, error) {
 	if projectID == "" || len(files) == 0 {
 		return nil, errors.New("invalid arguments")
 	}
 
-	result := &model.BatchConflictResult{
+	result := &writer.BatchConflictResult{
 		ProjectID:    projectID,
 		HasConflicts: false,
-		Conflicts:    make(map[string]*model.ConflictInfo),
+		Conflicts:    make(map[string]*writer.ConflictInfo),
 	}
 
 	for _, file := range files {
@@ -421,7 +421,7 @@ func (s *VersionService) BatchDetectConflicts(ctx context.Context, projectID str
 }
 
 // CreateCommit 创建批量提交（使用MongoDB事务）
-func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, message string, files []model.CommitFile) (*model.Commit, error) {
+func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, message string, files []writer.CommitFile) (*writer.Commit, error) {
 	if projectID == "" || authorID == "" || len(files) == 0 {
 		return nil, errors.New("invalid arguments")
 	}
@@ -451,7 +451,7 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 	}
 
 	// 创建提交记录
-	commit := &model.Commit{
+	commit := &writer.Commit{
 		ID:        primitive.NewObjectID().Hex(),
 		ProjectID: projectID,
 		AuthorID:  authorID,
@@ -502,7 +502,7 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 			}
 
 			// 创建修订记录
-			revision := &model.FileRevision{
+			revision := &writer.FileRevision{
 				ID:         primitive.NewObjectID().Hex(),
 				ProjectID:  projectID,
 				NodeID:     file.NodeID,
@@ -534,13 +534,13 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 		return nil, err
 	}
 
-	return result.(*model.Commit), nil
+	return result.(*writer.Commit), nil
 }
 
 // StoreSnapshot 根据策略存储快照内容
 func (s *VersionService) StoreSnapshot(content string, projectID, nodeID string, version int) (string, string, error) {
 	contentSize := len([]byte(content))
-	strategy := model.GetSnapshotStrategy(contentSize)
+	strategy := writer.GetSnapshotStrategy(contentSize)
 
 	switch strategy {
 	case "inline":
@@ -569,7 +569,7 @@ func (s *VersionService) RetrieveSnapshot(snapshot, storageRef string) (string, 
 }
 
 // ListCommits 查询提交历史
-func (s *VersionService) ListCommits(ctx context.Context, projectID string, authorID string, limit, offset int64) ([]*model.Commit, error) {
+func (s *VersionService) ListCommits(ctx context.Context, projectID string, authorID string, limit, offset int64) ([]*writer.Commit, error) {
 	if projectID == "" {
 		return nil, errors.New("project_id is required")
 	}
@@ -590,7 +590,7 @@ func (s *VersionService) ListCommits(ctx context.Context, projectID string, auth
 	}
 	defer cursor.Close(ctx)
 
-	var commits []*model.Commit
+	var commits []*writer.Commit
 	if err := cursor.All(ctx, &commits); err != nil {
 		return nil, err
 	}
@@ -599,13 +599,13 @@ func (s *VersionService) ListCommits(ctx context.Context, projectID string, auth
 }
 
 // GetCommitDetails 获取提交详情，包括相关的文件修订
-func (s *VersionService) GetCommitDetails(ctx context.Context, projectID, commitID string) (*model.Commit, []*model.FileRevision, error) {
+func (s *VersionService) GetCommitDetails(ctx context.Context, projectID, commitID string) (*writer.Commit, []*writer.FileRevision, error) {
 	if projectID == "" || commitID == "" {
 		return nil, nil, errors.New("invalid arguments")
 	}
 
 	// 获取提交信息
-	var commit model.Commit
+	var commit writer.Commit
 	err := commitCol().FindOne(ctx, bson.M{"_id": commitID, "project_id": projectID}).Decode(&commit)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -624,7 +624,7 @@ func (s *VersionService) GetCommitDetails(ctx context.Context, projectID, commit
 	}
 	defer cursor.Close(ctx)
 
-	var revisions []*model.FileRevision
+	var revisions []*writer.FileRevision
 	if err := cursor.All(ctx, &revisions); err != nil {
 		return nil, nil, err
 	}
@@ -653,9 +653,9 @@ func (s *VersionService) GetCurrentVersion(ctx context.Context, projectID, nodeI
 }
 
 // ResolveBatchConflicts 批量解决冲突
-func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *model.BatchConflictResolution) (*model.Commit, error) {
+func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *writer.BatchConflictResolution) (*writer.Commit, error) {
 	// 首先检测所有文件的冲突状态
-	var commitFiles []model.CommitFile
+	var commitFiles []writer.CommitFile
 
 	for nodeID, resolution := range req.Resolutions {
 		// 验证冲突是否仍然存在
@@ -691,7 +691,7 @@ func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *model.B
 			return nil, fmt.Errorf("failed to get current version for file %s: %w", nodeID, err)
 		}
 
-		commitFiles = append(commitFiles, model.CommitFile{
+		commitFiles = append(commitFiles, writer.CommitFile{
 			NodeID:          nodeID,
 			ExpectedVersion: currentVersion,
 			Content:         resolvedContent,
@@ -708,7 +708,7 @@ func (s *VersionService) ResolveBatchConflicts(ctx context.Context, req *model.B
 }
 
 // AutoResolveConflicts 自动解决简单冲突
-func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, nodeID string, conflictingRevisions []model.FileRevision) (string, error) {
+func (s *VersionService) AutoResolveConflicts(ctx context.Context, projectID, nodeID string, conflictingRevisions []writer.FileRevision) (string, error) {
 	// 简化的自动合并实现
 	// 在实际项目中，这里需要实现更复杂的三路合并算法
 
@@ -753,7 +753,7 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 	}
 	defer cursor.Close(ctx)
 
-	var revisions []model.FileRevision
+	var revisions []writer.FileRevision
 	if err := cursor.All(ctx, &revisions); err != nil {
 		return nil, fmt.Errorf("解析版本历史失败: %w", err)
 	}
@@ -788,7 +788,7 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 // GetVersion 获取特定版本
 func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID string) (*VersionDetail, error) {
 	// 查询版本 - versionID直接是string类型
-	var revision model.FileRevision
+	var revision writer.FileRevision
 	err := revCol().FindOne(ctx, bson.M{"_id": versionID, "node_id": documentID}).Decode(&revision)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

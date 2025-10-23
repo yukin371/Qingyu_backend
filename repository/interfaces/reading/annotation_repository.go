@@ -1,9 +1,8 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // AnnotationRepository 标注（笔记、书签）仓储接口

@@ -1,12 +1,12 @@
 package reader
 
 import (
+	"Qingyu_backend/models/reader"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reading/reader"
 )
 
 // BatchCreateAnnotationsRequest 批量创建注记请求

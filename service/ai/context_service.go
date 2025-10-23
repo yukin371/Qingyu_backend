@@ -1,12 +1,12 @@
 package ai
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"strings"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/writing"
 	documentService "Qingyu_backend/service/project"
 )
@@ -88,7 +88,7 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 
 	// 获取章节内容
 	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
-	var docContent *document.DocumentContent
+	var docContent *writer.DocumentContent
 	if s.documentContentRepo != nil {
 		var err error
 		docContent, err = s.documentContentRepo.GetByDocumentID(ctx, chapterID)
@@ -140,7 +140,7 @@ func (s *ContextService) buildPreviousChaptersSummary(ctx context.Context, proje
 // generateChapterSummary 生成章节摘要
 // 注意: 此方法依赖 documentContentRepo，如果为 nil 则降级使用 KeyPoints
 // 建议调用方直接使用 buildChapterInfo，它已经包含了摘要生成逻辑
-func (s *ContextService) generateChapterSummary(ctx context.Context, doc *document.Document) string {
+func (s *ContextService) generateChapterSummary(ctx context.Context, doc *writer.Document) string {
 	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
 	if s.documentContentRepo == nil {
 		// 降级方案：从 KeyPoints 生成摘要

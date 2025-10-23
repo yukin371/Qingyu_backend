@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/base"
 	"Qingyu_backend/service/reading"
 )

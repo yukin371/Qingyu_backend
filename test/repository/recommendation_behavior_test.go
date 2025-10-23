@@ -1,6 +1,7 @@
 package repository
 
 import (
+	reco "Qingyu_backend/models/recommendation"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	"Qingyu_backend/test/testutil"
 )

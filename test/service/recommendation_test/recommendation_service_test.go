@@ -1,6 +1,7 @@
 package recommendation_test
 
 import (
+	recommendation2 "Qingyu_backend/models/recommendation"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	"Qingyu_backend/service/recommendation"
 )
 
@@ -21,39 +21,39 @@ type MockBehaviorRepo struct {
 	mock.Mock
 }
 
-func (m *MockBehaviorRepo) Create(ctx context.Context, b *reco.Behavior) error {
+func (m *MockBehaviorRepo) Create(ctx context.Context, b *recommendation2.Behavior) error {
 	args := m.Called(ctx, b)
 	return args.Error(0)
 }
 
-func (m *MockBehaviorRepo) BatchCreate(ctx context.Context, bs []*reco.Behavior) error {
+func (m *MockBehaviorRepo) BatchCreate(ctx context.Context, bs []*recommendation2.Behavior) error {
 	args := m.Called(ctx, bs)
 	return args.Error(0)
 }
 
-func (m *MockBehaviorRepo) GetByUser(ctx context.Context, userID string, limit int) ([]*reco.Behavior, error) {
+func (m *MockBehaviorRepo) GetByUser(ctx context.Context, userID string, limit int) ([]*recommendation2.Behavior, error) {
 	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reco.Behavior), args.Error(1)
+	return args.Get(0).([]*recommendation2.Behavior), args.Error(1)
 }
 
 type MockProfileRepo struct {
 	mock.Mock
 }
 
-func (m *MockProfileRepo) Upsert(ctx context.Context, p *reco.UserProfile) error {
+func (m *MockProfileRepo) Upsert(ctx context.Context, p *recommendation2.UserProfile) error {
 	args := m.Called(ctx, p)
 	return args.Error(0)
 }
 
-func (m *MockProfileRepo) GetByUserID(ctx context.Context, userID string) (*reco.UserProfile, error) {
+func (m *MockProfileRepo) GetByUserID(ctx context.Context, userID string) (*recommendation2.UserProfile, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reco.UserProfile), args.Error(1)
+	return args.Get(0).(*recommendation2.UserProfile), args.Error(1)
 }
 
 // ===========================
@@ -70,7 +70,7 @@ func TestRecommendationService_RecordBehavior(t *testing.T) {
 
 	t.Run("成功记录行为", func(t *testing.T) {
 		ctx := context.Background()
-		behavior := &reco.Behavior{
+		behavior := &recommendation2.Behavior{
 			UserID:       "user123",
 			ItemID:       "book456",
 			BehaviorType: "view",
@@ -88,7 +88,7 @@ func TestRecommendationService_RecordBehavior(t *testing.T) {
 
 	t.Run("缺少必需字段", func(t *testing.T) {
 		ctx := context.Background()
-		behavior := &reco.Behavior{
+		behavior := &recommendation2.Behavior{
 			BehaviorType: "view",
 		}
 
@@ -109,7 +109,7 @@ func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 
 	t.Run("获取推荐-用户有画像", func(t *testing.T) {
 		ctx := context.Background()
-		profile := &reco.UserProfile{
+		profile := &recommendation2.UserProfile{
 			UserID: "user123",
 			Tags: map[string]float64{
 				"玄幻": 0.8,

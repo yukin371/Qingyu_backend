@@ -3,6 +3,7 @@
 package api
 
 import (
+	"Qingyu_backend/models/reader"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -16,7 +17,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	readerAPI "Qingyu_backend/api/v1/reader"
-	readerModel "Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 )
 
@@ -69,12 +69,12 @@ type MockReaderService struct {
 	mock.Mock
 }
 
-func (m *MockReaderService) GetChapterByID(ctx context.Context, id string) (*readerModel.Chapter, error) {
+func (m *MockReaderService) GetChapterByID(ctx context.Context, id string) (*reader.Chapter, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Chapter), args.Error(1)
+	return args.Get(0).(*reader.Chapter), args.Error(1)
 }
 
 func (m *MockReaderService) GetChapterContent(ctx context.Context, userID, chapterID string) (string, error) {
@@ -82,44 +82,44 @@ func (m *MockReaderService) GetChapterContent(ctx context.Context, userID, chapt
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockReaderService) GetChaptersByBookID(ctx context.Context, bookID string, page, size int) ([]*readerModel.Chapter, int64, error) {
+func (m *MockReaderService) GetChaptersByBookID(ctx context.Context, bookID string, page, size int) ([]*reader.Chapter, int64, error) {
 	args := m.Called(ctx, bookID, page, size)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*readerModel.Chapter), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*reader.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockReaderService) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*readerModel.Chapter, error) {
+func (m *MockReaderService) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
 	args := m.Called(ctx, bookID, currentChapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Chapter), args.Error(1)
+	return args.Get(0).(*reader.Chapter), args.Error(1)
 }
 
-func (m *MockReaderService) GetPreviousChapter(ctx context.Context, bookID string, currentChapterNum int) (*readerModel.Chapter, error) {
+func (m *MockReaderService) GetPreviousChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
 	args := m.Called(ctx, bookID, currentChapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Chapter), args.Error(1)
+	return args.Get(0).(*reader.Chapter), args.Error(1)
 }
 
-func (m *MockReaderService) GetFirstChapter(ctx context.Context, bookID string) (*readerModel.Chapter, error) {
+func (m *MockReaderService) GetFirstChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Chapter), args.Error(1)
+	return args.Get(0).(*reader.Chapter), args.Error(1)
 }
 
-func (m *MockReaderService) GetLastChapter(ctx context.Context, bookID string) (*readerModel.Chapter, error) {
+func (m *MockReaderService) GetLastChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Chapter), args.Error(1)
+	return args.Get(0).(*reader.Chapter), args.Error(1)
 }
 
 func (m *MockReaderService) SaveReadingProgress(ctx context.Context, userID, bookID, chapterID string, progress float64) error {
@@ -127,12 +127,12 @@ func (m *MockReaderService) SaveReadingProgress(ctx context.Context, userID, boo
 	return args.Error(0)
 }
 
-func (m *MockReaderService) GetReadingProgress(ctx context.Context, userID, bookID string) (*readerModel.ReadingProgress, error) {
+func (m *MockReaderService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.ReadingProgress), args.Error(1)
+	return args.Get(0).(*reader.ReadingProgress), args.Error(1)
 }
 
 func (m *MockReaderService) UpdateReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
@@ -140,20 +140,20 @@ func (m *MockReaderService) UpdateReadingTime(ctx context.Context, userID, bookI
 	return args.Error(0)
 }
 
-func (m *MockReaderService) GetRecentReading(ctx context.Context, userID string, limit int) ([]*readerModel.ReadingProgress, error) {
+func (m *MockReaderService) GetRecentReading(ctx context.Context, userID string, limit int) ([]*reader.ReadingProgress, error) {
 	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
 }
 
-func (m *MockReaderService) GetReadingHistory(ctx context.Context, userID string, page, size int) ([]*readerModel.ReadingProgress, int64, error) {
+func (m *MockReaderService) GetReadingHistory(ctx context.Context, userID string, page, size int) ([]*reader.ReadingProgress, int64, error) {
 	args := m.Called(ctx, userID, page, size)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]*readerModel.ReadingProgress), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*reader.ReadingProgress), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockReaderService) GetTotalReadingTime(ctx context.Context, userID string) (int64, error) {
@@ -161,23 +161,23 @@ func (m *MockReaderService) GetTotalReadingTime(ctx context.Context, userID stri
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockReaderService) GetUnfinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error) {
+func (m *MockReaderService) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
 }
 
-func (m *MockReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error) {
+func (m *MockReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
 }
 
-func (m *MockReaderService) CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error {
+func (m *MockReaderService) CreateAnnotation(ctx context.Context, annotation *reader.Annotation) error {
 	args := m.Called(ctx, annotation)
 	return args.Error(0)
 }
@@ -192,87 +192,87 @@ func (m *MockReaderService) DeleteAnnotation(ctx context.Context, userID, annota
 	return args.Error(0)
 }
 
-func (m *MockReaderService) GetAnnotationsByChapter(ctx context.Context, userID, chapterID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetAnnotationsByChapter(ctx context.Context, userID, chapterID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetAnnotationsByBook(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetAnnotationsByBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetNotesByBook(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetNotesByBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) SearchNotes(ctx context.Context, userID, keyword string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) SearchNotes(ctx context.Context, userID, keyword string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, keyword)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetBookmarksByBook(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetBookmarksByBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetLatestBookmark(ctx context.Context, userID, bookID string) (*readerModel.Annotation, error) {
+func (m *MockReaderService) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.Annotation), args.Error(1)
+	return args.Get(0).(*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetHighlightsByBook(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetHighlightsByBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetPublicAnnotations(ctx context.Context, chapterID string) ([]*readerModel.Annotation, error) {
+func (m *MockReaderService) GetPublicAnnotations(ctx context.Context, chapterID string) ([]*reader.Annotation, error) {
 	args := m.Called(ctx, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*readerModel.Annotation), args.Error(1)
+	return args.Get(0).([]*reader.Annotation), args.Error(1)
 }
 
-func (m *MockReaderService) GetReadingSettings(ctx context.Context, userID string) (*readerModel.ReadingSettings, error) {
+func (m *MockReaderService) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*readerModel.ReadingSettings), args.Error(1)
+	return args.Get(0).(*reader.ReadingSettings), args.Error(1)
 }
 
-func (m *MockReaderService) SaveReadingSettings(ctx context.Context, settings *readerModel.ReadingSettings) error {
+func (m *MockReaderService) SaveReadingSettings(ctx context.Context, settings *reader.ReadingSettings) error {
 	args := m.Called(ctx, settings)
 	return args.Error(0)
 }
@@ -305,7 +305,7 @@ func TestChaptersAPI_GetChapterByID(t *testing.T) {
 
 	// 测试用例
 	t.Run("成功获取章节信息", func(t *testing.T) {
-		testChapter := &readerModel.Chapter{
+		testChapter := &reader.Chapter{
 			ID:         "chapter123",
 			BookID:     "book456",
 			Title:      "第一章",
@@ -388,7 +388,7 @@ func TestChaptersAPI_GetBookChapters(t *testing.T) {
 	router.GET("/api/v1/reader/chapters", api.GetBookChapters)
 
 	t.Run("成功获取章节列表", func(t *testing.T) {
-		chapters := []*readerModel.Chapter{
+		chapters := []*reader.Chapter{
 			{ID: "c1", Title: "第一章", ChapterNum: 1},
 			{ID: "c2", Title: "第二章", ChapterNum: 2},
 		}
@@ -470,7 +470,7 @@ func TestProgressAPI_GetReadingProgress(t *testing.T) {
 	router.GET("/api/v1/reader/progress", mockAuth("user123"), api.GetReadingProgress)
 
 	t.Run("成功获取进度", func(t *testing.T) {
-		progress := &readerModel.ReadingProgress{
+		progress := &reader.ReadingProgress{
 			UserID:      "user123",
 			BookID:      "book123",
 			ChapterID:   "chapter456",
@@ -514,7 +514,7 @@ func TestProgressAPI_GetRecentReading(t *testing.T) {
 	router.GET("/api/v1/reader/progress/recent", mockAuth("user123"), api.GetRecentReading)
 
 	t.Run("成功获取最近阅读", func(t *testing.T) {
-		recentBooks := []*readerModel.ReadingProgress{
+		recentBooks := []*reader.ReadingProgress{
 			{BookID: "book1", ChapterID: "chapter1", Progress: 0.5},
 			{BookID: "book2", ChapterID: "chapter2", Progress: 0.8},
 		}
@@ -553,7 +553,7 @@ func TestAnnotationsAPI_CreateAnnotation(t *testing.T) {
 			"isPublic":  false,
 		}
 
-		mockService.On("CreateAnnotation", mock.Anything, mock.MatchedBy(func(a *readerModel.Annotation) bool {
+		mockService.On("CreateAnnotation", mock.Anything, mock.MatchedBy(func(a *reader.Annotation) bool {
 			return a.UserID == "user123" && a.Type == "bookmark"
 		})).Return(nil)
 
@@ -575,7 +575,7 @@ func TestAnnotationsAPI_CreateAnnotation(t *testing.T) {
 			"isPublic":  false,
 		}
 
-		mockService.On("CreateAnnotation", mock.Anything, mock.MatchedBy(func(a *readerModel.Annotation) bool {
+		mockService.On("CreateAnnotation", mock.Anything, mock.MatchedBy(func(a *reader.Annotation) bool {
 			return a.Type == "note" && a.Note == "这是一条笔记"
 		})).Return(nil)
 
@@ -637,7 +637,7 @@ func TestAnnotationsAPI_GetBookmarks(t *testing.T) {
 	router.GET("/api/v1/reader/bookmarks", mockAuth("user123"), api.GetBookmarks)
 
 	t.Run("成功获取书签列表", func(t *testing.T) {
-		bookmarks := []*readerModel.Annotation{
+		bookmarks := []*reader.Annotation{
 			{ID: "b1", Type: "bookmark", BookID: "book123", ChapterID: "c1"},
 			{ID: "b2", Type: "bookmark", BookID: "book123", ChapterID: "c2"},
 		}
@@ -669,7 +669,7 @@ func TestSettingAPI_GetReadingSettings(t *testing.T) {
 	router.GET("/api/v1/reader/settings", mockAuth("user123"), api.GetReadingSettings)
 
 	t.Run("成功获取设置", func(t *testing.T) {
-		settings := &readerModel.ReadingSettings{
+		settings := &reader.ReadingSettings{
 			UserID:     "user123",
 			FontSize:   16,
 			FontFamily: "serif",
@@ -708,7 +708,7 @@ func TestSettingAPI_SaveReadingSettings(t *testing.T) {
 			"theme":      "dark",
 		}
 
-		mockService.On("SaveReadingSettings", mock.Anything, mock.MatchedBy(func(s *readerModel.ReadingSettings) bool {
+		mockService.On("SaveReadingSettings", mock.Anything, mock.MatchedBy(func(s *reader.ReadingSettings) bool {
 			return s.UserID == "user123" && s.FontSize == 18
 		})).Return(nil)
 
@@ -804,7 +804,7 @@ func TestConcurrentRequests(t *testing.T) {
 	router := setupTestRouter()
 	router.GET("/api/v1/reader/chapters/:id", api.GetChapterByID)
 
-	testChapter := &readerModel.Chapter{
+	testChapter := &reader.Chapter{
 		ID:    "chapter123",
 		Title: "测试章节",
 	}

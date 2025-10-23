@@ -1,6 +1,7 @@
 package api
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	bookstoreAPI "Qingyu_backend/api/v1/bookstore"
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -27,44 +27,44 @@ func (m *MockBookstoreService) GetHomepageData(ctx context.Context) (*bookstoreS
 	return args.Get(0).(*bookstoreService.HomepageData), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+func (m *MockBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*bookstore.Book), args.Error(1)
+	return args.Get(0).(*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+func (m *MockBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+	return args.Get(0).([]*bookstore2.Banner), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, categoryID, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (m *MockBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.CategoryTree), args.Error(1)
+	return args.Get(0).([]*bookstore2.CategoryTree), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+func (m *MockBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*bookstore.Category), args.Error(1)
+	return args.Get(0).(*bookstore2.Category), args.Error(1)
 }
 
 func (m *MockBookstoreService) IncrementBookView(ctx context.Context, bookID string) error {
@@ -77,64 +77,64 @@ func (m *MockBookstoreService) IncrementBannerClick(ctx context.Context, bannerI
 	return args.Error(0)
 }
 
-func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, rankingType, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, keyword, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+func (m *MockBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.Category), args.Error(1)
+	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (m *MockBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	args := m.Called(ctx, rankingType, period)
 	return args.Error(0)
 }
 
-func (m *MockBookstoreService) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+func (m *MockBookstoreService) GetBookStats(ctx context.Context) (*bookstore2.BookStats, error) {
 	args := m.Called(ctx)
-	return args.Get(0).(*bookstore.BookStats), args.Error(1)
+	return args.Get(0).(*bookstore2.BookStats), args.Error(1)
 }
 
 // setupTestRouter 设置测试路由
@@ -201,21 +201,21 @@ func TestGetHomepage(t *testing.T) {
 
 	// 准备测试数据
 	homepageData := &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{
 				ID:    primitive.NewObjectID(),
 				Title: "Test Banner",
 				Image: "https://example.com/banner.jpg",
 			},
 		},
-		RecommendedBooks: []*bookstore.Book{
+		RecommendedBooks: []*bookstore2.Book{
 			{
 				ID:     primitive.NewObjectID(),
 				Title:  "Test Book",
 				Author: "Test Author",
 			},
 		},
-		Rankings: map[string][]*bookstore.RankingItem{
+		Rankings: map[string][]*bookstore2.RankingItem{
 			"realtime": {
 				{
 					ID:   primitive.NewObjectID(),
@@ -251,11 +251,11 @@ func TestGetRealtimeRankingApi(t *testing.T) {
 	router := setupTestRouter(mockService)
 
 	// 准备测试数据
-	rankingItems := []*bookstore.RankingItem{
+	rankingItems := []*bookstore2.RankingItem{
 		{
 			ID:        primitive.NewObjectID(),
 			BookID:    primitive.NewObjectID(),
-			Type:      bookstore.RankingTypeRealtime,
+			Type:      bookstore2.RankingTypeRealtime,
 			Rank:      1,
 			Score:     100.0,
 			ViewCount: 1000,
@@ -265,7 +265,7 @@ func TestGetRealtimeRankingApi(t *testing.T) {
 		{
 			ID:        primitive.NewObjectID(),
 			BookID:    primitive.NewObjectID(),
-			Type:      bookstore.RankingTypeRealtime,
+			Type:      bookstore2.RankingTypeRealtime,
 			Rank:      2,
 			Score:     95.0,
 			ViewCount: 800,
@@ -292,7 +292,7 @@ func TestGetRealtimeRankingApi(t *testing.T) {
 
 	// 验证返回的数据
 	dataBytes, _ := json.Marshal(response.Data)
-	var returnedItems []*bookstore.RankingItem
+	var returnedItems []*bookstore2.RankingItem
 	json.Unmarshal(dataBytes, &returnedItems)
 
 	assert.Len(t, returnedItems, 2)
@@ -307,7 +307,7 @@ func TestGetRealtimeRankingWithLimit(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	rankingItems := []*bookstore.RankingItem{
+	rankingItems := []*bookstore2.RankingItem{
 		{
 			ID:   primitive.NewObjectID(),
 			Rank: 1,
@@ -330,10 +330,10 @@ func TestGetWeeklyRankingApi(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	rankingItems := []*bookstore.RankingItem{
+	rankingItems := []*bookstore2.RankingItem{
 		{
 			ID:     primitive.NewObjectID(),
-			Type:   bookstore.RankingTypeWeekly,
+			Type:   bookstore2.RankingTypeWeekly,
 			Rank:   1,
 			Period: "2024-W03",
 		},
@@ -361,10 +361,10 @@ func TestGetRankingByType(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	rankingItems := []*bookstore.RankingItem{
+	rankingItems := []*bookstore2.RankingItem{
 		{
 			ID:   primitive.NewObjectID(),
-			Type: bookstore.RankingTypeMonthly,
+			Type: bookstore2.RankingTypeMonthly,
 			Rank: 1,
 		},
 	}
@@ -407,7 +407,7 @@ func TestGetBookByID(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	book := &bookstore.Book{
+	book := &bookstore2.Book{
 		ID:     primitive.NewObjectID(),
 		Title:  "Test Book",
 		Author: "Test Author",
@@ -437,7 +437,7 @@ func TestGetActiveBanners(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	banners := []*bookstore.Banner{
+	banners := []*bookstore2.Banner{
 		{
 			ID:       primitive.NewObjectID(),
 			Title:    "Banner 1",
@@ -495,7 +495,7 @@ func TestSearchBooks(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	books := []*bookstore.Book{
+	books := []*bookstore2.Book{
 		{
 			ID:     primitive.NewObjectID(),
 			Title:  "Search Result Book",
@@ -526,7 +526,7 @@ func TestAPIErrorHandling(t *testing.T) {
 	router := setupTestRouter(mockService)
 
 	// 模拟服务返回错误
-	mockService.On("GetRealtimeRanking", mock.Anything, 20).Return([]*bookstore.RankingItem(nil), assert.AnError)
+	mockService.On("GetRealtimeRanking", mock.Anything, 20).Return([]*bookstore2.RankingItem(nil), assert.AnError)
 
 	req, _ := http.NewRequest("GET", "/api/v1/bookstore/rankings/realtime", nil)
 	w := httptest.NewRecorder()
@@ -549,7 +549,7 @@ func TestGetBooksByCategory(t *testing.T) {
 	router := setupTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	books := []*bookstore.Book{
+	books := []*bookstore2.Book{
 		{
 			ID:     primitive.NewObjectID(),
 			Title:  "Category Book 1",
@@ -605,7 +605,7 @@ func TestGetRecommendedBooks(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	books := []*bookstore.Book{
+	books := []*bookstore2.Book{
 		{
 			ID:     primitive.NewObjectID(),
 			Title:  "Recommended Book 1",
@@ -634,7 +634,7 @@ func TestGetFeaturedBooks(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	books := []*bookstore.Book{
+	books := []*bookstore2.Book{
 		{
 			ID:     primitive.NewObjectID(),
 			Title:  "Featured Book 1",
@@ -663,13 +663,13 @@ func TestGetCategoryTree(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupTestRouter(mockService)
 
-	tree := []*bookstore.CategoryTree{
+	tree := []*bookstore2.CategoryTree{
 		{
-			Category: bookstore.Category{
+			Category: bookstore2.Category{
 				ID:   primitive.NewObjectID(),
 				Name: "分类1",
 			},
-			Children: []*bookstore.CategoryTree{},
+			Children: []*bookstore2.CategoryTree{},
 		},
 	}
 
@@ -695,7 +695,7 @@ func TestGetCategoryByID(t *testing.T) {
 	router := setupTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	category := &bookstore.Category{
+	category := &bookstore2.Category{
 		ID:   primitive.NewObjectID(),
 		Name: "测试分类",
 	}

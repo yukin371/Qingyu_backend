@@ -1,6 +1,7 @@
 package writing
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	writingInterface "Qingyu_backend/repository/interfaces/writing"
 )
@@ -30,7 +30,7 @@ func NewMongoProjectRepository(db *mongo.Database) writingInterface.ProjectRepos
 }
 
 // Create 创建项目
-func (r *MongoProjectRepository) Create(ctx context.Context, project *document.Project) error {
+func (r *MongoProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	if project == nil {
 		return fmt.Errorf("项目对象不能为空")
 	}
@@ -47,16 +47,16 @@ func (r *MongoProjectRepository) Create(ctx context.Context, project *document.P
 
 	// 设置默认状态
 	if project.Status == "" {
-		project.Status = document.StatusDraft
+		project.Status = writer.StatusDraft
 	}
 
 	// 设置默认可见性
 	if project.Visibility == "" {
-		project.Visibility = document.VisibilityPrivate
+		project.Visibility = writer.VisibilityPrivate
 	}
 
 	// 初始化统计信息
-	project.Statistics = document.ProjectStats{
+	project.Statistics = writer.ProjectStats{
 		TotalWords:    0,
 		ChapterCount:  0,
 		DocumentCount: 0,
@@ -64,7 +64,7 @@ func (r *MongoProjectRepository) Create(ctx context.Context, project *document.P
 	}
 
 	// 初始化设置
-	project.Settings = document.ProjectSettings{
+	project.Settings = writer.ProjectSettings{
 		AutoBackup:     true,
 		BackupInterval: 24,
 	}
@@ -84,8 +84,8 @@ func (r *MongoProjectRepository) Create(ctx context.Context, project *document.P
 }
 
 // GetByID 根据ID获取项目
-func (r *MongoProjectRepository) GetByID(ctx context.Context, id string) (*document.Project, error) {
-	var project document.Project
+func (r *MongoProjectRepository) GetByID(ctx context.Context, id string) (*writer.Project, error) {
+	var project writer.Project
 
 	filter := bson.M{
 		"_id":        id,
@@ -140,7 +140,7 @@ func (r *MongoProjectRepository) Delete(ctx context.Context, id string) error {
 }
 
 // List 查询项目列表
-func (r *MongoProjectRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*document.Project, error) {
+func (r *MongoProjectRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.Project, error) {
 	mongoFilter := bson.M{"deleted_at": nil}
 
 	// 如果有筛选条件，合并条件
@@ -164,7 +164,7 @@ func (r *MongoProjectRepository) List(ctx context.Context, filter infrastructure
 	}
 	defer cursor.Close(ctx)
 
-	var projects []*document.Project
+	var projects []*writer.Project
 	if err = cursor.All(ctx, &projects); err != nil {
 		return nil, fmt.Errorf("解析项目数据失败: %w", err)
 	}
@@ -205,7 +205,7 @@ func (r *MongoProjectRepository) Count(ctx context.Context, filter infrastructur
 }
 
 // GetListByOwnerID 获取作者的项目列表
-func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*document.Project, error) {
+func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*writer.Project, error) {
 	filter := bson.M{
 		"author_id":  ownerID,
 		"deleted_at": nil,
@@ -222,7 +222,7 @@ func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID s
 	}
 	defer cursor.Close(ctx)
 
-	var projects []*document.Project
+	var projects []*writer.Project
 	if err = cursor.All(ctx, &projects); err != nil {
 		return nil, fmt.Errorf("解析项目数据失败: %w", err)
 	}
@@ -231,7 +231,7 @@ func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID s
 }
 
 // GetByOwnerAndStatus 根据作者和状态查询项目
-func (r *MongoProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*document.Project, error) {
+func (r *MongoProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*writer.Project, error) {
 	filter := bson.M{
 		"author_id":  ownerID,
 		"status":     status,
@@ -249,7 +249,7 @@ func (r *MongoProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerI
 	}
 	defer cursor.Close(ctx)
 
-	var projects []*document.Project
+	var projects []*writer.Project
 	if err = cursor.All(ctx, &projects); err != nil {
 		return nil, fmt.Errorf("解析项目数据失败: %w", err)
 	}
@@ -397,7 +397,7 @@ func (r *MongoProjectRepository) CountByStatus(ctx context.Context, status strin
 }
 
 // CreateWithTransaction 在事务中创建项目
-func (r *MongoProjectRepository) CreateWithTransaction(ctx context.Context, project *document.Project, callback func(ctx context.Context) error) error {
+func (r *MongoProjectRepository) CreateWithTransaction(ctx context.Context, project *writer.Project, callback func(ctx context.Context) error) error {
 	session, err := r.db.Client().StartSession()
 	if err != nil {
 		return fmt.Errorf("启动事务失败: %w", err)

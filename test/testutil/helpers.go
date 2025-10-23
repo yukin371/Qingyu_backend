@@ -1,12 +1,12 @@
 package testutil
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"testing"
 	"time"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/models/users"
 
 	"github.com/stretchr/testify/assert"
@@ -119,16 +119,16 @@ func AssertUserEqual(t *testing.T, expected, actual *users.User) {
 // ============ 项目相关测试助手 ============
 
 // ProjectOption 项目选项函数类型
-type ProjectOption func(*document.Project)
+type ProjectOption func(*writer.Project)
 
 // CreateTestProject 创建测试项目
-func CreateTestProject(userID string, opts ...ProjectOption) *document.Project {
-	project := &document.Project{
+func CreateTestProject(userID string, opts ...ProjectOption) *writer.Project {
+	project := &writer.Project{
 		ID:        primitive.NewObjectID().Hex(),
 		Title:     "测试项目",
 		Summary:   "这是一个测试项目",
 		AuthorID:  userID,
-		Status:    document.StatusDraft,
+		Status:    writer.StatusDraft,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -143,28 +143,28 @@ func CreateTestProject(userID string, opts ...ProjectOption) *document.Project {
 
 // WithProjectName 设置项目名称（使用Title字段）
 func WithProjectName(name string) ProjectOption {
-	return func(p *document.Project) {
+	return func(p *writer.Project) {
 		p.Title = name
 	}
 }
 
 // WithProjectDescription 设置项目描述（使用Summary字段）
 func WithProjectDescription(description string) ProjectOption {
-	return func(p *document.Project) {
+	return func(p *writer.Project) {
 		p.Summary = description
 	}
 }
 
 // WithProjectStatus 设置项目状态
 func WithProjectStatus(status string) ProjectOption {
-	return func(p *document.Project) {
-		p.Status = document.ProjectStatus(status)
+	return func(p *writer.Project) {
+		p.Status = writer.ProjectStatus(status)
 	}
 }
 
 // CreateTestProjects 批量创建测试项目
-func CreateTestProjects(userID string, count int) []*document.Project {
-	result := make([]*document.Project, count)
+func CreateTestProjects(userID string, count int) []*writer.Project {
+	result := make([]*writer.Project, count)
 	for i := 0; i < count; i++ {
 		result[i] = CreateTestProject(
 			userID,
@@ -175,7 +175,7 @@ func CreateTestProjects(userID string, count int) []*document.Project {
 }
 
 // AssertProjectEqual 断言项目相等
-func AssertProjectEqual(t *testing.T, expected, actual *document.Project) {
+func AssertProjectEqual(t *testing.T, expected, actual *writer.Project) {
 	assert.Equal(t, expected.ID, actual.ID)
 	assert.Equal(t, expected.Title, actual.Title)
 	assert.Equal(t, expected.Summary, actual.Summary)
@@ -186,17 +186,17 @@ func AssertProjectEqual(t *testing.T, expected, actual *document.Project) {
 // ============ 文档相关测试助手 ============
 
 // DocumentOption 文档选项函数类型
-type DocumentOption func(*document.Document)
+type DocumentOption func(*writer.Document)
 
 // CreateTestDocument 创建测试文档
 // 注意：此方法只创建Document元数据，不包含内容
 // 如需创建文档内容，请使用CreateTestDocumentContent
-func CreateTestDocument(projectID string, opts ...DocumentOption) *document.Document {
-	doc := &document.Document{
+func CreateTestDocument(projectID string, opts ...DocumentOption) *writer.Document {
+	doc := &writer.Document{
 		ID:        primitive.NewObjectID().Hex(),
 		ProjectID: projectID,
 		Title:     "测试文档",
-		Type:      document.TypeChapter,
+		Type:      writer.TypeChapter,
 		Status:    "draft",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -211,8 +211,8 @@ func CreateTestDocument(projectID string, opts ...DocumentOption) *document.Docu
 }
 
 // CreateTestDocumentContent 创建测试文档内容
-func CreateTestDocumentContent(documentID string, content string) *document.DocumentContent {
-	return &document.DocumentContent{
+func CreateTestDocumentContent(documentID string, content string) *writer.DocumentContent {
+	return &writer.DocumentContent{
 		ID:          primitive.NewObjectID().Hex(),
 		DocumentID:  documentID,
 		Content:     content,
@@ -228,7 +228,7 @@ func CreateTestDocumentContent(documentID string, content string) *document.Docu
 
 // WithDocumentTitle 设置文档标题
 func WithDocumentTitle(title string) DocumentOption {
-	return func(d *document.Document) {
+	return func(d *writer.Document) {
 		d.Title = title
 	}
 }
@@ -238,14 +238,14 @@ func WithDocumentTitle(title string) DocumentOption {
 // 请使用DocumentContent模型来处理文档内容
 // 此函数保留用于向后兼容，但实际上不会产生任何效果
 func WithDocumentContent(content string) DocumentOption {
-	return func(d *document.Document) {
+	return func(d *writer.Document) {
 		// 不再设置Content字段，保留函数签名用于兼容
 	}
 }
 
 // WithDocumentStatus 设置文档状态
 func WithDocumentStatus(status string) DocumentOption {
-	return func(d *document.Document) {
+	return func(d *writer.Document) {
 		d.Status = status
 	}
 }

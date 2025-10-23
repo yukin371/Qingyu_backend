@@ -1,4 +1,4 @@
-package document
+package writer
 
 import "time"
 
@@ -50,9 +50,9 @@ type CharacterRelation struct {
 	ID        string       `bson:"_id,omitempty" json:"id"`
 	ProjectID string       `bson:"project_id" json:"projectId"`
 	FromID    string       `bson:"from_id" json:"fromId"`
-	ToID      string       `bson:"to_id" json:"toId"`
-	Type      RelationType `bson:"type" json:"type"`
-	Strength  int          `bson:"strength" json:"strength"` // 0-100 强度
+	ToID     string       `bson:"to_id" json:"toId"`
+	Type     RelationType `bson:"type" json:"type"`
+	Strength int          `bson:"strength" json:"strength"` // 0-100 强度
 	Notes     string       `bson:"notes,omitempty" json:"notes,omitempty"`
 	CreatedAt time.Time    `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time    `bson:"updated_at" json:"updatedAt"`

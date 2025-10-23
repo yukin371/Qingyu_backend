@@ -1,22 +1,21 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"time"
-
-	"Qingyu_backend/models/reading/bookstore"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // HomepageResponse 首页响应
 type HomepageResponse struct {
-	Banners        []bookstore.Banner `json:"banners"`
-	RecommendBooks []bookstore.Book   `json:"recommendBooks"`
-	FeaturedBooks  []bookstore.Book   `json:"featuredBooks"`
-	HotBooks       []bookstore.Book   `json:"hotBooks"`
-	NewReleases    []bookstore.Book   `json:"newReleases"`
-	FreeBooks      []bookstore.Book   `json:"freeBooks"`
-	Categories     []CategoryNode     `json:"categories"`
+	Banners        []bookstore2.Banner `json:"banners"`
+	RecommendBooks []bookstore2.Book   `json:"recommendBooks"`
+	FeaturedBooks  []bookstore2.Book   `json:"featuredBooks"`
+	HotBooks       []bookstore2.Book   `json:"hotBooks"`
+	NewReleases    []bookstore2.Book   `json:"newReleases"`
+	FreeBooks      []bookstore2.Book   `json:"freeBooks"`
+	Categories     []CategoryNode      `json:"categories"`
 }
 
 // CategoryNode 分类树节点
@@ -57,9 +56,9 @@ type RankingResponse struct {
 
 // RankingItemDetail 榜单项详情
 type RankingItemDetail struct {
-	Rank      int            `json:"rank"`
-	Book      bookstore.Book `json:"book"`
-	Score     float64        `json:"score"`
+	Rank  int             `json:"rank"`
+	Book  bookstore2.Book `json:"book"`
+	Score float64         `json:"score"`
 	ViewCount int64          `json:"viewCount"`
 	LikeCount int64          `json:"likeCount"`
 	Change    int            `json:"change"` // 排名变化
@@ -67,15 +66,15 @@ type RankingItemDetail struct {
 
 // BookListResponse 书籍列表响应
 type BookListResponse struct {
-	Books []bookstore.Book `json:"books"`
-	Total int64            `json:"total"`
+	Books []bookstore2.Book `json:"books"`
+	Total int64             `json:"total"`
 	Page  int              `json:"page"`
 	Size  int              `json:"size"`
 }
 
 // CategoryResponse 分类响应
 type CategoryResponse struct {
-	Category  bookstore.Category `json:"category"`
-	BookCount int64              `json:"bookCount"`
+	Category  bookstore2.Category `json:"category"`
+	BookCount int64               `json:"bookCount"`
 	Children  []CategoryNode     `json:"children,omitempty"`
 }

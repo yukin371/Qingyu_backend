@@ -1,4 +1,4 @@
-package document
+package writer
 
 import (
 	"fmt"
@@ -69,9 +69,9 @@ type ProjectSettings struct {
 
 // Collaborator 协作者
 type Collaborator struct {
-	UserID     string           `bson:"user_id" json:"userId"`
-	Role       CollaboratorRole `bson:"role" json:"role"`
-	InvitedAt  time.Time        `bson:"invited_at" json:"invitedAt"`
+	UserID    string           `bson:"user_id" json:"userId"`
+	Role      CollaboratorRole `bson:"role" json:"role"`
+	InvitedAt time.Time        `bson:"invited_at" json:"invitedAt"`
 	AcceptedAt *time.Time       `bson:"accepted_at,omitempty" json:"acceptedAt,omitempty"`
 }
 

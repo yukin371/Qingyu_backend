@@ -1,11 +1,11 @@
 package document
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/document"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/base"
@@ -81,11 +81,11 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	}
 
 	// 4. 创建文档对象
-	doc := &document.Document{
+	doc := &writer.Document{
 		ProjectID:    req.ProjectID,
 		ParentID:     req.ParentID,
 		Title:        req.Title,
-		Type:         document.DocumentType(req.Type),
+		Type:         writer.DocumentType(req.Type),
 		Level:        level,
 		Order:        req.Order,
 		Status:       "planned",
@@ -128,7 +128,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 }
 
 // GetDocument 获取文档详情
-func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*document.Document, error) {
+func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*writer.Document, error) {
 	// 1. 查询文档
 	doc, err := s.documentRepo.GetByID(ctx, documentID)
 	if err != nil {
@@ -322,7 +322,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 }
 
 // 私有方法
-func (s *DocumentService) buildDocumentTree(documents []*document.Document) []*DocumentTreeNode {
+func (s *DocumentService) buildDocumentTree(documents []*writer.Document) []*DocumentTreeNode {
 	// 构建树形结构
 	nodeMap := make(map[string]*DocumentTreeNode)
 	var rootNodes []*DocumentTreeNode
@@ -366,7 +366,7 @@ func (s *DocumentService) validateCreateDocumentRequest(req *CreateDocumentReque
 	}
 
 	// 验证文档类型
-	docType := document.DocumentType(req.Type)
+	docType := writer.DocumentType(req.Type)
 	if !docType.IsValid() {
 		return fmt.Errorf("无效的文档类型: %s", req.Type)
 	}
@@ -388,13 +388,13 @@ func (s *DocumentService) updateProjectStatistics(ctx context.Context, projectID
 
 	for _, doc := range documents {
 		totalWords += doc.WordCount
-		if doc.Type == document.TypeChapter {
+		if doc.Type == writer.TypeChapter {
 			chapterCount++
 		}
 	}
 
 	// 更新项目统计
-	stats := &document.ProjectStats{
+	stats := &writer.ProjectStats{
 		TotalWords:    totalWords,
 		ChapterCount:  chapterCount,
 		DocumentCount: documentCount,

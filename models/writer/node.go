@@ -1,4 +1,4 @@
-package document
+package writer
 
 import (
 	"fmt"

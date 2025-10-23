@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
