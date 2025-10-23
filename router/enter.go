@@ -20,6 +20,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
 	"Qingyu_backend/repository/mongodb"
+	mongoAI "Qingyu_backend/repository/mongodb/ai"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoUser "Qingyu_backend/repository/mongodb/user"
 
@@ -128,7 +129,7 @@ func RegisterRoutes(r *gin.Engine) {
 	aiSvc := aiService.NewService()
 
 	// 创建AI相关Repository
-	quotaRepo := mongodb.NewMongoQuotaRepository(global.DB)
+	quotaRepo := mongoAI.NewMongoQuotaRepository(global.DB)
 
 	// 创建聊天Repository（使用临时实现）
 	chatRepo := aiService.NewInMemoryChatRepository()

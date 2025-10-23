@@ -1,32 +1,32 @@
-package interfaces
+package ai
 
 import (
 	"context"
 	"time"
 
-	"Qingyu_backend/models/ai"
+	aiModels "Qingyu_backend/models/ai"
 )
 
 // QuotaRepository 配额Repository接口
 type QuotaRepository interface {
 	// 配额管理
-	CreateQuota(ctx context.Context, quota *ai.UserQuota) error
-	GetQuotaByUserID(ctx context.Context, userID string, quotaType ai.QuotaType) (*ai.UserQuota, error)
-	UpdateQuota(ctx context.Context, quota *ai.UserQuota) error
-	DeleteQuota(ctx context.Context, userID string, quotaType ai.QuotaType) error
+	CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error
+	GetQuotaByUserID(ctx context.Context, userID string, quotaType aiModels.QuotaType) (*aiModels.UserQuota, error)
+	UpdateQuota(ctx context.Context, quota *aiModels.UserQuota) error
+	DeleteQuota(ctx context.Context, userID string, quotaType aiModels.QuotaType) error
 
 	// 批量操作
-	GetAllQuotasByUserID(ctx context.Context, userID string) ([]*ai.UserQuota, error)
-	BatchResetQuotas(ctx context.Context, quotaType ai.QuotaType) error
+	GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error)
+	BatchResetQuotas(ctx context.Context, quotaType aiModels.QuotaType) error
 
 	// 配额事务记录
-	CreateTransaction(ctx context.Context, transaction *ai.QuotaTransaction) error
-	GetTransactionsByUserID(ctx context.Context, userID string, limit, offset int) ([]*ai.QuotaTransaction, error)
-	GetTransactionsByTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) ([]*ai.QuotaTransaction, error)
+	CreateTransaction(ctx context.Context, transaction *aiModels.QuotaTransaction) error
+	GetTransactionsByUserID(ctx context.Context, userID string, limit, offset int) ([]*aiModels.QuotaTransaction, error)
+	GetTransactionsByTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) ([]*aiModels.QuotaTransaction, error)
 
 	// 统计查询
 	GetQuotaStatistics(ctx context.Context, userID string) (*QuotaStatistics, error)
-	GetTotalConsumption(ctx context.Context, userID string, quotaType ai.QuotaType, startTime, endTime time.Time) (int, error)
+	GetTotalConsumption(ctx context.Context, userID string, quotaType aiModels.QuotaType, startTime, endTime time.Time) (int, error)
 
 	// 健康检查
 	Health(ctx context.Context) error

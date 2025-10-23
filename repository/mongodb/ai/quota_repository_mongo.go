@@ -1,12 +1,12 @@
-package mongodb
+package ai
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/ai"
-	"Qingyu_backend/repository/interfaces"
+	aiModels "Qingyu_backend/models/ai"
+	"Qingyu_backend/repository/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,15 +21,15 @@ type MongoQuotaRepository struct {
 }
 
 // NewMongoQuotaRepository 创建MongoDB配额Repository
-func NewMongoQuotaRepository(db *mongo.Database) interfaces.QuotaRepository {
+func NewMongoQuotaRepository(db *mongo.Database) ai.QuotaRepository {
 	return &MongoQuotaRepository{
-		quotaCollection:       db.Collection(ai.UserQuota{}.CollectionName()),
-		transactionCollection: db.Collection(ai.QuotaTransaction{}.CollectionName()),
+		quotaCollection:       db.Collection(aiModels.UserQuota{}.CollectionName()),
+		transactionCollection: db.Collection(aiModels.QuotaTransaction{}.CollectionName()),
 	}
 }
 
 // CreateQuota 创建配额
-func (r *MongoQuotaRepository) CreateQuota(ctx context.Context, quota *ai.UserQuota) error {
+func (r *MongoQuotaRepository) CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
 	quota.BeforeCreate()
 
 	_, err := r.quotaCollection.InsertOne(ctx, quota)
@@ -44,17 +44,17 @@ func (r *MongoQuotaRepository) CreateQuota(ctx context.Context, quota *ai.UserQu
 }
 
 // GetQuotaByUserID 根据用户ID和配额类型获取配额
-func (r *MongoQuotaRepository) GetQuotaByUserID(ctx context.Context, userID string, quotaType ai.QuotaType) (*ai.UserQuota, error) {
+func (r *MongoQuotaRepository) GetQuotaByUserID(ctx context.Context, userID string, quotaType aiModels.QuotaType) (*aiModels.UserQuota, error) {
 	filter := bson.M{
 		"user_id":    userID,
 		"quota_type": quotaType,
 	}
 
-	var quota ai.UserQuota
+	var quota aiModels.UserQuota
 	err := r.quotaCollection.FindOne(ctx, filter).Decode(&quota)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, ai.ErrQuotaNotFound
+			return nil, aiModels.ErrQuotaNotFound
 		}
 		return nil, fmt.Errorf("查询配额失败: %w", err)
 	}
@@ -71,7 +71,7 @@ func (r *MongoQuotaRepository) GetQuotaByUserID(ctx context.Context, userID stri
 }
 
 // UpdateQuota 更新配额
-func (r *MongoQuotaRepository) UpdateQuota(ctx context.Context, quota *ai.UserQuota) error {
+func (r *MongoQuotaRepository) UpdateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
 	quota.BeforeUpdate()
 
 	filter := bson.M{
@@ -96,14 +96,14 @@ func (r *MongoQuotaRepository) UpdateQuota(ctx context.Context, quota *ai.UserQu
 	}
 
 	if result.MatchedCount == 0 {
-		return ai.ErrQuotaNotFound
+		return aiModels.ErrQuotaNotFound
 	}
 
 	return nil
 }
 
 // DeleteQuota 删除配额
-func (r *MongoQuotaRepository) DeleteQuota(ctx context.Context, userID string, quotaType ai.QuotaType) error {
+func (r *MongoQuotaRepository) DeleteQuota(ctx context.Context, userID string, quotaType aiModels.QuotaType) error {
 	filter := bson.M{
 		"user_id":    userID,
 		"quota_type": quotaType,
@@ -115,14 +115,14 @@ func (r *MongoQuotaRepository) DeleteQuota(ctx context.Context, userID string, q
 	}
 
 	if result.DeletedCount == 0 {
-		return ai.ErrQuotaNotFound
+		return aiModels.ErrQuotaNotFound
 	}
 
 	return nil
 }
 
 // GetAllQuotasByUserID 获取用户所有配额
-func (r *MongoQuotaRepository) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*ai.UserQuota, error) {
+func (r *MongoQuotaRepository) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error) {
 	filter := bson.M{"user_id": userID}
 
 	cursor, err := r.quotaCollection.Find(ctx, filter)
@@ -131,7 +131,7 @@ func (r *MongoQuotaRepository) GetAllQuotasByUserID(ctx context.Context, userID 
 	}
 	defer cursor.Close(ctx)
 
-	var quotas []*ai.UserQuota
+	var quotas []*aiModels.UserQuota
 	if err = cursor.All(ctx, &quotas); err != nil {
 		return nil, fmt.Errorf("解析配额列表失败: %w", err)
 	}
@@ -148,7 +148,7 @@ func (r *MongoQuotaRepository) GetAllQuotasByUserID(ctx context.Context, userID 
 }
 
 // BatchResetQuotas 批量重置配额
-func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType ai.QuotaType) error {
+func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType aiModels.QuotaType) error {
 	filter := bson.M{
 		"quota_type": quotaType,
 		"reset_at":   bson.M{"$lte": time.Now()},
@@ -158,7 +158,7 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 		"$set": bson.M{
 			"used_quota":      0,
 			"remaining_quota": "$total_quota",
-			"status":          ai.QuotaStatusActive,
+			"status":          aiModels.QuotaStatusActive,
 			"updated_at":      time.Now(),
 		},
 	}
@@ -167,9 +167,9 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 	var resetAt time.Time
 	now := time.Now()
 	switch quotaType {
-	case ai.QuotaTypeDaily:
+	case aiModels.QuotaTypeDaily:
 		resetAt = now.AddDate(0, 0, 1)
-	case ai.QuotaTypeMonthly:
+	case aiModels.QuotaTypeMonthly:
 		resetAt = now.AddDate(0, 1, 0)
 	default:
 		return fmt.Errorf("不支持的配额类型: %s", quotaType)
@@ -178,7 +178,7 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 	update = bson.M{
 		"$set": bson.M{
 			"used_quota": 0,
-			"status":     ai.QuotaStatusActive,
+			"status":     aiModels.QuotaStatusActive,
 			"reset_at":   resetAt,
 			"updated_at": now,
 		},
@@ -193,7 +193,7 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 }
 
 // CreateTransaction 创建配额事务记录
-func (r *MongoQuotaRepository) CreateTransaction(ctx context.Context, transaction *ai.QuotaTransaction) error {
+func (r *MongoQuotaRepository) CreateTransaction(ctx context.Context, transaction *aiModels.QuotaTransaction) error {
 	if transaction.ID.IsZero() {
 		transaction.ID = primitive.NewObjectID()
 	}
@@ -210,7 +210,7 @@ func (r *MongoQuotaRepository) CreateTransaction(ctx context.Context, transactio
 }
 
 // GetTransactionsByUserID 获取用户配额事务记录
-func (r *MongoQuotaRepository) GetTransactionsByUserID(ctx context.Context, userID string, limit, offset int) ([]*ai.QuotaTransaction, error) {
+func (r *MongoQuotaRepository) GetTransactionsByUserID(ctx context.Context, userID string, limit, offset int) ([]*aiModels.QuotaTransaction, error) {
 	filter := bson.M{"user_id": userID}
 
 	opts := options.Find().
@@ -224,7 +224,7 @@ func (r *MongoQuotaRepository) GetTransactionsByUserID(ctx context.Context, user
 	}
 	defer cursor.Close(ctx)
 
-	var transactions []*ai.QuotaTransaction
+	var transactions []*aiModels.QuotaTransaction
 	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, fmt.Errorf("解析配额事务失败: %w", err)
 	}
@@ -233,7 +233,7 @@ func (r *MongoQuotaRepository) GetTransactionsByUserID(ctx context.Context, user
 }
 
 // GetTransactionsByTimeRange 获取时间范围内的配额事务
-func (r *MongoQuotaRepository) GetTransactionsByTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) ([]*ai.QuotaTransaction, error) {
+func (r *MongoQuotaRepository) GetTransactionsByTimeRange(ctx context.Context, userID string, startTime, endTime time.Time) ([]*aiModels.QuotaTransaction, error) {
 	filter := bson.M{
 		"user_id": userID,
 		"timestamp": bson.M{
@@ -248,7 +248,7 @@ func (r *MongoQuotaRepository) GetTransactionsByTimeRange(ctx context.Context, u
 	}
 	defer cursor.Close(ctx)
 
-	var transactions []*ai.QuotaTransaction
+	var transactions []*aiModels.QuotaTransaction
 	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, fmt.Errorf("解析配额事务失败: %w", err)
 	}
@@ -257,14 +257,14 @@ func (r *MongoQuotaRepository) GetTransactionsByTimeRange(ctx context.Context, u
 }
 
 // GetQuotaStatistics 获取配额统计信息
-func (r *MongoQuotaRepository) GetQuotaStatistics(ctx context.Context, userID string) (*interfaces.QuotaStatistics, error) {
+func (r *MongoQuotaRepository) GetQuotaStatistics(ctx context.Context, userID string) (*ai.QuotaStatistics, error) {
 	// 获取所有配额
 	quotas, err := r.GetAllQuotasByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	stats := &interfaces.QuotaStatistics{
+	stats := &ai.QuotaStatistics{
 		UserID:         userID,
 		QuotaByType:    make(map[string]int),
 		QuotaByService: make(map[string]int),
@@ -315,7 +315,7 @@ func (r *MongoQuotaRepository) GetQuotaStatistics(ctx context.Context, userID st
 }
 
 // GetTotalConsumption 获取总消费量
-func (r *MongoQuotaRepository) GetTotalConsumption(ctx context.Context, userID string, quotaType ai.QuotaType, startTime, endTime time.Time) (int, error) {
+func (r *MongoQuotaRepository) GetTotalConsumption(ctx context.Context, userID string, quotaType aiModels.QuotaType, startTime, endTime time.Time) (int, error) {
 	filter := bson.M{
 		"user_id":    userID,
 		"quota_type": quotaType,
