@@ -40,18 +40,16 @@ func InitBookstoreRouter(
 			// 书城首页
 			public.GET("/homepage", bookstoreApiHandler.GetHomepage)
 
-			// 书籍列表和搜索
-			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
+			// 书籍列表和搜索 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
+			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
+			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
+			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
 
-			// 推荐和精选
-			public.GET("/recommended", bookstoreApiHandler.GetRecommendedBooks)
-			public.GET("/featured", bookstoreApiHandler.GetFeaturedBooks)
-
-			// 分类
-			public.GET("/categories", bookstoreApiHandler.GetCategoryTree)
-			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
+			// 分类 - 注意：具体路由必须放在参数化路由之前
+			public.GET("/categories/tree", bookstoreApiHandler.GetCategoryTree)
 			public.GET("/categories/:id/books", bookstoreApiHandler.GetBooksByCategory)
+			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
 
 			// Banner
 			public.GET("/banners", bookstoreApiHandler.GetActiveBanners)

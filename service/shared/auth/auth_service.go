@@ -142,7 +142,8 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
 	if err != nil {
 		// 会话创建失败不影响登录（降级处理）
-		fmt.Printf("[Auth] 创建会话失败: %v\n", err)
+		// TODO: 使用logger记录错误，不要使用fmt.Printf污染HTTP响应
+		_ = err
 	}
 	_ = session // 暂时不使用，后续可添加到响应中
 

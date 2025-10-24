@@ -57,7 +57,8 @@ func (s *SessionServiceImpl) CreateSession(ctx context.Context, userID string) (
 	// MVP: 使用JSON存储会话ID列表（简化实现，避免扩展CacheClient接口）
 	if err := s.addSessionToUserList(ctx, userID, sessionID); err != nil {
 		// 非关键错误，记录但不中断
-		fmt.Printf("[Session] 添加会话到用户列表失败: %v\n", err)
+		// TODO: 使用logger记录错误，不要使用fmt.Printf污染HTTP响应
+		_ = err
 	}
 
 	return session, nil

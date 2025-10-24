@@ -149,42 +149,42 @@ func (f *MongoRepositoryFactory) CreateAnnotationRepository() readingRepo.Annota
 
 // CreateBookRepository 创建书籍Repository
 func (f *MongoRepositoryFactory) CreateBookRepository() bookstoreRepo.BookRepository {
-	return mongoBookstore.NewMongoBookRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookRepository(f.client, f.database.Name())
 }
 
 // CreateBookDetailRepository 创建书籍详情Repository
 func (f *MongoRepositoryFactory) CreateBookDetailRepository() bookstoreRepo.BookDetailRepository {
-	return mongoBookstore.NewMongoBookDetailRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookDetailRepository(f.client, f.database.Name())
 }
 
 // CreateCategoryRepository 创建分类Repository
 func (f *MongoRepositoryFactory) CreateCategoryRepository() bookstoreRepo.CategoryRepository {
-	return mongoBookstore.NewMongoCategoryRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoCategoryRepository(f.client, f.database.Name())
 }
 
 // CreateBookStatisticsRepository 创建书籍统计Repository
 func (f *MongoRepositoryFactory) CreateBookStatisticsRepository() bookstoreRepo.BookStatisticsRepository {
-	return mongoBookstore.NewMongoBookStatisticsRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookStatisticsRepository(f.client, f.database.Name())
 }
 
 // CreateBookRatingRepository 创建书籍评分Repository
 func (f *MongoRepositoryFactory) CreateBookRatingRepository() bookstoreRepo.BookRatingRepository {
-	return mongoBookstore.NewMongoBookRatingRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookRatingRepository(f.client, f.database.Name())
 }
 
 // CreateBookstoreChapterRepository 创建书城章节Repository
 func (f *MongoRepositoryFactory) CreateBookstoreChapterRepository() bookstoreRepo.ChapterRepository {
-	return mongoBookstore.NewMongoChapterRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoChapterRepository(f.client, f.database.Name())
 }
 
 // CreateBannerRepository 创建横幅Repository
 func (f *MongoRepositoryFactory) CreateBannerRepository() bookstoreRepo.BannerRepository {
-	return mongoBookstore.NewMongoBannerRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBannerRepository(f.client, f.database.Name())
 }
 
 // CreateRankingRepository 创建榜单Repository
 func (f *MongoRepositoryFactory) CreateRankingRepository() bookstoreRepo.RankingRepository {
-	return mongoBookstore.NewMongoRankingRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoRankingRepository(f.client, f.database.Name())
 }
 
 // ========== Recommendation Module Repositories ==========
@@ -275,6 +275,9 @@ func (f *MongoRepositoryFactory) GetClient() *mongo.Client {
 
 // GetDatabaseName 获取数据库名称
 func (f *MongoRepositoryFactory) GetDatabaseName() string {
+	if f.database != nil {
+		return f.database.Name()
+	}
 	if f.config != nil {
 		return f.config.Database
 	}
