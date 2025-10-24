@@ -62,7 +62,7 @@ ok  	Qingyu_backend/service/ai	0.313s	coverage: 13.2% of statements
 ok  	Qingyu_backend/service/ai/adapter	3.370s	coverage: 5.2% of statements
 	Qingyu_backend/service/ai/dto		coverage: 0.0% of statements
 	Qingyu_backend/service/audit		coverage: 0.0% of statements
-	Qingyu_backend/service/base		coverage: 0.0% of statements
+	Qingyu_backend/service/interfaces/base		coverage: 0.0% of statements
 	Qingyu_backend/service/bookstore		coverage: 0.0% of statements
 	Qingyu_backend/service/container		coverage: 0.0% of statements
 	Qingyu_backend/service/document		coverage: 0.0% of statements
@@ -89,16 +89,16 @@ Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 --- FAIL: TestUserAPI_Integration (0.14s)
     --- FAIL: TestUserAPI_Integration/瀹屾暣鐢ㄦ埛鐢熷懡鍛ㄦ湡 (0.13s)
         --- FAIL: TestUserAPI_Integration/瀹屾暣鐢ㄦ埛鐢熷懡鍛ㄦ湡/鑾峰彇涓汉淇℃伅 (0.00s)
-            user_api_integration_test.go:174: 
+            user_api_integration_test.go:174:
                 	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/integration/user_api_integration_test.go:174
-                	Error:      	Not equal: 
+                	Error:      	Not equal:
                 	            	expected: 200
                 	            	actual  : 401
                 	Test:       	TestUserAPI_Integration/瀹屾暣鐢ㄦ埛鐢熷懡鍛ㄦ湡/鑾峰彇涓汉淇℃伅
                 	Messages:   	鑾峰彇涓汉淇℃伅搴旇杩斿洖200
-            user_api_integration_test.go:180: 
+            user_api_integration_test.go:180:
                 	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/integration/user_api_integration_test.go:180
-                	Error:      	Not equal: 
+                	Error:      	Not equal:
                 	            	expected: 200
                 	            	actual  : 401
                 	Test:       	TestUserAPI_Integration/瀹屾暣鐢ㄦ埛鐢熷懡鍛ㄦ湡/鑾峰彇涓汉淇℃伅
@@ -121,9 +121,9 @@ FAIL	Qingyu_backend/test/integration	5.676s
 ok  	Qingyu_backend/test/performance	1.154s	coverage: [no statements]
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 --- FAIL: TestBehaviorRepository_Create (0.15s)
-    recommendation_behavior_test.go:49: 
+    recommendation_behavior_test.go:49:
         	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/repository/recommendation_behavior_test.go:49
-        	Error:      	Should NOT be empty, but was 
+        	Error:      	Should NOT be empty, but was
         	Test:       	TestBehaviorRepository_Create
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
@@ -134,12 +134,12 @@ Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 --- FAIL: TestHotRecommendationRepository_GetHotBooks (0.06s)
-    recommendation_hot_test.go:68: 
+    recommendation_hot_test.go:68:
         	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/repository/recommendation_hot_test.go:68
-        	Error:      	Not equal: 
+        	Error:      	Not equal:
         	            	expected: "book_002"
         	            	actual  : "book_001"
-        	            	
+
         	            	Diff:
         	            	--- Expected
         	            	+++ Actual
@@ -249,12 +249,12 @@ Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 Successfully connected to MongoDB: mongodb://localhost:27017/qingyu
 --- FAIL: TestUserRepository_Integration (0.06s)
     --- FAIL: TestUserRepository_Integration/GetByPhone (0.00s)
-        user_repository_test.go:83: 
+        user_repository_test.go:83:
             	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/repository/user/user_repository_test.go:83
-            	Error:      	Not equal: 
+            	Error:      	Not equal:
             	            	expected: "68f49c13cf26cfcefa98f6da"
             	            	actual  : "68f49a9ea598e9a70c31ddca"
-            	            	
+
             	            	Diff:
             	            	--- Expected
             	            	+++ Actual
@@ -269,9 +269,9 @@ coverage: [no statements]
 FAIL	Qingyu_backend/test/repository/user	0.630s
 --- FAIL: TestShortcutService_GetUserShortcuts (0.00s)
     --- FAIL: TestShortcutService_GetUserShortcuts/楠岃瘉榛樿蹇嵎閿暟閲?(0.00s)
-        shortcut_service_test.go:34: 
+        shortcut_service_test.go:34:
             	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/service/shortcut_service_test.go:34
-            	Error:      	Not equal: 
+            	Error:      	Not equal:
             	            	expected: 33
             	            	actual  : 34
             	Test:       	TestShortcutService_GetUserShortcuts/楠岃瘉榛樿蹇嵎閿暟閲?--- FAIL: TestUserService_LoginUser_ActiveStatus_Success (0.15s)
@@ -301,12 +301,12 @@ FAIL	Qingyu_backend/test/service	0.416s
 ok  	Qingyu_backend/test/service/reading	2.098s	coverage: [no statements]
 --- FAIL: TestRecommendationService_GetPersonalizedRecommendations_Enhanced (0.00s)
     --- FAIL: TestRecommendationService_GetPersonalizedRecommendations_Enhanced/鏃犵敾鍍忕敤鎴?鍐峰惎鍔ㄧ瓥鐣?(0.00s)
-        recommendation_service_enhanced_test.go:236: 
+        recommendation_service_enhanced_test.go:236:
             	Error Trace:	E:/Github/Qingyu/Qingyu_backend/test/service/recommendation_test/recommendation_service_enhanced_test.go:236
-            	Error:      	Not equal: 
+            	Error:      	Not equal:
             	            	expected: []string{"hot1", "hot2", "hot3"}
             	            	actual  : []string{"hot1", "hot2"}
-            	            	
+
             	            	Diff:
             	            	--- Expected
             	            	+++ Actual
@@ -320,7 +320,7 @@ ok  	Qingyu_backend/test/service/reading	2.098s	coverage: [no statements]
             	            	 }
             	Test:       	TestRecommendationService_GetPersonalizedRecommendations_Enhanced/鏃犵敾鍍忕敤鎴?鍐峰惎鍔ㄧ瓥鐣?--- FAIL: TestRecommendationService_GetSimilarItems_Enhanced (0.00s)
     --- FAIL: TestRecommendationService_GetSimilarItems_Enhanced/鎵惧埌鐩镐技鐗╁搧 (0.00s)
-panic: 
+panic:
 	assert: mock: I don't know what to return because the method call was unexpected.
 		Either do Mock.On("GetHotBooks").Return(...) first, or remove the GetHotBooks() call.
 		This method was unexpected:

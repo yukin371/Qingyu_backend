@@ -6,9 +6,9 @@ import (
 	adminApi "Qingyu_backend/api/v1/admin"
 	"Qingyu_backend/middleware"
 	aiService "Qingyu_backend/service/ai"
-	"Qingyu_backend/service/interfaces"
+	auditService "Qingyu_backend/service/interfaces/audit"
+	userService "Qingyu_backend/service/interfaces/user"
 	adminService "Qingyu_backend/service/shared/admin"
-	userService "Qingyu_backend/service/interfaces"
 )
 
 // RegisterAdminRoutes 注册管理员路由
@@ -16,7 +16,7 @@ func RegisterAdminRoutes(
 	r *gin.RouterGroup,
 	userSvc userService.UserService,
 	quotaSvc *aiService.QuotaService,
-	auditSvc interfaces.ContentAuditService,
+	auditSvc auditService.ContentAuditService,
 	adminSvc adminService.AdminService,
 ) {
 	// 创建admin API实例
@@ -35,15 +35,15 @@ func RegisterAdminRoutes(
 		// ===========================
 		usersGroup := adminGroup.Group("/users")
 		{
-			usersGroup.GET("", userAdminAPI.ListUsers)           // 获取用户列表
-			usersGroup.GET("/:id", userAdminAPI.GetUser)         // 获取用户详情
-			usersGroup.PUT("/:id", userAdminAPI.UpdateUser)      // 更新用户信息
-			usersGroup.DELETE("/:id", userAdminAPI.DeleteUser)   // 删除用户
-			usersGroup.POST("/:id/ban", userAdminAPI.BanUser)    // 封禁用户
+			usersGroup.GET("", userAdminAPI.ListUsers)            // 获取用户列表
+			usersGroup.GET("/:id", userAdminAPI.GetUser)          // 获取用户详情
+			usersGroup.PUT("/:id", userAdminAPI.UpdateUser)       // 更新用户信息
+			usersGroup.DELETE("/:id", userAdminAPI.DeleteUser)    // 删除用户
+			usersGroup.POST("/:id/ban", userAdminAPI.BanUser)     // 封禁用户
 			usersGroup.POST("/:id/unban", userAdminAPI.UnbanUser) // 解除封禁
 
 			// 用户统计
-			usersGroup.GET("/:user_id/statistics", systemAdminAPI.GetUserStatistics)
+			usersGroup.GET("/:id/statistics", systemAdminAPI.GetUserStatistics)
 		}
 
 		// ===========================
@@ -51,9 +51,9 @@ func RegisterAdminRoutes(
 		// ===========================
 		quotaGroup := adminGroup.Group("/quota")
 		{
-			quotaGroup.GET("/:userId", quotaAdminAPI.GetUserQuotaDetails)      // 获取用户配额详情
-			quotaGroup.PUT("/:userId", quotaAdminAPI.UpdateUserQuota)          // 更新用户配额
-			quotaGroup.POST("/:userId/suspend", quotaAdminAPI.SuspendUserQuota) // 暂停用户配额
+			quotaGroup.GET("/:userId", quotaAdminAPI.GetUserQuotaDetails)         // 获取用户配额详情
+			quotaGroup.PUT("/:userId", quotaAdminAPI.UpdateUserQuota)             // 更新用户配额
+			quotaGroup.POST("/:userId/suspend", quotaAdminAPI.SuspendUserQuota)   // 暂停用户配额
 			quotaGroup.POST("/:userId/activate", quotaAdminAPI.ActivateUserQuota) // 激活用户配额
 		}
 
@@ -62,17 +62,17 @@ func RegisterAdminRoutes(
 		// ===========================
 		auditGroup := adminGroup.Group("/audit")
 		{
-			auditGroup.GET("/pending", auditAdminAPI.GetPendingAudits)           // 获取待审核内容
-			auditGroup.GET("/high-risk", auditAdminAPI.GetHighRiskAudits)        // 获取高风险审核记录
-			auditGroup.GET("/statistics", auditAdminAPI.GetAuditStatistics)      // 获取审核统计
-			auditGroup.POST("/:id/review", auditAdminAPI.ReviewAudit)            // 审核内容
-			auditGroup.POST("/:id/appeal/review", auditAdminAPI.ReviewAppeal)    // 审核申诉
+			auditGroup.GET("/pending", auditAdminAPI.GetPendingAudits)        // 获取待审核内容
+			auditGroup.GET("/high-risk", auditAdminAPI.GetHighRiskAudits)     // 获取高风险审核记录
+			auditGroup.GET("/statistics", auditAdminAPI.GetAuditStatistics)   // 获取审核统计
+			auditGroup.POST("/:id/review", auditAdminAPI.ReviewAudit)         // 审核内容
+			auditGroup.POST("/:id/appeal/review", auditAdminAPI.ReviewAppeal) // 审核申诉
 		}
 
 		// ===========================
 		// 系统管理
 		// ===========================
-		
+
 		// 系统统计
 		adminGroup.GET("/stats", systemAdminAPI.GetSystemStats)
 
@@ -91,4 +91,3 @@ func RegisterAdminRoutes(
 		adminGroup.POST("/announcements", systemAdminAPI.CreateAnnouncement)
 	}
 }
-

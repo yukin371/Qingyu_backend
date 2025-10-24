@@ -1,11 +1,12 @@
 package container
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	user2 "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 	"Qingyu_backend/service/user"
 )
 
@@ -47,13 +48,13 @@ func (c *ServiceContainer) GetService(name string) (serviceInterfaces.BaseServic
 }
 
 // GetUserService 获取用户服务
-func (c *ServiceContainer) GetUserService() (serviceInterfaces.UserService, error) {
+func (c *ServiceContainer) GetUserService() (user2.UserService, error) {
 	service, err := c.GetService("UserService")
 	if err != nil {
 		return nil, err
 	}
 
-	userService, ok := service.(serviceInterfaces.UserService)
+	userService, ok := service.(user2.UserService)
 	if !ok {
 		return nil, fmt.Errorf("服务类型转换失败")
 	}

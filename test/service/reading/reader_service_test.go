@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 	"Qingyu_backend/service/reading"
 )
 

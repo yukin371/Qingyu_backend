@@ -1,21 +1,22 @@
 package admin
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	"Qingyu_backend/service/interfaces/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // UserAdminAPI 用户管理API处理器（管理员）
 type UserAdminAPI struct {
-	userService serviceInterfaces.UserService
+	userService user.UserService
 }
 
 // NewUserAdminAPI 创建用户管理API实例
-func NewUserAdminAPI(userService serviceInterfaces.UserService) *UserAdminAPI {
+func NewUserAdminAPI(userService user.UserService) *UserAdminAPI {
 	return &UserAdminAPI{
 		userService: userService,
 	}
@@ -45,7 +46,7 @@ func (api *UserAdminAPI) GetUser(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.GetUserRequest{
+	serviceReq := &user.GetUserRequest{
 		ID: userID,
 	}
 
@@ -121,7 +122,7 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.ListUsersRequest{
+	serviceReq := &user.ListUsersRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Status:   string(req.Status),
@@ -217,7 +218,7 @@ func (api *UserAdminAPI) UpdateUser(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.UpdateUserRequest{
+	serviceReq := &user.UpdateUserRequest{
 		ID:      userID,
 		Updates: updates,
 	}
@@ -266,7 +267,7 @@ func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.DeleteUserRequest{
+	serviceReq := &user.DeleteUserRequest{
 		ID: userID,
 	}
 
@@ -323,7 +324,7 @@ func (api *UserAdminAPI) BanUser(c *gin.Context) {
 	// TODO: 可以扩展添加ban_reason, ban_until等字段
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.UpdateUserRequest{
+	serviceReq := &user.UpdateUserRequest{
 		ID:      userID,
 		Updates: updates,
 	}
@@ -374,7 +375,7 @@ func (api *UserAdminAPI) UnbanUser(c *gin.Context) {
 	updates["status"] = "active"
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.UpdateUserRequest{
+	serviceReq := &user.UpdateUserRequest{
 		ID:      userID,
 		Updates: updates,
 	}

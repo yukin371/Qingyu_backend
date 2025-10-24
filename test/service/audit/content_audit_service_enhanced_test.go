@@ -14,7 +14,7 @@ import (
 	pkgAudit "Qingyu_backend/pkg/audit"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	auditService "Qingyu_backend/service/audit"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 )
 
 // ============================================

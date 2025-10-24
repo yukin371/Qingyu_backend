@@ -10,7 +10,7 @@ import (
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	userRepoInterface "Qingyu_backend/repository/interfaces/user"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 )
 
 // === Mock UserRepository ===

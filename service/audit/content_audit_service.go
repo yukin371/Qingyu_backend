@@ -1,6 +1,7 @@
 package audit
 
 import (
+	auditInterface "Qingyu_backend/service/interfaces/audit"
 	"context"
 	"fmt"
 	"time"
@@ -12,7 +13,6 @@ import (
 	pkgErrors "Qingyu_backend/pkg/errors"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/interfaces"
 )
 
 // ContentAuditService 内容审核服务
@@ -78,12 +78,12 @@ func (s *ContentAuditService) Initialize(ctx context.Context) error {
 }
 
 // CheckContent 实时检测内容
-func (s *ContentAuditService) CheckContent(ctx context.Context, content string) (*interfaces.AuditCheckResult, error) {
+func (s *ContentAuditService) CheckContent(ctx context.Context, content string) (*auditInterface.AuditCheckResult, error) {
 	if content == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "内容不能为空", "", nil)
 	}
 
-	result := &interfaces.AuditCheckResult{
+	result := &auditInterface.AuditCheckResult{
 		IsSafe:      true,
 		RiskLevel:   0,
 		RiskScore:   0,

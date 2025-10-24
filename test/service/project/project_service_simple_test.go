@@ -10,7 +10,7 @@ import (
 
 	base_infra "Qingyu_backend/repository/interfaces/infrastructure"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 	projectService "Qingyu_backend/service/project"
 )
 

@@ -14,7 +14,7 @@ import (
 	readerAPI "Qingyu_backend/api/v1/reader"
 	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 	"Qingyu_backend/service/reading"
 )
 

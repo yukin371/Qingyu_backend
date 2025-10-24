@@ -1,4 +1,4 @@
-package interfaces
+package base
 
 import (
 	"context"
@@ -79,4 +79,27 @@ func IsNotFoundError(err error) bool {
 		return serviceErr.Type == ErrorTypeNotFound
 	}
 	return false
+}
+
+// Event 事件接口
+type Event interface {
+	GetEventType() string
+	GetEventData() interface{}
+	GetTimestamp() time.Time
+	GetSource() string
+}
+
+// EventHandler 事件处理器接口
+type EventHandler interface {
+	Handle(ctx context.Context, event Event) error
+	GetHandlerName() string
+	GetSupportedEventTypes() []string
+}
+
+// EventBus 事件总线接口
+type EventBus interface {
+	Subscribe(eventType string, handler EventHandler) error
+	Unsubscribe(eventType string, handlerName string) error
+	Publish(ctx context.Context, event Event) error
+	PublishAsync(ctx context.Context, event Event) error
 }

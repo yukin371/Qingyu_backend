@@ -74,15 +74,15 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user_id	path		string	true	"用户ID"
+//	@Param			id	path		string	true	"用户ID"
 //	@Success		200		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		403		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/admin/users/{user_id}/statistics [get]
+//	@Router			/api/v1/admin/users/{id}/statistics [get]
 func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
-	userID := c.Param("user_id")
+	userID := c.Param("id")
 	if userID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "缺少用户ID")
 		return
@@ -290,4 +290,3 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	announcements := []interface{}{}
 	shared.Paginated(c, announcements, 0, page, pageSize, "获取成功")
 }
-

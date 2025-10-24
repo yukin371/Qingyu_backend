@@ -1,12 +1,12 @@
 package auth
 
 import (
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
-	userServiceInterface "Qingyu_backend/service/interfaces"
 )
 
 // AuthServiceImpl Auth服务实现（整合JWT、角色、权限、会话）

@@ -1,21 +1,22 @@
 package user
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	user2 "Qingyu_backend/service/interfaces/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // UserAPI 用户管理API处理器
 type UserAPI struct {
-	userService serviceInterfaces.UserService
+	userService user2.UserService
 }
 
 // NewUserAPI 创建用户API实例
-func NewUserAPI(userService serviceInterfaces.UserService) *UserAPI {
+func NewUserAPI(userService user2.UserService) *UserAPI {
 	return &UserAPI{
 		userService: userService,
 	}
@@ -40,7 +41,7 @@ func (api *UserAPI) Register(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.RegisterUserRequest{
+	serviceReq := &user2.RegisterUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -100,7 +101,7 @@ func (api *UserAPI) Login(c *gin.Context) {
 	clientIP := c.ClientIP()
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.LoginUserRequest{
+	serviceReq := &user2.LoginUserRequest{
 		Username: req.Username,
 		Password: req.Password,
 	}
@@ -160,7 +161,7 @@ func (api *UserAPI) GetProfile(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.GetUserRequest{
+	serviceReq := &user2.GetUserRequest{
 		ID: userID.(string),
 	}
 
@@ -244,7 +245,7 @@ func (api *UserAPI) UpdateProfile(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.UpdateUserRequest{
+	serviceReq := &user2.UpdateUserRequest{
 		ID:      userID.(string),
 		Updates: updates,
 	}
@@ -297,7 +298,7 @@ func (api *UserAPI) ChangePassword(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &serviceInterfaces.UpdatePasswordRequest{
+	serviceReq := &user2.UpdatePasswordRequest{
 		ID:          userID.(string),
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
@@ -324,4 +325,3 @@ func (api *UserAPI) ChangePassword(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "密码修改成功", nil)
 }
-

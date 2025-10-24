@@ -931,9 +931,9 @@
 {"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"start","Package":"Qingyu_backend/service/audit"}
 {"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"output","Package":"Qingyu_backend/service/audit","Output":"?   \tQingyu_backend/service/audit\t[no test files]\n"}
 {"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"skip","Package":"Qingyu_backend/service/audit","Elapsed":0}
-{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"start","Package":"Qingyu_backend/service/base"}
-{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"output","Package":"Qingyu_backend/service/base","Output":"?   \tQingyu_backend/service/base\t[no test files]\n"}
-{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"skip","Package":"Qingyu_backend/service/base","Elapsed":0}
+{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"start","Package":"Qingyu_backend/service/interfaces/base"}
+{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"output","Package":"Qingyu_backend/service/interfaces/base","Output":"?   \tQingyu_backend/service/interfaces/base\t[no test files]\n"}
+{"Time":"2025-10-19T16:01:16.4440851+08:00","Action":"skip","Package":"Qingyu_backend/service/interfaces/base","Elapsed":0}
 {"Time":"2025-10-19T16:01:16.4446478+08:00","Action":"start","Package":"Qingyu_backend/service/bookstore"}
 {"Time":"2025-10-19T16:01:16.4446478+08:00","Action":"output","Package":"Qingyu_backend/service/bookstore","Output":"?   \tQingyu_backend/service/bookstore\t[no test files]\n"}
 {"Time":"2025-10-19T16:01:16.4446478+08:00","Action":"skip","Package":"Qingyu_backend/service/bookstore","Elapsed":0.001}

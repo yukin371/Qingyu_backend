@@ -1,12 +1,12 @@
 package service
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
 	"Qingyu_backend/service/container"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // ServiceManager 服务管理器
