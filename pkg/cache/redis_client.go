@@ -10,6 +10,10 @@ import (
 
 	"Qingyu_backend/config"
 
+	// TODO(架构优化): 迁移到 github.com/redis/go-redis/v9
+	// 当前使用 v8 版本导致 go.mod 中出现 indirect 依赖警告
+	// 项目已有 v9 作为 direct 依赖，应统一迁移
+	// 相关文档: doc/implementation/01基础设施/Redis客户端集成报告_2025-10-24.md
 	"github.com/go-redis/redis/v8"
 )
 

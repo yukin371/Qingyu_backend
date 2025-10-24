@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
-	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
-	bookstoreRepoInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
@@ -400,29 +398,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	// ============ 2. 创建书城服务 ============
-	// 需要进行类型断言
-	bookRepoRaw := c.repositoryFactory.CreateBookRepository()
-	categoryRepoRaw := c.repositoryFactory.CreateCategoryRepository()
-	bannerRepoRaw := c.repositoryFactory.CreateBannerRepository()
-	rankingRepoRaw := c.repositoryFactory.CreateRankingRepository()
-
-	// 类型断言
-	bookRepo, ok := bookRepoRaw.(bookstoreRepoInterfaces.BookRepository)
-	if !ok {
-		return fmt.Errorf("BookRepository类型转换失败")
-	}
-	categoryRepo, ok := categoryRepoRaw.(bookstoreRepoInterfaces.CategoryRepository)
-	if !ok {
-		return fmt.Errorf("CategoryRepository类型转换失败")
-	}
-	bannerRepo, ok := bannerRepoRaw.(bookstoreRepoInterfaces.BannerRepository)
-	if !ok {
-		return fmt.Errorf("BannerRepository类型转换失败")
-	}
-	rankingRepo, ok := rankingRepoRaw.(bookstoreRepoInterfaces.RankingRepository)
-	if !ok {
-		return fmt.Errorf("RankingRepository类型转换失败")
-	}
+	// RepositoryFactory已返回具体类型，无需类型断言
+	bookRepo := c.repositoryFactory.CreateBookRepository()
+	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
+	bannerRepo := c.repositoryFactory.CreateBannerRepository()
+	rankingRepo := c.repositoryFactory.CreateRankingRepository()
 
 	c.bookstoreService = bookstoreService.NewBookstoreService(
 		bookRepo,
@@ -453,11 +433,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.aiService = aiService.NewService()
 
 	// 创建AI配额服务
-	quotaRepoRaw := c.repositoryFactory.CreateQuotaRepository()
-	quotaRepo, ok := quotaRepoRaw.(aiRepoInterfaces.QuotaRepository)
-	if !ok {
-		return fmt.Errorf("QuotaRepository类型转换失败")
-	}
+	quotaRepo := c.repositoryFactory.CreateQuotaRepository()
 	c.quotaService = aiService.NewQuotaService(quotaRepo)
 	// 注意：QuotaService 不完全实现 BaseService，不注册到 services map
 
