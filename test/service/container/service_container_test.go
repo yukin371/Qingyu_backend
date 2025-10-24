@@ -170,9 +170,7 @@ func (m *MockRepositoryFactory) GetDatabaseType() string {
 
 // TestNewServiceContainer 测试服务容器创建
 func TestNewServiceContainer(t *testing.T) {
-	mockFactory := new(MockRepositoryFactory)
-
-	serviceContainer := container.NewServiceContainer(mockFactory)
+	serviceContainer := container.NewServiceContainer()
 
 	assert.NotNil(t, serviceContainer, "服务容器不应为nil")
 	assert.False(t, serviceContainer.IsInitialized(), "新创建的容器应该是未初始化状态")
@@ -180,8 +178,7 @@ func TestNewServiceContainer(t *testing.T) {
 
 // TestServiceContainer_RegisterService 测试服务注册
 func TestServiceContainer_RegisterService(t *testing.T) {
-	mockFactory := new(MockRepositoryFactory)
-	serviceContainer := container.NewServiceContainer(mockFactory)
+	serviceContainer := container.NewServiceContainer()
 
 	// 创建一个Mock服务
 	mockService := new(MockBaseService)
@@ -204,8 +201,7 @@ func TestServiceContainer_RegisterService(t *testing.T) {
 
 // TestServiceContainer_GetService_NotFound 测试获取不存在的服务
 func TestServiceContainer_GetService_NotFound(t *testing.T) {
-	mockFactory := new(MockRepositoryFactory)
-	serviceContainer := container.NewServiceContainer(mockFactory)
+	serviceContainer := container.NewServiceContainer()
 
 	// 获取不存在的服务
 	service, err := serviceContainer.GetService("NonExistentService")
@@ -215,8 +211,7 @@ func TestServiceContainer_GetService_NotFound(t *testing.T) {
 
 // TestServiceContainer_GetServiceMetrics 测试获取服务指标
 func TestServiceContainer_GetServiceMetrics(t *testing.T) {
-	mockFactory := new(MockRepositoryFactory)
-	serviceContainer := container.NewServiceContainer(mockFactory)
+	serviceContainer := container.NewServiceContainer()
 
 	// 创建一个Mock服务
 	mockService := new(MockBaseService)
@@ -237,8 +232,7 @@ func TestServiceContainer_GetServiceMetrics(t *testing.T) {
 
 // TestServiceContainer_GetServiceNames 测试获取所有服务名称
 func TestServiceContainer_GetServiceNames(t *testing.T) {
-	mockFactory := new(MockRepositoryFactory)
-	serviceContainer := container.NewServiceContainer(mockFactory)
+	serviceContainer := container.NewServiceContainer()
 
 	// 初始时应该没有服务
 	names := serviceContainer.GetServiceNames()
