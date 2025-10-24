@@ -264,7 +264,7 @@ func TestAnnotationRepository_SearchNotes(t *testing.T) {
 		"chapter_id": "chapter1",
 		"text":       "Test text",
 		"note":       "Important content",
-		"type":       1,
+		"type":       string(reader.AnnotationTypeNote), // 使用字符串类型
 		"created_at": time.Now(),
 		"updated_at": time.Now(),
 	}
@@ -279,7 +279,7 @@ func TestAnnotationRepository_SearchNotes(t *testing.T) {
 		"chapter_id": "chapter2",
 		"text":       "Test text",
 		"note":       "Regular note",
-		"type":       1,
+		"type":       string(reader.AnnotationTypeNote), // 使用字符串类型
 		"created_at": time.Now(),
 		"updated_at": time.Now(),
 	}
@@ -289,8 +289,10 @@ func TestAnnotationRepository_SearchNotes(t *testing.T) {
 	// 搜索包含"Important"的笔记
 	results, err := annotationRepo.SearchNotes(ctx, "user1", "Important")
 	require.NoError(t, err)
-	assert.Len(t, results, 1)
-	assert.Contains(t, results[0].Note, "Important")
+	require.Len(t, results, 1, "应该找到1条包含Important的笔记")
+	if len(results) > 0 {
+		assert.Contains(t, results[0].Note, "Important")
+	}
 }
 
 // ============ 书签操作测试 ============

@@ -9,6 +9,7 @@ type Role struct {
 	Description string    `json:"description" bson:"description"` // 角色描述
 	Permissions []string  `json:"permissions" bson:"permissions"` // 权限列表
 	IsSystem    bool      `json:"is_system" bson:"is_system"`     // 是否系统角色（不可删除）
+	IsDefault   bool      `json:"is_default" bson:"is_default"`   // 是否默认角色（新用户默认分配）
 	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" bson:"updated_at"`
 }
