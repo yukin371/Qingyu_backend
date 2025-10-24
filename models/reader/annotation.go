@@ -7,8 +7,9 @@ import (
 type AnnotationType string
 
 const (
+	AnnotationTypeNote      AnnotationType = "note"      // 笔记
 	AnnotationTypeBookmark  AnnotationType = "bookmark"  // 书签
-	AnnotationTypeHighlight AnnotationType = "highlight" // 划线
+	AnnotationTypeHighlight AnnotationType = "highlight" // 划线/高亮
 )
 
 type Annotation struct {

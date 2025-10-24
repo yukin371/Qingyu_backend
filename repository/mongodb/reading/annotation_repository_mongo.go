@@ -135,7 +135,7 @@ func (r *MongoAnnotationRepository) GetByUserAndChapter(ctx context.Context, use
 }
 
 // GetByType 根据类型获取标注
-func (r *MongoAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType int) ([]*reader.Annotation, error) {
+func (r *MongoAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType string) ([]*reader.Annotation, error) {
 	filter := bson.M{
 		"user_id": userID,
 		"book_id": bookID,
@@ -157,9 +157,9 @@ func (r *MongoAnnotationRepository) GetByType(ctx context.Context, userID, bookI
 	return annotations, nil
 }
 
-// GetNotes 获取笔记（type = 1）
+// GetNotes 获取笔记
 func (r *MongoAnnotationRepository) GetNotes(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
-	return r.GetByType(ctx, userID, bookID, 1)
+	return r.GetByType(ctx, userID, bookID, string(reader.AnnotationTypeNote))
 }
 
 // GetNotesByChapter 获取章节笔记
@@ -168,7 +168,7 @@ func (r *MongoAnnotationRepository) GetNotesByChapter(ctx context.Context, userI
 		"user_id":    userID,
 		"book_id":    bookID,
 		"chapter_id": chapterID,
-		"type":       1,
+		"type":       string(reader.AnnotationTypeNote),
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "start_offset", Value: 1}})
 
@@ -190,7 +190,7 @@ func (r *MongoAnnotationRepository) GetNotesByChapter(ctx context.Context, userI
 func (r *MongoAnnotationRepository) SearchNotes(ctx context.Context, userID string, keyword string) ([]*reader.Annotation, error) {
 	filter := bson.M{
 		"user_id": userID,
-		"type":    1,
+		"type":    string(reader.AnnotationTypeNote),
 		"$or": []bson.M{
 			{"content": bson.M{"$regex": keyword, "$options": "i"}},
 			{"note": bson.M{"$regex": keyword, "$options": "i"}},
@@ -214,7 +214,7 @@ func (r *MongoAnnotationRepository) SearchNotes(ctx context.Context, userID stri
 
 // GetBookmarks 获取书签（type = 2）
 func (r *MongoAnnotationRepository) GetBookmarks(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
-	return r.GetByType(ctx, userID, bookID, 2)
+	return r.GetByType(ctx, userID, bookID, string(reader.AnnotationTypeBookmark))
 }
 
 // GetBookmarkByPosition 根据位置获取书签
@@ -224,7 +224,7 @@ func (r *MongoAnnotationRepository) GetBookmarkByPosition(ctx context.Context, u
 		"user_id":      userID,
 		"book_id":      bookID,
 		"chapter_id":   chapterID,
-		"type":         2,
+		"type":         string(reader.AnnotationTypeBookmark),
 		"start_offset": startOffset,
 	}
 
@@ -245,7 +245,7 @@ func (r *MongoAnnotationRepository) GetLatestBookmark(ctx context.Context, userI
 	filter := bson.M{
 		"user_id": userID,
 		"book_id": bookID,
-		"type":    2,
+		"type":    string(reader.AnnotationTypeBookmark),
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
 
@@ -262,7 +262,7 @@ func (r *MongoAnnotationRepository) GetLatestBookmark(ctx context.Context, userI
 
 // GetHighlights 获取高亮（type = 3）
 func (r *MongoAnnotationRepository) GetHighlights(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
-	return r.GetByType(ctx, userID, bookID, 3)
+	return r.GetByType(ctx, userID, bookID, string(reader.AnnotationTypeHighlight))
 }
 
 // GetHighlightsByChapter 获取章节高亮
@@ -271,7 +271,7 @@ func (r *MongoAnnotationRepository) GetHighlightsByChapter(ctx context.Context, 
 		"user_id":    userID,
 		"book_id":    bookID,
 		"chapter_id": chapterID,
-		"type":       3,
+		"type":       string(reader.AnnotationTypeHighlight),
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "start_offset", Value: 1}})
 
@@ -313,7 +313,7 @@ func (r *MongoAnnotationRepository) CountByBook(ctx context.Context, userID, boo
 }
 
 // CountByType 统计某类型的标注数量
-func (r *MongoAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType int) (int64, error) {
+func (r *MongoAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType string) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{
 		"user_id": userID,
 		"type":    annotationType,
@@ -512,6 +512,9 @@ func (r *MongoAnnotationRepository) Health(ctx context.Context) error {
 }
 
 // generateAnnotationID 生成标注ID
+var annotationIDCounter int64
+
 func generateAnnotationID() string {
-	return fmt.Sprintf("ann_%d", time.Now().UnixNano())
+	annotationIDCounter++
+	return fmt.Sprintf("ann_%d_%d", time.Now().UnixNano(), annotationIDCounter)
 }
