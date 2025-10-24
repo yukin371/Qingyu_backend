@@ -144,9 +144,14 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *user2.UpdateUserR
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户失败", err)
 	}
 
+	// 4. 获取更新后的用户信息
+	updatedUser, err := s.userRepo.GetByID(ctx, req.ID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取更新后的用户信息失败", err)
+	}
+
 	return &user2.UpdateUserResponse{
-		Updated:   true,
-		UpdatedAt: time.Now(),
+		User: *updatedUser,
 	}, nil
 }
 

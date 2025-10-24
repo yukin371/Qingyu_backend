@@ -250,7 +250,7 @@ func (api *UserAPI) UpdateProfile(c *gin.Context) {
 		Updates: updates,
 	}
 
-	_, err := api.userService.UpdateUser(c.Request.Context(), serviceReq)
+	updatedUser, err := api.userService.UpdateUser(c.Request.Context(), serviceReq)
 	if err != nil {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
@@ -267,7 +267,8 @@ func (api *UserAPI) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	// 返回更新后的用户信息
+	shared.Success(c, http.StatusOK, "更新成功", updatedUser)
 }
 
 // ChangePassword 修改密码

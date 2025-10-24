@@ -32,8 +32,11 @@ func TestUserAPI_Integration(t *testing.T) {
 	}
 
 	// 1. 初始化配置和数据库
-	_, err := config.LoadConfig("../../config/config.yaml")
+	_, err := config.LoadConfig("../..")
 	require.NoError(t, err, "加载配置失败")
+
+	// 确保 JWT 配置已加载
+	require.NotNil(t, config.GlobalConfig.JWT, "JWT配置未加载")
 
 	err = core.InitDB()
 	require.NoError(t, err, "初始化数据库失败")
@@ -159,19 +162,26 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 		// 更新token（使用登录获得的新token）
 		token = newToken
 
-		t.Logf("✓ 用户登录成功，获得新Token")
+		t.Logf("✓ 用户登录成功，获得新Token: %s", token[:20]+"...")
 	})
 
 	// ========== 阶段3：获取个人信息 ==========
 	t.Run("获取个人信息", func(t *testing.T) {
+		t.Logf("使用Token: %s", token[:20]+"...")
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/users/profile", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		resp := httptest.NewRecorder()
 
 		router.ServeHTTP(resp, req)
 
+		// 打印响应内容用于调试
+		t.Logf("获取个人信息响应状态码: %d", resp.Code)
+		t.Logf("获取个人信息响应内容: %s", resp.Body.String())
+
 		// 验证响应
-		assert.Equal(t, http.StatusOK, resp.Code, "获取个人信息应该返回200")
+		if resp.Code != http.StatusOK {
+			t.Fatalf("获取个人信息应该返回200，实际返回: %d, 响应: %s", resp.Code, resp.Body.String())
+		}
 
 		var response map[string]interface{}
 		err := json.Unmarshal(resp.Body.Bytes(), &response)
@@ -179,7 +189,11 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		assert.Equal(t, float64(200), response["code"])
 
-		data := response["data"].(map[string]interface{})
+		data, ok := response["data"].(map[string]interface{})
+		if !ok || data == nil {
+			t.Fatalf("响应数据格式错误: %+v", response)
+		}
+
 		assert.Equal(t, userID, data["user_id"])
 		assert.Equal(t, testUsername, data["username"])
 		assert.Equal(t, testEmail, data["email"])
@@ -202,8 +216,14 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		router.ServeHTTP(resp, req)
 
+		// 打印响应内容用于调试
+		t.Logf("更新个人信息响应状态码: %d", resp.Code)
+		t.Logf("更新个人信息响应内容: %s", resp.Body.String())
+
 		// 验证响应
-		assert.Equal(t, http.StatusOK, resp.Code, "更新个人信息应该返回200")
+		if resp.Code != http.StatusOK {
+			t.Fatalf("更新个人信息应该返回200，实际返回: %d, 响应: %s", resp.Code, resp.Body.String())
+		}
 
 		var response map[string]interface{}
 		err := json.Unmarshal(resp.Body.Bytes(), &response)
@@ -211,7 +231,11 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		assert.Equal(t, float64(200), response["code"])
 
-		data := response["data"].(map[string]interface{})
+		data, ok := response["data"].(map[string]interface{})
+		if !ok || data == nil {
+			t.Fatalf("响应数据格式错误: %+v", response)
+		}
+
 		assert.Equal(t, "测试昵称", data["nickname"])
 		assert.Equal(t, "这是一个测试用户的个人简介", data["bio"])
 

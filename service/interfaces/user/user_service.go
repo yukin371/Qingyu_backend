@@ -71,8 +71,7 @@ type UpdateUserRequest struct {
 
 // UpdateUserResponse 更新用户响应
 type UpdateUserResponse struct {
-	Updated   bool      `json:"updated"`
-	UpdatedAt time.Time `json:"updated_at"`
+	usersModel.User
 }
 
 // DeleteUserRequest 删除用户请求

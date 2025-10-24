@@ -171,10 +171,28 @@ func TestRoleRepository_Integration(t *testing.T) {
 
 	// 测试获取默认角色
 	t.Run("GetDefaultRole", func(t *testing.T) {
+		// 首先创建一个默认角色
+		defaultRole := &authModel.Role{
+			Name:        "default_user_" + time.Now().Format("20060102150405"),
+			Description: "默认用户角色",
+			IsSystem:    true,
+			IsDefault:   true,
+			Permissions: []string{authModel.PermUserRead},
+		}
+		err := roleRepo.Create(ctx, defaultRole)
+		require.NoError(t, err, "创建默认角色应该成功")
+
+		// 测试获取默认角色
 		role, err := roleRepo.GetDefaultRole(ctx)
 		assert.NoError(t, err, "获取默认角色应该成功")
 		if role != nil {
 			assert.True(t, role.IsSystem, "应该是系统角色")
+			assert.True(t, role.IsDefault, "应该是默认角色")
+		}
+
+		// 清理默认角色
+		if defaultRole.ID != "" {
+			roleRepo.Delete(ctx, defaultRole.ID)
 		}
 	})
 
@@ -224,12 +242,14 @@ func TestRoleRepository_DefaultRole(t *testing.T) {
 			Name:        "default_role1_" + timestamp,
 			Description: "默认角色1",
 			IsSystem:    true,
+			IsDefault:   true, // 标记为默认角色
 			Permissions: []string{authModel.PermUserRead, authModel.PermBookRead},
 		},
 		{
 			Name:        "default_role2_" + timestamp,
 			Description: "默认角色2",
 			IsSystem:    true,
+			IsDefault:   false, // 非默认角色
 			Permissions: []string{authModel.PermUserRead, authModel.PermBookRead},
 		},
 	}
@@ -245,7 +265,10 @@ func TestRoleRepository_DefaultRole(t *testing.T) {
 		role, err := roleRepo.GetDefaultRole(ctx)
 		assert.NoError(t, err, "获取默认角色应该成功")
 		assert.NotNil(t, role, "应该返回一个默认角色")
-		assert.True(t, role.IsSystem, "应该是系统角色")
+		if role != nil {
+			assert.True(t, role.IsSystem, "应该是系统角色")
+			assert.True(t, role.IsDefault, "应该是默认角色")
+		}
 	})
 
 	// 测试列出所有默认角色
