@@ -9,13 +9,15 @@ import (
 // 请使用 ServiceContainer.GetMongoDB() 和 ServiceContainer.GetMongoClient() 代替
 //
 // 迁移指南：
-//   旧方式: global.DB.Collection("users")
-//   新方式: serviceContainer.GetMongoDB().Collection("users")
+//
+//	旧方式: global.DB.Collection("users")
+//	新方式: serviceContainer.GetMongoDB().Collection("users")
 //
 // 或者在服务中通过依赖注入：
-//   func NewYourService(db *mongo.Database) *YourService {
-//       return &YourService{db: db}
-//   }
+//
+//	func NewYourService(db *mongo.Database) *YourService {
+//	    return &YourService{db: db}
+//	}
 var (
 	// MongoDB 客户端
 	// Deprecated: 使用 ServiceContainer.GetMongoClient() 代替
