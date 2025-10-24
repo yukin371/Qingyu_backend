@@ -10,7 +10,7 @@ import (
 
 	"Qingyu_backend/config"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // Redis错误定义
@@ -86,7 +86,8 @@ func NewRedisClient(cfg *config.RedisConfig) (RedisClient, error) {
 		// 连接池配置
 		PoolSize:     cfg.PoolSize,
 		MinIdleConns: cfg.MinIdleConns,
-		MaxConnAge:   0, // 0表示不限制连接年龄
+		// 注意: v9 移除了 MaxConnAge，使用 ConnMaxLifetime 和 ConnMaxIdleTime
+		// 默认值已经是不限制连接生命周期，无需显式设置
 
 		// 超时配置
 		DialTimeout:  cfg.DialTimeout,

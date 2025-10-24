@@ -75,6 +75,21 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 	}, nil
 }
 
+// NewMongoRepositoryFactoryWithClient 使用已有MongoDB连接创建工厂
+// 推荐使用此方法，避免重复创建连接
+// 此方法从ServiceContainer获取已初始化的MongoDB连接
+func NewMongoRepositoryFactoryWithClient(
+	client *mongo.Client,
+	db *mongo.Database,
+) *MongoRepositoryFactory {
+	return &MongoRepositoryFactory{
+		client:   client,
+		db:       db,
+		database: db,
+		config:   nil, // 不需要配置，因为连接已创建
+	}
+}
+
 // ========== User Module Repositories ==========
 
 // CreateUserRepository 创建用户Repository

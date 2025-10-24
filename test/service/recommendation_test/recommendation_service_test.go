@@ -119,11 +119,23 @@ func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 
 		mockProfileRepo.On("GetByUserID", ctx, "user123").Return(profile, nil)
 
+		// Mock GetByTags返回推荐的物品特征
+		mockItems := []*recommendation2.ItemFeature{
+			{ItemID: "item1", Tags: map[string]float64{"玄幻": 0.9}},
+			{ItemID: "item2", Tags: map[string]float64{"修仙": 0.7}},
+		}
+		mockItemFeatureRepo.On("GetByTags", ctx, profile.Tags, 20).Return(mockItems, nil)
+
+		// Mock GetHotBooks用于补充推荐结果
+		mockHotRecommendations := []string{"hot1", "hot2", "hot3"}
+		mockHotRepo.On("GetHotBooks", ctx, 8, 7).Return(mockHotRecommendations, nil)
+
 		recommendations, err := service.GetPersonalizedRecommendations(ctx, "user123", 10)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, recommendations)
 		mockProfileRepo.AssertExpectations(t)
+		mockItemFeatureRepo.AssertExpectations(t)
 	})
 
 	t.Run("获取推荐-用户无画像", func(t *testing.T) {
@@ -131,12 +143,17 @@ func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 
 		mockProfileRepo.On("GetByUserID", ctx, "new_user").Return(nil, nil)
 
+		// 无画像时返回热门推荐
+		mockHotRecommendations := []string{"hot1", "hot2", "hot3"}
+		mockHotRepo.On("GetHotBooks", ctx, 10, 7).Return(mockHotRecommendations, nil)
+
 		recommendations, err := service.GetPersonalizedRecommendations(ctx, "new_user", 10)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, recommendations)
-		assert.Empty(t, recommendations) // 无画像返回空
+		assert.NotEmpty(t, recommendations) // 无画像返回热门推荐
 		mockProfileRepo.AssertExpectations(t)
+		mockHotRepo.AssertExpectations(t)
 	})
 }
 
