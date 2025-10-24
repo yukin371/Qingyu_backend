@@ -26,6 +26,10 @@ import (
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
 	"Qingyu_backend/service/shared/wallet"
+
+	// Infrastructure
+	"Qingyu_backend/config"
+	"Qingyu_backend/pkg/cache"
 )
 
 // ServiceContainer 服务容器
@@ -37,7 +41,8 @@ type ServiceContainer struct {
 	mu                sync.RWMutex // 保护并发访问
 
 	// 基础设施
-	eventBus serviceInterfaces.EventBus
+	eventBus    serviceInterfaces.EventBus
+	redisClient cache.RedisClient
 
 	// 服务指标
 	serviceMetrics map[string]*metrics.ServiceMetrics
@@ -213,6 +218,12 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		return nil
 	}
 
+	// 初始化Redis客户端（如果配置存在）
+	if err := c.initRedis(); err != nil {
+		// Redis初始化失败不阻塞启动，但记录错误
+		fmt.Printf("警告: Redis客户端初始化失败: %v\n", err)
+	}
+
 	// 初始化Repository工厂
 	if err := c.repositoryFactory.Health(ctx); err != nil {
 		return fmt.Errorf("Repository工厂健康检查失败: %w", err)
@@ -226,6 +237,22 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	}
 
 	c.initialized = true
+	return nil
+}
+
+// initRedis 初始化Redis客户端
+func (c *ServiceContainer) initRedis() error {
+	cfg := config.GetRedisConfig()
+	if cfg == nil {
+		return fmt.Errorf("Redis配置未找到")
+	}
+
+	client, err := cache.NewRedisClient(cfg)
+	if err != nil {
+		return fmt.Errorf("创建Redis客户端失败: %w", err)
+	}
+
+	c.redisClient = client
 	return nil
 }
 
@@ -250,6 +277,14 @@ func (c *ServiceContainer) Health(ctx context.Context) error {
 func (c *ServiceContainer) Close(ctx context.Context) error {
 	var lastErr error
 
+	// 关闭Redis客户端
+	if c.redisClient != nil {
+		if err := c.redisClient.Close(); err != nil {
+			fmt.Printf("警告: 关闭Redis客户端失败: %v\n", err)
+			lastErr = fmt.Errorf("关闭Redis客户端失败: %w", err)
+		}
+	}
+
 	// 关闭所有服务
 	for name, service := range c.services {
 		if err := service.Close(ctx); err != nil {
@@ -264,6 +299,13 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 
 	c.initialized = false
 	return lastErr
+}
+
+// GetRedisClient 获取Redis客户端
+func (c *ServiceContainer) GetRedisClient() cache.RedisClient {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.redisClient
 }
 
 // GetRepositoryFactory 获取Repository工厂
