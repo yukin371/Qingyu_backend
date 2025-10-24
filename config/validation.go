@@ -120,6 +120,15 @@ func setConfigDefaults(cfg *Config) {
 		}
 	}
 
+	// Redis默认值
+	if cfg.Redis != nil {
+		SetRedisConfig(cfg.Redis)
+	} else {
+		// 使用默认Redis配置
+		cfg.Redis = DefaultRedisConfig()
+		SetRedisConfig(cfg.Redis)
+	}
+
 	// 服务器默认值
 	if cfg.Server == nil {
 		cfg.Server = &ServerConfig{}

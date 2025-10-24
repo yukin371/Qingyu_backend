@@ -12,6 +12,7 @@ import (
 // Config 存储应用配置
 type Config struct {
 	Database *DatabaseConfig    `mapstructure:"database"`
+	Redis    *RedisConfig       `mapstructure:"redis"`
 	Server   *ServerConfig      `mapstructure:"server"`
 	JWT      *JWTConfig         `mapstructure:"jwt"`
 	AI       *AIConfig          `mapstructure:"ai"`
