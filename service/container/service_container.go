@@ -7,15 +7,16 @@ import (
 	repoInterfaces "Qingyu_backend/repository/interfaces"
 	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
 	bookstoreRepoInterfaces "Qingyu_backend/repository/interfaces/bookstore"
+	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
-
+	
 	// Service implementations
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	readingService "Qingyu_backend/service/reading"
 	userService "Qingyu_backend/service/user"
-
+	
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
@@ -31,6 +32,9 @@ type ServiceContainer struct {
 	repositoryFactory repoInterfaces.RepositoryFactory
 	services          map[string]serviceInterfaces.BaseService
 	initialized       bool
+	
+	// 基础设施
+	eventBus          serviceInterfaces.EventBus
 
 	// 业务服务
 	userService      userInterface.UserService
@@ -57,6 +61,7 @@ func NewServiceContainer(repositoryFactory repoInterfaces.RepositoryFactory) *Se
 		repositoryFactory: repositoryFactory,
 		services:          make(map[string]serviceInterfaces.BaseService),
 		initialized:       false,
+		eventBus:          base.NewSimpleEventBus(), // 创建事件总线
 	}
 }
 
@@ -180,6 +185,11 @@ func (c *ServiceContainer) GetAdminService() (admin.AdminService, error) {
 	return c.adminService, nil
 }
 
+// GetEventBus 获取事件总线
+func (c *ServiceContainer) GetEventBus() serviceInterfaces.EventBus {
+	return c.eventBus
+}
+
 // Initialize 初始化所有服务
 func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	if c.initialized {
@@ -293,15 +303,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
-
+	
 	c.readerService = readingService.NewReaderService(
 		chapterRepo,
 		progressRepo,
 		annotationRepo,
 		settingsRepo,
-		nil, // eventBus - TODO: 实现事件总线
-		nil, // cacheService - TODO: 实现缓存服务
-		nil, // vipService - TODO: 实现VIP服务
+		c.eventBus, // ✅ 注入事件总线
+		nil,        // cacheService - TODO: 实现缓存服务
+		nil,        // vipService - TODO: 实现VIP服务
 	)
 	// 注意：ReaderService 不完全实现 BaseService，不注册到 services map
 
