@@ -43,6 +43,11 @@ func (m *MockDocumentRepository) Update(ctx context.Context, id string, updates 
 	return args.Error(0)
 }
 
+func (m *MockDocumentRepository) UpdateByProject(ctx context.Context, documentID, projectID string, updates map[string]interface{}) error {
+	args := m.Called(ctx, documentID, projectID, updates)
+	return args.Error(0)
+}
+
 func (m *MockDocumentRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -338,8 +343,8 @@ func TestDocumentService_UpdateDocument_Success(t *testing.T) {
 	}
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
-	// Mock update
-	mockDocRepo.On("Update", ctx, docID, mock.AnythingOfType("map[string]interface {}")).Return(nil)
+	// Mock update by project
+	mockDocRepo.On("UpdateByProject", ctx, docID, mockProject.ID, mock.AnythingOfType("map[string]interface {}")).Return(nil)
 
 	// Mock event
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
