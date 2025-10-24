@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"Qingyu_backend/repository/interfaces"
+	repoInterfaces "Qingyu_backend/repository/interfaces"
+	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
+	bookstoreRepoInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/container"
 
 	"github.com/stretchr/testify/assert"
@@ -16,58 +18,52 @@ type MockRepositoryFactory struct {
 	mock.Mock
 }
 
-func (m *MockRepositoryFactory) CreateUserRepository() interfaces.UserRepository {
-	args := m.Called()
-	if args.Get(0) == nil {
-		return nil
-	}
-	return args.Get(0).(interfaces.UserRepository)
-}
-
-func (m *MockRepositoryFactory) CreateBookRepository() interfaces.BookRepository {
-	args := m.Called()
-	if args.Get(0) == nil {
-		return nil
-	}
-	return args.Get(0).(interfaces.BookRepository)
-}
-
-func (m *MockRepositoryFactory) CreateCategoryRepository() interfaces.CategoryRepository {
+func (m *MockRepositoryFactory) CreateUserRepository() repoInterfaces.UserRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateBannerRepository() interfaces.BannerRepository {
+func (m *MockRepositoryFactory) CreateBookRepository() repoInterfaces.BookRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateChapterRepository() interfaces.ChapterRepository {
+func (m *MockRepositoryFactory) CreateCategoryRepository() repoInterfaces.CategoryRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingProgressRepository() interfaces.ReadingProgressRepository {
+func (m *MockRepositoryFactory) CreateBannerRepository() repoInterfaces.BannerRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateAnnotationRepository() interfaces.AnnotationRepository {
+func (m *MockRepositoryFactory) CreateChapterRepository() repoInterfaces.ChapterRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingSettingsRepository() interfaces.ReadingSettingsRepository {
+func (m *MockRepositoryFactory) CreateReadingProgressRepository() repoInterfaces.ReadingProgressRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateQuotaRepository() interfaces.QuotaRepository {
+func (m *MockRepositoryFactory) CreateAnnotationRepository() repoInterfaces.AnnotationRepository {
 	args := m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateRankingRepository() interfaces.RankingRepository {
+func (m *MockRepositoryFactory) CreateReadingSettingsRepository() repoInterfaces.ReadingSettingsRepository {
+	args := m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateQuotaRepository() aiRepoInterfaces.QuotaRepository {
+	args := m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateRankingRepository() bookstoreRepoInterfaces.RankingRepository {
 	args := m.Called()
 	return nil
 }

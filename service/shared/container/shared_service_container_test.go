@@ -9,10 +9,17 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// DEPRECATED: 这些测试已废弃
+// SharedServiceContainer 已被废弃，请使用 service/container/ServiceContainer
+// 相关测试已迁移到 test/service/container/service_container_test.go
+//
+// 这些测试将在确认迁移完成后删除
+
 // ============ 测试用例 ============
 // Mock实现已移至 test_mocks.go 文件
 
 // TestNewSharedServiceContainer 测试容器创建
+// DEPRECATED: 使用 ServiceContainer 测试替代
 func TestNewSharedServiceContainer(t *testing.T) {
 	container := NewSharedServiceContainer()
 

@@ -13,7 +13,6 @@ import (
 	userRouter "Qingyu_backend/router/user"
 
 	"Qingyu_backend/service"
-	"Qingyu_backend/service/shared/container"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,14 +30,32 @@ func RegisterRoutes(r *gin.Engine) {
 
 	log.Println("✓ 服务容器已初始化，开始注册路由...")
 
-	// TODO: 移除SharedServiceContainer，使用统一服务容器
-	// 临时：继续使用SharedServiceContainer处理共享服务
-	sharedContainer := container.NewSharedServiceContainer()
-	log.Println("警告: Shared 服务容器已创建，但服务尚未完全实现")
+	// ============ 注册共享服务路由（如果已配置） ============
+	// 尝试从服务容器获取共享服务
+	authSvc, authErr := serviceContainer.GetAuthService()
+	walletSvc, walletErr := serviceContainer.GetWalletService()
+	storageSvc, storageErr := serviceContainer.GetStorageService()
 
-	// 注册 shared API 路由组
-	sharedGroup := v1.Group("/shared")
-	sharedRouter.RegisterRoutes(sharedGroup, sharedContainer)
+	// 只有当所有共享服务都可用时，才注册共享服务路由
+	if authErr == nil && walletErr == nil && storageErr == nil {
+		sharedGroup := v1.Group("/shared")
+		sharedRouter.RegisterRoutes(sharedGroup, authSvc, walletSvc, storageSvc)
+		log.Println("✓ 共享服务路由已注册到: /api/v1/shared/")
+		log.Println("  - /api/v1/shared/auth/* (认证服务)")
+		log.Println("  - /api/v1/shared/wallet/* (钱包服务)")
+		log.Println("  - /api/v1/shared/storage/* (存储服务)")
+	} else {
+		log.Println("⚠ 共享服务路由未注册（服务未配置）")
+		if authErr != nil {
+			log.Printf("  - AuthService: %v", authErr)
+		}
+		if walletErr != nil {
+			log.Printf("  - WalletService: %v", walletErr)
+		}
+		if storageErr != nil {
+			log.Printf("  - StorageService: %v", storageErr)
+		}
+	}
 
 	// ============ 注册书店路由 ============
 	bookstoreSvc, err := serviceContainer.GetBookstoreService()
@@ -124,9 +141,15 @@ func RegisterRoutes(r *gin.Engine) {
 	// 获取配额服务（用于管理员管理）
 	quotaService, _ := serviceContainer.GetQuotaService()
 
+	// 获取 AdminService（如果可用）
+	adminSvc, adminErr := serviceContainer.GetAdminService()
+	if adminErr != nil {
+		log.Printf("⚠ AdminService未配置: %v", adminErr)
+		adminSvc = nil
+	}
+
 	// TODO: 获取审核服务实例（需要实现）
 	// auditSvc := serviceContainer.GetAuditService()
-	adminSvc := sharedContainer.AdminService()
 	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, nil, adminSvc)
 
 	log.Println("✓ 管理员路由已注册到: /api/v1/admin/")
