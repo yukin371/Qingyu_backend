@@ -22,7 +22,7 @@ func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServic
 	authAPI := shared.NewAuthAPI(serviceContainer.AuthService())
 	walletAPI := shared.NewWalletAPI(serviceContainer.WalletService())
 	storageAPI := shared.NewStorageAPI(serviceContainer.StorageService())
-	adminAPI := shared.NewAdminAPI(serviceContainer.AdminService())
+	// 注意：AdminAPI已迁移到 admin 模块
 
 	// ============ 认证服务路由 ============
 	authGroup := r.Group("/auth")
@@ -79,23 +79,6 @@ func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServic
 		storageGroup.GET("/files/:file_id/url", storageAPI.GetFileURL)
 	}
 
-	// ============ 管理服务路由 ============
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(middleware.JWTAuth())                    // 所有管理接口都需要认证
-	adminGroup.Use(middleware.AdminPermissionMiddleware())  // 管理员权限验证
-	adminGroup.Use(middleware.RateLimitMiddleware(100, 60)) // 100次/分钟（管理员权限更高）
-	{
-		// 内容审核
-		adminGroup.GET("/reviews/pending", adminAPI.GetPendingReviews)
-		adminGroup.POST("/reviews", adminAPI.ReviewContent)
-
-		// 提现审核
-		adminGroup.POST("/withdraw/review", adminAPI.ReviewWithdraw)
-
-		// 用户管理
-		adminGroup.GET("/users/:user_id/statistics", adminAPI.GetUserStatistics)
-
-		// 操作日志
-		adminGroup.GET("/operation-logs", adminAPI.GetOperationLogs)
-	}
+	// 注意：管理员路由已迁移到 /api/v1/admin
+	// 参见: router/admin/admin_router.go
 }

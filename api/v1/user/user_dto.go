@@ -1,10 +1,10 @@
-package system
+package user
 
 import (
 	"time"
 )
 
-// DTO (Data Transfer Object) - API层的请求和响应结构
+// DTO (Data Transfer Object) - 用户API层的请求和响应结构
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
@@ -70,24 +70,3 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required,min=6" validate:"required,min=6"`
 }
 
-// ListUsersRequest 获取用户列表请求（查询参数）
-type ListUsersRequest struct {
-	Page     int    `form:"page" validate:"omitempty,min=1"`
-	PageSize int    `form:"page_size" validate:"omitempty,min=1,max=100"`
-	Username string `form:"username" validate:"omitempty"`
-	Email    string `form:"email" validate:"omitempty,email"`
-	Role     string `form:"role" validate:"omitempty"`
-	Status   string `form:"status" validate:"omitempty"` // usersModel.UserStatus
-}
-
-// AdminUpdateUserRequest 管理员更新用户请求
-type AdminUpdateUserRequest struct {
-	Nickname      *string `json:"nickname,omitempty" validate:"omitempty,max=50"`
-	Bio           *string `json:"bio,omitempty" validate:"omitempty,max=500"`
-	Avatar        *string `json:"avatar,omitempty" validate:"omitempty,url"`
-	Phone         *string `json:"phone,omitempty" validate:"omitempty,e164"`
-	Role          *string `json:"role,omitempty" validate:"omitempty,oneof=user author admin"`
-	Status        *string `json:"status,omitempty" validate:"omitempty"` // usersModel.UserStatus
-	EmailVerified *bool   `json:"email_verified,omitempty"`
-	PhoneVerified *bool   `json:"phone_verified,omitempty"`
-}

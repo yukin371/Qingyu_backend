@@ -59,16 +59,6 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 		}
 	}
 
-	// 管理员路由（配额管理）
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(middleware.JWTAuth())
-	adminGroup.Use(middleware.AdminPermissionMiddleware()) // 使用管理员权限检查
-	{
-		adminQuotaGroup := adminGroup.Group("/quota")
-		{
-			adminQuotaGroup.PUT("/:userId", quotaApiHandler.UpdateUserQuota)
-			adminQuotaGroup.POST("/:userId/suspend", quotaApiHandler.SuspendUserQuota)
-			adminQuotaGroup.POST("/:userId/activate", quotaApiHandler.ActivateUserQuota)
-		}
-	}
+	// 注意：管理员配额管理路由已迁移到 /api/v1/admin/quota
+	// 参见: router/admin/admin_router.go
 }
