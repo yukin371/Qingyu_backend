@@ -6,8 +6,6 @@ import (
 	"errors"
 	"time"
 
-	"Qingyu_backend/global"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,16 +13,18 @@ import (
 )
 
 // DocumentService 处理文档相关业务逻辑
-type DocumentService struct{}
+type DocumentService struct {
+	db *mongo.Database
+}
 
 // NewDocumentService 创建设置服务
-func NewDocumentService() *DocumentService {
-	return &DocumentService{}
+func NewDocumentService(db *mongo.Database) *DocumentService {
+	return &DocumentService{db: db}
 }
 
 // getCollection 获取数据库集合
-func getCollection() *mongo.Collection {
-	return global.DB.Collection("documents")
+func (s *DocumentService) getCollection() *mongo.Collection {
+	return s.db.Collection("documents")
 }
 
 // Create 创建文档
@@ -38,7 +38,7 @@ func (s *DocumentService) Create(doc *model.Document) (*model.Document, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := getCollection().InsertOne(ctx, doc)
+	_, err := s.getCollection().InsertOne(ctx, doc)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *DocumentService) List(userID string, limit, offset int64) ([]*model.Doc
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := getCollection().Find(ctx, filter, findOptions)
+	cursor, err := s.getCollection().Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *DocumentService) GetByID(id string) (*model.Document, error) {
 	defer cancel()
 
 	var doc model.Document
-	err := getCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&doc)
+	err := s.getCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -135,7 +135,7 @@ func (s *DocumentService) Update(id string, update *model.Document) (*model.Docu
 
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	var updated model.Document
-	err := getCollection().FindOneAndUpdate(ctx, bson.M{"_id": id}, updateDoc, opts).Decode(&updated)
+	err := s.getCollection().FindOneAndUpdate(ctx, bson.M{"_id": id}, updateDoc, opts).Decode(&updated)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -153,7 +153,7 @@ func (s *DocumentService) Delete(id string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, err := getCollection().DeleteOne(ctx, bson.M{"_id": id})
+	res, err := s.getCollection().DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, err
 	}
