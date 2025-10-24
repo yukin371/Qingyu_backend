@@ -22,11 +22,11 @@ const (
 
 // UserEventData 用户事件数据
 type UserEventData struct {
-	UserID   string    `json:"user_id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	Action   string    `json:"action"`
-	Time     time.Time `json:"time"`
+	UserID   string                 `json:"user_id"`
+	Username string                 `json:"username"`
+	Email    string                 `json:"email"`
+	Action   string                 `json:"action"`
+	Time     time.Time              `json:"time"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -86,10 +86,10 @@ func (h *WelcomeEmailHandler) Handle(ctx context.Context, event base.Event) erro
 
 	// 发送欢迎邮件（这里只是模拟）
 	log.Printf("[WelcomeEmailHandler] 发送欢迎邮件给用户: %s (%s)", data.Username, data.Email)
-	
+
 	// 实际项目中这里应该调用邮件服务
 	// emailService.SendWelcomeEmail(data.Email, data.Username)
-	
+
 	return nil
 }
 
@@ -130,10 +130,10 @@ func (h *UserActivityLogHandler) Handle(ctx context.Context, event base.Event) e
 		data.Username,
 		data.Action,
 		data.Time.Format("2006-01-02 15:04:05"))
-	
+
 	// 实际项目中这里应该将日志写入数据库或日志系统
 	// activityLogRepo.Create(...)
-	
+
 	return nil
 }
 
@@ -180,18 +180,18 @@ func (h *UserStatisticsHandler) Handle(ctx context.Context, event base.Event) er
 		log.Printf("[UserStatistics] 新用户注册: %s, 更新总用户数", data.Username)
 		// 实际项目中这里应该更新统计数据
 		// statisticsRepo.IncrementTotalUsers()
-		
+
 	case EventTypeUserLoggedIn:
 		log.Printf("[UserStatistics] 用户登录: %s, 更新活跃用户数", data.Username)
 		// 实际项目中这里应该更新活跃用户统计
 		// statisticsRepo.IncrementActiveUsers()
-		
+
 	case EventTypeUserDeleted:
 		log.Printf("[UserStatistics] 用户删除: %s, 更新总用户数", data.Username)
 		// 实际项目中这里应该更新统计数据
 		// statisticsRepo.DecrementTotalUsers()
 	}
-	
+
 	return nil
 }
 
@@ -208,4 +208,3 @@ func (h *UserStatisticsHandler) GetSupportedEventTypes() []string {
 		EventTypeUserDeleted,
 	}
 }
-

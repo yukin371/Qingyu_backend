@@ -10,6 +10,18 @@ import (
 	adminModel "Qingyu_backend/models/shared/admin"
 )
 
+// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
+// TODO: 完善审核流程
+//   - 多级审核支持
+//   - 审核规则引擎
+//   - 自动审核（敏感词过滤、AI内容审核）
+// TODO: 完善日志记录功能
+//   - 操作日志详细记录
+//   - 日志搜索和分析
+//   - 日志归档和备份
+// TODO: 添加权限管理功能
+// TODO: 实现数据统计和报表导出
+
 // AdminServiceImpl 管理服务实现
 type AdminServiceImpl struct {
 	auditRepo AuditRepository

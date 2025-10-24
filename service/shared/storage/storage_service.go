@@ -12,6 +12,13 @@ import (
 	"time"
 )
 
+// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
+// TODO: 完善文件上传功能（分片上传、断点续传）
+// TODO: 完善文件下载功能（断点续传、流式下载）
+// TODO: 添加图片处理功能（压缩、裁剪、水印）
+// TODO: 集成云存储服务（阿里云OSS、腾讯云COS、AWS S3）
+// TODO: 实现文件版本管理
+
 // StorageServiceImpl 存储服务实现
 type StorageServiceImpl struct {
 	backend  StorageBackend

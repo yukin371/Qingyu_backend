@@ -17,6 +17,8 @@ type UnifiedWalletService struct {
 	walletMgr      *WalletServiceImpl
 	transactionMgr *TransactionServiceImpl
 	withdrawMgr    *WithdrawServiceImpl
+
+	initialized bool // 初始化标志
 }
 
 // NewUnifiedWalletService 创建统一钱包服务
@@ -207,11 +209,61 @@ func (s *UnifiedWalletService) ProcessWithdraw(ctx context.Context, withdrawID s
 	return s.walletRepo.UpdateWithdrawRequest(ctx, withdrawID, updates)
 }
 
-// ============ 健康检查 ============
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化钱包服务
+func (s *UnifiedWalletService) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.walletRepo == nil {
+		return fmt.Errorf("walletRepo is nil")
+	}
+	if s.walletMgr == nil {
+		return fmt.Errorf("walletMgr is nil")
+	}
+	if s.transactionMgr == nil {
+		return fmt.Errorf("transactionMgr is nil")
+	}
+	if s.withdrawMgr == nil {
+		return fmt.Errorf("withdrawMgr is nil")
+	}
+
+	// 检查Repository健康状态
+	if err := s.walletRepo.Health(ctx); err != nil {
+		return fmt.Errorf("walletRepo health check failed: %w", err)
+	}
+
+	s.initialized = true
+	return nil
+}
 
 // Health 健康检查
 func (s *UnifiedWalletService) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
 	return s.walletRepo.Health(ctx)
+}
+
+// Close 关闭服务，清理资源
+func (s *UnifiedWalletService) Close(ctx context.Context) error {
+	// 钱包服务暂无需要清理的资源
+	// 未来如果有缓存、事务等资源，在此处清理
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *UnifiedWalletService) GetServiceName() string {
+	return "WalletService"
+}
+
+// GetVersion 获取服务版本
+func (s *UnifiedWalletService) GetVersion() string {
+	return "v1.0.0"
 }
 
 // ============ 辅助函数 ============

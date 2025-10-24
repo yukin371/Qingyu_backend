@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
 	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
@@ -10,17 +11,18 @@ import (
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
-	
+
 	// Service implementations
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	readingService "Qingyu_backend/service/reading"
 	userService "Qingyu_backend/service/user"
-	
+
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
 	"Qingyu_backend/service/shared/messaging"
+	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
 	"Qingyu_backend/service/shared/wallet"
@@ -32,9 +34,13 @@ type ServiceContainer struct {
 	repositoryFactory repoInterfaces.RepositoryFactory
 	services          map[string]serviceInterfaces.BaseService
 	initialized       bool
-	
+	mu                sync.RWMutex // 保护并发访问
+
 	// 基础设施
-	eventBus          serviceInterfaces.EventBus
+	eventBus serviceInterfaces.EventBus
+
+	// 服务指标
+	serviceMetrics map[string]*metrics.ServiceMetrics
 
 	// 业务服务
 	userService      userInterface.UserService
@@ -60,6 +66,7 @@ func NewServiceContainer(repositoryFactory repoInterfaces.RepositoryFactory) *Se
 	return &ServiceContainer{
 		repositoryFactory: repositoryFactory,
 		services:          make(map[string]serviceInterfaces.BaseService),
+		serviceMetrics:    make(map[string]*metrics.ServiceMetrics),
 		initialized:       false,
 		eventBus:          base.NewSimpleEventBus(), // 创建事件总线
 	}
@@ -67,11 +74,21 @@ func NewServiceContainer(repositoryFactory repoInterfaces.RepositoryFactory) *Se
 
 // RegisterService 注册服务
 func (c *ServiceContainer) RegisterService(name string, service serviceInterfaces.BaseService) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if c.services[name] != nil {
 		return fmt.Errorf("服务 %s 已存在", name)
 	}
 
 	c.services[name] = service
+
+	// 为服务创建指标
+	c.serviceMetrics[name] = metrics.NewServiceMetrics(
+		service.GetServiceName(),
+		service.GetVersion(),
+	)
+
 	return nil
 }
 
@@ -303,7 +320,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
-	
+
 	c.readerService = readingService.NewReaderService(
 		chapterRepo,
 		progressRepo,
@@ -381,4 +398,56 @@ func (c *ServiceContainer) GetServiceNames() []string {
 // IsInitialized 检查是否已初始化
 func (c *ServiceContainer) IsInitialized() bool {
 	return c.initialized
+}
+
+// ============ 指标管理方法 ============
+
+// GetServiceMetrics 获取指定服务的指标
+func (c *ServiceContainer) GetServiceMetrics(serviceName string) (*metrics.ServiceMetrics, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	metric, exists := c.serviceMetrics[serviceName]
+	if !exists {
+		return nil, fmt.Errorf("服务 %s 的指标不存在", serviceName)
+	}
+
+	return metric, nil
+}
+
+// GetAllServicesMetrics 获取所有服务的指标
+func (c *ServiceContainer) GetAllServicesMetrics() map[string]*metrics.ServiceMetrics {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	result := make(map[string]*metrics.ServiceMetrics)
+	for name, metric := range c.serviceMetrics {
+		result[name] = metric
+	}
+
+	return result
+}
+
+// GetAllServicesHealth 获取所有服务的健康状态
+func (c *ServiceContainer) GetAllServicesHealth(ctx context.Context) map[string]bool {
+	c.mu.RLock()
+	services := make(map[string]serviceInterfaces.BaseService)
+	for name, service := range c.services {
+		services[name] = service
+	}
+	c.mu.RUnlock()
+
+	result := make(map[string]bool)
+	for name, service := range services {
+		err := service.Health(ctx)
+		healthy := err == nil
+		result[name] = healthy
+
+		// 更新指标
+		if metric, exists := c.serviceMetrics[name]; exists {
+			metric.RecordHealthCheck(healthy)
+		}
+	}
+
+	return result
 }
