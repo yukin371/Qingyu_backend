@@ -4,9 +4,13 @@ import (
 	"context"
 	"testing"
 
-	repoInterfaces "Qingyu_backend/repository/interfaces"
 	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
 	bookstoreRepoInterfaces "Qingyu_backend/repository/interfaces/bookstore"
+	readingRepoInterfaces "Qingyu_backend/repository/interfaces/reading"
+	recommendationRepoInterfaces "Qingyu_backend/repository/interfaces/recommendation"
+	sharedRepoInterfaces "Qingyu_backend/repository/interfaces/shared"
+	userRepoInterfaces "Qingyu_backend/repository/interfaces/user"
+	writingRepoInterfaces "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/container"
 
 	"github.com/stretchr/testify/assert"
@@ -18,56 +22,137 @@ type MockRepositoryFactory struct {
 	mock.Mock
 }
 
-func (m *MockRepositoryFactory) CreateUserRepository() repoInterfaces.UserRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateUserRepository() userRepoInterfaces.UserRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateBookRepository() repoInterfaces.BookRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateBookRepository() bookstoreRepoInterfaces.BookRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateCategoryRepository() repoInterfaces.CategoryRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateCategoryRepository() bookstoreRepoInterfaces.CategoryRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateBannerRepository() repoInterfaces.BannerRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateBannerRepository() bookstoreRepoInterfaces.BannerRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateChapterRepository() repoInterfaces.ChapterRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateChapterRepository() readingRepoInterfaces.ChapterRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingProgressRepository() repoInterfaces.ReadingProgressRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateReadingProgressRepository() readingRepoInterfaces.ReadingProgressRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateAnnotationRepository() repoInterfaces.AnnotationRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateAnnotationRepository() readingRepoInterfaces.AnnotationRepository {
+	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingSettingsRepository() repoInterfaces.ReadingSettingsRepository {
-	args := m.Called()
+func (m *MockRepositoryFactory) CreateReadingSettingsRepository() readingRepoInterfaces.ReadingSettingsRepository {
+	m.Called()
 	return nil
 }
 
 func (m *MockRepositoryFactory) CreateQuotaRepository() aiRepoInterfaces.QuotaRepository {
-	args := m.Called()
+	m.Called()
 	return nil
 }
 
 func (m *MockRepositoryFactory) CreateRankingRepository() bookstoreRepoInterfaces.RankingRepository {
-	args := m.Called()
+	m.Called()
 	return nil
 }
 
+// 用户相关
+func (m *MockRepositoryFactory) CreateRoleRepository() userRepoInterfaces.RoleRepository {
+	m.Called()
+	return nil
+}
+
+// 写作相关
+func (m *MockRepositoryFactory) CreateProjectRepository() writingRepoInterfaces.ProjectRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateDocumentRepository() writingRepoInterfaces.DocumentRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateDocumentContentRepository() writingRepoInterfaces.DocumentContentRepository {
+	m.Called()
+	return nil
+}
+
+// 书城相关
+func (m *MockRepositoryFactory) CreateBookDetailRepository() bookstoreRepoInterfaces.BookDetailRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateBookStatisticsRepository() bookstoreRepoInterfaces.BookStatisticsRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateBookRatingRepository() bookstoreRepoInterfaces.BookRatingRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateBookstoreChapterRepository() bookstoreRepoInterfaces.ChapterRepository {
+	m.Called()
+	return nil
+}
+
+// 推荐系统相关
+func (m *MockRepositoryFactory) CreateBehaviorRepository() recommendationRepoInterfaces.BehaviorRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateProfileRepository() recommendationRepoInterfaces.ProfileRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateItemFeatureRepository() recommendationRepoInterfaces.ItemFeatureRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateHotRecommendationRepository() recommendationRepoInterfaces.HotRecommendationRepository {
+	m.Called()
+	return nil
+}
+
+// 共享服务相关
+func (m *MockRepositoryFactory) CreateAuthRepository() sharedRepoInterfaces.AuthRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateWalletRepository() sharedRepoInterfaces.WalletRepository {
+	m.Called()
+	return nil
+}
+
+func (m *MockRepositoryFactory) CreateRecommendationRepository() sharedRepoInterfaces.RecommendationRepository {
+	m.Called()
+	return nil
+}
+
+// 基础设施方法
 func (m *MockRepositoryFactory) Health(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
@@ -76,6 +161,11 @@ func (m *MockRepositoryFactory) Health(ctx context.Context) error {
 func (m *MockRepositoryFactory) Close() error {
 	args := m.Called()
 	return args.Error(0)
+}
+
+func (m *MockRepositoryFactory) GetDatabaseType() string {
+	m.Called()
+	return "mock"
 }
 
 // TestNewServiceContainer 测试服务容器创建

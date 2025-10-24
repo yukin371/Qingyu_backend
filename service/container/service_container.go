@@ -349,9 +349,55 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.chatService = aiService.NewChatService(c.aiService, chatRepo)
 	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
 
-	// ============ 5. 共享服务（可选，未完全实现） ============
-	// 注意：共享服务尚未完全实现，暂时设置为nil
-	// TODO: 实现并注册共享服务
+	// ============ 5. 共享服务初始化 ============
+
+	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
+	walletRepo := c.repositoryFactory.CreateWalletRepository()
+	walletSvc := wallet.NewUnifiedWalletService(walletRepo)
+	c.walletService = walletSvc // 保存为接口类型
+
+	// 类型断言为 BaseService，以便注册到服务映射
+	if baseWalletSvc, ok := walletSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("WalletService", baseWalletSvc); err != nil {
+			return fmt.Errorf("注册钱包服务失败: %w", err)
+		}
+	} else {
+		return fmt.Errorf("WalletService 未实现 BaseService 接口")
+	}
+
+	// 5.2 创建 AuthService（复杂，需要多个子服务）
+	// TODO: 完整实现 AuthService 需要配置以下依赖：
+	//   - JWTService: 需要 JWT配置 和 RedisClient
+	//   - RoleService: 需要 AuthRepository
+	//   - PermissionService: 需要 AuthRepository
+	//   - SessionService: 需要 RedisClient
+	//   - UserService: 已在上面创建
+	//
+	// 示例实现：
+	// authRepo := c.repositoryFactory.CreateAuthRepository()
+	// jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), nil) // nil 表示暂不使用 Redis
+	// roleService := auth.NewRoleService(authRepo)
+	// permissionService := auth.NewPermissionService(authRepo)
+	// sessionService := auth.NewSessionService(nil) // nil 表示暂不使用 Redis
+	// c.authService = auth.NewAuthService(
+	//     jwtService,
+	//     roleService,
+	//     permissionService,
+	//     authRepo,
+	//     c.userService,
+	//     sessionService,
+	// )
+	// if err := c.RegisterService("AuthService", c.authService); err != nil {
+	//     return fmt.Errorf("注册认证服务失败: %w", err)
+	// }
+	//
+	// 注意：完整实现需要 Redis 客户端，暂时跳过，留待后续配置
+
+	// 5.3 其他共享服务（暂未实现）
+	// TODO: RecommendationService - 需要 RecommendationRepository 和 Redis
+	// TODO: MessagingService - 需要 Redis/RabbitMQ 等消息队列
+	// TODO: StorageService - 需要 StorageBackend 和 FileRepository
+	// TODO: AdminService - 需要 AuditRepository, LogRepository, UserRepository
 
 	return nil
 }
