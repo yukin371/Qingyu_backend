@@ -226,7 +226,7 @@ func (m *MockAnnotationRepository) GetByUserAndChapter(ctx context.Context, user
 	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType int) ([]*reader2.Annotation, error) {
+func (m *MockAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, annotationType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -308,7 +308,7 @@ func (m *MockAnnotationRepository) CountByBook(ctx context.Context, userID, book
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType int) (int64, error) {
+func (m *MockAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType string) (int64, error) {
 	args := m.Called(ctx, userID, annotationType)
 	return args.Get(0).(int64), args.Error(1)
 }
