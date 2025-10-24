@@ -1,22 +1,22 @@
 package admin
 
 import (
+	"Qingyu_backend/service/interfaces/audit"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/interfaces"
 )
 
 // AuditAdminAPI 审核管理API处理器（管理员）
 type AuditAdminAPI struct {
-	auditService interfaces.ContentAuditService
+	auditService audit.ContentAuditService
 }
 
 // NewAuditAdminAPI 创建审核管理API实例
-func NewAuditAdminAPI(auditService interfaces.ContentAuditService) *AuditAdminAPI {
+func NewAuditAdminAPI(auditService audit.ContentAuditService) *AuditAdminAPI {
 	return &AuditAdminAPI{
 		auditService: auditService,
 	}
@@ -252,4 +252,3 @@ func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "获取成功", stats)
 }
-

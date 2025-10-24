@@ -71,7 +71,7 @@ echo "Step 1: 用户注册（密码强度验证）"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 测试弱密码（应被拒绝）
-WEAK_RESPONSE=$(curl -s -X POST "$API_BASE/auth/register" \
+WEAK_RESPONSE=$(curl -s -X POST "$API_BASE/register" \
     -H "Content-Type: application/json" \
     -d "{
         \"username\": \"${TEST_USER}_weak\",
@@ -86,7 +86,7 @@ else
 fi
 
 # 注册强密码用户
-REGISTER_RESPONSE=$(curl -s -X POST "$API_BASE/auth/register" \
+REGISTER_RESPONSE=$(curl -s -X POST "$API_BASE/register" \
     -H "Content-Type: application/json" \
     -d "{
         \"username\": \"$TEST_USER\",
@@ -107,7 +107,7 @@ echo "Step 2: 用户登录（多端限制）"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 登录获取Token
-LOGIN_RESPONSE=$(curl -s -X POST "$API_BASE/auth/login" \
+LOGIN_RESPONSE=$(curl -s -X POST "$API_BASE/login" \
     -H "Content-Type: application/json" \
     -d "{
         \"username\": \"$TEST_USER\",
@@ -269,7 +269,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Step 9: 退出登录"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-LOGOUT_RESPONSE=$(curl -s -X POST "$API_BASE/auth/logout" \
+LOGOUT_RESPONSE=$(curl -s -X POST "$API_BASE/shared/auth/logout" \
     -H "Authorization: Bearer $TOKEN")
 
 if echo "$LOGOUT_RESPONSE" | grep -q "success\|ok"; then

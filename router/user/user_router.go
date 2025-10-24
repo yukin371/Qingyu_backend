@@ -1,11 +1,12 @@
 package user
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
+
 	"github.com/gin-gonic/gin"
 
 	userApi "Qingyu_backend/api/v1/user"
 	"Qingyu_backend/middleware"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // RegisterUserRoutes 注册用户相关路由
@@ -40,4 +41,3 @@ func RegisterUserRoutes(r *gin.RouterGroup, userService serviceInterfaces.UserSe
 		authenticated.PUT("/password", userAPI.ChangePassword)
 	}
 }
-

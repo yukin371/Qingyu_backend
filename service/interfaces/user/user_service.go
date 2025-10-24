@@ -1,6 +1,7 @@
-package interfaces
+package user
 
 import (
+	"Qingyu_backend/service/interfaces/base"
 	"context"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 // UserService 用户服务接口
 // 定义用户相关的所有业务逻辑方法
 type UserService interface {
-	BaseService
+	base.BaseService
 
 	// 用户管理
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error)

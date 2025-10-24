@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/service/base"
 	documentService "Qingyu_backend/service/document"
+	"Qingyu_backend/service/interfaces/base"
 )
 
 // ============ Mock Repositories ============

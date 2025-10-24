@@ -46,8 +46,15 @@ import (
 // @tag.description 钱包、充值、提现功能
 
 func main() {
+	// 获取当前工作目录（用于调试）
+	wd, _ := os.Getwd()
+
 	// 获取配置文件路径
 	// Docker环境使用绝对路径，本地开发使用环境变量或当前目录
+	log.Printf("[Main] Working directory: %s", wd)
+	log.Printf("[Main] CONFIG_FILE env: %s", os.Getenv("CONFIG_FILE"))
+	log.Printf("[Main] CONFIG_PATH env: %s", os.Getenv("CONFIG_PATH"))
+
 	configPath := os.Getenv("CONFIG_FILE")
 	if configPath == "" {
 		configPath = os.Getenv("CONFIG_PATH")
@@ -56,14 +63,16 @@ func main() {
 		// 默认尝试 /app/config/config.yaml（Docker环境）
 		if _, err := os.Stat("/app/config/config.yaml"); err == nil {
 			configPath = "/app/config/config.yaml"
+			log.Printf("[Main] Found Docker config at: %s", configPath)
 		} else {
 			// 否则使用当前目录（本地环境）
 			configPath = "."
+			log.Printf("[Main] Using current directory for config: %s", configPath)
 		}
 	}
 	configPath = filepath.Clean(configPath)
 
-	log.Printf("[Main] Loading configuration from: %s", configPath)
+	log.Printf("[Main] Final config path: %s", configPath)
 
 	// 加载配置
 	_, err := config.LoadConfig(configPath)

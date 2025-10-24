@@ -1,4 +1,4 @@
-package interfaces
+package ai
 
 import (
 	"context"

@@ -4,6 +4,7 @@
 package api
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -17,7 +18,6 @@ import (
 
 	userAPI "Qingyu_backend/api/v1/user"
 	usersModel "Qingyu_backend/models/users"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 	userService "Qingyu_backend/service/user"
 )
 

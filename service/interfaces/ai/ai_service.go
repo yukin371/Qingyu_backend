@@ -1,10 +1,10 @@
-package interfaces
+package ai
 
 import (
 	"context"
 	"time"
 
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 )
 
 // AIService AI服务接口

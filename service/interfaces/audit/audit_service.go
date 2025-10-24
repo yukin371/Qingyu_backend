@@ -1,4 +1,4 @@
-package interfaces
+package audit
 
 import (
 	"context"
