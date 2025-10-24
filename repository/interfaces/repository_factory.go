@@ -7,6 +7,7 @@ import (
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
+	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/repository/interfaces/writing"
 )
@@ -53,10 +54,9 @@ type RepositoryFactory interface {
 	CreateHotRecommendationRepository() RecommendationInterfaces.HotRecommendationRepository
 
 	// 共享服务相关Repository
-	// 注意：这些方法暂时不在标准接口中，因为SharedService还未完全集成
-	// CreateAuthRepository() interface{}
-	// CreateWalletRepository() interface{}
-	// CreateRecommendationRepository() interface{}
+	CreateAuthRepository() SharedInterfaces.AuthRepository
+	CreateWalletRepository() SharedInterfaces.WalletRepository
+	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
 
 	// Health 基础设施方法
 	Health(ctx context.Context) error
