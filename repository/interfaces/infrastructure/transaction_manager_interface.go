@@ -25,7 +25,7 @@ type TransactionManager interface {
 	// 获取事务上下文
 	GetTransactionContext(ctx context.Context) (TransactionContext, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

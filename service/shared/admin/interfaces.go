@@ -25,7 +25,7 @@ type AdminService interface {
 	GetOperationLogs(ctx context.Context, req *GetLogsRequest) ([]*AdminLog, error)
 	ExportLogs(ctx context.Context, startDate, endDate time.Time) ([]byte, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

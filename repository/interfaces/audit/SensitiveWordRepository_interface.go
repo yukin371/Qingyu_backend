@@ -33,6 +33,6 @@ type SensitiveWordRepository interface {
 	CountByCategory(ctx context.Context) (map[string]int64, error)
 	CountByLevel(ctx context.Context) (map[int]int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

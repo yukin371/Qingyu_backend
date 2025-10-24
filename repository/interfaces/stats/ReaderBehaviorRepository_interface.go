@@ -47,6 +47,6 @@ type ReaderBehaviorRepository interface {
 	Count(ctx context.Context, filter infrastructure.Filter) (int64, error)
 	CountByBehaviorType(ctx context.Context, behaviorType string) (int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
