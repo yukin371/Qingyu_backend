@@ -14,7 +14,7 @@ import (
 	"Qingyu_backend/core"
 	"Qingyu_backend/global"
 	"Qingyu_backend/repository/mongodb/user"
-	"Qingyu_backend/router/users"
+	userRouter "Qingyu_backend/router/user"
 	userService "Qingyu_backend/service/user"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +55,7 @@ func TestUserAPI_Integration(t *testing.T) {
 
 	// 4. 注册路由
 	apiV1 := router.Group("/api/v1")
-	users.RegisterUserRoutes(apiV1, userSvc)
+	userRouter.RegisterUserRoutes(apiV1, userSvc)
 
 	// 5. 运行测试场景
 	t.Run("完整用户生命周期", func(t *testing.T) {
