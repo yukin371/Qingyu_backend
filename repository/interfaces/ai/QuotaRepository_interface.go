@@ -28,7 +28,7 @@ type QuotaRepository interface {
 	GetQuotaStatistics(ctx context.Context, userID string) (*QuotaStatistics, error)
 	GetTotalConsumption(ctx context.Context, userID string, quotaType aiModels.QuotaType, startTime, endTime time.Time) (int, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

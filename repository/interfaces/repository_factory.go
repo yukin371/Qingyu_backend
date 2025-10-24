@@ -34,7 +34,7 @@ type RepositoryFactory interface {
 	CreateItemFeatureRepository() RecommendationInterfaces.ItemFeatureRepository
 	CreateHotRecommendationRepository() RecommendationInterfaces.HotRecommendationRepository
 
-	// 基础设施方法
+	// Health 基础设施方法
 	Health(ctx context.Context) error
 	Close() error
 	GetDatabaseType() string

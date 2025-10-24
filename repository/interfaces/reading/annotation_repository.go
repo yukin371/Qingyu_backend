@@ -51,6 +51,6 @@ type AnnotationRepository interface {
 	GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader.Annotation, error)
 	GetSharedAnnotations(ctx context.Context, userID string) ([]*reader.Annotation, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	base_infra "Qingyu_backend/repository/interfaces/infrastructure"
+	baseinfra "Qingyu_backend/repository/interfaces/infrastructure"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/interfaces/base"
 	projectService "Qingyu_backend/service/project"
@@ -71,7 +71,7 @@ func (m *MockProjectRepo) SoftDelete(ctx context.Context, projectID, ownerID str
 	return args.Error(0)
 }
 
-func (m *MockProjectRepo) Count(ctx context.Context, filter base_infra.Filter) (int64, error) {
+func (m *MockProjectRepo) Count(ctx context.Context, filter baseinfra.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }

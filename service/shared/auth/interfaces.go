@@ -33,7 +33,7 @@ type AuthService interface {
 	DestroySession(ctx context.Context, sessionID string) error
 	RefreshSession(ctx context.Context, sessionID string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

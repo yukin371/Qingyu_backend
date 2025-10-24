@@ -47,6 +47,6 @@ type ChapterRepository interface {
 	GetChapterContent(ctx context.Context, chapterID string) (string, error)
 	UpdateChapterContent(ctx context.Context, chapterID string, content string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

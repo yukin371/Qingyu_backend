@@ -129,8 +129,8 @@ type SnapshotStorage struct {
 
 // GetSnapshotStrategy 根据内容大小决定存储策略
 func GetSnapshotStrategy(contentSize int) string {
-	const INLINE_THRESHOLD = 64 * 1024 // 64KB
-	if contentSize <= INLINE_THRESHOLD {
+	const InlineThreshold = 64 * 1024 // 64KB
+	if contentSize <= InlineThreshold {
 		return "inline"
 	}
 	return "external"

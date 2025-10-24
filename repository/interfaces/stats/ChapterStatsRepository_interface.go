@@ -41,6 +41,6 @@ type ChapterStatsRepository interface {
 	Count(ctx context.Context, filter infrastructure.Filter) (int64, error)
 	CountByBook(ctx context.Context, bookID string) (int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

@@ -38,6 +38,6 @@ type ViolationRecordRepository interface {
 	GetActivePenalties(ctx context.Context) ([]*audit.ViolationRecord, error)
 	CleanExpiredPenalties(ctx context.Context) (int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

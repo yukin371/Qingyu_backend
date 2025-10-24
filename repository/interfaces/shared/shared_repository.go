@@ -33,7 +33,7 @@ type AuthRepository interface {
 	GetRolePermissions(ctx context.Context, roleID string) ([]string, error)
 	GetUserPermissions(ctx context.Context, userID string) ([]string, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -60,7 +60,7 @@ type WalletRepository interface {
 	ListWithdrawRequests(ctx context.Context, filter *WithdrawFilter) ([]*walletModel.WithdrawRequest, error)
 	CountWithdrawRequests(ctx context.Context, filter *WithdrawFilter) (int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -98,7 +98,7 @@ type RecommendationRepository interface {
 	// SaveRecommendations(ctx context.Context, userID string, items []*recommendationModel.RecommendedItem) error
 	// GetRecommendations(ctx context.Context, userID string) ([]*recommendationModel.RecommendedItem, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -119,7 +119,7 @@ type StorageRepository interface {
 	RevokeAccess(ctx context.Context, fileID, userID string) error
 	CheckAccess(ctx context.Context, fileID, userID string) (bool, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -148,7 +148,7 @@ type AdminRepository interface {
 	ListAdminLogs(ctx context.Context, filter *AdminLogFilter) ([]*adminModel.AdminLog, error)
 	CountAdminLogs(ctx context.Context, filter *AdminLogFilter) (int64, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

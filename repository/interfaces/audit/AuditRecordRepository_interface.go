@@ -40,6 +40,6 @@ type AuditRecordRepository interface {
 	CountHighRiskByAuthor(ctx context.Context, authorID string, minLevel int) (int64, error)
 	GetRecentRecords(ctx context.Context, targetType string, limit int64) ([]*audit.AuditRecord, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
