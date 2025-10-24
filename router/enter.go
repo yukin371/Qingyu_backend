@@ -9,6 +9,7 @@ import (
 	projectRouter "Qingyu_backend/router/project"
 	readerRouter "Qingyu_backend/router/reader"
 	sharedRouter "Qingyu_backend/router/shared"
+	systemRouter "Qingyu_backend/router/system"
 	userRouter "Qingyu_backend/router/user"
 
 	"Qingyu_backend/service"
@@ -134,6 +135,14 @@ func RegisterRoutes(r *gin.Engine) {
 	log.Println("  - /api/v1/admin/audit/* (审核管理)")
 	log.Println("  - /api/v1/admin/stats (系统统计)")
 	log.Println("  - /api/v1/admin/config (系统配置)")
+
+	// ============ 注册系统监控路由 ============
+	systemRouter.InitSystemRoutes(v1)
+	log.Println("✓ 系统监控路由已注册到: /api/v1/system/")
+	log.Println("  - /api/v1/system/health (系统健康检查)")
+	log.Println("  - /api/v1/system/health/:service (服务健康检查)")
+	log.Println("  - /api/v1/system/metrics (所有服务指标)")
+	log.Println("  - /api/v1/system/metrics/:service (特定服务指标)")
 
 	// ============ 健康检查 ============
 	r.GET("/ping", func(c *gin.Context) {

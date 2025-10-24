@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
+// TODO: 完善消息队列功能（消息持久化、重试机制、死信队列）
+// TODO: 添加消息优先级支持
+// TODO: 实现消息批量发送和接收
+
 // MessagingServiceImpl 消息服务实现
 type MessagingServiceImpl struct {
 	queueClient QueueClient // Redis队列客户端

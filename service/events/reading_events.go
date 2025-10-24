@@ -13,11 +13,11 @@ import (
 
 // ReadingEvent 事件类型常量
 const (
-	EventTypeChapterRead       = "reading.chapter_read"
-	EventTypeBookmarkAdded     = "reading.bookmark_added"
-	EventTypeNoteCreated       = "reading.note_created"
-	EventTypeReadingProgress   = "reading.progress_updated"
-	EventTypeReadingCompleted  = "reading.book_completed"
+	EventTypeChapterRead      = "reading.chapter_read"
+	EventTypeBookmarkAdded    = "reading.bookmark_added"
+	EventTypeNoteCreated      = "reading.note_created"
+	EventTypeReadingProgress  = "reading.progress_updated"
+	EventTypeReadingCompleted = "reading.book_completed"
 )
 
 // ReadingEventData 阅读事件数据
@@ -94,16 +94,16 @@ func (h *ReadingStatisticsHandler) Handle(ctx context.Context, event base.Event)
 		// - 书籍阅读次数
 		// - 用户阅读时长
 		// - 章节热度
-		
+
 	case EventTypeReadingProgress:
 		log.Printf("[ReadingStatistics] 用户 %s 的阅读进度更新为 %d%%", data.UserID, data.Progress)
 		// 更新用户阅读进度统计
-		
+
 	case EventTypeReadingCompleted:
 		log.Printf("[ReadingStatistics] 用户 %s 完成了书籍 %s", data.UserID, data.BookID)
 		// 更新书籍完成统计
 	}
-	
+
 	return nil
 }
 
@@ -144,13 +144,13 @@ func (h *RecommendationUpdateHandler) Handle(ctx context.Context, event base.Eve
 
 	// 根据阅读行为更新推荐
 	log.Printf("[RecommendationUpdate] 基于用户 %s 的阅读行为更新推荐列表", data.UserID)
-	
+
 	// 实际项目中这里应该:
 	// 1. 分析用户阅读偏好
 	// 2. 更新用户画像
 	// 3. 重新计算推荐书籍
 	// recommendationService.UpdateUserRecommendations(data.UserID)
-	
+
 	return nil
 }
 
@@ -166,4 +166,3 @@ func (h *RecommendationUpdateHandler) GetSupportedEventTypes() []string {
 		EventTypeReadingCompleted,
 	}
 }
-

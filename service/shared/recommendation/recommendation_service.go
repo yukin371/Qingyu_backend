@@ -10,6 +10,15 @@ import (
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
+// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
+// TODO: 完善推荐算法
+//   - 协同过滤算法（用户-用户、物品-物品）
+//   - 内容推荐算法（基于标签、分类）
+//   - 混合推荐算法
+// TODO: 实现实时推荐更新
+// TODO: 添加 A/B 测试支持
+// TODO: 实现推荐效果评估（点击率、转化率统计）
+
 // RecommendationServiceImpl 推荐服务实现
 type RecommendationServiceImpl struct {
 	recRepo     sharedRepo.RecommendationRepository
