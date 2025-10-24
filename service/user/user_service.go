@@ -344,7 +344,9 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	ip := "unknown" // TODO: 从 context 中获取客户端 IP
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
-		fmt.Printf("更新最后登录时间失败: %v\n", err)
+		// 注意：不要使用fmt.Printf，会污染HTTP响应
+		// TODO: 使用logger记录错误
+		_ = err
 	}
 
 	// 6. 生成JWT令牌

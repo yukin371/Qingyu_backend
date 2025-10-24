@@ -18,14 +18,14 @@ func InitializeServices() error {
 	// 创建服务容器（不再需要提供repository factory）
 	ServiceManager = container.NewServiceContainer()
 
-	// 设置默认服务
-	if err := ServiceManager.SetupDefaultServices(); err != nil {
+	// 先初始化容器（创建MongoDB连接和Repository工厂）
+	// 这会自动创建MongoDB连接和Repository工厂
+	if err := ServiceManager.Initialize(context.Background()); err != nil {
 		return err
 	}
 
-	// 初始化所有服务
-	// 这会自动创建MongoDB连接和Repository工厂
-	if err := ServiceManager.Initialize(context.Background()); err != nil {
+	// 然后设置默认服务（此时repositoryFactory已经初始化）
+	if err := ServiceManager.SetupDefaultServices(); err != nil {
 		return err
 	}
 

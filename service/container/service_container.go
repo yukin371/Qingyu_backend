@@ -492,6 +492,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// TODO: StorageService - 需要 StorageBackend 和 FileRepository
 	// TODO: AdminService - 需要 AuditRepository, LogRepository, UserRepository
 
+	// ============ 6. 初始化所有已注册的服务 ============
+	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
+	ctx := context.Background()
+	for name, service := range c.services {
+		if err := service.Initialize(ctx); err != nil {
+			return fmt.Errorf("初始化服务 %s 失败: %w", name, err)
+		}
+	}
+
 	return nil
 }
 
