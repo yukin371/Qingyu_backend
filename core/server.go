@@ -19,6 +19,11 @@ func InitServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("server configuration is missing")
 	}
 
+	// 初始化服务容器
+	if err := InitServices(); err != nil {
+		return nil, fmt.Errorf("failed to initialize services: %w", err)
+	}
+
 	// 设置gin模式
 	gin.SetMode(cfg.Mode)
 
