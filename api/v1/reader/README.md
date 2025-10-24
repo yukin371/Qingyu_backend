@@ -59,48 +59,61 @@ api/v1/reader/
 └── README.md                  # 本文档
 ```
 
-## 🌐 API路由
+## 🌐 API路由总览
 
-### 所有接口都需要认证
+### 所有接口都需要JWT认证
 
-```
-# 书架管理
-GET    /api/v1/reader/books                  # 获取书架
-POST   /api/v1/reader/books/:bookId          # 添加到书架
-DELETE /api/v1/reader/books/:bookId          # 从书架移除
+#### 书架管理
 
-# 章节内容
-GET /api/v1/reader/chapters/:id              # 获取章节信息
-GET /api/v1/reader/chapters/:id/content      # 获取章节内容
-GET /api/v1/reader/chapters/:id/next         # 获取下一章
-GET /api/v1/reader/chapters/:id/prev         # 获取上一章
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/reader/books | 获取书架 | BooksAPI.GetBookshelf |
+| POST | /api/v1/reader/books/:bookId | 添加到书架 | BooksAPI.AddToBookshelf |
+| DELETE | /api/v1/reader/books/:bookId | 从书架移除 | BooksAPI.RemoveFromBookshelf |
 
-# 阅读进度
-GET  /api/v1/reader/progress/:bookId         # 获取阅读进度
-POST /api/v1/reader/progress                 # 保存阅读进度
-POST /api/v1/reader/progress/time            # 更新阅读时长
-GET  /api/v1/reader/progress/history         # 获取阅读历史
-GET  /api/v1/reader/progress/statistics      # 获取阅读统计
-GET  /api/v1/reader/progress/statistics/daily   # 获取每日统计
-GET  /api/v1/reader/progress/statistics/weekly  # 获取每周统计
+#### 章节内容
 
-# 标注管理
-GET    /api/v1/reader/annotations            # 获取标注列表
-GET    /api/v1/reader/annotations/:id        # 获取标注详情
-POST   /api/v1/reader/annotations            # 创建标注
-PUT    /api/v1/reader/annotations/:id        # 更新标注
-DELETE /api/v1/reader/annotations/:id        # 删除标注
-DELETE /api/v1/reader/annotations            # 批量删除标注
-GET    /api/v1/reader/annotations/book/:bookId       # 获取书籍标注
-GET    /api/v1/reader/annotations/chapter/:chapterId # 获取章节标注
-GET    /api/v1/reader/annotations/search     # 搜索标注
-GET    /api/v1/reader/annotations/export     # 导出标注
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/reader/chapters/:id | 获取章节信息 | ChaptersAPI.GetChapter |
+| GET | /api/v1/reader/chapters/:id/content | 获取章节内容 | ChaptersAPI.GetContent |
+| GET | /api/v1/reader/chapters/:id/next | 获取下一章 | ChaptersAPI.GetNextChapter |
+| GET | /api/v1/reader/chapters/:id/prev | 获取上一章 | ChaptersAPI.GetPrevChapter |
 
-# 阅读设置
-GET  /api/v1/reader/settings                 # 获取阅读设置
-PUT  /api/v1/reader/settings                 # 更新阅读设置
-POST /api/v1/reader/settings/reset           # 重置设置
-```
+#### 阅读进度
+
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/reader/progress/:bookId | 获取阅读进度 | ProgressAPI.GetProgress |
+| POST | /api/v1/reader/progress | 保存阅读进度 | ProgressAPI.SaveProgress |
+| POST | /api/v1/reader/progress/time | 更新阅读时长 | ProgressAPI.UpdateReadingTime |
+| GET | /api/v1/reader/progress/history | 获取阅读历史 | ProgressAPI.GetHistory |
+| GET | /api/v1/reader/progress/statistics | 获取阅读统计 | ProgressAPI.GetStatistics |
+| GET | /api/v1/reader/progress/statistics/daily | 获取每日统计 | ProgressAPI.GetDailyStats |
+| GET | /api/v1/reader/progress/statistics/weekly | 获取每周统计 | ProgressAPI.GetWeeklyStats |
+
+#### 标注管理
+
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/reader/annotations | 获取标注列表 | AnnotationsAPI.GetAnnotations |
+| GET | /api/v1/reader/annotations/:id | 获取标注详情 | AnnotationsAPI.GetAnnotation |
+| POST | /api/v1/reader/annotations | 创建标注 | AnnotationsAPI.CreateAnnotation |
+| PUT | /api/v1/reader/annotations/:id | 更新标注 | AnnotationsAPI.UpdateAnnotation |
+| DELETE | /api/v1/reader/annotations/:id | 删除标注 | AnnotationsAPI.DeleteAnnotation |
+| DELETE | /api/v1/reader/annotations | 批量删除标注 | AnnotationsAPI.BatchDelete |
+| GET | /api/v1/reader/annotations/book/:bookId | 获取书籍标注 | AnnotationsAPI.GetBookAnnotations |
+| GET | /api/v1/reader/annotations/chapter/:chapterId | 获取章节标注 | AnnotationsAPI.GetChapterAnnotations |
+| GET | /api/v1/reader/annotations/search | 搜索标注 | AnnotationsAPI.SearchAnnotations |
+| GET | /api/v1/reader/annotations/export | 导出标注 | AnnotationsAPI.ExportAnnotations |
+
+#### 阅读设置
+
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/reader/settings | 获取阅读设置 | SettingAPI.GetSettings |
+| PUT | /api/v1/reader/settings | 更新阅读设置 | SettingAPI.UpdateSettings |
+| POST | /api/v1/reader/settings/reset | 重置设置 | SettingAPI.ResetSettings |
 
 ## 🔄 与Bookstore模块的区别
 

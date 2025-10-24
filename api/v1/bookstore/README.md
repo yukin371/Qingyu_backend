@@ -54,37 +54,37 @@ api/v1/bookstore/
 └── README.md                 # 本文档
 ```
 
-## 🌐 API路由
+## 🌐 API路由总览
 
 ### 公开接口（无需认证）
 
-```
-GET  /api/v1/bookstore/homepage              # 书城首页
-GET  /api/v1/bookstore/books                 # 书籍列表
-GET  /api/v1/bookstore/books/search          # 搜索书籍
-GET  /api/v1/bookstore/books/:id             # 书籍详情
-GET  /api/v1/bookstore/books/:id/chapters    # 书籍章节目录
-GET  /api/v1/bookstore/books/:id/related     # 相关推荐
-GET  /api/v1/bookstore/chapters/:id          # 章节预览
-GET  /api/v1/bookstore/categories            # 分类列表
-GET  /api/v1/bookstore/categories/:id/books  # 分类下的书籍
-GET  /api/v1/bookstore/tags                  # 标签列表
-GET  /api/v1/bookstore/tags/:id/books        # 标签下的书籍
-GET  /api/v1/bookstore/rankings              # 排行榜
-GET  /api/v1/bookstore/rankings/:type        # 指定类型排行榜
-GET  /api/v1/bookstore/books/:id/statistics  # 书籍统计
-```
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/bookstore/homepage | 书城首页 | BookstoreAPI.GetHomepage |
+| GET | /api/v1/bookstore/books | 书籍列表 | BookstoreAPI.GetBooks |
+| GET | /api/v1/bookstore/books/search | 搜索书籍 | BookstoreAPI.SearchBooks |
+| GET | /api/v1/bookstore/books/:id | 书籍详情 | BookDetailAPI.GetBookDetail |
+| GET | /api/v1/bookstore/books/:id/chapters | 书籍章节目录 | ChapterAPI.GetChapters |
+| GET | /api/v1/bookstore/books/:id/related | 相关推荐 | BookDetailAPI.GetRelatedBooks |
+| GET | /api/v1/bookstore/chapters/:id | 章节预览 | ChapterAPI.PreviewChapter |
+| GET | /api/v1/bookstore/categories | 分类列表 | BookstoreAPI.GetCategories |
+| GET | /api/v1/bookstore/categories/:id/books | 分类下的书籍 | BookstoreAPI.GetBooksByCategory |
+| GET | /api/v1/bookstore/tags | 标签列表 | BookstoreAPI.GetTags |
+| GET | /api/v1/bookstore/tags/:id/books | 标签下的书籍 | BookstoreAPI.GetBooksByTag |
+| GET | /api/v1/bookstore/rankings | 排行榜 | BookstoreAPI.GetRankings |
+| GET | /api/v1/bookstore/rankings/:type | 指定类型排行榜 | BookstoreAPI.GetRankingByType |
+| GET | /api/v1/bookstore/books/:id/statistics | 书籍统计 | BookStatisticsAPI.GetStatistics |
 
 ### 需要认证的接口
 
-```
-GET    /api/v1/bookstore/books/:id/rating    # 获取书籍评分
-POST   /api/v1/bookstore/books/:id/rating    # 评分
-PUT    /api/v1/bookstore/books/:id/rating    # 更新评分
-DELETE /api/v1/bookstore/books/:id/rating    # 删除评分
-GET    /api/v1/bookstore/my/ratings          # 我的评分记录
-GET    /api/v1/bookstore/books/:id/favorite  # 收藏状态
-```
+| 方法 | 路径 | 说明 | Handler |
+|------|------|------|---------|
+| GET | /api/v1/bookstore/books/:id/rating | 获取书籍评分 | BookRatingAPI.GetRating |
+| POST | /api/v1/bookstore/books/:id/rating | 评分 | BookRatingAPI.CreateRating |
+| PUT | /api/v1/bookstore/books/:id/rating | 更新评分 | BookRatingAPI.UpdateRating |
+| DELETE | /api/v1/bookstore/books/:id/rating | 删除评分 | BookRatingAPI.DeleteRating |
+| GET | /api/v1/bookstore/my/ratings | 我的评分记录 | BookRatingAPI.GetMyRatings |
+| GET | /api/v1/bookstore/books/:id/favorite | 收藏状态 | BookDetailAPI.GetFavoriteStatus |
 
 ## 🔄 与Reader模块的区别
 
