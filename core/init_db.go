@@ -1,97 +1,35 @@
 package core
 
 import (
-	"context"
 	"fmt"
-	"time"
 
-	"Qingyu_backend/config"
-	"Qingyu_backend/global"
-	"Qingyu_backend/repository/mongodb"
 	"Qingyu_backend/service"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // InitDB 初始化数据库连接
+// Deprecated: MongoDB初始化已迁移到ServiceContainer
+// 保留此函数仅用于向后兼容，实际初始化在ServiceContainer.Initialize()中完成
 func InitDB() error {
-	cfg := config.GlobalConfig.Database
-	if cfg == nil {
-		return fmt.Errorf("database configuration is missing")
-	}
+	// MongoDB初始化已迁移到ServiceContainer
+	// 此函数保留为空，避免破坏现有调用
+	// 实际的MongoDB连接在service.InitializeServices()中由ServiceContainer自动创建
 
-	// 检查主数据库配置
-	if cfg.Primary.Type != config.DatabaseTypeMongoDB || cfg.Primary.MongoDB == nil {
-		return fmt.Errorf("MongoDB configuration is missing or invalid")
-	}
+	// 可选：为了兼容性，设置全局变量指向ServiceContainer的连接
+	// 但这需要在InitServices之后调用，所以这里暂时返回nil
 
-	mongoCfg := cfg.Primary.MongoDB
-
-	// 创建MongoDB客户端配置
-	clientOptions := options.Client().
-		ApplyURI(mongoCfg.URI).
-		SetConnectTimeout(mongoCfg.ConnectTimeout).
-		SetMaxPoolSize(mongoCfg.MaxPoolSize).
-		SetMinPoolSize(mongoCfg.MinPoolSize).
-		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
-
-	// 连接到MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
-		return fmt.Errorf("failed to connect to MongoDB: %w", err)
-	}
-
-	// 验证连接
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to ping MongoDB: %w", err)
-	}
-
-	// 设置全局客户端和数据库实例
-	global.MongoClient = client
-	global.DB = client.Database(mongoCfg.Database)
-
-	fmt.Printf("Successfully connected to MongoDB: %s/%s\n", mongoCfg.URI, mongoCfg.Database)
+	fmt.Println("InitDB: MongoDB初始化已迁移到ServiceContainer")
 	return nil
 }
 
 // InitServices 初始化所有服务
-// 创建Repository工厂并初始化服务容器
+// ServiceContainer会自动创建MongoDB连接和Repository工厂
 func InitServices() error {
-	cfg := config.GlobalConfig.Database
-	if cfg == nil {
-		return fmt.Errorf("database configuration is missing")
-	}
-
-	// 检查MongoDB配置
-	if cfg.Primary.Type != config.DatabaseTypeMongoDB || cfg.Primary.MongoDB == nil {
-		return fmt.Errorf("MongoDB configuration is missing or invalid")
-	}
-
-	mongoCfg := cfg.Primary.MongoDB
-
-	// 创建MongoDB Repository工厂配置
-	mongoConfig := &config.MongoDBConfig{
-		URI:            mongoCfg.URI,
-		Database:       mongoCfg.Database,
-		MaxPoolSize:    mongoCfg.MaxPoolSize,
-		MinPoolSize:    mongoCfg.MinPoolSize,
-		ConnectTimeout: 10 * time.Second,
-		ServerTimeout:  30 * time.Second,
-	}
-
-	// 创建Repository工厂
-	repositoryFactory, err := mongodb.NewMongoRepositoryFactory(mongoConfig)
-	if err != nil {
-		return fmt.Errorf("创建Repository工厂失败: %w", err)
-	}
-
-	// 初始化服务容器
-	if err := service.InitializeServices(repositoryFactory); err != nil {
+	// 直接初始化服务容器
+	// ServiceContainer.Initialize()会自动：
+	// 1. 创建MongoDB连接
+	// 2. 创建Repository工厂
+	// 3. 初始化所有服务
+	if err := service.InitializeServices(); err != nil {
 		return fmt.Errorf("初始化服务失败: %w", err)
 	}
 

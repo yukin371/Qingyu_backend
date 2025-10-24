@@ -30,6 +30,10 @@ import (
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
+	"Qingyu_backend/repository/mongodb"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ServiceContainer 服务容器
@@ -43,6 +47,8 @@ type ServiceContainer struct {
 	// 基础设施
 	eventBus    serviceInterfaces.EventBus
 	redisClient cache.RedisClient
+	mongoClient *mongo.Client
+	mongoDB     *mongo.Database
 
 	// 服务指标
 	serviceMetrics map[string]*metrics.ServiceMetrics
@@ -67,13 +73,13 @@ type ServiceContainer struct {
 }
 
 // NewServiceContainer 创建服务容器
-func NewServiceContainer(repositoryFactory repoInterfaces.RepositoryFactory) *ServiceContainer {
+// Repository工厂将在Initialize()时自动创建
+func NewServiceContainer() *ServiceContainer {
 	return &ServiceContainer{
-		repositoryFactory: repositoryFactory,
-		services:          make(map[string]serviceInterfaces.BaseService),
-		serviceMetrics:    make(map[string]*metrics.ServiceMetrics),
-		initialized:       false,
-		eventBus:          base.NewSimpleEventBus(), // 创建事件总线
+		services:       make(map[string]serviceInterfaces.BaseService),
+		serviceMetrics: make(map[string]*metrics.ServiceMetrics),
+		initialized:    false,
+		eventBus:       base.NewSimpleEventBus(), // 创建事件总线
 	}
 }
 
@@ -218,18 +224,29 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		return nil
 	}
 
-	// 初始化Redis客户端（如果配置存在）
+	// 1. 初始化MongoDB（优先级最高）
+	if err := c.initMongoDB(); err != nil {
+		return fmt.Errorf("MongoDB初始化失败: %w", err)
+	}
+
+	// 2. 创建Repository工厂（使用容器的MongoDB连接）
+	c.repositoryFactory = mongodb.NewMongoRepositoryFactoryWithClient(
+		c.mongoClient,
+		c.mongoDB,
+	)
+
+	// 3. 初始化Redis客户端（失败不阻塞）
 	if err := c.initRedis(); err != nil {
 		// Redis初始化失败不阻塞启动，但记录错误
 		fmt.Printf("警告: Redis客户端初始化失败: %v\n", err)
 	}
 
-	// 初始化Repository工厂
+	// 4. 初始化Repository工厂健康检查
 	if err := c.repositoryFactory.Health(ctx); err != nil {
 		return fmt.Errorf("Repository工厂健康检查失败: %w", err)
 	}
 
-	// 初始化所有服务
+	// 5. 初始化所有服务
 	for name, service := range c.services {
 		if err := service.Initialize(ctx); err != nil {
 			return fmt.Errorf("初始化服务 %s 失败: %w", name, err)
@@ -237,6 +254,40 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	}
 
 	c.initialized = true
+	return nil
+}
+
+// initMongoDB 初始化MongoDB客户端
+func (c *ServiceContainer) initMongoDB() error {
+	cfg := config.GlobalConfig.Database
+	if cfg == nil || cfg.Primary.MongoDB == nil {
+		return fmt.Errorf("MongoDB配置未找到")
+	}
+
+	mongoCfg := cfg.Primary.MongoDB
+
+	clientOptions := options.Client().
+		ApplyURI(mongoCfg.URI).
+		SetMaxPoolSize(mongoCfg.MaxPoolSize).
+		SetMinPoolSize(mongoCfg.MinPoolSize).
+		SetConnectTimeout(mongoCfg.ConnectTimeout).
+		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
+
+	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		return fmt.Errorf("连接MongoDB失败: %w", err)
+	}
+
+	if err := client.Ping(ctx, nil); err != nil {
+		client.Disconnect(ctx)
+		return fmt.Errorf("MongoDB连接测试失败: %w", err)
+	}
+
+	c.mongoClient = client
+	c.mongoDB = client.Database(mongoCfg.Database)
 	return nil
 }
 
@@ -277,7 +328,7 @@ func (c *ServiceContainer) Health(ctx context.Context) error {
 func (c *ServiceContainer) Close(ctx context.Context) error {
 	var lastErr error
 
-	// 关闭Redis客户端
+	// 1. 关闭Redis客户端
 	if c.redisClient != nil {
 		if err := c.redisClient.Close(); err != nil {
 			fmt.Printf("警告: 关闭Redis客户端失败: %v\n", err)
@@ -285,16 +336,26 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 		}
 	}
 
-	// 关闭所有服务
+	// 2. 关闭所有服务
 	for name, service := range c.services {
 		if err := service.Close(ctx); err != nil {
 			lastErr = fmt.Errorf("关闭服务 %s 失败: %w", name, err)
 		}
 	}
 
-	// 关闭Repository工厂
-	if err := c.repositoryFactory.Close(); err != nil {
-		lastErr = fmt.Errorf("关闭Repository工厂失败: %w", err)
+	// 3. 关闭MongoDB（在Repository工厂之前关闭）
+	if c.mongoClient != nil {
+		if err := c.mongoClient.Disconnect(ctx); err != nil {
+			fmt.Printf("警告: 关闭MongoDB客户端失败: %v\n", err)
+			lastErr = fmt.Errorf("关闭MongoDB客户端失败: %w", err)
+		}
+	}
+
+	// 4. 关闭Repository工厂
+	if c.repositoryFactory != nil {
+		if err := c.repositoryFactory.Close(); err != nil {
+			lastErr = fmt.Errorf("关闭Repository工厂失败: %w", err)
+		}
 	}
 
 	c.initialized = false
@@ -306,6 +367,20 @@ func (c *ServiceContainer) GetRedisClient() cache.RedisClient {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.redisClient
+}
+
+// GetMongoDB 获取MongoDB数据库实例
+func (c *ServiceContainer) GetMongoDB() *mongo.Database {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.mongoDB
+}
+
+// GetMongoClient 获取MongoDB客户端
+func (c *ServiceContainer) GetMongoClient() *mongo.Client {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.mongoClient
 }
 
 // GetRepositoryFactory 获取Repository工厂
