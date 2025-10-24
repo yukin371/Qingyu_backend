@@ -12,6 +12,15 @@ import (
 	"Qingyu_backend/service/shared/wallet"
 )
 
+// DEPRECATED: SharedServiceContainer 已废弃
+// 请使用 service/container/ServiceContainer 统一管理所有服务（包括共享服务）
+// 此容器将在下一版本中删除
+//
+// 迁移指南:
+// 1. 使用 service.GetServiceContainer() 获取全局服务容器
+// 2. 通过 container.GetAuthService(), container.GetWalletService() 等方法获取共享服务
+// 3. 不再需要单独创建 SharedServiceContainer 实例
+//
 // SharedServiceContainer 共享服务容器
 // 统一管理所有共享底层服务
 type SharedServiceContainer struct {
@@ -45,6 +54,7 @@ type SharedServiceConfig struct {
 }
 
 // NewSharedServiceContainer 创建共享服务容器
+// DEPRECATED: 此方法已废弃，请使用 service.GetServiceContainer() 获取全局服务容器
 func NewSharedServiceContainer() *SharedServiceContainer {
 	return &SharedServiceContainer{
 		initialized: false,

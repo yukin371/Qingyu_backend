@@ -6,11 +6,14 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/shared/container"
+	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/shared/storage"
+	"Qingyu_backend/service/shared/wallet"
 )
 
 // RegisterRoutes 注册共享服务路由
-func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServiceContainer) {
+// 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
+func RegisterRoutes(r *gin.RouterGroup, authService auth.AuthService, walletService wallet.WalletService, storageService storage.StorageService) {
 	// 应用全局中间件
 	r.Use(middleware.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
 	r.Use(middleware.ResponseTimingMiddleware())    // 响应时间记录
@@ -19,9 +22,9 @@ func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServic
 	r.Use(response.GzipMiddleware(5))               // Gzip压缩（压缩级别5）
 
 	// 创建API处理器
-	authAPI := shared.NewAuthAPI(serviceContainer.AuthService())
-	walletAPI := shared.NewWalletAPI(serviceContainer.WalletService())
-	storageAPI := shared.NewStorageAPI(serviceContainer.StorageService())
+	authAPI := shared.NewAuthAPI(authService)
+	walletAPI := shared.NewWalletAPI(walletService)
+	storageAPI := shared.NewStorageAPI(storageService)
 	// 注意：AdminAPI已迁移到 admin 模块
 
 	// ============ 认证服务路由 ============

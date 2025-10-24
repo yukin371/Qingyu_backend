@@ -1,5 +1,9 @@
 package container
 
+// DEPRECATED: SharedServiceFactory 已废弃
+// 请使用 service/container/ServiceContainer 的 SetupDefaultServices() 方法
+// 此文件将在下一版本中删除
+
 import (
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
