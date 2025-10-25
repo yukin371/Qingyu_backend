@@ -103,7 +103,14 @@ func RegisterRoutes(r *gin.Engine) {
 			likeSvc = nil
 		}
 
-		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc)
+		// 获取收藏服务（如果可用）
+		collectionSvc, collectionErr := serviceContainer.GetCollectionService()
+		if collectionErr != nil {
+			logger.Warn("收藏服务未配置", zap.Error(collectionErr))
+			collectionSvc = nil
+		}
+
+		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc, collectionSvc)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")

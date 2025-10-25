@@ -14,6 +14,7 @@ func InitReaderRouter(
 	readerService *reading.ReaderService,
 	commentService *reading.CommentService,
 	likeService *reading.LikeService,
+	collectionService *reading.CollectionService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
@@ -32,6 +33,12 @@ func InitReaderRouter(
 	var likeApiHandler *readerApi.LikeAPI
 	if likeService != nil {
 		likeApiHandler = readerApi.NewLikeAPI(likeService)
+	}
+
+	// 收藏API（如果collectionService可用）
+	var collectionApiHandler *readerApi.CollectionAPI
+	if collectionService != nil {
+		collectionApiHandler = readerApi.NewCollectionAPI(collectionService)
 	}
 
 	// 阅读器主路由组（需要认证）
@@ -145,6 +152,30 @@ func InitReaderRouter(
 			{
 				likes.GET("/books", likeApiHandler.GetUserLikedBooks) // 获取用户点赞的书籍列表
 				likes.GET("/stats", likeApiHandler.GetUserLikeStats)  // 获取用户点赞统计
+			}
+		}
+
+		// 收藏模块（如果collectionApiHandler可用）
+		if collectionApiHandler != nil {
+			collections := readerGroup.Group("/collections")
+			{
+				// 收藏管理
+				collections.POST("", collectionApiHandler.AddCollection)                 // 添加收藏
+				collections.GET("", collectionApiHandler.GetCollections)                 // 获取收藏列表
+				collections.PUT("/:id", collectionApiHandler.UpdateCollection)           // 更新收藏
+				collections.DELETE("/:id", collectionApiHandler.DeleteCollection)        // 删除收藏
+				collections.GET("/check/:book_id", collectionApiHandler.CheckCollected)  // 检查是否已收藏
+				collections.GET("/tags/:tag", collectionApiHandler.GetCollectionsByTag)  // 根据标签获取收藏
+				collections.GET("/stats", collectionApiHandler.GetCollectionStats)       // 获取收藏统计
+				collections.POST("/:id/share", collectionApiHandler.ShareCollection)     // 分享收藏
+				collections.DELETE("/:id/share", collectionApiHandler.UnshareCollection) // 取消分享收藏
+				collections.GET("/public", collectionApiHandler.GetPublicCollections)    // 获取公开收藏列表
+
+				// 收藏夹管理
+				collections.POST("/folders", collectionApiHandler.CreateFolder)       // 创建收藏夹
+				collections.GET("/folders", collectionApiHandler.GetFolders)          // 获取收藏夹列表
+				collections.PUT("/folders/:id", collectionApiHandler.UpdateFolder)    // 更新收藏夹
+				collections.DELETE("/folders/:id", collectionApiHandler.DeleteFolder) // 删除收藏夹
 			}
 		}
 	}
