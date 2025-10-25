@@ -8,6 +8,7 @@ import (
 	aiService "Qingyu_backend/service/ai"
 	auditService "Qingyu_backend/service/interfaces/audit"
 	userService "Qingyu_backend/service/interfaces/user"
+	sharedService "Qingyu_backend/service/shared"
 	adminService "Qingyu_backend/service/shared/admin"
 )
 
@@ -18,12 +19,14 @@ func RegisterAdminRoutes(
 	quotaSvc *aiService.QuotaService,
 	auditSvc auditService.ContentAuditService,
 	adminSvc adminService.AdminService,
+	configSvc *sharedService.ConfigService,
 ) {
 	// 创建admin API实例
 	userAdminAPI := adminApi.NewUserAdminAPI(userSvc)
 	quotaAdminAPI := adminApi.NewQuotaAdminAPI(quotaSvc)
 	auditAdminAPI := adminApi.NewAuditAdminAPI(auditSvc)
 	systemAdminAPI := adminApi.NewSystemAdminAPI(adminSvc)
+	configAdminAPI := adminApi.NewConfigAPI(configSvc)
 
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
 	adminGroup := r.Group("/admin")
@@ -79,9 +82,30 @@ func RegisterAdminRoutes(
 		// 操作日志
 		adminGroup.GET("/operation-logs", systemAdminAPI.GetOperationLogs)
 
-		// 系统配置
-		adminGroup.GET("/config", systemAdminAPI.GetSystemConfig)
-		adminGroup.PUT("/config", systemAdminAPI.UpdateSystemConfig)
+		// ===========================
+		// 配置管理（新版）
+		// ===========================
+		configGroup := adminGroup.Group("/config")
+		{
+			// 读取配置
+			configGroup.GET("", configAdminAPI.GetAllConfigs)       // 获取所有配置
+			configGroup.GET("/:key", configAdminAPI.GetConfigByKey) // 获取单个配置
+
+			// 更新配置
+			configGroup.PUT("", configAdminAPI.UpdateConfig)            // 更新配置
+			configGroup.PUT("/batch", configAdminAPI.BatchUpdateConfig) // 批量更新配置
+
+			// 验证配置
+			configGroup.POST("/validate", configAdminAPI.ValidateConfig) // 验证配置
+
+			// 备份管理
+			configGroup.GET("/backups", configAdminAPI.GetConfigBackups)     // 获取备份列表
+			configGroup.POST("/restore", configAdminAPI.RestoreConfigBackup) // 恢复备份
+		}
+
+		// 系统配置（旧版，保持兼容）
+		adminGroup.GET("/config-legacy", systemAdminAPI.GetSystemConfig)
+		adminGroup.PUT("/config-legacy", systemAdminAPI.UpdateSystemConfig)
 
 		// 提现管理
 		adminGroup.POST("/withdraw/review", systemAdminAPI.ReviewWithdraw)
