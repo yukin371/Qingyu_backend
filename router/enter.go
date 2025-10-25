@@ -110,7 +110,14 @@ func RegisterRoutes(r *gin.Engine) {
 			collectionSvc = nil
 		}
 
-		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc, collectionSvc)
+		// 获取阅读历史服务（如果可用）
+		readingHistorySvc, historyErr := serviceContainer.GetReadingHistoryService()
+		if historyErr != nil {
+			logger.Warn("阅读历史服务未配置", zap.Error(historyErr))
+			readingHistorySvc = nil
+		}
+
+		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")

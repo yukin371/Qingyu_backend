@@ -161,6 +161,11 @@ func (f *MongoRepositoryFactory) CreateCollectionRepository() readingRepo.Collec
 	return mongoReading.NewMongoCollectionRepository(f.database)
 }
 
+// CreateReadingHistoryRepository 创建阅读历史Repository
+func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readingRepo.ReadingHistoryRepository {
+	return mongoReading.NewMongoReadingHistoryRepository(f.database)
+}
+
 // ========== Bookstore Module Repositories ==========
 
 // CreateBookRepository 创建书籍Repository
