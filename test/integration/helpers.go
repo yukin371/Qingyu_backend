@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -271,12 +272,125 @@ func (h *TestHelper) GetTestBooks(limit int) []string {
 
 // CleanupTestData 清理测试数据
 func (h *TestHelper) CleanupTestData(collections ...string) {
+	// 获取当前测试用户的ID
+	testUsers := []string{"test_user01", "test_user02", "test_user03"}
+
 	for _, coll := range collections {
-		_, err := global.DB.Collection(coll).DeleteMany(h.ctx, bson.M{
-			"user_id": bson.M{"$regex": "^test_"},
+		// 先获取测试用户的ObjectID
+		var userIDs []string
+		cursor, _ := global.DB.Collection("users").Find(h.ctx, bson.M{
+			"username": bson.M{"$in": testUsers},
 		})
-		if err != nil {
-			h.t.Logf("⚠ 清理集合 %s 失败: %v", coll, err)
+		if cursor != nil {
+			var users []bson.M
+			cursor.All(h.ctx, &users)
+			for _, user := range users {
+				if id, ok := user["_id"].(primitive.ObjectID); ok {
+					userIDs = append(userIDs, id.Hex())
+				}
+			}
+			cursor.Close(h.ctx)
+		}
+
+		// 使用获取到的user_id清理
+		if len(userIDs) > 0 {
+			_, err := global.DB.Collection(coll).DeleteMany(h.ctx, bson.M{
+				"user_id": bson.M{"$in": userIDs},
+			})
+			if err != nil {
+				h.t.Logf("⚠ 清理集合 %s 失败: %v", coll, err)
+			} else {
+				h.t.Logf("✓ 已清理集合 %s 的测试数据", coll)
+			}
+		}
+	}
+}
+
+// RemoveCollectionByBookID 通过API删除指定书籍的收藏（如果存在）
+// 这是一个辅助方法，用于测试前清理数据
+func (h *TestHelper) RemoveCollectionByBookID(bookID, token string) {
+	h.t.Logf("检查并清理书籍收藏: %s", bookID)
+
+	// 1. 获取收藏列表
+	w := h.DoAuthRequest("GET", ReaderCollectionsPath, nil, token)
+
+	if w.Code != 200 {
+		h.t.Logf("  - 获取收藏列表失败，无法清理")
+		return
+	}
+
+	var listResp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &listResp)
+
+	// 2. 在收藏列表中查找指定书籍
+	if data, ok := listResp["data"].(map[string]interface{}); ok {
+		// 注意：API返回的是list字段，不是collections
+		if collections, ok := data["list"].([]interface{}); ok {
+			for _, item := range collections {
+				if collection, ok := item.(map[string]interface{}); ok {
+					// 检查是否是目标书籍
+					if collection["book_id"] == bookID {
+						// 获取collection的_id或id字段
+						var collectionID string
+						if id, ok := collection["id"].(string); ok {
+							collectionID = id
+						} else if id, ok := collection["_id"].(string); ok {
+							collectionID = id
+						}
+
+						if collectionID != "" {
+							// 删除这个收藏
+							deleteURL := fmt.Sprintf("%s/%s", ReaderCollectionsPath, collectionID)
+							w := h.DoAuthRequest("DELETE", deleteURL, nil, token)
+
+							if w.Code == 200 {
+								h.t.Logf("✓ 已删除旧收藏记录: %s (book_id: %s)", collectionID, bookID)
+								return
+							} else {
+								h.t.Logf("⚠ 删除收藏失败 (状态码: %d)", w.Code)
+							}
+						}
+					}
+				}
+			}
+			h.t.Logf("  - 书籍未被收藏，无需清理")
+		}
+	}
+}
+
+// CleanupTestCollections 清理测试用户的收藏数据（针对特定书籍）
+// 注意：这个方法直接操作数据库，主要用于defer清理
+func (h *TestHelper) CleanupTestCollections(bookID string) {
+	// 直接删除测试用户的收藏
+	testUsers := []string{"test_user01", "test_user02", "test_user03"}
+
+	// 获取测试用户的ID
+	var userIDs []string
+	cursor, err := global.DB.Collection("users").Find(h.ctx, bson.M{
+		"username": bson.M{"$in": testUsers},
+	})
+	if err != nil {
+		return
+	}
+	if cursor != nil {
+		var users []bson.M
+		cursor.All(h.ctx, &users)
+		for _, user := range users {
+			if id, ok := user["_id"].(primitive.ObjectID); ok {
+				userIDs = append(userIDs, id.Hex())
+			}
+		}
+		cursor.Close(h.ctx)
+	}
+
+	// 删除指定书籍的收藏
+	if len(userIDs) > 0 {
+		result, _ := global.DB.Collection("collections").DeleteMany(h.ctx, bson.M{
+			"user_id": bson.M{"$in": userIDs},
+			"book_id": bookID,
+		})
+		if result.DeletedCount > 0 {
+			h.t.Logf("✓ 测试结束：已清理 %d 条收藏数据", result.DeletedCount)
 		}
 	}
 }
@@ -329,6 +443,96 @@ func (h *TestHelper) LogWarning(format string, args ...interface{}) {
 // LogError 记录错误日志
 func (h *TestHelper) LogError(format string, args ...interface{}) {
 	h.t.Logf("❌ "+format, args...)
+}
+
+// ========================================
+// 增强的错误诊断功能
+// ========================================
+
+// LogRequest 记录详细的请求信息
+func (h *TestHelper) LogRequest(method, path string, body interface{}, token string) {
+	h.t.Logf("→ 请求: %s %s", method, path)
+
+	if body != nil {
+		bodyJSON, err := json.MarshalIndent(body, "", "  ")
+		if err == nil {
+			h.t.Logf("  Body: %s", bodyJSON)
+		} else {
+			h.t.Logf("  Body: %v", body)
+		}
+	}
+
+	if token != "" {
+		tokenLen := len(token)
+		if tokenLen > 20 {
+			h.t.Logf("  Token: %s...", token[:20])
+		} else {
+			h.t.Logf("  Token: %s", token)
+		}
+	}
+}
+
+// LogResponse 记录详细的响应信息
+func (h *TestHelper) LogResponse(w *httptest.ResponseRecorder) {
+	h.t.Logf("← 响应: %d", w.Code)
+
+	// 尝试格式化JSON
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, w.Body.Bytes(), "", "  "); err == nil {
+		responseStr := prettyJSON.String()
+		if len(responseStr) > 500 {
+			h.t.Logf("  Body (前500字符): %s...", responseStr[:500])
+		} else {
+			h.t.Logf("  Body: %s", responseStr)
+		}
+	} else {
+		bodyStr := w.Body.String()
+		if len(bodyStr) > 500 {
+			h.t.Logf("  Body (前500字符): %s...", bodyStr[:500])
+		} else {
+			h.t.Logf("  Body: %s", bodyStr)
+		}
+	}
+}
+
+// LogTestContext 记录测试执行上下文
+func (h *TestHelper) LogTestContext(step string, details ...interface{}) {
+	h.t.Logf("┌─ %s ─┐", step)
+	for i, detail := range details {
+		h.t.Logf("│ [%d] %v", i+1, detail)
+	}
+	h.t.Logf("└%s┘", strings.Repeat("─", len(step)+4))
+}
+
+// GetResponseString 返回格式化的响应字符串
+func (h *TestHelper) GetResponseString(w *httptest.ResponseRecorder) string {
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, w.Body.Bytes(), "", "  "); err == nil {
+		return prettyJSON.String()
+	}
+	return w.Body.String()
+}
+
+// AssertJSONResponse 断言响应是有效的JSON并返回解析后的数据
+func (h *TestHelper) AssertJSONResponse(w *httptest.ResponseRecorder, msgAndArgs ...interface{}) map[string]interface{} {
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+
+	if err != nil {
+		msg := "响应不是有效的JSON"
+		if len(msgAndArgs) > 0 {
+			if format, ok := msgAndArgs[0].(string); ok {
+				msg = fmt.Sprintf(format, msgAndArgs[1:]...)
+			}
+		}
+
+		h.t.Logf("❌ %s", msg)
+		h.t.Logf("   错误: %v", err)
+		h.t.Logf("   响应内容: %s", w.Body.String())
+		h.t.FailNow()
+	}
+
+	return response
 }
 
 // ========================================

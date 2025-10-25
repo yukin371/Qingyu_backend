@@ -70,7 +70,7 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		// 根据错误类型返回具体的错误信息
-		if strings.Contains(errMsg, "已收藏") || strings.Contains(errMsg, "already") {
+		if strings.Contains(errMsg, "已经收藏") || strings.Contains(errMsg, "already") {
 			shared.Error(c, http.StatusBadRequest, "该书籍已经收藏", errMsg)
 		} else if strings.Contains(errMsg, "不存在") || strings.Contains(errMsg, "not found") {
 			shared.Error(c, http.StatusNotFound, "书籍不存在", errMsg)

@@ -48,7 +48,20 @@ func InitReaderRouter(
 		historyApiHandler = readerApi.NewReadingHistoryAPI(readingHistoryService)
 	}
 
-	// 阅读器主路由组（需要认证）
+	// ========================================
+	// 公开路由（不需要认证）
+	// ========================================
+	readerPublic := r.Group("/reader")
+	{
+		// 公开的收藏列表
+		if collectionApiHandler != nil {
+			readerPublic.GET("/collections/public", collectionApiHandler.GetPublicCollections)
+		}
+	}
+
+	// ========================================
+	// 需要认证的路由
+	// ========================================
 	readerGroup := r.Group("/reader")
 	readerGroup.Use(middleware.JWTAuth())
 	{
@@ -176,7 +189,7 @@ func InitReaderRouter(
 				collections.GET("/stats", collectionApiHandler.GetCollectionStats)       // 获取收藏统计
 				collections.POST("/:id/share", collectionApiHandler.ShareCollection)     // 分享收藏
 				collections.DELETE("/:id/share", collectionApiHandler.UnshareCollection) // 取消分享收藏
-				collections.GET("/public", collectionApiHandler.GetPublicCollections)    // 获取公开收藏列表
+				// 注意：GET("/public") 已移至公开路由组，不需要认证
 
 				// 收藏夹管理
 				collections.POST("/folders", collectionApiHandler.CreateFolder)       // 创建收藏夹

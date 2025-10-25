@@ -59,10 +59,20 @@ func TestWritingScenario(t *testing.T) {
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
+		// 添加详细的诊断日志
+		t.Logf("原始响应状态: %d", resp.StatusCode)
+		t.Logf("响应头: %v", resp.Header)
 		body, _ := io.ReadAll(resp.Body)
+		t.Logf("响应Body长度: %d", len(body))
+		t.Logf("响应Body (前500字符): %s", string(body[:min(len(body), 500)]))
+
 		var result map[string]interface{}
 		err = json.Unmarshal(body, &result)
-		require.NoError(t, err)
+		if err != nil {
+			t.Logf("❌ JSON解析失败: %v", err)
+			t.Logf("完整响应Body: %s", string(body))
+		}
+		require.NoError(t, err, "JSON解析失败，请检查API响应格式")
 
 		if result["code"] == float64(200) {
 			data := result["data"].(map[string]interface{})
