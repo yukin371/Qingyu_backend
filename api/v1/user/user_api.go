@@ -130,10 +130,13 @@ func (api *UserAPI) Login(c *gin.Context) {
 
 	// 构建响应
 	loginResp := LoginResponse{
-		UserID:   resp.User.ID,
-		Username: resp.User.Username,
-		Email:    resp.User.Email,
-		Token:    resp.Token,
+		Token: resp.Token,
+		User: UserBasicInfo{
+			UserID:   resp.User.ID,
+			Username: resp.User.Username,
+			Email:    resp.User.Email,
+			Role:     resp.User.Role,
+		},
 	}
 
 	shared.Success(c, http.StatusOK, "登录成功", loginResp)
