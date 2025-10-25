@@ -17,7 +17,8 @@ type Service struct {
 	adapterManager *adapter.AdapterManager
 }
 
-// NewService 创建AI服务
+// NewService 创建AI服务（向后兼容，但不推荐使用）
+// 废弃：请使用 NewServiceWithDependencies
 func NewService() *Service {
 	// 使用全局配置
 	cfg := config.GlobalConfig
@@ -25,7 +26,8 @@ func NewService() *Service {
 		panic("GlobalConfig is not initialized")
 	}
 
-	// 创建document服务实例
+	// 创建document服务实例（空的，没有依赖注入）
+	// 警告：这会导致nil pointer错误！
 	docService := &documentService.DocumentService{}
 	projService := &documentService.ProjectService{}
 	nodeService := &documentService.NodeService{}
@@ -53,6 +55,37 @@ func NewService() *Service {
 			},
 		}
 		adapterManager = adapter.NewAdapterManager(externalAPIConfig)
+	}
+
+	return &Service{
+		contextService: contextService,
+		adapterManager: adapterManager,
+	}
+}
+
+// NewServiceWithDependencies 创建AI服务（使用依赖注入，推荐）
+func NewServiceWithDependencies(projectService *documentService.ProjectService) *Service {
+	// 使用全局配置
+	cfg := config.GlobalConfig
+	if cfg == nil {
+		panic("GlobalConfig is not initialized")
+	}
+
+	// 创建其他document服务实例（暂时仍为空，待后续迁移）
+	docService := &documentService.DocumentService{}
+	nodeService := &documentService.NodeService{}
+	versionService := &documentService.VersionService{}
+
+	// 创建上下文服务，使用注入的ProjectService
+	contextService := NewContextService(docService, projectService, nodeService, versionService, nil)
+
+	// 创建适配器管理器 - 优先使用External配置（支持多提供商）
+	var adapterManager *adapter.AdapterManager
+	if cfg.External != nil {
+		adapterManager = adapter.NewAdapterManager(cfg.External)
+	} else {
+		// 默认空配置（应该不会走到这里，因为config.test.yaml有External配置）
+		fmt.Println("警告: 未找到External API配置，AI功能可能无法使用")
 	}
 
 	return &Service{

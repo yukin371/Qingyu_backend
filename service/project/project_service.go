@@ -314,6 +314,20 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (
 	return s.GetProject(ctx, projectID)
 }
 
+// GetByIDWithoutAuth 获取项目详情（无权限检查，用于内部服务调用如AI）
+func (s *ProjectService) GetByIDWithoutAuth(ctx context.Context, projectID string) (*writer.Project, error) {
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	return project, nil
+}
+
 // GetProjectList 获取项目列表（兼容API层调用）
 func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*writer.Project, error) {
 	// 构建请求
