@@ -16,6 +16,9 @@
 # 测试二进制文件
 *.test
 
+# 测试结果
+test_results/
+
 # 输出目录
 /dist/
 /build/

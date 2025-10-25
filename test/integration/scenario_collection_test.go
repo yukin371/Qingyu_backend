@@ -166,6 +166,7 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 		// 关闭数据库连接
 		if global.DB != nil {
 			global.DB.Client().Disconnect(context.Background())
+			global.DB = nil // 重要：将global.DB设为nil，避免后续测试使用断开的连接
 		}
 	}
 

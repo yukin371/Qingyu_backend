@@ -38,9 +38,9 @@ func TestWritingScenario(t *testing.T) {
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
-		data := helper.AssertSuccess(w, 200, "创建写作项目应该成功")
+		data := helper.AssertSuccess(w, 201, "创建写作项目应该成功")
 
-		if id, ok := data["id"].(string); ok {
+		if id, ok := data["projectId"].(string); ok {
 			projectID = id
 			title := data["title"]
 			helper.LogSuccess("写作项目创建成功 - 项目ID: %s, 标题: %v", projectID, title)
