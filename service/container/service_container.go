@@ -13,6 +13,7 @@ import (
 	// Service implementations
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
+	projectService "Qingyu_backend/service/project"
 	readingService "Qingyu_backend/service/reading"
 	userService "Qingyu_backend/service/user"
 
@@ -60,6 +61,7 @@ type ServiceContainer struct {
 	likeService           *readingService.LikeService
 	collectionService     *readingService.CollectionService
 	readingHistoryService *readingService.ReadingHistoryService
+	projectService        *projectService.ProjectService
 
 	// AI 相关服务
 	quotaService *aiService.QuotaService
@@ -504,8 +506,20 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	c.services["ReadingHistoryService"] = c.readingHistoryService
 
+	// ============ 4.8 创建项目服务 ============
+	projectRepo := c.repositoryFactory.CreateProjectRepository()
+	c.projectService = projectService.NewProjectService(
+		projectRepo,
+		c.eventBus,
+	)
+	// 注册ProjectService
+	if err := c.RegisterService("ProjectService", c.projectService); err != nil {
+		return fmt.Errorf("注册项目服务失败: %w", err)
+	}
+
 	// ============ 5. 创建AI服务 ============
-	c.aiService = aiService.NewService()
+	// AIService需要ProjectService来构建上下文
+	c.aiService = aiService.NewServiceWithDependencies(c.projectService)
 
 	// 创建AI配额服务
 	quotaRepo := c.repositoryFactory.CreateQuotaRepository()

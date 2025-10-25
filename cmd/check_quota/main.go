@@ -14,7 +14,7 @@ import (
 
 func main() {
 	fmt.Println("检查AI配额数据...")
-	
+
 	// 加载配置
 	_, err := config.LoadConfig(".")
 	if err != nil {
@@ -24,7 +24,7 @@ func main() {
 	// 连接MongoDB
 	ctx := context.Background()
 	mongoConfig := config.GlobalConfig.Database.Primary.MongoDB
-	
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConfig.URI))
 	if err != nil {
 		log.Fatal("连接MongoDB失败:", err)
@@ -45,7 +45,7 @@ func main() {
 	fmt.Printf("\n用户信息:\n")
 	fmt.Printf("  username: %v\n", user["username"])
 	fmt.Printf("  _id: %v (type: %T)\n", user["_id"], user["_id"])
-	
+
 	userID := user["_id"]
 
 	// 查询该用户的所有配额
@@ -75,4 +75,3 @@ func main() {
 	}
 	fmt.Println()
 }
-

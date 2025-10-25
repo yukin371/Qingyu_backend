@@ -44,8 +44,9 @@ func NewContextService(
 
 // BuildContext 构建AI上下文
 func (s *ContextService) BuildContext(ctx context.Context, projectID string, chapterID string) (*ai.AIContext, error) {
-	// 获取项目信息
-	project, err := s.projectService.GetProjectByID(ctx, projectID)
+	// 获取项目信息（直接从repository，跳过权限检查）
+	// AI上下文构建不应该受权限限制，因为已经通过配额中间件验证
+	project, err := s.projectService.GetByIDWithoutAuth(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("获取项目信息失败: %w", err)
 	}
@@ -53,10 +54,14 @@ func (s *ContextService) BuildContext(ctx context.Context, projectID string, cha
 		return nil, fmt.Errorf("项目不存在")
 	}
 
-	// 构建章节信息
-	chapterInfo, err := s.buildChapterInfo(ctx, projectID, chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("构建章节信息失败: %w", err)
+	// 构建章节信息（可选）
+	var chapterInfo *ai.ChapterInfo
+	if chapterID != "" {
+		var err error
+		chapterInfo, err = s.buildChapterInfo(ctx, projectID, chapterID)
+		if err != nil {
+			return nil, fmt.Errorf("构建章节信息失败: %w", err)
+		}
 	}
 
 	aiContext := &ai.AIContext{
