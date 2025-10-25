@@ -33,16 +33,16 @@ func TestAIGenerationScenario(t *testing.T) {
 
 	t.Run("1.文本生成_续写功能", func(t *testing.T) {
 		requestData := map[string]interface{}{
-			"prompt": "在一个风雪交加的夜晚，主角踏上了寻找失散多年亲人的旅程。",
-			"type":   "continue",
-			"length": 200,
+			"projectId":      "test_project_001",
+			"currentText":    "在一个风雪交加的夜晚，主角踏上了寻找失散多年亲人的旅程。",
+			"continueLength": 200,
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/ai/generate", requestData, token)
 		data := helper.AssertSuccess(w, 200, "续写功能应该成功")
 
 		if generatedText, ok := data["generated_text"].(string); ok {
-			t.Logf("  原文: %s", requestData["prompt"])
+			t.Logf("  原文: %s", requestData["currentText"])
 			t.Logf("  续写: %s", generatedText)
 
 			assert.NotEmpty(t, generatedText, "生成的文本不应为空")
@@ -56,9 +56,10 @@ func TestAIGenerationScenario(t *testing.T) {
 		originalText := "他快速地跑向门口，打开门冲了出去。"
 
 		requestData := map[string]interface{}{
-			"text":  originalText,
-			"type":  "rewrite",
-			"style": "literary", // 文学化
+			"projectId":    "test_project_001",
+			"originalText": originalText,
+			"rewriteMode":  "polish", // polish: 润色
+			"instructions": "使其更有文学性",
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/ai/rewrite", requestData, token)
@@ -79,9 +80,10 @@ func TestAIGenerationScenario(t *testing.T) {
 		outline := "主角在森林中遇到了神秘的老人"
 
 		requestData := map[string]interface{}{
-			"outline": outline,
-			"type":    "expand",
-			"length":  300,
+			"projectId":    "test_project_001",
+			"originalText": outline,
+			"rewriteMode":  "expand", // expand: 扩写
+			"instructions": "扩展为300字左右的详细描述",
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/ai/expand", requestData, token)
@@ -106,8 +108,10 @@ func TestAIGenerationScenario(t *testing.T) {
 		rawText := "天气很热，他很累，想要休息一下。"
 
 		requestData := map[string]interface{}{
-			"text": rawText,
-			"type": "polish",
+			"projectId":    "test_project_001",
+			"originalText": rawText,
+			"rewriteMode":  "polish", // polish: 润色
+			"instructions": "提升文学性和表达力",
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/ai/polish", requestData, token)

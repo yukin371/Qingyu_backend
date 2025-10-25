@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 
@@ -31,8 +32,14 @@ func (s *QuotaService) InitializeUserQuota(ctx context.Context, userID, userRole
 		return nil // 已存在，不需要初始化
 	}
 
-	// 获取默认配额
-	defaultQuota := ai.GetDefaultQuota(userRole, membershipLevel)
+	// 优先从配置文件获取默认配额
+	var defaultQuota int
+	if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
+		defaultQuota = config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
+	} else {
+		// 配置不存在时使用模型中的默认值
+		defaultQuota = ai.GetDefaultQuota(userRole, membershipLevel)
+	}
 
 	// 创建日配额
 	quota := &ai.UserQuota{
@@ -70,6 +77,42 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 			}
 		} else {
 			return err
+		}
+	}
+
+	// 自动升级配额：如果配置文件中的配额更大，自动升级
+	if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
+		// 从配额元数据获取用户角色，如果没有则默认为reader/normal
+		userRole := "reader"
+		membershipLevel := "normal"
+		if quota.Metadata != nil {
+			if quota.Metadata.UserRole != "" {
+				userRole = quota.Metadata.UserRole
+			}
+			if quota.Metadata.MembershipLevel != "" {
+				membershipLevel = quota.Metadata.MembershipLevel
+			}
+		}
+
+		configQuota := config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
+		if configQuota > quota.TotalQuota {
+			// 配置中的配额更大，自动升级
+			oldTotal := quota.TotalQuota
+			quota.TotalQuota = configQuota
+			// 增加剩余配额（按照增加的比例）
+			increase := configQuota - oldTotal
+			quota.RemainingQuota = quota.RemainingQuota + increase
+			if quota.RemainingQuota < 0 {
+				quota.RemainingQuota = 0
+			}
+			if quota.RemainingQuota > configQuota {
+				quota.RemainingQuota = configQuota
+			}
+			// 更新到数据库
+			if updateErr := s.quotaRepo.UpdateQuota(ctx, quota); updateErr != nil {
+				// 升级失败不影响检查，继续使用旧值
+				fmt.Printf("警告: 配额升级失败: %v\n", updateErr)
+			}
 		}
 	}
 
