@@ -40,7 +40,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	}
 
 	// 2. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -98,7 +98,7 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*wri
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -113,7 +113,7 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*wri
 // ListMyProjects 获取我的项目列表
 func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRequest) (*ListProjectsResponse, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -174,7 +174,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -244,7 +244,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) er
 	}
 
 	// 2. 权限检查（只有所有者可以删除）
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}

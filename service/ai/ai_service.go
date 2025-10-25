@@ -127,6 +127,11 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 		}
 	}
 
+	// 检查适配器管理器是否已初始化
+	if s.adapterManager == nil {
+		return nil, fmt.Errorf("AI适配器管理器未初始化，请检查配置文件中的External API配置")
+	}
+
 	// 使用适配器管理器生成内容
 	adapterReq := &adapter.TextGenerationRequest{
 		Prompt:      req.Prompt,

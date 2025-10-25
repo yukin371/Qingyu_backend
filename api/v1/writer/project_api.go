@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -40,7 +41,13 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 		return
 	}
 
-	resp, err := api.projectService.CreateProject(c.Request.Context(), &req)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	resp, err := api.projectService.CreateProject(ctx, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
 		return
@@ -96,7 +103,13 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 		Category: category,
 	}
 
-	resp, err := api.projectService.ListMyProjects(c.Request.Context(), req)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	resp, err := api.projectService.ListMyProjects(ctx, req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "查询列表失败", err.Error())
 		return
@@ -126,7 +139,13 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	if err := api.projectService.UpdateProject(c.Request.Context(), projectID, &req); err != nil {
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	if err := api.projectService.UpdateProject(ctx, projectID, &req); err != nil {
 		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
 		return
 	}
@@ -147,7 +166,13 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	if err := api.projectService.DeleteProject(c.Request.Context(), projectID); err != nil {
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	if err := api.projectService.DeleteProject(ctx, projectID); err != nil {
 		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
 		return
 	}
@@ -167,8 +192,14 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 	projectID := c.Param("id")
 
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
 	// 调用Service计算并更新统计信息
-	if err := api.projectService.RecalculateProjectStatistics(c.Request.Context(), projectID); err != nil {
+	if err := api.projectService.RecalculateProjectStatistics(ctx, projectID); err != nil {
 		shared.Error(c, http.StatusInternalServerError, "更新统计失败", err.Error())
 		return
 	}

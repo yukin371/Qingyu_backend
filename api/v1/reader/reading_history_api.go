@@ -62,7 +62,7 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "记录成功", gin.H{})
+	shared.Success(c, 201, "记录成功", gin.H{})
 }
 
 // GetReadingHistories 获取阅读历史列表

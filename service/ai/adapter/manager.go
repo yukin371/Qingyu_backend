@@ -45,6 +45,9 @@ func (m *AdapterManager) initializeAdapters() {
 		switch name {
 		case "openai":
 			adapter = NewOpenAIAdapter(providerConfig.APIKey, providerConfig.BaseURL)
+		case "deepseek":
+			// DeepSeek API兼容OpenAI格式，使用专用DeepSeek适配器
+			adapter = NewDeepSeekAdapter(providerConfig.APIKey, providerConfig.BaseURL)
 		case "claude":
 			adapter = NewClaudeAdapter(providerConfig.APIKey, providerConfig.BaseURL)
 		case "gemini":
@@ -70,6 +73,14 @@ func (m *AdapterManager) GetAdapter(provider string) (AIAdapter, error) {
 
 	if provider == "" {
 		provider = m.defaultProvider
+		// 检查默认提供商是否为空
+		if provider == "" {
+			return nil, &AdapterError{
+				Code:    ErrorTypeInvalidRequest,
+				Message: "未配置默认AI提供商，请检查配置文件",
+				Type:    ErrorTypeInvalidRequest,
+			}
+		}
 	}
 
 	adapter, exists := m.adapters[provider]
@@ -86,6 +97,13 @@ func (m *AdapterManager) GetAdapter(provider string) (AIAdapter, error) {
 
 // GetDefaultAdapter 获取默认适配器
 func (m *AdapterManager) GetDefaultAdapter() (AIAdapter, error) {
+	if m.defaultProvider == "" {
+		return nil, &AdapterError{
+			Code:    ErrorTypeInvalidRequest,
+			Message: "未配置默认AI提供商，请检查配置文件",
+			Type:    ErrorTypeInvalidRequest,
+		}
+	}
 	return m.GetAdapter(m.defaultProvider)
 }
 

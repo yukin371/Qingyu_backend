@@ -83,14 +83,14 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 //
 //	@Summary	获取评论列表
 //	@Tags		评论
-//	@Param		bookId	query		string	true	"书籍ID"
+//	@Param		book_id	query		string	true	"书籍ID"
 //	@Param		sortBy	query		string	false	"排序方式(latest/hot)"	default(latest)
 //	@Param		page	query		int		false	"页码"					default(1)
 //	@Param		size	query		int		false	"每页数量"				default(20)
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/comments [get]
 func (api *CommentAPI) GetCommentList(c *gin.Context) {
-	bookID := c.Query("bookId")
+	bookID := c.Query("book_id")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
 		return

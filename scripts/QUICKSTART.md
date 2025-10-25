@@ -1,20 +1,5 @@
 # 🚀 青羽后端脚本 - 快速开始
 
-## 📁 目录结构整理
-
-首次使用前，运行文件组织脚本将现有脚本分类：
-
-```bash
-# 预览整理计划（不实际移动文件）
-python scripts/organize_scripts.py --preview
-
-# 执行整理
-python scripts/organize_scripts.py
-
-# 查看新的目录结构
-python scripts/organize_scripts.py --show-structure
-```
-
 ## ⚡ 常用操作
 
 ### 1. 初始化本地开发环境

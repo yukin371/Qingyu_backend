@@ -28,6 +28,7 @@ import (
 
 	// Infrastructure
 	"Qingyu_backend/config"
+	"Qingyu_backend/global"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
 
@@ -324,7 +325,10 @@ func (c *ServiceContainer) initMongoDB() error {
 
 	c.mongoClient = client
 	c.mongoDB = client.Database(mongoCfg.Database)
-	return nil
+
+	// 设置全局DB变量（兼容测试和旧代码）
+	// 注意：需要导入global包
+	return c.setGlobalDB()
 }
 
 // initRedis 初始化Redis客户端
@@ -340,6 +344,15 @@ func (c *ServiceContainer) initRedis() error {
 	}
 
 	c.redisClient = client
+	return nil
+}
+
+// setGlobalDB 设置全局DB变量（用于测试和向后兼容）
+func (c *ServiceContainer) setGlobalDB() error {
+	if c.mongoDB == nil {
+		return fmt.Errorf("MongoDB未初始化")
+	}
+	global.DB = c.mongoDB
 	return nil
 }
 
