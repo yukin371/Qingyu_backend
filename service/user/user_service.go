@@ -10,6 +10,8 @@ import (
 	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
+
+	"go.uber.org/zap"
 )
 
 // UserServiceImpl 用户服务实现
@@ -292,29 +294,32 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	// DEBUG: 记录登录尝试
-	fmt.Printf("[DEBUG] 登录尝试 - 用户名: %s\n", req.Username)
+	zap.L().Debug("登录尝试", zap.String("username", req.Username))
 
 	// 2. 获取用户
 	user, err := s.userRepo.GetByUsername(ctx, req.Username)
 	if err != nil {
-		fmt.Printf("[DEBUG] 获取用户失败 - 错误: %v\n", err)
+		zap.L().Debug("获取用户失败", zap.Error(err))
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
 		}
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
 	}
 
-	fmt.Printf("[DEBUG] 用户找到 - ID: %s, 用户名: %s, 状态: %s\n", user.ID, user.Username, user.Status)
-	fmt.Printf("[DEBUG] 密码哈希: %s\n", user.Password[:20]+"...")
-	fmt.Printf("[DEBUG] 输入密码: %s\n", req.Password)
+	zap.L().Debug("用户找到",
+		zap.String("user_id", user.ID),
+		zap.String("username", user.Username),
+		zap.String("status", string(user.Status)))
+	zap.L().Debug("密码哈希", zap.String("hash_prefix", user.Password[:20]+"..."))
+	zap.L().Debug("输入密码", zap.String("password", req.Password))
 
 	// 3. 验证密码
 	if !user.ValidatePassword(req.Password) {
-		fmt.Printf("[DEBUG] 密码验证失败\n")
+		zap.L().Debug("密码验证失败")
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
 	}
 
-	fmt.Printf("[DEBUG] 密码验证成功\n")
+	zap.L().Debug("密码验证成功")
 
 	// 4. 检查用户状态
 	switch user.Status {
@@ -355,9 +360,11 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	ip := "unknown" // TODO: 从 context 中获取客户端 IP
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
-		// 注意：不要使用fmt.Printf，会污染HTTP响应
-		// TODO: 使用logger记录错误
-		_ = err
+		zap.L().Warn("更新最后登录时间失败",
+			zap.String("user_id", user.ID),
+			zap.String("ip", ip),
+			zap.Error(err),
+		)
 	}
 
 	// 6. 生成JWT令牌

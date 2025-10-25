@@ -11,6 +11,8 @@ import (
 	"time"
 
 	authModel "Qingyu_backend/models/shared/auth"
+
+	"go.uber.org/zap"
 )
 
 // SessionServiceImpl 会话服务实现
@@ -57,8 +59,11 @@ func (s *SessionServiceImpl) CreateSession(ctx context.Context, userID string) (
 	// MVP: 使用JSON存储会话ID列表（简化实现，避免扩展CacheClient接口）
 	if err := s.addSessionToUserList(ctx, userID, sessionID); err != nil {
 		// 非关键错误，记录但不中断
-		// TODO: 使用logger记录错误，不要使用fmt.Printf污染HTTP响应
-		_ = err
+		zap.L().Warn("添加会话到用户列表失败",
+			zap.String("user_id", userID),
+			zap.String("session_id", sessionID),
+			zap.Error(err),
+		)
 	}
 
 	return session, nil

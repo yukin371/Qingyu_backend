@@ -7,6 +7,8 @@ import (
 
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+
+	"go.uber.org/zap"
 )
 
 // AuthServiceImpl Auth服务实现（整合JWT、角色、权限、会话）
@@ -142,8 +144,10 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
 	if err != nil {
 		// 会话创建失败不影响登录（降级处理）
-		// TODO: 使用logger记录错误，不要使用fmt.Printf污染HTTP响应
-		_ = err
+		zap.L().Warn("创建会话失败",
+			zap.String("user_id", loginResp.User.ID),
+			zap.Error(err),
+		)
 	}
 	_ = session // 暂时不使用，后续可添加到响应中
 
