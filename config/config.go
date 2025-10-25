@@ -18,6 +18,7 @@ type Config struct {
 	JWT      *JWTConfig         `mapstructure:"jwt"`
 	AI       *AIConfig          `mapstructure:"ai"`
 	External *ExternalAPIConfig `mapstructure:"external"`
+	AIQuota  *AIQuotaConfig     `mapstructure:"ai_quota"`
 }
 
 // ServerConfig 服务器配置
@@ -55,6 +56,61 @@ type ProviderConfig struct {
 	Priority        int      `mapstructure:"priority"`
 	Enabled         bool     `mapstructure:"enabled"`
 	SupportedModels []string `mapstructure:"supported_models"`
+}
+
+// AIQuotaConfig AI配额配置
+type AIQuotaConfig struct {
+	DefaultQuotas    *DefaultQuotasConfig `mapstructure:"default_quotas"`
+	Reset            *QuotaResetConfig    `mapstructure:"reset"`
+	WarningThreshold float64              `mapstructure:"warning_threshold"`
+	AllowOverdraft   bool                 `mapstructure:"allow_overdraft"`
+	OverdraftLimit   int                  `mapstructure:"overdraft_limit"`
+}
+
+// DefaultQuotasConfig 默认配额配置
+type DefaultQuotasConfig struct {
+	Reader map[string]int `mapstructure:"reader"` // normal, vip
+	Writer map[string]int `mapstructure:"writer"` // novice, signed, master
+	Admin  map[string]int `mapstructure:"admin"`  // normal
+}
+
+// QuotaResetConfig 配额重置配置
+type QuotaResetConfig struct {
+	DailyResetHour  int  `mapstructure:"daily_reset_hour"`
+	EnableAutoReset bool `mapstructure:"enable_auto_reset"`
+}
+
+// GetDefaultQuota 从配置获取默认配额
+func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
+	if c == nil || c.DefaultQuotas == nil {
+		// 如果配置不存在，返回硬编码的默认值
+		return 5
+	}
+
+	switch userRole {
+	case "reader":
+		if quota, ok := c.DefaultQuotas.Reader[membershipLevel]; ok {
+			return quota
+		}
+		// 如果没有找到对应等级，尝试normal
+		if quota, ok := c.DefaultQuotas.Reader["normal"]; ok {
+			return quota
+		}
+	case "writer":
+		if quota, ok := c.DefaultQuotas.Writer[membershipLevel]; ok {
+			return quota
+		}
+		if quota, ok := c.DefaultQuotas.Writer["novice"]; ok {
+			return quota
+		}
+	case "admin":
+		if quota, ok := c.DefaultQuotas.Admin["normal"]; ok {
+			return quota
+		}
+	}
+
+	// 最后的默认值
+	return 5
 }
 
 var (
