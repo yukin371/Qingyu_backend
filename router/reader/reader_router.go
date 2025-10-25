@@ -64,9 +64,9 @@ func InitReaderRouter(
 
 			// 书籍点赞（如果likeApiHandler可用）
 			if likeApiHandler != nil {
-				books.POST("/:id/like", likeApiHandler.LikeBook)            // 点赞书籍
-				books.DELETE("/:id/like", likeApiHandler.UnlikeBook)        // 取消点赞书籍
-				books.GET("/:id/like/info", likeApiHandler.GetBookLikeInfo) // 获取点赞信息
+				books.POST("/:bookId/like", likeApiHandler.LikeBook)            // 点赞书籍
+				books.DELETE("/:bookId/like", likeApiHandler.UnlikeBook)        // 取消点赞书籍
+				books.GET("/:bookId/like/info", likeApiHandler.GetBookLikeInfo) // 获取点赞信息
 			}
 		}
 
