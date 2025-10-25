@@ -31,10 +31,16 @@ type LoginRequest struct {
 
 // LoginResponse 登录响应
 type LoginResponse struct {
+	Token string        `json:"token"`
+	User  UserBasicInfo `json:"user"`
+}
+
+// UserBasicInfo 基本用户信息
+type UserBasicInfo struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
-	Token    string `json:"token"`
+	Role     string `json:"role,omitempty"`
 }
 
 // UserProfileResponse 用户信息响应
@@ -69,4 +75,3 @@ type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required" validate:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=6" validate:"required,min=6"`
 }
-
