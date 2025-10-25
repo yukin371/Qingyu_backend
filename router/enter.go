@@ -1,6 +1,8 @@
 package router
 
 import (
+	"os"
+
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
@@ -11,6 +13,7 @@ import (
 	userRouter "Qingyu_backend/router/user"
 
 	"Qingyu_backend/service"
+	sharedService "Qingyu_backend/service/shared"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -151,16 +154,23 @@ func RegisterRoutes(r *gin.Engine) {
 		adminSvc = nil
 	}
 
+	// 创建配置管理服务
+	configPath := os.Getenv("CONFIG_FILE")
+	if configPath == "" {
+		configPath = "./config/config.yaml"
+	}
+	configSvc := sharedService.NewConfigService(configPath)
+
 	// TODO: 获取审核服务实例（需要实现）
 	// auditSvc := serviceContainer.GetAuditService()
-	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, nil, adminSvc)
+	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, nil, adminSvc, configSvc)
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")
 	logger.Info("  - /api/v1/admin/quota/* (AI配额管理)")
 	logger.Info("  - /api/v1/admin/audit/* (审核管理)")
 	logger.Info("  - /api/v1/admin/stats (系统统计)")
-	logger.Info("  - /api/v1/admin/config (系统配置)")
+	logger.Info("  - /api/v1/admin/config/* (配置管理)")
 
 	// ============ 注册系统监控路由 ============
 	systemRouter.InitSystemRoutes(v1)
