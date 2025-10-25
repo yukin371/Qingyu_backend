@@ -71,6 +71,7 @@ Thumbs.db
 *.sqlite3
 
 # 配置文件（如果包含敏感信息）
+config.test.yaml
 config.local.yaml
 config.local.json
 
