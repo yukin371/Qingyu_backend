@@ -1,19 +1,10 @@
 package integration
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 	"Qingyu_backend/global"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -26,21 +17,20 @@ func TestReadingScenario(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	// 初始化
-	_, err := config.LoadConfig("../..")
-	require.NoError(t, err, "加载配置失败")
+	// 设置测试环境
+	router, cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
+	// 初始化helper
+	helper := NewTestHelper(t, router)
 
-	ctx := context.Background()
-	baseURL := "http://localhost:8080"
-
-	// 登录获取 token
-	token := loginTestUser(t, baseURL, "test_user01", "Test@123456")
+	// 登录测试用户
+	token := helper.LoginTestUser()
 	if token == "" {
 		t.Skip("无法登录测试用户，跳过阅读流程测试")
 	}
+
+	ctx := context.Background()
 
 	// 获取一本测试书籍
 	var testBook map[string]interface{}
@@ -65,32 +55,17 @@ func TestReadingScenario(t *testing.T) {
 	}
 
 	t.Run("1.书籍详情_获取书籍信息", func(t *testing.T) {
-		resp, err := http.Get(fmt.Sprintf("%s/api/v1/bookstore/books/%s", baseURL, testBookID))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		body, _ := io.ReadAll(resp.Body)
+		url := fmt.Sprintf("%s/%s", BookstoreBooksPath, testBookID)
+		w := helper.DoRequest("GET", url, nil, "")
 
 		// 处理404情况
-		if resp.StatusCode == http.StatusNotFound {
-			// TODO: 修复书籍详情API路由问题
-			// - 检查路由是否正确注册：GET /api/v1/bookstore/books/:id
-			// - 确认BookstoreAPI中GetBookByID方法是否实现
-			// - 验证MongoDB ObjectID转换是否正确
-			t.Logf("⚠ 书籍详情API返回404，可能路由未实现")
-			t.Logf("  书籍ID: %s", testBookID)
+		if w.Code == 404 {
+			t.Logf("⚠ 书籍详情API返回404，可能路由未实现 (ID: %s)", testBookID)
 			t.Skip("书籍详情API尚未完全实现")
 			return
 		}
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode, "应该成功获取书籍详情")
-
-		var result map[string]interface{}
-		err = json.Unmarshal(body, &result)
-		require.NoError(t, err)
-
-		assert.Equal(t, float64(200), result["code"])
-		data := result["data"]
+		data := helper.AssertSuccess(w, 200, "应该成功获取书籍详情")
 
 		// 安全检查data是否为nil
 		if data == nil {
@@ -98,63 +73,38 @@ func TestReadingScenario(t *testing.T) {
 			return
 		}
 
-		dataMap := data.(map[string]interface{})
-		t.Logf("✓ 书籍详情获取成功")
-		t.Logf("  书名: %s", dataMap["title"])
-		t.Logf("  作者: %s", dataMap["author"])
-		t.Logf("  字数: %.0f", dataMap["word_count"])
-		t.Logf("  章节数: %.0f", dataMap["chapter_count"])
+		title := data["title"]
+		author := data["author"]
+		wordCount := data["word_count"]
+		chapterCount := data["chapter_count"]
+		helper.LogSuccess("书籍详情获取成功 - 书名: %v, 作者: %v, 字数: %v, 章节数: %v",
+			title, author, wordCount, chapterCount)
 	})
 
 	t.Run("2.书籍详情_获取章节列表", func(t *testing.T) {
-		// TODO: 修复章节列表API
-		// - 确认API路径正确: GET /api/v1/reader/chapters?bookId=xxx
-		// - 验证返回JSON格式而非HTML
-		// 使用认证请求获取章节列表
-		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/reader/chapters?bookId=%s&page=1&size=10", baseURL, testBookID), nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		body, _ := io.ReadAll(resp.Body)
+		url := fmt.Sprintf("%s?bookId=%s&page=1&size=10", ReaderChaptersPath, testBookID)
+		w := helper.DoAuthRequest("GET", url, nil, token)
 
 		// 检查404
-		if resp.StatusCode == http.StatusNotFound {
+		if w.Code == 404 {
 			t.Skip("章节列表API尚未实现")
 			return
 		}
 
-		var result map[string]interface{}
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			t.Logf("⚠ JSON解析失败（API可能返回了HTML）: %v", err)
-			t.Skip("章节列表API响应格式错误")
-			return
-		}
+		data := helper.AssertSuccess(w, 200, "获取章节列表应该成功")
 
-		if result["code"] == float64(200) {
-			data := result["data"].(map[string]interface{})
-			chapters := data["chapters"]
-			if chapters != nil {
-				chapterList := chapters.([]interface{})
-				t.Logf("✓ 章节列表获取成功，共 %d 章", len(chapterList))
+		if chapters, ok := data["chapters"].([]interface{}); ok {
+			helper.LogSuccess("章节列表获取成功，共 %d 章", len(chapters))
 
-				// 显示前3章
-				for i := 0; i < len(chapterList) && i < 3; i++ {
-					ch := chapterList[i].(map[string]interface{})
-					isFree := "免费"
-					if !ch["is_free"].(bool) {
-						isFree = "付费"
-					}
-					t.Logf("  第%d章: %s (%s)", i+1, ch["title"], isFree)
+			// 显示前3章
+			for i := 0; i < len(chapters) && i < 3; i++ {
+				ch := chapters[i].(map[string]interface{})
+				isFree := "免费"
+				if free, ok := ch["is_free"].(bool); ok && !free {
+					isFree = "付费"
 				}
+				t.Logf("  第%d章: %s (%s)", i+1, ch["title"], isFree)
 			}
-		} else {
-			t.Logf("○ 获取章节列表失败: %v", result["message"])
 		}
 	})
 
@@ -175,24 +125,12 @@ func TestReadingScenario(t *testing.T) {
 
 	if firstChapterID != "" {
 		t.Run("3.章节阅读_获取章节内容（免费章节）", func(t *testing.T) {
-			req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/reader/chapters/%s/content", baseURL, firstChapterID), nil)
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
+			url := fmt.Sprintf("%s/%s/content", ReaderChaptersPath, firstChapterID)
+			w := helper.DoAuthRequest("GET", url, nil, token)
+			data := helper.AssertSuccess(w, 200, "获取章节内容应该成功")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				data := result["data"].(map[string]interface{})
-				content := data["content"].(string)
-				t.Logf("✓ 章节内容获取成功，内容长度: %d 字符", len(content))
+			if content, ok := data["content"].(string); ok {
+				helper.LogSuccess("章节内容获取成功，内容长度: %d 字符", len(content))
 
 				// 显示前100个字符
 				if len(content) > 100 {
@@ -200,8 +138,6 @@ func TestReadingScenario(t *testing.T) {
 				} else {
 					t.Logf("  内容预览: %s", content)
 				}
-			} else {
-				t.Logf("○ 获取章节内容失败: %v", result["message"])
 			}
 		})
 
@@ -212,55 +148,23 @@ func TestReadingScenario(t *testing.T) {
 				"position":   50, // 阅读到50%
 			}
 
-			jsonData, _ := json.Marshal(progressData)
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/reader/progress", baseURL), bytes.NewBuffer(jsonData))
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
-			req.Header.Set("Content-Type", "application/json")
+			w := helper.DoAuthRequest("POST", ReaderProgressPath, progressData, token)
+			helper.AssertSuccess(w, 200, "保存阅读进度应该成功")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				t.Logf("✓ 阅读进度保存成功，位置: 50%%")
-			} else {
-				t.Logf("○ 保存阅读进度失败: %v", result["message"])
-			}
+			helper.LogSuccess("阅读进度保存成功，位置: 50%%")
 		})
 
 		t.Run("5.阅读进度_获取阅读进度", func(t *testing.T) {
-			req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/reader/progress/%s", baseURL, testBookID), nil)
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
+			url := fmt.Sprintf("%s/%s", ReaderProgressPath, testBookID)
+			w := helper.DoAuthRequest("GET", url, nil, token)
+			data := helper.AssertSuccess(w, 200, "获取阅读进度应该成功")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				data := result["data"]
-				if data != nil {
-					progress := data.(map[string]interface{})
-					t.Logf("✓ 阅读进度获取成功")
-					t.Logf("  书籍ID: %v", progress["book_id"])
-					t.Logf("  章节ID: %v", progress["chapter_id"])
-					t.Logf("  阅读位置: %.0f%%", progress["position"])
-				}
-			} else {
-				t.Logf("○ 获取阅读进度失败: %v", result["message"])
+			if data != nil {
+				bookID := data["book_id"]
+				chapterID := data["chapter_id"]
+				position := data["position"]
+				helper.LogSuccess("阅读进度获取成功 - 书籍ID: %v, 章节ID: %v, 阅读位置: %v%%",
+					bookID, chapterID, position)
 			}
 		})
 
@@ -273,27 +177,10 @@ func TestReadingScenario(t *testing.T) {
 				"text":       "重要情节",
 			}
 
-			jsonData, _ := json.Marshal(annotationData)
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/reader/annotations", baseURL), bytes.NewBuffer(jsonData))
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
-			req.Header.Set("Content-Type", "application/json")
+			w := helper.DoAuthRequest("POST", ReaderAnnotationsPath, annotationData, token)
+			helper.AssertSuccess(w, 200, "添加书签应该成功")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				t.Logf("✓ 书签添加成功")
-			} else {
-				t.Logf("○ 添加书签失败: %v", result["message"])
-			}
+			helper.LogSuccess("书签添加成功")
 		})
 
 		t.Run("7.书签笔记_添加笔记", func(t *testing.T) {
@@ -306,149 +193,43 @@ func TestReadingScenario(t *testing.T) {
 				"note":       "这段描写非常生动",
 			}
 
-			jsonData, _ := json.Marshal(annotationData)
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/reader/annotations", baseURL), bytes.NewBuffer(jsonData))
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
-			req.Header.Set("Content-Type", "application/json")
+			w := helper.DoAuthRequest("POST", ReaderAnnotationsPath, annotationData, token)
+			helper.AssertSuccess(w, 200, "添加笔记应该成功")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				t.Logf("✓ 笔记添加成功")
-			} else {
-				t.Logf("○ 添加笔记失败: %v", result["message"])
-			}
+			helper.LogSuccess("笔记添加成功")
 		})
 
 		t.Run("8.书签笔记_获取书签和笔记列表", func(t *testing.T) {
-			req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/reader/annotations?bookId=%s", baseURL, testBookID), nil)
-			require.NoError(t, err)
-			req.Header.Set("Authorization", "Bearer "+token)
-
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			body, _ := io.ReadAll(resp.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			require.NoError(t, err)
-
-			if result["code"] == float64(200) {
-				data := result["data"]
-				if data != nil {
-					annotations := data.([]interface{})
-					t.Logf("✓ 书签笔记列表获取成功，共 %d 条", len(annotations))
-				}
+			url := fmt.Sprintf("%s?bookId=%s", ReaderAnnotationsPath, testBookID)
+			w := helper.DoAuthRequest("GET", url, nil, token)
+			
+			// 尝试解析响应（API可能直接返回数组或嵌套在data中）
+			if w.Code == 200 {
+				helper.LogSuccess("书签笔记列表获取成功")
 			} else {
-				t.Logf("○ 获取书签笔记失败: %v", result["message"])
+				t.Logf("○ 获取书签笔记失败，状态码: %d", w.Code)
 			}
 		})
 	}
 
 	t.Run("9.收藏_添加书籍到书架", func(t *testing.T) {
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/reader/books/%s", baseURL, testBookID), nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
+		url := fmt.Sprintf("%s/%s", ReaderBooksPath, testBookID)
+		w := helper.DoAuthRequest("POST", url, nil, token)
+		helper.AssertSuccess(w, 200, "添加到书架应该成功")
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		body, _ := io.ReadAll(resp.Body)
-		var result map[string]interface{}
-		err = json.Unmarshal(body, &result)
-		require.NoError(t, err)
-
-		if result["code"] == float64(200) {
-			t.Logf("✓ 书籍已添加到书架")
-		} else {
-			t.Logf("○ 添加到书架失败: %v", result["message"])
-		}
+		helper.LogSuccess("书籍已添加到书架")
 	})
 
 	t.Run("10.书架_查看我的书架", func(t *testing.T) {
-		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/reader/books?page=1&size=10", baseURL), nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("GET", ReaderBooksPath+"?page=1&size=10", nil, token)
+		data := helper.AssertSuccess(w, 200, "获取书架应该成功")
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		body, _ := io.ReadAll(resp.Body)
-		var result map[string]interface{}
-		err = json.Unmarshal(body, &result)
-		require.NoError(t, err)
-
-		if result["code"] == float64(200) {
-			data := result["data"]
-			if data != nil {
-				bookshelf := data.(map[string]interface{})
-				books := bookshelf["books"]
-				if books != nil {
-					bookList := books.([]interface{})
-					t.Logf("✓ 书架获取成功，共 %d 本书", len(bookList))
-				}
+		if data != nil {
+			if books, ok := data["books"].([]interface{}); ok {
+				helper.LogSuccess("书架获取成功，共 %d 本书", len(books))
 			}
-		} else {
-			t.Logf("○ 获取书架失败: %v", result["message"])
 		}
 	})
 
-	t.Logf("\n=== 阅读流程测试完成 ===")
-	t.Logf("测试场景: 书籍详情 → 章节列表 → 阅读内容 → 保存进度 → 书签笔记 → 书架")
-}
-
-// 辅助函数：登录测试用户
-func loginTestUser(t *testing.T, baseURL, username, password string) string {
-	loginData := map[string]interface{}{
-		"username": username,
-		"password": password,
-	}
-
-	jsonData, _ := json.Marshal(loginData)
-	resp, err := http.Post(
-		fmt.Sprintf("%s/api/v1/login", baseURL),
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
-
-	if err != nil {
-		t.Logf("登录请求失败: %v", err)
-		return ""
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	var result map[string]interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		t.Logf("解析登录响应失败: %v", err)
-		return ""
-	}
-
-	if result["code"] != float64(200) {
-		t.Logf("登录失败: %v", result["message"])
-		return ""
-	}
-
-	data := result["data"].(map[string]interface{})
-	token := data["token"].(string)
-
-	t.Logf("✓ 测试用户登录成功: %s", username)
-
-	return token
+	helper.LogSuccess("阅读流程测试完成 - 测试场景: 书籍详情 → 章节列表 → 阅读内容 → 保存进度 → 书签笔记 → 书架")
 }

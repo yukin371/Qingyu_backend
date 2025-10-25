@@ -1,45 +1,35 @@
 package integration
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 )
 
-// AI文本生成测试 - 测试Gemini API集成
+// AI文本生成测试 - 测试DeepSeek API集成
 func TestAIGenerationScenario(t *testing.T) {
 	if testing.Short() {
 		t.Skip("跳过集成测试")
 	}
 
-	// 初始化
-	_, err := config.LoadConfig("../..")
-	require.NoError(t, err, "加载配置失败")
+	// 设置测试环境
+	router, cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
+	// 初始化helper
+	helper := NewTestHelper(t, router)
 
-	baseURL := "http://localhost:8080"
-
-	// 登录获取 token（使用VIP用户以获得AI权限）
-	token := loginTestUser(t, baseURL, "vip_user01", "Vip@123456")
+	// 登录获取 token（优先使用VIP用户以获得AI权限）
+	token := helper.LoginUser("vip_user01", "Vip@123456")
 	if token == "" {
-		token = loginTestUser(t, baseURL, "test_user01", "Test@123456")
+		token = helper.LoginTestUser() // 降级到普通用户
 	}
 
 	if token == "" {
 		t.Skip("无法登录测试用户，跳过AI测试")
 	}
+
+	t.Logf("ℹ 本测试使用DeepSeek API (deepseek-chat模型)")
 
 	t.Run("1.文本生成_续写功能", func(t *testing.T) {
 		requestData := map[string]interface{}{
@@ -48,20 +38,17 @@ func TestAIGenerationScenario(t *testing.T) {
 			"length": 200,
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/generate", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/generate", requestData, token)
+		data := helper.AssertSuccess(w, 200, "续写功能应该成功")
 
-		if response["code"] == float64(200) {
-			data := response["data"].(map[string]interface{})
-			generatedText := data["generated_text"].(string)
-
-			t.Logf("✓ 续写功能测试成功")
+		if generatedText, ok := data["generated_text"].(string); ok {
 			t.Logf("  原文: %s", requestData["prompt"])
 			t.Logf("  续写: %s", generatedText)
 
 			assert.NotEmpty(t, generatedText, "生成的文本不应为空")
 			assert.Greater(t, len(generatedText), 50, "生成的文本长度应大于50字符")
-		} else {
-			t.Logf("○ 续写功能调用失败: %v", response["message"])
+
+			helper.LogSuccess("续写功能测试成功 (DeepSeek)")
 		}
 	})
 
@@ -74,20 +61,17 @@ func TestAIGenerationScenario(t *testing.T) {
 			"style": "literary", // 文学化
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/rewrite", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/rewrite", requestData, token)
+		data := helper.AssertSuccess(w, 200, "改写功能应该成功")
 
-		if response["code"] == float64(200) {
-			data := response["data"].(map[string]interface{})
-			rewrittenText := data["rewritten_text"].(string)
-
-			t.Logf("✓ 改写功能测试成功")
+		if rewrittenText, ok := data["rewritten_text"].(string); ok {
 			t.Logf("  原文: %s", originalText)
 			t.Logf("  改写: %s", rewrittenText)
 
 			assert.NotEmpty(t, rewrittenText, "改写的文本不应为空")
 			assert.NotEqual(t, originalText, rewrittenText, "改写后的文本应与原文不同")
-		} else {
-			t.Logf("○ 改写功能调用失败: %v", response["message"])
+
+			helper.LogSuccess("改写功能测试成功 (DeepSeek)")
 		}
 	})
 
@@ -100,20 +84,21 @@ func TestAIGenerationScenario(t *testing.T) {
 			"length":  300,
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/expand", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/expand", requestData, token)
+		data := helper.AssertSuccess(w, 200, "扩写功能应该成功")
 
-		if response["code"] == float64(200) {
-			data := response["data"].(map[string]interface{})
-			expandedText := data["expanded_text"].(string)
-
-			t.Logf("✓ 扩写功能测试成功")
+		if expandedText, ok := data["expanded_text"].(string); ok {
+			previewLen := 100
+			if len(expandedText) < 100 {
+				previewLen = len(expandedText)
+			}
 			t.Logf("  大纲: %s", outline)
-			t.Logf("  扩写: %s...", expandedText[:min(100, len(expandedText))])
+			t.Logf("  扩写: %s...", expandedText[:previewLen])
 
 			assert.NotEmpty(t, expandedText, "扩写的文本不应为空")
 			assert.Greater(t, len(expandedText), len(outline)*2, "扩写后的文本应显著长于大纲")
-		} else {
-			t.Logf("○ 扩写功能调用失败: %v", response["message"])
+
+			helper.LogSuccess("扩写功能测试成功 (DeepSeek)")
 		}
 	})
 
@@ -125,19 +110,16 @@ func TestAIGenerationScenario(t *testing.T) {
 			"type": "polish",
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/polish", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/polish", requestData, token)
+		data := helper.AssertSuccess(w, 200, "润色功能应该成功")
 
-		if response["code"] == float64(200) {
-			data := response["data"].(map[string]interface{})
-			polishedText := data["polished_text"].(string)
-
-			t.Logf("✓ 润色功能测试成功")
+		if polishedText, ok := data["polished_text"].(string); ok {
 			t.Logf("  原文: %s", rawText)
 			t.Logf("  润色: %s", polishedText)
 
 			assert.NotEmpty(t, polishedText, "润色的文本不应为空")
-		} else {
-			t.Logf("○ 润色功能调用失败: %v", response["message"])
+
+			helper.LogSuccess("润色功能测试成功 (DeepSeek)")
 		}
 	})
 
@@ -148,26 +130,20 @@ func TestAIGenerationScenario(t *testing.T) {
 			"length": 50,
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/generate", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/generate", requestData, token)
+		data := helper.AssertSuccess(w, 200, "AI生成应该成功")
 
-		if response["code"] == float64(200) {
-			data := response["data"].(map[string]interface{})
+		// 检查usage信息
+		if usage, ok := data["usage"].(map[string]interface{}); ok {
+			t.Logf("  提示词Tokens: %.0f", usage["prompt_tokens"])
+			t.Logf("  生成Tokens: %.0f", usage["completion_tokens"])
+			t.Logf("  总计Tokens: %.0f", usage["total_tokens"])
 
-			// 检查usage信息
-			if usage, ok := data["usage"]; ok {
-				usageMap := usage.(map[string]interface{})
+			assert.Greater(t, usage["total_tokens"].(float64), float64(0), "总Token数应大于0")
 
-				t.Logf("✓ Token使用统计:")
-				t.Logf("  提示词Tokens: %.0f", usageMap["prompt_tokens"])
-				t.Logf("  生成Tokens: %.0f", usageMap["completion_tokens"])
-				t.Logf("  总计Tokens: %.0f", usageMap["total_tokens"])
-
-				assert.Greater(t, usageMap["total_tokens"].(float64), float64(0), "总Token数应大于0")
-			} else {
-				t.Logf("○ 响应中没有usage信息")
-			}
+			helper.LogSuccess("Token使用统计测试成功 (DeepSeek)")
 		} else {
-			t.Logf("○ AI调用失败: %v", response["message"])
+			t.Logf("○ 响应中没有usage信息")
 		}
 	})
 
@@ -177,14 +153,10 @@ func TestAIGenerationScenario(t *testing.T) {
 			"type":   "continue",
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/generate", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/generate", requestData, token)
+		helper.AssertError(w, 400, "空文本应该返回错误")
 
-		// 应该返回错误
-		if response["code"] != float64(200) {
-			t.Logf("✓ 空文本错误处理正确: %v", response["message"])
-		} else {
-			t.Logf("○ 空文本应该返回错误")
-		}
+		helper.LogSuccess("空文本错误处理正确")
 	})
 
 	t.Run("7.错误处理_超长文本", func(t *testing.T) {
@@ -199,121 +171,68 @@ func TestAIGenerationScenario(t *testing.T) {
 			"type":   "continue",
 		}
 
-		response := callAIAPI(t, baseURL, token, "/api/v1/ai/generate", requestData)
+		w := helper.DoAuthRequest("POST", "/api/v1/ai/generate", requestData, token)
 
 		// 可能返回错误或截断
-		if response["code"] != float64(200) {
-			t.Logf("✓ 超长文本错误处理: %v", response["message"])
+		if w.Code != 200 {
+			t.Logf("✓ 超长文本错误处理: 状态码 %d", w.Code)
+			helper.LogSuccess("超长文本错误处理正确")
 		} else {
 			t.Logf("○ 超长文本被接受（可能被截断）")
 		}
 	})
 
-	t.Logf("\n=== AI文本生成测试完成 ===")
-	t.Logf("测试场景: 续写 → 改写 → 扩写 → 润色 → Token统计 → 错误处理")
+	helper.LogSuccess("AI文本生成测试完成 (DeepSeek) - 测试场景: 续写 → 改写 → 扩写 → 润色 → Token统计 → 错误处理")
 }
 
-// 测试直接调用Gemini Adapter
-func TestGeminiAdapterDirect(t *testing.T) {
+// 测试AI服务健康检查
+func TestAIServiceHealth(t *testing.T) {
 	if testing.Short() {
 		t.Skip("跳过集成测试")
 	}
 
-	_, err := config.LoadConfig("../..")
-	require.NoError(t, err)
+	// 设置测试环境
+	router, cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
-	ctx := context.Background()
+	// 初始化helper
+	helper := NewTestHelper(t, router)
 
-	t.Run("Gemini_健康检查", func(t *testing.T) {
-		// 这里需要直接使用Gemini Adapter
-		// 由于需要访问internal包，这个测试可能需要放在service/ai包中
-		t.Log("○ Gemini Adapter健康检查需要在service层测试")
+	// 登录测试用户
+	token := helper.LoginTestUser()
+	if token == "" {
+		t.Skip("无法登录测试用户")
+	}
+
+	t.Run("AI服务_健康检查", func(t *testing.T) {
+		w := helper.DoAuthRequest("GET", "/api/v1/ai/health", nil, token)
+		helper.AssertSuccess(w, 200, "AI服务健康检查应该成功")
+
+		helper.LogSuccess("AI服务健康检查通过 (DeepSeek)")
 	})
 
-	t.Run("Gemini_简单文本生成", func(t *testing.T) {
-		// 直接调用Gemini API（绕过业务层）
-		apiKey := "AIzaSyA6aj4aqWOdkIfZAYPlM5fk_8e4gJtkceE"
-		model := "gemini-1.5-flash"
+	t.Run("AI服务_获取提供商列表", func(t *testing.T) {
+		w := helper.DoAuthRequest("GET", "/api/v1/ai/providers", nil, token)
+		data := helper.AssertSuccess(w, 200, "获取提供商列表应该成功")
 
-		requestData := map[string]interface{}{
-			"contents": []map[string]interface{}{
-				{
-					"parts": []map[string]interface{}{
-						{"text": "Hello, how are you?"},
-					},
-				},
-			},
+		if providers, ok := data["providers"].([]interface{}); ok {
+			helper.LogSuccess("AI提供商列表获取成功，共 %d 个提供商", len(providers))
 		}
+	})
 
-		jsonData, _ := json.Marshal(requestData)
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-			model, apiKey)
+	t.Run("AI服务_获取模型列表", func(t *testing.T) {
+		w := helper.DoAuthRequest("GET", "/api/v1/ai/models", nil, token)
+		data := helper.AssertSuccess(w, 200, "获取模型列表应该成功")
 
-		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if models, ok := data["models"].([]interface{}); ok {
+			helper.LogSuccess("AI模型列表获取成功，共 %d 个模型", len(models))
 
-		if err != nil {
-			t.Logf("○ Gemini API调用失败: %v", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		body, _ := io.ReadAll(resp.Body)
-
-		if resp.StatusCode == http.StatusOK {
-			var result map[string]interface{}
-			json.Unmarshal(body, &result)
-
-			t.Logf("✓ Gemini API直接调用成功")
-			t.Logf("  响应状态: %d", resp.StatusCode)
-
-			if candidates, ok := result["candidates"].([]interface{}); ok && len(candidates) > 0 {
-				t.Logf("  ✓ 收到响应候选")
+			// 显示前3个模型
+			for i := 0; i < len(models) && i < 3; i++ {
+				if model, ok := models[i].(map[string]interface{}); ok {
+					t.Logf("  - %v", model["name"])
+				}
 			}
-		} else {
-			t.Logf("○ Gemini API返回错误: %d", resp.StatusCode)
-			t.Logf("  响应: %s", string(body))
 		}
 	})
-
-	_ = ctx
-}
-
-// 辅助函数：调用AI API
-func callAIAPI(t *testing.T, baseURL, token, endpoint string, data map[string]interface{}) map[string]interface{} {
-	jsonData, _ := json.Marshal(data)
-
-	req, err := http.NewRequest("POST", baseURL+endpoint, bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Logf("创建请求失败: %v", err)
-		return map[string]interface{}{"code": float64(500), "message": err.Error()}
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Logf("请求失败: %v", err)
-		return map[string]interface{}{"code": float64(500), "message": err.Error()}
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	var result map[string]interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		t.Logf("解析响应失败: %v", err)
-		return map[string]interface{}{"code": float64(500), "message": "解析失败"}
-	}
-
-	return result
-}
-
-// min 辅助函数
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
