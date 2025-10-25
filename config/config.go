@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -75,13 +76,35 @@ func LoadConfig(configPath string) (*Config, error) {
 		// 直接设置配置文件
 		v.SetConfigFile(configPath)
 	} else {
-		// 配置Viper
-		v.SetConfigName("config")       // 配置文件名（不带扩展名）
-		v.SetConfigType("yaml")         // 配置文件类型
-		v.AddConfigPath(configPath)     // 配置文件路径
-		v.AddConfigPath("./config")     // config子目录
-		v.AddConfigPath("../../config") // 从cmd/server运行时
-		v.AddConfigPath(".")            // 当前目录
+		// 优先尝试加载 config.test.yaml（测试配置优先）
+		testConfigPaths := []string{
+			configPath,
+			"./config",
+			"../../config",
+			".",
+		}
+
+		testConfigFound := false
+		for _, path := range testConfigPaths {
+			testConfigFile := fmt.Sprintf("%s/config.test.yaml", path)
+			if _, err := os.Stat(testConfigFile); err == nil {
+				v.SetConfigFile(testConfigFile)
+				testConfigFound = true
+				fmt.Printf("[Config] Using test config: %s\n", testConfigFile)
+				break
+			}
+		}
+
+		// 如果没有找到 test 配置，使用默认配置查找
+		if !testConfigFound {
+			v.SetConfigName("config")       // 配置文件名（不带扩展名）
+			v.SetConfigType("yaml")         // 配置文件类型
+			v.AddConfigPath(configPath)     // 配置文件路径
+			v.AddConfigPath("./config")     // config子目录
+			v.AddConfigPath("../../config") // 从cmd/server运行时
+			v.AddConfigPath(".")            // 当前目录
+			fmt.Println("[Config] Test config not found, using default config search")
+		}
 	}
 
 	v.AutomaticEnv()                                   // 读取环境变量
