@@ -89,7 +89,21 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Warn("获取阅读器服务失败", zap.Error(err))
 		logger.Info("阅读器路由未注册")
 	} else {
-		readerRouter.InitReaderRouter(v1, readerSvc)
+		// 获取评论服务（如果可用）
+		commentSvc, commentErr := serviceContainer.GetCommentService()
+		if commentErr != nil {
+			logger.Warn("评论服务未配置", zap.Error(commentErr))
+			commentSvc = nil
+		}
+
+		// 获取点赞服务（如果可用）
+		likeSvc, likeErr := serviceContainer.GetLikeService()
+		if likeErr != nil {
+			logger.Warn("点赞服务未配置", zap.Error(likeErr))
+			likeSvc = nil
+		}
+
+		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")
@@ -97,6 +111,9 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
 		logger.Info("  - /api/v1/reader/annotations/* (标注管理)")
 		logger.Info("  - /api/v1/reader/settings/* (阅读设置)")
+		if commentSvc != nil {
+			logger.Info("  - /api/v1/reader/comments/* (评论系统)")
+		}
 	}
 
 	// ============ 注册用户路由 ============

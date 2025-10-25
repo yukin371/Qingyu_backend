@@ -56,6 +56,8 @@ type ServiceContainer struct {
 	aiService        *aiService.Service
 	bookstoreService bookstoreService.BookstoreService
 	readerService    *readingService.ReaderService
+	commentService   *readingService.CommentService
+	likeService      *readingService.LikeService
 
 	// AI 相关服务
 	quotaService *aiService.QuotaService
@@ -143,6 +145,22 @@ func (c *ServiceContainer) GetReaderService() (*readingService.ReaderService, er
 		return nil, fmt.Errorf("ReaderService未初始化")
 	}
 	return c.readerService, nil
+}
+
+// GetCommentService 获取评论服务
+func (c *ServiceContainer) GetCommentService() (*readingService.CommentService, error) {
+	if c.commentService == nil {
+		return nil, fmt.Errorf("CommentService未初始化")
+	}
+	return c.commentService, nil
+}
+
+// GetLikeService 获取点赞服务
+func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error) {
+	if c.likeService == nil {
+		return nil, fmt.Errorf("LikeService未初始化")
+	}
+	return c.likeService, nil
 }
 
 // GetQuotaService 获取配额服务
@@ -429,7 +447,28 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	// 注意：ReaderService 不完全实现 BaseService，不注册到 services map
 
-	// ============ 4. 创建AI服务 ============
+	// ============ 4. 创建评论服务 ============
+	commentRepo := c.repositoryFactory.CreateCommentRepository()
+	sensitiveWordRepo := c.repositoryFactory.CreateSensitiveWordRepository()
+
+	c.commentService = readingService.NewCommentService(
+		commentRepo,
+		sensitiveWordRepo, // 可以为nil，表示不启用敏感词检测
+		c.eventBus,        // ✅ 注入事件总线
+	)
+	c.services["CommentService"] = c.commentService
+
+	// ============ 4.5 创建点赞服务 ============
+	likeRepo := c.repositoryFactory.CreateLikeRepository()
+
+	c.likeService = readingService.NewLikeService(
+		likeRepo,
+		commentRepo, // 用于更新评论点赞数
+		c.eventBus,  // 注入事件总线
+	)
+	c.services["LikeService"] = c.likeService
+
+	// ============ 5. 创建AI服务 ============
 	c.aiService = aiService.NewService()
 
 	// 创建AI配额服务
