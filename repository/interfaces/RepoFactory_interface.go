@@ -37,6 +37,7 @@ type RepositoryFactory interface {
 	CreateCommentRepository() ReadingInterfaces.CommentRepository
 	CreateLikeRepository() ReadingInterfaces.LikeRepository
 	CreateCollectionRepository() ReadingInterfaces.CollectionRepository
+	CreateReadingHistoryRepository() ReadingInterfaces.ReadingHistoryRepository
 
 	// 书城相关Repository
 	CreateBookRepository() BookstoreInterfaces.BookRepository

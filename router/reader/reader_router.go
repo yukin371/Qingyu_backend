@@ -15,6 +15,7 @@ func InitReaderRouter(
 	commentService *reading.CommentService,
 	likeService *reading.LikeService,
 	collectionService *reading.CollectionService,
+	readingHistoryService *reading.ReadingHistoryService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
@@ -39,6 +40,12 @@ func InitReaderRouter(
 	var collectionApiHandler *readerApi.CollectionAPI
 	if collectionService != nil {
 		collectionApiHandler = readerApi.NewCollectionAPI(collectionService)
+	}
+
+	// 阅读历史API（如果readingHistoryService可用）
+	var historyApiHandler *readerApi.ReadingHistoryAPI
+	if readingHistoryService != nil {
+		historyApiHandler = readerApi.NewReadingHistoryAPI(readingHistoryService)
 	}
 
 	// 阅读器主路由组（需要认证）
@@ -176,6 +183,18 @@ func InitReaderRouter(
 				collections.GET("/folders", collectionApiHandler.GetFolders)          // 获取收藏夹列表
 				collections.PUT("/folders/:id", collectionApiHandler.UpdateFolder)    // 更新收藏夹
 				collections.DELETE("/folders/:id", collectionApiHandler.DeleteFolder) // 删除收藏夹
+			}
+		}
+
+		// 阅读历史模块（如果historyApiHandler可用）
+		if historyApiHandler != nil {
+			history := readerGroup.Group("/reading-history")
+			{
+				history.POST("", historyApiHandler.RecordReading)        // 记录阅读历史
+				history.GET("", historyApiHandler.GetReadingHistories)   // 获取阅读历史列表
+				history.GET("/stats", historyApiHandler.GetReadingStats) // 获取阅读统计
+				history.DELETE("/:id", historyApiHandler.DeleteHistory)  // 删除单条历史记录
+				history.DELETE("", historyApiHandler.ClearHistories)     // 清空历史记录
 			}
 		}
 	}

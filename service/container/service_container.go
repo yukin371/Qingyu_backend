@@ -52,13 +52,14 @@ type ServiceContainer struct {
 	serviceMetrics map[string]*metrics.ServiceMetrics
 
 	// 业务服务
-	userService       userInterface.UserService
-	aiService         *aiService.Service
-	bookstoreService  bookstoreService.BookstoreService
-	readerService     *readingService.ReaderService
-	commentService    *readingService.CommentService
-	likeService       *readingService.LikeService
-	collectionService *readingService.CollectionService
+	userService           userInterface.UserService
+	aiService             *aiService.Service
+	bookstoreService      bookstoreService.BookstoreService
+	readerService         *readingService.ReaderService
+	commentService        *readingService.CommentService
+	likeService           *readingService.LikeService
+	collectionService     *readingService.CollectionService
+	readingHistoryService *readingService.ReadingHistoryService
 
 	// AI 相关服务
 	quotaService *aiService.QuotaService
@@ -170,6 +171,14 @@ func (c *ServiceContainer) GetCollectionService() (*readingService.CollectionSer
 		return nil, fmt.Errorf("CollectionService未初始化")
 	}
 	return c.collectionService, nil
+}
+
+// GetReadingHistoryService 获取阅读历史服务
+func (c *ServiceContainer) GetReadingHistoryService() (*readingService.ReadingHistoryService, error) {
+	if c.readingHistoryService == nil {
+		return nil, fmt.Errorf("ReadingHistoryService未初始化")
+	}
+	return c.readingHistoryService, nil
 }
 
 // GetQuotaService 获取配额服务
@@ -485,6 +494,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		c.eventBus, // 注入事件总线
 	)
 	c.services["CollectionService"] = c.collectionService
+
+	// ============ 4.7 创建阅读历史服务 ============
+	readingHistoryRepo := c.repositoryFactory.CreateReadingHistoryRepository()
+
+	c.readingHistoryService = readingService.NewReadingHistoryService(
+		readingHistoryRepo,
+		c.eventBus, // 注入事件总线
+	)
+	c.services["ReadingHistoryService"] = c.readingHistoryService
 
 	// ============ 5. 创建AI服务 ============
 	c.aiService = aiService.NewService()
