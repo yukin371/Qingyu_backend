@@ -30,15 +30,15 @@ func NewLikeAPI(likeService *reading.LikeService) *LikeAPI {
 // @Tags 阅读端-点赞
 // @Accept json
 // @Produce json
-// @Param id path string true "书籍ID"
+// @Param bookId path string true "书籍ID"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 401 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/reader/books/{id}/like [post]
+// @Router /api/v1/reader/books/{bookId}/like [post]
 // @Security Bearer
 func (api *LikeAPI) LikeBook(c *gin.Context) {
-	bookID := c.Param("id")
+	bookID := c.Param("bookId")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
 		return
@@ -67,15 +67,15 @@ func (api *LikeAPI) LikeBook(c *gin.Context) {
 // @Tags 阅读端-点赞
 // @Accept json
 // @Produce json
-// @Param id path string true "书籍ID"
+// @Param bookId path string true "书籍ID"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 401 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/reader/books/{id}/like [delete]
+// @Router /api/v1/reader/books/{bookId}/like [delete]
 // @Security Bearer
 func (api *LikeAPI) UnlikeBook(c *gin.Context) {
-	bookID := c.Param("id")
+	bookID := c.Param("bookId")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
 		return
@@ -103,13 +103,13 @@ func (api *LikeAPI) UnlikeBook(c *gin.Context) {
 // @Tags 阅读端-点赞
 // @Accept json
 // @Produce json
-// @Param id path string true "书籍ID"
+// @Param bookId path string true "书籍ID"
 // @Success 200 {object} response.Response{data=object{like_count=int64,is_liked=bool}}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/reader/books/{id}/like/info [get]
+// @Router /api/v1/reader/books/{bookId}/like/info [get]
 func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
-	bookID := c.Param("id")
+	bookID := c.Param("bookId")
 	if bookID == "" {
 		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
 		return
