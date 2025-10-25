@@ -234,7 +234,7 @@ func loginAsTestUser(t *testing.T, router *gin.Engine) string {
 	}
 
 	body, _ := json.Marshal(loginData)
-	req := httptest.NewRequest("POST", "/api/v1/users/login", bytes.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

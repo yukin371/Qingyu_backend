@@ -1,11 +1,11 @@
 # 测试环境配置
 server:
-  port: ":8080"
-  mode: test
+  port: "8080"
+  mode: debug  # 测试环境使用debug模式
   timeout: 30s
 
 mongodb:
-  uri: "mongodb://admin:password@localhost:27017"
+  uri: "mongodb://localhost:27017"
   database: "qingyu_test"
   timeout: 30
 
@@ -49,3 +49,17 @@ performance:
   request_timeout: 30s
   db_timeout: 10s
 
+# 外部API配置（AI提供商 - 测试）
+external_api:
+  default_provider: "gemini"
+  providers:
+    gemini:
+      name: "gemini"
+      api_key: "AIzaSyA6aj4aqWOdkIfZAYPlM5fk_8e4gJtkceE"
+      base_url: "https://generativelanguage.googleapis.com"
+      enabled: true
+      priority: 1
+      supported_models:
+        - "gemini-1.5-flash"
+        - "gemini-1.5-pro"
+        - "gemini-1.0-pro"
