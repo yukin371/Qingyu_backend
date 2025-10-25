@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/config"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
+	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
@@ -145,6 +146,16 @@ func (f *MongoRepositoryFactory) CreateAnnotationRepository() readingRepo.Annota
 	return mongoReading.NewMongoAnnotationRepository(f.database)
 }
 
+// CreateCommentRepository 创建评论Repository
+func (f *MongoRepositoryFactory) CreateCommentRepository() readingRepo.CommentRepository {
+	return mongoReading.NewMongoCommentRepository(f.database)
+}
+
+// CreateLikeRepository 创建点赞Repository
+func (f *MongoRepositoryFactory) CreateLikeRepository() readingRepo.LikeRepository {
+	return mongoReading.NewMongoLikeRepository(f.database)
+}
+
 // ========== Bookstore Module Repositories ==========
 
 // CreateBookRepository 创建书籍Repository
@@ -231,6 +242,16 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 // CreateQuotaRepository 创建配额Repository
 func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository {
 	return mongoAI.NewMongoQuotaRepository(f.database)
+}
+
+// ========== Audit Module Repositories ==========
+
+// CreateSensitiveWordRepository 创建敏感词Repository
+// 注意：当前返回nil，表示敏感词检测未启用
+// TODO: 实现敏感词Repository
+func (f *MongoRepositoryFactory) CreateSensitiveWordRepository() auditRepo.SensitiveWordRepository {
+	// 暂时返回nil，CommentService会处理nil的情况
+	return nil
 }
 
 // ========== Factory Management Methods ==========

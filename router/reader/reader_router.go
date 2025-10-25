@@ -13,6 +13,7 @@ func InitReaderRouter(
 	r *gin.RouterGroup,
 	readerService *reading.ReaderService,
 	commentService *reading.CommentService,
+	likeService *reading.LikeService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
@@ -25,6 +26,12 @@ func InitReaderRouter(
 	var commentApiHandler *readerApi.CommentAPI
 	if commentService != nil {
 		commentApiHandler = readerApi.NewCommentAPI(commentService)
+	}
+
+	// 点赞API（如果likeService可用）
+	var likeApiHandler *readerApi.LikeAPI
+	if likeService != nil {
+		likeApiHandler = readerApi.NewLikeAPI(likeService)
 	}
 
 	// 阅读器主路由组（需要认证）
@@ -40,6 +47,13 @@ func InitReaderRouter(
 			books.GET("/finished", booksApiHandler.GetFinishedBooks)      // 获取已读完
 			books.POST("/:bookId", booksApiHandler.AddToBookshelf)        // 添加到书架
 			books.DELETE("/:bookId", booksApiHandler.RemoveFromBookshelf) // 从书架移除
+
+			// 书籍点赞（如果likeApiHandler可用）
+			if likeApiHandler != nil {
+				books.POST("/:id/like", likeApiHandler.LikeBook)            // 点赞书籍
+				books.DELETE("/:id/like", likeApiHandler.UnlikeBook)        // 取消点赞书籍
+				books.GET("/:id/like/info", likeApiHandler.GetBookLikeInfo) // 获取点赞信息
+			}
 		}
 
 		// 章节内容（阅读）
@@ -122,6 +136,15 @@ func InitReaderRouter(
 				comments.POST("/:id/reply", commentApiHandler.ReplyComment)   // 回复评论
 				comments.POST("/:id/like", commentApiHandler.LikeComment)     // 点赞评论
 				comments.DELETE("/:id/like", commentApiHandler.UnlikeComment) // 取消点赞
+			}
+		}
+
+		// 点赞模块（如果likeApiHandler可用）
+		if likeApiHandler != nil {
+			likes := readerGroup.Group("/likes")
+			{
+				likes.GET("/books", likeApiHandler.GetUserLikedBooks) // 获取用户点赞的书籍列表
+				likes.GET("/stats", likeApiHandler.GetUserLikeStats)  // 获取用户点赞统计
 			}
 		}
 	}
