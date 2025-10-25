@@ -2,13 +2,19 @@ package integration
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	"Qingyu_backend/config"
+	"Qingyu_backend/core"
+	"Qingyu_backend/global"
 )
 
 // TestCollectionScenario 收藏系统场景测试
@@ -184,4 +190,79 @@ func TestCollectionScenario(t *testing.T) {
 		t.Logf("✓ 收藏统计: %v条收藏, %v个收藏夹",
 			data["total_collections"], data["total_folders"])
 	})
+}
+
+// setupTestEnvironment 设置测试环境
+func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
+	// 加载配置
+	_, err := config.LoadConfig("../..")
+	if err != nil {
+		t.Fatalf("加载配置失败: %v", err)
+	}
+
+	// 初始化数据库
+	err = core.InitDB()
+	if err != nil {
+		t.Fatalf("初始化数据库失败: %v", err)
+	}
+
+	// 设置Gin为测试模式
+	gin.SetMode(gin.TestMode)
+
+	// 初始化服务器（会自动初始化服务和路由）
+	r, err := core.InitServer()
+	if err != nil {
+		t.Fatalf("初始化服务器失败: %v", err)
+	}
+
+	// 清理函数
+	cleanup := func() {
+		// 关闭数据库连接
+		if global.DB != nil {
+			global.DB.Client().Disconnect(context.Background())
+		}
+	}
+
+	return r, cleanup
+}
+
+// loginAsTestUser 登录测试用户并返回token
+func loginAsTestUser(t *testing.T, router *gin.Engine) string {
+	loginData := map[string]interface{}{
+		"username": "test_user01",
+		"password": "Test@123456",
+	}
+
+	body, _ := json.Marshal(loginData)
+	req := httptest.NewRequest("POST", "/api/v1/users/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Logf("登录失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
+		return ""
+	}
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	if err != nil {
+		t.Logf("解析登录响应失败: %v", err)
+		return ""
+	}
+
+	data, ok := response["data"].(map[string]interface{})
+	if !ok {
+		t.Logf("响应数据格式错误")
+		return ""
+	}
+
+	token, ok := data["token"].(string)
+	if !ok {
+		t.Logf("获取token失败")
+		return ""
+	}
+
+	return token
 }
