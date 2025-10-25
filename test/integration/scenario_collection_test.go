@@ -1,12 +1,8 @@
 package integration
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -23,11 +19,23 @@ func TestCollectionScenario(t *testing.T) {
 	router, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
+	// 创建TestHelper
+	helper := NewTestHelper(t, router)
+
 	// 使用测试用户登录
-	token := loginAsTestUser(t, router)
+	token := helper.LoginTestUser()
+	if token == "" {
+		t.Fatal("登录失败，无法继续测试")
+	}
 
 	// 测试用书籍ID（使用书城中的书籍）
 	testBookID := "507f1f77bcf86cd799439011"
+
+	// 清理可能的遗留测试数据（使用API方式）
+	helper.RemoveCollectionByBookID(testBookID, token)
+
+	// 测试结束后清理数据
+	defer helper.CleanupTestData("collections", "collection_folders")
 
 	t.Run("1.收藏管理_添加收藏", func(t *testing.T) {
 		reqBody := map[string]interface{}{
@@ -37,22 +45,13 @@ func TestCollectionScenario(t *testing.T) {
 			"is_public": true,
 		}
 
-		body, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest("POST", "/api/v1/reader/collections", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("POST", ReaderCollectionsPath, reqBody, token)
+		response := helper.AssertSuccess(w, 201, "添加收藏失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusCreated, w.Code, "应该成功添加收藏")
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		assert.Equal(t, float64(201), response["code"])
 		assert.NotNil(t, response["data"])
 
-		t.Logf("✓ 添加收藏成功")
+		helper.LogSuccess("添加收藏成功")
 	})
 
 	t.Run("2.收藏管理_重复收藏检测", func(t *testing.T) {
@@ -61,57 +60,32 @@ func TestCollectionScenario(t *testing.T) {
 			"note":    "重复收藏",
 		}
 
-		body, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest("POST", "/api/v1/reader/collections", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("POST", ReaderCollectionsPath, reqBody, token)
+		helper.AssertError(w, 400, "该书籍已经收藏", "重复收藏检测失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code, "不应该允许重复收藏")
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
-		assert.Contains(t, response["message"], "已经收藏")
-
-		t.Logf("✓ 重复收藏检测通过")
+		helper.LogSuccess("重复收藏检测通过")
 	})
 
 	t.Run("3.收藏管理_检查收藏状态", func(t *testing.T) {
-		url := fmt.Sprintf("/api/v1/reader/collections/check/%s", testBookID)
-		req := httptest.NewRequest("GET", url, nil)
-		req.Header.Set("Authorization", "Bearer "+token)
+		url := fmt.Sprintf("%s/check/%s", ReaderCollectionsPath, testBookID)
+		w := helper.DoAuthRequest("GET", url, nil, token)
+		response := helper.AssertSuccess(w, 200, "检查收藏状态失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		data := response["data"].(map[string]interface{})
 		assert.True(t, data["is_collected"].(bool), "应该显示已收藏")
 
-		t.Logf("✓ 收藏状态检查通过")
+		helper.LogSuccess("收藏状态检查通过")
 	})
 
 	t.Run("4.收藏管理_获取收藏列表", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/reader/collections?page=1&size=20", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("GET", ReaderCollectionsPath+"?page=1&size=20", nil, token)
+		response := helper.AssertSuccess(w, 200, "获取收藏列表失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		data := response["data"].(map[string]interface{})
 		list := data["list"].([]interface{})
 		assert.Greater(t, len(list), 0, "应该有至少一条收藏记录")
 
-		t.Logf("✓ 获取收藏列表成功，共%d条", len(list))
+		helper.LogSuccess("获取收藏列表成功，共%d条", len(list))
 	})
 
 	t.Run("5.收藏夹管理_创建收藏夹", func(t *testing.T) {
@@ -121,73 +95,45 @@ func TestCollectionScenario(t *testing.T) {
 			"is_public":   true,
 		}
 
-		body, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest("POST", "/api/v1/reader/collections/folders", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("POST", ReaderCollectionsPath+"/folders", reqBody, token)
+		response := helper.AssertSuccess(w, 201, "创建收藏夹失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusCreated, w.Code, "应该成功创建收藏夹")
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		assert.Equal(t, float64(201), response["code"])
 		assert.NotNil(t, response["data"])
 
-		t.Logf("✓ 创建收藏夹成功")
+		helper.LogSuccess("创建收藏夹成功")
 	})
 
 	t.Run("6.收藏夹管理_获取收藏夹列表", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/reader/collections/folders", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("GET", ReaderCollectionsPath+"/folders", nil, token)
+		response := helper.AssertSuccess(w, 200, "获取收藏夹列表失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		data := response["data"].(map[string]interface{})
 		list := data["list"].([]interface{})
 		assert.Greater(t, len(list), 0, "应该有至少一个收藏夹")
 
-		t.Logf("✓ 获取收藏夹列表成功，共%d个", len(list))
+		helper.LogSuccess("获取收藏夹列表成功，共%d个", len(list))
 	})
 
 	t.Run("7.收藏分享_获取公开收藏", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/reader/collections/public?page=1&size=10", nil)
+		// 公开接口不需要认证
+		w := helper.DoRequest("GET", ReaderCollectionsPath+"/public?page=1&size=10", nil, "")
+		response := helper.AssertSuccess(w, 200, "获取公开收藏列表失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		assert.Equal(t, float64(200), response["code"])
 
-		t.Logf("✓ 获取公开收藏列表成功")
+		helper.LogSuccess("获取公开收藏列表成功")
 	})
 
 	t.Run("8.收藏统计_获取统计数据", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/reader/collections/stats", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
+		w := helper.DoAuthRequest("GET", ReaderCollectionsPath+"/stats", nil, token)
+		response := helper.AssertSuccess(w, 200, "获取收藏统计失败")
 
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
 		data := response["data"].(map[string]interface{})
 		assert.NotNil(t, data["total_collections"])
 		assert.NotNil(t, data["total_folders"])
 
-		t.Logf("✓ 收藏统计: %v条收藏, %v个收藏夹",
+		helper.LogSuccess("收藏统计: %v条收藏, %v个收藏夹",
 			data["total_collections"], data["total_folders"])
 	})
 }
@@ -224,45 +170,4 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 	}
 
 	return r, cleanup
-}
-
-// loginAsTestUser 登录测试用户并返回token
-func loginAsTestUser(t *testing.T, router *gin.Engine) string {
-	loginData := map[string]interface{}{
-		"username": "test_user01",
-		"password": "Test@123456",
-	}
-
-	body, _ := json.Marshal(loginData)
-	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Logf("登录失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
-		return ""
-	}
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	if err != nil {
-		t.Logf("解析登录响应失败: %v", err)
-		return ""
-	}
-
-	data, ok := response["data"].(map[string]interface{})
-	if !ok {
-		t.Logf("响应数据格式错误")
-		return ""
-	}
-
-	token, ok := data["token"].(string)
-	if !ok {
-		t.Logf("获取token失败")
-		return ""
-	}
-
-	return token
 }
