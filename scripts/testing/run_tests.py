@@ -1,248 +1,158 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-青羽后端 - 测试运行脚本（Python 版本）
-
-运行项目测试套件
-
-使用方法:
-    python scripts/testing/run_tests.py
-    python scripts/testing/run_tests.py --coverage
-    python scripts/testing/run_tests.py --package=service
+青羽后端 - 集成测试运行脚本（Python版本）
+支持跨平台，避免编码问题
 """
 
-import argparse
+import subprocess
 import sys
 import os
-import subprocess
 import time
-from pathlib import Path
-from datetime import datetime
+import requests
 
-# ANSI 颜色代码
-class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'
+def print_header(text):
+    print("\n" + "=" * 60)
+    print(text)
+    print("=" * 60 + "\n")
 
-def print_color(message: str, color: str = Colors.NC):
-    """打印彩色文本"""
-    print(f"{color}{message}{Colors.NC}")
-
-def print_header(title: str):
-    """打印标题"""
-    separator = "=" * 60
-    print()
-    print(separator)
-    print(title)
-    print(separator)
-    print()
-
-def run_go_test(package: str = "./...", coverage: bool = False, verbose: bool = False, timeout: str = "10m") -> int:
-    """
-    运行 Go 测试
-
-    Args:
-        package: 测试包路径
-        coverage: 是否生成覆盖率报告
-        verbose: 是否显示详细输出
-        timeout: 超时时间
-
-    Returns:
-        退出代码
-    """
-    cmd = ["go", "test"]
-
-    # 添加包路径
-    cmd.append(package)
-
-    # 添加选项
-    if verbose:
-        cmd.append("-v")
-
-    cmd.extend(["-timeout", timeout])
-
-    # 添加覆盖率选项
-    if coverage:
-        coverage_file = "coverage"
-        cmd.extend(["-coverprofile", coverage_file])
-
-    # 运行测试
+def check_server():
+    """检查服务器是否运行"""
     try:
-        result = subprocess.run(cmd, check=False)
-        return result.returncode
-    except KeyboardInterrupt:
-        print_color("\n测试被用户中断", Colors.YELLOW)
-        return 130
-    except Exception as e:
-        print_color(f"运行测试失败: {e}", Colors.RED)
-        return 1
+        response = requests.get("http://localhost:8080/api/v1/system/health", timeout=2)
+        return response.status_code == 200
+    except:
+        return False
 
-def generate_coverage_report(output_format: str = "html"):
-    """生成覆盖率报告"""
-    coverage_file = "coverage"
+def start_server():
+    """启动服务器"""
+    print("正在后台启动服务器...")
+    
+    if sys.platform == 'win32':
+        # Windows
+        subprocess.Popen(
+            "start /B go run cmd/server/main.go > server_test.log 2>&1",
+            shell=True
+        )
+    else:
+        # Linux/Mac
+        subprocess.Popen(
+            "go run cmd/server/main.go > server_test.log 2>&1 &",
+            shell=True
+        )
+    
+    # 等待服务器启动
+    print("等待服务器启动...")
+    for i in range(10):
+        time.sleep(1)
+        if check_server():
+            print("✓ 服务器启动成功")
+            return True
+        print(f"  等待中... {i+1}/10")
+    
+    print("✗ 服务器启动失败")
+    return False
 
-    if not Path(coverage_file).exists():
-        print_color("覆盖率文件不存在", Colors.YELLOW)
-        return
-
-    print()
-    print_header("生成覆盖率报告")
-
-    if output_format == "html":
-        # 生成 HTML 报告
-        output_file = "coverage.html"
-        cmd = ["go", "tool", "cover", f"-html={coverage_file}", f"-o", output_file]
-
-        try:
-            subprocess.run(cmd, check=True)
-            print_color(f"✓ HTML 覆盖率报告已生成: {output_file}", Colors.GREEN)
-
-            # 尝试在浏览器中打开
-            try:
-                import webbrowser
-                abs_path = Path(output_file).absolute()
-                webbrowser.open(f"file://{abs_path}")
-                print_color("✓ 已在浏览器中打开报告", Colors.GREEN)
-            except:
-                pass
-        except Exception as e:
-            print_color(f"生成 HTML 报告失败: {e}", Colors.RED)
-
-    # 显示覆盖率摘要
-    cmd = ["go", "tool", "cover", f"-func={coverage_file}"]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print()
-        print("覆盖率摘要:")
-        print(result.stdout)
-    except Exception as e:
-        print_color(f"显示覆盖率摘要失败: {e}", Colors.RED)
+def run_test(test_file):
+    """运行测试"""
+    print(f"\n运行测试: {test_file}\n")
+    
+    # 如果是运行所有测试，使用包路径而不是通配符
+    if test_file == 'all':
+        cmd = "go test -v ./test/integration/ -run Scenario"
+    else:
+        cmd = f"go test -v ./test/integration/{test_file}"
+    
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        encoding='utf-8',
+        text=True
+    )
+    
+    return result.returncode == 0
 
 def main():
-    """主函数"""
-    parser = argparse.ArgumentParser(
-        description='青羽后端 - 测试运行脚本',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-示例:
-  # 运行所有测试
-  python scripts/testing/run_tests.py
-
-  # 运行特定包的测试
-  python scripts/testing/run_tests.py --package=./service/...
-  python scripts/testing/run_tests.py --package=./api/v1/...
-
-  # 生成覆盖率报告
-  python scripts/testing/run_tests.py --coverage
-
-  # 详细输出
-  python scripts/testing/run_tests.py -v
-
-  # 快速测试（跳过需要数据库的测试）
-  python scripts/testing/run_tests.py --short
-        """
-    )
-
-    parser.add_argument(
-        '--package',
-        type=str,
-        default='./...',
-        help='要测试的包路径（默认: ./...，表示所有包）'
-    )
-
-    parser.add_argument(
-        '--coverage',
-        action='store_true',
-        help='生成覆盖率报告'
-    )
-
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='显示详细输出'
-    )
-
-    parser.add_argument(
-        '--short',
-        action='store_true',
-        help='运行快速测试（跳过长时间运行的测试）'
-    )
-
-    parser.add_argument(
-        '--timeout',
-        type=str,
-        default='10m',
-        help='测试超时时间（默认: 10m）'
-    )
-
-    args = parser.parse_args()
-
-    # 打印欢迎信息
-    print_header("青羽后端 - 测试运行器")
-
-    # 检查是否在项目根目录
-    if not Path("go.mod").exists():
-        print_color("错误: 请在项目根目录运行此脚本", Colors.RED)
-        print(f"当前目录: {os.getcwd()}")
-        return 1
-
-    # 显示配置
-    print("测试配置:")
-    print(f"  包路径: {args.package}")
-    print(f"  覆盖率: {'是' if args.coverage else '否'}")
-    print(f"  详细输出: {'是' if args.verbose else '否'}")
-    print(f"  快速模式: {'是' if args.short else '否'}")
-    print(f"  超时时间: {args.timeout}")
-    print()
-
-    # 记录开始时间
-    start_time = time.time()
-
-    # 运行测试
-    print_header("运行测试")
-
-    exit_code = run_go_test(
-        package=args.package,
-        coverage=args.coverage,
-        verbose=args.verbose,
-        timeout=args.timeout
-    )
-
-    # 记录结束时间
-    elapsed_time = time.time() - start_time
-
-    # 生成覆盖率报告
-    if args.coverage and exit_code == 0:
-        generate_coverage_report()
-
-    # 打印结果
-    print()
-    print_header("测试结果")
-
-    print(f"运行时间: {elapsed_time:.2f} 秒")
-
-    if exit_code == 0:
-        print_color("✓ 所有测试通过", Colors.GREEN)
-        return 0
+    print_header("青羽后端 - 集成测试运行工具")
+    
+    # 检查服务器
+    if not check_server():
+        print("⚠ 服务器未运行")
+        choice = input("是否启动服务器？(yes/no): ")
+        if choice.lower() == 'yes':
+            if not start_server():
+                print("无法启动服务器，请手动启动")
+                print("命令: go run cmd/server/main.go")
+                return 1
+        else:
+            print("请手动启动服务器后再运行测试")
+            return 1
     else:
-        print_color("✗ 测试失败", Colors.RED)
-        return exit_code
+        print("✓ 服务器正在运行")
+    
+    # 选择测试
+    print("\n可用的测试场景:")
+    print("  1. 书城流程测试 (scenario_bookstore_test.go)")
+    print("  2. 搜索功能测试 (scenario_search_test.go)")
+    print("  3. 阅读流程测试 (scenario_reading_test.go)")
+    print("  4. AI生成测试 (scenario_ai_generation_test.go)")
+    print("  5. 认证流程测试 (scenario_auth_test.go)")
+    print("  6. 写作流程测试 (scenario_writing_test.go)")
+    print("  7. 互动功能测试 (scenario_interaction_test.go)")
+    print("  8. 全部测试")
+    print()
+    
+    choice = input("请选择要执行的测试 (1-8): ")
+    
+    test_files = {
+        '1': 'scenario_bookstore_test.go',
+        '2': 'scenario_search_test.go',
+        '3': 'scenario_reading_test.go',
+        '4': 'scenario_ai_generation_test.go',
+        '5': 'scenario_auth_test.go',
+        '6': 'scenario_writing_test.go',
+        '7': 'scenario_interaction_test.go',
+        '8': 'all'  # 特殊标记，表示运行所有测试
+    }
+    
+    if choice not in test_files:
+        print("无效的选择")
+        return 1
+    
+    test_file = test_files[choice]
+    
+    print_header("执行集成测试")
+    
+    success = run_test(test_file)
+    
+    print_header("测试完成")
+    
+    if success:
+        print("✓ 测试执行成功")
+    else:
+        print("⚠ 部分测试可能失败，请查看详细输出")
+    
+    # 询问是否查看服务器日志
+    if os.path.exists("server_test.log"):
+        view_log = input("\n是否查看服务器日志？(yes/no): ")
+        if view_log.lower() == 'yes':
+            with open("server_test.log", 'r', encoding='utf-8') as f:
+                print("\n" + "=" * 60)
+                print("服务器日志")
+                print("=" * 60)
+                print(f.read())
+    
+    print("\n提示:")
+    print("- 测试结果已显示在上方")
+    print("- 服务器日志: server_test.log")
+    print("- 如需停止服务器，请手动关闭或使用 Ctrl+C")
+    print()
+    
+    return 0 if success else 1
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         sys.exit(main())
     except KeyboardInterrupt:
-        print()
-        print_color("用户中断操作", Colors.YELLOW)
-        sys.exit(130)
-    except Exception as e:
-        print()
-        print_color(f"错误: {e}", Colors.RED)
-        import traceback
-        traceback.print_exc()
+        print("\n\n操作已取消")
         sys.exit(1)
-

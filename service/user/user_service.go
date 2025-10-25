@@ -291,19 +291,30 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户名和密码不能为空", nil)
 	}
 
+	// DEBUG: 记录登录尝试
+	fmt.Printf("[DEBUG] 登录尝试 - 用户名: %s\n", req.Username)
+
 	// 2. 获取用户
 	user, err := s.userRepo.GetByUsername(ctx, req.Username)
 	if err != nil {
+		fmt.Printf("[DEBUG] 获取用户失败 - 错误: %v\n", err)
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
 		}
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
 	}
 
+	fmt.Printf("[DEBUG] 用户找到 - ID: %s, 用户名: %s, 状态: %s\n", user.ID, user.Username, user.Status)
+	fmt.Printf("[DEBUG] 密码哈希: %s\n", user.Password[:20]+"...")
+	fmt.Printf("[DEBUG] 输入密码: %s\n", req.Password)
+
 	// 3. 验证密码
 	if !user.ValidatePassword(req.Password) {
+		fmt.Printf("[DEBUG] 密码验证失败\n")
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
 	}
+
+	fmt.Printf("[DEBUG] 密码验证成功\n")
 
 	// 4. 检查用户状态
 	switch user.Status {
