@@ -37,17 +37,19 @@ const (
 	UserPasswordPath = APIBasePath + "/users/password"
 
 	// 阅读器相关
-	ReaderBooksPath       = APIBasePath + "/reader/books"
-	ReaderChaptersPath    = APIBasePath + "/reader/chapters"
-	ReaderProgressPath    = APIBasePath + "/reader/progress"
-	ReaderAnnotationsPath = APIBasePath + "/reader/annotations"
-	ReaderCommentsPath    = APIBasePath + "/reader/comments"
-	ReaderCollectionsPath = APIBasePath + "/reader/collections"
-	ReaderLikesPath       = APIBasePath + "/reader/likes"
+	ReaderBooksPath          = APIBasePath + "/reader/books"
+	ReaderChaptersPath       = APIBasePath + "/reader/chapters"
+	ReaderProgressPath       = APIBasePath + "/reader/progress"
+	ReaderAnnotationsPath    = APIBasePath + "/reader/annotations"
+	ReaderCommentsPath       = APIBasePath + "/reader/comments"
+	ReaderCollectionsPath    = APIBasePath + "/reader/collections"
+	ReaderLikesPath          = APIBasePath + "/reader/likes"
+	ReaderReadingHistoryPath = APIBasePath + "/reader/reading-history"
 
 	// 书城相关
 	BookstoreHomePath    = APIBasePath + "/bookstore/homepage"
 	BookstoreBooksPath   = APIBasePath + "/bookstore/books"
+	BookstoreSearchPath  = APIBasePath + "/bookstore/books/search"
 	BookstoreRankingPath = APIBasePath + "/bookstore/rankings"
 )
 
@@ -549,4 +551,12 @@ func LoginAsUser(t *testing.T, router *gin.Engine, username, password string) st
 func LoginAsTestUser(t *testing.T, router *gin.Engine) string {
 	helper := NewTestHelper(t, router)
 	return helper.LoginTestUser()
+}
+
+// loginTestUser 兼容旧测试的登录函数（待迁移的测试使用）
+// 注意：baseURL参数被忽略，因为我们使用TestHelper
+func loginTestUser(t *testing.T, baseURL, username, password string) string {
+	router, _ := setupTestEnvironment(t)
+	helper := NewTestHelper(t, router)
+	return helper.LoginUser(username, password)
 }

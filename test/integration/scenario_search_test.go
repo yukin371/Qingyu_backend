@@ -12,11 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// API路径常量
-const (
-	BookstoreSearchPath = "/api/v1/bookstore/books/search"
-)
-
 // 书籍搜索测试 - 完整搜索流程
 func TestSearchScenario(t *testing.T) {
 	// 设置测试环境
