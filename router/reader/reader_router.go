@@ -12,6 +12,7 @@ import (
 func InitReaderRouter(
 	r *gin.RouterGroup,
 	readerService *reading.ReaderService,
+	commentService *reading.CommentService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
@@ -19,6 +20,12 @@ func InitReaderRouter(
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)
+
+	// 评论API（如果commentService可用）
+	var commentApiHandler *readerApi.CommentAPI
+	if commentService != nil {
+		commentApiHandler = readerApi.NewCommentAPI(commentService)
+	}
 
 	// 阅读器主路由组（需要认证）
 	readerGroup := r.Group("/reader")
@@ -38,10 +45,12 @@ func InitReaderRouter(
 		// 章节内容（阅读）
 		chapters := readerGroup.Group("/chapters")
 		{
+			// 注意：查询参数形式的路由必须在参数化路由之前
+			chapters.GET("", chaptersApiHandler.GetBookChapters)                      // 获取书籍章节列表（查询参数：bookId）
 			chapters.GET("/:id", chaptersApiHandler.GetChapterByID)                   // 获取章节信息
 			chapters.GET("/:id/content", chaptersApiHandler.GetChapterContent)        // 获取章节内容
-			chapters.GET("/book/:bookId", chaptersApiHandler.GetBookChapters)         // 获取书籍章节列表
 			chapters.GET("/:id/navigation", chaptersApiHandler.GetNavigationChapters) // 获取导航章节
+			chapters.GET("/book/:bookId", chaptersApiHandler.GetBookChapters)         // 获取书籍章节列表（路径参数）
 			chapters.GET("/book/:bookId/first", chaptersApiHandler.GetFirstChapter)   // 获取第一章
 			chapters.GET("/book/:bookId/last", chaptersApiHandler.GetLastChapter)     // 获取最后一章
 		}
@@ -99,6 +108,21 @@ func InitReaderRouter(
 			settings.GET("", settingApiHandler.GetReadingSettings)    // 获取阅读设置
 			settings.POST("", settingApiHandler.SaveReadingSettings)  // 保存阅读设置
 			settings.PUT("", settingApiHandler.UpdateReadingSettings) // 更新阅读设置
+		}
+
+		// 评论模块（如果commentService可用）
+		if commentApiHandler != nil {
+			comments := readerGroup.Group("/comments")
+			{
+				comments.POST("", commentApiHandler.CreateComment)            // 发表评论
+				comments.GET("", commentApiHandler.GetCommentList)            // 获取评论列表
+				comments.GET("/:id", commentApiHandler.GetCommentDetail)      // 获取评论详情
+				comments.PUT("/:id", commentApiHandler.UpdateComment)         // 更新评论
+				comments.DELETE("/:id", commentApiHandler.DeleteComment)      // 删除评论
+				comments.POST("/:id/reply", commentApiHandler.ReplyComment)   // 回复评论
+				comments.POST("/:id/like", commentApiHandler.LikeComment)     // 点赞评论
+				comments.DELETE("/:id/like", commentApiHandler.UnlikeComment) // 取消点赞
+			}
 		}
 	}
 }
