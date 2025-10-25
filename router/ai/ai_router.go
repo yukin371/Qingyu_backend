@@ -57,6 +57,20 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 			chatGroup.GET("/sessions/:sessionId", chatApiHandler.GetChatHistory)
 			chatGroup.DELETE("/sessions/:sessionId", chatApiHandler.DeleteChatSession)
 		}
+
+		// ============ 兼容性路由（支持旧的API路径） ============
+		// 这些路由将重定向到新的API路径，保持向后兼容
+		compatGroup := aiGroup.Group("")
+		compatGroup.Use(middleware.QuotaCheckMiddleware(quotaService))
+		{
+			// /api/v1/ai/generate -> /api/v1/ai/writing/continue
+			compatGroup.POST("/generate", writingApiHandler.ContinueWriting)
+
+			// /api/v1/ai/rewrite, /api/v1/ai/expand, /api/v1/ai/polish -> /api/v1/ai/writing/rewrite
+			compatGroup.POST("/rewrite", writingApiHandler.RewriteText)
+			compatGroup.POST("/expand", writingApiHandler.RewriteText)
+			compatGroup.POST("/polish", writingApiHandler.RewriteText)
+		}
 	}
 
 	// 注意：管理员配额管理路由已迁移到 /api/v1/admin/quota
