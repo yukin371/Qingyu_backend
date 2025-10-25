@@ -52,12 +52,13 @@ type ServiceContainer struct {
 	serviceMetrics map[string]*metrics.ServiceMetrics
 
 	// 业务服务
-	userService      userInterface.UserService
-	aiService        *aiService.Service
-	bookstoreService bookstoreService.BookstoreService
-	readerService    *readingService.ReaderService
-	commentService   *readingService.CommentService
-	likeService      *readingService.LikeService
+	userService       userInterface.UserService
+	aiService         *aiService.Service
+	bookstoreService  bookstoreService.BookstoreService
+	readerService     *readingService.ReaderService
+	commentService    *readingService.CommentService
+	likeService       *readingService.LikeService
+	collectionService *readingService.CollectionService
 
 	// AI 相关服务
 	quotaService *aiService.QuotaService
@@ -161,6 +162,14 @@ func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error)
 		return nil, fmt.Errorf("LikeService未初始化")
 	}
 	return c.likeService, nil
+}
+
+// GetCollectionService 获取收藏服务
+func (c *ServiceContainer) GetCollectionService() (*readingService.CollectionService, error) {
+	if c.collectionService == nil {
+		return nil, fmt.Errorf("CollectionService未初始化")
+	}
+	return c.collectionService, nil
 }
 
 // GetQuotaService 获取配额服务
@@ -467,6 +476,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		c.eventBus,  // 注入事件总线
 	)
 	c.services["LikeService"] = c.likeService
+
+	// ============ 4.6 创建收藏服务 ============
+	collectionRepo := c.repositoryFactory.CreateCollectionRepository()
+
+	c.collectionService = readingService.NewCollectionService(
+		collectionRepo,
+		c.eventBus, // 注入事件总线
+	)
+	c.services["CollectionService"] = c.collectionService
 
 	// ============ 5. 创建AI服务 ============
 	c.aiService = aiService.NewService()
