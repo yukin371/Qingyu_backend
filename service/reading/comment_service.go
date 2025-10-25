@@ -426,13 +426,24 @@ func (s *CommentService) checkSensitiveWords(ctx context.Context, content string
 		return false, nil, nil
 	}
 
-	// TODO: 实现敏感词检测逻辑
-	// 1. 从Repository获取敏感词列表
-	// 2. 检查内容中是否包含敏感词
-	// 3. 返回检测结果
+	// 获取启用的敏感词列表
+	enabledWords, err := s.sensitiveWordRepo.GetEnabledWords(ctx)
+	if err != nil {
+		return false, nil, fmt.Errorf("获取敏感词列表失败: %w", err)
+	}
 
-	// 暂时返回false（未检测到敏感词）
-	return false, nil, nil
+	// 检查内容中是否包含敏感词
+	var foundWords []string
+	contentLower := strings.ToLower(content)
+
+	for _, word := range enabledWords {
+		wordLower := strings.ToLower(word.Word)
+		if strings.Contains(contentLower, wordLower) {
+			foundWords = append(foundWords, word.Word)
+		}
+	}
+
+	return len(foundWords) > 0, foundWords, nil
 }
 
 // getRootID 获取根评论ID
