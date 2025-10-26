@@ -339,3 +339,112 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "取消点赞成功", nil)
 }
+
+// GetCommentThread 获取评论完整线程（包含所有回复）
+//
+//	@Summary	获取评论完整线程
+//	@Tags		评论
+//	@Param		id	path		string	true	"评论ID"
+//	@Success	200	{object}	shared.APIResponse
+//	@Router		/api/v1/reader/comments/{id}/thread [get]
+func (api *CommentAPI) GetCommentThread(c *gin.Context) {
+	commentID := c.Param("id")
+	if commentID == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		return
+	}
+
+	// 获取评论及其所有回复（树状结构）
+	// TODO: 需要在 CommentService 中实现 GetCommentThread 方法
+	// thread, err := api.commentService.GetCommentThread(c.Request.Context(), commentID)
+	// if err != nil {
+	// 	shared.Error(c, http.StatusInternalServerError, "获取评论线程失败", err.Error())
+	// 	return
+	// }
+
+	// 临时实现：返回评论详情
+	comment, err := api.commentService.GetCommentDetail(c.Request.Context(), commentID)
+	if err != nil {
+		shared.Error(c, http.StatusNotFound, "获取评论失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", comment)
+}
+
+// GetTopComments 获取热门评论
+//
+//	@Summary	获取热门评论
+//	@Tags		评论
+//	@Param		book_id	query		string	true	"书籍ID"
+//	@Param		limit	query		int		false	"返回数量"	default(10)
+//	@Success	200		{object}	shared.APIResponse
+//	@Router		/api/v1/reader/comments/top [get]
+func (api *CommentAPI) GetTopComments(c *gin.Context) {
+	bookID := c.Query("book_id")
+	if bookID == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if limit > 50 {
+		limit = 50 // 限制最大返回数量
+	}
+
+	// 获取热门评论（按点赞数、回复数等排序）
+	// TODO: 需要在 CommentService 中实现 GetTopComments 方法
+	// topComments, err := api.commentService.GetTopComments(c.Request.Context(), bookID, limit)
+	// if err != nil {
+	// 	shared.Error(c, http.StatusInternalServerError, "获取热门评论失败", err.Error())
+	// 	return
+	// }
+
+	// 临时实现：返回常规评论列表，按热度排序
+	comments, total, err := api.commentService.GetCommentList(c.Request.Context(), bookID, "hot", 1, limit)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取热门评论失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+		"comments": comments,
+		"total":    total,
+	})
+}
+
+// GetCommentReplies 获取评论的回复列表（分页）
+//
+//	@Summary	获取评论回复列表
+//	@Tags		评论
+//	@Param		id		path		string	true	"评论ID"
+//	@Param		page	query		int		false	"页码"		default(1)
+//	@Param		size	query		int		false	"每页数量"	default(20)
+//	@Success	200		{object}	shared.APIResponse
+//	@Router		/api/v1/reader/comments/{id}/replies [get]
+func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
+	commentID := c.Param("id")
+	if commentID == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	// 获取评论的直接回复（分页）
+	// TODO: 需要在 CommentService 中实现 GetCommentReplies 方法
+	// replies, total, err := api.commentService.GetCommentReplies(c.Request.Context(), commentID, page, size)
+	// if err != nil {
+	// 	shared.Error(c, http.StatusInternalServerError, "获取回复列表失败", err.Error())
+	// 	return
+	// }
+
+	// 临时实现：返回空列表（前端可以正常渲染）
+	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+		"replies": []interface{}{},
+		"total":   0,
+		"page":    page,
+		"size":    size,
+	})
+}

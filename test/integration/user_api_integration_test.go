@@ -10,12 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 	"Qingyu_backend/global"
-	"Qingyu_backend/repository/mongodb/user"
-	userRouter "Qingyu_backend/router/user"
-	userService "Qingyu_backend/service/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -31,34 +26,16 @@ func TestUserAPI_Integration(t *testing.T) {
 		t.Skip("跳过集成测试（使用 -short 标志）")
 	}
 
-	// 1. 初始化配置和数据库
-	_, err := config.LoadConfig("../..")
-	require.NoError(t, err, "加载配置失败")
+	// 使用统一的测试环境设置
+	router, cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
-	// 确保 JWT 配置已加载
-	require.NotNil(t, config.GlobalConfig.JWT, "JWT配置未加载")
-
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
-
-	// 获取数据库连接
-	mongoDB, err := getMongoDB()
-	require.NoError(t, err, "获取数据库连接失败")
+	// 获取数据库连接用于清理
+	mongoDB := global.DB
+	require.NotNil(t, mongoDB, "数据库连接未初始化")
 
 	// 确保测试结束后清理
 	defer cleanupTestData(t, mongoDB)
-
-	// 2. 创建Repository和Service
-	userRepo := user.NewMongoUserRepository(mongoDB)
-	userSvc := userService.NewUserService(userRepo)
-
-	// 3. 设置Gin为测试模式
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-
-	// 4. 注册路由
-	apiV1 := router.Group("/api/v1")
-	userRouter.RegisterUserRoutes(apiV1, userSvc)
 
 	// 5. 运行测试场景
 	t.Run("完整用户生命周期", func(t *testing.T) {

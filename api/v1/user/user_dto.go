@@ -75,3 +75,22 @@ type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required" validate:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=6" validate:"required,min=6"`
 }
+
+// PublicUserProfileResponse 用户公开信息响应（用于用户主页）
+type PublicUserProfileResponse struct {
+	UserID    string    `json:"user_id"`
+	Username  string    `json:"username"`
+	Avatar    string    `json:"avatar,omitempty"`
+	Nickname  string    `json:"nickname,omitempty"`
+	Bio       string    `json:"bio,omitempty"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// UserBooksResponse 用户作品列表响应
+type UserBooksResponse struct {
+	Books []map[string]interface{} `json:"books"`
+	Total int                      `json:"total"`
+	Page  int                      `json:"page"`
+	Size  int                      `json:"size"`
+}
