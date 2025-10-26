@@ -67,6 +67,8 @@
 
 ## 阅读器相关
 
+### 章节阅读
+
 | 功能 | 方法 | 路径 | 需认证 | 参数 |
 |------|------|------|--------|------|
 | 获取章节信息 | GET | `/reader/chapters/:id` | ❌ | - |
@@ -75,6 +77,29 @@
 | 获取阅读设置 | GET | `/reader/settings` | ✅ | - |
 | 保存阅读设置 | POST | `/reader/settings` | ✅ | Settings对象 |
 | 更新阅读设置 | PUT | `/reader/settings` | ✅ | 部分字段 |
+
+### 评论功能 ⭐️新增
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 发表评论 | POST | `/reader/comments` | ✅ | `{book_id, chapter_id?, content, rating?}` |
+| 获取评论列表 | GET | `/reader/comments` | ❌ | `book_id, sortBy, page, size` |
+| 获取评论详情 | GET | `/reader/comments/:id` | ❌ | - |
+| 更新评论 | PUT | `/reader/comments/:id` | ✅ | `{content}` |
+| 删除评论 | DELETE | `/reader/comments/:id` | ✅ | - |
+| 回复评论 | POST | `/reader/comments/:id/reply` | ✅ | `{content}` |
+| **点赞评论** ⭐️ | POST | `/reader/comments/:id/like` | ✅ | - |
+| **取消点赞** ⭐️ | DELETE | `/reader/comments/:id/like` | ✅ | - |
+
+### 阅读历史
+
+| 功能 | 方法 | 路径 | 需认证 | 参数 |
+|------|------|------|--------|------|
+| 记录阅读 | POST | `/reader/reading-history` | ✅ | `{book_id, chapter_id, start_time, end_time, progress}` |
+| 获取历史列表 | GET | `/reader/reading-history` | ✅ | `page, page_size, book_id?` |
+| 获取阅读统计 | GET | `/reader/reading-history/stats` | ✅ | `days` |
+| 删除历史记录 | DELETE | `/reader/reading-history/:id` | ✅ | - |
+| 清空历史记录 | DELETE | `/reader/reading-history` | ✅ | - |
 
 ---
 
@@ -217,7 +242,7 @@
 
 ---
 
-## 统一响应格式
+## 统一响应格式 ⭐️已更新
 
 ### 成功响应
 
@@ -227,9 +252,15 @@
   "message": "操作成功",
   "data": {
     // 业务数据
-  }
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
 }
 ```
+
+> **新增字段说明**:
+> - `timestamp`: Unix时间戳，服务器响应时间
+> - `request_id`: 请求追踪ID，便于调试和日志追踪（可选）
 
 ### 错误响应
 
@@ -237,7 +268,9 @@
 {
   "code": 400,
   "message": "参数错误",
-  "error": "username is required"
+  "error": "username is required",
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
 }
 ```
 
@@ -248,11 +281,26 @@
   "code": 200,
   "message": "获取成功",
   "data": [...],
-  "total": 100,
-  "page": 1,
-  "pageSize": 20
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde",
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
 }
 ```
+
+> **分页字段说明**:
+> - `total`: 总记录数
+> - `page`: 当前页码
+> - `page_size`: 每页大小
+> - `total_pages`: 总页数
+> - `has_next`: 是否有下一页
+> - `has_previous`: 是否有上一页
 
 ---
 
@@ -277,14 +325,33 @@ request.interceptors.request.use(config => {
   return config;
 });
 
-// 响应拦截
+// 响应拦截 ⭐️已更新
 request.interceptors.response.use(
-  response => response.data.data,
+  response => {
+    const { code, message, data, timestamp, request_id } = response.data;
+    
+    // 记录请求ID便于追踪
+    if (request_id && process.env.NODE_ENV === 'development') {
+      console.debug('Request ID:', request_id);
+    }
+    
+    // 返回数据部分
+    return data;
+  },
   error => {
-    if (error.response?.status === 401) {
-      // 跳转登录
+    const { code, message, error: errorDetail, request_id } = error.response?.data || {};
+    
+    // 401 未授权
+    if (code === 401 || error.response?.status === 401) {
+      localStorage.removeItem('token');
       window.location.href = '/login';
     }
+    
+    // 记录错误追踪ID
+    if (request_id) {
+      console.error('Error Request ID:', request_id);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -425,6 +492,39 @@ export async function consume(amount, reason) {
 }
 ```
 
+### 评论点赞操作 ⭐️新增
+
+```javascript
+// 点赞评论
+export async function likeComment(commentId) {
+  return request.post(`/reader/comments/${commentId}/like`);
+}
+
+// 取消点赞
+export async function unlikeComment(commentId) {
+  return request.delete(`/reader/comments/${commentId}/like`);
+}
+
+// Vue组件中使用示例
+const handleLike = async (comment) => {
+  try {
+    if (comment.is_liked) {
+      await unlikeComment(comment.id);
+      comment.is_liked = false;
+      comment.like_count--;
+      ElMessage.success('已取消点赞');
+    } else {
+      await likeComment(comment.id);
+      comment.is_liked = true;
+      comment.like_count++;
+      ElMessage.success('点赞成功');
+    }
+  } catch (error) {
+    ElMessage.error('操作失败');
+  }
+};
+```
+
 ### 错误处理
 
 ```javascript
@@ -490,6 +590,29 @@ try {
 
 ---
 
-**最后更新**: 2025-10-20  
-**维护者**: 青羽后端团队
+---
+
+## AI 服务提供商 ⭐️新增
+
+| 提供商 | 模型 | 说明 | 状态 |
+|--------|------|------|------|
+| OpenAI | GPT-3.5, GPT-4 | 通用文本生成 | ✅ |
+| Claude | Claude-2, Claude-3 | Anthropic AI | ✅ |
+| Gemini | Gemini-Pro | Google AI | ✅ |
+| **DeepSeek** ⭐️ | deepseek-chat | 兼容OpenAI格式 | ✅ |
+
+**默认提供商**: DeepSeek
+
+**支持功能**:
+- ✅ 智能续写
+- ✅ 文本改写
+- ✅ 文本扩写
+- ✅ 文本润色
+- ✅ Token使用统计
+
+---
+
+**最后更新**: 2025-10-25  
+**维护者**: 青羽后端团队  
+**文档版本**: v1.3
 

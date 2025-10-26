@@ -212,6 +212,176 @@ func (s *ConfigService) GetAllConfigs(ctx context.Context) ([]*ConfigGroup, erro
 		})
 	}
 
+	// 邮件配置组
+	if cfg.Email != nil {
+		groups = append(groups, &ConfigGroup{
+			Name:        "email",
+			Description: "邮件配置",
+			Items: []*ConfigItem{
+				{
+					Key:         "email.enabled",
+					Value:       cfg.Email.Enabled,
+					Type:        "boolean",
+					Description: "是否启用邮件服务",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "email.smtp_host",
+					Value:       cfg.Email.SMTPHost,
+					Type:        "string",
+					Description: "SMTP服务器地址",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "email.smtp_port",
+					Value:       cfg.Email.SMTPPort,
+					Type:        "number",
+					Description: "SMTP端口",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "email.username",
+					Value:       s.maskSensitiveValue(cfg.Email.Username),
+					Type:        "string",
+					Description: "SMTP用户名",
+					Editable:    true,
+					Sensitive:   true,
+				},
+				{
+					Key:         "email.password",
+					Value:       s.maskSensitiveValue(cfg.Email.Password),
+					Type:        "string",
+					Description: "SMTP密码",
+					Editable:    true,
+					Sensitive:   true,
+				},
+				{
+					Key:         "email.from_address",
+					Value:       cfg.Email.FromAddress,
+					Type:        "string",
+					Description: "发件人邮箱地址",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "email.from_name",
+					Value:       cfg.Email.FromName,
+					Type:        "string",
+					Description: "发件人名称",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "email.use_tls",
+					Value:       cfg.Email.UseTLS,
+					Type:        "boolean",
+					Description: "是否使用TLS",
+					Editable:    true,
+					Sensitive:   false,
+				},
+			},
+		})
+	}
+
+	// 支付配置组
+	if cfg.Payment != nil {
+		paymentItems := []*ConfigItem{
+			{
+				Key:         "payment.enabled",
+				Value:       cfg.Payment.Enabled,
+				Type:        "boolean",
+				Description: "是否启用支付功能",
+				Editable:    true,
+				Sensitive:   false,
+			},
+			{
+				Key:         "payment.default_provider",
+				Value:       cfg.Payment.DefaultProvider,
+				Type:        "string",
+				Description: "默认支付提供商 (alipay/wechat)",
+				Editable:    true,
+				Sensitive:   false,
+			},
+		}
+
+		// 支付宝配置
+		if cfg.Payment.Alipay != nil {
+			paymentItems = append(paymentItems, []*ConfigItem{
+				{
+					Key:         "payment.alipay.enabled",
+					Value:       cfg.Payment.Alipay.Enabled,
+					Type:        "boolean",
+					Description: "是否启用支付宝",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "payment.alipay.app_id",
+					Value:       s.maskSensitiveValue(cfg.Payment.Alipay.AppID),
+					Type:        "string",
+					Description: "支付宝应用ID",
+					Editable:    true,
+					Sensitive:   true,
+				},
+				{
+					Key:         "payment.alipay.sandbox",
+					Value:       cfg.Payment.Alipay.Sandbox,
+					Type:        "boolean",
+					Description: "是否使用沙箱环境",
+					Editable:    true,
+					Sensitive:   false,
+				},
+			}...)
+		}
+
+		// 微信支付配置
+		if cfg.Payment.Wechat != nil {
+			paymentItems = append(paymentItems, []*ConfigItem{
+				{
+					Key:         "payment.wechat.enabled",
+					Value:       cfg.Payment.Wechat.Enabled,
+					Type:        "boolean",
+					Description: "是否启用微信支付",
+					Editable:    true,
+					Sensitive:   false,
+				},
+				{
+					Key:         "payment.wechat.app_id",
+					Value:       s.maskSensitiveValue(cfg.Payment.Wechat.AppID),
+					Type:        "string",
+					Description: "微信应用ID",
+					Editable:    true,
+					Sensitive:   true,
+				},
+				{
+					Key:         "payment.wechat.mch_id",
+					Value:       s.maskSensitiveValue(cfg.Payment.Wechat.MchID),
+					Type:        "string",
+					Description: "微信商户ID",
+					Editable:    true,
+					Sensitive:   true,
+				},
+				{
+					Key:         "payment.wechat.sandbox",
+					Value:       cfg.Payment.Wechat.Sandbox,
+					Type:        "boolean",
+					Description: "是否使用沙箱环境",
+					Editable:    true,
+					Sensitive:   false,
+				},
+			}...)
+		}
+
+		groups = append(groups, &ConfigGroup{
+			Name:        "payment",
+			Description: "支付配置",
+			Items:       paymentItems,
+		})
+	}
+
 	return groups, nil
 }
 

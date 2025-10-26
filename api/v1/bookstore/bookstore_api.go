@@ -336,10 +336,21 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		return
 	}
 
+	// 确保返回空数组而不是nil
+	if books == nil {
+		books = make([]*bookstore2.Book, 0)
+	}
+
+	// 构造响应数据
+	responseData := map[string]interface{}{
+		"books": books,
+		"total": total,
+	}
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    200,
 		Message: "搜索书籍成功",
-		Data:    books,
+		Data:    responseData,
 		Total:   total,
 		Page:    page,
 		Size:    size,

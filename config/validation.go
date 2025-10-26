@@ -161,4 +161,51 @@ func setConfigDefaults(cfg *Config) {
 	if cfg.AI.Temperature == 0 {
 		cfg.AI.Temperature = 7
 	}
+
+	// 邮件默认值
+	if cfg.Email == nil {
+		cfg.Email = &EmailConfig{
+			Enabled:     false,
+			SMTPHost:    "smtp.example.com",
+			SMTPPort:    587,
+			FromAddress: "noreply@qingyu.com",
+			FromName:    "青羽阅读",
+			UseTLS:      true,
+			UseSSL:      false,
+		}
+	}
+
+	// 支付默认值
+	if cfg.Payment == nil {
+		cfg.Payment = &PaymentConfig{
+			Enabled:         false,
+			DefaultProvider: "alipay",
+			Alipay: &AlipayConfig{
+				Enabled:  false,
+				Sandbox:  true,
+				SignType: "RSA2",
+			},
+			Wechat: &WechatPayConfig{
+				Enabled: false,
+				Sandbox: true,
+			},
+		}
+	}
+
+	// 确保支付宝配置存在
+	if cfg.Payment != nil && cfg.Payment.Alipay == nil {
+		cfg.Payment.Alipay = &AlipayConfig{
+			Enabled:  false,
+			Sandbox:  true,
+			SignType: "RSA2",
+		}
+	}
+
+	// 确保微信支付配置存在
+	if cfg.Payment != nil && cfg.Payment.Wechat == nil {
+		cfg.Payment.Wechat = &WechatPayConfig{
+			Enabled: false,
+			Sandbox: true,
+		}
+	}
 }
