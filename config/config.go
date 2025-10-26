@@ -19,6 +19,8 @@ type Config struct {
 	AI       *AIConfig          `mapstructure:"ai"`
 	External *ExternalAPIConfig `mapstructure:"external"`
 	AIQuota  *AIQuotaConfig     `mapstructure:"ai_quota"`
+	Email    *EmailConfig       `mapstructure:"email"`
+	Payment  *PaymentConfig     `mapstructure:"payment"`
 }
 
 // ServerConfig 服务器配置
@@ -78,6 +80,52 @@ type DefaultQuotasConfig struct {
 type QuotaResetConfig struct {
 	DailyResetHour  int  `mapstructure:"daily_reset_hour"`
 	EnableAutoReset bool `mapstructure:"enable_auto_reset"`
+}
+
+// EmailConfig 邮件配置
+type EmailConfig struct {
+	Enabled     bool   `mapstructure:"enabled"`
+	SMTPHost    string `mapstructure:"smtp_host"`
+	SMTPPort    int    `mapstructure:"smtp_port"`
+	Username    string `mapstructure:"username"`
+	Password    string `mapstructure:"password"`
+	FromAddress string `mapstructure:"from_address"`
+	FromName    string `mapstructure:"from_name"`
+	UseTLS      bool   `mapstructure:"use_tls"`
+	UseSSL      bool   `mapstructure:"use_ssl"`
+}
+
+// PaymentConfig 支付配置
+type PaymentConfig struct {
+	Enabled         bool             `mapstructure:"enabled"`
+	DefaultProvider string           `mapstructure:"default_provider"` // alipay, wechat
+	Alipay          *AlipayConfig    `mapstructure:"alipay"`
+	Wechat          *WechatPayConfig `mapstructure:"wechat"`
+	NotifyURL       string           `mapstructure:"notify_url"`
+	ReturnURL       string           `mapstructure:"return_url"`
+}
+
+// AlipayConfig 支付宝配置
+type AlipayConfig struct {
+	Enabled         bool   `mapstructure:"enabled"`
+	AppID           string `mapstructure:"app_id"`
+	PrivateKey      string `mapstructure:"private_key"`
+	PublicKey       string `mapstructure:"public_key"`
+	AlipayPublicKey string `mapstructure:"alipay_public_key"`
+	SignType        string `mapstructure:"sign_type"` // RSA2
+	Sandbox         bool   `mapstructure:"sandbox"`
+}
+
+// WechatPayConfig 微信支付配置
+type WechatPayConfig struct {
+	Enabled    bool   `mapstructure:"enabled"`
+	AppID      string `mapstructure:"app_id"`
+	MchID      string `mapstructure:"mch_id"`
+	APIKey     string `mapstructure:"api_key"`
+	APIv3Key   string `mapstructure:"apiv3_key"`
+	SerialNo   string `mapstructure:"serial_no"`
+	PrivateKey string `mapstructure:"private_key"`
+	Sandbox    bool   `mapstructure:"sandbox"`
 }
 
 // GetDefaultQuota 从配置获取默认配额
@@ -263,6 +311,32 @@ func setDefaults() {
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)
+
+	// 邮件默认配置
+	v.SetDefault("email.enabled", false)
+	v.SetDefault("email.smtp_host", "smtp.example.com")
+	v.SetDefault("email.smtp_port", 587)
+	v.SetDefault("email.username", "")
+	v.SetDefault("email.password", "")
+	v.SetDefault("email.from_address", "noreply@qingyu.com")
+	v.SetDefault("email.from_name", "青羽阅读")
+	v.SetDefault("email.use_tls", true)
+	v.SetDefault("email.use_ssl", false)
+
+	// 支付默认配置
+	v.SetDefault("payment.enabled", false)
+	v.SetDefault("payment.default_provider", "alipay")
+	v.SetDefault("payment.notify_url", "")
+	v.SetDefault("payment.return_url", "")
+
+	// 支付宝默认配置
+	v.SetDefault("payment.alipay.enabled", false)
+	v.SetDefault("payment.alipay.sandbox", true)
+	v.SetDefault("payment.alipay.sign_type", "RSA2")
+
+	// 微信支付默认配置
+	v.SetDefault("payment.wechat.enabled", false)
+	v.SetDefault("payment.wechat.sandbox", true)
 }
 
 // WatchConfig 启用配置热重载

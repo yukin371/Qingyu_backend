@@ -1,7 +1,7 @@
 # 推荐系统 API 参考
 
-> **版本**: v1.0  
-> **最后更新**: 2025-10-18  
+> **版本**: v1.3 ⭐️已更新  
+> **最后更新**: 2025-10-25  
 > **基础路径**: `/api/v1/recommendation`
 
 ---
@@ -24,6 +24,96 @@
 - ✅ 首页混合推荐
 - ✅ 热门推荐
 - ✅ 分类推荐
+
+---
+
+## 1.3 统一响应格式 ⭐️v1.3更新
+
+### 成功响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 业务数据
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+**新增字段说明**:
+- `timestamp`: Unix时间戳，服务器响应时间
+- `request_id`: 请求追踪ID，便于调试和日志追踪（可选字段）
+
+---
+
+## 1.4 TypeScript 类型定义 ⭐️v1.3新增
+
+```typescript
+// src/types/recommendation.ts
+import type { APIResponse } from './api';
+import type { Book } from './bookstore';
+
+// 推荐结果
+export interface RecommendationResult {
+  books: Book[];
+  reason?: string;
+  algorithm?: string;
+  confidence?: number;
+}
+
+// 用户行为
+export interface UserBehavior {
+  itemId: string;
+  itemType: 'book' | 'chapter';
+  behaviorType: 'view' | 'click' | 'like' | 'collect' | 'read';
+  duration?: number;
+  timestamp: string;
+}
+
+// 相似物品
+export interface SimilarItem {
+  book: Book;
+  similarity: number;
+  reason: string;
+}
+
+// API函数
+export const getPersonalizedRecommendation = (limit: number = 10) => {
+  return request.get<APIResponse<RecommendationResult>>('/recommendation/personalized', {
+    params: { limit }
+  });
+};
+
+export const getSimilarItems = (itemId: string, limit: number = 10) => {
+  return request.get<APIResponse<SimilarItem[]>>('/recommendation/similar', {
+    params: { itemId, limit }
+  });
+};
+
+export const recordBehavior = (behavior: Omit<UserBehavior, 'timestamp'>) => {
+  return request.post<APIResponse<null>>('/recommendation/behavior', behavior);
+};
+
+export const getHomepageRecommendation = (limit: number = 20) => {
+  return request.get<APIResponse<RecommendationResult>>('/recommendation/homepage', {
+    params: { limit }
+  });
+};
+
+export const getHotRecommendation = (limit: number = 10, days: number = 7) => {
+  return request.get<APIResponse<Book[]>>('/recommendation/hot', {
+    params: { limit, days }
+  });
+};
+
+export const getCategoryRecommendation = (category: string, limit: number = 10) => {
+  return request.get<APIResponse<Book[]>>('/recommendation/category', {
+    params: { category, limit }
+  });
+};
+```
 
 ---
 

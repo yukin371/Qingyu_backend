@@ -1,16 +1,10 @@
 package integration
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
-	"Qingyu_backend/global"
 )
 
 // TestCollectionScenario 收藏系统场景测试
@@ -136,39 +130,4 @@ func TestCollectionScenario(t *testing.T) {
 		helper.LogSuccess("收藏统计: %v条收藏, %v个收藏夹",
 			data["total_collections"], data["total_folders"])
 	})
-}
-
-// setupTestEnvironment 设置测试环境
-func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
-	// 加载配置
-	_, err := config.LoadConfig("../..")
-	if err != nil {
-		t.Fatalf("加载配置失败: %v", err)
-	}
-
-	// 初始化数据库
-	err = core.InitDB()
-	if err != nil {
-		t.Fatalf("初始化数据库失败: %v", err)
-	}
-
-	// 设置Gin为测试模式
-	gin.SetMode(gin.TestMode)
-
-	// 初始化服务器（会自动初始化服务和路由）
-	r, err := core.InitServer()
-	if err != nil {
-		t.Fatalf("初始化服务器失败: %v", err)
-	}
-
-	// 清理函数
-	cleanup := func() {
-		// 关闭数据库连接
-		if global.DB != nil {
-			global.DB.Client().Disconnect(context.Background())
-			global.DB = nil // 重要：将global.DB设为nil，避免后续测试使用断开的连接
-		}
-	}
-
-	return r, cleanup
 }

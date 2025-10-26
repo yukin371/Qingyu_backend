@@ -32,3 +32,80 @@ type BannerFilter struct {
 	Limit      int     `json:"limit,omitempty"`
 	Offset     int     `json:"offset,omitempty"`
 }
+
+// GetConditions 实现Filter接口
+func (f *BannerFilter) GetConditions() map[string]interface{} {
+	conditions := make(map[string]interface{})
+
+	if f.IsActive != nil {
+		conditions["is_active"] = *f.IsActive
+	}
+	if f.TargetType != nil {
+		conditions["target_type"] = *f.TargetType
+	}
+
+	return conditions
+}
+
+// GetSort 实现Filter接口
+func (f *BannerFilter) GetSort() map[string]int {
+	sort := make(map[string]int)
+
+	if f.SortBy != "" {
+		sortValue := 1 // 默认升序
+		if f.SortOrder == "desc" {
+			sortValue = -1
+		}
+
+		switch f.SortBy {
+		case "sort_order":
+			sort["sort_order"] = sortValue
+		case "click_count":
+			sort["click_count"] = sortValue
+		case "created_at":
+			sort["created_at"] = sortValue
+		default:
+			sort["sort_order"] = 1
+		}
+	} else {
+		// 默认按排序权重升序
+		sort["sort_order"] = 1
+	}
+
+	return sort
+}
+
+// GetLimit 实现Filter接口
+func (f *BannerFilter) GetLimit() int {
+	return f.Limit
+}
+
+// GetOffset 实现Filter接口
+func (f *BannerFilter) GetOffset() int {
+	return f.Offset
+}
+
+// GetFields 实现Filter接口
+func (f *BannerFilter) GetFields() []string {
+	return []string{} // Banner查询返回所有字段
+}
+
+// Validate 实现Filter接口
+func (f *BannerFilter) Validate() error {
+	if f.Limit < 0 {
+		return &ValidationError{Message: "limit不能为负数"}
+	}
+	if f.Offset < 0 {
+		return &ValidationError{Message: "offset不能为负数"}
+	}
+	return nil
+}
+
+// ValidationError 验证错误
+type ValidationError struct {
+	Message string
+}
+
+func (e *ValidationError) Error() string {
+	return e.Message
+}

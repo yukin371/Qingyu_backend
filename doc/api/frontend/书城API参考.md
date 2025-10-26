@@ -1,7 +1,7 @@
 # 书城系统 API 参考
 
-> **版本**: v1.0  
-> **最后更新**: 2025-10-18  
+> **版本**: v1.3 ⭐️已更新  
+> **最后更新**: 2025-10-25  
 > **基础路径**: `/api/v1/bookstore`
 
 ---
@@ -25,6 +25,132 @@
 - ✅ 高级搜索和过滤
 - ✅ 多维度榜单（实时/周榜/月榜/新人榜）
 - ✅ 浏览量和点击量统计
+
+---
+
+## 1.3 统一响应格式 ⭐️v1.3更新
+
+### 成功响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 业务数据
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+### 分页响应
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [...],
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde",
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```
+
+**新增字段说明**:
+- `timestamp`: Unix时间戳，服务器响应时间
+- `request_id`: 请求追踪ID，便于调试和日志追踪（可选字段）
+- `pagination`: 分页信息对象（替代原来的平铺字段）
+
+---
+
+## 1.4 TypeScript 类型定义 ⭐️v1.3新增
+
+```typescript
+// src/types/bookstore.ts
+import type { APIResponse, PaginatedResponse } from './api';
+
+// 书籍信息
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  coverUrl: string;
+  description: string;
+  categoryId: string;
+  categoryName: string;
+  wordCount: number;
+  chapterCount: number;
+  status: 'ongoing' | 'completed';
+  rating: number;
+  viewCount: number;
+  tags: string[];
+  isPaid: boolean;
+  price?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 书籍分类
+export interface Category {
+  id: string;
+  name: string;
+  parentId: string | null;
+  icon?: string;
+  bookCount: number;
+  children?: Category[];
+}
+
+// Banner
+export interface Banner {
+  id: string;
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  order: number;
+}
+
+// 首页数据
+export interface HomepageData {
+  banners: Banner[];
+  recommended: Book[];
+  featured: Book[];
+  categories: Category[];
+}
+
+// 搜索参数
+export interface SearchBooksParams {
+  keyword?: string;
+  author?: string;
+  categoryId?: string;
+  sortBy?: 'latest' | 'hot' | 'rating';
+  minRating?: number;
+  page?: number;
+  size?: number;
+}
+
+// API函数
+export const getHomepage = () => {
+  return request.get<APIResponse<HomepageData>>('/bookstore/homepage');
+};
+
+export const getBookDetail = (bookId: string) => {
+  return request.get<APIResponse<Book>>(`/bookstore/books/${bookId}`);
+};
+
+export const searchBooks = (params: SearchBooksParams) => {
+  return request.get<PaginatedResponse<Book>>('/bookstore/books/search', { params });
+};
+
+export const getCategoryTree = () => {
+  return request.get<APIResponse<Category[]>>('/bookstore/categories/tree');
+};
+```
 
 ---
 

@@ -17,6 +17,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/config"
+	"Qingyu_backend/core"
 	"Qingyu_backend/global"
 )
 
@@ -551,6 +553,41 @@ func LoginAsUser(t *testing.T, router *gin.Engine, username, password string) st
 func LoginAsTestUser(t *testing.T, router *gin.Engine) string {
 	helper := NewTestHelper(t, router)
 	return helper.LoginTestUser()
+}
+
+// setupTestEnvironment 设置测试环境
+func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
+	// 加载配置
+	_, err := config.LoadConfig("../..")
+	if err != nil {
+		t.Fatalf("加载配置失败: %v", err)
+	}
+
+	// 初始化数据库
+	err = core.InitDB()
+	if err != nil {
+		t.Fatalf("初始化数据库失败: %v", err)
+	}
+
+	// 设置Gin为测试模式
+	gin.SetMode(gin.TestMode)
+
+	// 初始化服务器（会自动初始化服务和路由）
+	r, err := core.InitServer()
+	if err != nil {
+		t.Fatalf("初始化服务器失败: %v", err)
+	}
+
+	// 清理函数
+	cleanup := func() {
+		// 关闭数据库连接
+		if global.DB != nil {
+			global.DB.Client().Disconnect(context.Background())
+			global.DB = nil // 重要：将global.DB设为nil，避免后续测试使用断开的连接
+		}
+	}
+
+	return r, cleanup
 }
 
 // loginTestUser 兼容旧测试的登录函数（待迁移的测试使用）
