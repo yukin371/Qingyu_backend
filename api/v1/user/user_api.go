@@ -4,6 +4,7 @@ import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	user2 "Qingyu_backend/service/interfaces/user"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -328,4 +329,111 @@ func (api *UserAPI) ChangePassword(c *gin.Context) {
 	}
 
 	shared.Success(c, http.StatusOK, "密码修改成功", nil)
+}
+
+// GetUserProfile 获取用户公开信息（用于用户主页）
+//
+//	@Summary		获取用户公开信息
+//	@Description	获取指定用户的公开信息，用于展示用户主页
+//	@Tags			用户
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	path		string	true	"用户ID"
+//	@Success		200		{object}	shared.APIResponse{data=PublicUserProfileResponse}
+//	@Failure		404		{object}	shared.ErrorResponse
+//	@Failure		500		{object}	shared.ErrorResponse
+//	@Router			/api/v1/users/{userId}/profile [get]
+func (api *UserAPI) GetUserProfile(c *gin.Context) {
+	userID := c.Param("userId")
+	if userID == "" {
+		shared.BadRequest(c, "参数错误", "用户ID不能为空")
+		return
+	}
+
+	// 调用Service层获取用户信息
+	serviceReq := &user2.GetUserRequest{
+		ID: userID,
+	}
+
+	resp, err := api.userService.GetUser(c.Request.Context(), serviceReq)
+	if err != nil {
+		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
+			switch serviceErr.Type {
+			case serviceInterfaces.ErrorTypeNotFound:
+				shared.NotFound(c, "用户不存在")
+			default:
+				shared.InternalError(c, "获取用户信息失败", err)
+			}
+			return
+		}
+		shared.InternalError(c, "获取用户信息失败", err)
+		return
+	}
+
+	// 构建公开信息响应（不包含敏感信息）
+	publicProfile := PublicUserProfileResponse{
+		UserID:    resp.User.ID,
+		Username:  resp.User.Username,
+		Avatar:    resp.User.Avatar,
+		Nickname:  resp.User.Nickname,
+		Bio:       resp.User.Bio,
+		Role:      resp.User.Role,
+		CreatedAt: resp.User.CreatedAt,
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", publicProfile)
+}
+
+// GetUserBooks 获取用户的作品列表
+//
+//	@Summary		获取用户作品列表
+//	@Description	获取指定用户的已发布作品列表
+//	@Tags			用户
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	path		string	true	"用户ID"
+//	@Param			page	query		int		false	"页码"		default(1)
+//	@Param			size	query		int		false	"每页数量"	default(20)
+//	@Param			status	query		string	false	"状态筛选"	Enums(published, completed)
+//	@Success		200		{object}	shared.APIResponse{data=UserBooksResponse}
+//	@Failure		404		{object}	shared.ErrorResponse
+//	@Failure		500		{object}	shared.ErrorResponse
+//	@Router			/api/v1/users/{userId}/books [get]
+func (api *UserAPI) GetUserBooks(c *gin.Context) {
+	userID := c.Param("userId")
+	if userID == "" {
+		shared.BadRequest(c, "参数错误", "用户ID不能为空")
+		return
+	}
+
+	// 获取分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	_ = c.Query("status") // status 参数预留，待 BookService 实现时使用
+
+	// TODO: 调用BookService查询用户的已发布作品
+	// 这里简化实现，返回模拟数据
+	// 实际应该调用 bookService.GetBooksByAuthor(ctx, userID, page, size, status)
+
+	books := []map[string]interface{}{
+		{
+			"book_id":     "book123",
+			"title":       "示例作品",
+			"cover":       "",
+			"description": "这是一部精彩的作品",
+			"category":    "玄幻",
+			"status":      "published",
+			"word_count":  100000,
+			"created_at":  "2024-01-01T00:00:00Z",
+		},
+	}
+
+	response := UserBooksResponse{
+		Books: books,
+		Total: len(books),
+		Page:  page,
+		Size:  size,
+	}
+
+	shared.Success(c, http.StatusOK, "获取成功", response)
 }
