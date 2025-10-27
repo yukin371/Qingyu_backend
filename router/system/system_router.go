@@ -2,12 +2,16 @@ package system
 
 import (
 	systemAPI "Qingyu_backend/api/v1/system"
+	"Qingyu_backend/pkg/metrics"
 
 	"github.com/gin-gonic/gin"
 )
 
 // InitSystemRoutes 初始化系统路由
 func InitSystemRoutes(router *gin.RouterGroup) {
+	// 初始化Prometheus指标
+	metrics.InitPrometheusMetrics()
+
 	healthAPI := systemAPI.NewHealthAPI()
 
 	systemGroup := router.Group("/system")
