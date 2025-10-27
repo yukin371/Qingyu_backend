@@ -144,16 +144,17 @@ func TestCommentRepository(t *testing.T) {
 		err := repo.Create(ctx, comment)
 		assert.NoError(t, err)
 
-		// 删除评论
+		// 删除评论（软删除）
 		err = repo.Delete(ctx, comment.ID.Hex())
 		assert.NoError(t, err)
 
-		// 验证已删除
+		// 验证状态已更新为deleted（软删除不会物理删除记录）
 		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.Error(t, err)
-		assert.Nil(t, found)
+		assert.NoError(t, err)
+		assert.NotNil(t, found)
+		assert.Equal(t, "deleted", found.Status)
 
-		t.Logf("✓ 删除评论成功")
+		t.Logf("✓ 删除评论成功（软删除）")
 	})
 
 	t.Run("IncrementLikeCount_Success", func(t *testing.T) {
