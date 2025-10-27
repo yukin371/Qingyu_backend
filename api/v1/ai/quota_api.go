@@ -134,5 +134,43 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 	shared.Success(c, http.StatusOK, "获取成功", transactions)
 }
 
+// RechargeRequest 充值请求
+type RechargeRequest struct {
+	Amount int    `json:"amount" binding:"required,gt=0"` // 充值数量（必须 > 0）
+	Reason string `json:"reason"`                         // 充值原因
+}
+
+// RechargeQuota 用户自助充值配额（需要购买或兑换）
+// @Summary 配额充值
+// @Description 用户使用积分或购买充值配额
+// @Tags AI配额
+// @Accept json
+// @Produce json
+// @Param request body RechargeRequest true "充值请求"
+// @Success 200 {object} response.Response
+// @Router /api/v1/ai/quota/recharge [post]
+func (api *QuotaApi) RechargeQuota(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		return
+	}
+
+	var req RechargeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		return
+	}
+
+	// 调用充值服务
+	err := api.quotaService.RechargeQuota(c.Request.Context(), userID.(string), req.Amount, req.Reason, userID.(string))
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "充值失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "充值成功", nil)
+}
+
 // 注意：管理员配额管理功能已迁移到 admin 模块
 // 参见: api/v1/admin/quota_admin_api.go
