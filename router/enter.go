@@ -41,12 +41,16 @@ func RegisterRoutes(r *gin.Engine) {
 	// 尝试从服务容器获取共享服务
 	authSvc, authErr := serviceContainer.GetAuthService()
 	walletSvc, walletErr := serviceContainer.GetWalletService()
-	storageSvc, storageErr := serviceContainer.GetStorageService()
+
+	// 获取存储相关服务
+	storageServiceImpl, storageErr := serviceContainer.GetStorageServiceImpl()
+	multipartService, multipartErr := serviceContainer.GetMultipartUploadService()
+	imageProcessor, imageErr := serviceContainer.GetImageProcessor()
 
 	// 只有当所有共享服务都可用时，才注册共享服务路由
-	if authErr == nil && walletErr == nil && storageErr == nil {
+	if authErr == nil && walletErr == nil && storageErr == nil && multipartErr == nil && imageErr == nil {
 		sharedGroup := v1.Group("/shared")
-		sharedRouter.RegisterRoutes(sharedGroup, authSvc, walletSvc, storageSvc)
+		sharedRouter.RegisterRoutes(sharedGroup, authSvc, walletSvc, storageServiceImpl, multipartService, imageProcessor)
 		logger.Info("✓ 共享服务路由已注册到: /api/v1/shared/")
 		logger.Info("  - /api/v1/shared/auth/* (认证服务)")
 		logger.Info("  - /api/v1/shared/wallet/* (钱包服务)")
@@ -61,6 +65,12 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 		if storageErr != nil {
 			logger.Warn("  - StorageService", zap.Error(storageErr))
+		}
+		if multipartErr != nil {
+			logger.Warn("  - MultipartUploadService", zap.Error(multipartErr))
+		}
+		if imageErr != nil {
+			logger.Warn("  - ImageProcessor", zap.Error(imageErr))
 		}
 	}
 

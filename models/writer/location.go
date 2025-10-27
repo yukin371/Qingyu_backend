@@ -23,9 +23,9 @@ type LocationRelation struct {
 	ID        string               `bson:"_id,omitempty" json:"id"`
 	ProjectID string               `bson:"project_id" json:"projectId"`
 	FromID    string               `bson:"from_id" json:"fromId"`
-	ToID     string               `bson:"to_id" json:"toId"`
-	Type     LocationRelationType `bson:"type" json:"type"`
-	Distance string               `bson:"distance,omitempty" json:"distance,omitempty"` // 距离描述
+	ToID      string               `bson:"to_id" json:"toId"`
+	Type      LocationRelationType `bson:"type" json:"type"`
+	Distance  string               `bson:"distance,omitempty" json:"distance,omitempty"` // 距离描述
 	Notes     string               `bson:"notes,omitempty" json:"notes,omitempty"`
 	CreatedAt time.Time            `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time            `bson:"updated_at" json:"updatedAt"`

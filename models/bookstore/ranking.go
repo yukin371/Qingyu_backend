@@ -43,8 +43,8 @@ type RankingFilter struct {
 
 // RankingStats 榜单统计信息
 type RankingStats struct {
-	Type   RankingType `json:"type"`
-	Period string      `json:"period"`
+	Type          RankingType `json:"type"`
+	Period        string      `json:"period"`
 	TotalBooks    int64       `json:"totalBooks"`
 	TotalViews    int64       `json:"totalViews"`
 	TotalLikes    int64       `json:"totalLikes"`

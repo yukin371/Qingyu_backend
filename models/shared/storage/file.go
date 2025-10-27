@@ -49,3 +49,24 @@ const (
 	PermissionWrite  = "write"
 	PermissionDelete = "delete"
 )
+
+// MultipartUpload 分片上传任务
+type MultipartUpload struct {
+	ID             string            `json:"id" bson:"_id,omitempty"`
+	UploadID       string            `json:"upload_id" bson:"upload_id"`             // 上传任务ID
+	FileID         string            `json:"file_id" bson:"file_id"`                 // 文件ID
+	FileName       string            `json:"file_name" bson:"file_name"`             // 文件名
+	FileSize       int64             `json:"file_size" bson:"file_size"`             // 文件总大小
+	ChunkSize      int64             `json:"chunk_size" bson:"chunk_size"`           // 分片大小
+	TotalChunks    int               `json:"total_chunks" bson:"total_chunks"`       // 总分片数
+	UploadedChunks []int             `json:"uploaded_chunks" bson:"uploaded_chunks"` // 已上传分片索引
+	MD5Hash        string            `json:"md5_hash,omitempty" bson:"md5_hash"`     // 完整文件MD5
+	StoragePath    string            `json:"storage_path" bson:"storage_path"`       // 存储路径
+	UploadedBy     string            `json:"uploaded_by" bson:"uploaded_by"`         // 上传者
+	Status         string            `json:"status" bson:"status"`                   // pending, uploading, completed, failed, aborted
+	Metadata       map[string]string `json:"metadata,omitempty" bson:"metadata"`     // 扩展元数据
+	ExpiresAt      time.Time         `json:"expires_at" bson:"expires_at"`           // 过期时间
+	CreatedAt      time.Time         `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time         `json:"updated_at" bson:"updated_at"`
+	CompletedAt    *time.Time        `json:"completed_at,omitempty" bson:"completed_at"` // 完成时间
+}

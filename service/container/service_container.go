@@ -75,6 +75,11 @@ type ServiceContainer struct {
 	messagingService      messaging.MessagingService
 	storageService        storage.StorageService
 	adminService          admin.AdminService
+
+	// 存储相关具体实现（用于API层）
+	storageServiceImpl *storage.StorageServiceImpl
+	multipartService   *storage.MultipartUploadService
+	imageProcessor     *storage.ImageProcessor
 }
 
 // NewServiceContainer 创建服务容器
@@ -651,6 +656,45 @@ func (c *ServiceContainer) SetMessagingService(service messaging.MessagingServic
 // SetStorageService 设置存储服务
 func (c *ServiceContainer) SetStorageService(service storage.StorageService) {
 	c.storageService = service
+}
+
+// SetStorageServiceImpl 设置存储服务实现
+func (c *ServiceContainer) SetStorageServiceImpl(service *storage.StorageServiceImpl) {
+	c.storageServiceImpl = service
+}
+
+// SetMultipartUploadService 设置分片上传服务
+func (c *ServiceContainer) SetMultipartUploadService(service *storage.MultipartUploadService) {
+	c.multipartService = service
+}
+
+// SetImageProcessor 设置图片处理器
+func (c *ServiceContainer) SetImageProcessor(processor *storage.ImageProcessor) {
+	c.imageProcessor = processor
+}
+
+// GetStorageServiceImpl 获取存储服务实现
+func (c *ServiceContainer) GetStorageServiceImpl() (*storage.StorageServiceImpl, error) {
+	if c.storageServiceImpl == nil {
+		return nil, fmt.Errorf("StorageServiceImpl未初始化")
+	}
+	return c.storageServiceImpl, nil
+}
+
+// GetMultipartUploadService 获取分片上传服务
+func (c *ServiceContainer) GetMultipartUploadService() (*storage.MultipartUploadService, error) {
+	if c.multipartService == nil {
+		return nil, fmt.Errorf("MultipartUploadService未初始化")
+	}
+	return c.multipartService, nil
+}
+
+// GetImageProcessor 获取图片处理器
+func (c *ServiceContainer) GetImageProcessor() (*storage.ImageProcessor, error) {
+	if c.imageProcessor == nil {
+		return nil, fmt.Errorf("ImageProcessor未初始化")
+	}
+	return c.imageProcessor, nil
 }
 
 // SetAdminService 设置管理服务

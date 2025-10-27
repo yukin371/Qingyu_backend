@@ -56,25 +56,25 @@ type RankingResponse struct {
 
 // RankingItemDetail 榜单项详情
 type RankingItemDetail struct {
-	Rank  int             `json:"rank"`
-	Book  bookstore2.Book `json:"book"`
-	Score float64         `json:"score"`
-	ViewCount int64          `json:"viewCount"`
-	LikeCount int64          `json:"likeCount"`
-	Change    int            `json:"change"` // 排名变化
+	Rank      int             `json:"rank"`
+	Book      bookstore2.Book `json:"book"`
+	Score     float64         `json:"score"`
+	ViewCount int64           `json:"viewCount"`
+	LikeCount int64           `json:"likeCount"`
+	Change    int             `json:"change"` // 排名变化
 }
 
 // BookListResponse 书籍列表响应
 type BookListResponse struct {
 	Books []bookstore2.Book `json:"books"`
 	Total int64             `json:"total"`
-	Page  int              `json:"page"`
-	Size  int              `json:"size"`
+	Page  int               `json:"page"`
+	Size  int               `json:"size"`
 }
 
 // CategoryResponse 分类响应
 type CategoryResponse struct {
 	Category  bookstore2.Category `json:"category"`
 	BookCount int64               `json:"bookCount"`
-	Children  []CategoryNode     `json:"children,omitempty"`
+	Children  []CategoryNode      `json:"children,omitempty"`
 }

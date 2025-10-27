@@ -202,7 +202,7 @@ func TestReadingScenario(t *testing.T) {
 		t.Run("8.书签笔记_获取书签和笔记列表", func(t *testing.T) {
 			url := fmt.Sprintf("%s?bookId=%s", ReaderAnnotationsPath, testBookID)
 			w := helper.DoAuthRequest("GET", url, nil, token)
-			
+
 			// 尝试解析响应（API可能直接返回数组或嵌套在data中）
 			if w.Code == 200 {
 				helper.LogSuccess("书签笔记列表获取成功")

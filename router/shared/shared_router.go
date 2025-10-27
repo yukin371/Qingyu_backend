@@ -13,7 +13,14 @@ import (
 
 // RegisterRoutes 注册共享服务路由
 // 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
-func RegisterRoutes(r *gin.RouterGroup, authService auth.AuthService, walletService wallet.WalletService, storageService storage.StorageService) {
+func RegisterRoutes(
+	r *gin.RouterGroup,
+	authService auth.AuthService,
+	walletService wallet.WalletService,
+	storageService *storage.StorageServiceImpl,
+	multipartService *storage.MultipartUploadService,
+	imageProcessor *storage.ImageProcessor,
+) {
 	// 应用全局中间件
 	r.Use(middleware.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
 	r.Use(middleware.ResponseTimingMiddleware())    // 响应时间记录
@@ -24,7 +31,7 @@ func RegisterRoutes(r *gin.RouterGroup, authService auth.AuthService, walletServ
 	// 创建API处理器
 	authAPI := shared.NewAuthAPI(authService)
 	walletAPI := shared.NewWalletAPI(walletService)
-	storageAPI := shared.NewStorageAPI(storageService)
+	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)
 	// 注意：AdminAPI已迁移到 admin 模块
 
 	// ============ 认证服务路由 ============
@@ -79,7 +86,7 @@ func RegisterRoutes(r *gin.RouterGroup, authService auth.AuthService, walletServ
 		storageGroup.DELETE("/files/:file_id", storageAPI.DeleteFile)
 		storageGroup.GET("/files/:file_id", storageAPI.GetFileInfo)
 		storageGroup.GET("/files", storageAPI.ListFiles)
-		storageGroup.GET("/files/:file_id/url", storageAPI.GetFileURL)
+		storageGroup.GET("/files/:file_id/url", storageAPI.GetDownloadURL)
 	}
 
 	// 注意：管理员路由已迁移到 /api/v1/admin

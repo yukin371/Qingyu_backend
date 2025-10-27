@@ -14,29 +14,29 @@ import (
 
 // BookDetailFilter 书籍详情筛选条件 - 适用于网络小说平台
 type BookDetailFilter struct {
-	Title          string                `json:"title,omitempty"`
-	Author         string                `json:"author,omitempty"`
-	AuthorID       *primitive.ObjectID   `json:"author_id,omitempty"`
-	CategoryIDs    []primitive.ObjectID  `json:"category_ids,omitempty"`
+	Title          string                 `json:"title,omitempty"`
+	Author         string                 `json:"author,omitempty"`
+	AuthorID       *primitive.ObjectID    `json:"author_id,omitempty"`
+	CategoryIDs    []primitive.ObjectID   `json:"category_ids,omitempty"`
 	Tags           []string               `json:"tags,omitempty"`
 	Status         *bookstore2.BookStatus `json:"status,omitempty"`
 	IsFree         *bool                  `json:"is_free,omitempty"`
-	MinPrice       *float64              `json:"min_price,omitempty"`
-	MaxPrice       *float64              `json:"max_price,omitempty"`
-	MinRating      *float64              `json:"min_rating,omitempty"`
-	MaxRating      *float64              `json:"max_rating,omitempty"`
-	MinWordCount   *int64                `json:"min_word_count,omitempty"`
-	MaxWordCount   *int64                `json:"max_word_count,omitempty"`
-	SerializedFrom *time.Time            `json:"serialized_from,omitempty"` // 开始连载时间范围
-	SerializedTo   *time.Time            `json:"serialized_to,omitempty"`   // 开始连载时间范围
-	CompletedFrom  *time.Time            `json:"completed_from,omitempty"`  // 完结时间范围
-	CompletedTo    *time.Time            `json:"completed_to,omitempty"`    // 完结时间范围
-	CreatedAtFrom  *time.Time            `json:"created_at_from,omitempty"`
-	CreatedAtTo    *time.Time            `json:"created_at_to,omitempty"`
-	UpdatedAtFrom  *time.Time            `json:"updated_at_from,omitempty"`
-	UpdatedAtTo    *time.Time            `json:"updated_at_to,omitempty"`
-	SortBy         string                `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
-	SortOrder      string                `json:"sort_order,omitempty"` // asc, desc
+	MinPrice       *float64               `json:"min_price,omitempty"`
+	MaxPrice       *float64               `json:"max_price,omitempty"`
+	MinRating      *float64               `json:"min_rating,omitempty"`
+	MaxRating      *float64               `json:"max_rating,omitempty"`
+	MinWordCount   *int64                 `json:"min_word_count,omitempty"`
+	MaxWordCount   *int64                 `json:"max_word_count,omitempty"`
+	SerializedFrom *time.Time             `json:"serialized_from,omitempty"` // 开始连载时间范围
+	SerializedTo   *time.Time             `json:"serialized_to,omitempty"`   // 开始连载时间范围
+	CompletedFrom  *time.Time             `json:"completed_from,omitempty"`  // 完结时间范围
+	CompletedTo    *time.Time             `json:"completed_to,omitempty"`    // 完结时间范围
+	CreatedAtFrom  *time.Time             `json:"created_at_from,omitempty"`
+	CreatedAtTo    *time.Time             `json:"created_at_to,omitempty"`
+	UpdatedAtFrom  *time.Time             `json:"updated_at_from,omitempty"`
+	UpdatedAtTo    *time.Time             `json:"updated_at_to,omitempty"`
+	SortBy         string                 `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
+	SortOrder      string                 `json:"sort_order,omitempty"` // asc, desc
 }
 
 // BookDetailService 书籍详情服务接口 - 专注于书籍详情页面的完整信息管理

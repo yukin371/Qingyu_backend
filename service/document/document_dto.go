@@ -75,8 +75,8 @@ type ListDocumentsRequest struct {
 type ListDocumentsResponse struct {
 	Documents []*writer.Document `json:"documents"`
 	Total     int                `json:"total"`
-	Page      int                  `json:"page"`
-	PageSize  int                  `json:"pageSize"`
+	Page      int                `json:"page"`
+	PageSize  int                `json:"pageSize"`
 }
 
 // AutoSaveRequest 自动保存请求
