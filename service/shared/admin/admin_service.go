@@ -10,7 +10,6 @@ import (
 	adminModel "Qingyu_backend/models/shared/admin"
 )
 
-// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
 // TODO: 完善审核流程
 //   - 多级审核支持
 //   - 审核规则引擎
@@ -24,9 +23,10 @@ import (
 
 // AdminServiceImpl 管理服务实现
 type AdminServiceImpl struct {
-	auditRepo AuditRepository
-	logRepo   LogRepository
-	userRepo  UserRepository
+	auditRepo   AuditRepository
+	logRepo     LogRepository
+	userRepo    UserRepository
+	initialized bool // 初始化标志
 }
 
 // AuditRepository 审核记录Repository
@@ -347,8 +347,53 @@ func (s *AdminServiceImpl) ExportLogs(ctx context.Context, startDate, endDate ti
 
 // ============ 健康检查 ============
 
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化服务
+func (s *AdminServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.auditRepo == nil {
+		return fmt.Errorf("auditRepo is nil")
+	}
+	if s.logRepo == nil {
+		return fmt.Errorf("logRepo is nil")
+	}
+	if s.userRepo == nil {
+		return fmt.Errorf("userRepo is nil")
+	}
+
+	// 初始化完成
+	s.initialized = true
+	return nil
+}
+
 // Health 健康检查
 func (s *AdminServiceImpl) Health(ctx context.Context) error {
-	// 简单的健康检查，可以扩展检查各个依赖
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	// 可以扩展检查各个依赖的健康状态
 	return nil
+}
+
+// Close 关闭服务，清理资源
+func (s *AdminServiceImpl) Close(ctx context.Context) error {
+	// 管理服务暂无需要清理的资源
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *AdminServiceImpl) GetServiceName() string {
+	return "AdminService"
+}
+
+// GetVersion 获取服务版本
+func (s *AdminServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }

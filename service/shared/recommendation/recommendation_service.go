@@ -10,7 +10,6 @@ import (
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
-// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
 // TODO: 完善推荐算法
 //   - 协同过滤算法（用户-用户、物品-物品）
 //   - 内容推荐算法（基于标签、分类）
@@ -24,6 +23,7 @@ type RecommendationServiceImpl struct {
 	recRepo     sharedRepo.RecommendationRepository
 	cacheClient CacheClient // Redis缓存客户端
 	cacheTTL    time.Duration
+	initialized bool // 初始化标志
 }
 
 // CacheClient Redis缓存接口
@@ -237,9 +237,52 @@ func (s *RecommendationServiceImpl) RefreshHotItems(ctx context.Context, itemTyp
 	return nil
 }
 
-// ============ 健康检查 ============
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化服务
+func (s *RecommendationServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.recRepo == nil {
+		return fmt.Errorf("recRepo is nil")
+	}
+	// cacheClient可选，不强制要求
+
+	// 检查Repository健康状态
+	if err := s.recRepo.Health(ctx); err != nil {
+		return fmt.Errorf("recRepo health check failed: %w", err)
+	}
+
+	// 初始化完成
+	s.initialized = true
+	return nil
+}
 
 // Health 健康检查
 func (s *RecommendationServiceImpl) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
 	return s.recRepo.Health(ctx)
+}
+
+// Close 关闭服务，清理资源
+func (s *RecommendationServiceImpl) Close(ctx context.Context) error {
+	// 推荐服务暂无需要清理的资源
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *RecommendationServiceImpl) GetServiceName() string {
+	return "RecommendationService"
+}
+
+// GetVersion 获取服务版本
+func (s *RecommendationServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }

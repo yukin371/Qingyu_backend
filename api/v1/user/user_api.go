@@ -2,7 +2,7 @@ package user
 
 import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
-	user2 "Qingyu_backend/service/interfaces/user"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"net/http"
 	"strconv"
 
@@ -13,11 +13,11 @@ import (
 
 // UserAPI 用户管理API处理器
 type UserAPI struct {
-	userService user2.UserService
+	userService userServiceInterface.UserService
 }
 
 // NewUserAPI 创建用户API实例
-func NewUserAPI(userService user2.UserService) *UserAPI {
+func NewUserAPI(userService userServiceInterface.UserService) *UserAPI {
 	return &UserAPI{
 		userService: userService,
 	}
@@ -42,7 +42,7 @@ func (api *UserAPI) Register(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &user2.RegisterUserRequest{
+	serviceReq := &userServiceInterface.RegisterUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -102,7 +102,7 @@ func (api *UserAPI) Login(c *gin.Context) {
 	clientIP := c.ClientIP()
 
 	// 调用Service层
-	serviceReq := &user2.LoginUserRequest{
+	serviceReq := &userServiceInterface.LoginUserRequest{
 		Username: req.Username,
 		Password: req.Password,
 	}
@@ -165,7 +165,7 @@ func (api *UserAPI) GetProfile(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &user2.GetUserRequest{
+	serviceReq := &userServiceInterface.GetUserRequest{
 		ID: userID.(string),
 	}
 
@@ -249,7 +249,7 @@ func (api *UserAPI) UpdateProfile(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &user2.UpdateUserRequest{
+	serviceReq := &userServiceInterface.UpdateUserRequest{
 		ID:      userID.(string),
 		Updates: updates,
 	}
@@ -303,7 +303,7 @@ func (api *UserAPI) ChangePassword(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &user2.UpdatePasswordRequest{
+	serviceReq := &userServiceInterface.UpdatePasswordRequest{
 		ID:          userID.(string),
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
@@ -351,7 +351,7 @@ func (api *UserAPI) GetUserProfile(c *gin.Context) {
 	}
 
 	// 调用Service层获取用户信息
-	serviceReq := &user2.GetUserRequest{
+	serviceReq := &userServiceInterface.GetUserRequest{
 		ID: userID,
 	}
 
