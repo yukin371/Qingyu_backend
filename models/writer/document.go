@@ -10,9 +10,9 @@ type Document struct {
 	ID        string       `bson:"_id,omitempty" json:"id"`
 	ProjectID string       `bson:"project_id" json:"projectId" validate:"required"`
 	ParentID  string       `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空表示根文档
-	Title string       `bson:"title" json:"title" validate:"required,min=1,max=200"`
-	Type  DocumentType `bson:"type" json:"type" validate:"required"`
-	Level int          `bson:"level" json:"level"`   // 层级深度（0-2）
+	Title     string       `bson:"title" json:"title" validate:"required,min=1,max=200"`
+	Type      DocumentType `bson:"type" json:"type" validate:"required"`
+	Level     int          `bson:"level" json:"level"`   // 层级深度（0-2）
 	Order     int          `bson:"order" json:"order"`   // 同级排序
 	Status    string       `bson:"status" json:"status"` // planned | writing | completed
 

@@ -23,15 +23,15 @@ type TimelineEvent struct {
 	ProjectID    string     `bson:"project_id" json:"projectId"`
 	TimelineID   string     `bson:"timeline_id" json:"timelineId"`
 	Title        string     `bson:"title" json:"title"`
-	Description string     `bson:"description,omitempty" json:"description,omitempty"`
-	StoryTime   *StoryTime `bson:"story_time,omitempty" json:"storyTime,omitempty"`
-	Duration    string     `bson:"duration,omitempty" json:"duration,omitempty"`         // 事件持续时间描述
+	Description  string     `bson:"description,omitempty" json:"description,omitempty"`
+	StoryTime    *StoryTime `bson:"story_time,omitempty" json:"storyTime,omitempty"`
+	Duration     string     `bson:"duration,omitempty" json:"duration,omitempty"`         // 事件持续时间描述
 	Impact       string     `bson:"impact,omitempty" json:"impact,omitempty"`             // 事件影响
 	Participants []string   `bson:"participants,omitempty" json:"participants,omitempty"` // 参与角色ID
 	LocationIDs  []string   `bson:"location_ids,omitempty" json:"locationIds,omitempty"`  // 相关地点ID
 	ChapterIDs   []string   `bson:"chapter_ids,omitempty" json:"chapterIds,omitempty"`    // 相关章节ID
-	EventType   EventType  `bson:"event_type" json:"eventType"`
-	Importance  int        `bson:"importance" json:"importance"` // 重要性等级 1-10
+	EventType    EventType  `bson:"event_type" json:"eventType"`
+	Importance   int        `bson:"importance" json:"importance"` // 重要性等级 1-10
 	CreatedAt    time.Time  `bson:"created_at" json:"createdAt"`
 	UpdatedAt    time.Time  `bson:"updated_at" json:"updatedAt"`
 }

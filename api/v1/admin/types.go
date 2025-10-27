@@ -128,4 +128,3 @@ type BanUserRequest struct {
 	Duration     int    `json:"duration" binding:"required,min=1"`
 	DurationUnit string `json:"durationUnit" binding:"required,oneof=hours days weeks months"`
 }
-

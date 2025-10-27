@@ -44,8 +44,8 @@ type ListProjectsRequest struct {
 type ListProjectsResponse struct {
 	Projects []*writer.Project `json:"projects"`
 	Total    int64             `json:"total"`
-	Page     int                 `json:"page"`
-	PageSize int                 `json:"pageSize"`
+	Page     int               `json:"page"`
+	PageSize int               `json:"pageSize"`
 }
 
 // GetProjectResponse 获取项目详情响应
@@ -60,9 +60,9 @@ type UpdateStatisticsRequest struct {
 
 // AddCollaboratorRequest 添加协作者请求
 type AddCollaboratorRequest struct {
-	ProjectID string                    `json:"projectId" validate:"required"`
-	UserID string                  `json:"userId" validate:"required"`
-	Role   writer.CollaboratorRole `json:"role" validate:"required"`
+	ProjectID string                  `json:"projectId" validate:"required"`
+	UserID    string                  `json:"userId" validate:"required"`
+	Role      writer.CollaboratorRole `json:"role" validate:"required"`
 }
 
 // RemoveCollaboratorRequest 移除协作者请求

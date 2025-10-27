@@ -9,19 +9,19 @@ import (
 
 // ProjectDetailResponse 项目详情响应
 type ProjectDetailResponse struct {
-	ID             primitive.ObjectID       `json:"id"`
-	Title          string                   `json:"title"`
-	Description    string                   `json:"description"`
-	CoverImage     string                   `json:"coverImage"`
-	Genre          string                   `json:"genre"`
-	Tags           []string                 `json:"tags"`
-	Status         string                   `json:"status"`
-	Visibility     string                   `json:"visibility"`
-	TotalWords     int64                    `json:"totalWords"`
-	ChapterCount   int                      `json:"chapterCount"`
-	LastUpdateTime time.Time                `json:"lastUpdateTime"`
-	CreatedAt      time.Time                `json:"createdAt"`
-	UpdatedAt      time.Time                `json:"updatedAt"`
+	ID             primitive.ObjectID     `json:"id"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	CoverImage     string                 `json:"coverImage"`
+	Genre          string                 `json:"genre"`
+	Tags           []string               `json:"tags"`
+	Status         string                 `json:"status"`
+	Visibility     string                 `json:"visibility"`
+	TotalWords     int64                  `json:"totalWords"`
+	ChapterCount   int                    `json:"chapterCount"`
+	LastUpdateTime time.Time              `json:"lastUpdateTime"`
+	CreatedAt      time.Time              `json:"createdAt"`
+	UpdatedAt      time.Time              `json:"updatedAt"`
 	Documents      []DocumentSummary      `json:"documents"`
 	Characters     []writer.Character     `json:"characters"`
 	Locations      []writer.Location      `json:"locations"`
