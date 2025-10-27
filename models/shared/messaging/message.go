@@ -67,4 +67,15 @@ const (
 	NotificationStatusSent    = "sent"
 	NotificationStatusPending = "pending"
 	NotificationStatusFailed  = "failed"
+	NotificationStatusDeleted = "deleted"
 )
+
+// 消息模板类型
+const (
+	MessageTemplateTypeEmail = "email"
+	MessageTemplateTypeSMS   = "sms"
+	MessageTemplateTypePush  = "push"
+)
+
+// NotificationType 通知类型（类型别名）
+type NotificationType string
