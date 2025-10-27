@@ -1,14 +1,13 @@
 package seeds
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
-
-	"Qingyu_backend/models/reading/bookstore"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -209,25 +208,25 @@ func (ni *NovelImporter) importSingleNovel(ctx context.Context, novel *NovelItem
 }
 
 // convertToBook 转换为 Book 模型
-func (ni *NovelImporter) convertToBook(novel *NovelItem) *bookstore.Book {
+func (ni *NovelImporter) convertToBook(novel *NovelItem) *bookstore2.Book {
 	now := time.Now()
 	publishedAt := now.Add(-30 * 24 * time.Hour) // 假设30天前发布
 
 	// 解析状态
-	var status bookstore.BookStatus
+	var status bookstore2.BookStatus
 	switch novel.Status {
 	case "completed":
-		status = bookstore.BookStatusCompleted
+		status = bookstore2.BookStatusCompleted
 	case "ongoing":
-		status = bookstore.BookStatusOngoing
+		status = bookstore2.BookStatusOngoing
 	default:
-		status = bookstore.BookStatusPublished
+		status = bookstore2.BookStatusPublished
 	}
 
 	// 默认封面
 	defaultCover := "https://via.placeholder.com/300x400?text=" + novel.Title
 
-	book := &bookstore.Book{
+	book := &bookstore2.Book{
 		Title:         novel.Title,
 		Author:        novel.Author,
 		Introduction:  novel.Introduction,
@@ -272,7 +271,7 @@ func (ni *NovelImporter) importChapters(ctx context.Context, bookID primitive.Ob
 
 		for j, chapterData := range batch {
 			chapterNum := i + j + 1
-			chapter := &bookstore.Chapter{
+			chapter := &bookstore2.Chapter{
 				BookID:      bookID,
 				Title:       chapterData.Title,
 				ChapterNum:  chapterNum,

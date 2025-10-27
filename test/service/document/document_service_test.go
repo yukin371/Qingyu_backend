@@ -1,6 +1,7 @@
 package document_test
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"errors"
 	"testing"
@@ -11,10 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/service/base"
 	documentService "Qingyu_backend/service/document"
+	"Qingyu_backend/service/interfaces/base"
 )
 
 // ============ Mock Repositories ============
@@ -25,21 +25,26 @@ type MockDocumentRepository struct {
 	writing.DocumentRepository
 }
 
-func (m *MockDocumentRepository) Create(ctx context.Context, doc *document.Document) error {
+func (m *MockDocumentRepository) Create(ctx context.Context, doc *writer.Document) error {
 	args := m.Called(ctx, doc)
 	return args.Error(0)
 }
 
-func (m *MockDocumentRepository) GetByID(ctx context.Context, id string) (*document.Document, error) {
+func (m *MockDocumentRepository) GetByID(ctx context.Context, id string) (*writer.Document, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*document.Document), args.Error(1)
+	return args.Get(0).(*writer.Document), args.Error(1)
 }
 
 func (m *MockDocumentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockDocumentRepository) UpdateByProject(ctx context.Context, documentID, projectID string, updates map[string]interface{}) error {
+	args := m.Called(ctx, documentID, projectID, updates)
 	return args.Error(0)
 }
 
@@ -48,20 +53,20 @@ func (m *MockDocumentRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockDocumentRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Document, error) {
+func (m *MockDocumentRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.Document, error) {
 	args := m.Called(ctx, projectID, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Document), args.Error(1)
+	return args.Get(0).([]*writer.Document), args.Error(1)
 }
 
-func (m *MockDocumentRepository) GetByParentID(ctx context.Context, parentID string) ([]*document.Document, error) {
+func (m *MockDocumentRepository) GetByParentID(ctx context.Context, parentID string) ([]*writer.Document, error) {
 	args := m.Called(ctx, parentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Document), args.Error(1)
+	return args.Get(0).([]*writer.Document), args.Error(1)
 }
 
 // MockProjectRepository Mock项目Repository
@@ -70,16 +75,21 @@ type MockProjectRepository struct {
 	writing.ProjectRepository
 }
 
-func (m *MockProjectRepository) GetByID(ctx context.Context, id string) (*document.Project, error) {
+func (m *MockProjectRepository) GetByID(ctx context.Context, id string) (*writer.Project, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*document.Project), args.Error(1)
+	return args.Get(0).(*writer.Project), args.Error(1)
 }
 
 func (m *MockProjectRepository) UpdateTotalWords(ctx context.Context, id string, totalWords int64) error {
 	args := m.Called(ctx, id, totalWords)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -122,7 +132,7 @@ func TestDocumentService_CreateDocument_Success(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock project exists and user has permission
-	mockProject := &document.Project{
+	mockProject := &writer.Project{
 		ID:       projectID,
 		Title:    "Test Project",
 		AuthorID: "test-user-id",
@@ -131,10 +141,13 @@ func TestDocumentService_CreateDocument_Success(t *testing.T) {
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
 	// Mock document creation
-	mockDocRepo.On("Create", ctx, mock.AnythingOfType("*document.Document")).Return(nil)
+	mockDocRepo.On("Create", ctx, mock.AnythingOfType("*writer.Document")).Return(nil)
 
 	// Mock GetByProjectID for statistics update (async)
-	mockDocRepo.On("GetByProjectID", mock.Anything, projectID, mock.AnythingOfType("int64"), mock.AnythingOfType("int64")).Return([]*document.Document{}, nil).Maybe()
+	mockDocRepo.On("GetByProjectID", mock.Anything, projectID, mock.AnythingOfType("int64"), mock.AnythingOfType("int64")).Return([]*writer.Document{}, nil).Maybe()
+
+	// Mock project update for statistics (async)
+	mockProjectRepo.On("Update", mock.Anything, projectID, mock.Anything).Return(nil).Maybe()
 
 	// Mock event publishing
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Maybe()
@@ -205,7 +218,7 @@ func TestDocumentService_CreateDocument_NoPermission(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock project exists but user has no permission
-	mockProject := &document.Project{
+	mockProject := &writer.Project{
 		ID:       projectID,
 		Title:    "Test Project",
 		AuthorID: "test-user-id", // Different owner
@@ -238,13 +251,14 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 
 	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
 
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
 
 	// Mock document exists
-	mockDoc := &document.Document{
+	mockDoc := &writer.Document{
 		ID:        docID,
-		ProjectID: primitive.NewObjectID().Hex(),
+		ProjectID: projectID,
 		Title:     "Test Document",
 		Type:      "chapter",
 		WordCount: 100,
@@ -254,6 +268,15 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 	}
 	mockDocRepo.On("GetByID", ctx, docID).Return(mockDoc, nil)
 
+	// Mock project exists and user has permission
+	mockProject := &writer.Project{
+		ID:       projectID,
+		Title:    "Test Project",
+		AuthorID: "test-user-id",
+		Status:   "active",
+	}
+	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
+
 	// Execute
 	resp, err := service.GetDocument(ctx, docID)
 
@@ -261,7 +284,7 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "Test Document", resp.Title)
-	assert.Equal(t, document.DocumentType("chapter"), resp.Type)
+	assert.Equal(t, writer.DocumentType("chapter"), resp.Type)
 	assert.Equal(t, 100, resp.WordCount)
 	mockDocRepo.AssertExpectations(t)
 }
@@ -303,7 +326,7 @@ func TestDocumentService_UpdateDocument_Success(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock document exists
-	mockDoc := &document.Document{
+	mockDoc := &writer.Document{
 		ID:        docID,
 		ProjectID: projectID,
 		Title:     "Old Title",
@@ -313,15 +336,15 @@ func TestDocumentService_UpdateDocument_Success(t *testing.T) {
 	mockDocRepo.On("GetByID", ctx, docID).Return(mockDoc, nil)
 
 	// Mock project exists and user has permission
-	mockProject := &document.Project{
+	mockProject := &writer.Project{
 		ID:       projectID,
 		AuthorID: "test-user-id",
 		Status:   "active",
 	}
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
-	// Mock update
-	mockDocRepo.On("Update", ctx, docID, mock.AnythingOfType("map[string]interface {}")).Return(nil)
+	// Mock update by project
+	mockDocRepo.On("UpdateByProject", ctx, docID, mockProject.ID, mock.AnythingOfType("map[string]interface {}")).Return(nil)
 
 	// Mock event
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
@@ -353,7 +376,7 @@ func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock document exists
-	mockDoc := &document.Document{
+	mockDoc := &writer.Document{
 		ID:        docID,
 		ProjectID: projectID,
 		Title:     "Test Document",
@@ -363,7 +386,7 @@ func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 	mockDocRepo.On("GetByID", ctx, docID).Return(mockDoc, nil)
 
 	// Mock project exists and user has permission
-	mockProject := &document.Project{
+	mockProject := &writer.Project{
 		ID:       projectID,
 		AuthorID: "test-user-id",
 		Status:   "active",
@@ -371,7 +394,7 @@ func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
 	// Mock no children
-	mockDocRepo.On("GetByParentID", ctx, docID).Return([]*document.Document{}, nil)
+	mockDocRepo.On("GetByParentID", ctx, docID).Return([]*writer.Document{}, nil)
 
 	// Mock delete
 	mockDocRepo.On("Delete", ctx, docID).Return(nil)
@@ -401,7 +424,7 @@ func TestDocumentService_DeleteDocument_HasChildren(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock document exists
-	mockDoc := &document.Document{
+	mockDoc := &writer.Document{
 		ID:        docID,
 		ProjectID: projectID,
 		Title:     "Test Document",
@@ -411,7 +434,7 @@ func TestDocumentService_DeleteDocument_HasChildren(t *testing.T) {
 	mockDocRepo.On("GetByID", ctx, docID).Return(mockDoc, nil)
 
 	// Mock project exists and user has permission
-	mockProject := &document.Project{
+	mockProject := &writer.Project{
 		ID:       projectID,
 		AuthorID: "test-user-id",
 		Status:   "active",
@@ -419,7 +442,7 @@ func TestDocumentService_DeleteDocument_HasChildren(t *testing.T) {
 	mockProjectRepo.On("GetByID", ctx, projectID).Return(mockProject, nil)
 
 	// Mock has children
-	children := []*document.Document{
+	children := []*writer.Document{
 		{ID: primitive.NewObjectID().Hex(), Title: "Child 1"},
 	}
 	mockDocRepo.On("GetByParentID", ctx, docID).Return(children, nil)
@@ -446,7 +469,7 @@ func TestDocumentService_ListDocuments_Success(t *testing.T) {
 	projectID := primitive.NewObjectID().Hex()
 
 	// Mock documents exist
-	mockDocs := []*document.Document{
+	mockDocs := []*writer.Document{
 		{
 			ID:        primitive.NewObjectID().Hex(),
 			ProjectID: projectID,

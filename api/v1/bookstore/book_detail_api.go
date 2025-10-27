@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 

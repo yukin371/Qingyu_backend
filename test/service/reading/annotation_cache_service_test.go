@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 )
 

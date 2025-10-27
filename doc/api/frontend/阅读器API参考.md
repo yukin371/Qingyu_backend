@@ -1,8 +1,9 @@
 # 阅读器系统 API 参考
 
-> **版本**: v1.0  
-> **最后更新**: 2025-10-18  
-> **基础路径**: `/api/v1/reader`
+> **版本**: v1.3 ⭐️已更新  
+> **最后更新**: 2025-10-25  
+> **基础路径**: `/api/v1/reader`  
+> **主要更新**: 新增评论点赞功能、统一响应格式、阅读历史优化
 
 ---
 
@@ -26,6 +27,167 @@
 - ✅ 章节导航（上一章/下一章）
 - ✅ 书签管理
 - ✅ 阅读历史记录
+- ✅ **评论功能（发表、回复、点赞）** ⭐️v1.3新增
+- ✅ **评论点赞/取消点赞** ⭐️v1.3新增
+
+---
+
+## 1.3 统一响应格式 ⭐️v1.3更新
+
+### 成功响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 业务数据
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+### 错误响应
+```json
+{
+  "code": 400,
+  "message": "参数错误",
+  "error": "详细错误信息",
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+### 分页响应
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [...],
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde",
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```
+
+**新增字段说明**:
+- `timestamp`: Unix时间戳，服务器响应时间
+- `request_id`: 请求追踪ID，便于调试和日志追踪（可选字段）
+- `pagination`: 分页信息对象（替代原来的平铺字段）
+
+---
+
+## 1.4 TypeScript 类型定义 ⭐️v1.3新增
+
+```typescript
+// src/types/api.ts
+
+// 基础响应类型
+export interface APIResponse<T = any> {
+  code: number;
+  message: string;
+  data?: T;
+  timestamp: number;
+  request_id?: string;
+}
+
+// 错误响应类型
+export interface ErrorResponse {
+  code: number;
+  message: string;
+  error?: string;
+  timestamp: number;
+  request_id?: string;
+}
+
+// 分页信息类型
+export interface Pagination {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+// 分页响应类型
+export interface PaginatedResponse<T = any> extends APIResponse<T[]> {
+  pagination: Pagination;
+}
+
+// 章节信息类型
+export interface ChapterInfo {
+  id: string;
+  bookId: string;
+  title: string;
+  chapterNum: number;
+  wordCount: number;
+  isFree: boolean;
+  price: number;
+  publishTime: string;
+  prevChapterId: string | null;
+  nextChapterId: string | null;
+}
+
+// 评论类型
+export interface Comment {
+  id: string;
+  user_id: string;
+  username: string;
+  avatar: string;
+  book_id: string;
+  chapter_id?: string;
+  content: string;
+  rating?: number;
+  like_count: number;
+  reply_count: number;
+  is_liked: boolean;
+  created_at: string;
+}
+
+// 评论列表响应
+export interface CommentListResponse {
+  comments: Comment[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+// 阅读历史类型
+export interface ReadingHistory {
+  id: string;
+  book_id: string;
+  book_title: string;
+  chapter_id: string;
+  chapter_title: string;
+  progress: number;
+  duration: number;
+  last_read_at: string;
+}
+
+// 阅读统计类型
+export interface ReadingStats {
+  summary: {
+    total_books: number;
+    total_chapters: number;
+    total_duration: number;
+    average_daily_duration: number;
+  };
+  daily_stats: Array<{
+    date: string;
+    books_read: number;
+    chapters_read: number;
+    duration: number;
+  }>;
+}
+```
 
 ---
 
@@ -1126,7 +1288,579 @@ const loadChapterWithCache = async (chapterId) => {
 
 ---
 
-## 6. 常见问题
+## 6. 评论功能 ⭐️v1.3新增
+
+### 6.1 发表评论
+
+**接口说明**: 对书籍或章节发表评论
+
+**请求**
+```
+POST /api/v1/reader/comments
+```
+
+**认证**: 🔒 需要 JWT Token
+
+**请求体**
+```json
+{
+  "book_id": "book123",
+  "chapter_id": "chapter456",
+  "content": "这章写得真不错！",
+  "rating": 5
+}
+```
+
+**响应示例**
+```json
+{
+  "code": 201,
+  "message": "发表评论成功",
+  "data": {
+    "id": "comment789",
+    "user_id": "user123",
+    "book_id": "book123",
+    "chapter_id": "chapter456",
+    "content": "这章写得真不错！",
+    "rating": 5,
+    "like_count": 0,
+    "reply_count": 0,
+    "is_liked": false,
+    "created_at": "2025-10-25T10:00:00Z"
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 6.2 获取评论列表
+
+**接口说明**: 获取书籍的评论列表
+
+**请求**
+```
+GET /api/v1/reader/comments?book_id={bookId}&sortBy=latest&page=1&size=20
+```
+
+**查询参数**
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| book_id | string | 是 | 书籍ID |
+| sortBy | string | 否 | 排序方式：latest（最新）/hot（最热），默认latest |
+| page | int | 否 | 页码，默认1 |
+| size | int | 否 | 每页数量，默认20 |
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "comments": [
+      {
+        "id": "comment789",
+        "user_id": "user123",
+        "username": "张三",
+        "avatar": "https://avatar.url",
+        "book_id": "book123",
+        "content": "这章写得真不错！",
+        "rating": 5,
+        "like_count": 10,
+        "reply_count": 3,
+        "is_liked": false,
+        "created_at": "2025-10-25T10:00:00Z"
+      }
+    ],
+    "total": 100,
+    "page": 1,
+    "size": 20
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 6.3 点赞评论 ⭐️v1.3新增
+
+**接口说明**: 对评论进行点赞
+
+**请求**
+```
+POST /api/v1/reader/comments/:id/like
+```
+
+**认证**: 🔒 需要 JWT Token
+
+**路径参数**
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 评论ID |
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "点赞成功",
+  "data": null,
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 6.4 取消点赞 ⭐️v1.3新增
+
+**接口说明**: 取消对评论的点赞
+
+**请求**
+```
+DELETE /api/v1/reader/comments/:id/like
+```
+
+**认证**: 🔒 需要 JWT Token
+
+**路径参数**
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 评论ID |
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "取消点赞成功",
+  "data": null,
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 6.5 回复评论
+
+**接口说明**: 回复一条评论
+
+**请求**
+```
+POST /api/v1/reader/comments/:id/reply
+```
+
+**认证**: 🔒 需要 JWT Token
+
+**请求体**
+```json
+{
+  "content": "我也觉得很精彩！"
+}
+```
+
+**响应示例**
+```json
+{
+  "code": 201,
+  "message": "回复成功",
+  "data": {
+    "id": "comment790",
+    "parent_comment_id": "comment789",
+    "user_id": "user456",
+    "content": "我也觉得很精彩！",
+    "created_at": "2025-10-25T10:05:00Z"
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 6.6 TypeScript API 封装
+
+**评论相关API封装**:
+```typescript
+// src/api/reader.ts
+import type { APIResponse, Comment, CommentListResponse } from '@/types/api';
+import request from '@/utils/request';
+
+// 发表评论
+export interface CreateCommentParams {
+  book_id: string;
+  chapter_id?: string;
+  content: string;
+  rating?: number;
+}
+
+export const createComment = (data: CreateCommentParams) => {
+  return request.post<APIResponse<Comment>>('/reader/comments', data);
+};
+
+// 获取评论列表
+export interface GetCommentListParams {
+  book_id: string;
+  sortBy?: 'latest' | 'hot';
+  page?: number;
+  size?: number;
+}
+
+export const getCommentList = (params: GetCommentListParams) => {
+  return request.get<APIResponse<CommentListResponse>>('/reader/comments', { params });
+};
+
+// 点赞评论
+export const likeComment = (commentId: string) => {
+  return request.post<APIResponse<null>>(`/reader/comments/${commentId}/like`);
+};
+
+// 取消点赞
+export const unlikeComment = (commentId: string) => {
+  return request.delete<APIResponse<null>>(`/reader/comments/${commentId}/like`);
+};
+
+// 回复评论
+export const replyComment = (commentId: string, content: string) => {
+  return request.post<APIResponse<Comment>>(`/reader/comments/${commentId}/reply`, { content });
+};
+```
+
+### 6.7 Vue 3 + TypeScript 组件示例
+
+**评论列表组件**:
+```vue
+<template>
+  <div class="comment-list">
+    <!-- 评论列表 -->
+    <div v-for="comment in comments" :key="comment.id" class="comment-item">
+      <div class="comment-header">
+        <img :src="comment.avatar" class="avatar" alt="avatar" />
+        <span class="username">{{ comment.username }}</span>
+        <span class="time">{{ formatTime(comment.created_at) }}</span>
+      </div>
+      
+      <div class="comment-content">{{ comment.content }}</div>
+      
+      <div class="comment-actions">
+        <!-- 点赞按钮 -->
+        <button 
+          @click="toggleLike(comment)" 
+          :class="{ 'active': comment.is_liked }"
+          class="like-btn"
+        >
+          <i :class="comment.is_liked ? 'icon-liked' : 'icon-like'"></i>
+          {{ comment.like_count }}
+        </button>
+        
+        <!-- 回复按钮 -->
+        <button @click="showReply(comment)" class="reply-btn">
+          <i class="icon-reply"></i>
+          回复 ({{ comment.reply_count }})
+        </button>
+      </div>
+    </div>
+    
+    <!-- 加载更多 -->
+    <button v-if="hasMore" @click="loadMore" class="load-more">
+      加载更多
+    </button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import { getCommentList, likeComment, unlikeComment } from '@/api/reader';
+import type { Comment } from '@/types/api';
+
+interface Props {
+  bookId: string;
+}
+
+const props = defineProps<Props>();
+
+const comments = ref<Comment[]>([]);
+const page = ref(1);
+const hasMore = ref(true);
+
+// 加载评论列表
+const loadComments = async () => {
+  try {
+    const response = await getCommentList({
+      book_id: props.bookId,
+      sortBy: 'latest',
+      page: page.value,
+      size: 20
+    });
+    
+    const { comments: newComments, total } = response.data!;
+    
+    if (page.value === 1) {
+      comments.value = newComments;
+    } else {
+      comments.value.push(...newComments);
+    }
+    
+    hasMore.value = comments.value.length < total;
+  } catch (error) {
+    ElMessage.error('加载评论失败');
+  }
+};
+
+// 点赞/取消点赞
+const toggleLike = async (comment: Comment) => {
+  try {
+    if (comment.is_liked) {
+      await unlikeComment(comment.id);
+      comment.is_liked = false;
+      comment.like_count--;
+      ElMessage.success('已取消点赞');
+    } else {
+      await likeComment(comment.id);
+      comment.is_liked = true;
+      comment.like_count++;
+      ElMessage.success('点赞成功');
+    }
+  } catch (error) {
+    ElMessage.error('操作失败');
+  }
+};
+
+// 显示回复框
+const showReply = (comment: Comment) => {
+  // 实现回复逻辑
+  console.log('回复评论:', comment.id);
+};
+
+// 加载更多
+const loadMore = () => {
+  page.value++;
+  loadComments();
+};
+
+// 格式化时间
+const formatTime = (time: string): string => {
+  const date = new Date(time);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  return date.toLocaleDateString();
+};
+
+onMounted(() => {
+  loadComments();
+});
+</script>
+
+<style scoped>
+.comment-list {
+  padding: 16px;
+}
+
+.comment-item {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.username {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.time {
+  color: #999;
+  font-size: 12px;
+}
+
+.comment-content {
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.like-btn,
+.reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.like-btn.active {
+  color: #f56c6c;
+  border-color: #f56c6c;
+  background: #fef0f0;
+}
+
+.like-btn:hover,
+.reply-btn:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.load-more {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  border: 1px dashed #ddd;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.load-more:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+</style>
+```
+
+---
+
+## 7. 阅读历史 ⭐️v1.3优化
+
+### 7.1 记录阅读历史
+
+**接口说明**: 记录用户的阅读行为
+
+**请求**
+```
+POST /api/v1/reader/reading-history
+```
+
+**认证**: 🔒 需要 JWT Token
+
+**请求体**
+```json
+{
+  "book_id": "book123",
+  "chapter_id": "chapter456",
+  "start_time": "2025-10-25T10:00:00Z",
+  "end_time": "2025-10-25T10:15:00Z",
+  "progress": 75.5,
+  "device_type": "web",
+  "device_id": "device_123"
+}
+```
+
+**响应示例**
+```json
+{
+  "code": 201,
+  "message": "记录成功",
+  "data": {},
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+> **注意**: 响应状态码为 `201 Created`，遵循 RESTful 规范。
+
+### 7.2 获取阅读历史
+
+**接口说明**: 获取用户的阅读历史记录
+
+**请求**
+```
+GET /api/v1/reader/reading-history?page=1&page_size=20&book_id=book123
+```
+
+**查询参数**
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | int | 否 | 页码，默认1 |
+| page_size | int | 否 | 每页数量，默认20 |
+| book_id | string | 否 | 筛选指定书籍 |
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "histories": [
+      {
+        "id": "history123",
+        "book_id": "book123",
+        "book_title": "修仙传",
+        "chapter_id": "chapter456",
+        "chapter_title": "第一章",
+        "progress": 75.5,
+        "duration": 900,
+        "last_read_at": "2025-10-25T10:15:00Z"
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "page_size": 20,
+      "total_pages": 3,
+      "has_next": true,
+      "has_previous": false
+    }
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+### 7.3 获取阅读统计
+
+**接口说明**: 获取用户的阅读统计数据
+
+**请求**
+```
+GET /api/v1/reader/reading-history/stats?days=30
+```
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "summary": {
+      "total_books": 15,
+      "total_chapters": 120,
+      "total_duration": 36000,
+      "average_daily_duration": 1200
+    },
+    "daily_stats": [
+      {
+        "date": "2025-10-25",
+        "books_read": 3,
+        "chapters_read": 8,
+        "duration": 1800
+      }
+    ]
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-xxx"
+}
+```
+
+---
+
+## 8. 常见问题
 
 ### Q1: 如何处理付费章节的购买流程？
 
@@ -1214,7 +1948,13 @@ const loadChapterInChunks = async (chapterId) => {
 
 ---
 
-**文档版本**: v1.0  
-**最后更新**: 2025-10-18  
+**文档版本**: v1.3 ⭐️  
+**最后更新**: 2025-10-25  
 **维护者**: 青羽后端团队
+
+**v1.3 主要更新**:
+- ✅ 新增评论点赞/取消点赞功能
+- ✅ 统一响应格式（timestamp, request_id）
+- ✅ 优化阅读历史API
+- ✅ 新增完整的Vue组件示例
 

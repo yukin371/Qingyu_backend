@@ -9,7 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/repository/interfaces"
+	aiRepo "Qingyu_backend/repository/interfaces/ai"
+	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
@@ -18,6 +19,7 @@ import (
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 
 	// 导入各个子包的具体实现
+	mongoAI "Qingyu_backend/repository/mongodb/ai"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
@@ -72,6 +74,21 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 		database: database,
 		config:   config,
 	}, nil
+}
+
+// NewMongoRepositoryFactoryWithClient 使用已有MongoDB连接创建工厂
+// 推荐使用此方法，避免重复创建连接
+// 此方法从ServiceContainer获取已初始化的MongoDB连接
+func NewMongoRepositoryFactoryWithClient(
+	client *mongo.Client,
+	db *mongo.Database,
+) *MongoRepositoryFactory {
+	return &MongoRepositoryFactory{
+		client:   client,
+		db:       db,
+		database: db,
+		config:   nil, // 不需要配置，因为连接已创建
+	}
 }
 
 // ========== User Module Repositories ==========
@@ -129,46 +146,66 @@ func (f *MongoRepositoryFactory) CreateAnnotationRepository() readingRepo.Annota
 	return mongoReading.NewMongoAnnotationRepository(f.database)
 }
 
+// CreateCommentRepository 创建评论Repository
+func (f *MongoRepositoryFactory) CreateCommentRepository() readingRepo.CommentRepository {
+	return mongoReading.NewMongoCommentRepository(f.database)
+}
+
+// CreateLikeRepository 创建点赞Repository
+func (f *MongoRepositoryFactory) CreateLikeRepository() readingRepo.LikeRepository {
+	return mongoReading.NewMongoLikeRepository(f.database)
+}
+
+// CreateCollectionRepository 创建收藏Repository
+func (f *MongoRepositoryFactory) CreateCollectionRepository() readingRepo.CollectionRepository {
+	return mongoReading.NewMongoCollectionRepository(f.database)
+}
+
+// CreateReadingHistoryRepository 创建阅读历史Repository
+func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readingRepo.ReadingHistoryRepository {
+	return mongoReading.NewMongoReadingHistoryRepository(f.database)
+}
+
 // ========== Bookstore Module Repositories ==========
 
 // CreateBookRepository 创建书籍Repository
 func (f *MongoRepositoryFactory) CreateBookRepository() bookstoreRepo.BookRepository {
-	return mongoBookstore.NewMongoBookRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookRepository(f.client, f.database.Name())
 }
 
 // CreateBookDetailRepository 创建书籍详情Repository
 func (f *MongoRepositoryFactory) CreateBookDetailRepository() bookstoreRepo.BookDetailRepository {
-	return mongoBookstore.NewMongoBookDetailRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookDetailRepository(f.client, f.database.Name())
 }
 
 // CreateCategoryRepository 创建分类Repository
 func (f *MongoRepositoryFactory) CreateCategoryRepository() bookstoreRepo.CategoryRepository {
-	return mongoBookstore.NewMongoCategoryRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoCategoryRepository(f.client, f.database.Name())
 }
 
 // CreateBookStatisticsRepository 创建书籍统计Repository
 func (f *MongoRepositoryFactory) CreateBookStatisticsRepository() bookstoreRepo.BookStatisticsRepository {
-	return mongoBookstore.NewMongoBookStatisticsRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookStatisticsRepository(f.client, f.database.Name())
 }
 
 // CreateBookRatingRepository 创建书籍评分Repository
 func (f *MongoRepositoryFactory) CreateBookRatingRepository() bookstoreRepo.BookRatingRepository {
-	return mongoBookstore.NewMongoBookRatingRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBookRatingRepository(f.client, f.database.Name())
 }
 
 // CreateBookstoreChapterRepository 创建书城章节Repository
 func (f *MongoRepositoryFactory) CreateBookstoreChapterRepository() bookstoreRepo.ChapterRepository {
-	return mongoBookstore.NewMongoChapterRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoChapterRepository(f.client, f.database.Name())
 }
 
 // CreateBannerRepository 创建横幅Repository
 func (f *MongoRepositoryFactory) CreateBannerRepository() bookstoreRepo.BannerRepository {
-	return mongoBookstore.NewMongoBannerRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoBannerRepository(f.client, f.database.Name())
 }
 
 // CreateRankingRepository 创建榜单Repository
 func (f *MongoRepositoryFactory) CreateRankingRepository() bookstoreRepo.RankingRepository {
-	return mongoBookstore.NewMongoRankingRepository(f.client, f.config.Database)
+	return mongoBookstore.NewMongoRankingRepository(f.client, f.database.Name())
 }
 
 // ========== Recommendation Module Repositories ==========
@@ -213,8 +250,18 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 // ========== AI Module Repositories ==========
 
 // CreateQuotaRepository 创建配额Repository
-func (f *MongoRepositoryFactory) CreateQuotaRepository() interfaces.QuotaRepository {
-	return NewMongoQuotaRepository(f.database)
+func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository {
+	return mongoAI.NewMongoQuotaRepository(f.database)
+}
+
+// ========== Audit Module Repositories ==========
+
+// CreateSensitiveWordRepository 创建敏感词Repository
+// 注意：当前返回nil，表示敏感词检测未启用
+// TODO: 实现敏感词Repository
+func (f *MongoRepositoryFactory) CreateSensitiveWordRepository() auditRepo.SensitiveWordRepository {
+	// 暂时返回nil，CommentService会处理nil的情况
+	return nil
 }
 
 // ========== Factory Management Methods ==========
@@ -259,6 +306,9 @@ func (f *MongoRepositoryFactory) GetClient() *mongo.Client {
 
 // GetDatabaseName 获取数据库名称
 func (f *MongoRepositoryFactory) GetDatabaseName() string {
+	if f.database != nil {
+		return f.database.Name()
+	}
 	if f.config != nil {
 		return f.config.Database
 	}

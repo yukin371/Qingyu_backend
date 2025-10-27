@@ -1,12 +1,12 @@
 package ai
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"strings"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/writing"
 	documentService "Qingyu_backend/service/project"
 )
@@ -44,8 +44,9 @@ func NewContextService(
 
 // BuildContext 构建AI上下文
 func (s *ContextService) BuildContext(ctx context.Context, projectID string, chapterID string) (*ai.AIContext, error) {
-	// 获取项目信息
-	project, err := s.projectService.GetProjectByID(ctx, projectID)
+	// 获取项目信息（直接从repository，跳过权限检查）
+	// AI上下文构建不应该受权限限制，因为已经通过配额中间件验证
+	project, err := s.projectService.GetByIDWithoutAuth(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("获取项目信息失败: %w", err)
 	}
@@ -53,10 +54,14 @@ func (s *ContextService) BuildContext(ctx context.Context, projectID string, cha
 		return nil, fmt.Errorf("项目不存在")
 	}
 
-	// 构建章节信息
-	chapterInfo, err := s.buildChapterInfo(ctx, projectID, chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("构建章节信息失败: %w", err)
+	// 构建章节信息（可选）
+	var chapterInfo *ai.ChapterInfo
+	if chapterID != "" {
+		var err error
+		chapterInfo, err = s.buildChapterInfo(ctx, projectID, chapterID)
+		if err != nil {
+			return nil, fmt.Errorf("构建章节信息失败: %w", err)
+		}
 	}
 
 	aiContext := &ai.AIContext{
@@ -88,7 +93,7 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 
 	// 获取章节内容
 	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
-	var docContent *document.DocumentContent
+	var docContent *writer.DocumentContent
 	if s.documentContentRepo != nil {
 		var err error
 		docContent, err = s.documentContentRepo.GetByDocumentID(ctx, chapterID)
@@ -140,7 +145,7 @@ func (s *ContextService) buildPreviousChaptersSummary(ctx context.Context, proje
 // generateChapterSummary 生成章节摘要
 // 注意: 此方法依赖 documentContentRepo，如果为 nil 则降级使用 KeyPoints
 // 建议调用方直接使用 buildChapterInfo，它已经包含了摘要生成逻辑
-func (s *ContextService) generateChapterSummary(ctx context.Context, doc *document.Document) string {
+func (s *ContextService) generateChapterSummary(ctx context.Context, doc *writer.Document) string {
 	// 注意: documentContentRepo 可能为 nil（旧架构遗留），需要防御性检查
 	if s.documentContentRepo == nil {
 		// 降级方案：从 KeyPoints 生成摘要

@@ -1,12 +1,11 @@
 package reading
 
 import (
+	reader2 "Qingyu_backend/models/reader"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"Qingyu_backend/models/reading/reader"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -19,18 +18,18 @@ type ReaderCacheService interface {
 	InvalidateChapterContent(ctx context.Context, chapterID string) error
 
 	// 章节信息缓存
-	GetChapter(ctx context.Context, chapterID string) (*reader.Chapter, error)
-	SetChapter(ctx context.Context, chapterID string, chapter *reader.Chapter, expiration time.Duration) error
+	GetChapter(ctx context.Context, chapterID string) (*reader2.Chapter, error)
+	SetChapter(ctx context.Context, chapterID string, chapter *reader2.Chapter, expiration time.Duration) error
 	InvalidateChapter(ctx context.Context, chapterID string) error
 
 	// 阅读设置缓存
-	GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error)
-	SetReadingSettings(ctx context.Context, userID string, settings *reader.ReadingSettings, expiration time.Duration) error
+	GetReadingSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error)
+	SetReadingSettings(ctx context.Context, userID string, settings *reader2.ReadingSettings, expiration time.Duration) error
 	InvalidateReadingSettings(ctx context.Context, userID string) error
 
 	// 阅读进度缓存
-	GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error)
-	SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader.ReadingProgress, expiration time.Duration) error
+	GetReadingProgress(ctx context.Context, userID, bookID string) (*reader2.ReadingProgress, error)
+	SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader2.ReadingProgress, expiration time.Duration) error
 	InvalidateReadingProgress(ctx context.Context, userID, bookID string) error
 
 	// 批量清理
@@ -94,7 +93,7 @@ func (c *RedisReaderCacheService) InvalidateChapterContent(ctx context.Context, 
 // =========================
 
 // GetChapter 获取章节信息缓存
-func (c *RedisReaderCacheService) GetChapter(ctx context.Context, chapterID string) (*reader.Chapter, error) {
+func (c *RedisReaderCacheService) GetChapter(ctx context.Context, chapterID string) (*reader2.Chapter, error) {
 	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -104,7 +103,7 @@ func (c *RedisReaderCacheService) GetChapter(ctx context.Context, chapterID stri
 		return nil, fmt.Errorf("failed to get chapter cache: %w", err)
 	}
 
-	var chapter reader.Chapter
+	var chapter reader2.Chapter
 	if err := json.Unmarshal([]byte(data), &chapter); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal chapter data: %w", err)
 	}
@@ -113,7 +112,7 @@ func (c *RedisReaderCacheService) GetChapter(ctx context.Context, chapterID stri
 }
 
 // SetChapter 设置章节信息缓存
-func (c *RedisReaderCacheService) SetChapter(ctx context.Context, chapterID string, chapter *reader.Chapter, expiration time.Duration) error {
+func (c *RedisReaderCacheService) SetChapter(ctx context.Context, chapterID string, chapter *reader2.Chapter, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
 	jsonData, err := json.Marshal(chapter)
 	if err != nil {
@@ -134,7 +133,7 @@ func (c *RedisReaderCacheService) InvalidateChapter(ctx context.Context, chapter
 // =========================
 
 // GetReadingSettings 获取阅读设置缓存
-func (c *RedisReaderCacheService) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+func (c *RedisReaderCacheService) GetReadingSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error) {
 	key := c.getKey(fmt.Sprintf("settings:%s", userID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -144,7 +143,7 @@ func (c *RedisReaderCacheService) GetReadingSettings(ctx context.Context, userID
 		return nil, fmt.Errorf("failed to get reading settings cache: %w", err)
 	}
 
-	var settings reader.ReadingSettings
+	var settings reader2.ReadingSettings
 	if err := json.Unmarshal([]byte(data), &settings); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal reading settings data: %w", err)
 	}
@@ -153,7 +152,7 @@ func (c *RedisReaderCacheService) GetReadingSettings(ctx context.Context, userID
 }
 
 // SetReadingSettings 设置阅读设置缓存
-func (c *RedisReaderCacheService) SetReadingSettings(ctx context.Context, userID string, settings *reader.ReadingSettings, expiration time.Duration) error {
+func (c *RedisReaderCacheService) SetReadingSettings(ctx context.Context, userID string, settings *reader2.ReadingSettings, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("settings:%s", userID))
 	jsonData, err := json.Marshal(settings)
 	if err != nil {
@@ -174,7 +173,7 @@ func (c *RedisReaderCacheService) InvalidateReadingSettings(ctx context.Context,
 // =========================
 
 // GetReadingProgress 获取阅读进度缓存
-func (c *RedisReaderCacheService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
+func (c *RedisReaderCacheService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader2.ReadingProgress, error) {
 	key := c.getKey(fmt.Sprintf("progress:%s:%s", userID, bookID))
 	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -184,7 +183,7 @@ func (c *RedisReaderCacheService) GetReadingProgress(ctx context.Context, userID
 		return nil, fmt.Errorf("failed to get reading progress cache: %w", err)
 	}
 
-	var progress reader.ReadingProgress
+	var progress reader2.ReadingProgress
 	if err := json.Unmarshal([]byte(data), &progress); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal reading progress data: %w", err)
 	}
@@ -193,7 +192,7 @@ func (c *RedisReaderCacheService) GetReadingProgress(ctx context.Context, userID
 }
 
 // SetReadingProgress 设置阅读进度缓存
-func (c *RedisReaderCacheService) SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader.ReadingProgress, expiration time.Duration) error {
+func (c *RedisReaderCacheService) SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader2.ReadingProgress, expiration time.Duration) error {
 	key := c.getKey(fmt.Sprintf("progress:%s:%s", userID, bookID))
 	jsonData, err := json.Marshal(progress)
 	if err != nil {

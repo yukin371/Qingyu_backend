@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"fmt"
@@ -8,67 +9,66 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
 // BookDetailFilter 书籍详情筛选条件 - 适用于网络小说平台
 type BookDetailFilter struct {
-	Title          string                `json:"title,omitempty"`
-	Author         string                `json:"author,omitempty"`
-	AuthorID       *primitive.ObjectID   `json:"author_id,omitempty"`
-	CategoryIDs    []primitive.ObjectID  `json:"category_ids,omitempty"`
-	Tags           []string              `json:"tags,omitempty"`
-	Status         *bookstore.BookStatus `json:"status,omitempty"`
-	IsFree         *bool                 `json:"is_free,omitempty"`
-	MinPrice       *float64              `json:"min_price,omitempty"`
-	MaxPrice       *float64              `json:"max_price,omitempty"`
-	MinRating      *float64              `json:"min_rating,omitempty"`
-	MaxRating      *float64              `json:"max_rating,omitempty"`
-	MinWordCount   *int64                `json:"min_word_count,omitempty"`
-	MaxWordCount   *int64                `json:"max_word_count,omitempty"`
-	SerializedFrom *time.Time            `json:"serialized_from,omitempty"` // 开始连载时间范围
-	SerializedTo   *time.Time            `json:"serialized_to,omitempty"`   // 开始连载时间范围
-	CompletedFrom  *time.Time            `json:"completed_from,omitempty"`  // 完结时间范围
-	CompletedTo    *time.Time            `json:"completed_to,omitempty"`    // 完结时间范围
-	CreatedAtFrom  *time.Time            `json:"created_at_from,omitempty"`
-	CreatedAtTo    *time.Time            `json:"created_at_to,omitempty"`
-	UpdatedAtFrom  *time.Time            `json:"updated_at_from,omitempty"`
-	UpdatedAtTo    *time.Time            `json:"updated_at_to,omitempty"`
-	SortBy         string                `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
-	SortOrder      string                `json:"sort_order,omitempty"` // asc, desc
+	Title          string                 `json:"title,omitempty"`
+	Author         string                 `json:"author,omitempty"`
+	AuthorID       *primitive.ObjectID    `json:"author_id,omitempty"`
+	CategoryIDs    []primitive.ObjectID   `json:"category_ids,omitempty"`
+	Tags           []string               `json:"tags,omitempty"`
+	Status         *bookstore2.BookStatus `json:"status,omitempty"`
+	IsFree         *bool                  `json:"is_free,omitempty"`
+	MinPrice       *float64               `json:"min_price,omitempty"`
+	MaxPrice       *float64               `json:"max_price,omitempty"`
+	MinRating      *float64               `json:"min_rating,omitempty"`
+	MaxRating      *float64               `json:"max_rating,omitempty"`
+	MinWordCount   *int64                 `json:"min_word_count,omitempty"`
+	MaxWordCount   *int64                 `json:"max_word_count,omitempty"`
+	SerializedFrom *time.Time             `json:"serialized_from,omitempty"` // 开始连载时间范围
+	SerializedTo   *time.Time             `json:"serialized_to,omitempty"`   // 开始连载时间范围
+	CompletedFrom  *time.Time             `json:"completed_from,omitempty"`  // 完结时间范围
+	CompletedTo    *time.Time             `json:"completed_to,omitempty"`    // 完结时间范围
+	CreatedAtFrom  *time.Time             `json:"created_at_from,omitempty"`
+	CreatedAtTo    *time.Time             `json:"created_at_to,omitempty"`
+	UpdatedAtFrom  *time.Time             `json:"updated_at_from,omitempty"`
+	UpdatedAtTo    *time.Time             `json:"updated_at_to,omitempty"`
+	SortBy         string                 `json:"sort_by,omitempty"`    // created_at, updated_at, serialized_at, rating, word_count, view_count, like_count, collect_count
+	SortOrder      string                 `json:"sort_order,omitempty"` // asc, desc
 }
 
 // BookDetailService 书籍详情服务接口 - 专注于书籍详情页面的完整信息管理
 // 用于书籍详情页面、章节管理、统计数据等详细场景
 type BookDetailService interface {
 	// 书籍详情基础操作
-	CreateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error
-	GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookDetail, error)
-	UpdateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error
+	CreateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error
+	GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookDetail, error)
+	UpdateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error
 	DeleteBookDetail(ctx context.Context, id primitive.ObjectID) error
 
 	// 书籍详情查询
-	GetBookDetailByTitle(ctx context.Context, title string) (*bookstore.BookDetail, error)
-	GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBookDetailsByStatus(ctx context.Context, status bookstore.BookStatus, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
+	GetBookDetailByTitle(ctx context.Context, title string) (*bookstore2.BookDetail, error)
+	GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBookDetailsByStatus(ctx context.Context, status bookstore2.BookStatus, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 
 	// API 兼容方法别名（为了与 API 层命名保持一致）
-	GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error)
-	GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
-	GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
-	GetPopularBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
-	GetLatestBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
+	GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
+	GetPopularBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
+	GetLatestBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 	CountBooksByCategory(ctx context.Context, category string) (int64, error)
 
 	// 书籍详情统计和交互
@@ -85,16 +85,16 @@ type BookDetailService interface {
 	GetBookDetailStats(ctx context.Context) (map[string]interface{}, error)
 	GetBookDetailCountByCategory(ctx context.Context, category string) (int64, error)
 	GetBookDetailCountByAuthor(ctx context.Context, author string) (int64, error)
-	GetBookDetailCountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error)
+	GetBookDetailCountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error)
 
 	// 书籍详情推荐
-	GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
-	GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error)
-	GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
-	GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error)
+	GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
+	GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
+	GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
+	GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 
 	// 书籍详情批量操作
-	BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error
+	BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error
 	BatchUpdateBookDetailTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error
 }
 
@@ -113,7 +113,7 @@ func NewBookDetailService(bookDetailRepo BookstoreRepo.BookDetailRepository, cac
 }
 
 // CreateBookDetail 创建书籍详情
-func (s *BookDetailServiceImpl) CreateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error {
+func (s *BookDetailServiceImpl) CreateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error {
 	if bookDetail == nil {
 		return errors.New("book detail cannot be nil")
 	}
@@ -147,7 +147,7 @@ func (s *BookDetailServiceImpl) CreateBookDetail(ctx context.Context, bookDetail
 }
 
 // GetBookDetailByID 根据ID获取书籍详情
-func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookDetail, error) {
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
 		if cachedBook, err := s.cacheService.GetBookDetail(ctx, id.Hex()); err == nil && cachedBook != nil {
@@ -173,7 +173,7 @@ func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primit
 }
 
 // UpdateBookDetail 更新书籍详情
-func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail *bookstore.BookDetail) error {
+func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error {
 	if bookDetail == nil {
 		return errors.New("book detail cannot be nil")
 	}
@@ -243,7 +243,7 @@ func (s *BookDetailServiceImpl) DeleteBookDetail(ctx context.Context, id primiti
 }
 
 // GetBookDetailByTitle 根据标题获取书籍详情
-func (s *BookDetailServiceImpl) GetBookDetailByTitle(ctx context.Context, title string) (*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetBookDetailByTitle(ctx context.Context, title string) (*bookstore2.BookDetail, error) {
 	if title == "" {
 		return nil, errors.New("title cannot be empty")
 	}
@@ -257,7 +257,7 @@ func (s *BookDetailServiceImpl) GetBookDetailByTitle(ctx context.Context, title 
 }
 
 // GetBookDetailsByAuthor 根据作者获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if author == "" {
 		return nil, 0, errors.New("author cannot be empty")
 	}
@@ -286,7 +286,7 @@ func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, auth
 }
 
 // GetBookDetailsByAuthorID 根据作者ID获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if authorID.IsZero() {
 		return nil, 0, errors.New("author ID cannot be empty")
 	}
@@ -313,7 +313,7 @@ func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, au
 }
 
 // GetBookDetailsByCategory 根据分类获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if category == "" {
 		return nil, 0, errors.New("category cannot be empty")
 	}
@@ -342,7 +342,7 @@ func (s *BookDetailServiceImpl) GetBookDetailsByCategory(ctx context.Context, ca
 }
 
 // GetBookDetailsByStatus 根据状态获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByStatus(ctx context.Context, status bookstore.BookStatus, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailsByStatus(ctx context.Context, status bookstore2.BookStatus, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -368,7 +368,7 @@ func (s *BookDetailServiceImpl) GetBookDetailsByStatus(ctx context.Context, stat
 }
 
 // GetBookDetailsByTags 根据标签获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if len(tags) == 0 {
 		return nil, 0, errors.New("tags cannot be empty")
 	}
@@ -397,7 +397,7 @@ func (s *BookDetailServiceImpl) GetBookDetailsByTags(ctx context.Context, tags [
 }
 
 // SearchBookDetails 搜索书籍详情
-func (s *BookDetailServiceImpl) SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) SearchBookDetails(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if keyword == "" {
 		return nil, 0, errors.New("keyword cannot be empty")
 	}
@@ -427,7 +427,7 @@ func (s *BookDetailServiceImpl) SearchBookDetails(ctx context.Context, keyword s
 }
 
 // SearchBookDetailsWithFilter 使用过滤器搜索书籍详情
-func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	if filter == nil {
 		return nil, 0, errors.New("filter cannot be nil")
 	}
@@ -442,7 +442,7 @@ func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context,
 
 	// TODO: Repository 层需要实现 SearchWithFilter 方法
 	// 暂时使用简单搜索方式
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	var err error
 
 	// 根据过滤器条件调用不同的查询方法
@@ -472,19 +472,19 @@ func (s *BookDetailServiceImpl) GetBookDetailStats(ctx context.Context) (map[str
 	stats := make(map[string]interface{})
 
 	// 各状态书籍数量
-	completedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusCompleted)
+	completedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore2.BookStatusCompleted)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get completed book count: %w", err)
 	}
 	stats["completed_books"] = completedCount
 
-	ongoingCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusOngoing)
+	ongoingCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore2.BookStatusOngoing)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ongoing book count: %w", err)
 	}
 	stats["ongoing_books"] = ongoingCount
 
-	pausedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore.BookStatusPaused)
+	pausedCount, err := s.bookDetailRepo.CountByStatus(ctx, bookstore2.BookStatusPaused)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get paused book count: %w", err)
 	}
@@ -526,7 +526,7 @@ func (s *BookDetailServiceImpl) GetBookDetailCountByAuthor(ctx context.Context, 
 }
 
 // GetBookDetailCountByStatus 根据状态统计书籍数量
-func (s *BookDetailServiceImpl) GetBookDetailCountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
+func (s *BookDetailServiceImpl) GetBookDetailCountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error) {
 	count, err := s.bookDetailRepo.CountByStatus(ctx, status)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count book details by status: %w", err)
@@ -536,7 +536,7 @@ func (s *BookDetailServiceImpl) GetBookDetailCountByStatus(ctx context.Context, 
 }
 
 // GetRecommendedBookDetails 获取推荐书籍详情
-func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
@@ -558,7 +558,7 @@ func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, b
 		}
 
 		// 过滤掉当前书籍
-		var filteredBooks []*bookstore.BookDetail
+		var filteredBooks []*bookstore2.BookDetail
 		for _, book := range recommendedBooks {
 			if book.ID != bookID {
 				filteredBooks = append(filteredBooks, book)
@@ -573,7 +573,7 @@ func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, b
 }
 
 // GetSimilarBookDetails 获取相似书籍详情
-func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
@@ -595,7 +595,7 @@ func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookI
 		}
 
 		// 过滤掉当前书籍
-		var filteredBooks []*bookstore.BookDetail
+		var filteredBooks []*bookstore2.BookDetail
 		for _, book := range similarBooks {
 			if book.ID != bookID {
 				filteredBooks = append(filteredBooks, book)
@@ -611,13 +611,13 @@ func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookI
 }
 
 // GetPopularBookDetails 获取热门书籍详情
-func (s *BookDetailServiceImpl) GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
 
 	// 使用已完成状态的书籍作为热门书籍
-	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore.BookStatusCompleted, limit, 0)
+	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore2.BookStatusCompleted, limit, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get popular books: %w", err)
 	}
@@ -626,13 +626,13 @@ func (s *BookDetailServiceImpl) GetPopularBookDetails(ctx context.Context, limit
 }
 
 // GetLatestBookDetails 获取最新书籍详情
-func (s *BookDetailServiceImpl) GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
 
 	// 使用正在连载状态的书籍作为最新书籍
-	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore.BookStatusOngoing, limit, 0)
+	bookDetails, err := s.bookDetailRepo.GetByStatus(ctx, bookstore2.BookStatusOngoing, limit, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest books: %w", err)
 	}
@@ -753,7 +753,7 @@ func (s *BookDetailServiceImpl) UpdateLastChapter(ctx context.Context, bookID pr
 }
 
 // BatchUpdateBookDetailStatus 批量更新书籍状态
-func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -819,7 +819,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailTags(ctx context.Context, b
 }
 
 // invalidateRelatedCache 清除相关缓存
-func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, bookDetail *bookstore.BookDetail) {
+func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, bookDetail *bookstore2.BookDetail) {
 	if s.cacheService == nil {
 		return
 	}
@@ -842,31 +842,31 @@ func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, book
 // API 兼容方法别名实现
 
 // GetBooksByTitle 根据标题搜索书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBooksByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	return s.SearchBookDetails(ctx, title, page, pageSize)
 }
 
 // GetBooksByAuthor 根据作者获取书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBooksByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	return s.GetBookDetailsByAuthor(ctx, author, page, pageSize)
 }
 
 // GetBooksByCategory 根据分类获取书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBooksByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	return s.GetBookDetailsByCategory(ctx, category, page, pageSize)
 }
 
 // GetBooksByStatus 根据状态获取书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBooksByStatus(ctx context.Context, status string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	// 将字符串状态转换为 BookStatus 类型
-	var bookStatus bookstore.BookStatus
+	var bookStatus bookstore2.BookStatus
 	switch status {
 	case "serializing", "ongoing":
-		bookStatus = bookstore.BookStatusOngoing
+		bookStatus = bookstore2.BookStatusOngoing
 	case "completed":
-		bookStatus = bookstore.BookStatusCompleted
+		bookStatus = bookstore2.BookStatusCompleted
 	case "paused":
-		bookStatus = bookstore.BookStatusPaused
+		bookStatus = bookstore2.BookStatusPaused
 	default:
 		return nil, 0, fmt.Errorf("无效的书籍状态: %s", status)
 	}
@@ -874,33 +874,33 @@ func (s *BookDetailServiceImpl) GetBooksByStatus(ctx context.Context, status str
 }
 
 // GetBooksByTags 根据标签获取书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	return s.GetBookDetailsByTags(ctx, tags, page, pageSize)
 }
 
 // SearchBooks 搜索书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookDetail, int64, error) {
+func (s *BookDetailServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
 	return s.SearchBookDetails(ctx, keyword, page, pageSize)
 }
 
 // GetRecommendedBooks 获取推荐书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error) {
 	// 返回热门书籍作为推荐
 	return s.GetPopularBookDetails(ctx, limit)
 }
 
 // GetSimilarBooks 获取相似书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
 	return s.GetSimilarBookDetails(ctx, bookID, limit)
 }
 
 // GetPopularBooks 获取热门书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetPopularBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetPopularBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error) {
 	return s.GetPopularBookDetails(ctx, limit)
 }
 
 // GetLatestBooks 获取最新书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetLatestBooks(ctx context.Context, limit int) ([]*bookstore.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetLatestBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error) {
 	return s.GetLatestBookDetails(ctx, limit)
 }
 

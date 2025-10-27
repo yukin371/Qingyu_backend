@@ -1,6 +1,7 @@
 package api
 
 import (
+	"Qingyu_backend/models/writer"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -14,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	writerAPI "Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/service/project"
 )
 
@@ -65,7 +65,7 @@ func TestProjectApi_CreateProject(t *testing.T) {
 				Tags:     []string{"科幻", "冒险"},
 			},
 			setupMock: func(repo *MockProjectRepository) {
-				repo.On("Create", mock.Anything, mock.AnythingOfType("*document.Project")).Return(nil)
+				repo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Project")).Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -254,7 +254,7 @@ func TestProjectApi_ListProjects(t *testing.T) {
 			userID:      "user123",
 			queryParams: "?page=1&pageSize=10",
 			setupMock: func(repo *MockProjectRepository) {
-				projects := []*document.Project{
+				projects := []*writer.Project{
 					createTestProject("user123"),
 					createTestProject("user123"),
 				}
@@ -276,7 +276,7 @@ func TestProjectApi_ListProjects(t *testing.T) {
 			userID:      "user123",
 			queryParams: "?page=1&pageSize=10&status=draft",
 			setupMock: func(repo *MockProjectRepository) {
-				projects := []*document.Project{
+				projects := []*writer.Project{
 					createTestProject("user123"),
 				}
 				repo.On("GetByOwnerAndStatus", mock.Anything, "user123", "draft", int64(10), int64(0)).Return(projects, nil)
@@ -295,7 +295,7 @@ func TestProjectApi_ListProjects(t *testing.T) {
 			userID:      "user123",
 			queryParams: "?page=1&pageSize=10",
 			setupMock: func(repo *MockProjectRepository) {
-				repo.On("GetListByOwnerID", mock.Anything, "user123", int64(10), int64(0)).Return([]*document.Project{}, nil)
+				repo.On("GetListByOwnerID", mock.Anything, "user123", int64(10), int64(0)).Return([]*writer.Project{}, nil)
 				repo.On("CountByOwner", mock.Anything, "user123").Return(int64(0), nil)
 			},
 			expectedStatus: http.StatusOK,

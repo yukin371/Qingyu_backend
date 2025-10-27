@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 

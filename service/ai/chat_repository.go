@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"Qingyu_backend/global"
 	aiModels "Qingyu_backend/models/ai"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,21 +14,23 @@ import (
 )
 
 // ChatRepository 聊天数据访问层
-type ChatRepository struct{}
+type ChatRepository struct {
+	db *mongo.Database
+}
 
 // NewChatRepository 创建聊天数据访问层
-func NewChatRepository() *ChatRepository {
-	return &ChatRepository{}
+func NewChatRepository(db *mongo.Database) *ChatRepository {
+	return &ChatRepository{db: db}
 }
 
 // getSessionCollection 获取会话集合
 func (r *ChatRepository) getSessionCollection() *mongo.Collection {
-	return global.DB.Collection("ai_chat_sessions")
+	return r.db.Collection("ai_chat_sessions")
 }
 
 // getMessageCollection 获取消息集合
 func (r *ChatRepository) getMessageCollection() *mongo.Collection {
-	return global.DB.Collection("ai_chat_messages")
+	return r.db.Collection("ai_chat_messages")
 }
 
 // CreateSession 创建会话

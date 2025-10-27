@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -12,10 +13,14 @@ import (
 // Config 存储应用配置
 type Config struct {
 	Database *DatabaseConfig    `mapstructure:"database"`
+	Redis    *RedisConfig       `mapstructure:"redis"`
 	Server   *ServerConfig      `mapstructure:"server"`
 	JWT      *JWTConfig         `mapstructure:"jwt"`
 	AI       *AIConfig          `mapstructure:"ai"`
 	External *ExternalAPIConfig `mapstructure:"external"`
+	AIQuota  *AIQuotaConfig     `mapstructure:"ai_quota"`
+	Email    *EmailConfig       `mapstructure:"email"`
+	Payment  *PaymentConfig     `mapstructure:"payment"`
 }
 
 // ServerConfig 服务器配置
@@ -55,6 +60,107 @@ type ProviderConfig struct {
 	SupportedModels []string `mapstructure:"supported_models"`
 }
 
+// AIQuotaConfig AI配额配置
+type AIQuotaConfig struct {
+	DefaultQuotas    *DefaultQuotasConfig `mapstructure:"default_quotas"`
+	Reset            *QuotaResetConfig    `mapstructure:"reset"`
+	WarningThreshold float64              `mapstructure:"warning_threshold"`
+	AllowOverdraft   bool                 `mapstructure:"allow_overdraft"`
+	OverdraftLimit   int                  `mapstructure:"overdraft_limit"`
+}
+
+// DefaultQuotasConfig 默认配额配置
+type DefaultQuotasConfig struct {
+	Reader map[string]int `mapstructure:"reader"` // normal, vip
+	Writer map[string]int `mapstructure:"writer"` // novice, signed, master
+	Admin  map[string]int `mapstructure:"admin"`  // normal
+}
+
+// QuotaResetConfig 配额重置配置
+type QuotaResetConfig struct {
+	DailyResetHour  int  `mapstructure:"daily_reset_hour"`
+	EnableAutoReset bool `mapstructure:"enable_auto_reset"`
+}
+
+// EmailConfig 邮件配置
+type EmailConfig struct {
+	Enabled     bool   `mapstructure:"enabled"`
+	SMTPHost    string `mapstructure:"smtp_host"`
+	SMTPPort    int    `mapstructure:"smtp_port"`
+	Username    string `mapstructure:"username"`
+	Password    string `mapstructure:"password"`
+	FromAddress string `mapstructure:"from_address"`
+	FromName    string `mapstructure:"from_name"`
+	UseTLS      bool   `mapstructure:"use_tls"`
+	UseSSL      bool   `mapstructure:"use_ssl"`
+}
+
+// PaymentConfig 支付配置
+type PaymentConfig struct {
+	Enabled         bool             `mapstructure:"enabled"`
+	DefaultProvider string           `mapstructure:"default_provider"` // alipay, wechat
+	Alipay          *AlipayConfig    `mapstructure:"alipay"`
+	Wechat          *WechatPayConfig `mapstructure:"wechat"`
+	NotifyURL       string           `mapstructure:"notify_url"`
+	ReturnURL       string           `mapstructure:"return_url"`
+}
+
+// AlipayConfig 支付宝配置
+type AlipayConfig struct {
+	Enabled         bool   `mapstructure:"enabled"`
+	AppID           string `mapstructure:"app_id"`
+	PrivateKey      string `mapstructure:"private_key"`
+	PublicKey       string `mapstructure:"public_key"`
+	AlipayPublicKey string `mapstructure:"alipay_public_key"`
+	SignType        string `mapstructure:"sign_type"` // RSA2
+	Sandbox         bool   `mapstructure:"sandbox"`
+}
+
+// WechatPayConfig 微信支付配置
+type WechatPayConfig struct {
+	Enabled    bool   `mapstructure:"enabled"`
+	AppID      string `mapstructure:"app_id"`
+	MchID      string `mapstructure:"mch_id"`
+	APIKey     string `mapstructure:"api_key"`
+	APIv3Key   string `mapstructure:"apiv3_key"`
+	SerialNo   string `mapstructure:"serial_no"`
+	PrivateKey string `mapstructure:"private_key"`
+	Sandbox    bool   `mapstructure:"sandbox"`
+}
+
+// GetDefaultQuota 从配置获取默认配额
+func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
+	if c == nil || c.DefaultQuotas == nil {
+		// 如果配置不存在，返回硬编码的默认值
+		return 5
+	}
+
+	switch userRole {
+	case "reader":
+		if quota, ok := c.DefaultQuotas.Reader[membershipLevel]; ok {
+			return quota
+		}
+		// 如果没有找到对应等级，尝试normal
+		if quota, ok := c.DefaultQuotas.Reader["normal"]; ok {
+			return quota
+		}
+	case "writer":
+		if quota, ok := c.DefaultQuotas.Writer[membershipLevel]; ok {
+			return quota
+		}
+		if quota, ok := c.DefaultQuotas.Writer["novice"]; ok {
+			return quota
+		}
+	case "admin":
+		if quota, ok := c.DefaultQuotas.Admin["normal"]; ok {
+			return quota
+		}
+	}
+
+	// 最后的默认值
+	return 5
+}
+
 var (
 	// GlobalConfig 全局配置实例
 	GlobalConfig *Config
@@ -74,11 +180,35 @@ func LoadConfig(configPath string) (*Config, error) {
 		// 直接设置配置文件
 		v.SetConfigFile(configPath)
 	} else {
-		// 配置Viper
-		v.SetConfigName("config")   // 配置文件名（不带扩展名）
-		v.SetConfigType("yaml")     // 配置文件类型
-		v.AddConfigPath(configPath) // 配置文件路径
-		v.AddConfigPath(".")        // 当前目录
+		// 优先尝试加载 config.test.yaml（测试配置优先）
+		testConfigPaths := []string{
+			configPath,
+			"./config",
+			"../../config",
+			".",
+		}
+
+		testConfigFound := false
+		for _, path := range testConfigPaths {
+			testConfigFile := fmt.Sprintf("%s/config.test.yaml", path)
+			if _, err := os.Stat(testConfigFile); err == nil {
+				v.SetConfigFile(testConfigFile)
+				testConfigFound = true
+				fmt.Printf("[Config] Using test config: %s\n", testConfigFile)
+				break
+			}
+		}
+
+		// 如果没有找到 test 配置，使用默认配置查找
+		if !testConfigFound {
+			v.SetConfigName("config")       // 配置文件名（不带扩展名）
+			v.SetConfigType("yaml")         // 配置文件类型
+			v.AddConfigPath(configPath)     // 配置文件路径
+			v.AddConfigPath("./config")     // config子目录
+			v.AddConfigPath("../../config") // 从cmd/server运行时
+			v.AddConfigPath(".")            // 当前目录
+			fmt.Println("[Config] Test config not found, using default config search")
+		}
 	}
 
 	v.AutomaticEnv()                                   // 读取环境变量
@@ -181,6 +311,32 @@ func setDefaults() {
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)
+
+	// 邮件默认配置
+	v.SetDefault("email.enabled", false)
+	v.SetDefault("email.smtp_host", "smtp.example.com")
+	v.SetDefault("email.smtp_port", 587)
+	v.SetDefault("email.username", "")
+	v.SetDefault("email.password", "")
+	v.SetDefault("email.from_address", "noreply@qingyu.com")
+	v.SetDefault("email.from_name", "青羽阅读")
+	v.SetDefault("email.use_tls", true)
+	v.SetDefault("email.use_ssl", false)
+
+	// 支付默认配置
+	v.SetDefault("payment.enabled", false)
+	v.SetDefault("payment.default_provider", "alipay")
+	v.SetDefault("payment.notify_url", "")
+	v.SetDefault("payment.return_url", "")
+
+	// 支付宝默认配置
+	v.SetDefault("payment.alipay.enabled", false)
+	v.SetDefault("payment.alipay.sandbox", true)
+	v.SetDefault("payment.alipay.sign_type", "RSA2")
+
+	// 微信支付默认配置
+	v.SetDefault("payment.wechat.enabled", false)
+	v.SetDefault("payment.wechat.sandbox", true)
 }
 
 // WatchConfig 启用配置热重载

@@ -1,32 +1,31 @@
 package writer
 
 import (
+	"Qingyu_backend/models/writer"
 	"time"
-
-	"Qingyu_backend/models/document"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ProjectDetailResponse 项目详情响应
 type ProjectDetailResponse struct {
-	ID             primitive.ObjectID       `json:"id"`
-	Title          string                   `json:"title"`
-	Description    string                   `json:"description"`
-	CoverImage     string                   `json:"coverImage"`
-	Genre          string                   `json:"genre"`
-	Tags           []string                 `json:"tags"`
-	Status         string                   `json:"status"`
-	Visibility     string                   `json:"visibility"`
-	TotalWords     int64                    `json:"totalWords"`
-	ChapterCount   int                      `json:"chapterCount"`
-	LastUpdateTime time.Time                `json:"lastUpdateTime"`
-	CreatedAt      time.Time                `json:"createdAt"`
-	UpdatedAt      time.Time                `json:"updatedAt"`
-	Documents      []DocumentSummary        `json:"documents"`
-	Characters     []document.Character     `json:"characters"`
-	Locations      []document.Location      `json:"locations"`
-	Timeline       []document.TimelineEvent `json:"timeline"`
+	ID             primitive.ObjectID     `json:"id"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	CoverImage     string                 `json:"coverImage"`
+	Genre          string                 `json:"genre"`
+	Tags           []string               `json:"tags"`
+	Status         string                 `json:"status"`
+	Visibility     string                 `json:"visibility"`
+	TotalWords     int64                  `json:"totalWords"`
+	ChapterCount   int                    `json:"chapterCount"`
+	LastUpdateTime time.Time              `json:"lastUpdateTime"`
+	CreatedAt      time.Time              `json:"createdAt"`
+	UpdatedAt      time.Time              `json:"updatedAt"`
+	Documents      []DocumentSummary      `json:"documents"`
+	Characters     []writer.Character     `json:"characters"`
+	Locations      []writer.Location      `json:"locations"`
+	Timeline       []writer.TimelineEvent `json:"timeline"`
 }
 
 // DocumentSummary 文档摘要

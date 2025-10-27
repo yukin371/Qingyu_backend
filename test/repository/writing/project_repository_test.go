@@ -1,7 +1,7 @@
 package writing_test
 
 import (
-	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/writer"
 	writingInterface "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/repository/mongodb/writing"
 	"Qingyu_backend/test/testutil"
@@ -22,13 +22,13 @@ func setupProjectRepo(t *testing.T) (writingInterface.ProjectRepository, context
 	return repo, ctx, cleanup
 }
 
-func createTestProject(authorID, title string) *document.Project {
-	return &document.Project{
+func createTestProject(authorID, title string) *writer.Project {
+	return &writer.Project{
 		AuthorID:   authorID,
 		Title:      title,
 		Summary:    "Test project summary",
-		Status:     document.StatusDraft,
-		Visibility: document.VisibilityPrivate,
+		Status:     writer.StatusDraft,
+		Visibility: writer.VisibilityPrivate,
 		Tags:       []string{"test", "novel"},
 		Category:   "fantasy",
 	}
@@ -46,8 +46,8 @@ func TestProjectRepository_Create(t *testing.T) {
 	assert.NotEmpty(t, project.ID)
 	assert.NotZero(t, project.CreatedAt)
 	assert.NotZero(t, project.UpdatedAt)
-	assert.Equal(t, document.StatusDraft, project.Status)
-	assert.Equal(t, document.VisibilityPrivate, project.Visibility)
+	assert.Equal(t, writer.StatusDraft, project.Status)
+	assert.Equal(t, writer.VisibilityPrivate, project.Visibility)
 	assert.True(t, project.Settings.AutoBackup)
 	assert.Equal(t, 24, project.Settings.BackupInterval)
 }
@@ -69,19 +69,19 @@ func TestProjectRepository_Create_MissingFields(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		project *document.Project
+		project *writer.Project
 		errMsg  string
 	}{
 		{
 			name: "Missing AuthorID",
-			project: &document.Project{
+			project: &writer.Project{
 				Title: "Test Project",
 			},
 			errMsg: "作者ID不能为空",
 		},
 		{
 			name: "Missing Title",
-			project: &document.Project{
+			project: &writer.Project{
 				AuthorID: "author123",
 			},
 			errMsg: "项目标题不能为空",
@@ -151,7 +151,7 @@ func TestProjectRepository_Update(t *testing.T) {
 	updates := map[string]interface{}{
 		"title":   "Updated Title",
 		"summary": "Updated Summary",
-		"status":  document.StatusSerializing,
+		"status":  writer.StatusSerializing,
 	}
 
 	err = repo.Update(ctx, project.ID, updates)
@@ -162,7 +162,7 @@ func TestProjectRepository_Update(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Title", retrieved.Title)
 	assert.Equal(t, "Updated Summary", retrieved.Summary)
-	assert.Equal(t, document.StatusSerializing, retrieved.Status)
+	assert.Equal(t, writer.StatusSerializing, retrieved.Status)
 }
 
 // 8. 测试更新不存在的项目
@@ -232,20 +232,20 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 
 	// 创建不同状态的项目
 	draftProject := createTestProject(authorID, "Draft Project")
-	draftProject.Status = document.StatusDraft
+	draftProject.Status = writer.StatusDraft
 	err := repo.Create(ctx, draftProject)
 	require.NoError(t, err)
 
 	serializingProject := createTestProject(authorID, "Serializing Project")
-	serializingProject.Status = document.StatusSerializing
+	serializingProject.Status = writer.StatusSerializing
 	err = repo.Create(ctx, serializingProject)
 	require.NoError(t, err)
 
 	// 查询草稿状态项目
-	projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(document.StatusDraft), 10, 0)
+	projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusDraft), 10, 0)
 	require.NoError(t, err)
 	assert.Len(t, projects, 1)
-	assert.Equal(t, document.StatusDraft, projects[0].Status)
+	assert.Equal(t, writer.StatusDraft, projects[0].Status)
 }
 
 // 12. 测试更新项目（根据所有者）
@@ -398,23 +398,23 @@ func TestProjectRepository_CountByStatus(t *testing.T) {
 	// 创建不同状态的项目
 	for i := 0; i < 2; i++ {
 		draftProject := createTestProject("author"+string(rune('1'+i)), "Draft "+string(rune('A'+i)))
-		draftProject.Status = document.StatusDraft
+		draftProject.Status = writer.StatusDraft
 		err := repo.Create(ctx, draftProject)
 		require.NoError(t, err)
 	}
 
 	completedProject := createTestProject("author3", "Completed")
-	completedProject.Status = document.StatusCompleted
+	completedProject.Status = writer.StatusCompleted
 	err := repo.Create(ctx, completedProject)
 	require.NoError(t, err)
 
 	// 统计草稿
-	count, err := repo.CountByStatus(ctx, string(document.StatusDraft))
+	count, err := repo.CountByStatus(ctx, string(writer.StatusDraft))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 
 	// 统计完成
-	count, err = repo.CountByStatus(ctx, string(document.StatusCompleted))
+	count, err = repo.CountByStatus(ctx, string(writer.StatusCompleted))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 }

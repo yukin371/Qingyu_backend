@@ -1,13 +1,14 @@
 package infrastructure
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/models/document"
+	authModel "Qingyu_backend/models/shared/auth"
 	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +25,7 @@ type TransactionManager interface {
 	// 获取事务上下文
 	GetTransactionContext(ctx context.Context) (TransactionContext, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -81,14 +82,14 @@ type TransactionAIRepository interface {
 
 // TransactionDocumentRepository 文档事务Repository接口
 type TransactionDocumentRepository interface {
-	CRUDRepository[*document.Document, string]
-	GetByProjectID(ctx context.Context, projectID string) ([]*document.Document, error)
+	CRUDRepository[*writer.Document, string]
+	GetByProjectID(ctx context.Context, projectID string) ([]*writer.Document, error)
 }
 
 // TransactionRoleRepository 角色事务Repository接口
 type TransactionRoleRepository interface {
-	CRUDRepository[*usersModel.Role, string]
-	GetDefaultRole(ctx context.Context) (*usersModel.Role, error)
+	CRUDRepository[*authModel.Role, string]
+	GetDefaultRole(ctx context.Context) (*authModel.Role, error)
 	AssignRole(ctx context.Context, userID, roleID string) error
 }
 

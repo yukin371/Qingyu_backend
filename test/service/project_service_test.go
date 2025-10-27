@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"testing"
 	"time"
@@ -9,10 +10,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/models/document"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 	"Qingyu_backend/service/project"
 )
 
@@ -21,17 +21,17 @@ type MockProjectRepository struct {
 	mock.Mock
 }
 
-func (m *MockProjectRepository) Create(ctx context.Context, project *document.Project) error {
+func (m *MockProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	args := m.Called(ctx, project)
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) GetByID(ctx context.Context, id string) (*document.Project, error) {
+func (m *MockProjectRepository) GetByID(ctx context.Context, id string) (*writer.Project, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*document.Project), args.Error(1)
+	return args.Get(0).(*writer.Project), args.Error(1)
 }
 
 func (m *MockProjectRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -44,25 +44,25 @@ func (m *MockProjectRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*document.Project, error) {
+func (m *MockProjectRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.Project, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Project), args.Error(1)
+	return args.Get(0).([]*writer.Project), args.Error(1)
 }
 
-func (m *MockProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*document.Project, error) {
+func (m *MockProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*writer.Project, error) {
 	args := m.Called(ctx, ownerID, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*document.Project), args.Error(1)
+	return args.Get(0).([]*writer.Project), args.Error(1)
 }
 
-func (m *MockProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*document.Project, error) {
+func (m *MockProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*writer.Project, error) {
 	args := m.Called(ctx, ownerID, status, limit, offset)
-	return args.Get(0).([]*document.Project), args.Error(1)
+	return args.Get(0).([]*writer.Project), args.Error(1)
 }
 
 func (m *MockProjectRepository) UpdateByOwner(ctx context.Context, projectID, ownerID string, updates map[string]interface{}) error {
@@ -100,7 +100,7 @@ func (m *MockProjectRepository) CountByStatus(ctx context.Context, status string
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProjectRepository) CreateWithTransaction(ctx context.Context, project *document.Project, callback func(ctx context.Context) error) error {
+func (m *MockProjectRepository) CreateWithTransaction(ctx context.Context, project *writer.Project, callback func(ctx context.Context) error) error {
 	args := m.Called(ctx, project, callback)
 	return args.Error(0)
 }
@@ -157,8 +157,8 @@ func TestProjectService_CreateProject(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "userID", "user123")
 
 	// 3. 设置Mock期望
-	mockProjectRepo.On("Create", mock.Anything, mock.AnythingOfType("*document.Project")).Return(nil).Run(func(args mock.Arguments) {
-		proj := args.Get(1).(*document.Project)
+	mockProjectRepo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Project")).Return(nil).Run(func(args mock.Arguments) {
+		proj := args.Get(1).(*writer.Project)
 		proj.ID = "project123"
 		proj.CreatedAt = time.Now()
 	})
@@ -233,11 +233,11 @@ func TestProjectService_GetProject(t *testing.T) {
 
 	// 测试获取存在的项目
 	t.Run("获取存在的项目", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:         "project123",
 			AuthorID:   "user123",
 			Title:      "测试项目",
-			Visibility: document.VisibilityPrivate,
+			Visibility: writer.VisibilityPrivate,
 		}
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
@@ -264,11 +264,11 @@ func TestProjectService_GetProject(t *testing.T) {
 
 	// 测试无权限访问私密项目
 	t.Run("无权限访问私密项目", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:         "project123",
 			AuthorID:   "other_user",
 			Title:      "他人项目",
-			Visibility: document.VisibilityPrivate,
+			Visibility: writer.VisibilityPrivate,
 		}
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
@@ -285,11 +285,11 @@ func TestProjectService_GetProject(t *testing.T) {
 
 	// 测试访问公开项目
 	t.Run("访问公开项目", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:         "project123",
 			AuthorID:   "other_user",
 			Title:      "公开项目",
-			Visibility: document.VisibilityPublic,
+			Visibility: writer.VisibilityPublic,
 		}
 
 		mockProjectRepo.On("GetByID", mock.Anything, "project123").Return(testProject, nil).Once()
@@ -313,7 +313,7 @@ func TestProjectService_ListMyProjects(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "userID", "user123")
 
 	t.Run("获取所有项目", func(t *testing.T) {
-		testProjects := []*document.Project{
+		testProjects := []*writer.Project{
 			{ID: "proj1", Title: "项目1"},
 			{ID: "proj2", Title: "项目2"},
 		}
@@ -335,8 +335,8 @@ func TestProjectService_ListMyProjects(t *testing.T) {
 	})
 
 	t.Run("按状态筛选", func(t *testing.T) {
-		testProjects := []*document.Project{
-			{ID: "proj1", Title: "项目1", Status: document.StatusDraft},
+		testProjects := []*writer.Project{
+			{ID: "proj1", Title: "项目1", Status: writer.StatusDraft},
 		}
 
 		mockProjectRepo.On("GetByOwnerAndStatus", mock.Anything, "user123", "draft", int64(10), int64(0)).Return(testProjects, nil).Once()
@@ -367,7 +367,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "userID", "user123")
 
 	t.Run("所有者更新成功", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "user123",
 			Title:    "原标题",
@@ -387,7 +387,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 	})
 
 	t.Run("非所有者无法更新", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "other_user",
 			Title:    "原标题",
@@ -410,14 +410,14 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	t.Run("编辑者可以更新", func(t *testing.T) {
 		now := time.Now()
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "other_user",
 			Title:    "原标题",
-			Collaborators: []document.Collaborator{
+			Collaborators: []writer.Collaborator{
 				{
 					UserID:     "user123",
-					Role:       document.RoleEditor,
+					Role:       writer.RoleEditor,
 					InvitedAt:  now,
 					AcceptedAt: &now,
 				},
@@ -451,7 +451,7 @@ func TestProjectService_DeleteProject(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "userID", "user123")
 
 	t.Run("所有者删除成功", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "user123",
 			Title:    "测试项目",
@@ -467,7 +467,7 @@ func TestProjectService_DeleteProject(t *testing.T) {
 	})
 
 	t.Run("非所有者无法删除", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "other_user",
 			Title:    "测试项目",
@@ -511,13 +511,13 @@ func TestProjectService_UpdateProjectStatistics(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("更新统计成功", func(t *testing.T) {
-		testProject := &document.Project{
+		testProject := &writer.Project{
 			ID:       "project123",
 			AuthorID: "user123",
 			Title:    "测试项目",
 		}
 
-		stats := &document.ProjectStats{
+		stats := &writer.ProjectStats{
 			TotalWords:    10000,
 			ChapterCount:  10,
 			DocumentCount: 20,

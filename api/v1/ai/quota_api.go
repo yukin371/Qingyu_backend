@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/ai"
 	aiService "Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
@@ -135,104 +134,43 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 	shared.Success(c, http.StatusOK, "获取成功", transactions)
 }
 
-// UpdateQuotaRequest 更新配额请求
-type UpdateQuotaRequest struct {
-	TotalQuota int    `json:"totalQuota" binding:"required,min=0"`
-	QuotaType  string `json:"quotaType" binding:"required,oneof=daily monthly total"`
+// RechargeRequest 充值请求
+type RechargeRequest struct {
+	Amount int    `json:"amount" binding:"required,gt=0"` // 充值数量（必须 > 0）
+	Reason string `json:"reason"`                         // 充值原因
 }
 
-// UpdateUserQuota 更新用户配额（管理员）
-// @Summary 更新用户配额
-// @Description 管理员更新指定用户的配额
+// RechargeQuota 用户自助充值配额（需要购买或兑换）
+// @Summary 配额充值
+// @Description 用户使用积分或购买充值配额
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Param userId path string true "用户ID"
-// @Param request body UpdateQuotaRequest true "配额信息"
+// @Param request body RechargeRequest true "充值请求"
 // @Success 200 {object} response.Response
-// @Router /api/v1/admin/quota/:userId [put]
-func (api *QuotaApi) UpdateUserQuota(c *gin.Context) {
-	targetUserID := c.Param("userId")
-	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+// @Router /api/v1/ai/quota/recharge [post]
+func (api *QuotaApi) RechargeQuota(c *gin.Context) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
 		return
 	}
 
-	var req UpdateQuotaRequest
+	var req RechargeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
 		return
 	}
 
-	// 转换配额类型
-	var quotaType ai.QuotaType
-	switch req.QuotaType {
-	case "daily":
-		quotaType = ai.QuotaTypeDaily
-	case "monthly":
-		quotaType = ai.QuotaTypeMonthly
-	case "total":
-		quotaType = ai.QuotaTypeTotal
-	default:
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的配额类型")
-		return
-	}
-
-	err := api.quotaService.UpdateUserQuota(c.Request.Context(), targetUserID, quotaType, req.TotalQuota)
+	// 调用充值服务
+	err := api.quotaService.RechargeQuota(c.Request.Context(), userID.(string), req.Amount, req.Reason, userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新配额失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "充值失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	shared.Success(c, http.StatusOK, "充值成功", nil)
 }
 
-// SuspendUserQuota 暂停用户配额（管理员）
-// @Summary 暂停用户配额
-// @Description 管理员暂停指定用户的配额
-// @Tags AI配额
-// @Accept json
-// @Produce json
-// @Param userId path string true "用户ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/admin/quota/:userId/suspend [post]
-func (api *QuotaApi) SuspendUserQuota(c *gin.Context) {
-	targetUserID := c.Param("userId")
-	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
-		return
-	}
-
-	err := api.quotaService.SuspendUserQuota(c.Request.Context(), targetUserID)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "暂停配额失败", err.Error())
-		return
-	}
-
-	shared.Success(c, http.StatusOK, "暂停成功", nil)
-}
-
-// ActivateUserQuota 激活用户配额（管理员）
-// @Summary 激活用户配额
-// @Description 管理员激活指定用户的配额
-// @Tags AI配额
-// @Accept json
-// @Produce json
-// @Param userId path string true "用户ID"
-// @Success 200 {object} response.Response
-// @Router /api/v1/admin/quota/:userId/activate [post]
-func (api *QuotaApi) ActivateUserQuota(c *gin.Context) {
-	targetUserID := c.Param("userId")
-	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
-		return
-	}
-
-	err := api.quotaService.ActivateUserQuota(c.Request.Context(), targetUserID)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "激活配额失败", err.Error())
-		return
-	}
-
-	shared.Success(c, http.StatusOK, "激活成功", nil)
-}
+// 注意：管理员配额管理功能已迁移到 admin 模块
+// 参见: api/v1/admin/quota_admin_api.go

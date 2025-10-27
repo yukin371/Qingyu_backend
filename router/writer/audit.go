@@ -1,14 +1,15 @@
 package writer
 
 import (
+	"Qingyu_backend/service/interfaces/audit"
+
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/service/interfaces"
 )
 
 // InitAuditRouter 初始化审核路由
-func InitAuditRouter(r *gin.RouterGroup, auditService interfaces.ContentAuditService) {
+func InitAuditRouter(r *gin.RouterGroup, auditService audit.ContentAuditService) {
 	auditApi := writer.NewAuditApi(auditService)
 
 	// 公开的审核接口（需要认证）

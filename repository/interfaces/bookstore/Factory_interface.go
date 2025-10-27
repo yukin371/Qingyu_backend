@@ -19,7 +19,7 @@ type BookstoreRepositoryFactory interface {
 	// 榜单相关Repository
 	GetRankingRepository() RankingRepository
 
-	// 基础设施方法
+	// Health 基础设施方法
 	Health(ctx context.Context) error
 	Close() error
 }

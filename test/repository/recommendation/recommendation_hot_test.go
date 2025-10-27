@@ -1,4 +1,4 @@
-package recommendation_test
+package recommendation
 
 import (
 	"context"

@@ -4,106 +4,27 @@
 package api
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	systemAPI "Qingyu_backend/api/v1/system"
+	userAPI "Qingyu_backend/api/v1/user"
 	usersModel "Qingyu_backend/models/users"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 	userService "Qingyu_backend/service/user"
 )
-
-// MockUserRepository User Repository Mock
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) Create(ctx context.Context, user *usersModel.User) error {
-	args := m.Called(ctx, user)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*usersModel.User, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*usersModel.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByUsername(ctx context.Context, username string) (*usersModel.User, error) {
-	args := m.Called(ctx, username)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*usersModel.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*usersModel.User, error) {
-	args := m.Called(ctx, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*usersModel.User), args.Error(1)
-}
-
-func (m *MockUserRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	args := m.Called(ctx, id, updates)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) Delete(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) List(ctx context.Context, page, pageSize int) ([]*usersModel.User, int64, error) {
-	args := m.Called(ctx, page, pageSize)
-	if args.Get(0) == nil {
-		return nil, 0, args.Error(2)
-	}
-	return args.Get(0).([]*usersModel.User), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockUserRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
-	args := m.Called(ctx, username)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	args := m.Called(ctx, email)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockUserRepository) UpdatePassword(ctx context.Context, id string, hashedPassword string) error {
-	args := m.Called(ctx, id, hashedPassword)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, id string, loginTime time.Time, ip string) error {
-	args := m.Called(ctx, id, loginTime, ip)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) Health(ctx context.Context) error {
-	args := m.Called(ctx)
-	return args.Error(0)
-}
 
 // UserAPITestSuite 用户API测试套件
 type UserAPITestSuite struct {
 	userService serviceInterfaces.UserService
-	userAPI     *systemAPI.UserAPI
+	userAPI     *userAPI.UserAPI
 	router      *gin.Engine
 	mockRepo    *MockUserRepository
 }
@@ -119,38 +40,30 @@ func setupUserAPITest(t *testing.T) *UserAPITestSuite {
 	userSvc := userService.NewUserService(mockRepo)
 
 	// 创建UserAPI
-	userAPI := systemAPI.NewUserAPI(userSvc)
+	api := userAPI.NewUserAPI(userSvc)
 
 	// 设置路由
 	router := gin.New()
 	router.Use(gin.Recovery())
 
 	// 公开路由
-	router.POST("/api/v1/register", userAPI.Register)
-	router.POST("/api/v1/login", userAPI.Login)
+	router.POST("/api/v1/register", api.Register)
+	router.POST("/api/v1/login", api.Login)
 
 	// 需要认证的路由
 	authenticated := router.Group("/api/v1")
 	authenticated.Use(mockAuthMiddleware())
 	{
-		authenticated.GET("/users/profile", userAPI.GetProfile)
-		authenticated.PUT("/users/profile", userAPI.UpdateProfile)
-		authenticated.PUT("/users/password", userAPI.ChangePassword)
+		authenticated.GET("/users/profile", api.GetProfile)
+		authenticated.PUT("/users/profile", api.UpdateProfile)
+		authenticated.PUT("/users/password", api.ChangePassword)
 
-		// 管理员路由
-		admin := authenticated.Group("/admin")
-		admin.Use(mockAdminMiddleware())
-		{
-			admin.GET("/users", userAPI.ListUsers)
-			admin.GET("/users/:id", userAPI.GetUser)
-			admin.PUT("/users/:id", userAPI.UpdateUser)
-			admin.DELETE("/users/:id", userAPI.DeleteUser)
-		}
+		// 注意：管理员路由已迁移到 admin 模块，这里暂时保留用于测试
 	}
 
 	return &UserAPITestSuite{
 		userService: userSvc,
-		userAPI:     userAPI,
+		userAPI:     api,
 		router:      router,
 		mockRepo:    mockRepo,
 	}

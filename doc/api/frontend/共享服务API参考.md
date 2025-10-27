@@ -1,7 +1,7 @@
 # 共享服务 API 参考
 
-> **版本**: v1.0  
-> **最后更新**: 2025-10-20  
+> **版本**: v1.3 ⭐️已更新  
+> **最后更新**: 2025-10-25  
 > **基础路径**: `/api/v1/shared`
 
 ---
@@ -27,6 +27,116 @@
 - ✅ 认证服务（登录、登出、Token 刷新）
 - ✅ 权限和角色管理
 - ✅ 管理员审核功能
+
+---
+
+## 1.3 统一响应格式 ⭐️v1.3更新
+
+### 成功响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 业务数据
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+### 错误响应
+```json
+{
+  "code": 400,
+  "message": "参数错误",
+  "error": "详细错误信息",
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+**新增字段说明**:
+- `timestamp`: Unix时间戳，服务器响应时间
+- `request_id`: 请求追踪ID，便于调试和日志追踪（可选字段）
+
+---
+
+## 1.4 TypeScript 类型定义 ⭐️v1.3新增
+
+```typescript
+// src/types/shared.ts
+import type { APIResponse, PaginatedResponse } from './api';
+
+// 钱包信息
+export interface WalletInfo {
+  userId: string;
+  balance: number;
+  frozenBalance: number;
+  totalIncome: number;
+  totalExpense: number;
+  currency: string;
+}
+
+// 交易记录
+export interface Transaction {
+  id: string;
+  userId: string;
+  type: 'recharge' | 'consume' | 'transfer' | 'withdraw';
+  amount: number;
+  balance: number;
+  reason: string;
+  status: 'pending' | 'success' | 'failed';
+  createdAt: string;
+}
+
+// 文件信息
+export interface FileInfo {
+  id: string;
+  filename: string;
+  originalName: string;
+  size: number;
+  mimeType: string;
+  url: string;
+  category: string;
+  uploadedAt: string;
+}
+
+// 提现申请
+export interface WithdrawRequest {
+  id: string;
+  userId: string;
+  amount: number;
+  account: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string;
+  createdAt: string;
+  processedAt?: string;
+}
+
+// API函数
+export const getWalletBalance = () => {
+  return request.get<APIResponse<{ balance: number }>>('/shared/wallet/balance');
+};
+
+export const recharge = (amount: number, method: string) => {
+  return request.post<APIResponse<Transaction>>('/shared/wallet/recharge', { amount, method });
+};
+
+export const uploadFile = (file: File, path?: string) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (path) formData.append('path', path);
+  
+  return request.post<APIResponse<FileInfo>>('/shared/storage/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
+
+export const getTransactionHistory = (params: { page?: number; page_size?: number; type?: string }) => {
+  return request.get<PaginatedResponse<Transaction>>('/shared/wallet/transactions', { params });
+};
+```
 
 ---
 

@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"fmt"
@@ -8,25 +9,24 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
 // BookStatisticsService 书籍统计服务接口
 type BookStatisticsService interface {
 	// 统计基础操作
-	CreateStatistics(ctx context.Context, stats *bookstore.BookStatistics) error
-	GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookStatistics, error)
-	GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookStatistics, error)
-	UpdateStatistics(ctx context.Context, stats *bookstore.BookStatistics) error
+	CreateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error
+	GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookStatistics, error)
+	GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore2.BookStatistics, error)
+	UpdateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error
 	DeleteStatistics(ctx context.Context, id primitive.ObjectID) error
 
 	// 统计数据查询
-	GetTopViewedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error)
-	GetTopFavoritedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error)
-	GetTopRatedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error)
-	GetHottestBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error)
-	GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore.BookStatistics, error)
+	GetTopViewedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error)
+	GetTopFavoritedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error)
+	GetTopRatedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error)
+	GetHottestBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error)
+	GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore2.BookStatistics, error)
 
 	// 统计数据更新
 	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
@@ -48,12 +48,12 @@ type BookStatisticsService interface {
 
 	// 聚合统计
 	GetAggregatedStatistics(ctx context.Context) (map[string]interface{}, error)
-	GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore.BookStatistics, error)
+	GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore2.BookStatistics, error)
 	GetBookPopularityLevel(ctx context.Context, bookID primitive.ObjectID) (string, error)
 
 	// 批量操作
 	BatchUpdateViewCount(ctx context.Context, bookIDs []primitive.ObjectID, increment int64) error
-	BatchCreateStatistics(ctx context.Context, statsList []*bookstore.BookStatistics) error
+	BatchCreateStatistics(ctx context.Context, statsList []*bookstore2.BookStatistics) error
 	BatchDeleteStatistics(ctx context.Context, bookIDs []primitive.ObjectID) error
 
 	// 统计报告
@@ -62,8 +62,8 @@ type BookStatisticsService interface {
 	GenerateMonthlyReport(ctx context.Context, year int, month int) (map[string]interface{}, error)
 
 	// 搜索和过滤
-	SearchStatistics(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookStatistics, int64, error)
-	GetStatisticsByFilter(ctx context.Context, filter *BookstoreRepo.BookStatisticsFilter, page, pageSize int) ([]*bookstore.BookStatistics, int64, error)
+	SearchStatistics(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookStatistics, int64, error)
+	GetStatisticsByFilter(ctx context.Context, filter *BookstoreRepo.BookStatisticsFilter, page, pageSize int) ([]*bookstore2.BookStatistics, int64, error)
 }
 
 // BookStatisticsServiceImpl 书籍统计服务实现
@@ -81,7 +81,7 @@ func NewBookStatisticsService(statsRepo BookstoreRepo.BookStatisticsRepository, 
 }
 
 // CreateStatistics 创建统计数据
-func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats *bookstore.BookStatistics) error {
+func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error {
 	if stats == nil {
 		return errors.New("statistics cannot be nil")
 	}
@@ -112,7 +112,7 @@ func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats 
 }
 
 // GetStatisticsByID 根据ID获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookStatistics, error) {
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
 		if cachedStats, err := s.cacheService.GetBookStatistics(ctx, id.Hex()); err == nil && cachedStats != nil {
@@ -138,7 +138,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id pr
 }
 
 // GetStatisticsByBookID 根据书籍ID获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore2.BookStatistics, error) {
 	if bookID.IsZero() {
 		return nil, errors.New("book ID cannot be empty")
 	}
@@ -158,7 +158,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 
 	// 如果不存在，创建默认统计数据
 	if stats == nil {
-		stats = &bookstore.BookStatistics{
+		stats = &bookstore2.BookStatistics{
 			BookID:             bookID,
 			ViewCount:          0,
 			FavoriteCount:      0,
@@ -183,7 +183,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 }
 
 // UpdateStatistics 更新统计数据
-func (s *BookStatisticsServiceImpl) UpdateStatistics(ctx context.Context, stats *bookstore.BookStatistics) error {
+func (s *BookStatisticsServiceImpl) UpdateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error {
 	if stats == nil {
 		return errors.New("statistics cannot be nil")
 	}
@@ -236,7 +236,7 @@ func (s *BookStatisticsServiceImpl) DeleteStatistics(ctx context.Context, id pri
 }
 
 // GetTopViewedBooks 获取浏览量最高的书籍
-func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error) {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
@@ -245,13 +245,13 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 	if s.cacheService != nil {
 		if cachedBooks, err := s.cacheService.GetTopViewedBooks(ctx); err == nil && len(cachedBooks) > 0 {
 			// 将 []*bookstore.Book 转换为 []*bookstore.BookStatistics
-			var result []*bookstore.BookStatistics
+			var result []*bookstore2.BookStatistics
 			for _, book := range cachedBooks {
 				if len(result) >= limit {
 					break
 				}
 				// 这里需要根据实际情况转换，暂时返回空的统计数据
-				stats := &bookstore.BookStatistics{
+				stats := &bookstore2.BookStatistics{
 					BookID: book.ID,
 				}
 				result = append(result, stats)
@@ -268,10 +268,10 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 
 	// 缓存结果 - 需要将统计数据转换为书籍数据进行缓存
 	if s.cacheService != nil {
-		var booksForCache []*bookstore.Book
+		var booksForCache []*bookstore2.Book
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
-			book := &bookstore.Book{
+			book := &bookstore2.Book{
 				ID: stats.BookID,
 			}
 			booksForCache = append(booksForCache, book)
@@ -283,7 +283,7 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 }
 
 // GetTopFavoritedBooks 获取收藏量最高的书籍
-func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error) {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
@@ -292,13 +292,13 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 	if s.cacheService != nil {
 		if cachedBooks, err := s.cacheService.GetTopFavoritedBooks(ctx); err == nil && len(cachedBooks) > 0 {
 			// 将 []*bookstore.Book 转换为 []*bookstore.BookStatistics
-			var result []*bookstore.BookStatistics
+			var result []*bookstore2.BookStatistics
 			for _, book := range cachedBooks {
 				if len(result) >= limit {
 					break
 				}
 				// 这里需要根据实际情况转换，暂时返回空的统计数据
-				stats := &bookstore.BookStatistics{
+				stats := &bookstore2.BookStatistics{
 					BookID: book.ID,
 				}
 				result = append(result, stats)
@@ -315,10 +315,10 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 
 	// 缓存结果 - 需要将统计数据转换为书籍数据进行缓存
 	if s.cacheService != nil {
-		var booksForCache []*bookstore.Book
+		var booksForCache []*bookstore2.Book
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
-			book := &bookstore.Book{
+			book := &bookstore2.Book{
 				ID: stats.BookID,
 			}
 			booksForCache = append(booksForCache, book)
@@ -330,7 +330,7 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 }
 
 // GetTopRatedBooks 获取评分最高的书籍
-func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error) {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
@@ -339,13 +339,13 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 	if s.cacheService != nil {
 		if cachedBooks, err := s.cacheService.GetTopRatedBooks(ctx); err == nil && len(cachedBooks) > 0 {
 			// 将 []*bookstore.Book 转换为 []*bookstore.BookStatistics
-			var result []*bookstore.BookStatistics
+			var result []*bookstore2.BookStatistics
 			for _, book := range cachedBooks {
 				if len(result) >= limit {
 					break
 				}
 				// 这里需要根据实际情况转换，暂时返回空的统计数据
-				stats := &bookstore.BookStatistics{
+				stats := &bookstore2.BookStatistics{
 					BookID: book.ID,
 				}
 				result = append(result, stats)
@@ -362,10 +362,10 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 
 	// 缓存结果 - 需要将统计数据转换为书籍数据进行缓存
 	if s.cacheService != nil {
-		var booksForCache []*bookstore.Book
+		var booksForCache []*bookstore2.Book
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
-			book := &bookstore.Book{
+			book := &bookstore2.Book{
 				ID: stats.BookID,
 			}
 			booksForCache = append(booksForCache, book)
@@ -377,7 +377,7 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 }
 
 // GetHottestBooks 获取最热门的书籍
-func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit int) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error) {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
@@ -386,13 +386,13 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 	if s.cacheService != nil {
 		if cachedBooks, err := s.cacheService.GetHottestBooks(ctx); err == nil && len(cachedBooks) > 0 {
 			// 将 []*bookstore.Book 转换为 []*bookstore.BookStatistics
-			var result []*bookstore.BookStatistics
+			var result []*bookstore2.BookStatistics
 			for _, book := range cachedBooks {
 				if len(result) >= limit {
 					break
 				}
 				// 这里需要根据实际情况转换，暂时返回空的统计数据
-				stats := &bookstore.BookStatistics{
+				stats := &bookstore2.BookStatistics{
 					BookID: book.ID,
 				}
 				result = append(result, stats)
@@ -409,10 +409,10 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 
 	// 缓存结果 - 需要将统计数据转换为书籍数据进行缓存
 	if s.cacheService != nil {
-		var booksForCache []*bookstore.Book
+		var booksForCache []*bookstore2.Book
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
-			book := &bookstore.Book{
+			book := &bookstore2.Book{
 				ID: stats.BookID,
 			}
 			booksForCache = append(booksForCache, book)
@@ -424,7 +424,7 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 }
 
 // GetTrendingBooks 获取趋势书籍
-func (s *BookStatisticsServiceImpl) GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore2.BookStatistics, error) {
 	if days < 1 || days > 30 {
 		days = 7
 	}
@@ -762,7 +762,7 @@ func (s *BookStatisticsServiceImpl) GetAggregatedStatistics(ctx context.Context)
 }
 
 // GetStatisticsByTimeRange 根据时间范围获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore2.BookStatistics, error) {
 	if startTime.After(endTime) {
 		return nil, errors.New("start time cannot be after end time")
 	}
@@ -824,7 +824,7 @@ func (s *BookStatisticsServiceImpl) BatchUpdateViewCount(ctx context.Context, bo
 }
 
 // BatchCreateStatistics 批量创建统计数据
-func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, statsList []*bookstore.BookStatistics) error {
+func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, statsList []*bookstore2.BookStatistics) error {
 	if len(statsList) == 0 {
 		return errors.New("statistics list cannot be empty")
 	}
@@ -975,7 +975,7 @@ func (s *BookStatisticsServiceImpl) GenerateMonthlyReport(ctx context.Context, y
 }
 
 // SearchStatistics 搜索统计数据
-func (s *BookStatisticsServiceImpl) SearchStatistics(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.BookStatistics, int64, error) {
+func (s *BookStatisticsServiceImpl) SearchStatistics(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookStatistics, int64, error) {
 	if keyword == "" {
 		return nil, 0, errors.New("keyword cannot be empty")
 	}
@@ -1004,7 +1004,7 @@ func (s *BookStatisticsServiceImpl) SearchStatistics(ctx context.Context, keywor
 }
 
 // GetStatisticsByFilter 根据过滤条件获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByFilter(ctx context.Context, filter *BookstoreRepo.BookStatisticsFilter, page, pageSize int) ([]*bookstore.BookStatistics, int64, error) {
+func (s *BookStatisticsServiceImpl) GetStatisticsByFilter(ctx context.Context, filter *BookstoreRepo.BookStatisticsFilter, page, pageSize int) ([]*bookstore2.BookStatistics, int64, error) {
 	if filter == nil {
 		return nil, 0, errors.New("filter cannot be nil")
 	}
@@ -1027,7 +1027,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByFilter(ctx context.Context, f
 }
 
 // invalidateRelatedCache 清除相关缓存
-func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, stats *bookstore.BookStatistics) {
+func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, stats *bookstore2.BookStatistics) {
 	if s.cacheService == nil {
 		return
 	}

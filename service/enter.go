@@ -1,12 +1,11 @@
 package service
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 
-	repoInterfaces "Qingyu_backend/repository/interfaces"
 	"Qingyu_backend/service/container"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // ServiceManager 服务管理器
@@ -14,17 +13,19 @@ import (
 var ServiceManager *container.ServiceContainer
 
 // InitializeServices 初始化所有服务
-func InitializeServices(repositoryFactory repoInterfaces.RepositoryFactory) error {
-	// 创建服务容器
-	ServiceManager = container.NewServiceContainer(repositoryFactory)
+// ServiceContainer会自动创建MongoDB连接和Repository工厂
+func InitializeServices() error {
+	// 创建服务容器（不再需要提供repository factory）
+	ServiceManager = container.NewServiceContainer()
 
-	// 设置默认服务
-	if err := ServiceManager.SetupDefaultServices(); err != nil {
+	// 先初始化容器（创建MongoDB连接和Repository工厂）
+	// 这会自动创建MongoDB连接和Repository工厂
+	if err := ServiceManager.Initialize(context.Background()); err != nil {
 		return err
 	}
 
-	// 初始化所有服务
-	if err := ServiceManager.Initialize(context.Background()); err != nil {
+	// 然后设置默认服务（此时repositoryFactory已经初始化）
+	if err := ServiceManager.SetupDefaultServices(); err != nil {
 		return err
 	}
 

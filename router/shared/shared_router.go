@@ -6,11 +6,21 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/shared/container"
+	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/shared/storage"
+	"Qingyu_backend/service/shared/wallet"
 )
 
 // RegisterRoutes 注册共享服务路由
-func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServiceContainer) {
+// 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
+func RegisterRoutes(
+	r *gin.RouterGroup,
+	authService auth.AuthService,
+	walletService wallet.WalletService,
+	storageService *storage.StorageServiceImpl,
+	multipartService *storage.MultipartUploadService,
+	imageProcessor *storage.ImageProcessor,
+) {
 	// 应用全局中间件
 	r.Use(middleware.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
 	r.Use(middleware.ResponseTimingMiddleware())    // 响应时间记录
@@ -19,10 +29,10 @@ func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServic
 	r.Use(response.GzipMiddleware(5))               // Gzip压缩（压缩级别5）
 
 	// 创建API处理器
-	authAPI := shared.NewAuthAPI(serviceContainer.AuthService())
-	walletAPI := shared.NewWalletAPI(serviceContainer.WalletService())
-	storageAPI := shared.NewStorageAPI(serviceContainer.StorageService())
-	adminAPI := shared.NewAdminAPI(serviceContainer.AdminService())
+	authAPI := shared.NewAuthAPI(authService)
+	walletAPI := shared.NewWalletAPI(walletService)
+	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)
+	// 注意：AdminAPI已迁移到 admin 模块
 
 	// ============ 认证服务路由 ============
 	authGroup := r.Group("/auth")
@@ -76,26 +86,9 @@ func RegisterRoutes(r *gin.RouterGroup, serviceContainer *container.SharedServic
 		storageGroup.DELETE("/files/:file_id", storageAPI.DeleteFile)
 		storageGroup.GET("/files/:file_id", storageAPI.GetFileInfo)
 		storageGroup.GET("/files", storageAPI.ListFiles)
-		storageGroup.GET("/files/:file_id/url", storageAPI.GetFileURL)
+		storageGroup.GET("/files/:file_id/url", storageAPI.GetDownloadURL)
 	}
 
-	// ============ 管理服务路由 ============
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(middleware.JWTAuth())                    // 所有管理接口都需要认证
-	adminGroup.Use(middleware.AdminPermissionMiddleware())  // 管理员权限验证
-	adminGroup.Use(middleware.RateLimitMiddleware(100, 60)) // 100次/分钟（管理员权限更高）
-	{
-		// 内容审核
-		adminGroup.GET("/reviews/pending", adminAPI.GetPendingReviews)
-		adminGroup.POST("/reviews", adminAPI.ReviewContent)
-
-		// 提现审核
-		adminGroup.POST("/withdraw/review", adminAPI.ReviewWithdraw)
-
-		// 用户管理
-		adminGroup.GET("/users/:user_id/statistics", adminAPI.GetUserStatistics)
-
-		// 操作日志
-		adminGroup.GET("/operation-logs", adminAPI.GetOperationLogs)
-	}
+	// 注意：管理员路由已迁移到 /api/v1/admin
+	// 参见: router/admin/admin_router.go
 }

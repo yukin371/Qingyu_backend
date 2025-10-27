@@ -1,6 +1,8 @@
 package user
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	user2 "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 	"time"
@@ -8,7 +10,8 @@ import (
 	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
+
+	"go.uber.org/zap"
 )
 
 // UserServiceImpl 用户服务实现
@@ -19,7 +22,7 @@ type UserServiceImpl struct {
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repoInterfaces.UserRepository) serviceInterfaces.UserService {
+func NewUserService(userRepo repoInterfaces.UserRepository) user2.UserService {
 	return &UserServiceImpl{
 		userRepo: userRepo,
 		name:     "UserService",
@@ -53,7 +56,7 @@ func (s *UserServiceImpl) GetVersion() string {
 }
 
 // CreateUser 创建用户
-func (s *UserServiceImpl) CreateUser(ctx context.Context, req *serviceInterfaces.CreateUserRequest) (*serviceInterfaces.CreateUserResponse, error) {
+func (s *UserServiceImpl) CreateUser(ctx context.Context, req *user2.CreateUserRequest) (*user2.CreateUserResponse, error) {
 	// 1. 验证请求数据
 	if err := s.validateCreateUserRequest(req); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "请求数据验证失败", err)
@@ -93,13 +96,13 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *serviceInterfaces
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 
-	return &serviceInterfaces.CreateUserResponse{
+	return &user2.CreateUserResponse{
 		User: user,
 	}, nil
 }
 
 // GetUser 获取用户
-func (s *UserServiceImpl) GetUser(ctx context.Context, req *serviceInterfaces.GetUserRequest) (*serviceInterfaces.GetUserResponse, error) {
+func (s *UserServiceImpl) GetUser(ctx context.Context, req *user2.GetUserRequest) (*user2.GetUserResponse, error) {
 	// 1. 验证请求数据
 	if req.ID == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
@@ -114,13 +117,13 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, req *serviceInterfaces.Ge
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
 	}
 
-	return &serviceInterfaces.GetUserResponse{
+	return &user2.GetUserResponse{
 		User: user,
 	}, nil
 }
 
 // UpdateUser 更新用户
-func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces.UpdateUserRequest) (*serviceInterfaces.UpdateUserResponse, error) {
+func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *user2.UpdateUserRequest) (*user2.UpdateUserResponse, error) {
 	// 1. 验证请求数据
 	if req.ID == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
@@ -143,14 +146,19 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *serviceInterfaces
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户失败", err)
 	}
 
-	return &serviceInterfaces.UpdateUserResponse{
-		Updated:   true,
-		UpdatedAt: time.Now(),
+	// 4. 获取更新后的用户信息
+	updatedUser, err := s.userRepo.GetByID(ctx, req.ID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取更新后的用户信息失败", err)
+	}
+
+	return &user2.UpdateUserResponse{
+		User: *updatedUser,
 	}, nil
 }
 
 // DeleteUser 删除用户
-func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces.DeleteUserRequest) (*serviceInterfaces.DeleteUserResponse, error) {
+func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *user2.DeleteUserRequest) (*user2.DeleteUserResponse, error) {
 	// 1. 验证请求数据
 	if req.ID == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
@@ -170,14 +178,14 @@ func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *serviceInterfaces
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "删除用户失败", err)
 	}
 
-	return &serviceInterfaces.DeleteUserResponse{
+	return &user2.DeleteUserResponse{
 		Deleted:   true,
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 // ListUsers 列出用户
-func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.ListUsersRequest) (*serviceInterfaces.ListUsersResponse, error) {
+func (s *UserServiceImpl) ListUsers(ctx context.Context, req *user2.ListUsersRequest) (*user2.ListUsersResponse, error) {
 	// 1. 构建过滤器
 	filter := repoInterfaces.UserFilter{
 		Username: req.Username,
@@ -214,7 +222,7 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.
 	// 6. 计算总页数
 	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
 
-	return &serviceInterfaces.ListUsersResponse{
+	return &user2.ListUsersResponse{
 		Users:      userList,
 		Total:      total,
 		Page:       req.Page,
@@ -224,7 +232,7 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *serviceInterfaces.
 }
 
 // RegisterUser 注册用户
-func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfaces.RegisterUserRequest) (*serviceInterfaces.RegisterUserResponse, error) {
+func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterUserRequest) (*user2.RegisterUserResponse, error) {
 	// 1. 验证请求数据
 	if err := s.validateRegisterUserRequest(req); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "请求数据验证失败", err)
@@ -272,32 +280,46 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *serviceInterfac
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
 
-	return &serviceInterfaces.RegisterUserResponse{
+	return &user2.RegisterUserResponse{
 		User:  user,
 		Token: token,
 	}, nil
 }
 
 // LoginUser 登录用户
-func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.LoginUserRequest) (*serviceInterfaces.LoginUserResponse, error) {
+func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserRequest) (*user2.LoginUserResponse, error) {
 	// 1. 验证请求数据
 	if req.Username == "" || req.Password == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户名和密码不能为空", nil)
 	}
 
+	// DEBUG: 记录登录尝试
+	zap.L().Debug("登录尝试", zap.String("username", req.Username))
+
 	// 2. 获取用户
 	user, err := s.userRepo.GetByUsername(ctx, req.Username)
 	if err != nil {
+		zap.L().Debug("获取用户失败", zap.Error(err))
 		if repoInterfaces.IsNotFoundError(err) {
 			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
 		}
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
 	}
 
+	zap.L().Debug("用户找到",
+		zap.String("user_id", user.ID),
+		zap.String("username", user.Username),
+		zap.String("status", string(user.Status)))
+	zap.L().Debug("密码哈希", zap.String("hash_prefix", user.Password[:20]+"..."))
+	zap.L().Debug("输入密码", zap.String("password", req.Password))
+
 	// 3. 验证密码
 	if !user.ValidatePassword(req.Password) {
+		zap.L().Debug("密码验证失败")
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
 	}
+
+	zap.L().Debug("密码验证成功")
 
 	// 4. 检查用户状态
 	switch user.Status {
@@ -338,7 +360,11 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 	ip := "unknown" // TODO: 从 context 中获取客户端 IP
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
-		fmt.Printf("更新最后登录时间失败: %v\n", err)
+		zap.L().Warn("更新最后登录时间失败",
+			zap.String("user_id", user.ID),
+			zap.String("ip", ip),
+			zap.Error(err),
+		)
 	}
 
 	// 6. 生成JWT令牌
@@ -347,32 +373,32 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *serviceInterfaces.
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
 
-	return &serviceInterfaces.LoginUserResponse{
+	return &user2.LoginUserResponse{
 		User:  user,
 		Token: token,
 	}, nil
 }
 
 // LogoutUser 登出用户
-func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *serviceInterfaces.LogoutUserRequest) (*serviceInterfaces.LogoutUserResponse, error) {
+func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserRequest) (*user2.LogoutUserResponse, error) {
 	// 这里简化处理，实际应该将令牌加入黑名单
 	// TODO: 实现JWT令牌黑名单机制
-	return &serviceInterfaces.LogoutUserResponse{
+	return &user2.LogoutUserResponse{
 		Success: true,
 	}, nil
 }
 
 // ValidateToken 验证令牌
-func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *serviceInterfaces.ValidateTokenRequest) (*serviceInterfaces.ValidateTokenResponse, error) {
+func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *user2.ValidateTokenRequest) (*user2.ValidateTokenResponse, error) {
 	// 这里简化处理，实际应该验证JWT令牌
 	// TODO: 实现JWT令牌验证
-	return &serviceInterfaces.ValidateTokenResponse{
+	return &user2.ValidateTokenResponse{
 		Valid: false, // 暂时返回false
 	}, nil
 }
 
 // UpdateLastLogin 更新最后登录时间
-func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *serviceInterfaces.UpdateLastLoginRequest) (*serviceInterfaces.UpdateLastLoginResponse, error) {
+func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *user2.UpdateLastLoginRequest) (*user2.UpdateLastLoginResponse, error) {
 	// 1. 验证请求数据
 	if req.ID == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
@@ -385,13 +411,13 @@ func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *serviceInter
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新最后登录时间失败", err)
 	}
 
-	return &serviceInterfaces.UpdateLastLoginResponse{
+	return &user2.UpdateLastLoginResponse{
 		Updated: true,
 	}, nil
 }
 
 // UpdatePassword 更新密码
-func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *serviceInterfaces.UpdatePasswordRequest) (*serviceInterfaces.UpdatePasswordResponse, error) {
+func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *user2.UpdatePasswordRequest) (*user2.UpdatePasswordResponse, error) {
 	// 1. 验证请求数据
 	if err := s.validateUpdatePasswordRequest(req); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "请求数据验证失败", err)
@@ -422,13 +448,13 @@ func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *serviceInterf
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
 	}
 
-	return &serviceInterfaces.UpdatePasswordResponse{
+	return &user2.UpdatePasswordResponse{
 		Updated: true,
 	}, nil
 }
 
 // ResetPassword 重置密码
-func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *serviceInterfaces.ResetPasswordRequest) (*serviceInterfaces.ResetPasswordResponse, error) {
+func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPasswordRequest) (*user2.ResetPasswordResponse, error) {
 	// 1. 验证请求数据
 	if req.Email == "" {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "邮箱不能为空", nil)
@@ -439,7 +465,7 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *serviceInterfa
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
 			// 为了安全，即使用户不存在也返回成功
-			return &serviceInterfaces.ResetPasswordResponse{
+			return &user2.ResetPasswordResponse{
 				Success: true,
 			}, nil
 		}
@@ -460,39 +486,39 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *serviceInterfa
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
 	}
 
-	return &serviceInterfaces.ResetPasswordResponse{
+	return &user2.ResetPasswordResponse{
 		Success: true,
 	}, nil
 }
 
 // AssignRole 分配角色
-func (s *UserServiceImpl) AssignRole(ctx context.Context, req *serviceInterfaces.AssignRoleRequest) (*serviceInterfaces.AssignRoleResponse, error) {
+func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
 	// TODO: 实现角色分配逻辑
-	return &serviceInterfaces.AssignRoleResponse{
+	return &user2.AssignRoleResponse{
 		Assigned: false, // 暂时返回false
 	}, nil
 }
 
 // RemoveRole 移除角色
-func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *serviceInterfaces.RemoveRoleRequest) (*serviceInterfaces.RemoveRoleResponse, error) {
+func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
 	// TODO: 实现角色移除逻辑
-	return &serviceInterfaces.RemoveRoleResponse{
+	return &user2.RemoveRoleResponse{
 		Removed: false, // 暂时返回false
 	}, nil
 }
 
 // GetUserRoles 获取用户角色
-func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *serviceInterfaces.GetUserRolesRequest) (*serviceInterfaces.GetUserRolesResponse, error) {
+func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
 	// TODO: 实现获取用户角色逻辑
-	return &serviceInterfaces.GetUserRolesResponse{
+	return &user2.GetUserRolesResponse{
 		Roles: []string{}, // 暂时返回空列表
 	}, nil
 }
 
 // GetUserPermissions 获取用户权限
-func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *serviceInterfaces.GetUserPermissionsRequest) (*serviceInterfaces.GetUserPermissionsResponse, error) {
+func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
 	// TODO: 实现获取用户权限逻辑
-	return &serviceInterfaces.GetUserPermissionsResponse{
+	return &user2.GetUserPermissionsResponse{
 		Permissions: []string{}, // 暂时返回空列表
 	}, nil
 }
@@ -500,7 +526,7 @@ func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *serviceIn
 // 私有方法
 
 // validateCreateUserRequest 验证创建用户请求
-func (s *UserServiceImpl) validateCreateUserRequest(req *serviceInterfaces.CreateUserRequest) error {
+func (s *UserServiceImpl) validateCreateUserRequest(req *user2.CreateUserRequest) error {
 	if req.Username == "" {
 		return fmt.Errorf("用户名不能为空")
 	}
@@ -514,7 +540,7 @@ func (s *UserServiceImpl) validateCreateUserRequest(req *serviceInterfaces.Creat
 }
 
 // validateRegisterUserRequest 验证注册用户请求
-func (s *UserServiceImpl) validateRegisterUserRequest(req *serviceInterfaces.RegisterUserRequest) error {
+func (s *UserServiceImpl) validateRegisterUserRequest(req *user2.RegisterUserRequest) error {
 	if req.Username == "" {
 		return fmt.Errorf("用户名不能为空")
 	}
@@ -528,7 +554,7 @@ func (s *UserServiceImpl) validateRegisterUserRequest(req *serviceInterfaces.Reg
 }
 
 // validateUpdatePasswordRequest 验证更新密码请求
-func (s *UserServiceImpl) validateUpdatePasswordRequest(req *serviceInterfaces.UpdatePasswordRequest) error {
+func (s *UserServiceImpl) validateUpdatePasswordRequest(req *user2.UpdatePasswordRequest) error {
 	if req.ID == "" {
 		return fmt.Errorf("用户ID不能为空")
 	}
