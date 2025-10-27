@@ -615,21 +615,46 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
-	// 5.4 其他共享服务（暂未实现Repository）
-	// TODO: MessagingService - 需要 Redis/RabbitMQ 等消息队列客户端
-	//   messagingSvc := messaging.NewMessagingService(queueClient)
-	//   c.messagingService = messagingSvc
-	//   if err := c.RegisterService("MessagingService", messagingSvc); err != nil { ... }
-	//
-	// TODO: StorageService - 需要 StorageBackend 和 FileRepository
-	//   storageSvc := storage.NewStorageService(backend, fileRepo)
-	//   c.storageService = storageSvc
-	//   if err := c.RegisterService("StorageService", storageSvc); err != nil { ... }
-	//
-	// TODO: AdminService - 需要 AuditRepository, LogRepository, UserRepository
-	//   adminSvc := admin.NewAdminService(auditRepo, logRepo, userRepo)
-	//   c.adminService = adminSvc
-	//   if err := c.RegisterService("AdminService", adminSvc); err != nil { ... }
+	// 5.4 StorageService
+	// TODO(Phase2): 创建StorageBackend（MinIO/Local）
+	// storageRepo := c.repositoryFactory.CreateStorageRepository()
+	// backend := storage.NewLocalBackend("./uploads") // 或 MinIO backend
+	// storageSvc := storage.NewStorageService(backend, storageRepo)
+	// c.storageService = storageSvc
+	// if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
+	// 	if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
+	// 		return fmt.Errorf("注册存储服务失败: %w", err)
+	// 	}
+	// }
+
+	// 5.5 AdminService
+	// TODO(Phase2): AdminService需要额外的LogRepository，当前AdminRepository已实现
+	// adminRepo := c.repositoryFactory.CreateAdminRepository()
+	// adminSvc := admin.NewAdminService(adminRepo, adminRepo, c.userRepository)
+	// c.adminService = adminSvc
+	// if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
+	// 	if err := c.RegisterService("AdminService", baseAdminSvc); err != nil {
+	// 		return fmt.Errorf("注册管理服务失败: %w", err)
+	// 	}
+	// }
+
+	// 5.6 MessagingService
+	// TODO(Phase2): MessagingService需要QueueClient（Redis/RabbitMQ）
+	// messageRepo := c.repositoryFactory.CreateMessageRepository()
+	// if c.redisClient != nil {
+	// 	queueClient := messaging.NewRedisQueueClient(c.redisClient)
+	// 	messagingSvc := messaging.NewMessagingService(queueClient, messageRepo)
+	// 	c.messagingService = messagingSvc
+	// 	if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
+	// 		if err := c.RegisterService("MessagingService", baseMessagingSvc); err != nil {
+	// 			return fmt.Errorf("注册消息服务失败: %w", err)
+	// 		}
+	// 	}
+	// } else {
+	// 	fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
+	// }
+
+	fmt.Println("提示: StorageService、AdminService、MessagingService将在Task 2.1-2.3中完整实现并注册")
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
