@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
-// StatsService 统计Service
-type StatsService struct {
+// ReadingStatsService 阅读统计服务
+// 职责：书籍、章节、读者行为统计
+// 领域：Reading/Bookstore业务域
+type ReadingStatsService struct {
 	chapterStatsRepo   statsRepo.ChapterStatsRepository
 	readerBehaviorRepo statsRepo.ReaderBehaviorRepository
 	bookStatsRepo      statsRepo.BookStatsRepository
@@ -18,23 +20,23 @@ type StatsService struct {
 	version            string
 }
 
-// NewStatsService 创建统计Service
-func NewStatsService(
+// NewReadingStatsService 创建阅读统计服务
+func NewReadingStatsService(
 	chapterStatsRepo statsRepo.ChapterStatsRepository,
 	readerBehaviorRepo statsRepo.ReaderBehaviorRepository,
 	bookStatsRepo statsRepo.BookStatsRepository,
-) *StatsService {
-	return &StatsService{
+) *ReadingStatsService {
+	return &ReadingStatsService{
 		chapterStatsRepo:   chapterStatsRepo,
 		readerBehaviorRepo: readerBehaviorRepo,
 		bookStatsRepo:      bookStatsRepo,
-		serviceName:        "StatsService",
+		serviceName:        "ReadingStatsService",
 		version:            "1.0.0",
 	}
 }
 
 // CalculateChapterStats 计算章节统计数据
-func (s *StatsService) CalculateChapterStats(ctx context.Context, chapterID string) (*stats.ChapterStats, error) {
+func (s *ReadingStatsService) CalculateChapterStats(ctx context.Context, chapterID string) (*stats.ChapterStats, error) {
 	// 1. 获取基础统计
 	uniqueReaders, err := s.readerBehaviorRepo.CountUniqueReadersByChapter(ctx, chapterID)
 	if err != nil {
@@ -91,7 +93,7 @@ func (s *StatsService) CalculateChapterStats(ctx context.Context, chapterID stri
 }
 
 // CalculateBookStats 计算作品统计数据
-func (s *StatsService) CalculateBookStats(ctx context.Context, bookID string) (*stats.BookStats, error) {
+func (s *ReadingStatsService) CalculateBookStats(ctx context.Context, bookID string) (*stats.BookStats, error) {
 	// 1. 统计独立读者数
 	uniqueReaders, err := s.readerBehaviorRepo.CountUniqueReaders(ctx, bookID)
 	if err != nil {
@@ -169,7 +171,7 @@ func (s *StatsService) CalculateBookStats(ctx context.Context, bookID string) (*
 }
 
 // GenerateHeatmap 生成阅读热力图
-func (s *StatsService) GenerateHeatmap(ctx context.Context, bookID string) ([]*stats.HeatmapPoint, error) {
+func (s *ReadingStatsService) GenerateHeatmap(ctx context.Context, bookID string) ([]*stats.HeatmapPoint, error) {
 	// 调用Repository层生成热力图
 	heatmap, err := s.chapterStatsRepo.GenerateHeatmap(ctx, bookID)
 	if err != nil {
@@ -209,12 +211,12 @@ func (s *StatsService) GenerateHeatmap(ctx context.Context, bookID string) ([]*s
 }
 
 // CalculateCompletionRate 计算完读率
-func (s *StatsService) CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error) {
+func (s *ReadingStatsService) CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error) {
 	return s.readerBehaviorRepo.CalculateCompletionRate(ctx, chapterID)
 }
 
 // CalculateDropOffPoints 计算跳出点
-func (s *StatsService) CalculateDropOffPoints(ctx context.Context, bookID string) ([]*stats.ChapterStatsAggregate, error) {
+func (s *ReadingStatsService) CalculateDropOffPoints(ctx context.Context, bookID string) ([]*stats.ChapterStatsAggregate, error) {
 	// 获取跳出率最高的章节
 	dropOffChapters, err := s.chapterStatsRepo.GetHighestDropOffChapters(ctx, bookID, 10)
 	if err != nil {
@@ -225,22 +227,22 @@ func (s *StatsService) CalculateDropOffPoints(ctx context.Context, bookID string
 }
 
 // GetTimeRangeStats 获取时间范围统计
-func (s *StatsService) GetTimeRangeStats(ctx context.Context, bookID string, startDate, endDate time.Time) (*stats.TimeRangeStats, error) {
+func (s *ReadingStatsService) GetTimeRangeStats(ctx context.Context, bookID string, startDate, endDate time.Time) (*stats.TimeRangeStats, error) {
 	return s.chapterStatsRepo.GetTimeRangeStats(ctx, bookID, startDate, endDate)
 }
 
 // GetRevenueBreakdown 获取收入细分
-func (s *StatsService) GetRevenueBreakdown(ctx context.Context, bookID string, startDate, endDate time.Time) (*stats.RevenueBreakdown, error) {
+func (s *ReadingStatsService) GetRevenueBreakdown(ctx context.Context, bookID string, startDate, endDate time.Time) (*stats.RevenueBreakdown, error) {
 	return s.bookStatsRepo.GetRevenueBreakdown(ctx, bookID, startDate, endDate)
 }
 
 // GetTopChapters 获取热门章节
-func (s *StatsService) GetTopChapters(ctx context.Context, bookID string) (*stats.TopChapters, error) {
+func (s *ReadingStatsService) GetTopChapters(ctx context.Context, bookID string) (*stats.TopChapters, error) {
 	return s.bookStatsRepo.GetTopChapters(ctx, bookID)
 }
 
 // RecordReaderBehavior 记录读者行为
-func (s *StatsService) RecordReaderBehavior(ctx context.Context, behavior *stats.ReaderBehavior) error {
+func (s *ReadingStatsService) RecordReaderBehavior(ctx context.Context, behavior *stats.ReaderBehavior) error {
 	// 设置创建时间
 	behavior.CreatedAt = time.Now()
 
@@ -266,12 +268,12 @@ func (s *StatsService) RecordReaderBehavior(ctx context.Context, behavior *stats
 }
 
 // CalculateRetention 计算留存率
-func (s *StatsService) CalculateRetention(ctx context.Context, bookID string, days int) (float64, error) {
+func (s *ReadingStatsService) CalculateRetention(ctx context.Context, bookID string, days int) (float64, error) {
 	return s.readerBehaviorRepo.CalculateRetention(ctx, bookID, days)
 }
 
 // GetDailyStats 获取每日统计
-func (s *StatsService) GetDailyStats(ctx context.Context, bookID string, days int) ([]*stats.BookStatsDaily, error) {
+func (s *ReadingStatsService) GetDailyStats(ctx context.Context, bookID string, days int) ([]*stats.BookStatsDaily, error) {
 	endDate := time.Now()
 	startDate := endDate.AddDate(0, 0, -days)
 
@@ -284,7 +286,7 @@ func (s *StatsService) GetDailyStats(ctx context.Context, bookID string, days in
 }
 
 // AnalyzeTrend 分析趋势
-func (s *StatsService) AnalyzeTrend(ctx context.Context, bookID string, metric string, days int) (string, error) {
+func (s *ReadingStatsService) AnalyzeTrend(ctx context.Context, bookID string, metric string, days int) (string, error) {
 	switch metric {
 	case "view":
 		return s.bookStatsRepo.AnalyzeViewTrend(ctx, bookID, days)
@@ -296,7 +298,7 @@ func (s *StatsService) AnalyzeTrend(ctx context.Context, bookID string, metric s
 }
 
 // CalculateAvgRevenuePerUser 计算用户平均贡献
-func (s *StatsService) CalculateAvgRevenuePerUser(ctx context.Context, bookID string) (float64, error) {
+func (s *ReadingStatsService) CalculateAvgRevenuePerUser(ctx context.Context, bookID string) (float64, error) {
 	// 获取总收入
 	totalRevenue, err := s.bookStatsRepo.CalculateTotalRevenue(ctx, bookID)
 	if err != nil {
@@ -321,7 +323,7 @@ func (s *StatsService) CalculateAvgRevenuePerUser(ctx context.Context, bookID st
 }
 
 // Health 健康检查
-func (s *StatsService) Health(ctx context.Context) error {
+func (s *ReadingStatsService) Health(ctx context.Context) error {
 	// 检查所有Repository的健康状态
 	if err := s.chapterStatsRepo.Health(ctx); err != nil {
 		return fmt.Errorf("章节统计Repository健康检查失败: %w", err)
@@ -339,11 +341,11 @@ func (s *StatsService) Health(ctx context.Context) error {
 }
 
 // GetServiceName 获取服务名称
-func (s *StatsService) GetServiceName() string {
+func (s *ReadingStatsService) GetServiceName() string {
 	return s.serviceName
 }
 
 // GetVersion 获取服务版本
-func (s *StatsService) GetVersion() string {
+func (s *ReadingStatsService) GetVersion() string {
 	return s.version
 }

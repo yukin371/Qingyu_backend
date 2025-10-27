@@ -6,8 +6,10 @@ import (
 	"time"
 )
 
-// StatsService 数据统计服务接口
-type StatsService interface {
+// PlatformStatsService 平台统计服务接口
+// 职责：跨业务域的聚合统计、平台级数据分析
+// 领域：Platform/Shared
+type PlatformStatsService interface {
 	// 用户统计
 	GetUserStats(ctx context.Context, userID string) (*UserStats, error)
 	GetPlatformUserStats(ctx context.Context, startDate, endDate time.Time) (*PlatformUserStats, error)
@@ -26,19 +28,24 @@ type StatsService interface {
 	Health(ctx context.Context) error
 }
 
-// StatsServiceImpl 统计服务实现
-type StatsServiceImpl struct {
+// PlatformStatsServiceImpl 平台统计服务实现
+type PlatformStatsServiceImpl struct {
 	// TODO(Phase3): 注入实际的Repository
 	// userRepo    userRepo.UserRepository
 	// bookRepo    bookstoreRepo.BookRepository
 	// projectRepo writingRepo.ProjectRepository
 	// walletRepo  userRepo.WalletRepository
+
+	// TODO(Phase3): 可以组合其他领域的StatsService
+	// readingStatsService *reading.ReadingStatsService
+	// userStatsService    *user.UserStatsService
+
 	initialized bool
 }
 
-// NewStatsService 创建统计服务
-func NewStatsService() StatsService {
-	return &StatsServiceImpl{}
+// NewPlatformStatsService 创建平台统计服务
+func NewPlatformStatsService() PlatformStatsService {
+	return &PlatformStatsServiceImpl{}
 }
 
 // ============ 用户统计 ============
@@ -60,7 +67,7 @@ type UserStats struct {
 }
 
 // GetUserStats 获取用户统计
-func (s *StatsServiceImpl) GetUserStats(ctx context.Context, userID string) (*UserStats, error) {
+func (s *PlatformStatsServiceImpl) GetUserStats(ctx context.Context, userID string) (*UserStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -96,7 +103,7 @@ type PlatformUserStats struct {
 }
 
 // GetPlatformUserStats 获取平台用户统计
-func (s *StatsServiceImpl) GetPlatformUserStats(ctx context.Context, startDate, endDate time.Time) (*PlatformUserStats, error) {
+func (s *PlatformStatsServiceImpl) GetPlatformUserStats(ctx context.Context, startDate, endDate time.Time) (*PlatformUserStats, error) {
 	// TODO(Phase3): 实现实际的聚合查询
 	stats := &PlatformUserStats{
 		TotalUsers:       10000,
@@ -127,7 +134,7 @@ type ContentStats struct {
 }
 
 // GetContentStats 获取内容统计
-func (s *StatsServiceImpl) GetContentStats(ctx context.Context, userID string) (*ContentStats, error) {
+func (s *PlatformStatsServiceImpl) GetContentStats(ctx context.Context, userID string) (*ContentStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -161,7 +168,7 @@ type PlatformContentStats struct {
 }
 
 // GetPlatformContentStats 获取平台内容统计
-func (s *StatsServiceImpl) GetPlatformContentStats(ctx context.Context, startDate, endDate time.Time) (*PlatformContentStats, error) {
+func (s *PlatformStatsServiceImpl) GetPlatformContentStats(ctx context.Context, startDate, endDate time.Time) (*PlatformContentStats, error) {
 	// TODO(Phase3): 实现实际的聚合查询
 	stats := &PlatformContentStats{
 		TotalBooks:        5000,
@@ -196,7 +203,7 @@ type DailyAction struct {
 }
 
 // GetUserActivityStats 获取用户活跃度统计
-func (s *StatsServiceImpl) GetUserActivityStats(ctx context.Context, userID string, days int) (*ActivityStats, error) {
+func (s *PlatformStatsServiceImpl) GetUserActivityStats(ctx context.Context, userID string, days int) (*ActivityStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -245,7 +252,7 @@ type DailyRevenue struct {
 }
 
 // GetRevenueStats 获取收益统计
-func (s *StatsServiceImpl) GetRevenueStats(ctx context.Context, userID string, startDate, endDate time.Time) (*RevenueStats, error) {
+func (s *PlatformStatsServiceImpl) GetRevenueStats(ctx context.Context, userID string, startDate, endDate time.Time) (*RevenueStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -278,13 +285,13 @@ func (s *StatsServiceImpl) GetRevenueStats(ctx context.Context, userID string, s
 // ============ BaseService接口实现 ============
 
 // Initialize 初始化服务
-func (s *StatsServiceImpl) Initialize(ctx context.Context) error {
+func (s *PlatformStatsServiceImpl) Initialize(ctx context.Context) error {
 	s.initialized = true
 	return nil
 }
 
 // Health 健康检查
-func (s *StatsServiceImpl) Health(ctx context.Context) error {
+func (s *PlatformStatsServiceImpl) Health(ctx context.Context) error {
 	if !s.initialized {
 		return fmt.Errorf("service not initialized")
 	}
@@ -292,18 +299,18 @@ func (s *StatsServiceImpl) Health(ctx context.Context) error {
 }
 
 // Close 关闭服务
-func (s *StatsServiceImpl) Close(ctx context.Context) error {
+func (s *PlatformStatsServiceImpl) Close(ctx context.Context) error {
 	s.initialized = false
 	return nil
 }
 
 // GetServiceName 获取服务名称
-func (s *StatsServiceImpl) GetServiceName() string {
-	return "StatsService"
+func (s *PlatformStatsServiceImpl) GetServiceName() string {
+	return "PlatformStatsService"
 }
 
 // GetVersion 获取服务版本
-func (s *StatsServiceImpl) GetVersion() string {
+func (s *PlatformStatsServiceImpl) GetVersion() string {
 	return "v1.0.0"
 }
 
