@@ -247,6 +247,21 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 	return mongoShared.NewRecommendationRepository(f.database)
 }
 
+// CreateStorageRepository 创建存储Repository
+func (f *MongoRepositoryFactory) CreateStorageRepository() sharedRepo.StorageRepository {
+	return NewMongoStorageRepository(f.database)
+}
+
+// CreateAdminRepository 创建管理后台Repository
+func (f *MongoRepositoryFactory) CreateAdminRepository() sharedRepo.AdminRepository {
+	return mongoShared.NewMongoAdminRepository(f.database)
+}
+
+// CreateMessageRepository 创建消息Repository
+func (f *MongoRepositoryFactory) CreateMessageRepository() sharedRepo.MessageRepository {
+	return mongoShared.NewMongoMessageRepository(f.database)
+}
+
 // ========== AI Module Repositories ==========
 
 // CreateQuotaRepository 创建配额Repository
