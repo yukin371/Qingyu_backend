@@ -2,13 +2,13 @@ package writer
 
 import (
 	"Qingyu_backend/api/v1/writer"
-	statsService "Qingyu_backend/service/stats"
+	readingStats "Qingyu_backend/service/reading/stats"
 
 	"github.com/gin-gonic/gin"
 )
 
-// InitStatsRouter 初始化统计路由
-func InitStatsRouter(r *gin.RouterGroup, service *statsService.StatsService) {
+// InitStatsRouter 初始化统计路由（阅读/书店统计）
+func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService) {
 	// 创建API实例
 	statsApi := writer.NewStatsApi(service)
 

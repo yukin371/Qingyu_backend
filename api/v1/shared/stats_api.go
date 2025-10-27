@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// StatsAPI 统计API处理器
+// StatsAPI 平台统计API处理器
+// 注意：这个API处理平台级别的统计
 type StatsAPI struct {
-	statsService stats.StatsService
+	statsService stats.PlatformStatsService
 }
 
 // NewStatsAPI 创建统计API实例
-func NewStatsAPI(statsService stats.StatsService) *StatsAPI {
+func NewStatsAPI(statsService stats.PlatformStatsService) *StatsAPI {
 	return &StatsAPI{
 		statsService: statsService,
 	}
