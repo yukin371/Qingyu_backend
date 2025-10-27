@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// TODO: 实现 BaseService 接口方法 (Initialize, Health, Close, GetServiceName, GetVersion)
 // TODO: 完善文件上传功能（分片上传、断点续传）
 // TODO: 完善文件下载功能（断点续传、流式下载）
 // TODO: 添加图片处理功能（压缩、裁剪、水印）
@@ -21,8 +20,9 @@ import (
 
 // StorageServiceImpl 存储服务实现
 type StorageServiceImpl struct {
-	backend  StorageBackend
-	fileRepo FileRepository
+	backend     StorageBackend
+	fileRepo    FileRepository
+	initialized bool // 初始化标志
 }
 
 // StorageBackend 存储后端接口
@@ -235,19 +235,6 @@ func (s *StorageServiceImpl) GetDownloadURL(ctx context.Context, fileID string, 
 	return url, nil
 }
 
-// ============ 健康检查 ============
-
-// Health 健康检查
-func (s *StorageServiceImpl) Health(ctx context.Context) error {
-	// 检查存储后端是否可用
-	exists, err := s.backend.Exists(ctx, "health_check")
-	if err != nil {
-		return fmt.Errorf("存储后端不可用: %w", err)
-	}
-	_ = exists
-	return nil
-}
-
 // ============ 辅助方法 ============
 
 // calculateMD5 计算文件MD5
@@ -283,4 +270,57 @@ func generateFileID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化服务
+func (s *StorageServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.backend == nil {
+		return fmt.Errorf("backend is nil")
+	}
+	if s.fileRepo == nil {
+		return fmt.Errorf("fileRepo is nil")
+	}
+
+	// 初始化完成
+	s.initialized = true
+	return nil
+}
+
+// Health 健康检查
+func (s *StorageServiceImpl) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	// 检查存储后端是否可用
+	exists, err := s.backend.Exists(ctx, "health_check")
+	if err != nil {
+		return fmt.Errorf("存储后端不可用: %w", err)
+	}
+	_ = exists
+	return nil
+}
+
+// Close 关闭服务，清理资源
+func (s *StorageServiceImpl) Close(ctx context.Context) error {
+	// 存储服务暂无需要清理的资源
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *StorageServiceImpl) GetServiceName() string {
+	return "StorageService"
+}
+
+// GetVersion 获取服务版本
+func (s *StorageServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }

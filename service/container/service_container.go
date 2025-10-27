@@ -588,11 +588,33 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	//
 	// 注意：完整实现需要 Redis 客户端，暂时跳过，留待后续配置
 
-	// 5.3 其他共享服务（暂未实现）
-	// TODO: RecommendationService - 需要 RecommendationRepository 和 Redis
-	// TODO: MessagingService - 需要 Redis/RabbitMQ 等消息队列
+	// 5.3 创建 RecommendationService
+	recRepo := c.repositoryFactory.CreateRecommendationRepository()
+	recSvc := recommendation.NewRecommendationService(recRepo, c.redisClient)
+	c.recommendationService = recSvc
+
+	// 类型断言为 BaseService，以便注册到服务映射
+	if baseRecSvc, ok := recSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("RecommendationService", baseRecSvc); err != nil {
+			return fmt.Errorf("注册推荐服务失败: %w", err)
+		}
+	}
+
+	// 5.4 其他共享服务（暂未实现Repository）
+	// TODO: MessagingService - 需要 Redis/RabbitMQ 等消息队列客户端
+	//   messagingSvc := messaging.NewMessagingService(queueClient)
+	//   c.messagingService = messagingSvc
+	//   if err := c.RegisterService("MessagingService", messagingSvc); err != nil { ... }
+	//
 	// TODO: StorageService - 需要 StorageBackend 和 FileRepository
+	//   storageSvc := storage.NewStorageService(backend, fileRepo)
+	//   c.storageService = storageSvc
+	//   if err := c.RegisterService("StorageService", storageSvc); err != nil { ... }
+	//
 	// TODO: AdminService - 需要 AuditRepository, LogRepository, UserRepository
+	//   adminSvc := admin.NewAdminService(auditRepo, logRepo, userRepo)
+	//   c.adminService = adminSvc
+	//   if err := c.RegisterService("AdminService", adminSvc); err != nil { ... }
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
