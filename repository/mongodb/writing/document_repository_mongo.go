@@ -1,6 +1,7 @@
 package writing
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/document"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	writingInterface "Qingyu_backend/repository/interfaces/writing"
 )
@@ -30,7 +30,7 @@ func NewMongoDocumentRepository(db *mongo.Database) writingInterface.DocumentRep
 }
 
 // Create 创建文档
-func (r *MongoDocumentRepository) Create(ctx context.Context, doc *document.Document) error {
+func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Document) error {
 	if doc == nil {
 		return fmt.Errorf("文档对象不能为空")
 	}
@@ -58,8 +58,8 @@ func (r *MongoDocumentRepository) Create(ctx context.Context, doc *document.Docu
 }
 
 // GetByID 根据ID获取文档
-func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*document.Document, error) {
-	var doc document.Document
+func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writer.Document, error) {
+	var doc writer.Document
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -129,7 +129,7 @@ func (r *MongoDocumentRepository) Delete(ctx context.Context, id string) error {
 }
 
 // List 查询文档列表
-func (r *MongoDocumentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*document.Document, error) {
+func (r *MongoDocumentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.Document, error) {
 	mongoFilter := bson.M{"deleted_at": nil}
 
 	// 如果有筛选条件，合并条件
@@ -153,7 +153,7 @@ func (r *MongoDocumentRepository) List(ctx context.Context, filter infrastructur
 	}
 	defer cursor.Close(ctx)
 
-	var documents []*document.Document
+	var documents []*writer.Document
 	if err = cursor.All(ctx, &documents); err != nil {
 		return nil, fmt.Errorf("解析文档数据失败: %w", err)
 	}
@@ -199,7 +199,7 @@ func (r *MongoDocumentRepository) Count(ctx context.Context, filter infrastructu
 }
 
 // GetByProjectID 获取项目的所有文档
-func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*document.Document, error) {
+func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.Document, error) {
 	filter := bson.M{
 		"project_id": projectID,
 		"deleted_at": nil,
@@ -219,7 +219,7 @@ func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID 
 	}
 	defer cursor.Close(ctx)
 
-	var documents []*document.Document
+	var documents []*writer.Document
 	if err = cursor.All(ctx, &documents); err != nil {
 		return nil, fmt.Errorf("解析文档数据失败: %w", err)
 	}
@@ -228,7 +228,7 @@ func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID 
 }
 
 // GetByProjectAndType 按项目和类型查询文档
-func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*document.Document, error) {
+func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*writer.Document, error) {
 	filter := bson.M{
 		"project_id": projectID,
 		"type":       documentType,
@@ -246,7 +246,7 @@ func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, proje
 	}
 	defer cursor.Close(ctx)
 
-	var documents []*document.Document
+	var documents []*writer.Document
 	if err = cursor.All(ctx, &documents); err != nil {
 		return nil, fmt.Errorf("解析文档数据失败: %w", err)
 	}
@@ -427,7 +427,7 @@ func (r *MongoDocumentRepository) CountByProject(ctx context.Context, projectID 
 }
 
 // CreateWithTransaction 在事务中创建文档
-func (r *MongoDocumentRepository) CreateWithTransaction(ctx context.Context, doc *document.Document, callback func(ctx context.Context) error) error {
+func (r *MongoDocumentRepository) CreateWithTransaction(ctx context.Context, doc *writer.Document, callback func(ctx context.Context) error) error {
 	session, err := r.db.Client().StartSession()
 	if err != nil {
 		return fmt.Errorf("启动事务失败: %w", err)

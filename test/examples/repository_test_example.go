@@ -75,7 +75,7 @@ func (r *ExampleUserRepository) Delete(ctx context.Context, id string) error {
 
 // ============ Table-Driven Repository测试示例 ============
 
-func TestUserRepository_Create_TableDriven(t *testing.T) {
+func TestuserrepositoryCreateTabledriven(t *testing.T) {
 	// 使用工厂创建测试数据
 	userFactory := fixtures.NewUserFactory()
 
@@ -129,7 +129,7 @@ func TestUserRepository_Create_TableDriven(t *testing.T) {
 
 // ============ CRUD操作完整测试示例 ============
 
-func TestUserRepository_CRUD_Complete(t *testing.T) {
+func TestuserrepositoryCrudComplete(t *testing.T) {
 	// Arrange
 	repo, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -203,7 +203,7 @@ func TestUserRepository_CRUD_Complete(t *testing.T) {
 
 // ============ 数据准备和清理示例 ============
 
-func TestUserRepository_WithDataPreparation(t *testing.T) {
+func TestuserrepositoryWithdatapreparation(t *testing.T) {
 	// Arrange: 准备测试数据
 	repo, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -249,7 +249,7 @@ func TestUserRepository_WithDataPreparation(t *testing.T) {
 
 // ============ 批量操作测试示例 ============
 
-func TestUserRepository_BatchOperations(t *testing.T) {
+func TestuserrepositoryBatchoperations(t *testing.T) {
 	repo, cleanup := setupTestDB(t)
 	defer cleanup()
 
@@ -295,7 +295,7 @@ func TestUserRepository_BatchOperations(t *testing.T) {
 
 // ============ 边界条件测试示例 ============
 
-func TestUserRepository_EdgeCases(t *testing.T) {
+func TestuserrepositoryEdgecases(t *testing.T) {
 	repo, cleanup := setupTestDB(t)
 	defer cleanup()
 
@@ -331,7 +331,7 @@ func TestUserRepository_EdgeCases(t *testing.T) {
 
 // ============ 并发测试示例 ============
 
-func TestUserRepository_Concurrent(t *testing.T) {
+func TestuserrepositoryConcurrent(t *testing.T) {
 	if testing.Short() {
 		t.Skip("跳过并发测试")
 	}
@@ -364,7 +364,7 @@ func TestUserRepository_Concurrent(t *testing.T) {
 
 // ============ 性能基准测试示例 ============
 
-func BenchmarkUserRepository_Create(b *testing.B) {
+func BenchmarkuserrepositoryCreate(b *testing.B) {
 	repo, cleanup := setupTestDB(&testing.T{})
 	defer cleanup()
 
@@ -378,7 +378,7 @@ func BenchmarkUserRepository_Create(b *testing.B) {
 	}
 }
 
-func BenchmarkUserRepository_GetByID(b *testing.B) {
+func BenchmarkuserrepositoryGetbyid(b *testing.B) {
 	repo, cleanup := setupTestDB(&testing.T{})
 	defer cleanup()
 

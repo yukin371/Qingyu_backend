@@ -4,6 +4,7 @@
 package api
 
 import (
+	readerModel "Qingyu_backend/models/reader"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -18,7 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerAPI "Qingyu_backend/api/v1/reader"
-	readerModel "Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 	"Qingyu_backend/test/testutil"
 )

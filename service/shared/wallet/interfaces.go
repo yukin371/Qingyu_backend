@@ -31,7 +31,7 @@ type WalletService interface {
 	RejectWithdraw(ctx context.Context, withdrawID, adminID, reason string) error
 	ProcessWithdraw(ctx context.Context, withdrawID string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

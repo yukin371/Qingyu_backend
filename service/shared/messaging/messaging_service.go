@@ -7,9 +7,14 @@ import (
 	"time"
 )
 
+// TODO: 完善消息队列功能（消息持久化、重试机制、死信队列）
+// TODO: 添加消息优先级支持
+// TODO: 实现消息批量发送和接收
+
 // MessagingServiceImpl 消息服务实现
 type MessagingServiceImpl struct {
 	queueClient QueueClient // Redis队列客户端
+	initialized bool        // 初始化标志
 }
 
 // QueueClient 队列客户端接口（Redis）
@@ -163,10 +168,30 @@ func (s *MessagingServiceImpl) ListTopics(ctx context.Context) ([]string, error)
 	return s.queueClient.ListStreams(ctx)
 }
 
-// ============ 健康检查 ============
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化服务
+func (s *MessagingServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.queueClient == nil {
+		return fmt.Errorf("queueClient is nil")
+	}
+
+	// 初始化完成
+	s.initialized = true
+	return nil
+}
 
 // Health 健康检查
 func (s *MessagingServiceImpl) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
 	// 尝试发布一条测试消息
 	testMsg := map[string]interface{}{
 		"type": "health_check",
@@ -175,4 +200,21 @@ func (s *MessagingServiceImpl) Health(ctx context.Context) error {
 
 	_, err := s.queueClient.Publish(ctx, "health_check", testMsg)
 	return err
+}
+
+// Close 关闭服务，清理资源
+func (s *MessagingServiceImpl) Close(ctx context.Context) error {
+	// 消息服务暂无需要清理的资源
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *MessagingServiceImpl) GetServiceName() string {
+	return "MessagingService"
+}
+
+// GetVersion 获取服务版本
+func (s *MessagingServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }

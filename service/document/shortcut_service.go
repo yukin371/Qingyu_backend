@@ -1,10 +1,10 @@
 package document
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"time"
 
-	"Qingyu_backend/models/document"
 	pkgErrors "Qingyu_backend/pkg/errors"
 )
 
@@ -21,7 +21,7 @@ func NewShortcutService() *ShortcutService {
 }
 
 // GetUserShortcuts 获取用户快捷键配置
-func (s *ShortcutService) GetUserShortcuts(ctx context.Context, userID string) (*document.ShortcutConfig, error) {
+func (s *ShortcutService) GetUserShortcuts(ctx context.Context, userID string) (*writer.ShortcutConfig, error) {
 	// 1. 参数验证
 	if userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "用户ID不能为空", "", nil)
@@ -34,9 +34,9 @@ func (s *ShortcutService) GetUserShortcuts(ctx context.Context, userID string) (
 	// }
 
 	// 3. 如果用户没有自定义配置，返回默认配置
-	config := &document.ShortcutConfig{
+	config := &writer.ShortcutConfig{
 		UserID:    userID,
-		Shortcuts: document.GetDefaultShortcuts(),
+		Shortcuts: writer.GetDefaultShortcuts(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -45,7 +45,7 @@ func (s *ShortcutService) GetUserShortcuts(ctx context.Context, userID string) (
 }
 
 // UpdateUserShortcuts 更新用户快捷键配置
-func (s *ShortcutService) UpdateUserShortcuts(ctx context.Context, userID string, shortcuts map[string]document.Shortcut) error {
+func (s *ShortcutService) UpdateUserShortcuts(ctx context.Context, userID string, shortcuts map[string]writer.Shortcut) error {
 	// 1. 参数验证
 	if userID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "用户ID不能为空", "", nil)
@@ -90,7 +90,7 @@ func (s *ShortcutService) ResetUserShortcuts(ctx context.Context, userID string)
 }
 
 // GetShortcutHelp 获取快捷键帮助（按分类）
-func (s *ShortcutService) GetShortcutHelp(ctx context.Context, userID string) ([]document.ShortcutCategory, error) {
+func (s *ShortcutService) GetShortcutHelp(ctx context.Context, userID string) ([]writer.ShortcutCategory, error) {
 	// 1. 获取用户快捷键配置
 	config, err := s.GetUserShortcuts(ctx, userID)
 	if err != nil {
@@ -98,13 +98,13 @@ func (s *ShortcutService) GetShortcutHelp(ctx context.Context, userID string) ([
 	}
 
 	// 2. 按分类整理
-	categories := document.GetShortcutsByCategory(config.Shortcuts)
+	categories := writer.GetShortcutsByCategory(config.Shortcuts)
 
 	return categories, nil
 }
 
 // validateShortcuts 验证快捷键配置
-func (s *ShortcutService) validateShortcuts(shortcuts map[string]document.Shortcut) error {
+func (s *ShortcutService) validateShortcuts(shortcuts map[string]writer.Shortcut) error {
 	// 1. 检查是否有重复的按键组合
 	usedKeys := make(map[string]string)
 	for action, shortcut := range shortcuts {

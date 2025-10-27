@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	user2 "Qingyu_backend/service/interfaces/user"
 	"context"
 	"testing"
 
@@ -11,7 +12,6 @@ import (
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/service/user"
 	"Qingyu_backend/test/testutil"
 )
@@ -214,7 +214,7 @@ func TestUserService_LoginUser_ActiveStatus_Success(t *testing.T) {
 	mockRepo.On("UpdateLastLogin", ctx, activeUser.ID, mock.Anything).Return(nil)
 
 	// Act
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "activeuser",
 		Password: "password123",
 	})
@@ -246,7 +246,7 @@ func TestUserService_LoginUser_InactiveStatus_Rejected(t *testing.T) {
 	mockRepo.On("GetByUsername", ctx, "inactiveuser").Return(inactiveUser, nil)
 
 	// Act
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "inactiveuser",
 		Password: "password123",
 	})
@@ -278,7 +278,7 @@ func TestUserService_LoginUser_BannedStatus_Rejected(t *testing.T) {
 	mockRepo.On("GetByUsername", ctx, "banneduser").Return(bannedUser, nil)
 
 	// Act
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "banneduser",
 		Password: "password123",
 	})
@@ -310,7 +310,7 @@ func TestUserService_LoginUser_DeletedStatus_Rejected(t *testing.T) {
 	mockRepo.On("GetByUsername", ctx, "deleteduser").Return(deletedUser, nil)
 
 	// Act
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "deleteduser",
 		Password: "password123",
 	})
@@ -340,7 +340,7 @@ func TestUserService_LoginUser_WrongPassword(t *testing.T) {
 	mockRepo.On("GetByUsername", ctx, "normaluser").Return(activeUser, nil)
 
 	// Act - 使用错误的密码
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "normaluser",
 		Password: "wrong_password",
 	})
@@ -364,7 +364,7 @@ func TestUserService_LoginUser_UserNotFound(t *testing.T) {
 	mockRepo.On("GetByUsername", ctx, "nonexistent").Return((*users.User)(nil), notFoundErr)
 
 	// Act
-	resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+	resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 		Username: "nonexistent",
 		Password: "password123",
 	})
@@ -434,7 +434,7 @@ func TestUserService_LoginUser_AllStatuses(t *testing.T) {
 			}
 
 			// Act
-			resp, err := service.LoginUser(ctx, &interfaces.LoginUserRequest{
+			resp, err := service.LoginUser(ctx, &user2.LoginUserRequest{
 				Username: "testuser",
 				Password: "password123",
 			})

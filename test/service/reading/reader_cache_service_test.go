@@ -1,6 +1,7 @@
 package reading
 
 import (
+	reader2 "Qingyu_backend/models/reader"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/service/reading"
 )
 
@@ -22,8 +22,8 @@ func setupReaderCacheMock(prefix string) (reading.ReaderCacheService, redismock.
 }
 
 // createTestChapter 创建测试用章节
-func createTestChapter(chapterID string) *reader.Chapter {
-	return &reader.Chapter{
+func createTestChapter(chapterID string) *reader2.Chapter {
+	return &reader2.Chapter{
 		ID:      chapterID,
 		BookID:  "book123",
 		Title:   "第一章",
@@ -33,8 +33,8 @@ func createTestChapter(chapterID string) *reader.Chapter {
 }
 
 // createTestProgress 创建测试用阅读进度
-func createTestProgress(userID, bookID string) *reader.ReadingProgress {
-	return &reader.ReadingProgress{
+func createTestProgress(userID, bookID string) *reader2.ReadingProgress {
+	return &reader2.ReadingProgress{
 		ID:          "progress123",
 		UserID:      userID,
 		BookID:      bookID,
@@ -48,8 +48,8 @@ func createTestProgress(userID, bookID string) *reader.ReadingProgress {
 }
 
 // createTestReadingSettings 创建测试用阅读设置
-func createTestReadingSettings(userID string) *reader.ReadingSettings {
-	return &reader.ReadingSettings{
+func createTestReadingSettings(userID string) *reader2.ReadingSettings {
+	return &reader2.ReadingSettings{
 		ID:          "settings123",
 		UserID:      userID,
 		FontFamily:  "Arial",

@@ -1,7 +1,7 @@
 package writing_test
 
 import (
-	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/writer"
 	writingInterface "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/repository/mongodb/writing"
 	"Qingyu_backend/test/testutil"
@@ -21,8 +21,8 @@ func setupDocumentContentRepo(t *testing.T) (writingInterface.DocumentContentRep
 	return repo, ctx, cleanup
 }
 
-func createTestDocumentContent(documentID, content string) *document.DocumentContent {
-	return &document.DocumentContent{
+func createTestDocumentContent(documentID, content string) *writer.DocumentContent {
+	return &writer.DocumentContent{
 		DocumentID:  documentID,
 		Content:     content,
 		ContentType: "markdown",

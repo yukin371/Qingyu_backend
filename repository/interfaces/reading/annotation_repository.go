@@ -1,9 +1,8 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // AnnotationRepository 标注（笔记、书签）仓储接口
@@ -17,7 +16,7 @@ type AnnotationRepository interface {
 	// 查询操作
 	GetByUserAndBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error)
 	GetByUserAndChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error)
-	GetByType(ctx context.Context, userID, bookID string, annotationType int) ([]*reader.Annotation, error)
+	GetByType(ctx context.Context, userID, bookID string, annotationType string) ([]*reader.Annotation, error)
 
 	// 笔记操作
 	GetNotes(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error)
@@ -36,7 +35,7 @@ type AnnotationRepository interface {
 	// 统计操作
 	CountByUser(ctx context.Context, userID string) (int64, error)
 	CountByBook(ctx context.Context, userID, bookID string) (int64, error)
-	CountByType(ctx context.Context, userID string, annotationType int) (int64, error)
+	CountByType(ctx context.Context, userID string, annotationType string) (int64, error)
 
 	// 批量操作
 	BatchCreate(ctx context.Context, annotations []*reader.Annotation) error
@@ -52,6 +51,6 @@ type AnnotationRepository interface {
 	GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader.Annotation, error)
 	GetSharedAnnotations(ctx context.Context, userID string) ([]*reader.Annotation, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

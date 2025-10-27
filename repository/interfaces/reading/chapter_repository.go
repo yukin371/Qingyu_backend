@@ -1,9 +1,8 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // ChapterRepository 章节仓储接口
@@ -48,6 +47,6 @@ type ChapterRepository interface {
 	GetChapterContent(ctx context.Context, chapterID string) (string, error)
 	UpdateChapterContent(ctx context.Context, chapterID string, content string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

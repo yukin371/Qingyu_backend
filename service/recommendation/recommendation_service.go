@@ -1,12 +1,12 @@
 package recommendation
 
 import (
+	recommendation2 "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
 	"math"
 	"sort"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 )
 
@@ -28,7 +28,7 @@ type RecommendationService interface {
 	GetCategoryRecommendations(ctx context.Context, category string, limit int) ([]string, error)
 
 	// RecordBehavior 记录用户行为
-	RecordBehavior(ctx context.Context, behavior *reco.Behavior) error
+	RecordBehavior(ctx context.Context, behavior *recommendation2.Behavior) error
 
 	// ServiceInfo 服务信息
 	ServiceInfo() (string, string)
@@ -215,7 +215,7 @@ func (s *RecommendationServiceImpl) GetSimilarItems(ctx context.Context, itemID 
 }
 
 // RecordBehavior 记录用户行为
-func (s *RecommendationServiceImpl) RecordBehavior(ctx context.Context, behavior *reco.Behavior) error {
+func (s *RecommendationServiceImpl) RecordBehavior(ctx context.Context, behavior *recommendation2.Behavior) error {
 	if behavior.UserID == "" || behavior.ItemID == "" {
 		return fmt.Errorf("user_id and item_id are required")
 	}
@@ -390,7 +390,7 @@ func (s *RecommendationServiceImpl) calculateTagMatchScore(userTags, itemTags ma
 }
 
 // calculateItemSimilarity 计算物品相似度
-func (s *RecommendationServiceImpl) calculateItemSimilarity(item1, item2 *reco.ItemFeature) float64 {
+func (s *RecommendationServiceImpl) calculateItemSimilarity(item1, item2 *recommendation2.ItemFeature) float64 {
 	similarity := 0.0
 
 	// 分类相似度（权重0.4）

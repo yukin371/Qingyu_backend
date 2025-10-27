@@ -1,22 +1,22 @@
 package writer
 
 import (
+	"Qingyu_backend/service/interfaces/audit"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
 	auditDTO "Qingyu_backend/service/audit"
-	"Qingyu_backend/service/interfaces"
 )
 
 // AuditApi 审核API
 type AuditApi struct {
-	auditService interfaces.ContentAuditService
+	auditService audit.ContentAuditService
 }
 
 // NewAuditApi 创建审核API
-func NewAuditApi(auditService interfaces.ContentAuditService) *AuditApi {
+func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 	return &AuditApi{
 		auditService: auditService,
 	}

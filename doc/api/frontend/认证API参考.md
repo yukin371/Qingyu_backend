@@ -1,7 +1,7 @@
 # 认证系统 API 参考
 
-> **版本**: v1.0  
-> **最后更新**: 2025-10-18  
+> **版本**: v1.3 ⭐️已更新  
+> **最后更新**: 2025-10-25  
 > **基础路径**: `/api/v1/shared/auth`
 
 ---
@@ -25,6 +25,89 @@
 - ✅ 用户登出（Token 失效）
 - ✅ 权限获取
 - ✅ 角色管理
+
+---
+
+## 1.3 统一响应格式 ⭐️v1.3更新
+
+### 成功响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 业务数据
+  },
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+### 错误响应
+```json
+{
+  "code": 401,
+  "message": "认证失败",
+  "error": "Token已过期",
+  "timestamp": 1729875123,
+  "request_id": "req-12345-abcde"
+}
+```
+
+**新增字段说明**:
+- `timestamp`: Unix时间戳，服务器响应时间
+- `request_id`: 请求追踪ID，便于调试和日志追踪（可选字段）
+
+---
+
+## 1.4 TypeScript 类型定义 ⭐️v1.3新增
+
+```typescript
+// src/types/auth.ts
+import type { APIResponse } from './api';
+
+// 登录响应
+export interface LoginResponse {
+  token: string;
+  userID: string;
+  username: string;
+  role: string;
+  expiresAt: string;
+}
+
+// 用户权限
+export interface UserPermission {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+}
+
+// 用户角色
+export interface UserRole {
+  id: string;
+  name: string;
+  code: string;
+  permissions: string[];
+}
+
+// API函数
+export const login = (username: string, password: string) => {
+  return request.post<APIResponse<LoginResponse>>('/login', { username, password });
+};
+
+export const refreshToken = () => {
+  return request.post<APIResponse<LoginResponse>>('/shared/auth/refresh');
+};
+
+export const logout = () => {
+  return request.post<APIResponse<null>>('/shared/auth/logout');
+};
+
+export const getUserPermissions = () => {
+  return request.get<APIResponse<UserPermission[]>>('/shared/auth/permissions');
+};
+```
 
 ---
 

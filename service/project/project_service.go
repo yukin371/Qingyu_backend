@@ -1,11 +1,11 @@
 package project
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/document"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
 	"Qingyu_backend/service/base"
@@ -40,21 +40,21 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	}
 
 	// 2. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
 	// 3. 创建项目对象
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID:   userID,
 		Title:      req.Title,
 		Summary:    req.Summary,
 		CoverURL:   req.CoverURL,
 		Category:   req.Category,
 		Tags:       req.Tags,
-		Status:     document.StatusDraft,       // 默认状态为草稿
-		Visibility: document.VisibilityPrivate, // 默认为私密
+		Status:     writer.StatusDraft,       // 默认状态为草稿
+		Visibility: writer.VisibilityPrivate, // 默认为私密
 	}
 
 	// 4. 保存到数据库
@@ -86,7 +86,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 }
 
 // GetProject 获取项目详情
-func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*document.Project, error) {
+func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*writer.Project, error) {
 	// 1. 查询项目
 	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*doc
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -113,7 +113,7 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*doc
 // ListMyProjects 获取我的项目列表
 func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRequest) (*ListProjectsResponse, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -131,7 +131,7 @@ func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRe
 	limit := int64(req.PageSize)
 
 	// 4. 查询项目列表
-	var projects []*document.Project
+	var projects []*writer.Project
 	var err error
 
 	if req.Status != "" {
@@ -174,7 +174,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -203,7 +203,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 	}
 	if req.Status != "" {
 		// 验证状态值
-		status := document.ProjectStatus(req.Status)
+		status := writer.ProjectStatus(req.Status)
 		if !status.IsValid() {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目状态", "", nil)
 		}
@@ -244,7 +244,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) er
 	}
 
 	// 2. 权限检查（只有所有者可以删除）
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -275,7 +275,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) er
 }
 
 // UpdateProjectStatistics 更新项目统计
-func (s *ProjectService) UpdateProjectStatistics(ctx context.Context, projectID string, stats *document.ProjectStats) error {
+func (s *ProjectService) UpdateProjectStatistics(ctx context.Context, projectID string, stats *writer.ProjectStats) error {
 	// 1. 验证项目存在
 	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
@@ -303,19 +303,33 @@ func (s *ProjectService) RecalculateProjectStatistics(ctx context.Context, proje
 	// Note: 这需要DocumentService来计算，这里返回成功
 	// 实际计算逻辑应该由DocumentService的updateProjectStatistics方法触发
 	// TODO: 重构统计逻辑，将DocumentService注入到ProjectService中
-	stats := &document.ProjectStats{
+	stats := &writer.ProjectStats{
 		LastUpdateAt: time.Now(),
 	}
 	return s.UpdateProjectStatistics(ctx, projectID, stats)
 }
 
 // GetProjectByID 根据ID获取项目（别名方法，兼容API层调用）
-func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*document.Project, error) {
+func (s *ProjectService) GetProjectByID(ctx context.Context, projectID string) (*writer.Project, error) {
 	return s.GetProject(ctx, projectID)
 }
 
+// GetByIDWithoutAuth 获取项目详情（无权限检查，用于内部服务调用如AI）
+func (s *ProjectService) GetByIDWithoutAuth(ctx context.Context, projectID string) (*writer.Project, error) {
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	return project, nil
+}
+
 // GetProjectList 获取项目列表（兼容API层调用）
-func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*document.Project, error) {
+func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*writer.Project, error) {
 	// 构建请求
 	req := &ListProjectsRequest{
 		Page:     int(offset/limit) + 1,
@@ -336,7 +350,7 @@ func (s *ProjectService) GetProjectList(ctx context.Context, userID, status stri
 }
 
 // UpdateProjectByID 更新项目（兼容API层调用）
-func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userID string, req *document.Project) error {
+func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userID string, req *writer.Project) error {
 	// 构建更新请求
 	updateReq := &UpdateProjectRequest{
 		Title:    req.Title,

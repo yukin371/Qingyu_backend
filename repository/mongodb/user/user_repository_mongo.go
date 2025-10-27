@@ -441,8 +441,9 @@ func (r *MongoUserRepository) GetByUsername(ctx context.Context, username string
 	var user usersModel.User
 
 	filter := bson.M{
-		"username":   username,
-		"deleted_at": bson.M{"$exists": false},
+		"username": username,
+		// 注意：User 模型使用 status 字段而不是 deleted_at
+		// 软删除检查应该在业务层处理，这里只查询用户是否存在
 	}
 
 	err := r.collection.FindOne(ctx, filter).Decode(&user)
@@ -469,8 +470,9 @@ func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*us
 	var user usersModel.User
 
 	filter := bson.M{
-		"email":      email,
-		"deleted_at": bson.M{"$exists": false},
+		"email": email,
+		// 注意：User 模型使用 status 字段而不是 deleted_at
+		// 软删除检查应该在业务层处理，这里只查询用户是否存在
 	}
 
 	err := r.collection.FindOne(ctx, filter).Decode(&user)
@@ -495,8 +497,8 @@ func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*us
 // ExistsByUsername 检查用户名是否存在
 func (r *MongoUserRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
 	filter := bson.M{
-		"username":   username,
-		"deleted_at": bson.M{"$exists": false},
+		"username": username,
+		// 注意：User 模型使用 status 字段，软删除检查在业务层处理
 	}
 
 	count, err := r.collection.CountDocuments(ctx, filter)
@@ -514,8 +516,8 @@ func (r *MongoUserRepository) ExistsByUsername(ctx context.Context, username str
 // ExistsByEmail 检查邮箱是否存在
 func (r *MongoUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	filter := bson.M{
-		"email":      email,
-		"deleted_at": bson.M{"$exists": false},
+		"email": email,
+		// 注意：User 模型使用 status 字段，软删除检查在业务层处理
 	}
 
 	count, err := r.collection.CountDocuments(ctx, filter)

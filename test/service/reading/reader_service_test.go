@@ -1,6 +1,7 @@
 package reading
 
 import (
+	reader2 "Qingyu_backend/models/reader"
 	"context"
 	"testing"
 	"time"
@@ -8,8 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/models/reading/reader"
-	"Qingyu_backend/service/base"
+	"Qingyu_backend/service/interfaces/base"
 	"Qingyu_backend/service/reading"
 )
 
@@ -43,17 +43,17 @@ type MockProgressRepository struct {
 	mock.Mock
 }
 
-func (m *MockProgressRepository) Create(ctx context.Context, progress *reader.ReadingProgress) error {
+func (m *MockProgressRepository) Create(ctx context.Context, progress *reader2.ReadingProgress) error {
 	args := m.Called(ctx, progress)
 	return args.Error(0)
 }
 
-func (m *MockProgressRepository) GetByID(ctx context.Context, id string) (*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetByID(ctx context.Context, id string) (*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).(*reader2.ReadingProgress), args.Error(1)
 }
 
 func (m *MockProgressRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -66,28 +66,28 @@ func (m *MockProgressRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockProgressRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) (*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).(*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockProgressRepository) GetByUser(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetByUser(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockProgressRepository) GetRecentReadingByUser(ctx context.Context, userID string, limit int) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetRecentReadingByUser(ctx context.Context, userID string, limit int) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
 func (m *MockProgressRepository) SaveProgress(ctx context.Context, userID, bookID, chapterID string, progress float64) error {
@@ -105,7 +105,7 @@ func (m *MockProgressRepository) UpdateLastReadAt(ctx context.Context, userID, b
 	return args.Error(0)
 }
 
-func (m *MockProgressRepository) BatchUpdateProgress(ctx context.Context, progresses []*reader.ReadingProgress) error {
+func (m *MockProgressRepository) BatchUpdateProgress(ctx context.Context, progresses []*reader2.ReadingProgress) error {
 	args := m.Called(ctx, progresses)
 	return args.Error(0)
 }
@@ -130,41 +130,41 @@ func (m *MockProgressRepository) CountReadingBooks(ctx context.Context, userID s
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProgressRepository) GetReadingHistory(ctx context.Context, userID string, limit, offset int) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetReadingHistory(ctx context.Context, userID string, limit, offset int) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockProgressRepository) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockProgressRepository) GetFinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetFinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
-func (m *MockProgressRepository) SyncProgress(ctx context.Context, userID string, progresses []*reader.ReadingProgress) error {
+func (m *MockProgressRepository) SyncProgress(ctx context.Context, userID string, progresses []*reader2.ReadingProgress) error {
 	args := m.Called(ctx, userID, progresses)
 	return args.Error(0)
 }
 
-func (m *MockProgressRepository) GetProgressesByUser(ctx context.Context, userID string, updatedAfter time.Time) ([]*reader.ReadingProgress, error) {
+func (m *MockProgressRepository) GetProgressesByUser(ctx context.Context, userID string, updatedAfter time.Time) ([]*reader2.ReadingProgress, error) {
 	args := m.Called(ctx, userID, updatedAfter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+	return args.Get(0).([]*reader2.ReadingProgress), args.Error(1)
 }
 
 func (m *MockProgressRepository) DeleteOldProgress(ctx context.Context, beforeTime time.Time) error {
@@ -187,17 +187,17 @@ type MockAnnotationRepository struct {
 	mock.Mock
 }
 
-func (m *MockAnnotationRepository) Create(ctx context.Context, annotation *reader.Annotation) error {
+func (m *MockAnnotationRepository) Create(ctx context.Context, annotation *reader2.Annotation) error {
 	args := m.Called(ctx, annotation)
 	return args.Error(0)
 }
 
-func (m *MockAnnotationRepository) GetByID(ctx context.Context, id string) (*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetByID(ctx context.Context, id string) (*reader2.Annotation, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Annotation), args.Error(1)
+	return args.Get(0).(*reader2.Annotation), args.Error(1)
 }
 
 func (m *MockAnnotationRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -210,92 +210,92 @@ func (m *MockAnnotationRepository) Delete(ctx context.Context, id string) error 
 	return args.Error(0)
 }
 
-func (m *MockAnnotationRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetByUserAndChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetByUserAndChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType int) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, annotationType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetNotes(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetNotes(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetNotesByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetNotesByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) SearchNotes(ctx context.Context, userID, keyword string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) SearchNotes(ctx context.Context, userID, keyword string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, keyword)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetBookmarks(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetBookmarks(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetBookmarkByPosition(ctx context.Context, userID, bookID, chapterID string, startOffset int) (*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetBookmarkByPosition(ctx context.Context, userID, bookID, chapterID string, startOffset int) (*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, chapterID, startOffset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Annotation), args.Error(1)
+	return args.Get(0).(*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Annotation), args.Error(1)
+	return args.Get(0).(*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetHighlights(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetHighlights(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetHighlightsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetHighlightsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, bookID, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
 func (m *MockAnnotationRepository) CountByUser(ctx context.Context, userID string) (int64, error) {
@@ -308,12 +308,12 @@ func (m *MockAnnotationRepository) CountByBook(ctx context.Context, userID, book
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType int) (int64, error) {
+func (m *MockAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType string) (int64, error) {
 	args := m.Called(ctx, userID, annotationType)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) BatchCreate(ctx context.Context, annotations []*reader.Annotation) error {
+func (m *MockAnnotationRepository) BatchCreate(ctx context.Context, annotations []*reader2.Annotation) error {
 	args := m.Called(ctx, annotations)
 	return args.Error(0)
 }
@@ -333,33 +333,33 @@ func (m *MockAnnotationRepository) DeleteByChapter(ctx context.Context, userID, 
 	return args.Error(0)
 }
 
-func (m *MockAnnotationRepository) SyncAnnotations(ctx context.Context, userID string, annotations []*reader.Annotation) error {
+func (m *MockAnnotationRepository) SyncAnnotations(ctx context.Context, userID string, annotations []*reader2.Annotation) error {
 	args := m.Called(ctx, userID, annotations)
 	return args.Error(0)
 }
 
-func (m *MockAnnotationRepository) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, bookID, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) GetSharedAnnotations(ctx context.Context, userID string) ([]*reader.Annotation, error) {
+func (m *MockAnnotationRepository) GetSharedAnnotations(ctx context.Context, userID string) ([]*reader2.Annotation, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Annotation), args.Error(1)
+	return args.Get(0).([]*reader2.Annotation), args.Error(1)
 }
 
 func (m *MockAnnotationRepository) Health(ctx context.Context) error {
@@ -428,7 +428,7 @@ func TestReaderService_CreateAnnotation(t *testing.T) {
 	ctx := context.Background()
 
 	// 准备测试数据
-	annotation := &reader.Annotation{
+	annotation := &reader2.Annotation{
 		UserID:    "user123",
 		BookID:    "book123",
 		ChapterID: "chapter1",

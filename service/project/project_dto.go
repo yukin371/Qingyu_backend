@@ -1,9 +1,8 @@
 package project
 
 import (
+	"Qingyu_backend/models/writer"
 	"time"
-
-	"Qingyu_backend/models/document"
 )
 
 // CreateProjectRequest 创建项目请求
@@ -43,15 +42,15 @@ type ListProjectsRequest struct {
 
 // ListProjectsResponse 项目列表响应
 type ListProjectsResponse struct {
-	Projects []*document.Project `json:"projects"`
-	Total    int64               `json:"total"`
-	Page     int                 `json:"page"`
-	PageSize int                 `json:"pageSize"`
+	Projects []*writer.Project `json:"projects"`
+	Total    int64             `json:"total"`
+	Page     int               `json:"page"`
+	PageSize int               `json:"pageSize"`
 }
 
 // GetProjectResponse 获取项目详情响应
 type GetProjectResponse struct {
-	*document.Project
+	*writer.Project
 }
 
 // UpdateStatisticsRequest 更新统计请求
@@ -61,9 +60,9 @@ type UpdateStatisticsRequest struct {
 
 // AddCollaboratorRequest 添加协作者请求
 type AddCollaboratorRequest struct {
-	ProjectID string                    `json:"projectId" validate:"required"`
-	UserID    string                    `json:"userId" validate:"required"`
-	Role      document.CollaboratorRole `json:"role" validate:"required"`
+	ProjectID string                  `json:"projectId" validate:"required"`
+	UserID    string                  `json:"userId" validate:"required"`
+	Role      writer.CollaboratorRole `json:"role" validate:"required"`
 }
 
 // RemoveCollaboratorRequest 移除协作者请求

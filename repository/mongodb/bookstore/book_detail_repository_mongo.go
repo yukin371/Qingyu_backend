@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
@@ -30,7 +30,7 @@ func NewMongoBookDetailRepository(client *mongo.Client, database string) Booksto
 }
 
 // Create 创建书籍详情
-func (r *MongoBookDetailRepository) Create(ctx context.Context, bookDetail *bookstore.BookDetail) error {
+func (r *MongoBookDetailRepository) Create(ctx context.Context, bookDetail *bookstore2.BookDetail) error {
 	if bookDetail == nil {
 		return errors.New("book detail cannot be nil")
 	}
@@ -47,8 +47,8 @@ func (r *MongoBookDetailRepository) Create(ctx context.Context, bookDetail *book
 }
 
 // GetByID 根据ID获取书籍详情
-func (r *MongoBookDetailRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookDetail, error) {
-	var bookDetail bookstore.BookDetail
+func (r *MongoBookDetailRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookDetail, error) {
+	var bookDetail bookstore2.BookDetail
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&bookDetail)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -98,7 +98,7 @@ func (r *MongoBookDetailRepository) Delete(ctx context.Context, id primitive.Obj
 }
 
 // GetAll 获取所有书籍详情
-func (r *MongoBookDetailRepository) GetAll(ctx context.Context, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetAll(ctx context.Context, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -114,9 +114,9 @@ func (r *MongoBookDetailRepository) GetAll(ctx context.Context, limit, offset in
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -138,8 +138,8 @@ func (r *MongoBookDetailRepository) Count(ctx context.Context, filter infra.Filt
 }
 
 // GetByTitle 根据标题获取书籍详情
-func (r *MongoBookDetailRepository) GetByTitle(ctx context.Context, title string) (*bookstore.BookDetail, error) {
-	var bookDetail bookstore.BookDetail
+func (r *MongoBookDetailRepository) GetByTitle(ctx context.Context, title string) (*bookstore2.BookDetail, error) {
+	var bookDetail bookstore2.BookDetail
 	filter := bson.M{"title": bson.M{"$regex": title, "$options": "i"}}
 	err := r.collection.FindOne(ctx, filter).Decode(&bookDetail)
 	if err != nil {
@@ -152,7 +152,7 @@ func (r *MongoBookDetailRepository) GetByTitle(ctx context.Context, title string
 }
 
 // GetByAuthor 根据作者获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -169,9 +169,9 @@ func (r *MongoBookDetailRepository) GetByAuthor(ctx context.Context, author stri
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -182,7 +182,7 @@ func (r *MongoBookDetailRepository) GetByAuthor(ctx context.Context, author stri
 }
 
 // GetByAuthorID 根据作者ID获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -199,9 +199,9 @@ func (r *MongoBookDetailRepository) GetByAuthorID(ctx context.Context, authorID 
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func (r *MongoBookDetailRepository) GetByAuthorID(ctx context.Context, authorID 
 }
 
 // GetByCategory 根据分类获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByCategory(ctx context.Context, category string, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByCategory(ctx context.Context, category string, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -229,9 +229,9 @@ func (r *MongoBookDetailRepository) GetByCategory(ctx context.Context, category 
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -242,7 +242,7 @@ func (r *MongoBookDetailRepository) GetByCategory(ctx context.Context, category 
 }
 
 // GetByStatus 根据状态获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByStatus(ctx context.Context, status bookstore2.BookStatus, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -259,9 +259,9 @@ func (r *MongoBookDetailRepository) GetByStatus(ctx context.Context, status book
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -272,8 +272,8 @@ func (r *MongoBookDetailRepository) GetByStatus(ctx context.Context, status book
 }
 
 // GetByISBN 根据ISBN获取书籍详情
-func (r *MongoBookDetailRepository) GetByISBN(ctx context.Context, isbn string) (*bookstore.BookDetail, error) {
-	var bookDetail bookstore.BookDetail
+func (r *MongoBookDetailRepository) GetByISBN(ctx context.Context, isbn string) (*bookstore2.BookDetail, error) {
+	var bookDetail bookstore2.BookDetail
 	filter := bson.M{"isbn": isbn}
 	err := r.collection.FindOne(ctx, filter).Decode(&bookDetail)
 	if err != nil {
@@ -286,7 +286,7 @@ func (r *MongoBookDetailRepository) GetByISBN(ctx context.Context, isbn string) 
 }
 
 // GetByPublisher 根据出版社获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByPublisher(ctx context.Context, publisher string, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByPublisher(ctx context.Context, publisher string, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -302,7 +302,7 @@ func (r *MongoBookDetailRepository) GetByPublisher(ctx context.Context, publishe
 	}
 	defer cursor.Close(ctx)
 
-	var result []*bookstore.BookDetail
+	var result []*bookstore2.BookDetail
 	if err = cursor.All(ctx, &result); err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (r *MongoBookDetailRepository) GetByPublisher(ctx context.Context, publishe
 }
 
 // GetByTags 根据标签获取书籍详情列表
-func (r *MongoBookDetailRepository) GetByTags(ctx context.Context, tags []string, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByTags(ctx context.Context, tags []string, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -327,9 +327,9 @@ func (r *MongoBookDetailRepository) GetByTags(ctx context.Context, tags []string
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -340,7 +340,7 @@ func (r *MongoBookDetailRepository) GetByTags(ctx context.Context, tags []string
 }
 
 // Search 搜索书籍详情
-func (r *MongoBookDetailRepository) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -365,9 +365,9 @@ func (r *MongoBookDetailRepository) Search(ctx context.Context, keyword string, 
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -378,7 +378,7 @@ func (r *MongoBookDetailRepository) Search(ctx context.Context, keyword string, 
 }
 
 // SearchByFilter 根据过滤器搜索书籍详情
-func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *BookstoreInterface.BookDetailFilter) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *BookstoreInterface.BookDetailFilter) ([]*bookstore2.BookDetail, error) {
 	opts := options.Find()
 
 	// 构建排序
@@ -493,9 +493,9 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 	}
 	defer cursor.Close(ctx)
 
-	var bookDetails []*bookstore.BookDetail
+	var bookDetails []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var bookDetail bookstore.BookDetail
+		var bookDetail bookstore2.BookDetail
 		if err := cursor.Decode(&bookDetail); err != nil {
 			return nil, err
 		}
@@ -506,8 +506,8 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 }
 
 // GetByBookID 根据书籍基础ID获取详情
-func (r *MongoBookDetailRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookDetail, error) {
-	var detail bookstore.BookDetail
+func (r *MongoBookDetailRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore2.BookDetail, error) {
+	var detail bookstore2.BookDetail
 	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&detail)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -519,15 +519,15 @@ func (r *MongoBookDetailRepository) GetByBookID(ctx context.Context, bookID prim
 }
 
 // GetByBookIDs 批量根据书籍基础ID获取详情
-func (r *MongoBookDetailRepository) GetByBookIDs(ctx context.Context, bookIDs []primitive.ObjectID) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetByBookIDs(ctx context.Context, bookIDs []primitive.ObjectID) ([]*bookstore2.BookDetail, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bson.M{"$in": bookIDs}})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	var results []*bookstore.BookDetail
+	var results []*bookstore2.BookDetail
 	for cursor.Next(ctx) {
-		var d bookstore.BookDetail
+		var d bookstore2.BookDetail
 		if err := cursor.Decode(&d); err != nil {
 			return nil, err
 		}
@@ -547,12 +547,12 @@ func (r *MongoBookDetailRepository) UpdateAuthor(ctx context.Context, bookID pri
 }
 
 // GetSimilarBooks 获取相似书籍（基于标签和分类）
-func (r *MongoBookDetailRepository) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
 	// 先获取目标书的标签
-	var current bookstore.BookDetail
+	var current bookstore2.BookDetail
 	if err := r.collection.FindOne(ctx, bson.M{"_id": bookID}).Decode(&current); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return []*bookstore.BookDetail{}, nil
+			return []*bookstore2.BookDetail{}, nil
 		}
 		return nil, err
 	}
@@ -572,7 +572,7 @@ func (r *MongoBookDetailRepository) GetSimilarBooks(ctx context.Context, bookID 
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	var results []*bookstore.BookDetail
+	var results []*bookstore2.BookDetail
 	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
@@ -592,7 +592,7 @@ func (r *MongoBookDetailRepository) CountByAuthor(ctx context.Context, author st
 }
 
 // CountByStatus 根据状态统计书籍数量
-func (r *MongoBookDetailRepository) CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
+func (r *MongoBookDetailRepository) CountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error) {
 	filter := bson.M{"status": status}
 	return r.collection.CountDocuments(ctx, filter)
 }
@@ -610,7 +610,7 @@ func (r *MongoBookDetailRepository) CountByPublisher(ctx context.Context, publis
 }
 
 // BatchUpdateStatus 批量更新书籍状态
-func (r *MongoBookDetailRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore.BookStatus) error {
+func (r *MongoBookDetailRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error {
 	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
 	update := bson.M{
 		"$set": bson.M{
@@ -749,7 +749,7 @@ func (r *MongoBookDetailRepository) Health(ctx context.Context) error {
 }
 
 // List 根据过滤条件列出书籍详情
-func (r *MongoBookDetailRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore.BookDetail, error) {
+func (r *MongoBookDetailRepository) List(ctx context.Context, filter infra.Filter) ([]*bookstore2.BookDetail, error) {
 	var query bson.M
 	if filter != nil {
 		query = bson.M(filter.GetConditions())
@@ -772,7 +772,7 @@ func (r *MongoBookDetailRepository) List(ctx context.Context, filter infra.Filte
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	var results []*bookstore.BookDetail
+	var results []*bookstore2.BookDetail
 	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
 	"Qingyu_backend/global"
-	usersModel "Qingyu_backend/models/users"
+	authModel "Qingyu_backend/models/shared/auth"
 	"Qingyu_backend/repository/mongodb/user"
 )
 
@@ -43,11 +43,11 @@ func TestRoleRepository_Integration(t *testing.T) {
 	})
 
 	// 创建测试角色
-	testRole := &usersModel.Role{
+	testRole := &authModel.Role{
 		Name:        "test_role_" + time.Now().Format("20060102150405"),
 		Description: "测试角色",
-		IsDefault:   false,
-		Permissions: []string{usersModel.PermissionUserRead, usersModel.PermissionUserWrite},
+		IsSystem:    false,
+		Permissions: []string{authModel.PermUserRead, authModel.PermUserWrite},
 	}
 
 	// 测试创建角色
@@ -87,7 +87,7 @@ func TestRoleRepository_Integration(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		updates := map[string]interface{}{
 			"description": "更新后的描述",
-			"is_default":  true,
+			"is_system":   true,
 		}
 		err := roleRepo.Update(ctx, testRole.ID, updates)
 		assert.NoError(t, err, "更新角色应该成功")
@@ -96,7 +96,7 @@ func TestRoleRepository_Integration(t *testing.T) {
 		role, err := roleRepo.GetByID(ctx, testRole.ID)
 		assert.NoError(t, err, "获取更新后的角色应该成功")
 		assert.Equal(t, "更新后的描述", role.Description, "描述应该已更新")
-		assert.True(t, role.IsDefault, "IsDefault应该已更新")
+		assert.True(t, role.IsSystem, "IsSystem应该已更新")
 	})
 
 	// 测试获取角色权限
@@ -108,30 +108,30 @@ func TestRoleRepository_Integration(t *testing.T) {
 
 	// 测试添加权限
 	t.Run("AddPermission", func(t *testing.T) {
-		err := roleRepo.AddPermission(ctx, testRole.ID, usersModel.PermissionDocumentRead)
+		err := roleRepo.AddPermission(ctx, testRole.ID, authModel.PermDocumentRead)
 		assert.NoError(t, err, "添加权限应该成功")
 
 		permissions, err := roleRepo.GetRolePermissions(ctx, testRole.ID)
 		assert.NoError(t, err, "获取权限应该成功")
-		assert.Contains(t, permissions, usersModel.PermissionDocumentRead, "权限列表应该包含新权限")
+		assert.Contains(t, permissions, authModel.PermDocumentRead, "权限列表应该包含新权限")
 	})
 
 	// 测试移除权限
 	t.Run("RemovePermission", func(t *testing.T) {
-		err := roleRepo.RemovePermission(ctx, testRole.ID, usersModel.PermissionDocumentRead)
+		err := roleRepo.RemovePermission(ctx, testRole.ID, authModel.PermDocumentRead)
 		assert.NoError(t, err, "移除权限应该成功")
 
 		permissions, err := roleRepo.GetRolePermissions(ctx, testRole.ID)
 		assert.NoError(t, err, "获取权限应该成功")
-		assert.NotContains(t, permissions, usersModel.PermissionDocumentRead, "权限列表不应该包含已移除的权限")
+		assert.NotContains(t, permissions, authModel.PermDocumentRead, "权限列表不应该包含已移除的权限")
 	})
 
 	// 测试更新角色权限
 	t.Run("UpdateRolePermissions", func(t *testing.T) {
 		newPermissions := []string{
-			usersModel.PermissionUserRead,
-			usersModel.PermissionDocumentWrite,
-			usersModel.PermissionAdminAccess,
+			authModel.PermUserRead,
+			authModel.PermDocumentWrite,
+			authModel.PermAdminAccess,
 		}
 		err := roleRepo.UpdateRolePermissions(ctx, testRole.ID, newPermissions)
 		assert.NoError(t, err, "更新角色权限应该成功")
@@ -163,18 +163,36 @@ func TestRoleRepository_Integration(t *testing.T) {
 		roles, err := roleRepo.ListDefaultRoles(ctx)
 		assert.NoError(t, err, "列出默认角色应该成功")
 
-		// 验证所有角色都是默认角色
+		// 验证所有角色都是系统角色
 		for _, role := range roles {
-			assert.True(t, role.IsDefault, "所有角色都应该是默认角色")
+			assert.True(t, role.IsSystem, "所有角色都应该是系统角色")
 		}
 	})
 
 	// 测试获取默认角色
 	t.Run("GetDefaultRole", func(t *testing.T) {
+		// 首先创建一个默认角色
+		defaultRole := &authModel.Role{
+			Name:        "default_user_" + time.Now().Format("20060102150405"),
+			Description: "默认用户角色",
+			IsSystem:    true,
+			IsDefault:   true,
+			Permissions: []string{authModel.PermUserRead},
+		}
+		err := roleRepo.Create(ctx, defaultRole)
+		require.NoError(t, err, "创建默认角色应该成功")
+
+		// 测试获取默认角色
 		role, err := roleRepo.GetDefaultRole(ctx)
 		assert.NoError(t, err, "获取默认角色应该成功")
 		if role != nil {
+			assert.True(t, role.IsSystem, "应该是系统角色")
 			assert.True(t, role.IsDefault, "应该是默认角色")
+		}
+
+		// 清理默认角色
+		if defaultRole.ID != "" {
+			roleRepo.Delete(ctx, defaultRole.ID)
 		}
 	})
 
@@ -219,18 +237,20 @@ func TestRoleRepository_DefaultRole(t *testing.T) {
 
 	// 创建多个默认角色
 	timestamp := time.Now().Format("20060102150405")
-	defaultRoles := []*usersModel.Role{
+	defaultRoles := []*authModel.Role{
 		{
 			Name:        "default_role1_" + timestamp,
 			Description: "默认角色1",
-			IsDefault:   true,
-			Permissions: usersModel.GetDefaultPermissions(usersModel.RoleUser),
+			IsSystem:    true,
+			IsDefault:   true, // 标记为默认角色
+			Permissions: []string{authModel.PermUserRead, authModel.PermBookRead},
 		},
 		{
 			Name:        "default_role2_" + timestamp,
 			Description: "默认角色2",
-			IsDefault:   true,
-			Permissions: usersModel.GetDefaultPermissions(usersModel.RoleUser),
+			IsSystem:    true,
+			IsDefault:   false, // 非默认角色
+			Permissions: []string{authModel.PermUserRead, authModel.PermBookRead},
 		},
 	}
 
@@ -245,7 +265,10 @@ func TestRoleRepository_DefaultRole(t *testing.T) {
 		role, err := roleRepo.GetDefaultRole(ctx)
 		assert.NoError(t, err, "获取默认角色应该成功")
 		assert.NotNil(t, role, "应该返回一个默认角色")
-		assert.True(t, role.IsDefault, "应该是默认角色")
+		if role != nil {
+			assert.True(t, role.IsSystem, "应该是系统角色")
+			assert.True(t, role.IsDefault, "应该是默认角色")
+		}
 	})
 
 	// 测试列出所有默认角色

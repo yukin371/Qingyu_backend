@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"errors"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/models/reading/reader"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	"Qingyu_backend/service/reading"
 )

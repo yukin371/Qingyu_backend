@@ -93,7 +93,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id string, updates map[str
 
 // ============ Table-Driven测试示例 ============
 
-func TestUserService_CreateUser_TableDriven(t *testing.T) {
+func TestuserserviceCreateuserTabledriven(t *testing.T) {
 	// 定义测试用例表
 	tests := []struct {
 		name    string                    // 测试用例名称
@@ -187,7 +187,7 @@ func TestUserService_CreateUser_TableDriven(t *testing.T) {
 
 // ============ 使用工厂模式的测试示例 ============
 
-func TestUserService_GetUser_WithFactory(t *testing.T) {
+func TestuserserviceGetuserWithfactory(t *testing.T) {
 	// 使用工厂创建测试数据
 	userFactory := fixtures.NewUserFactory()
 
@@ -246,7 +246,7 @@ func TestUserService_GetUser_WithFactory(t *testing.T) {
 
 // ============ 子测试示例 ============
 
-func TestUserService_UpdateUser(t *testing.T) {
+func TestuserserviceUpdateuser(t *testing.T) {
 	// 准备通用数据
 	userFactory := fixtures.NewUserFactory()
 	user := userFactory.Create()
@@ -292,7 +292,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 // ============ 使用testutil助手的示例 ============
 
-func TestUserService_WithHelpers(t *testing.T) {
+func TestuserserviceWithhelpers(t *testing.T) {
 	// 创建测试上下文
 	ctx := testutil.CreateTestContext()
 
@@ -325,7 +325,7 @@ func TestUserService_WithHelpers(t *testing.T) {
 
 // ============ 性能基准测试示例 ============
 
-func BenchmarkUserService_CreateUser(b *testing.B) {
+func BenchmarkuserserviceCreateuser(b *testing.B) {
 	mockRepo := new(MockUserRepository)
 	mockRepo.On("GetByEmail", mock.Anything, mock.Anything).
 		Return(nil, errors.New("not found"))

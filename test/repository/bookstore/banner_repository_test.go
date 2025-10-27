@@ -1,6 +1,7 @@
 package bookstore_test
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"testing"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 

@@ -1,12 +1,12 @@
 package user
 
 import (
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 	"context"
 	"errors"
 	"testing"
 
 	usersModel "Qingyu_backend/models/users"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 	"Qingyu_backend/service/user/mocks"
 
 	"github.com/stretchr/testify/assert"
