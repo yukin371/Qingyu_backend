@@ -62,6 +62,7 @@ type RepositoryFactory interface {
 	CreateAuthRepository() SharedInterfaces.AuthRepository
 	CreateWalletRepository() SharedInterfaces.WalletRepository
 	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
+	CreateStorageRepository() SharedInterfaces.StorageRepository
 
 	// 审核相关Repository
 	CreateSensitiveWordRepository() AuditInterfaces.SensitiveWordRepository

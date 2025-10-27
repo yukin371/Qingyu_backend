@@ -4,7 +4,12 @@ import (
 	"context"
 	"io"
 	"time"
+	
+	storageModel "Qingyu_backend/models/shared/storage"
 )
+
+// FileInfo 文件信息类型别名（使用models中的定义）
+type FileInfo = storageModel.FileInfo
 
 // StorageService 文件存储服务接口（对外暴露）
 type StorageService interface {
@@ -49,20 +54,4 @@ type ListFilesRequest struct {
 }
 
 // ============ 数据结构 ============
-
-// FileInfo 文件信息
-type FileInfo struct {
-	ID           string    `json:"id" bson:"_id,omitempty"`
-	Filename     string    `json:"filename" bson:"filename"`
-	OriginalName string    `json:"original_name" bson:"original_name"`
-	ContentType  string    `json:"content_type" bson:"content_type"`
-	Size         int64     `json:"size" bson:"size"`
-	Path         string    `json:"path" bson:"path"`
-	URL          string    `json:"url,omitempty" bson:"-"` // 访问URL（不存储）
-	UserID       string    `json:"user_id" bson:"user_id"`
-	IsPublic     bool      `json:"is_public" bson:"is_public"`
-	Category     string    `json:"category" bson:"category"`
-	MD5          string    `json:"md5,omitempty" bson:"md5,omitempty"`
-	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
-}
+// FileInfo 已在上面通过type alias定义，使用models/shared/storage.FileInfo
