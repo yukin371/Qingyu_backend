@@ -479,7 +479,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		progressRepo,
 		annotationRepo,
 		settingsRepo,
-		c.eventBus, // ✅ 注入事件总线
+		c.eventBus, // 注入事件总线
 		nil,        // cacheService - TODO: 实现缓存服务
 		nil,        // vipService - TODO: 实现VIP服务
 	)
@@ -492,7 +492,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.commentService = readingService.NewCommentService(
 		commentRepo,
 		sensitiveWordRepo, // 可以为nil，表示不启用敏感词检测
-		c.eventBus,        // ✅ 注入事件总线
+		c.eventBus,        // 注入事件总线
 	)
 	c.services["CommentService"] = c.commentService
 
@@ -565,44 +565,54 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		return fmt.Errorf("WalletService 未实现 BaseService 接口")
 	}
 
-	// 5.2 创建 AuthService（复杂，需要多个子服务）
-	// TODO: 完整实现 AuthService 需要配置以下依赖：
-	//   - JWTService: 需要 JWT配置 和 RedisClient
-	//   - RoleService: 需要 AuthRepository
-	//   - PermissionService: 需要 AuthRepository
-	//   - SessionService: 需要 RedisClient
-	//   - UserService: 已在上面创建
-	//
-	// 示例实现：
-	// authRepo := c.repositoryFactory.CreateAuthRepository()
-	// jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), nil) // nil 表示暂不使用 Redis
-	// roleService := auth.NewRoleService(authRepo)
-	// permissionService := auth.NewPermissionService(authRepo)
-	// sessionService := auth.NewSessionService(nil) // nil 表示暂不使用 Redis
-	// c.authService = auth.NewAuthService(
-	//     jwtService,
-	//     roleService,
-	//     permissionService,
-	//     authRepo,
-	//     c.userService,
-	//     sessionService,
-	// )
-	// if err := c.RegisterService("AuthService", c.authService); err != nil {
-	//     return fmt.Errorf("注册认证服务失败: %w", err)
-	// }
-	//
-	// 注意：完整实现需要 Redis 客户端，暂时跳过，留待后续配置
+	// 5.2 创建 AuthService（完整实现）
+	if c.redisClient != nil {
+		authRepo := c.repositoryFactory.CreateAuthRepository()
+
+		// 创建Redis适配器
+		redisAdapter := auth.NewRedisAdapter(c.redisClient)
+
+		// 创建子服务
+		jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), redisAdapter)
+		roleService := auth.NewRoleService(authRepo)
+		permissionService := auth.NewPermissionService(authRepo, redisAdapter)
+		sessionService := auth.NewSessionService(redisAdapter)
+
+		// 创建AuthService
+		c.authService = auth.NewAuthService(
+			jwtService,
+			roleService,
+			permissionService,
+			authRepo,
+			c.userService,
+			sessionService,
+		)
+
+		// 类型断言为BaseService，以便注册到服务映射
+		if baseAuthSvc, ok := c.authService.(serviceInterfaces.BaseService); ok {
+			if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
+				return fmt.Errorf("注册认证服务失败: %w", err)
+			}
+		}
+	} else {
+		fmt.Println("警告: Redis客户端未初始化，跳过AuthService创建")
+	}
 
 	// 5.3 创建 RecommendationService
-	recRepo := c.repositoryFactory.CreateRecommendationRepository()
-	recSvc := recommendation.NewRecommendationService(recRepo, c.redisClient)
-	c.recommendationService = recSvc
+	if c.redisClient != nil {
+		recRepo := c.repositoryFactory.CreateRecommendationRepository()
+		recAdapter := recommendation.NewRedisAdapter(c.redisClient)
+		recSvc := recommendation.NewRecommendationService(recRepo, recAdapter)
+		c.recommendationService = recSvc
 
-	// 类型断言为 BaseService，以便注册到服务映射
-	if baseRecSvc, ok := recSvc.(serviceInterfaces.BaseService); ok {
-		if err := c.RegisterService("RecommendationService", baseRecSvc); err != nil {
-			return fmt.Errorf("注册推荐服务失败: %w", err)
+		// 类型断言为 BaseService，以便注册到服务映射
+		if baseRecSvc, ok := recSvc.(serviceInterfaces.BaseService); ok {
+			if err := c.RegisterService("RecommendationService", baseRecSvc); err != nil {
+				return fmt.Errorf("注册推荐服务失败: %w", err)
+			}
 		}
+	} else {
+		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
 	// 5.4 其他共享服务（暂未实现Repository）
