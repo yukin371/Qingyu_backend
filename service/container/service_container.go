@@ -615,17 +615,36 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
-	// 5.4 StorageService
-	// TODO(Phase2): 创建StorageBackend（MinIO/Local）
-	// storageRepo := c.repositoryFactory.CreateStorageRepository()
-	// backend := storage.NewLocalBackend("./uploads") // 或 MinIO backend
-	// storageSvc := storage.NewStorageService(backend, storageRepo)
-	// c.storageService = storageSvc
-	// if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
-	// 	if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
-	// 		return fmt.Errorf("注册存储服务失败: %w", err)
-	// 	}
-	// }
+	// 5.4 StorageService（Phase2快速通道）
+	fmt.Println("初始化 StorageService...")
+	storageRepo := c.repositoryFactory.CreateStorageRepository()
+	
+	// 使用本地文件系统Backend（快速通道方案）
+	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:8080/api/v1/files")
+	
+	// 适配StorageRepository到FileRepository接口
+	fileRepo := storage.NewRepositoryAdapter(storageRepo)
+	storageSvc := storage.NewStorageService(localBackend, fileRepo)
+	c.storageServiceImpl = storageSvc.(*storage.StorageServiceImpl)
+	c.storageService = storageSvc
+	
+	// 注册为BaseService
+	if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
+			return fmt.Errorf("注册存储服务失败: %w", err)
+		}
+		fmt.Println("  ✓ StorageService 已注册")
+	}
+	
+	// 初始化MultipartUploadService
+	multipartSvc := storage.NewMultipartUploadService(localBackend, storageRepo)
+	c.multipartService = multipartSvc
+	
+	// 初始化ImageProcessor
+	imageProcessor := storage.NewImageProcessor(localBackend)
+	c.imageProcessor = imageProcessor
+	
+	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
 
 	// 5.5 AdminService
 	// TODO(Phase2): AdminService需要额外的LogRepository，当前AdminRepository已实现
@@ -654,7 +673,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// 	fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
 	// }
 
-	fmt.Println("提示: StorageService、AdminService、MessagingService将在Task 2.1-2.3中完整实现并注册")
+	fmt.Println("提示: AdminService、MessagingService将在Phase2后续任务中完整实现并注册")
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
