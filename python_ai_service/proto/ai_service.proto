@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package qingyu.ai;
+
+option go_package = "Qingyu_backend/pkg/grpc/pb";
+
+// AI 服务定义
+service AIService {
+  // 生成内容
+  rpc GenerateContent(GenerateContentRequest) returns (GenerateContentResponse);
+
+  // RAG 查询
+  rpc QueryKnowledge(RAGQueryRequest) returns (RAGQueryResponse);
+
+  // 获取上下文
+  rpc GetContext(ContextRequest) returns (ContextResponse);
+
+  // 执行 Agent 工作流
+  rpc ExecuteAgent(AgentExecutionRequest) returns (AgentExecutionResponse);
+
+  // 向量化文本
+  rpc EmbedText(EmbedRequest) returns (EmbedResponse);
+
+  // 健康检查
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============ 生成内容 ============
+
+message GenerateContentRequest {
+  string project_id = 1;
+  string chapter_id = 2;
+  string prompt = 3;
+  GenerateOptions options = 4;
+}
+
+message GenerateOptions {
+  string model = 1;           // 模型名称
+  int32 max_tokens = 2;       // 最大 Token 数
+  float temperature = 3;      // 温度参数 0.0-1.0
+  repeated string stop = 4;   // 停止词
+  bool stream = 5;            // 是否流式输出
+}
+
+message GenerateContentResponse {
+  string content = 1;
+  int32 tokens_used = 2;
+  string model = 3;
+  int64 generated_at = 4;  // Unix timestamp
+}
+
+// ============ RAG 查询 ============
+
+message RAGQueryRequest {
+  string query = 1;
+  string project_id = 2;
+  RAGFilters filters = 3;
+  int32 top_k = 4;  // 返回结果数量
+}
+
+message RAGFilters {
+  repeated string doc_types = 1;      // 文档类型过滤
+  repeated string character_ids = 2;  // 角色 ID 过滤
+  repeated string timeline_ids = 3;   // 时间线 ID 过滤
+  repeated string chapter_ids = 4;    // 章节 ID 过滤
+}
+
+message RAGQueryResponse {
+  repeated RAGResult results = 1;
+  int32 total = 2;
+}
+
+message RAGResult {
+  string id = 1;
+  string content = 2;
+  float score = 3;
+  string doc_type = 4;
+  map<string, string> metadata = 5;
+}
+
+// ============ 上下文获取 ============
+
+message ContextRequest {
+  string project_id = 1;
+  string chapter_id = 2;
+  string task_type = 3;  // continue_writing, create_chapter, review_content
+}
+
+message ContextResponse {
+  string task_type = 1;
+  WorkspaceContext context = 2;
+  int32 token_count = 3;
+}
+
+message WorkspaceContext {
+  repeated ChapterSummary previous_chapters = 1;
+  repeated CharacterInfo active_characters = 2;
+  repeated TimelineEvent timeline_events = 3;
+  repeated OutlineNode outline_nodes = 4;
+  WorldSettings world_settings = 5;
+}
+
+message ChapterSummary {
+  string id = 1;
+  string title = 2;
+  string summary = 3;
+  int32 order = 4;
+}
+
+message CharacterInfo {
+  string id = 1;
+  string name = 2;
+  repeated string alias = 3;
+  string summary = 4;
+  repeated string traits = 5;
+  string background = 6;
+}
+
+message TimelineEvent {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string impact = 4;
+  repeated string participants = 5;
+}
+
+message OutlineNode {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  int32 level = 4;
+}
+
+message WorldSettings {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  map<string, string> settings = 4;
+}
+
+// ============ Agent 执行 ============
+
+message AgentExecutionRequest {
+  string workflow_type = 1;  // a2a_pipeline, outline_generation, etc.
+  string project_id = 2;
+  map<string, string> parameters = 3;
+}
+
+message AgentExecutionResponse {
+  string execution_id = 1;
+  string status = 2;  // running, completed, failed
+  string result = 3;  // JSON 格式的结果
+  repeated string errors = 4;
+  int32 tokens_used = 5;
+}
+
+// ============ 向量化 ============
+
+message EmbedRequest {
+  repeated string texts = 1;
+  string model = 2;
+}
+
+message EmbedResponse {
+  repeated Embedding embeddings = 1;
+}
+
+message Embedding {
+  repeated float vector = 1;
+  int32 dimension = 2;
+}
+
+// ============ 健康检查 ============
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;  // healthy, degraded, unhealthy
+  map<string, string> checks = 2;
+}
+
