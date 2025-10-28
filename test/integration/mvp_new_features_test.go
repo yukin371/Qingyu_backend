@@ -247,11 +247,14 @@ func (m *MockCacheClient) Get(ctx context.Context, key string) (string, error) {
 	return "", assert.AnError
 }
 
-func (m *MockCacheClient) Set(ctx context.Context, key, value string, ttl time.Duration) error {
+func (m *MockCacheClient) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	if m.data == nil {
 		m.data = make(map[string]string)
 	}
-	m.data[key] = value
+	// 转换interface{}为string
+	if strVal, ok := value.(string); ok {
+		m.data[key] = strVal
+	}
 	return nil
 }
 
