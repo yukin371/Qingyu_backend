@@ -24,10 +24,10 @@ pymilvus==2.3.4
 
 # Embeddings
 sentence-transformers==2.3.1
-torch==2.1.2
+torch==2.8.0
 
 # Redis
-redis==5.0.1
+redis==5.2.1
 
 # Logging
 structlog==24.1.0

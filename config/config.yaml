@@ -24,11 +24,21 @@ jwt:
 
 # AI配置（测试）
 ai:
-  api_key: ""  # 开发环境测试密钥
-  base_url: "https://generativelanguage.googleapis.com/v1beta"
-  model: "gemini-1.5-flash"  # 或者使用 gemini-1.5-pro
+  api_key: "${OPENAI_API_KEY}"  # 开发环境测试密钥，支持环境变量
+  base_url: "https://api.openai.com/v1"  # 与Python一致
+  model: "gpt-4-turbo-preview"
   max_tokens: 2000
-  temperature: 0.7  # 0.0-1.0，值越高创造性越强
+  temperature: 0.7
+
+  # Python AI服务配置
+  python_service:
+    host: "localhost"  # 或Docker服务名如"python-ai-service"
+    grpc_port: 50052   # Python gRPC端口 (Go端口+1)
+    embedding_model: "BAAI/bge-large-zh-v1.5"
+    milvus_host: "localhost"  # Docker: milvus
+    milvus_port: 19530
+    redis_host: "localhost"  # Docker: redis
+    redis_port: 6379
 
 # Redis配置
 redis:

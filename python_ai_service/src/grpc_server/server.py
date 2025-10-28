@@ -66,7 +66,15 @@ async def serve():
 
 def start_grpc_server():
     """同步启动入口（用于在 FastAPI 中启动）"""
-    asyncio.create_task(serve())
+    import threading
+
+    # 在后台线程启动异步gRPC服务器
+    def run_server():
+        asyncio.run(serve())
+
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
+    logger.info("grpc_server_thread_started", port=settings.go_grpc_port + 1)
 
 
 if __name__ == "__main__":

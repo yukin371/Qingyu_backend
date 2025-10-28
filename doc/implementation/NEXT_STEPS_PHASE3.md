@@ -28,16 +28,49 @@
 
 ### 步骤 1: 生成 Protobuf 代码
 
-```bash
-# 确保安装了 protoc
-protoc --version
+#### 检查 protoc 是否已安装
 
-# 安装 Go 插件（如果未安装）
+```bash
+# 检查版本
+protoc --version
+```
+
+如果未安装，请参考 [安装指南](#q1-protoc-命令找不到)。
+
+#### 安装 Go 插件
+
+```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
 
-# 生成代码
+#### 生成代码
+
+**Linux / macOS**:
+```bash
 make proto
+```
+
+**Windows (PowerShell)**:
+```powershell
+.\scripts\generate_proto_all.ps1
+```
+
+**手动生成（所有平台）**:
+```bash
+# Go 代码
+protoc --go_out=. --go-grpc_out=. \
+  --go_opt=paths=source_relative \
+  --go-grpc_opt=paths=source_relative \
+  -I python_ai_service/proto \
+  python_ai_service/proto/ai_service.proto
+
+# Python 代码
+cd python_ai_service
+python -m grpc_tools.protoc -I proto \
+  --python_out=src/grpc_server \
+  --grpc_python_out=src/grpc_server \
+  proto/ai_service.proto
 ```
 
 **预期输出**:
