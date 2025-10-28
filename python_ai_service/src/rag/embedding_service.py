@@ -2,9 +2,10 @@
 向量化服务
 阶段 2.1 实现
 """
-from typing import List, Tuple
+from typing import List, Optional
 import torch
 from sentence_transformers import SentenceTransformer
+import numpy as np
 
 from ..core import get_logger, EmbeddingError, settings
 
@@ -29,12 +30,37 @@ class EmbeddingService:
 
     def load_model(self) -> None:
         """加载向量化模型"""
-        # TODO: 实现模型加载逻辑
-        # 1. 下载模型（如果需要）
-        # 2. 加载到内存
-        # 3. 移动到指定设备（CPU/GPU）
-        logger.info("load_model_not_implemented")
-        raise NotImplementedError("Model loading will be implemented in Stage 2.1")
+        try:
+            logger.info("loading_embedding_model", model=self.model_name)
+
+            # 1. 加载模型（SentenceTransformer 会自动下载）
+            self.model = SentenceTransformer(self.model_name)
+
+            # 2. 移动到指定设备
+            # 自动检测：如果指定cuda但不可用，则回退到cpu
+            if self.device == "cuda" and not torch.cuda.is_available():
+                logger.warning("cuda_not_available_fallback_to_cpu")
+                self.device = "cpu"
+
+            self.model.to(self.device)
+
+            # 3. 设置为评估模式
+            self.model.eval()
+
+            # 4. 预热模型（避免首次推理慢）
+            logger.info("warming_up_model")
+            _ = self.model.encode(["预热模型"], convert_to_numpy=True)
+
+            logger.info(
+                "model_loaded_successfully",
+                model=self.model_name,
+                device=self.device,
+                dimension=self.get_dimension()
+            )
+
+        except Exception as e:
+            logger.error("failed_to_load_model", error=str(e))
+            raise EmbeddingError(f"Failed to load embedding model: {str(e)}")
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         """批量向量化文本
@@ -45,12 +71,36 @@ class EmbeddingService:
         Returns:
             向量列表
         """
-        # TODO: 实现批量向量化逻辑
-        # 1. 文本预处理
-        # 2. 批量编码
-        # 3. 归一化
-        logger.info("embed_texts_not_implemented", num_texts=len(texts))
-        raise NotImplementedError("Text embedding will be implemented in Stage 2.1")
+        try:
+            if not self.model:
+                raise EmbeddingError("Model not loaded. Call load_model() first.")
+
+            logger.info("embedding_texts", count=len(texts))
+
+            # 1. 文本预处理（去除多余空格和换行）
+            cleaned_texts = [" ".join(text.split()) for text in texts]
+
+            # 2. 批量编码
+            # convert_to_numpy=True 返回 numpy 数组
+            # normalize_embeddings=True 进行 L2 归一化
+            embeddings = self.model.encode(
+                cleaned_texts,
+                batch_size=self.batch_size,
+                convert_to_numpy=True,
+                normalize_embeddings=True,  # L2 归一化（用于内积相似度）
+                show_progress_bar=len(texts) > 100  # 大批量时显示进度
+            )
+
+            # 3. 转换为 Python list
+            embeddings_list = embeddings.tolist()
+
+            logger.info("texts_embedded_successfully", count=len(embeddings_list))
+
+            return embeddings_list
+
+        except Exception as e:
+            logger.error("failed_to_embed_texts", error=str(e))
+            raise EmbeddingError(f"Failed to embed texts: {str(e)}")
 
     def embed_query(self, query: str) -> List[float]:
         """向量化查询文本
@@ -61,9 +111,14 @@ class EmbeddingService:
         Returns:
             查询向量
         """
-        # TODO: 实现查询向量化逻辑
-        logger.info("embed_query_not_implemented")
-        raise NotImplementedError("Query embedding will be implemented in Stage 2.1")
+        try:
+            # 调用 embed_texts，传入单个查询
+            embeddings = self.embed_texts([query])
+            return embeddings[0]
+
+        except Exception as e:
+            logger.error("failed_to_embed_query", error=str(e))
+            raise EmbeddingError(f"Failed to embed query: {str(e)}")
 
     def get_dimension(self) -> int:
         """获取向量维度
@@ -71,6 +126,10 @@ class EmbeddingService:
         Returns:
             向量维度
         """
-        # BGE-large-zh-v1.5 的维度是 1024
-        return 1024
+        if self.model:
+            # 动态获取模型的输出维度
+            return self.model.get_sentence_embedding_dimension()
+        else:
+            # 默认返回 BGE-large-zh-v1.5 的维度
+            return 1024
 
