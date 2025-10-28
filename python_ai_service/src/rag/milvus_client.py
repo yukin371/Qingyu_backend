@@ -66,6 +66,8 @@ class MilvusClient:
                 FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
                 FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=dimension),
                 FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=100),
+                FieldSchema(name="document_id", dtype=DataType.VARCHAR, max_length=200),  # 文档ID
+                FieldSchema(name="chunk_id", dtype=DataType.INT64),  # 文档内chunk序号
                 FieldSchema(name="metadata", dtype=DataType.JSON),
             ]
             schema = CollectionSchema(fields=fields, description="Qingyu Knowledge Base")
@@ -95,7 +97,9 @@ class MilvusClient:
         self,
         texts: List[str],
         vectors: List[List[float]],
-        metadata: List[Dict[str, Any]]
+        metadata: List[Dict[str, Any]],
+        document_ids: Optional[List[str]] = None,
+        chunk_ids: Optional[List[int]] = None
     ) -> List[str]:
         """插入向量数据
 
@@ -103,6 +107,8 @@ class MilvusClient:
             texts: 文本列表
             vectors: 向量列表
             metadata: 元数据列表
+            document_ids: 文档ID列表（可选，默认生成UUID）
+            chunk_ids: chunk序号列表（可选，默认为0）
 
         Returns:
             插入的文档 ID 列表
@@ -118,16 +124,24 @@ class MilvusClient:
             # 提取 source 字段（如果存在）
             sources = [meta.get("source", "unknown") for meta in metadata]
 
+            # 处理document_id和chunk_id
+            if document_ids is None:
+                document_ids = ids  # 默认使用主键ID
+            if chunk_ids is None:
+                chunk_ids = [0] * len(texts)  # 默认chunk_id为0
+
             # 构建批量插入数据
             entities = [
                 ids,
                 texts,
                 vectors,
                 sources,
+                document_ids,
+                chunk_ids,
                 metadata
             ]
 
-            logger.info("inserting_vectors", count=len(texts))
+            logger.info("inserting_vectors", count=len(texts), unique_documents=len(set(document_ids)))
 
             # 执行插入
             insert_result = self.collection.insert(entities)
@@ -238,6 +252,126 @@ class MilvusClient:
         except Exception as e:
             logger.error("failed_to_delete_vectors", error=str(e))
             raise MilvusConnectionError(f"Failed to delete vectors: {str(e)}")
+
+    def insert_document(
+        self,
+        document_id: str,
+        chunks: List[Dict[str, Any]],
+        vectors: List[List[float]]
+    ) -> List[str]:
+        """插入文档（自动分块）
+
+        Args:
+            document_id: 文档ID
+            chunks: chunk列表，每个chunk包含 {'text': str, 'chunk_id': int, 'metadata': dict}
+            vectors: 向量列表
+
+        Returns:
+            插入的ID列表
+        """
+        try:
+            # 提取数据
+            texts = [chunk['text'] for chunk in chunks]
+            chunk_ids = [chunk.get('chunk_id', i) for i, chunk in enumerate(chunks)]
+            metadatas = [chunk.get('metadata', {}) for chunk in chunks]
+            document_ids = [document_id] * len(chunks)
+
+            # 批量插入
+            ids = self.insert(
+                texts=texts,
+                vectors=vectors,
+                metadata=metadatas,
+                document_ids=document_ids,
+                chunk_ids=chunk_ids
+            )
+
+            logger.info(
+                "document_inserted",
+                document_id=document_id,
+                chunk_count=len(chunks)
+            )
+
+            return ids
+
+        except Exception as e:
+            logger.error(
+                "failed_to_insert_document",
+                document_id=document_id,
+                error=str(e)
+            )
+            raise MilvusConnectionError(f"Failed to insert document: {str(e)}")
+
+    def get_document_chunks(self, document_id: str) -> List[Dict[str, Any]]:
+        """获取文档的所有chunk
+
+        Args:
+            document_id: 文档ID
+
+        Returns:
+            chunk列表
+        """
+        try:
+            if not self.collection:
+                raise MilvusConnectionError("Collection not loaded.")
+
+            # 构建查询表达式
+            expr = f'document_id == "{document_id}"'
+
+            logger.info("querying_document_chunks", document_id=document_id)
+
+            # 查询所有chunk
+            results = self.collection.query(
+                expr=expr,
+                output_fields=["id", "text", "source", "document_id", "chunk_id", "metadata"]
+            )
+
+            # 按chunk_id排序
+            sorted_results = sorted(results, key=lambda x: x.get('chunk_id', 0))
+
+            logger.info(
+                "document_chunks_retrieved",
+                document_id=document_id,
+                chunk_count=len(sorted_results)
+            )
+
+            return sorted_results
+
+        except Exception as e:
+            logger.error(
+                "failed_to_get_document_chunks",
+                document_id=document_id,
+                error=str(e)
+            )
+            raise MilvusConnectionError(f"Failed to get document chunks: {str(e)}")
+
+    def delete_document(self, document_id: str) -> None:
+        """删除文档的所有chunk
+
+        Args:
+            document_id: 文档ID
+        """
+        try:
+            if not self.collection:
+                raise MilvusConnectionError("Collection not loaded.")
+
+            # 构建删除表达式
+            expr = f'document_id == "{document_id}"'
+
+            logger.info("deleting_document", document_id=document_id)
+
+            # 执行删除
+            self.collection.delete(expr)
+            self.collection.flush()
+
+            logger.info("document_deleted", document_id=document_id)
+
+        except Exception as e:
+            logger.error(
+                "failed_to_delete_document",
+                document_id=document_id,
+                error=str(e)
+            )
+            raise MilvusConnectionError(f"Failed to delete document: {str(e)}")
 
     def health_check(self) -> bool:
         """健康检查

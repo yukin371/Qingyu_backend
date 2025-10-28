@@ -56,12 +56,28 @@ class Settings(BaseSettings):
     redis_password: str = Field(default="", alias="REDIS_PASSWORD")
 
     # Embedding
+    embedding_provider: str = Field(default="local", alias="EMBEDDING_PROVIDER")  # local, openai, custom
     embedding_model_name: str = Field(
         default="BAAI/bge-large-zh-v1.5",
         alias="EMBEDDING_MODEL_NAME"
     )
     embedding_model_device: str = Field(default="cuda", alias="EMBEDDING_MODEL_DEVICE")
     embedding_batch_size: int = Field(default=32, alias="EMBEDDING_BATCH_SIZE")
+    embedding_cache_enabled: bool = Field(default=True, alias="EMBEDDING_CACHE_ENABLED")
+    embedding_cache_ttl: int = Field(default=604800, alias="EMBEDDING_CACHE_TTL")  # 7天
+
+    # OpenAI Embedding
+    openai_embedding_model: str = Field(
+        default="text-embedding-3-small",
+        alias="OPENAI_EMBEDDING_MODEL"
+    )
+    openai_embedding_batch_size: int = Field(default=100, alias="OPENAI_EMBEDDING_BATCH_SIZE")
+    openai_embedding_max_retries: int = Field(default=3, alias="OPENAI_EMBEDDING_MAX_RETRIES")
+
+    # Text Splitter
+    text_chunk_size: int = Field(default=500, alias="TEXT_CHUNK_SIZE")
+    text_chunk_overlap: int = Field(default=50, alias="TEXT_CHUNK_OVERLAP")
+    text_splitter_type: str = Field(default="recursive", alias="TEXT_SPLITTER_TYPE")  # recursive, semantic
 
     # LangSmith
     langchain_tracing_v2: bool = Field(default=False, alias="LANGCHAIN_TRACING_V2")
