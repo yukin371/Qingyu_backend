@@ -57,12 +57,39 @@ class MilvusClient:
         Args:
             dimension: 向量维度，默认 1024（BGE-large-zh-v1.5）
         """
-        # TODO: 实现 Collection 创建逻辑
-        # 1. 定义 Schema
-        # 2. 创建 Collection
-        # 3. 创建索引
-        logger.info("create_collection_not_implemented")
-        raise NotImplementedError("Collection creation will be implemented in Stage 1.3")
+        try:
+            logger.info("creating_collection", name=self.collection_name, dimension=dimension)
+
+            # 1. 定义 Schema
+            fields = [
+                FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=200),
+                FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
+                FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=dimension),
+                FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=100),
+                FieldSchema(name="metadata", dtype=DataType.JSON),
+            ]
+            schema = CollectionSchema(fields=fields, description="Qingyu Knowledge Base")
+
+            # 2. 创建 Collection
+            self.collection = Collection(name=self.collection_name, schema=schema)
+            logger.info("collection_created", name=self.collection_name)
+
+            # 3. 创建索引
+            index_params = {
+                "metric_type": "IP",  # 内积相似度（归一化后等价余弦）
+                "index_type": "IVF_FLAT",
+                "params": {"nlist": 128}
+            }
+            self.collection.create_index(field_name="vector", index_params=index_params)
+            logger.info("index_created", index_type="IVF_FLAT")
+
+            # 4. 加载 Collection 到内存
+            self.collection.load()
+            logger.info("collection_loaded", name=self.collection_name)
+
+        except Exception as e:
+            logger.error("failed_to_create_collection", error=str(e))
+            raise MilvusConnectionError(f"Failed to create collection: {str(e)}")
 
     def insert(
         self,
@@ -80,9 +107,39 @@ class MilvusClient:
         Returns:
             插入的文档 ID 列表
         """
-        # TODO: 实现插入逻辑
-        logger.info("insert_not_implemented")
-        raise NotImplementedError("Insert will be implemented in Stage 1.3")
+        try:
+            if not self.collection:
+                raise MilvusConnectionError("Collection not loaded. Call create_collection() first.")
+
+            # 生成唯一 ID
+            import uuid
+            ids = [str(uuid.uuid4()) for _ in range(len(texts))]
+
+            # 提取 source 字段（如果存在）
+            sources = [meta.get("source", "unknown") for meta in metadata]
+
+            # 构建批量插入数据
+            entities = [
+                ids,
+                texts,
+                vectors,
+                sources,
+                metadata
+            ]
+
+            logger.info("inserting_vectors", count=len(texts))
+
+            # 执行插入
+            insert_result = self.collection.insert(entities)
+            self.collection.flush()
+
+            logger.info("vectors_inserted", count=len(ids), ids_sample=ids[:3])
+
+            return ids
+
+        except Exception as e:
+            logger.error("failed_to_insert_vectors", error=str(e))
+            raise MilvusConnectionError(f"Failed to insert vectors: {str(e)}")
 
     def search(
         self,
@@ -100,9 +157,60 @@ class MilvusClient:
         Returns:
             检索结果列表
         """
-        # TODO: 实现检索逻辑
-        logger.info("search_not_implemented")
-        raise NotImplementedError("Search will be implemented in Stage 2.2")
+        try:
+            if not self.collection:
+                raise MilvusConnectionError("Collection not loaded. Call create_collection() first.")
+
+            # 构建搜索参数
+            search_params = {
+                "metric_type": "IP",
+                "params": {"nprobe": 10}
+            }
+
+            # 构建过滤表达式（如果有）
+            expr = None
+            if filters:
+                # 简单的过滤表达式构建
+                # 例如：filters = {"source": "project"} -> expr = 'source == "project"'
+                filter_clauses = []
+                for key, value in filters.items():
+                    if isinstance(value, str):
+                        filter_clauses.append(f'{key} == "{value}"')
+                    else:
+                        filter_clauses.append(f'{key} == {value}')
+                expr = " and ".join(filter_clauses) if filter_clauses else None
+
+            logger.info("searching_vectors", top_k=top_k, has_filters=filters is not None)
+
+            # 执行搜索
+            results = self.collection.search(
+                data=[query_vector],
+                anns_field="vector",
+                param=search_params,
+                limit=top_k,
+                expr=expr,
+                output_fields=["id", "text", "source", "metadata"]
+            )
+
+            # 解析结果
+            search_results = []
+            for hits in results:
+                for hit in hits:
+                    search_results.append({
+                        "id": hit.entity.get("id"),
+                        "text": hit.entity.get("text"),
+                        "source": hit.entity.get("source"),
+                        "metadata": hit.entity.get("metadata"),
+                        "score": hit.score
+                    })
+
+            logger.info("search_completed", results_count=len(search_results))
+
+            return search_results
+
+        except Exception as e:
+            logger.error("failed_to_search_vectors", error=str(e))
+            raise MilvusConnectionError(f"Failed to search vectors: {str(e)}")
 
     def delete(self, ids: List[str]) -> None:
         """删除向量数据
@@ -110,9 +218,26 @@ class MilvusClient:
         Args:
             ids: 要删除的文档 ID 列表
         """
-        # TODO: 实现删除逻辑
-        logger.info("delete_not_implemented")
-        raise NotImplementedError("Delete will be implemented in Stage 2.3")
+        try:
+            if not self.collection:
+                raise MilvusConnectionError("Collection not loaded. Call create_collection() first.")
+
+            # 构建删除表达式
+            # 使用 IN 操作符批量删除
+            ids_str = ", ".join([f'"{id}"' for id in ids])
+            expr = f"id in [{ids_str}]"
+
+            logger.info("deleting_vectors", count=len(ids))
+
+            # 执行删除
+            self.collection.delete(expr)
+            self.collection.flush()
+
+            logger.info("vectors_deleted", count=len(ids))
+
+        except Exception as e:
+            logger.error("failed_to_delete_vectors", error=str(e))
+            raise MilvusConnectionError(f"Failed to delete vectors: {str(e)}")
 
     def health_check(self) -> bool:
         """健康检查
