@@ -1,14 +1,13 @@
 package recommendation
 
 import (
-	reco "Qingyu_backend/models/recommendation"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/recommendation"
+	"Qingyu_backend/service/shared/recommendation"
 )
 
 // RecommendationAPI 推荐API
@@ -113,9 +112,9 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 解析请求体
 	var req struct {
 		ItemID       string                 `json:"itemId" binding:"required"`
-		ChapterID    string                 `json:"chapterId"`
-		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/collect/read/finish/like/share
-		Value        float64                `json:"value"`
+		ItemType     string                 `json:"itemType"`                        // book/article等，默认book
+		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/favorite/read等
+		Duration     int64                  `json:"duration"`                        // 阅读时长（秒）
 		Metadata     map[string]interface{} `json:"metadata"`
 	}
 
@@ -124,18 +123,23 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 		return
 	}
 
-	// 构建行为对象
-	behavior := &reco.Behavior{
-		UserID:       userID.(string),
-		ItemID:       req.ItemID,
-		ChapterID:    req.ChapterID,
-		BehaviorType: req.BehaviorType,
-		Value:        req.Value,
-		Metadata:     req.Metadata,
+	// 默认类型为book
+	if req.ItemType == "" {
+		req.ItemType = "book"
+	}
+
+	// 构建行为记录请求
+	behaviorReq := &recommendation.RecordBehaviorRequest{
+		UserID:     userID.(string),
+		ItemID:     req.ItemID,
+		ItemType:   req.ItemType,
+		ActionType: req.BehaviorType,
+		Duration:   req.Duration,
+		Metadata:   req.Metadata,
 	}
 
 	// 记录行为
-	err := api.recoService.RecordBehavior(c.Request.Context(), behavior)
+	err := api.recoService.RecordUserBehavior(c.Request.Context(), behaviorReq)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "记录行为失败", err.Error())
 		return
@@ -146,7 +150,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 
 // GetHomepageRecommendations 获取首页推荐
 //
-//	@Summary	获取首页推荐（混合推荐策略）
+//	@Summary	获取首页推荐（混合推荐策略：个性化+热门）
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(20)
 //	@Success	200		{object}	shared.APIResponse
@@ -167,11 +171,21 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 		}
 	}
 
-	// 获取首页推荐
-	recommendations, err := api.recoService.GetHomepageRecommendations(c.Request.Context(), userIDStr, limit)
-	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取首页推荐失败", err.Error())
-		return
+	var recommendations []*recommendation.RecommendedItem
+	var err error
+
+	// 如果用户已登录，优先返回个性化推荐
+	if userIDStr != "" {
+		recommendations, err = api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userIDStr, limit)
+	}
+
+	// 如果未登录或个性化推荐失败，返回热门推荐
+	if userIDStr == "" || err != nil {
+		recommendations, err = api.recoService.GetHotItems(c.Request.Context(), "book", limit)
+		if err != nil {
+			shared.Error(c, http.StatusInternalServerError, "获取首页推荐失败", err.Error())
+			return
+		}
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
@@ -184,8 +198,8 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 //
 //	@Summary	获取热门推荐
 //	@Tags		推荐系统
-//	@Param		limit	query		int	false	"推荐数量"	default(20)
-//	@Param		days	query		int	false	"统计天数"	default(7)
+//	@Param		limit	query		int		false	"推荐数量"	default(20)
+//	@Param		type	query		string	false	"物品类型"	default(book)
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/recommendation/hot [get]
 func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
@@ -197,16 +211,11 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 		}
 	}
 
-	// 获取days参数
-	days := 7
-	if daysStr := c.Query("days"); daysStr != "" {
-		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 {
-			days = d
-		}
-	}
+	// 获取type参数，默认为book
+	itemType := c.DefaultQuery("type", "book")
 
 	// 获取热门推荐
-	recommendations, err := api.recoService.GetHotRecommendations(c.Request.Context(), limit, days)
+	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), itemType, limit)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取热门推荐失败", err.Error())
 		return
@@ -220,7 +229,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 
 // GetCategoryRecommendations 获取分类推荐
 //
-//	@Summary	获取分类推荐
+//	@Summary	获取分类推荐（当前使用热门推荐）
 //	@Tags		推荐系统
 //	@Param		category	query		string	true	"分类名称"
 //	@Param		limit		query		int		false	"推荐数量"	default(20)
@@ -241,8 +250,9 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 		}
 	}
 
-	// 获取分类推荐
-	recommendations, err := api.recoService.GetCategoryRecommendations(c.Request.Context(), category, limit)
+	// 注意：当前使用热门推荐作为分类推荐
+	// TODO: 后续可以基于category参数实现真正的分类推荐
+	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), "book", limit)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取分类推荐失败", err.Error())
 		return

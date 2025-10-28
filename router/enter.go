@@ -8,12 +8,15 @@ import (
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	projectRouter "Qingyu_backend/router/project"
 	readerRouter "Qingyu_backend/router/reader"
+	recommendationRouter "Qingyu_backend/router/recommendation"
 	sharedRouter "Qingyu_backend/router/shared"
 	systemRouter "Qingyu_backend/router/system"
 	userRouter "Qingyu_backend/router/user"
 
 	"Qingyu_backend/service"
 	sharedService "Qingyu_backend/service/shared"
+
+	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -139,6 +142,25 @@ func RegisterRoutes(r *gin.Engine) {
 		if commentSvc != nil {
 			logger.Info("  - /api/v1/reader/comments/* (评论系统)")
 		}
+	}
+
+	// ============ 注册推荐系统路由 ============
+	recommendationSvc, err := serviceContainer.GetRecommendationService()
+	if err != nil {
+		logger.Warn("获取推荐服务失败", zap.Error(err))
+		logger.Info("推荐系统路由未注册")
+	} else {
+		// 创建推荐API
+		recommendationApi := recommendationAPI.NewRecommendationAPI(recommendationSvc)
+		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
+
+		logger.Info("✓ 推荐系统路由已注册到: /api/v1/recommendation/")
+		logger.Info("  - /api/v1/recommendation/personalized (个性化推荐 - 需认证)")
+		logger.Info("  - /api/v1/recommendation/similar (相似推荐)")
+		logger.Info("  - /api/v1/recommendation/behavior (记录行为 - 需认证)")
+		logger.Info("  - /api/v1/recommendation/homepage (首页推荐)")
+		logger.Info("  - /api/v1/recommendation/hot (热门推荐)")
+		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
 	}
 
 	// ============ 注册用户路由 ============
