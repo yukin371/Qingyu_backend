@@ -79,6 +79,22 @@ class Settings(BaseSettings):
     text_chunk_overlap: int = Field(default=50, alias="TEXT_CHUNK_OVERLAP")
     text_splitter_type: str = Field(default="recursive", alias="TEXT_SPLITTER_TYPE")  # recursive, semantic
 
+    # RAG配置
+    rag_top_k: int = Field(default=5, alias="RAG_TOP_K")
+    rag_rerank_top_k: int = Field(default=3, alias="RAG_RERANK_TOP_K")
+    rag_max_context_tokens: int = Field(default=2000, alias="RAG_MAX_CONTEXT_TOKENS")
+    rag_use_reranker: bool = Field(default=False, alias="RAG_USE_RERANKER")
+    rag_use_hybrid_search: bool = Field(default=False, alias="RAG_USE_HYBRID_SEARCH")
+
+    # Reranker配置
+    reranker_model: str = Field(default="BAAI/bge-reranker-large", alias="RERANKER_MODEL")
+    reranker_batch_size: int = Field(default=32, alias="RERANKER_BATCH_SIZE")
+
+    # 混合检索配置
+    hybrid_vector_weight: float = Field(default=0.7, alias="HYBRID_VECTOR_WEIGHT")
+    hybrid_bm25_weight: float = Field(default=0.3, alias="HYBRID_BM25_WEIGHT")
+    hybrid_fusion_method: str = Field(default="rrf", alias="HYBRID_FUSION_METHOD")  # rrf, weighted
+
     # LangSmith
     langchain_tracing_v2: bool = Field(default=False, alias="LANGCHAIN_TRACING_V2")
     langchain_endpoint: Optional[str] = Field(default=None, alias="LANGCHAIN_ENDPOINT")
