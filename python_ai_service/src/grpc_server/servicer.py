@@ -1,11 +1,16 @@
 """
 gRPC Servicer 实现
 """
-from typing import Any
+import json
+from typing import Any, Optional
+
 import grpc
 from google.protobuf import timestamp_pb2
 
-from ..core import get_logger, AgentExecutionError, RAGQueryError
+from core.logger import get_logger
+from services.agent_service import AgentService
+from services.rag_service import RAGService
+
 from . import ai_service_pb2, ai_service_pb2_grpc
 
 logger = get_logger(__name__)
@@ -14,14 +19,24 @@ logger = get_logger(__name__)
 class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
     """AI Service gRPC 实现"""
 
-    def __init__(self):
-        """初始化服务"""
-        logger.info("initializing_ai_servicer")
+    def __init__(
+        self,
+        agent_service: Optional[AgentService] = None,
+        rag_service: Optional[RAGService] = None,
+    ):
+        """初始化服务
 
-        # TODO: 初始化依赖
-        # - RAG 系统
-        # - Embedding 服务
-        # - Agent 工作流
+        Args:
+            agent_service: Agent服务实例
+            rag_service: RAG服务实例
+        """
+        logger.info("Initializing AIServicer")
+
+        # 服务依赖
+        self.agent_service = agent_service or AgentService()
+        self.rag_service = rag_service or RAGService()
+
+        logger.info("AIServicer initialized")
 
     async def GenerateContent(
         self,
@@ -63,26 +78,44 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
     ) -> ai_service_pb2.RAGQueryResponse:
         """RAG 查询"""
         logger.info(
-            "query_knowledge_called",
-            query=request.query,
+            "QueryKnowledge called",
+            query=request.query[:100],
             project_id=request.project_id,
             top_k=request.top_k
         )
 
         try:
-            # TODO: 实现 RAG 查询逻辑
-            # 1. 向量化查询
-            # 2. Milvus 检索
-            # 3. 重排序
-            # 4. 返回结果
+            # 调用RAG服务
+            results = await self.rag_service.search(
+                query_text=request.query,
+                project_id=request.project_id,
+                user_id=request.user_id or None,
+                content_types=list(request.content_types) if request.content_types else None,
+                top_k=request.top_k or 5,
+            )
+
+            # 转换为gRPC响应
+            rag_results = []
+            for result in results:
+                rag_results.append(
+                    ai_service_pb2.RAGResult(
+                        text=result.get("text", ""),
+                        score=result.get("score", 0.0),
+                        document_id=result.get("document_id", ""),
+                        chunk_id=result.get("chunk_id", ""),
+                        metadata=json.dumps(result.get("metadata", {})),
+                    )
+                )
+
+            logger.info("QueryKnowledge completed", results_count=len(rag_results))
 
             return ai_service_pb2.RAGQueryResponse(
-                results=[],
-                total=0
+                results=rag_results,
+                total=len(rag_results)
             )
 
         except Exception as e:
-            logger.error("query_knowledge_failed", error=str(e), exc_info=True)
+            logger.error("QueryKnowledge failed", error=str(e), exc_info=True)
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"Failed to query knowledge: {str(e)}"
@@ -128,28 +161,43 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
     ) -> ai_service_pb2.AgentExecutionResponse:
         """执行 Agent 工作流"""
         logger.info(
-            "execute_agent_called",
+            "ExecuteAgent called",
             workflow_type=request.workflow_type,
-            project_id=request.project_id
+            project_id=request.project_id,
+            task_length=len(request.task),
         )
 
         try:
-            # TODO: 实现 Agent 执行逻辑
-            # 1. 根据 workflow_type 选择工作流
-            # 2. 初始化 LangGraph
-            # 3. 执行工作流
-            # 4. 返回结果
+            # 解析上下文
+            agent_context = json.loads(request.context) if request.context else {}
 
+            # 调用Agent服务
+            result = await self.agent_service.execute(
+                agent_type=request.workflow_type,
+                task=request.task,
+                context=agent_context,
+                tools=list(request.tools),
+                user_id=request.user_id or None,
+                project_id=request.project_id or None,
+            )
+
+            logger.info(
+                "ExecuteAgent completed",
+                status=result.status,
+                output_length=len(result.output),
+            )
+
+            # 构建响应
             return ai_service_pb2.AgentExecutionResponse(
-                execution_id="exec-" + request.project_id,
-                status="completed",
-                result="{}",
-                errors=[],
-                tokens_used=0
+                execution_id=f"exec-{request.project_id}",
+                status=result.status,
+                result=result.output,
+                errors=[],  # TODO: 从result中提取errors
+                tokens_used=result.metadata.get("tokens_used", 0),
             )
 
         except Exception as e:
-            logger.error("execute_agent_failed", error=str(e), exc_info=True)
+            logger.error("ExecuteAgent failed", error=str(e), exc_info=True)
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"Failed to execute agent: {str(e)}"
@@ -195,19 +243,31 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
         context: grpc.aio.ServicerContext
     ) -> ai_service_pb2.HealthCheckResponse:
         """健康检查"""
-        logger.debug("health_check_called")
+        logger.debug("HealthCheck called")
 
-        # TODO: 检查各个依赖的健康状态
-        checks = {
-            "milvus": "not_implemented",
-            "embedding_model": "not_implemented",
-            "agent_workflow": "not_implemented"
-        }
+        try:
+            # 检查各个服务的健康状态
+            agent_health = await self.agent_service.health_check()
+            rag_health = await self.rag_service.health_check()
 
-        status = "healthy" if all(v == "ok" for v in checks.values() if v != "not_implemented") else "degraded"
+            checks = {
+                "agent_service": "ok" if agent_health.get("healthy") else "error",
+                "rag_service": "ok" if rag_health.get("healthy") else "error",
+                "workflows": "ok" if agent_health.get("workflows") else "error",
+            }
 
-        return ai_service_pb2.HealthCheckResponse(
-            status=status,
-            checks=checks
-        )
+            # 总体状态
+            status = "healthy" if all(v == "ok" for v in checks.values()) else "degraded"
+
+            return ai_service_pb2.HealthCheckResponse(
+                status=status,
+                checks=checks
+            )
+
+        except Exception as e:
+            logger.error("HealthCheck failed", error=str(e))
+            return ai_service_pb2.HealthCheckResponse(
+                status="unhealthy",
+                checks={"error": str(e)}
+            )
 

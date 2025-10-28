@@ -151,10 +151,14 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 
 			// 示例gRPC调用 (假设proto定义了GenerateContent方法)
 			grpcReq := &pb.GenerateContentRequest{
-				Prompt:      req.Prompt,
-				Temperature: float32(options.Temperature),
-				MaxTokens:   int32(options.MaxTokens),
-				Model:       options.Model,
+				Prompt:    req.Prompt,
+				ProjectId: req.ProjectID,
+				ChapterId: req.ChapterID,
+				Options: &pb.GenerateOptions{
+					Temperature: float32(options.Temperature),
+					MaxTokens:   int32(options.MaxTokens),
+					Model:       options.Model,
+				},
 			}
 			grpcResp, err := client.GenerateContent(ctx, grpcReq)
 			if err != nil {
