@@ -95,6 +95,14 @@ class Settings(BaseSettings):
     hybrid_bm25_weight: float = Field(default=0.3, alias="HYBRID_BM25_WEIGHT")
     hybrid_fusion_method: str = Field(default="rrf", alias="HYBRID_FUSION_METHOD")  # rrf, weighted
 
+    # 索引更新配置
+    index_auto_update: bool = Field(default=True, alias="INDEX_AUTO_UPDATE")
+    index_batch_size: int = Field(default=10, alias="INDEX_BATCH_SIZE")
+    index_batch_interval: int = Field(default=60, alias="INDEX_BATCH_INTERVAL")  # 秒
+    index_max_workers: int = Field(default=3, alias="INDEX_MAX_WORKERS")
+    index_retry_times: int = Field(default=3, alias="INDEX_RETRY_TIMES")
+    index_retry_delay: int = Field(default=5, alias="INDEX_RETRY_DELAY")  # 秒
+
     # LangSmith
     langchain_tracing_v2: bool = Field(default=False, alias="LANGCHAIN_TRACING_V2")
     langchain_endpoint: Optional[str] = Field(default=None, alias="LANGCHAIN_ENDPOINT")
