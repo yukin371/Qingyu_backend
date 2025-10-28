@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Qingyu AI Service
 
 # Stage 1: Builder
-FROM python:3.10-slim as builder
+FROM python:3.12-slim as builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install --no-dev --no-interaction --no-ansi
 
 # Stage 2: Runtime
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
