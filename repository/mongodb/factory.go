@@ -124,6 +124,26 @@ func (f *MongoRepositoryFactory) CreateDocumentContentRepository() writingRepo.D
 	return mongoWriting.NewMongoDocumentContentRepository(f.database)
 }
 
+// CreateCharacterRepository 创建角色Repository
+func (f *MongoRepositoryFactory) CreateCharacterRepository() writingRepo.CharacterRepository {
+	return NewCharacterRepository(f.database)
+}
+
+// CreateLocationRepository 创建地点Repository
+func (f *MongoRepositoryFactory) CreateLocationRepository() writingRepo.LocationRepository {
+	return NewLocationRepository(f.database)
+}
+
+// CreateTimelineRepository 创建时间线Repository
+func (f *MongoRepositoryFactory) CreateTimelineRepository() writingRepo.TimelineRepository {
+	return NewTimelineRepository(f.database)
+}
+
+// CreateTimelineEventRepository 创建时间线事件Repository
+func (f *MongoRepositoryFactory) CreateTimelineEventRepository() writingRepo.TimelineEventRepository {
+	return NewTimelineEventRepository(f.database)
+}
+
 // ========== Reading Module Repositories ==========
 
 // CreateReadingSettingsRepository 创建阅读设置Repository
