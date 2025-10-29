@@ -286,6 +286,7 @@ func (s *SessionServiceImpl) getUserSessionsKey(userID string) string {
 
 // CheckDeviceLimit 检查设备数量限制（MVP: 多端登录限制）
 // maxDevices: 最大允许设备数，默认5
+// 注意：此方法只检查不踢出，如需自动踢出请使用EnforceDeviceLimit
 func (s *SessionServiceImpl) CheckDeviceLimit(ctx context.Context, userID string, maxDevices int) error {
 	if maxDevices <= 0 {
 		maxDevices = 5 // 默认最多5台设备
@@ -301,6 +302,91 @@ func (s *SessionServiceImpl) CheckDeviceLimit(ctx context.Context, userID string
 	if len(sessions) >= maxDevices {
 		return fmt.Errorf("登录设备数量已达上限（%d台），请退出其他设备后重试", maxDevices)
 	}
+
+	return nil
+}
+
+// EnforceDeviceLimit 强制执行设备数量限制（FIFO策略）
+// 如果设备数超限，自动踢出最老的设备，允许新设备登录
+// maxDevices: 最大允许设备数，默认5
+func (s *SessionServiceImpl) EnforceDeviceLimit(ctx context.Context, userID string, maxDevices int) error {
+	if maxDevices <= 0 {
+		maxDevices = 5 // 默认最多5台设备
+	}
+
+	// 1. 获取当前用户的所有活跃会话
+	sessions, err := s.GetUserSessions(ctx, userID)
+	if err != nil {
+		// 查询失败时采用宽松策略，允许登录
+		zap.L().Warn("获取用户会话失败，跳过设备限制检查",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		return nil
+	}
+
+	// 2. 如果未超限，直接返回
+	if len(sessions) < maxDevices {
+		zap.L().Debug("设备数量未超限",
+			zap.String("user_id", userID),
+			zap.Int("current", len(sessions)),
+			zap.Int("max", maxDevices),
+		)
+		return nil
+	}
+
+	// 3. 超限时，计算需要踢出的设备数量
+	numToKick := len(sessions) - maxDevices + 1 // +1 为新设备留位置
+
+	zap.L().Info("设备数量超限，准备踢出最老设备",
+		zap.String("user_id", userID),
+		zap.Int("current", len(sessions)),
+		zap.Int("max", maxDevices),
+		zap.Int("to_kick", numToKick),
+	)
+
+	// 4. 按创建时间排序（最老的在前）
+	// 注意：这里需要复制一份sessions，避免修改原切片
+	sortedSessions := make([]*Session, len(sessions))
+	copy(sortedSessions, sessions)
+
+	// 使用sort.Slice排序
+	for i := 0; i < len(sortedSessions)-1; i++ {
+		for j := i + 1; j < len(sortedSessions); j++ {
+			if sortedSessions[i].CreatedAt.After(sortedSessions[j].CreatedAt) {
+				sortedSessions[i], sortedSessions[j] = sortedSessions[j], sortedSessions[i]
+			}
+		}
+	}
+
+	// 5. 踢出最老的N个设备
+	kickedCount := 0
+	for i := 0; i < numToKick && i < len(sortedSessions); i++ {
+		oldSession := sortedSessions[i]
+		if err := s.DestroySession(ctx, oldSession.ID); err != nil {
+			zap.L().Warn("踢出旧设备失败",
+				zap.String("user_id", userID),
+				zap.String("session_id", oldSession.ID),
+				zap.Time("created_at", oldSession.CreatedAt),
+				zap.Error(err),
+			)
+			// 继续尝试踢出其他设备
+			continue
+		}
+
+		kickedCount++
+		zap.L().Info("成功踢出旧设备",
+			zap.String("user_id", userID),
+			zap.String("session_id", oldSession.ID),
+			zap.Time("created_at", oldSession.CreatedAt),
+		)
+	}
+
+	zap.L().Info("设备限制执行完成",
+		zap.String("user_id", userID),
+		zap.Int("kicked", kickedCount),
+		zap.Int("required", numToKick),
+	)
 
 	return nil
 }
