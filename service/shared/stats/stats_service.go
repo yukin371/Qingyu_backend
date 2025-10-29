@@ -1,9 +1,14 @@
 package stats
 
 import (
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	userRepo "Qingyu_backend/repository/interfaces/user"
+	writingRepo "Qingyu_backend/repository/interfaces/writing"
 	"context"
 	"fmt"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // PlatformStatsService 平台统计服务接口
@@ -30,22 +35,28 @@ type PlatformStatsService interface {
 
 // PlatformStatsServiceImpl 平台统计服务实现
 type PlatformStatsServiceImpl struct {
-	// TODO(Phase3): 注入实际的Repository
-	// userRepo    userRepo.UserRepository
-	// bookRepo    bookstoreRepo.BookRepository
-	// projectRepo writingRepo.ProjectRepository
-	// walletRepo  userRepo.WalletRepository
-
-	// TODO(Phase3): 可以组合其他领域的StatsService
-	// readingStatsService *reading.ReadingStatsService
-	// userStatsService    *user.UserStatsService
+	userRepo    userRepo.UserRepository
+	bookRepo    bookstoreRepo.BookRepository
+	projectRepo writingRepo.ProjectRepository
+	chapterRepo bookstoreRepo.ChapterRepository
 
 	initialized bool
 }
 
 // NewPlatformStatsService 创建平台统计服务
-func NewPlatformStatsService() PlatformStatsService {
-	return &PlatformStatsServiceImpl{}
+func NewPlatformStatsService(
+	userRepository userRepo.UserRepository,
+	bookRepository bookstoreRepo.BookRepository,
+	projectRepository writingRepo.ProjectRepository,
+	chapterRepository bookstoreRepo.ChapterRepository,
+) PlatformStatsService {
+	return &PlatformStatsServiceImpl{
+		userRepo:    userRepository,
+		bookRepo:    bookRepository,
+		projectRepo: projectRepository,
+		chapterRepo: chapterRepository,
+		initialized: false,
+	}
 }
 
 // ============ 用户统计 ============
@@ -72,21 +83,59 @@ func (s *PlatformStatsServiceImpl) GetUserStats(ctx context.Context, userID stri
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
-	// TODO(Phase3): 实现实际的统计查询
-	// 当前返回模拟数据
+	// 1. 获取用户基本信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		zap.L().Error("获取用户信息失败",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("获取用户信息失败: %w", err)
+	}
+
+	// 2. 统计项目数
+	projectCount, err := s.projectRepo.CountByOwner(ctx, userID)
+	if err != nil {
+		zap.L().Warn("统计项目数失败，使用默认值0",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		projectCount = 0
+	}
+
+	// 3. 统计书籍数和总字数
+	// 注意：当前GetByAuthorID需要ObjectID，暂时跳过书籍统计
+	// TODO(优化): 扩展BookRepository支持string author_id查询，或建立author_id索引
+	bookCount := int64(0)
+	totalWords := int64(0)
+
+	zap.L().Debug("书籍统计暂时跳过",
+		zap.String("user_id", userID),
+		zap.String("reason", "需要ObjectID类型author_id，当前用户ID为string类型"),
+	)
+
+	// 4. 构建统计结果
+	// VIPLevel字段在User模型中不存在，暂时使用Role
+	memberLevel := "普通用户"
+	if user.Role == "author" {
+		memberLevel = "作者"
+	} else if user.Role == "admin" {
+		memberLevel = "管理员"
+	}
+
 	stats := &UserStats{
 		UserID:        userID,
-		TotalProjects: 5,
-		TotalBooks:    3,
-		TotalWords:    150000,
-		TotalReading:  1200,
-		TotalLikes:    350,
-		TotalComments: 120,
-		TotalRevenue:  1500.50,
-		MemberLevel:   "VIP",
-		RegisteredAt:  time.Now().AddDate(0, -3, 0),
-		LastActiveAt:  time.Now(),
-		ActiveDays:    45,
+		TotalProjects: projectCount,
+		TotalBooks:    bookCount,   // TODO(Task3): 需要支持string author_id查询
+		TotalWords:    totalWords,  // TODO(Task3): 需要支持string author_id查询
+		TotalReading:  0,           // TODO(Task3): 需要阅读行为统计
+		TotalLikes:    0,           // TODO(Task3): 需要点赞统计
+		TotalComments: 0,           // TODO(Task3): 需要评论统计
+		TotalRevenue:  0,           // TODO(Task3): 需要钱包统计
+		MemberLevel:   memberLevel, // 暂时使用Role代替VIPLevel
+		RegisteredAt:  user.CreatedAt,
+		LastActiveAt:  user.UpdatedAt,
+		ActiveDays:    0, // TODO(Task3): 需要活跃度统计
 	}
 
 	return stats, nil
@@ -104,15 +153,28 @@ type PlatformUserStats struct {
 
 // GetPlatformUserStats 获取平台用户统计
 func (s *PlatformStatsServiceImpl) GetPlatformUserStats(ctx context.Context, startDate, endDate time.Time) (*PlatformUserStats, error) {
-	// TODO(Phase3): 实现实际的聚合查询
+	// TODO(Task3-聚合查询): 实现MongoDB聚合管道统计
+	// 需要实现：
+	// 1. db.users.countDocuments({}) - 总用户数
+	// 2. db.users.countDocuments({created_at: {$gte: startDate, $lte: endDate}}) - 新增用户
+	// 3. db.users.countDocuments({last_active_at: {$gte: startDate}}) - 活跃用户
+	// 4. db.users.countDocuments({vip_level: {$ne: "none"}}) - VIP用户
+	// 5. 留存率计算：需要活跃度记录表
+	// 6. 平均活跃天数：需要聚合管道计算
+	//
+	// 实施策略：Task 3 实现Repository层聚合方法
+	// 预计工期：4小时
+
 	stats := &PlatformUserStats{
-		TotalUsers:       10000,
-		NewUsers:         150,
-		ActiveUsers:      3500,
-		VIPUsers:         500,
-		RetentionRate:    0.75,
-		AverageActiveDay: 18.5,
+		TotalUsers:       0,
+		NewUsers:         0,
+		ActiveUsers:      0,
+		VIPUsers:         0,
+		RetentionRate:    0,
+		AverageActiveDay: 0,
 	}
+
+	zap.L().Warn("GetPlatformUserStats: 当前返回空数据，等待Task3实现")
 
 	return stats, nil
 }
@@ -139,18 +201,52 @@ func (s *PlatformStatsServiceImpl) GetContentStats(ctx context.Context, userID s
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
-	// TODO(Phase3): 实现实际的统计查询
+	// 1. 验证用户存在
+	_, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		zap.L().Error("获取用户信息失败",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("获取用户信息失败: %w", err)
+	}
+
+	// 2. 统计项目数
+	projectCount, err := s.projectRepo.CountByOwner(ctx, userID)
+	if err != nil {
+		zap.L().Warn("统计项目数失败，使用默认值0",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		projectCount = 0
+	}
+
+	// 3. 获取用户的所有书籍
+	// 注意：当前GetByAuthorID需要ObjectID，暂时跳过书籍统计
+	// TODO(优化): 扩展BookRepository支持string author_id查询
+	publishedBooks := int64(0)
+	draftBooks := int64(0)
+	totalChapters := int64(0)
+	totalWords := int64(0)
+	averageWordsPerDay := float64(0)
+
+	zap.L().Debug("书籍统计暂时跳过",
+		zap.String("user_id", userID),
+		zap.String("reason", "需要ObjectID类型author_id，当前用户ID为string类型"),
+	)
+
+	// 6. 构建统计结果
 	stats := &ContentStats{
 		UserID:             userID,
-		TotalProjects:      5,
-		PublishedBooks:     3,
-		DraftBooks:         2,
-		TotalChapters:      85,
-		TotalWords:         150000,
-		AverageWordsPerDay: 1200.5,
-		TotalViews:         15000,
-		TotalCollections:   350,
-		AverageRating:      4.5,
+		TotalProjects:      projectCount,
+		PublishedBooks:     publishedBooks,
+		DraftBooks:         draftBooks,
+		TotalChapters:      totalChapters,
+		TotalWords:         totalWords,
+		AverageWordsPerDay: averageWordsPerDay,
+		TotalViews:         0, // TODO(Task3): 需要阅读统计
+		TotalCollections:   0, // TODO(Task3): 需要收藏统计
+		AverageRating:      0, // TODO(Task3): 需要评分统计
 	}
 
 	return stats, nil
@@ -169,16 +265,30 @@ type PlatformContentStats struct {
 
 // GetPlatformContentStats 获取平台内容统计
 func (s *PlatformStatsServiceImpl) GetPlatformContentStats(ctx context.Context, startDate, endDate time.Time) (*PlatformContentStats, error) {
-	// TODO(Phase3): 实现实际的聚合查询
+	// TODO(Task3-聚合查询): 实现MongoDB聚合管道统计
+	// 需要实现：
+	// 1. db.books.countDocuments({}) - 总书籍数
+	// 2. db.books.countDocuments({created_at: {$gte: startDate, $lte: endDate}}) - 新增书籍
+	// 3. db.chapters.aggregate([{$group: {_id: null, total: {$sum: 1}}}]) - 总章节数
+	// 4. db.chapters.aggregate([{$group: {_id: null, total: {$sum: "$word_count"}}}]) - 总字数
+	// 5. db.book_stats.aggregate([{$group: {_id: null, total: {$sum: "$view_count"}}}]) - 总浏览量
+	// 6. db.book_ratings.aggregate([{$group: {_id: null, avg: {$avg: "$rating"}}}]) - 平均评分
+	// 7. db.books.aggregate([{$group: {_id: "$category", count: {$sum: 1}}}, {$sort: {count: -1}}, {$limit: 5}]) - 热门分类
+	//
+	// 实施策略：Task 3 实现Repository层聚合方法
+	// 预计工期：6小时
+
 	stats := &PlatformContentStats{
-		TotalBooks:        5000,
-		NewBooks:          120,
-		TotalChapters:     45000,
-		TotalWords:        50000000,
-		TotalViews:        1000000,
-		AverageRating:     4.3,
-		PopularCategories: []string{"玄幻", "都市", "科幻", "历史"},
+		TotalBooks:        0,
+		NewBooks:          0,
+		TotalChapters:     0,
+		TotalWords:        0,
+		TotalViews:        0,
+		AverageRating:     0,
+		PopularCategories: []string{},
 	}
+
+	zap.L().Warn("GetPlatformContentStats: 当前返回空数据，等待Task3实现")
 
 	return stats, nil
 }
@@ -211,24 +321,29 @@ func (s *PlatformStatsServiceImpl) GetUserActivityStats(ctx context.Context, use
 		days = 7 // 默认7天
 	}
 
-	// TODO(Phase3): 实现实际的活跃度统计
+	// TODO(Task3-活跃度统计): 需要实现活跃度记录表和统计逻辑
+	// 需要设计：
+	// 1. user_activity_logs表：记录用户操作（写作、阅读、评论、点赞）
+	// 2. 聚合查询：按天统计操作数
+	// 3. 聚合查询：按操作类型分组统计
+	// 4. 聚合查询：按小时统计活跃时段
+	//
+	// 实施策略：Task 3 设计活跃度记录表，实现聚合查询
+	// 预计工期：4小时
+
 	stats := &ActivityStats{
 		UserID:       userID,
 		Days:         days,
-		TotalActions: 150,
-		DailyActions: []DailyAction{
-			{Date: "2025-10-27", Actions: 25, Words: 1500},
-			{Date: "2025-10-26", Actions: 20, Words: 1200},
-			{Date: "2025-10-25", Actions: 18, Words: 1000},
-		},
-		ActionTypes: map[string]int64{
-			"write":   80,
-			"read":    40,
-			"comment": 20,
-			"like":    10,
-		},
-		ActiveHours: []int{9, 10, 14, 15, 20, 21, 22},
+		TotalActions: 0,
+		DailyActions: []DailyAction{},
+		ActionTypes:  map[string]int64{},
+		ActiveHours:  []int{},
 	}
+
+	zap.L().Warn("GetUserActivityStats: 当前返回空数据，等待Task3实现",
+		zap.String("user_id", userID),
+		zap.Int("days", days),
+	)
 
 	return stats, nil
 }
@@ -257,27 +372,32 @@ func (s *PlatformStatsServiceImpl) GetRevenueStats(ctx context.Context, userID s
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
-	// TODO(Phase3): 实现实际的收益统计
+	// TODO(Task3-收益统计): 需要实现钱包交易记录和聚合查询
+	// 需要设计：
+	// 1. wallet_transactions表：记录所有收入交易
+	// 2. 聚合查询：总收益（sum(amount)）
+	// 3. 聚合查询：期间收益（sum(amount) WHERE created_at BETWEEN startDate AND endDate）
+	// 4. 聚合查询：按日统计收益
+	// 5. 聚合查询：按书籍分组统计收益
+	// 6. 聚合查询：按收益类型分组统计
+	//
+	// 实施策略：Task 3 设计交易记录表，实现聚合查询
+	// 预计工期：4小时
+
 	stats := &RevenueStats{
 		UserID:        userID,
-		TotalRevenue:  1500.50,
-		PeriodRevenue: 350.00,
-		DailyRevenue: []DailyRevenue{
-			{Date: "2025-10-27", Revenue: 50.00},
-			{Date: "2025-10-26", Revenue: 45.50},
-			{Date: "2025-10-25", Revenue: 55.00},
-		},
-		RevenueByBook: map[string]float64{
-			"book1": 800.00,
-			"book2": 500.50,
-			"book3": 200.00,
-		},
-		RevenueByType: map[string]float64{
-			"subscription": 900.00,
-			"chapter":      400.50,
-			"reward":       200.00,
-		},
+		TotalRevenue:  0,
+		PeriodRevenue: 0,
+		DailyRevenue:  []DailyRevenue{},
+		RevenueByBook: map[string]float64{},
+		RevenueByType: map[string]float64{},
 	}
+
+	zap.L().Warn("GetRevenueStats: 当前返回空数据，等待Task3实现",
+		zap.String("user_id", userID),
+		zap.Time("start_date", startDate),
+		zap.Time("end_date", endDate),
+	)
 
 	return stats, nil
 }
@@ -314,8 +434,36 @@ func (s *PlatformStatsServiceImpl) GetVersion() string {
 	return "v1.0.0"
 }
 
-// TODO(Phase3): 高级统计功能
-// - [ ] 实时统计（Redis缓存）
+// ============ TODO: 高级统计功能（Task 3+） ============
+//
+// **P0任务2完成情况**：
+// ✅ GetUserStats - 实际Repository查询
+// ✅ GetContentStats - 实际Repository查询
+// ⏸️ GetPlatformUserStats - 延后到Task 3（需要聚合查询）
+// ⏸️ GetPlatformContentStats - 延后到Task 3（需要聚合查询）
+// ⏸️ GetUserActivityStats - 延后到Task 3（需要活跃度记录表）
+// ⏸️ GetRevenueStats - 延后到Task 3（需要钱包交易记录）
+//
+// **Task 3实施计划**（MongoDB聚合查询）：
+//
+// 1. **平台级统计** (6小时):
+//    - 实现UserRepository.GetPlatformStats() - 聚合查询
+//    - 实现BookRepository.GetPlatformStats() - 聚合查询
+//    - 实现ChapterRepository.GetPlatformStats() - 聚合查询
+//
+// 2. **活跃度统计** (4小时):
+//    - 设计user_activity_logs表
+//    - 实现ActivityRepository及聚合查询
+//
+// 3. **收益统计** (4小时):
+//    - 设计wallet_transactions表
+//    - 实现TransactionRepository及聚合查询
+//
+// 4. **性能优化** (2小时):
+//    - Redis缓存层（热门统计缓存1小时）
+//    - 异步统计更新（EventBus触发）
+//
+// **Phase 4+高级功能**（延后）：
 // - [ ] 趋势分析（增长率、环比等）
 // - [ ] 用户画像分析
 // - [ ] 内容质量分析
