@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/repository/interfaces/writing"
 	documentService "Qingyu_backend/service/document"
 	"Qingyu_backend/service/interfaces/base"
@@ -69,6 +70,81 @@ func (m *MockDocumentRepository) GetByParentID(ctx context.Context, parentID str
 	return args.Get(0).([]*writer.Document), args.Error(1)
 }
 
+// MockDocumentContentRepository Mock文档内容Repository
+type MockDocumentContentRepository struct {
+	mock.Mock
+	writing.DocumentContentRepository
+}
+
+func (m *MockDocumentContentRepository) Create(ctx context.Context, content *writer.DocumentContent) error {
+	args := m.Called(ctx, content)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) GetByDocumentID(ctx context.Context, docID string) (*writer.DocumentContent, error) {
+	args := m.Called(ctx, docID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*writer.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) GetByID(ctx context.Context, id string) (*writer.DocumentContent, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*writer.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) Delete(ctx context.Context, docID string) error {
+	args := m.Called(ctx, docID)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.DocumentContent, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*writer.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
+	args := m.Called(ctx, documentID, content, expectedVersion)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) BatchUpdateContent(ctx context.Context, updates map[string]string) error {
+	args := m.Called(ctx, updates)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) Ping(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) HealthCheck(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
 // MockProjectRepository Mock项目Repository
 type MockProjectRepository struct {
 	mock.Mock
@@ -123,10 +199,11 @@ func (m *MockEventBus) Unsubscribe(eventType string, handlerName string) error {
 func TestDocumentService_CreateDocument_Success(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	projectID := primitive.NewObjectID().Hex()
@@ -178,10 +255,11 @@ func TestDocumentService_CreateDocument_Success(t *testing.T) {
 func TestDocumentService_CreateDocument_ProjectNotFound(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	projectID := primitive.NewObjectID().Hex()
@@ -209,10 +287,11 @@ func TestDocumentService_CreateDocument_ProjectNotFound(t *testing.T) {
 func TestDocumentService_CreateDocument_NoPermission(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "other-user-id")
 	projectID := primitive.NewObjectID().Hex()
@@ -246,10 +325,11 @@ func TestDocumentService_CreateDocument_NoPermission(t *testing.T) {
 func TestDocumentService_GetDocument_Success(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
@@ -292,10 +372,11 @@ func TestDocumentService_GetDocument_Success(t *testing.T) {
 func TestDocumentService_GetDocument_NotFound(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.Background()
 	docID := primitive.NewObjectID().Hex()
@@ -316,10 +397,11 @@ func TestDocumentService_GetDocument_NotFound(t *testing.T) {
 func TestDocumentService_UpdateDocument_Success(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
@@ -366,10 +448,11 @@ func TestDocumentService_UpdateDocument_Success(t *testing.T) {
 func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
@@ -414,10 +497,11 @@ func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 func TestDocumentService_DeleteDocument_HasChildren(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.WithValue(context.Background(), "userID", "test-user-id")
 	docID := primitive.NewObjectID().Hex()
@@ -460,10 +544,11 @@ func TestDocumentService_DeleteDocument_HasChildren(t *testing.T) {
 func TestDocumentService_ListDocuments_Success(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.Background()
 	projectID := primitive.NewObjectID().Hex()
@@ -509,10 +594,11 @@ func TestDocumentService_ListDocuments_Success(t *testing.T) {
 func TestDocumentService_ListDocuments_Error(t *testing.T) {
 	// Setup
 	mockDocRepo := new(MockDocumentRepository)
+	mockContentRepo := new(MockDocumentContentRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := documentService.NewDocumentService(mockDocRepo, mockProjectRepo, mockEventBus)
+	service := documentService.NewDocumentService(mockDocRepo, mockContentRepo, mockProjectRepo, mockEventBus)
 
 	ctx := context.Background()
 	projectID := primitive.NewObjectID().Hex()
