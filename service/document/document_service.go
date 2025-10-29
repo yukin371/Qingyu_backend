@@ -13,25 +13,28 @@ import (
 
 // DocumentService 文档服务
 type DocumentService struct {
-	documentRepo writingRepo.DocumentRepository
-	projectRepo  writingRepo.ProjectRepository
-	eventBus     base.EventBus
-	serviceName  string
-	version      string
+	documentRepo        writingRepo.DocumentRepository
+	documentContentRepo writingRepo.DocumentContentRepository
+	projectRepo         writingRepo.ProjectRepository
+	eventBus            base.EventBus
+	serviceName         string
+	version             string
 }
 
 // NewDocumentService 创建文档服务
 func NewDocumentService(
 	documentRepo writingRepo.DocumentRepository,
+	documentContentRepo writingRepo.DocumentContentRepository,
 	projectRepo writingRepo.ProjectRepository,
 	eventBus base.EventBus,
 ) *DocumentService {
 	return &DocumentService{
-		documentRepo: documentRepo,
-		projectRepo:  projectRepo,
-		eventBus:     eventBus,
-		serviceName:  "DocumentService",
-		version:      "1.0.0",
+		documentRepo:        documentRepo,
+		documentContentRepo: documentContentRepo,
+		projectRepo:         projectRepo,
+		eventBus:            eventBus,
+		serviceName:         "DocumentService",
+		version:             "1.0.0",
 	}
 }
 
@@ -638,37 +641,75 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该文档", "", nil)
 	}
 
-	// 4. 版本冲突检测（简化版）
-	// TODO: 实现完整的版本控制系统
+	// 4. 获取或创建DocumentContent
+	content, err := s.documentContentRepo.GetByDocumentID(ctx, req.DocumentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
+	}
+
+	var newVersion int
 	hasConflict := false
-	if req.CurrentVersion > 0 {
-		// 检查版本号是否匹配
-		// 这里简化处理，实际应该从版本控制系统获取
-		hasConflict = false
+
+	if content == nil {
+		// 首次保存，创建新DocumentContent
+		newContent := &writer.DocumentContent{
+			DocumentID: req.DocumentID,
+			Content:    req.Content,
+			Version:    1,
+			WordCount:  len([]rune(req.Content)),
+			CharCount:  len(req.Content),
+		}
+		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)
+		}
+		newVersion = 1
+	} else {
+		// 更新现有内容（带版本检测）
+		expectedVersion := req.CurrentVersion
+		if expectedVersion == 0 {
+			// 如果客户端未提供版本号，使用当前版本
+			expectedVersion = content.Version
+		}
+
+		err := s.documentContentRepo.UpdateWithVersion(
+			ctx,
+			req.DocumentID,
+			req.Content,
+			expectedVersion,
+		)
+
+		if err != nil {
+			if err.Error() == "版本冲突，请重新获取最新内容" {
+				// 版本冲突
+				return &AutoSaveResponse{
+					Saved:       false,
+					NewVersion:  content.Version,
+					WordCount:   len([]rune(req.Content)),
+					SavedAt:     time.Now(),
+					HasConflict: true,
+				}, nil
+			}
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "保存文档内容失败", "", err)
+		}
+
+		// 更新成功，版本号+1
+		newVersion = expectedVersion + 1
 	}
 
-	if hasConflict {
-		return nil, fmt.Errorf("版本冲突")
-	}
-
-	// 5. 计算字数
+	// 5. 计算字数并更新Document元数据
 	wordCount := len([]rune(req.Content))
-
-	// 6. 更新文档内容和字数
 	updates := map[string]interface{}{
 		"word_count": wordCount,
 		"updated_at": time.Now(),
 	}
 
 	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
+		// 内容已保存，但元数据更新失败，记录错误但不返回失败
+		// 下次获取文档时会自动同步
+		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
 
-	// 7. 保存内容到DocumentContent集合（如果存在）
-	// TODO: 实现DocumentContent的保存逻辑
-	// 目前DocumentContent由VersionService管理
-
-	// 8. 发布事件
+	// 6. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
 			EventType: "document.autosaved",
@@ -676,16 +717,17 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 				"document_id": req.DocumentID,
 				"word_count":  wordCount,
 				"save_type":   req.SaveType,
+				"version":     newVersion,
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
 		})
 	}
 
-	// 9. 返回响应
+	// 7. 返回响应
 	return &AutoSaveResponse{
 		Saved:       true,
-		NewVersion:  req.CurrentVersion + 1,
+		NewVersion:  newVersion,
 		WordCount:   wordCount,
 		SavedAt:     time.Now(),
 		HasConflict: hasConflict,
@@ -747,20 +789,29 @@ func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID str
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
 
-	if project == nil || !project.CanEdit(userID) {
+	if project == nil || !project.CanView(userID) {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限访问该文档", "", nil)
 	}
 
 	// 4. 获取内容
-	// TODO: 从DocumentContent集合或VersionService获取实际内容
-	// 目前返回空内容
-	content := ""
+	content, err := s.documentContentRepo.GetByDocumentID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
+	}
 
-	// 5. 返回内容响应
+	// 5. 构建响应
+	actualContent := ""
+	version := 1
+	if content != nil {
+		actualContent = content.Content
+		version = content.Version
+	}
+
+	// 6. 返回内容响应
 	return &DocumentContentResponse{
 		DocumentID: documentID,
-		Content:    content,
-		Version:    1, // TODO: 从版本控制系统获取
+		Content:    actualContent,
+		Version:    version,
 		WordCount:  doc.WordCount,
 		UpdatedAt:  doc.UpdatedAt,
 	}, nil
@@ -798,28 +849,61 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该文档", "", nil)
 	}
 
-	// 4. 版本冲突检测
-	if req.Version > 0 {
-		// TODO: 实现版本号检查
+	// 4. 获取现有DocumentContent检查版本
+	existingContent, err := s.documentContentRepo.GetByDocumentID(ctx, req.DocumentID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
 	}
 
-	// 5. 计算字数
-	wordCount := len([]rune(req.Content))
+	// 5. 保存内容
+	if existingContent == nil {
+		// 首次保存，创建新内容
+		newContent := &writer.DocumentContent{
+			DocumentID: req.DocumentID,
+			Content:    req.Content,
+			Version:    1,
+			WordCount:  len([]rune(req.Content)),
+			CharCount:  len(req.Content),
+		}
+		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)
+		}
+	} else {
+		// 更新现有内容（带版本检测）
+		expectedVersion := req.Version
+		if expectedVersion == 0 {
+			// 如果未提供版本号，使用当前版本
+			expectedVersion = existingContent.Version
+		}
 
-	// 6. 更新文档
+		err := s.documentContentRepo.UpdateWithVersion(
+			ctx,
+			req.DocumentID,
+			req.Content,
+			expectedVersion,
+		)
+
+		if err != nil {
+			if err.Error() == "版本冲突，请重新获取最新内容" {
+				return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "版本冲突，请刷新后重试", "", err)
+			}
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "保存内容失败", "", err)
+		}
+	}
+
+	// 6. 计算字数并更新Document元数据
+	wordCount := len([]rune(req.Content))
 	updates := map[string]interface{}{
 		"word_count": wordCount,
 		"updated_at": time.Now(),
 	}
 
 	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
+		// 内容已保存，但元数据更新失败，记录错误但不返回失败
+		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
 
-	// 7. 保存内容
-	// TODO: 保存到DocumentContent集合
-
-	// 8. 发布事件
+	// 7. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
 			EventType: "document.content_updated",
