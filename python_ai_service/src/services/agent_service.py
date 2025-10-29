@@ -68,11 +68,11 @@ class AgentService:
         self.tool_service = tool_service or ToolService()
         self.workflows = {}
         self._initialized = False
-        
+
         # 执行历史记录（内存中，生产环境应该使用数据库）
         self._execution_history: Dict[str, AgentExecutionResult] = {}
         self._max_history_size = 1000
-        
+
         # 执行统计
         self._execution_stats = defaultdict(lambda: {
             "total": 0,
@@ -80,10 +80,10 @@ class AgentService:
             "failure": 0,
             "total_duration_ms": 0,
         })
-        
+
         # 正在执行的任务（用于取消）
         self._running_tasks: Dict[str, asyncio.Task] = {}
-        
+
         logger.info("AgentService created")
 
     async def initialize(self) -> None:
@@ -166,7 +166,7 @@ class AgentService:
                     rag_tool=rag_tool,
                 )
             )
-            
+
             # 记录正在运行的任务
             self._running_tasks[execution_id] = execution_task
 
@@ -211,7 +211,7 @@ class AgentService:
 
         except asyncio.CancelledError:
             logger.warning(f"Agent execution cancelled", execution_id=execution_id)
-            
+
             result = AgentExecutionResult(
                 execution_id=execution_id,
                 output="",
@@ -221,20 +221,20 @@ class AgentService:
                 metadata={},
                 error="Execution cancelled",
             )
-            
+
             self._save_execution_history(result)
             raise
 
         except Exception as e:
             duration_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
-            
+
             logger.error(
                 f"Agent execution failed",
                 execution_id=execution_id,
                 error=str(e),
                 exc_info=True
             )
-            
+
             # 创建失败结果
             result = AgentExecutionResult(
                 execution_id=execution_id,
@@ -245,13 +245,13 @@ class AgentService:
                 metadata={"duration_ms": duration_ms},
                 error=str(e),
             )
-            
+
             # 保存到历史记录
             self._save_execution_history(result)
-            
+
             # 更新统计
             self._update_stats(agent_type, False, duration_ms)
-            
+
             raise
 
         finally:
@@ -361,19 +361,19 @@ class AgentService:
             执行结果列表
         """
         results = list(self._execution_history.values())
-        
+
         # 过滤
         if user_id:
             results = [r for r in results if r.metadata.get("user_id") == user_id]
         if project_id:
             results = [r for r in results if r.metadata.get("project_id") == project_id]
-        
+
         # 按时间排序（最新在前）
         results.sort(
             key=lambda r: r.metadata.get("created_at", ""),
             reverse=True
         )
-        
+
         return results[:limit]
 
     def get_stats(self, agent_type: Optional[str] = None) -> Dict[str, Any]:
@@ -407,10 +407,10 @@ class AgentService:
                 key=lambda k: self._execution_history[k].metadata.get("created_at", "")
             )
             del self._execution_history[oldest_id]
-        
+
         # 添加创建时间
         result.metadata["created_at"] = datetime.utcnow().isoformat()
-        
+
         # 保存
         self._execution_history[result.execution_id] = result
 
@@ -437,7 +437,7 @@ class AgentService:
             健康状态
         """
         tool_health = await self.tool_service.health_check()
-        
+
         total_executions = sum(
             stats["total"] for stats in self._execution_stats.values()
         )
@@ -459,7 +459,7 @@ class AgentService:
         for execution_id, task in self._running_tasks.items():
             task.cancel()
             logger.info(f"Cancelled running task on shutdown", execution_id=execution_id)
-        
+
         await self.tool_service.close()
         logger.info("AgentService closed")
 
