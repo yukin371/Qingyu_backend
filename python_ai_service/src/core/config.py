@@ -37,6 +37,27 @@ class Settings(BaseSettings):
         alias="ANTHROPIC_MODEL"
     )
 
+    # Google Gemini
+    google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
+    gemini_model: str = Field(
+        default="gemini-2.0-flash-exp",
+        alias="GEMINI_MODEL"
+    )
+    gemini_transport: str = Field(
+        default="rest",
+        alias="GEMINI_TRANSPORT"
+    )  # rest or grpc
+
+    # Default LLM Provider
+    default_llm_provider: str = Field(
+        default="gemini",
+        alias="DEFAULT_LLM_PROVIDER"
+    )  # openai, anthropic, gemini
+    default_llm_model: str = Field(
+        default="gemini-2.0-flash-exp",
+        alias="DEFAULT_LLM_MODEL"
+    )
+
     # Milvus
     milvus_host: str = Field(default="localhost", alias="MILVUS_HOST")
     milvus_port: int = Field(default=19530, alias="MILVUS_PORT")
