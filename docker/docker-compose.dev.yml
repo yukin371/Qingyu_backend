@@ -74,11 +74,9 @@ services:
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
-      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
-      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
     volumes:
       - etcd_data:/etcd_data
-    command: etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://etcd:2379 --listen-peer-urls=http://0.0.0.0:2380 --data-dir=/etcd_data
+    command: etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://etcd:2379 --listen-peer-urls=http://0.0.0.0:2380 --initial-advertise-peer-urls=http://etcd:2380 --initial-cluster=default=http://etcd:2380 --data-dir=/etcd_data
     networks:
       - qingyu-network
 
