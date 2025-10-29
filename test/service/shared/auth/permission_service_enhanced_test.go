@@ -199,10 +199,10 @@ func (m *MockCacheClient) Get(ctx context.Context, key string) (string, error) {
 	return "", fmt.Errorf("key not found")
 }
 
-func (m *MockCacheClient) Set(ctx context.Context, key string, value string, ttl time.Duration) error {
+func (m *MockCacheClient) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.data[key] = value
+	m.data[key] = fmt.Sprintf("%v", value) // 转换为字符串存储
 	return nil
 }
 
