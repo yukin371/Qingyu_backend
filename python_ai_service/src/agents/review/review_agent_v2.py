@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import Runnable
 
-from agents.base_agent import BaseAgent
+from agents.base_agent_v2 import BaseAgentV2
 from agents.review.diagnostic_report import (
     CorrectionInstruction,
     CorrectionStrategy,
@@ -31,7 +31,7 @@ from llm.llm_factory import LLMFactory
 logger = get_logger(__name__)
 
 
-class ReviewAgentV2(BaseAgent):
+class ReviewAgentV2(BaseAgentV2):
     """审核Agent v2.0
 
     职责：
