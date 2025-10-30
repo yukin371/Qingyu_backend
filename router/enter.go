@@ -199,12 +199,22 @@ func RegisterRoutes(r *gin.Engine) {
 			quotaService = nil
 		}
 
-		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService)
+		// 尝试连接Phase3 gRPC服务
+		phase3Client, err := serviceContainer.GetPhase3Client()
+		if err != nil {
+			logger.Warn("Phase3 gRPC客户端未配置", zap.Error(err))
+			phase3Client = nil
+		}
+
+		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client)
 
 		logger.Info("✓ AI服务路由已注册到: /api/v1/ai/")
 		logger.Info("  - /api/v1/ai/writing/* (续写、改写)")
 		logger.Info("  - /api/v1/ai/chat/* (聊天)")
 		logger.Info("  - /api/v1/ai/quota/* (配额管理)")
+		if phase3Client != nil {
+			logger.Info("  - /api/v1/ai/creative/* (Phase3创作工作流)")
+		}
 	}
 
 	// ============ 注册管理员路由 ============

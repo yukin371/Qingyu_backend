@@ -67,6 +67,7 @@ type ServiceContainer struct {
 	// AI 相关服务
 	quotaService *aiService.QuotaService
 	chatService  *aiService.ChatService
+	phase3Client *aiService.Phase3Client
 
 	// 共享服务
 	authService           auth.AuthService
@@ -203,6 +204,14 @@ func (c *ServiceContainer) GetChatService() (*aiService.ChatService, error) {
 		return nil, fmt.Errorf("ChatService未初始化")
 	}
 	return c.chatService, nil
+}
+
+// GetPhase3Client 获取Phase3 gRPC客户端
+func (c *ServiceContainer) GetPhase3Client() (*aiService.Phase3Client, error) {
+	if c.phase3Client == nil {
+		return nil, fmt.Errorf("Phase3Client未初始化")
+	}
+	return c.phase3Client, nil
 }
 
 // ============ 共享服务获取方法 ============
@@ -618,16 +627,16 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// 5.4 StorageService（Phase2快速通道）
 	fmt.Println("初始化 StorageService...")
 	storageRepo := c.repositoryFactory.CreateStorageRepository()
-	
+
 	// 使用本地文件系统Backend（快速通道方案）
 	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:8080/api/v1/files")
-	
+
 	// 适配StorageRepository到FileRepository接口
 	fileRepo := storage.NewRepositoryAdapter(storageRepo)
 	storageSvc := storage.NewStorageService(localBackend, fileRepo)
 	c.storageServiceImpl = storageSvc.(*storage.StorageServiceImpl)
 	c.storageService = storageSvc
-	
+
 	// 注册为BaseService
 	if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
 		if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
@@ -635,15 +644,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 		fmt.Println("  ✓ StorageService 已注册")
 	}
-	
+
 	// 初始化MultipartUploadService
 	multipartSvc := storage.NewMultipartUploadService(localBackend, storageRepo)
 	c.multipartService = multipartSvc
-	
+
 	// 初始化ImageProcessor
 	imageProcessor := storage.NewImageProcessor(localBackend)
 	c.imageProcessor = imageProcessor
-	
+
 	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
 
 	// 5.5 AdminService
