@@ -192,16 +192,21 @@ func TestLikeServiceBatchOperations(t *testing.T) {
 	})
 
 	t.Run("BatchOperations_EmptyArray", func(t *testing.T) {
+		mockRepo := new(MockLikeRepository)
+		mockCommentRepo := new(MockCommentRepository)
+		mockEventBus := NewMockEventBus()
+
+		service := reading.NewLikeService(mockRepo, mockCommentRepo, mockEventBus)
+		ctx := context.Background()
+
 		emptyIDs := []string{}
 
-		mockRepo.On("GetLikesCountBatch", ctx, reader.LikeTargetTypeBook, emptyIDs).
-			Return(map[string]int64{}, nil).Once()
-
+		// 空数组会导致service直接返回空map，不调用repository
 		counts, err := service.GetBooksLikeCount(ctx, emptyIDs)
 		assert.NoError(t, err)
 		assert.Empty(t, counts)
 
-		mockRepo.AssertExpectations(t)
+		// 不验证mock期望，因为没有调用repository
 
 		t.Logf("✓ 批量操作空数组处理正确")
 	})
@@ -283,10 +288,8 @@ func TestLikeServiceError(t *testing.T) {
 			Return(errors.New("database error")).Once()
 
 		err := service.UnlikeBook(ctx, testUserID, testBookID)
-		// Service应该将某些错误视为幂等性处理
-		if err != nil {
-			assert.Contains(t, err.Error(), "取消点赞失败")
-		}
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "取消点赞书籍失败")
 
 		mockRepo.AssertExpectations(t)
 
