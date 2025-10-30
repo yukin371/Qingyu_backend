@@ -34,9 +34,10 @@ func setupSimpleEditorRouter(userID string) (*gin.Engine, *writer.EditorApi) {
 
 	// 创建DocumentService（用于EditorApi初始化）
 	mockDocRepo := new(MockDocumentRepository)
+	mockDocContentRepo := new(MockDocumentContentRepository)
 	mockProjRepo := new(MockProjectRepository)
 	eventBus := &MockEventBus{}
-	docService := document.NewDocumentService(mockDocRepo, mockProjRepo, eventBus)
+	docService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, eventBus)
 
 	editorApi := writer.NewEditorApi(docService)
 

@@ -505,6 +505,14 @@ func TestHealth(t *testing.T) {
 
 	service := NewAdminService(mockAudit, mockLog, mockUser)
 
+	// 初始化服务（使用类型断言访问实现类的Initialize方法）
+	if serviceImpl, ok := service.(*AdminServiceImpl); ok {
+		err := serviceImpl.Initialize(context.Background())
+		if err != nil {
+			t.Fatalf("初始化服务失败: %v", err)
+		}
+	}
+
 	err := service.Health(context.Background())
 	if err != nil {
 		t.Errorf("健康检查失败: %v", err)

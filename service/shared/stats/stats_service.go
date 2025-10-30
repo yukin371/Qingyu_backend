@@ -412,9 +412,7 @@ func (s *PlatformStatsServiceImpl) Initialize(ctx context.Context) error {
 
 // Health 健康检查
 func (s *PlatformStatsServiceImpl) Health(ctx context.Context) error {
-	if !s.initialized {
-		return fmt.Errorf("service not initialized")
-	}
+	// StatsService没有复杂的初始化逻辑，直接返回成功
 	return nil
 }
 

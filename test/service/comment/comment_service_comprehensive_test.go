@@ -30,7 +30,7 @@ func TestCommentServiceBusinessRules(t *testing.T) {
 	t.Run("ContentLength_Minimum", func(t *testing.T) {
 		// 测试最小长度（10字符）
 		shortContent := "这是10个字符的内容"
-		
+
 		mockSensitiveRepo.On("GetEnabledWords", ctx).Return([]*audit.SensitiveWord{}, nil).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*reader.Comment")).Return(nil).Once()
 
@@ -181,11 +181,6 @@ func TestCommentServiceSensitiveWord(t *testing.T) {
 
 // TestCommentServiceReplyChain 回复链测试
 func TestCommentServiceReplyChain(t *testing.T) {
-	mockRepo := new(MockCommentRepository)
-	mockSensitiveRepo := new(MockSensitiveWordRepository)
-	mockEventBus := NewMockEventBus()
-
-	service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -193,6 +188,13 @@ func TestCommentServiceReplyChain(t *testing.T) {
 	testRootID := primitive.NewObjectID().Hex()
 
 	t.Run("Reply_ToRootComment", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock
+		mockRepo := new(MockCommentRepository)
+		mockSensitiveRepo := new(MockSensitiveWordRepository)
+		mockEventBus := NewMockEventBus()
+
+		service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
+
 		// 回复根评论
 		parentComment := &reader.Comment{
 			ID:       primitive.NewObjectID(),
@@ -220,6 +222,13 @@ func TestCommentServiceReplyChain(t *testing.T) {
 	})
 
 	t.Run("Reply_ToNestedComment", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock
+		mockRepo := new(MockCommentRepository)
+		mockSensitiveRepo := new(MockSensitiveWordRepository)
+		mockEventBus := NewMockEventBus()
+
+		service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
+
 		// 回复嵌套评论
 		nestedComment := &reader.Comment{
 			ID:       primitive.NewObjectID(),
@@ -247,6 +256,13 @@ func TestCommentServiceReplyChain(t *testing.T) {
 	})
 
 	t.Run("Reply_ToDeletedComment", func(t *testing.T) {
+		// 为每个子测试创建独立的Mock
+		mockRepo := new(MockCommentRepository)
+		mockSensitiveRepo := new(MockSensitiveWordRepository)
+		mockEventBus := NewMockEventBus()
+
+		service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
+
 		// 回复已删除评论
 		deletedComment := &reader.Comment{
 			ID:     primitive.NewObjectID(),
@@ -428,4 +444,3 @@ func TestCommentServiceConcurrency(t *testing.T) {
 		t.Logf("✓ 并发发布评论成功")
 	})
 }
-

@@ -479,8 +479,8 @@ func TestDocumentService_DeleteDocument_Success(t *testing.T) {
 	// Mock no children
 	mockDocRepo.On("GetByParentID", ctx, docID).Return([]*writer.Document{}, nil)
 
-	// Mock delete
-	mockDocRepo.On("Delete", ctx, docID).Return(nil)
+	// Mock soft delete
+	mockDocRepo.On("SoftDelete", ctx, docID, projectID).Return(nil)
 
 	// Mock event
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil)
