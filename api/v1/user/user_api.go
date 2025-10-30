@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/utils"
 )
 
 // UserAPI 用户管理API处理器
@@ -99,16 +100,14 @@ func (api *UserAPI) Login(c *gin.Context) {
 	}
 
 	// 获取客户端IP
-	clientIP := c.ClientIP()
+	clientIP := utils.GetClientIP(c)
 
 	// 调用Service层
 	serviceReq := &userServiceInterface.LoginUserRequest{
 		Username: req.Username,
 		Password: req.Password,
+		ClientIP: clientIP,
 	}
-
-	// TODO: 将IP通过context传递给Service层
-	_ = clientIP
 
 	resp, err := api.userService.LoginUser(c.Request.Context(), serviceReq)
 	if err != nil {

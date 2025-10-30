@@ -482,3 +482,103 @@ func (s *CommentService) publishCommentEvent(ctx context.Context, eventType stri
 
 	s.eventBus.PublishAsync(ctx, event)
 }
+
+// =========================
+// 高级查询方法
+// =========================
+
+// GetCommentThread 获取评论线程（树状结构）
+func (s *CommentService) GetCommentThread(ctx context.Context, commentID string) (*reader.CommentThread, error) {
+	if commentID == "" {
+		return nil, fmt.Errorf("评论ID不能为空")
+	}
+
+	// 获取主评论
+	comment, err := s.GetCommentDetail(ctx, commentID)
+	if err != nil {
+		return nil, fmt.Errorf("获取评论详情失败: %w", err)
+	}
+
+	// 获取所有回复（不分页，获取全部）
+	replies, total, err := s.GetCommentReplies(ctx, commentID, 1, 100)
+	if err != nil {
+		return nil, fmt.Errorf("获取评论回复失败: %w", err)
+	}
+
+	// 构建回复线程（简化版，只支持一级回复）
+	replyThreads := make([]*reader.CommentThread, len(replies))
+	for i, reply := range replies {
+		replyThreads[i] = &reader.CommentThread{
+			Comment: reply,
+			Replies: nil, // 简化版不递归获取嵌套回复
+			Total:   0,
+			HasMore: false,
+		}
+	}
+
+	thread := &reader.CommentThread{
+		Comment: comment,
+		Replies: replyThreads,
+		Total:   total,
+		HasMore: total > 100, // 如果超过100条回复，表示还有更多
+	}
+
+	return thread, nil
+}
+
+// GetTopComments 获取热门评论（按点赞数排序）
+func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limit int) ([]*reader.Comment, error) {
+	if bookID == "" {
+		return nil, fmt.Errorf("书籍ID不能为空")
+	}
+
+	if limit <= 0 || limit > 100 {
+		limit = 10
+	}
+
+	// 使用热度排序获取评论列表
+	comments, _, err := s.GetCommentList(ctx, bookID, reader.CommentSortByHot, 1, limit)
+	if err != nil {
+		return nil, fmt.Errorf("获取热门评论失败: %w", err)
+	}
+
+	return comments, nil
+}
+
+// GetCommentReplies 获取评论的所有回复
+func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*reader.Comment, int64, error) {
+	if commentID == "" {
+		return nil, 0, fmt.Errorf("评论ID不能为空")
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 || size > 100 {
+		size = 20
+	}
+
+	// 获取该评论的所有回复（Repository 层暂不支持分页，返回所有回复）
+	allReplies, err := s.commentRepo.GetRepliesByCommentID(ctx, commentID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取评论回复失败: %w", err)
+	}
+
+	total := int64(len(allReplies))
+
+	// 在 Service 层实现分页
+	start := (page - 1) * size
+	end := start + size
+
+	if start >= len(allReplies) {
+		return []*reader.Comment{}, total, nil
+	}
+
+	if end > len(allReplies) {
+		end = len(allReplies)
+	}
+
+	replies := allReplies[start:end]
+
+	return replies, total, nil
+}

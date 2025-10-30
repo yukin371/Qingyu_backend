@@ -26,4 +26,9 @@ type CommentService interface {
 	// 统计
 	GetBookCommentStats(ctx context.Context, bookID string) (map[string]interface{}, error)
 	GetUserComments(ctx context.Context, userID string, page, size int) ([]*reader.Comment, int64, error)
+
+	// 高级查询
+	GetCommentThread(ctx context.Context, commentID string) (*reader.CommentThread, error)                     // 获取评论树状结构
+	GetTopComments(ctx context.Context, bookID string, limit int) ([]*reader.Comment, error)                   // 获取热门评论
+	GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*reader.Comment, int64, error) // 获取评论回复列表
 }

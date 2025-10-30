@@ -20,6 +20,7 @@ import (
 
 	// 导入各个子包的具体实现
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
+	mongoAudit "Qingyu_backend/repository/mongodb/audit"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
@@ -99,12 +100,8 @@ func (f *MongoRepositoryFactory) CreateUserRepository() userRepo.UserRepository 
 }
 
 // CreateRoleRepository 创建角色Repository
-// 注意：目前使用 AuthRepository 作为临时实现
-// TODO: 创建专门的 RoleRepository 实现或适配器
 func (f *MongoRepositoryFactory) CreateRoleRepository() userRepo.RoleRepository {
-	// 暂时返回 nil，需要实现正确的 RoleRepository
-	// return mongoShared.NewAuthRepository(f.database)
-	return nil // TODO: 实现 RoleRepository
+	return mongoShared.NewRoleRepository(f.database)
 }
 
 // ========== Writing Module Repositories ==========
@@ -292,11 +289,8 @@ func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository 
 // ========== Audit Module Repositories ==========
 
 // CreateSensitiveWordRepository 创建敏感词Repository
-// 注意：当前返回nil，表示敏感词检测未启用
-// TODO: 实现敏感词Repository
 func (f *MongoRepositoryFactory) CreateSensitiveWordRepository() auditRepo.SensitiveWordRepository {
-	// 暂时返回nil，CommentService会处理nil的情况
-	return nil
+	return mongoAudit.NewSensitiveWordRepository(f.database)
 }
 
 // ========== Factory Management Methods ==========
