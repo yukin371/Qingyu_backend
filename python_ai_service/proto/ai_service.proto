@@ -18,6 +18,18 @@ service AIService {
   // 执行 Agent 工作流
   rpc ExecuteAgent(AgentExecutionRequest) returns (AgentExecutionResponse);
 
+  // Phase3: 专业Agent工作流
+  rpc ExecuteCreativeWorkflow(CreativeWorkflowRequest) returns (CreativeWorkflowResponse);
+
+  // Phase3: 生成大纲
+  rpc GenerateOutline(OutlineRequest) returns (OutlineResponse);
+
+  // Phase3: 生成角色
+  rpc GenerateCharacters(CharactersRequest) returns (CharactersResponse);
+
+  // Phase3: 生成情节
+  rpc GeneratePlot(PlotRequest) returns (PlotResponse);
+
   // 向量化文本
   rpc EmbedText(EmbedRequest) returns (EmbedResponse);
 
@@ -168,6 +180,260 @@ message EmbedResponse {
 message Embedding {
   repeated float vector = 1;
   int32 dimension = 2;
+}
+
+// ============ Phase3: 创作工作流 ============
+
+message CreativeWorkflowRequest {
+  string task = 1;
+  string user_id = 2;
+  string project_id = 3;
+  int32 max_reflections = 4;  // 最大反思次数，默认3
+  bool enable_human_review = 5;  // 是否启用人工审核
+  map<string, string> workspace_context = 6;  // 可选的工作区上下文
+}
+
+message CreativeWorkflowResponse {
+  string execution_id = 1;
+  bool review_passed = 2;
+  int32 reflection_count = 3;
+  OutlineData outline = 4;
+  CharactersData characters = 5;
+  PlotData plot = 6;
+  DiagnosticReportData diagnostic_report = 7;
+  repeated string reasoning = 8;
+  map<string, float> execution_times = 9;
+  int32 tokens_used = 10;
+}
+
+// ============ Phase3: 大纲生成 ============
+
+message OutlineRequest {
+  string task = 1;
+  string user_id = 2;
+  string project_id = 3;
+  map<string, string> workspace_context = 4;
+  string correction_prompt = 5;  // 可选的修正提示
+}
+
+message OutlineResponse {
+  OutlineData outline = 1;
+  float execution_time = 2;
+}
+
+message OutlineData {
+  string title = 1;
+  string genre = 2;
+  string core_theme = 3;
+  string target_audience = 4;
+  int32 estimated_total_words = 5;
+  repeated ChapterData chapters = 6;
+  StoryArc story_arc = 7;
+}
+
+message ChapterData {
+  int32 chapter_id = 1;
+  string title = 2;
+  string summary = 3;
+  repeated string key_events = 4;
+  repeated string characters_involved = 5;
+  string conflict_type = 6;
+  string emotional_tone = 7;
+  int32 estimated_word_count = 8;
+  string chapter_goal = 9;
+  string cliffhanger = 10;
+}
+
+message StoryArc {
+  repeated int32 setup = 1;
+  repeated int32 rising_action = 2;
+  repeated int32 climax = 3;
+  repeated int32 falling_action = 4;
+  repeated int32 resolution = 5;
+}
+
+// ============ Phase3: 角色生成 ============
+
+message CharactersRequest {
+  string task = 1;
+  string user_id = 2;
+  string project_id = 3;
+  OutlineData outline = 4;  // 大纲信息
+  map<string, string> workspace_context = 5;
+  string correction_prompt = 6;
+}
+
+message CharactersResponse {
+  CharactersData characters = 1;
+  float execution_time = 2;
+}
+
+message CharactersData {
+  repeated CharacterData characters = 1;
+  RelationshipNetwork relationship_network = 2;
+}
+
+message CharacterData {
+  string character_id = 1;
+  string name = 2;
+  string role_type = 3;  // protagonist, antagonist, supporting
+  string importance = 4;  // major, minor
+  int32 age = 5;
+  string gender = 6;
+  string appearance = 7;
+  PersonalityData personality = 8;
+  BackgroundData background = 9;
+  string motivation = 10;
+  repeated RelationshipData relationships = 11;
+  DevelopmentArc development_arc = 12;
+  string role_in_story = 13;
+  int32 first_appearance = 14;
+  repeated int32 chapters_involved = 15;
+}
+
+message PersonalityData {
+  repeated string traits = 1;
+  repeated string strengths = 2;
+  repeated string weaknesses = 3;
+  string core_values = 4;
+  string fears = 5;
+}
+
+message BackgroundData {
+  string summary = 1;
+  string family = 2;
+  string education = 3;
+  repeated string key_experiences = 4;
+}
+
+message RelationshipData {
+  string character = 1;
+  string relation_type = 2;  // friend, enemy, family, mentor, rival
+  string description = 3;
+  string dynamics = 4;
+}
+
+message DevelopmentArc {
+  string starting_point = 1;
+  repeated string turning_points = 2;
+  string ending_point = 3;
+  string growth_theme = 4;
+}
+
+message RelationshipNetwork {
+  repeated Alliance alliances = 1;
+  repeated Conflict conflicts = 2;
+  repeated Mentorship mentorships = 3;
+}
+
+message Alliance {
+  repeated string members = 1;
+}
+
+message Conflict {
+  repeated string parties = 1;
+}
+
+message Mentorship {
+  string mentor = 1;
+  string student = 2;
+}
+
+// ============ Phase3: 情节生成 ============
+
+message PlotRequest {
+  string task = 1;
+  string user_id = 2;
+  string project_id = 3;
+  OutlineData outline = 4;
+  CharactersData characters = 5;
+  map<string, string> workspace_context = 6;
+  string correction_prompt = 7;
+}
+
+message PlotResponse {
+  PlotData plot = 1;
+  float execution_time = 2;
+}
+
+message PlotData {
+  repeated TimelineEventData timeline_events = 1;
+  repeated PlotThread plot_threads = 2;
+  repeated ConflictData conflicts = 3;
+  KeyPlotPoints key_plot_points = 4;
+}
+
+message TimelineEventData {
+  string event_id = 1;
+  string timestamp = 2;
+  string location = 3;
+  string title = 4;
+  string description = 5;
+  repeated string participants = 6;
+  string event_type = 7;  // 冲突/转折/高潮/铺垫/结局
+  EventImpact impact = 8;
+  repeated string causes = 9;
+  repeated string consequences = 10;
+  int32 chapter_id = 11;
+}
+
+message EventImpact {
+  string on_plot = 1;
+  map<string, string> on_characters = 2;
+  string emotional_impact = 3;
+}
+
+message PlotThread {
+  string thread_id = 1;
+  string title = 2;
+  string description = 3;
+  string type = 4;  // main, subplot
+  repeated string events = 5;
+  string starting_event = 6;
+  string climax_event = 7;
+  string resolution_event = 8;
+  repeated string characters_involved = 9;
+}
+
+message ConflictData {
+  string conflict_id = 1;
+  string type = 2;  // 人物冲突/内心冲突/环境冲突
+  repeated string parties = 3;
+  string description = 4;
+  repeated string escalation_events = 5;
+  string resolution_event = 6;
+}
+
+message KeyPlotPoints {
+  string inciting_incident = 1;
+  string plot_point_1 = 2;
+  string midpoint = 3;
+  string plot_point_2 = 4;
+  string climax = 5;
+  string resolution = 6;
+}
+
+// ============ Phase3: 诊断报告 ============
+
+message DiagnosticReportData {
+  bool passed = 1;
+  int32 quality_score = 2;
+  repeated DiagnosticIssue issues = 3;
+  string correction_strategy = 4;
+  repeated string affected_agents = 5;
+  repeated string reasoning_chain = 6;
+}
+
+message DiagnosticIssue {
+  string id = 1;
+  string severity = 2;
+  string category = 3;
+  string sub_category = 4;
+  string title = 5;
+  string description = 6;
+  string root_cause = 7;
+  repeated string affected_entities = 8;
+  string impact = 9;
 }
 
 // ============ 健康检查 ============
