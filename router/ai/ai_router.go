@@ -9,12 +9,18 @@ import (
 )
 
 // InitAIRouter 初始化AI路由
-func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService) {
+func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client) {
 	// 创建API实例
 	writingApiHandler := aiApi.NewWritingApi(aiService, quotaService)
 	chatApiHandler := aiApi.NewChatApi(chatService, quotaService)
 	systemApiHandler := aiApi.NewSystemApi(aiService)
 	quotaApiHandler := aiApi.NewQuotaApi(quotaService)
+
+	// Phase3创作API（如果客户端可用）
+	var creativeApiHandler *aiApi.CreativeAPI
+	if phase3Client != nil {
+		creativeApiHandler = aiApi.NewCreativeAPI(phase3Client)
+	}
 
 	// AI主路由组
 	aiGroup := r.Group("/ai")
@@ -71,6 +77,11 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 			compatGroup.POST("/expand", writingApiHandler.RewriteText)
 			compatGroup.POST("/polish", writingApiHandler.RewriteText)
 		}
+	}
+
+	// ============ Phase3 创作路由 ============
+	if creativeApiHandler != nil {
+		InitCreativeRoutes(r, creativeApiHandler)
 	}
 
 	// 注意：管理员配额管理路由已迁移到 /api/v1/admin/quota
