@@ -154,7 +154,7 @@ func TestProjectService_CreateProject(t *testing.T) {
 	// 2. 创建Service
 	service := project.NewProjectService(mockProjectRepo, mockEventBus)
 
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123") // 注意是userId而非userID
 
 	// 3. 设置Mock期望
 	mockProjectRepo.On("Create", mock.Anything, mock.AnythingOfType("*writer.Project")).Return(nil).Run(func(args mock.Arguments) {
@@ -229,7 +229,7 @@ func TestProjectService_GetProject(t *testing.T) {
 
 	service := project.NewProjectService(mockProjectRepo, mockEventBus)
 
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	// 测试获取存在的项目
 	t.Run("获取存在的项目", func(t *testing.T) {
@@ -310,7 +310,7 @@ func TestProjectService_ListMyProjects(t *testing.T) {
 
 	service := project.NewProjectService(mockProjectRepo, mockEventBus)
 
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	t.Run("获取所有项目", func(t *testing.T) {
 		testProjects := []*writer.Project{
@@ -364,7 +364,7 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	service := project.NewProjectService(mockProjectRepo, mockEventBus)
 
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	t.Run("所有者更新成功", func(t *testing.T) {
 		testProject := &writer.Project{
@@ -448,7 +448,7 @@ func TestProjectService_DeleteProject(t *testing.T) {
 
 	service := project.NewProjectService(mockProjectRepo, mockEventBus)
 
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	t.Run("所有者删除成功", func(t *testing.T) {
 		testProject := &writer.Project{

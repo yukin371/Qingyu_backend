@@ -140,6 +140,11 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 		return nil, fmt.Errorf("父评论不存在: %w", err)
 	}
 
+	// 检查父评论是否已删除
+	if parentComment.Status == "deleted" {
+		return nil, fmt.Errorf("无法回复已删除的评论")
+	}
+
 	// 创建回复评论
 	comment := &reader.Comment{
 		BookID:      parentComment.BookID,

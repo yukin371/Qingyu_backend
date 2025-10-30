@@ -52,8 +52,9 @@ type FileRepository interface {
 // NewStorageService 创建存储服务
 func NewStorageService(backend StorageBackend, fileRepo FileRepository) StorageService {
 	return &StorageServiceImpl{
-		backend:  backend,
-		fileRepo: fileRepo,
+		backend:     backend,
+		fileRepo:    fileRepo,
+		initialized: true, // 简单实现直接标记为已初始化
 	}
 }
 

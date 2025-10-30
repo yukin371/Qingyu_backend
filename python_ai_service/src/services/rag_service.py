@@ -28,12 +28,12 @@ class RAGService:
         """初始化服务"""
         self.rag_pipeline: Optional[RAGPipeline] = None
         self._initialized = False
-        
+
         # 查询缓存
         self._cache_enabled = False
         self._cache: Dict[str, Dict[str, Any]] = {}
         self._cache_ttl_seconds = 300  # 5分钟
-        
+
         # 统计信息
         self._stats = defaultdict(lambda: {
             "total_searches": 0,
@@ -41,7 +41,7 @@ class RAGService:
             "cache_hits": 0,
             "cache_misses": 0,
         })
-        
+
         logger.info("RAGService created")
 
     async def initialize(self) -> None:
@@ -221,7 +221,7 @@ class RAGService:
                 for doc in documents
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
                     failure_count += 1
@@ -366,15 +366,15 @@ class RAGService:
         """
         if cache_key not in self._cache:
             return None
-        
+
         entry = self._cache[cache_key]
         expires_at = entry["expires_at"]
-        
+
         # 检查是否过期
         if datetime.utcnow() > expires_at:
             del self._cache[cache_key]
             return None
-        
+
         return entry["results"]
 
     def _put_to_cache(self, cache_key: str, results: List[Dict[str, Any]]) -> None:

@@ -303,6 +303,14 @@ func TestUnifiedWalletService_Health(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	service := NewUnifiedWalletService(repo)
 
+	// 初始化服务（使用类型断言访问实现类的Initialize方法）
+	if serviceImpl, ok := service.(*UnifiedWalletService); ok {
+		err := serviceImpl.Initialize(ctx)
+		if err != nil {
+			t.Fatalf("初始化服务失败: %v", err)
+		}
+	}
+
 	err := service.Health(ctx)
 	if err != nil {
 		t.Fatalf("健康检查失败: %v", err)

@@ -91,7 +91,7 @@ func (m *MockEventBus) PublishAsync(ctx context.Context, event base.Event) error
 
 func createContext(userID string) context.Context {
 	ctx := context.Background()
-	return context.WithValue(ctx, "userID", userID)
+	return context.WithValue(ctx, "userId", userID)
 }
 
 func createProject(id, title, authorID string) *writer.Project {
