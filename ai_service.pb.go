@@ -4121,7 +4121,7 @@ const file_ai_service_proto_rawDesc = "" +
 	"\x12GenerateCharacters\x12\x1c.qingyu.ai.CharactersRequest\x1a\x1d.qingyu.ai.CharactersResponse\x12?\n" +
 	"\fGeneratePlot\x12\x16.qingyu.ai.PlotRequest\x1a\x17.qingyu.ai.PlotResponse\x12>\n" +
 	"\tEmbedText\x12\x17.qingyu.ai.EmbedRequest\x1a\x18.qingyu.ai.EmbedResponse\x12L\n" +
-	"\vHealthCheck\x12\x1d.qingyu.ai.HealthCheckRequest\x1a\x1e.qingyu.ai.HealthCheckResponseB\rZ\vpkg/grpc/pbb\x06proto3"
+	"\vHealthCheck\x12\x1d.qingyu.ai.HealthCheckRequest\x1a\x1e.qingyu.ai.HealthCheckResponseB\x1cZ\x1aQingyu_backend/pkg/grpc/pbb\x06proto3"
 
 var (
 	file_ai_service_proto_rawDescOnce sync.Once

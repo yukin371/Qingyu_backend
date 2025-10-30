@@ -1,44 +1,44 @@
 @echo off
-REM 生成gRPC Python代码
+REM Generate gRPC Python Code
 
 echo ========================================
-echo 生成gRPC Protobuf代码
+echo Generate gRPC Protobuf Code
 echo ========================================
 
 cd /d %~dp0..
 
 echo.
-echo [1/3] 检查依赖...
+echo [1/3] Checking dependencies...
 python -c "import grpc_tools.protoc" 2>NUL
 if errorlevel 1 (
-    echo ❌ 未安装grpcio-tools，正在安装...
+    echo grpcio-tools not installed, installing...
     pip install grpcio-tools
 )
 
 echo.
-echo [2/3] 生成Python protobuf代码...
+echo [2/3] Generating Python protobuf code...
 python -m grpc_tools.protoc ^
     -I proto ^
-    --python_out=src/grpc_service ^
-    --grpc_python_out=src/grpc_service ^
-    proto/ai_service.proto
+    --python_out=src\grpc_service ^
+    --grpc_python_out=src\grpc_service ^
+    proto\ai_service.proto
 
 if errorlevel 1 (
-    echo ❌ 代码生成失败
+    echo Code generation failed
     pause
     exit /b 1
 )
 
 echo.
-echo [3/3] 修复导入路径...
-REM Python生成的代码可能需要修复import路径
-python -c "import os; pb_file='src/grpc_service/ai_service_pb2_grpc.py'; content=open(pb_file).read(); content=content.replace('import ai_service_pb2', 'from . import ai_service_pb2'); open(pb_file, 'w').write(content)" 2>NUL
+echo [3/3] Fixing import paths...
+REM Fix import paths in generated code
+python -c "pb_file='src/grpc_service/ai_service_pb2_grpc.py'; content=open(pb_file).read(); content=content.replace('import ai_service_pb2', 'from . import ai_service_pb2'); open(pb_file, 'w').write(content)" 2>NUL
 
 echo.
-echo ✅ 代码生成完成！
-echo 生成的文件:
-echo   - src/grpc_service/ai_service_pb2.py
-echo   - src/grpc_service/ai_service_pb2_grpc.py
+echo Code generation completed!
+echo Generated files:
+echo   - src\grpc_service\ai_service_pb2.py
+echo   - src\grpc_service\ai_service_pb2_grpc.py
 echo.
 pause
 
