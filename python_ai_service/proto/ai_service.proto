@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package qingyu.ai;
 
-option go_package = "Qingyu_backend/pkg/grpc/pb";
+option go_package = "pkg/grpc/pb";
 
 // AI 服务定义
 service AIService {
