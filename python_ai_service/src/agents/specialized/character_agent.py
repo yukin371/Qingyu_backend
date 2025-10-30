@@ -289,7 +289,7 @@ class CharacterAgent(BaseAgentV2):
                     prompt_parts.append(f"... 还有{len(chapters) - 5}章")
 
         # 添加现有角色（如果有）
-        existing_characters = workspace_context.get("characters", [])
+        existing_characters = workspace_context.get("characters", []) if workspace_context else []
         if existing_characters:
             prompt_parts.append("\n【现有角色】")
             for char in existing_characters[:3]:
