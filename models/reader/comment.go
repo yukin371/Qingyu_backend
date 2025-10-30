@@ -62,3 +62,11 @@ func (c *Comment) IsReply() bool {
 func (c *Comment) HasRating() bool {
 	return c.Rating > 0
 }
+
+// CommentThread 评论线程（树状结构）
+type CommentThread struct {
+	Comment *Comment         `json:"comment"`  // 主评论
+	Replies []*CommentThread `json:"replies"`  // 回复列表（支持嵌套）
+	Total   int64            `json:"total"`    // 总回复数
+	HasMore bool             `json:"has_more"` // 是否还有更多回复
+}

@@ -122,6 +122,7 @@ type RegisterUserResponse struct {
 type LoginUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
+	ClientIP string `json:"client_ip,omitempty"` // 客户端IP地址
 }
 
 // LoginUserResponse 登录用户响应

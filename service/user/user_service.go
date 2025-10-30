@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 
 	"go.uber.org/zap"
@@ -17,14 +18,16 @@ import (
 // UserServiceImpl 用户服务实现
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
+	authRepo sharedRepo.AuthRepository
 	name     string
 	version  string
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repoInterfaces.UserRepository) user2.UserService {
+func NewUserService(userRepo repoInterfaces.UserRepository, authRepo sharedRepo.AuthRepository) user2.UserService {
 	return &UserServiceImpl{
 		userRepo: userRepo,
+		authRepo: authRepo,
 		name:     "UserService",
 		version:  "1.0.0",
 	}
@@ -356,8 +359,10 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	// 5. 更新最后登录时间
-	// IP 地址应该从 context 中获取，这里暂时使用默认值
-	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	ip := req.ClientIP
+	if ip == "" {
+		ip = "unknown"
+	}
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
 		zap.L().Warn("更新最后登录时间失败",
@@ -493,33 +498,113 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 
 // AssignRole 分配角色
 func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
-	// TODO: 实现角色分配逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+	if req.RoleID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 检查角色是否存在
+	_, err = s.authRepo.GetRole(ctx, req.RoleID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "角色不存在", err)
+	}
+
+	// 4. 分配角色
+	if err := s.authRepo.AssignUserRole(ctx, req.UserID, req.RoleID); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "分配角色失败", err)
+	}
+
 	return &user2.AssignRoleResponse{
-		Assigned: false, // 暂时返回false
+		Assigned: true,
 	}, nil
 }
 
 // RemoveRole 移除角色
 func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
-	// TODO: 实现角色移除逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+	if req.RoleID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 移除角色
+	if err := s.authRepo.RemoveUserRole(ctx, req.UserID, req.RoleID); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "移除角色失败", err)
+	}
+
 	return &user2.RemoveRoleResponse{
-		Removed: false, // 暂时返回false
+		Removed: true,
 	}, nil
 }
 
 // GetUserRoles 获取用户角色
 func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
-	// TODO: 实现获取用户角色逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 获取用户角色
+	roles, err := s.authRepo.GetUserRoles(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户角色失败", err)
+	}
+
+	// 4. 转换为角色名称列表
+	roleNames := make([]string, len(roles))
+	for i, role := range roles {
+		roleNames[i] = role.Name
+	}
+
 	return &user2.GetUserRolesResponse{
-		Roles: []string{}, // 暂时返回空列表
+		Roles: roleNames,
 	}, nil
 }
 
 // GetUserPermissions 获取用户权限
 func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
-	// TODO: 实现获取用户权限逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 获取用户权限（通过角色获取）
+	permissions, err := s.authRepo.GetUserPermissions(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户权限失败", err)
+	}
+
 	return &user2.GetUserPermissionsResponse{
-		Permissions: []string{}, // 暂时返回空列表
+		Permissions: permissions,
 	}, nil
 }
 

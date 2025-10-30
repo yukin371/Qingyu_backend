@@ -456,7 +456,8 @@ func (c *ServiceContainer) GetRepositoryFactory() repoInterfaces.RepositoryFacto
 func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 1. 创建用户服务 ============
 	userRepo := c.repositoryFactory.CreateUserRepository()
-	c.userService = userService.NewUserService(userRepo)
+	authRepo := c.repositoryFactory.CreateAuthRepository()
+	c.userService = userService.NewUserService(userRepo, authRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
 		return fmt.Errorf("注册用户服务失败: %w", err)
