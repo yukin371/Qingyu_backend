@@ -154,20 +154,13 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 //	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/admin/stats [get]
 func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
-	// TODO: 实现系统统计功能
-	// 统计内容包括：
-	// - 总用户数
-	// - 活跃用户数
-	// - 总书籍数
-	// - 总收入
-	// - 待审核数量
+	ctx := c.Request.Context()
 
-	stats := SystemStatsResponse{
-		TotalUsers:    0,
-		ActiveUsers:   0,
-		TotalBooks:    0,
-		TotalRevenue:  0.0,
-		PendingAudits: 0,
+	// 调用AdminService获取系统统计
+	stats, err := api.adminService.GetSystemStats(ctx)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取系统统计失败", err.Error())
+		return
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", stats)
@@ -187,21 +180,16 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 //	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/admin/config [get]
 func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
-	// TODO: 实现获取系统配置功能
-	// 配置内容包括：
-	// - 是否允许注册
-	// - 是否需要邮箱验证
-	// - 最大上传文件大小
-	// - 是否启用审核
+	ctx := c.Request.Context()
 
-	config := map[string]interface{}{
-		"allowRegistration":        true,
-		"requireEmailVerification": true,
-		"maxUploadSize":            10485760,
-		"enableAudit":              true,
+	// 调用AdminService获取系统配置
+	configs, err := api.adminService.GetSystemConfig(ctx)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取系统配置失败", err.Error())
+		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", config)
+	shared.Success(c, http.StatusOK, "获取成功", configs)
 }
 
 // UpdateSystemConfig 更新系统配置（管理员）
@@ -226,8 +214,14 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现更新系统配置功能
-	// 这里需要实现配置持久化和生效逻辑
+	ctx := c.Request.Context()
+
+	// 调用AdminService更新系统配置
+	err := api.adminService.UpdateSystemConfig(ctx, &req)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "更新系统配置失败", err.Error())
+		return
+	}
 
 	shared.Success(c, http.StatusOK, "更新成功", nil)
 }
@@ -260,10 +254,23 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现发布公告功能
-	// 公告应该存储到数据库，并通知所有在线用户
+	// 从context获取管理员ID
+	adminID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		return
+	}
 
-	shared.Success(c, http.StatusCreated, "公告发布成功", nil)
+	ctx := c.Request.Context()
+
+	// 调用AdminService创建公告
+	announcement, err := api.adminService.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "发布公告失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusCreated, "公告发布成功", announcement)
 }
 
 // GetAnnouncements 获取公告列表（管理员）
@@ -285,8 +292,14 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	// TODO: 实现获取公告列表功能
+	ctx := c.Request.Context()
 
-	announcements := []interface{}{}
-	shared.Paginated(c, announcements, 0, page, pageSize, "获取成功")
+	// 调用AdminService获取公告列表
+	announcements, total, err := api.adminService.GetAnnouncements(ctx, page, pageSize)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取公告列表失败", err.Error())
+		return
+	}
+
+	shared.Paginated(c, announcements, total, page, pageSize, "获取成功")
 }

@@ -233,21 +233,11 @@ func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 //	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/admin/audit/statistics [get]
 func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
-	// TODO: 实现审核统计功能
-	// 统计内容包括：
-	// - 待审核数量
-	// - 已审核数量
-	// - 通过率
-	// - 拒绝率
-	// - 高风险内容数量
-	// - 各类型内容分布
-
-	stats := map[string]interface{}{
-		"pending":     0,
-		"approved":    0,
-		"rejected":    0,
-		"highRisk":    0,
-		"approveRate": 0.0,
+	// 调用AuditService获取审核统计
+	stats, err := api.auditService.GetAuditStatistics(c.Request.Context())
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "获取审核统计失败", err.Error())
+		return
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", stats)

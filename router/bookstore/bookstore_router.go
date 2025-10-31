@@ -46,8 +46,8 @@ func InitBookstoreRouter(
 	r *gin.RouterGroup,
 	bookstoreService bookstore.BookstoreService,
 	bookDetailService bookstore.BookDetailService,
-	ratingService interface{},
-	statisticsService interface{},
+	ratingService bookstore.BookRatingService,
+	statisticsService bookstore.BookStatisticsService,
 ) {
 	// 创建API实例
 	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService)
@@ -57,11 +57,24 @@ func InitBookstoreRouter(
 	if bookDetailService != nil {
 		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookDetailService)
 	}
-	// if ratingService != nil {
-	// 	ratingApiHandler := bookstoreApi.NewBookRatingAPI(ratingService.(bookstore.RatingService))
+
+	// 初始化Rating API处理器
+	var ratingApiHandler *bookstoreApi.BookRatingAPI
+	if ratingService != nil {
+		ratingApiHandler = bookstoreApi.NewBookRatingAPI(ratingService)
+	}
+
+	// 初始化Chapter API处理器（暂时跳过，需要ChapterService）
+	// var chapterApiHandler *bookstoreApi.ChapterAPI
+	// if chapterService != nil {
+	// 	chapterApiHandler = bookstoreApi.NewChapterAPI(chapterService)
 	// }
+
+	// ℹ️ Statistics API已通过BookDetailAPI实现
+	// 如需单独的Statistics API处理器，可在这里初始化
+	// var statisticsApiHandler *bookstoreApi.BookStatisticsAPI
 	// if statisticsService != nil {
-	// 	statisticsApiHandler := bookstoreApi.NewBookStatisticsAPI(statisticsService.(bookstore.StatisticsService))
+	// 	statisticsApiHandler = bookstoreApi.NewBookStatisticsAPI(statisticsService)
 	// }
 	// chapterApiHandler := bookstoreApi.NewChapterAPI(...)
 
@@ -104,9 +117,16 @@ func InitBookstoreRouter(
 				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
 			}
 
-			// TODO: 当ChapterAPI实现后添加
-			// public.GET("/chapters/:id", chapterApiHandler.GetChapter)
-			// public.GET("/chapters/book/:id", chapterApiHandler.GetChaptersByBookID)
+			// ✅ 统计API（当StatisticsService可用时）
+			// 注意：BookDetailAPI中已包含GetBookStatistics
+			// Statistics API在BookDetail中已实现，这里备注即可
+
+			// ℹ️ Chapter API路由需要ChapterService支持
+			// 当ChapterService实现后，可以启用以下路由:
+			// if chapterApiHandler != nil {
+			// 	public.GET("/chapters/:id", chapterApiHandler.GetChapter)
+			// 	public.GET("/chapters/book/:id", chapterApiHandler.GetChaptersByBookID)
+			// }
 		}
 
 		// 需要认证的接口
@@ -116,12 +136,14 @@ func InitBookstoreRouter(
 			// ✅ 书籍点击记录（认证接口 - 关联到用户）
 			authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
 
-			// TODO: 当RatingAPI实现后添加
-			// authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)
-			// authenticated.POST("/books/:id/rating", ratingApiHandler.CreateRating)
-			// authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
-			// authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
-			// authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
+			// ✅ 评分API（当RatingAPI可用时）
+			if ratingApiHandler != nil {
+				authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)
+				authenticated.POST("/books/:id/rating", ratingApiHandler.CreateRating)
+				authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
+				authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
+				authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
+			}
 		}
 	}
 }

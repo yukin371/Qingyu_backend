@@ -124,7 +124,8 @@ type SystemStatsResponse struct {
 
 // BanUserRequest 封禁用户请求
 type BanUserRequest struct {
-	Reason       string `json:"reason" binding:"required"`
-	Duration     int    `json:"duration" binding:"required,min=1"`
-	DurationUnit string `json:"durationUnit" binding:"required,oneof=hours days weeks months"`
+	Reason       string     `json:"reason" binding:"required"`
+	Duration     int        `json:"duration" binding:"required,min=1"`
+	DurationUnit string     `json:"durationUnit" binding:"required,oneof=hours days weeks months"`
+	BanUntil     *time.Time `json:"banUntil,omitempty"`
 }

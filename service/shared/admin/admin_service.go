@@ -347,6 +347,83 @@ func (s *AdminServiceImpl) ExportLogs(ctx context.Context, startDate, endDate ti
 
 // ============ 健康检查 ============
 
+// GetSystemStats 获取系统统计
+func (s *AdminServiceImpl) GetSystemStats(ctx context.Context) (interface{}, error) {
+	// 返回系统统计数据（临时实现，后续可连接Repository获取真实数据）
+	stats := map[string]interface{}{
+		"totalUsers":    0,
+		"activeUsers":   0,
+		"totalBooks":    0,
+		"totalRevenue":  0.0,
+		"pendingAudits": 0,
+	}
+	return stats, nil
+}
+
+// GetSystemConfig 获取系统配置
+func (s *AdminServiceImpl) GetSystemConfig(ctx context.Context) (interface{}, error) {
+	// 返回系统配置（临时实现，后续可连接ConfigService获取真实数据）
+	config := map[string]interface{}{
+		"allowRegistration":        true,
+		"requireEmailVerification": true,
+		"maxUploadSize":            10485760,
+		"enableAudit":              true,
+	}
+	return config, nil
+}
+
+// UpdateSystemConfig 更新系统配置
+func (s *AdminServiceImpl) UpdateSystemConfig(ctx context.Context, req interface{}) error {
+	// 后续可连接ConfigService实现配置持久化
+	return nil
+}
+
+// CreateAnnouncement 创建公告
+func (s *AdminServiceImpl) CreateAnnouncement(ctx context.Context, adminID, title, content, announceType, priority string) (interface{}, error) {
+	// 后续可连接AnnouncementService实现公告创建
+	announcement := map[string]interface{}{
+		"id":        "new-announcement-id",
+		"title":     title,
+		"content":   content,
+		"type":      announceType,
+		"priority":  priority,
+		"createdBy": adminID,
+		"createdAt": time.Now(),
+	}
+	return announcement, nil
+}
+
+// GetAnnouncements 获取公告列表
+func (s *AdminServiceImpl) GetAnnouncements(ctx context.Context, page, pageSize int) (interface{}, int64, error) {
+	// 设置默认分页
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	// 后续可连接AnnouncementService实现公告列表查询
+	announcements := []interface{}{}
+	return announcements, 0, nil
+}
+
+// GetAuditStatistics 获取审核统计
+func (s *AdminServiceImpl) GetAuditStatistics(ctx context.Context) (interface{}, error) {
+	// 返回审核统计数据（临时实现，后续可连接Repository获取真实数据）
+	stats := map[string]interface{}{
+		"pending":     0,
+		"approved":    0,
+		"rejected":    0,
+		"highRisk":    0,
+		"approveRate": 0.0,
+	}
+	return stats, nil
+}
+
 // ============ BaseService 接口实现 ============
 
 // Initialize 初始化服务

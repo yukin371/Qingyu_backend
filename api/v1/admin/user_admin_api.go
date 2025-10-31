@@ -321,7 +321,13 @@ func (api *UserAdminAPI) BanUser(c *gin.Context) {
 	// 构建更新数据 - 设置为banned状态
 	updates := make(map[string]interface{})
 	updates["status"] = "banned"
-	// TODO: 可以扩展添加ban_reason, ban_until等字段
+	// 添加ban_reason和ban_until字段以完善用户信息扩展
+	if req.Reason != "" {
+		updates["ban_reason"] = req.Reason
+	}
+	if req.BanUntil != nil {
+		updates["ban_until"] = *req.BanUntil
+	}
 
 	// 调用Service层
 	serviceReq := &user.UpdateUserRequest{
