@@ -12,6 +12,7 @@ import (
 	sharedRouter "Qingyu_backend/router/shared"
 	systemRouter "Qingyu_backend/router/system"
 	userRouter "Qingyu_backend/router/user"
+	writerRouter "Qingyu_backend/router/writer"
 
 	"Qingyu_backend/service"
 	sharedService "Qingyu_backend/service/shared"
@@ -190,6 +191,13 @@ func RegisterRoutes(r *gin.Engine) {
 	projectRouter.RegisterRoutes(v1)
 	logger.Info("✓ 文档路由已注册到: /api/v1/projects/")
 
+	// ============ 注册写作端路由 ============
+	writerRouter.RegisterWriterRoutes(v1)
+	logger.Info("✓ 写作端路由已注册到: /api/v1/writer/")
+	logger.Info("  - /api/v1/writer/projects/* (项目管理)")
+	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
+	logger.Info("  - /api/v1/writer/versions/* (版本控制)")
+
 	// ============ 注册AI路由 ============
 	aiSvc, err := serviceContainer.GetAIService()
 	if err != nil {
@@ -244,9 +252,14 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 	configSvc := sharedService.NewConfigService(configPath)
 
-	// TODO: 获取审核服务实例（需要实现）
-	// auditSvc := serviceContainer.GetAuditService()
-	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, nil, adminSvc, configSvc)
+	// ✅ 获取审核服务
+	auditSvc, auditErr := serviceContainer.GetAuditService()
+	if auditErr != nil {
+		logger.Warn("⚠ AuditService未配置", zap.Error(auditErr))
+		auditSvc = nil
+	}
+
+	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc)
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")
