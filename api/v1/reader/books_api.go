@@ -107,7 +107,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/{bookId} [delete]
 func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 获取用户ID
-	_, exists := c.Get("userId")
+	userID, exists := c.Get("userId")
 	if !exists {
 		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
 		return
@@ -119,8 +119,13 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现删除阅读进度的方法
-	// 暂时返回成功，实际需要在Repository中添加Delete方法
+	// 调用Service删除阅读进度
+	err := api.readerService.DeleteReadingProgress(c.Request.Context(), userID.(string), bookID)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "移除失败", err.Error())
+		return
+	}
+
 	shared.Success(c, http.StatusOK, "移除成功", nil)
 }
 
