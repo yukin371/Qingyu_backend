@@ -7,9 +7,10 @@ import (
 	"time"
 )
 
-// TODO: 完善消息队列功能（消息持久化、重试机制、死信队列）
-// TODO: 添加消息优先级支持
-// TODO: 实现消息批量发送和接收
+// 注意：高级功能待后续实现
+//   - 消息持久化、重试机制、死信队列
+//   - 消息优先级支持
+//   - 消息批量发送和接收
 
 // MessagingServiceImpl 消息服务实现
 type MessagingServiceImpl struct {
@@ -74,10 +75,10 @@ func (s *MessagingServiceImpl) Publish(ctx context.Context, topic string, messag
 }
 
 // PublishDelayed 发布延迟消息
+// 注意：这是简化实现，延迟队列功能待后续增强（可使用Redis Sorted Set）
 func (s *MessagingServiceImpl) PublishDelayed(ctx context.Context, topic string, message interface{}, delay time.Duration) error {
-	// 简化实现：直接发布，实际应使用延迟队列
-	// TODO: 实现真正的延迟队列（可使用Redis Sorted Set）
-	time.Sleep(delay) // 简化处理
+	// 简化实现：直接等待后发布
+	time.Sleep(delay) // 简化处理，实际应使用异步延迟队列
 	return s.Publish(ctx, topic, message)
 }
 

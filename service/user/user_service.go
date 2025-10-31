@@ -386,8 +386,17 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 
 // LogoutUser 登出用户
 func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserRequest) (*user2.LogoutUserResponse, error) {
-	// 这里简化处理，实际应该将令牌加入黑名单
-	// TODO: 实现JWT令牌黑名单机制
+	// 注意：完整的实现应该：
+	// 1. 将 JWT Token 加入黑名单（Redis）
+	// 2. 设置过期时间等于 Token 的剩余有效期
+	// 当前实现：简化处理，仅返回成功
+	// TODO(Production): 集成 TokenBlacklistRepository
+	// if s.tokenBlacklistRepo != nil {
+	// 	err := s.tokenBlacklistRepo.AddToBlacklist(ctx, req.Token, tokenExpiry)
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "加入黑名单失败", err)
+	// 	}
+	// }
 	return &user2.LogoutUserResponse{
 		Success: true,
 	}, nil
@@ -395,10 +404,20 @@ func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserR
 
 // ValidateToken 验证令牌
 func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *user2.ValidateTokenRequest) (*user2.ValidateTokenResponse, error) {
-	// 这里简化处理，实际应该验证JWT令牌
-	// TODO: 实现JWT令牌验证
+	// 注意：完整的实现应该：
+	// 1. 验证 JWT Token 的签名和过期时间
+	// 2. 检查 Token 是否在黑名单中
+	// 3. 返回 Token 中的用户信息
+	// 当前实现：简化处理，JWT 验证在中间件中完成
+	// TODO(Production): 集成 JWT 验证库和黑名单检查
+	// if s.tokenBlacklistRepo != nil {
+	// 	isBlacklisted, _ := s.tokenBlacklistRepo.IsBlacklisted(ctx, req.Token)
+	// 	if isBlacklisted {
+	// 		return &user2.ValidateTokenResponse{Valid: false}, nil
+	// 	}
+	// }
 	return &user2.ValidateTokenResponse{
-		Valid: false, // 暂时返回false
+		Valid: false, // 暂时返回false，实际验证在 JWT 中间件中完成
 	}, nil
 }
 
@@ -410,8 +429,9 @@ func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *user2.Update
 	}
 
 	// 2. 更新最后登录时间
-	// IP 地址应该从 context 中获取，这里暂时使用默认值
-	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	// IP 地址应该从 API 层通过参数传递
+	// API 层使用 utils.GetClientIP(c) 获取真实客户端 IP
+	ip := "unknown" // 默认值，实际应该从请求参数中获取
 	if err := s.userRepo.UpdateLastLogin(ctx, req.ID, ip); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新最后登录时间失败", err)
 	}
@@ -459,6 +479,11 @@ func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *user2.UpdateP
 }
 
 // ResetPassword 重置密码
+// TODO:注意：这是简化实现。完整的密码重置流程应该包含：
+// 1. 用户请求重置 -> 生成Token并发送到邮箱
+// 2. 用户点击邮件链接 -> 验证Token
+// 3. 用户输入新密码 -> 更新密码
+// 当前实现：生成Token并模拟发送邮件（实际未发送）
 func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPasswordRequest) (*user2.ResetPasswordResponse, error) {
 	// 1. 验证请求数据
 	if req.Email == "" {
@@ -469,7 +494,7 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
-			// 为了安全，即使用户不存在也返回成功
+			// 为了安全，即使用户不存在也返回成功（防止邮箱枚举攻击）
 			return &user2.ResetPasswordResponse{
 				Success: true,
 			}, nil
@@ -477,19 +502,43 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户失败", err)
 	}
 
-	// 3. 生成新密码（这里简化处理，实际应该发送邮件）
-	newPassword := "new_password_placeholder" // TODO: 实现密码重置邮件发送
-
-	// 4. 更新密码
-	(*user).Password = newPassword
-	if err := (*user).SetPassword(newPassword); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "密码哈希失败", err)
+	// 3. 生成密码重置Token
+	tokenManager := NewPasswordResetTokenManager()
+	resetToken, err := tokenManager.GenerateToken(ctx, req.Email)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成重置Token失败", err)
 	}
-	hashedPassword := (*user).Password
 
-	if err := s.userRepo.UpdatePassword(ctx, (*user).ID, hashedPassword); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
-	}
+	// 4. 构建重置邮件内容
+	resetLink := fmt.Sprintf("https://qingyu.example.com/reset-password?token=%s&email=%s", resetToken, req.Email)
+	emailBody := fmt.Sprintf(`
+		<h2>密码重置请求</h2>
+		<p>您好，%s，</p>
+		<p>我们收到了您的密码重置请求。请点击下面的链接重置您的密码：</p>
+		<p><a href="%s">重置密码</a></p>
+		<p>该链接将在1小时后过期。</p>
+		<p>如果您没有请求重置密码，请忽略此邮件。</p>
+		<p>青羽写作团队</p>
+	`, user.Username, resetLink)
+
+	// 5. 发送重置邮件（当前为模拟发送）
+	// 注意：EmailService 需要在 ServiceContainer 中注入
+	// TODO(Production): 集成真实的邮件发送服务
+	// if s.emailService != nil {
+	// 	err := s.emailService.SendEmail(ctx, &messaging.EmailRequest{
+	// 		To:      []string{req.Email},
+	// 		Subject: "青羽写作 - 密码重置",
+	// 		Body:    emailBody,
+	// 		IsHTML:  true,
+	// 	})
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送重置邮件失败", err)
+	// 	}
+	// }
+
+	// 模拟：打印日志代替发送邮件
+	fmt.Printf("[Password Reset] Token generated for %s: %s\n", req.Email, resetToken)
+	fmt.Printf("[Password Reset] Email content:\n%s\n", emailBody)
 
 	return &user2.ResetPasswordResponse{
 		Success: true,

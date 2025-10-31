@@ -20,13 +20,9 @@ type Phase3Client struct {
 // NewPhase3Client 创建Phase3客户端
 func NewPhase3Client(address string) (*Phase3Client, error) {
 	// 创建gRPC连接
-	conn, err := grpc.Dial(
+	conn, err := grpc.NewClient(
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(
-			grpc.MaxCallRecvMsgSize(50*1024*1024), // 50MB
-			grpc.MaxCallSendMsgSize(50*1024*1024), // 50MB
-		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("连接AI服务失败: %w", err)

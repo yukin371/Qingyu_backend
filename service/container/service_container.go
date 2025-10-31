@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
@@ -31,6 +33,7 @@ import (
 	"Qingyu_backend/global"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
+	mongoShared "Qingyu_backend/repository/mongodb/shared"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -708,33 +711,44 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
 
 	// 5.5 AdminService
-	// TODO(Phase2): AdminService需要额外的LogRepository，当前AdminRepository已实现
-	// adminRepo := c.repositoryFactory.CreateAdminRepository()
-	// adminSvc := admin.NewAdminService(adminRepo, adminRepo, c.userRepository)
-	// c.adminService = adminSvc
-	// if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
-	// 	if err := c.RegisterService("AdminService", baseAdminSvc); err != nil {
-	// 		return fmt.Errorf("注册管理服务失败: %w", err)
-	// 	}
-	// }
+	// 创建 AdminLog 和 AdminAudit Repository
+	adminLogRepo := mongoShared.NewAdminLogRepository(c.mongoDB)
+	adminAuditRepo := mongoShared.NewAdminAuditRepository(c.mongoDB)
+
+	// 创建 AdminService 需要的简化 UserRepository 适配器
+	adminUserRepo := &adminUserRepositoryAdapter{userRepo: c.repositoryFactory.CreateUserRepository()}
+
+	// 创建 AdminService
+	adminSvc := admin.NewAdminService(adminAuditRepo, adminLogRepo, adminUserRepo)
+	c.adminService = adminSvc
+
+	if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AdminService", baseAdminSvc); err != nil {
+			return fmt.Errorf("注册管理服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ AdminService初始化完成")
 
 	// 5.6 MessagingService
-	// TODO(Phase2): MessagingService需要QueueClient（Redis/RabbitMQ）
-	// messageRepo := c.repositoryFactory.CreateMessageRepository()
-	// if c.redisClient != nil {
-	// 	queueClient := messaging.NewRedisQueueClient(c.redisClient)
-	// 	messagingSvc := messaging.NewMessagingService(queueClient, messageRepo)
-	// 	c.messagingService = messagingSvc
-	// 	if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
-	// 		if err := c.RegisterService("MessagingService", baseMessagingSvc); err != nil {
-	// 			return fmt.Errorf("注册消息服务失败: %w", err)
-	// 		}
-	// 	}
-	// } else {
-	// 	fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
-	// }
+	if c.redisClient != nil {
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			queueClient := messaging.NewRedisQueueClient(redisClient)
+			messagingSvc := messaging.NewMessagingService(queueClient)
+			c.messagingService = messagingSvc
 
-	fmt.Println("提示: AdminService、MessagingService将在Phase2后续任务中完整实现并注册")
+			if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
+				if err := c.RegisterService("MessagingService", baseMessagingSvc); err != nil {
+					return fmt.Errorf("注册消息服务失败: %w", err)
+				}
+			}
+			fmt.Println("  ✓ MessagingService初始化完成（Redis Stream）")
+		} else {
+			fmt.Println("警告: Redis客户端类型转换失败，跳过MessagingService创建")
+		}
+	} else {
+		fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
+	}
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
@@ -824,6 +838,60 @@ func (c *ServiceContainer) GetServiceNames() []string {
 		names = append(names, name)
 	}
 	return names
+}
+
+// ============ AdminService 适配器 ============
+
+// adminUserRepositoryAdapter 将 UserRepository 适配为 AdminService 需要的接口
+type adminUserRepositoryAdapter struct {
+	userRepo userRepo.UserRepository
+}
+
+// 确保实现了 admin.UserRepository 接口
+var _ admin.UserRepository = (*adminUserRepositoryAdapter)(nil)
+
+// GetStatistics 获取用户统计信息
+func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID string) (*admin.UserStatistics, error) {
+	// 简化实现，返回基本统计信息
+	user, err := a.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &admin.UserStatistics{
+		UserID:           user.ID,
+		TotalBooks:       0,   // TODO: 从 BookRepository 获取
+		TotalChapters:    0,   // TODO: 从 ChapterRepository 获取
+		TotalWords:       0,   // TODO: 从统计数据获取
+		TotalReads:       0,   // TODO: 从 ReadingProgress 获取
+		TotalIncome:      0.0, // TODO: 从 Wallet 获取
+		RegistrationDate: user.CreatedAt,
+		LastLoginDate:    user.LastLoginAt,
+	}, nil
+}
+
+// BanUser 封禁用户
+func (a *adminUserRepositoryAdapter) BanUser(ctx context.Context, userID, reason string, until time.Time) error {
+	// 使用 UserRepository 的 Update 方法
+	updates := map[string]interface{}{
+		"status":     "banned",
+		"ban_reason": reason,
+		"ban_until":  until,
+		"updated_at": time.Now(),
+	}
+	return a.userRepo.Update(ctx, userID, updates)
+}
+
+// UnbanUser 解封用户
+func (a *adminUserRepositoryAdapter) UnbanUser(ctx context.Context, userID string) error {
+	// 使用 UserRepository 的 Update 方法
+	updates := map[string]interface{}{
+		"status":     "active",
+		"ban_reason": "",
+		"ban_until":  nil,
+		"updated_at": time.Now(),
+	}
+	return a.userRepo.Update(ctx, userID, updates)
 }
 
 // IsInitialized 检查是否已初始化
