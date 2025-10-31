@@ -19,6 +19,9 @@ import (
 	readingService "Qingyu_backend/service/reading"
 	userService "Qingyu_backend/service/user"
 
+	// Audit service
+	auditSvc "Qingyu_backend/service/audit"
+
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
@@ -83,6 +86,9 @@ type ServiceContainer struct {
 	messagingService      messaging.MessagingService
 	storageService        storage.StorageService
 	adminService          admin.AdminService
+
+	// 审核服务
+	auditService *auditSvc.ContentAuditService
 
 	// 存储相关具体实现（用于API层）
 	storageServiceImpl *storage.StorageServiceImpl
@@ -293,6 +299,14 @@ func (c *ServiceContainer) GetAdminService() (admin.AdminService, error) {
 		return nil, fmt.Errorf("AdminService未初始化")
 	}
 	return c.adminService, nil
+}
+
+// GetAuditService 获取审核服务
+func (c *ServiceContainer) GetAuditService() (*auditSvc.ContentAuditService, error) {
+	if c.auditService == nil {
+		return nil, fmt.Errorf("AuditService未初始化")
+	}
+	return c.auditService, nil
 }
 
 // GetEventBus 获取事件总线
@@ -749,6 +763,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	} else {
 		fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
 	}
+
+	// 5.7 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
+	// TODO: 完整的AuditService初始化逻辑需要在service/audit完全实现后添加
+	fmt.Println("  ℹ AuditService初始化跳过（标记为可选）")
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务

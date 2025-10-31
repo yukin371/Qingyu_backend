@@ -8,21 +8,55 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// =====================================================
+// 书店路由配置文档
+// =====================================================
+//
+//  路由设计原则：
+//
+// 1️ 公开路由 (public) - 无需认证
+//    - 适用于首页数据、浏览、搜索、排行榜等内容消费场景
+//    - 可被任何客户端（已登录或未登录）访问
+//
+// 2️ 认证路由 (authenticated) - 需要JWT Token
+//    - 适用于用户个人数据、行为追踪、点赞评论等需关联用户身份的场景
+//    - 需要用户提供有效的JWT Token
+//
+//  具体划分：
+//
+//  公开 (无需登录)
+//  - GET /homepage               : 获取首页数据
+//  - GET /books/*                : 书籍信息查询
+//  - GET /categories/*           : 分类信息查询
+//  - GET /rankings/*             : 榜单查询
+//  - GET /banners                : 获取可用Banner
+//  - POST /banners/:id/click     : 👈 Banner点击记录（匿名可用）
+//
+//  认证 (需要登录)
+//  - POST /books/:id/view        : 书籍点击记录（关联用户）
+//  - POST /ratings/*             : 评分、评论等（关联用户）
+//
+//  为什么这样设计：
+//  - Banner点击是**广告统计**，不需要关联用户身份
+//  - 书籍点击是**用户行为数据**，用于个性化推荐
+//  - 这种设计让前端在登录前就能完全使用首页和浏览功能
+
 // InitBookstoreRouter 初始化书店路由
 func InitBookstoreRouter(
 	r *gin.RouterGroup,
 	bookstoreService bookstore.BookstoreService,
-	bookDetailService interface{}, // TODO: 改为具体类型
-	ratingService interface{}, // TODO: 改为具体类型
-	statisticsService interface{}, // TODO: 改为具体类型
+	bookDetailService bookstore.BookDetailService,
+	ratingService interface{},
+	statisticsService interface{},
 ) {
 	// 创建API实例
 	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService)
 
-	// TODO: 当其他服务实现后，取消注释
-	// if bookDetailService != nil {
-	// 	bookDetailApiHandler := bookstoreApi.NewBookDetailAPI(bookDetailService.(bookstore.BookDetailService))
-	// }
+	// 初始化其他服务的API处理器
+	var bookDetailApiHandler *bookstoreApi.BookDetailAPI
+	if bookDetailService != nil {
+		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookDetailService)
+	}
 	// if ratingService != nil {
 	// 	ratingApiHandler := bookstoreApi.NewBookRatingAPI(ratingService.(bookstore.RatingService))
 	// }
@@ -51,8 +85,10 @@ func InitBookstoreRouter(
 			public.GET("/categories/:id/books", bookstoreApiHandler.GetBooksByCategory)
 			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
 
-			// Banner
+			// Banner - 公开API
 			public.GET("/banners", bookstoreApiHandler.GetActiveBanners)
+			// ✅ Banner 点击记录（公开，不需要认证）
+			public.POST("/banners/:id/click", bookstoreApiHandler.IncrementBannerClick)
 
 			// 排行榜
 			public.GET("/rankings/realtime", bookstoreApiHandler.GetRealtimeRanking)
@@ -61,10 +97,12 @@ func InitBookstoreRouter(
 			public.GET("/rankings/newbie", bookstoreApiHandler.GetNewbieRanking)
 			public.GET("/rankings/:type", bookstoreApiHandler.GetRankingByType)
 
-			// TODO: 当BookDetailAPI实现后添加
-			// public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
-			// public.GET("/books/:id/similar", bookDetailApiHandler.GetSimilarBooks)
-			// public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
+			// 书籍详情接口（当BookDetailAPI可用时）
+			if bookDetailApiHandler != nil {
+				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
+				public.GET("/books/:id/similar", bookDetailApiHandler.GetSimilarBooks)
+				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
+			}
 
 			// TODO: 当ChapterAPI实现后添加
 			// public.GET("/chapters/:id", chapterApiHandler.GetChapter)
@@ -75,9 +113,8 @@ func InitBookstoreRouter(
 		authenticated := bookstoreGroup.Group("")
 		authenticated.Use(middleware.JWTAuth())
 		{
-			// 统计点击
+			// ✅ 书籍点击记录（认证接口 - 关联到用户）
 			authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
-			authenticated.POST("/banners/:id/click", bookstoreApiHandler.IncrementBannerClick)
 
 			// TODO: 当RatingAPI实现后添加
 			// authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)

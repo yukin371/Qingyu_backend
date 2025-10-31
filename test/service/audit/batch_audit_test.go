@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"Qingyu_backend/models/audit"
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	auditService "Qingyu_backend/service/audit"
 	"Qingyu_backend/service/base"
 )
@@ -41,7 +42,7 @@ func (m *MockAuditRecordRepository) Delete(ctx context.Context, id string) error
 	return args.Error(0)
 }
 
-func (m *MockAuditRecordRepository) List(ctx context.Context, filter interface{}) ([]*audit.AuditRecord, error) {
+func (m *MockAuditRecordRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*audit.AuditRecord, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -49,14 +50,17 @@ func (m *MockAuditRecordRepository) List(ctx context.Context, filter interface{}
 	return args.Get(0).([]*audit.AuditRecord), args.Error(1)
 }
 
-func (m *MockAuditRecordRepository) Count(ctx context.Context, filter interface{}) (int64, error) {
+func (m *MockAuditRecordRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockAuditRecordRepository) FindWithPagination(ctx context.Context, filter, pagination interface{}) (interface{}, error) {
+func (m *MockAuditRecordRepository) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[audit.AuditRecord], error) {
 	args := m.Called(ctx, filter, pagination)
-	return args.Get(0), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*infrastructure.PagedResult[audit.AuditRecord]), args.Error(1)
 }
 
 func (m *MockAuditRecordRepository) GetByTargetID(ctx context.Context, targetType, targetID string) (*audit.AuditRecord, error) {
@@ -158,12 +162,111 @@ type MockSensitiveWordRepository struct {
 	mock.Mock
 }
 
-func (m *MockSensitiveWordRepository) GetEnabledWords(ctx context.Context) ([]string, error) {
+func (m *MockSensitiveWordRepository) Create(ctx context.Context, word *audit.SensitiveWord) error {
+	args := m.Called(ctx, word)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) GetByID(ctx context.Context, id string) (*audit.SensitiveWord, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) GetByWord(ctx context.Context, word string) (*audit.SensitiveWord, error) {
+	args := m.Called(ctx, word)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*audit.SensitiveWord, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[audit.SensitiveWord], error) {
+	args := m.Called(ctx, filter, pagination)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*infrastructure.PagedResult[audit.SensitiveWord]), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) GetEnabledWords(ctx context.Context) ([]*audit.SensitiveWord, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) GetByCategory(ctx context.Context, category string) ([]*audit.SensitiveWord, error) {
+	args := m.Called(ctx, category)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) GetByLevel(ctx context.Context, minLevel int) ([]*audit.SensitiveWord, error) {
+	args := m.Called(ctx, minLevel)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.SensitiveWord), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) BatchCreate(ctx context.Context, words []*audit.SensitiveWord) error {
+	args := m.Called(ctx, words)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) BatchUpdate(ctx context.Context, ids []string, updates map[string]interface{}) error {
+	args := m.Called(ctx, ids, updates)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) BatchDelete(ctx context.Context, ids []string) error {
+	args := m.Called(ctx, ids)
+	return args.Error(0)
+}
+
+func (m *MockSensitiveWordRepository) CountByCategory(ctx context.Context) (map[string]int64, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]int64), args.Error(1)
+}
+
+func (m *MockSensitiveWordRepository) CountByLevel(ctx context.Context) (map[int]int64, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[int]int64), args.Error(1)
 }
 
 func (m *MockSensitiveWordRepository) Health(ctx context.Context) error {
@@ -176,9 +279,121 @@ type MockViolationRecordRepository struct {
 	mock.Mock
 }
 
-func (m *MockViolationRecordRepository) Create(ctx context.Context, record interface{}) error {
+func (m *MockViolationRecordRepository) Create(ctx context.Context, record *audit.ViolationRecord) error {
 	args := m.Called(ctx, record)
 	return args.Error(0)
+}
+
+func (m *MockViolationRecordRepository) GetByID(ctx context.Context, id string) (*audit.ViolationRecord, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockViolationRecordRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockViolationRecordRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*audit.ViolationRecord, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) FindWithPagination(ctx context.Context, filter infrastructure.Filter, pagination infrastructure.Pagination) (*infrastructure.PagedResult[audit.ViolationRecord], error) {
+	args := m.Called(ctx, filter, pagination)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*infrastructure.PagedResult[audit.ViolationRecord]), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) GetByUserID(ctx context.Context, userID string) ([]*audit.ViolationRecord, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) GetActiveViolations(ctx context.Context, userID string) ([]*audit.ViolationRecord, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) GetRecentViolations(ctx context.Context, userID string, since time.Time) ([]*audit.ViolationRecord, error) {
+	args := m.Called(ctx, userID, since)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) GetUserSummary(ctx context.Context, userID string) (*audit.UserViolationSummary, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*audit.UserViolationSummary), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) CountByUser(ctx context.Context, userID string) (int64, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) CountHighRiskByUser(ctx context.Context, userID string, minLevel int) (int64, error) {
+	args := m.Called(ctx, userID, minLevel)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) GetTopViolators(ctx context.Context, limit int) ([]*audit.UserViolationSummary, error) {
+	args := m.Called(ctx, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.UserViolationSummary), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) ApplyPenalty(ctx context.Context, userID string, penaltyType string, duration int, description string) error {
+	args := m.Called(ctx, userID, penaltyType, duration, description)
+	return args.Error(0)
+}
+
+func (m *MockViolationRecordRepository) RemovePenalty(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockViolationRecordRepository) GetActivePenalties(ctx context.Context) ([]*audit.ViolationRecord, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*audit.ViolationRecord), args.Error(1)
+}
+
+func (m *MockViolationRecordRepository) CleanExpiredPenalties(ctx context.Context) (int64, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockViolationRecordRepository) Health(ctx context.Context) error {
@@ -201,13 +416,13 @@ func (m *MockEventBus) Unsubscribe(eventType string, handlerName string) error {
 	return args.Error(0)
 }
 
-func (m *MockEventBus) Publish(event base.Event) error {
-	args := m.Called(event)
+func (m *MockEventBus) Publish(ctx context.Context, event base.Event) error {
+	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventBus) PublishAsync(event base.Event) error {
-	args := m.Called(event)
+func (m *MockEventBus) PublishAsync(ctx context.Context, event base.Event) error {
+	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
