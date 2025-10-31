@@ -2,9 +2,8 @@ package ai
 
 import (
 	"net/http"
-	"time"
 
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/api/v1/shared"
 	pb "Qingyu_backend/pkg/grpc/pb"
 	"Qingyu_backend/service/ai"
 
@@ -37,7 +36,7 @@ func NewCreativeAPI(phase3Client *ai.Phase3Client) *CreativeAPI {
 func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 	var req GenerateOutlineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.ValidationError(c, err.Error())
+		shared.ValidationError(c, err)
 		return
 	}
 
@@ -49,7 +48,6 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 	ctx, cancel := c.Request.Context(), func() {}
 	defer cancel()
 
-	startTime := time.Now()
 	grpcResp, err := a.phase3Client.GenerateOutline(
 		ctx,
 		req.Task,
@@ -58,7 +56,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		middleware.Error(c, http.StatusInternalServerError, "大纲生成失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "大纲生成失败", err.Error())
 		return
 	}
 
@@ -68,7 +66,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	middleware.Success(c, response)
+	shared.Success(c, http.StatusOK, "大纲生成成功", response)
 }
 
 // GenerateCharacters 生成角色
@@ -85,7 +83,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 	var req GenerateCharactersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.ValidationError(c, err.Error())
+		shared.ValidationError(c, err)
 		return
 	}
 
@@ -110,7 +108,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		middleware.Error(c, http.StatusInternalServerError, "角色生成失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "角色生成失败", err.Error())
 		return
 	}
 
@@ -119,7 +117,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	middleware.Success(c, response)
+	shared.Success(c, http.StatusOK, "角色生成成功", response)
 }
 
 // GeneratePlot 生成情节
@@ -136,7 +134,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 	var req GeneratePlotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.ValidationError(c, err.Error())
+		shared.ValidationError(c, err)
 		return
 	}
 
@@ -167,7 +165,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		middleware.Error(c, http.StatusInternalServerError, "情节生成失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "情节生成失败", err.Error())
 		return
 	}
 
@@ -176,7 +174,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	middleware.Success(c, response)
+	shared.Success(c, http.StatusOK, "情节生成成功", response)
 }
 
 // ExecuteCreativeWorkflow 执行完整创作工作流
@@ -193,7 +191,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 	var req ExecuteCreativeWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.ValidationError(c, err.Error())
+		shared.ValidationError(c, err)
 		return
 	}
 
@@ -218,7 +216,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		middleware.Error(c, http.StatusInternalServerError, "工作流执行失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "工作流执行失败", err.Error())
 		return
 	}
 
@@ -235,7 +233,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		TokensUsed:       grpcResp.TokensUsed,
 	}
 
-	middleware.Success(c, response)
+	shared.Success(c, http.StatusOK, "工作流执行成功", response)
 }
 
 // HealthCheck 健康检查
@@ -252,11 +250,11 @@ func (a *CreativeAPI) HealthCheck(c *gin.Context) {
 
 	resp, err := a.phase3Client.HealthCheck(ctx)
 	if err != nil {
-		middleware.Error(c, http.StatusInternalServerError, "健康检查失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "健康检查失败", err.Error())
 		return
 	}
 
-	middleware.Success(c, gin.H{
+	shared.Success(c, http.StatusOK, "健康检查成功", gin.H{
 		"status": resp.Status,
 		"checks": resp.Checks,
 	})
