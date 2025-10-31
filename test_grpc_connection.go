@@ -15,7 +15,7 @@ import (
 func main() {
 	// 连接到Python AI服务的gRPC端口
 	conn, err := grpc.NewClient(
-		"localhost:50052",
+		"localhost:50051",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
