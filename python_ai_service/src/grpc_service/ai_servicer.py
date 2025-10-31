@@ -101,7 +101,7 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             state_after_outline = await self.outline_agent.execute(initial_state)
             execution_times["outline"] = time.time() - outline_start
 
-            outline_output = state_after_outline.get("agent_outputs", {}).get("OutlineAgent", {})
+            outline_output = state_after_outline.get("agent_outputs", {}).get("outline_agent", {})
             self.logger.info(f"✅ 大纲生成完成 - 耗时: {execution_times['outline']:.2f}秒")
 
             # 2. 执行CharacterAgent
@@ -110,7 +110,7 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             state_after_character = await self.character_agent.execute(state_after_outline)
             execution_times["character"] = time.time() - character_start
 
-            character_output = state_after_character.get("agent_outputs", {}).get("CharacterAgent", {})
+            character_output = state_after_character.get("agent_outputs", {}).get("character_agent", {})
             self.logger.info(f"✅ 角色生成完成 - 耗时: {execution_times['character']:.2f}秒")
 
             # 3. 执行PlotAgent
@@ -119,7 +119,7 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             state_after_plot = await self.plot_agent.execute(state_after_character)
             execution_times["plot"] = time.time() - plot_start
 
-            plot_output = state_after_plot.get("agent_outputs", {}).get("PlotAgent", {})
+            plot_output = state_after_plot.get("agent_outputs", {}).get("plot_agent", {})
             self.logger.info(f"✅ 情节生成完成 - 耗时: {execution_times['plot']:.2f}秒")
 
             # 构建响应
@@ -194,8 +194,17 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             # 执行OutlineAgent
             state = await self.outline_agent.execute(initial_state)
 
-            outline_output = state.get("agent_outputs", {}).get("OutlineAgent", {})
+            outline_output = state.get("agent_outputs", {}).get("outline_agent", {})
             execution_time = time.time() - start_time
+
+            # 🔍 调试日志：检查Agent输出
+            self.logger.debug(f"📊 State keys: {list(state.keys())}")
+            self.logger.debug(f"📊 Agent outputs keys: {list(state.get('agent_outputs', {}).keys())}")
+            self.logger.debug(f"📊 OutlineAgent output keys: {list(outline_output.keys())}")
+            if outline_output:
+                self.logger.info(f"✅ 大纲数据: title='{outline_output.get('title', 'N/A')}', chapters={len(outline_output.get('chapters', []))}")
+            else:
+                self.logger.warning("⚠️ OutlineAgent返回空输出!")
 
             # 转换为protobuf格式
             outline_proto_dict = outline_dict_to_proto_data(outline_output)
@@ -244,7 +253,7 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             if request.HasField("outline"):
                 outline_dict = self._proto_outline_to_dict(request.outline)
                 initial_state["agent_outputs"] = {
-                    "OutlineAgent": outline_dict
+                    "outline_agent": outline_dict
                 }
                 # 提取outline_nodes
                 initial_state["outline_nodes"] = outline_dict.get("chapters", [])
@@ -258,8 +267,15 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             # 执行CharacterAgent
             state = await self.character_agent.execute(initial_state)
 
-            character_output = state.get("agent_outputs", {}).get("CharacterAgent", {})
+            character_output = state.get("agent_outputs", {}).get("character_agent", {})
             execution_time = time.time() - start_time
+
+            # 🔍 调试日志：检查Agent输出
+            self.logger.debug(f"📊 CharacterAgent output keys: {list(character_output.keys())}")
+            if character_output:
+                self.logger.info(f"✅ 角色数据: characters={len(character_output.get('characters', []))}")
+            else:
+                self.logger.warning("⚠️ CharacterAgent返回空输出!")
 
             # 转换为protobuf格式
             characters_proto_dict = characters_dict_to_proto_data(character_output)
@@ -309,13 +325,13 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             # 添加大纲输出到状态
             if request.HasField("outline"):
                 outline_dict = self._proto_outline_to_dict(request.outline)
-                agent_outputs["OutlineAgent"] = outline_dict
+                agent_outputs["outline_agent"] = outline_dict
                 initial_state["outline_nodes"] = outline_dict.get("chapters", [])
 
             # 添加角色输出到状态
             if request.HasField("characters"):
                 characters_dict = self._proto_characters_to_dict(request.characters)
-                agent_outputs["CharacterAgent"] = characters_dict
+                agent_outputs["character_agent"] = characters_dict
 
             initial_state["agent_outputs"] = agent_outputs
 
@@ -328,8 +344,15 @@ class AIServicer(ai_service_pb2_grpc.AIServiceServicer):
             # 执行PlotAgent
             state = await self.plot_agent.execute(initial_state)
 
-            plot_output = state.get("agent_outputs", {}).get("PlotAgent", {})
+            plot_output = state.get("agent_outputs", {}).get("plot_agent", {})
             execution_time = time.time() - start_time
+
+            # 🔍 调试日志：检查Agent输出
+            self.logger.debug(f"📊 PlotAgent output keys: {list(plot_output.keys())}")
+            if plot_output:
+                self.logger.info(f"✅ 情节数据: events={len(plot_output.get('timeline_events', []))}, threads={len(plot_output.get('plot_threads', []))}")
+            else:
+                self.logger.warning("⚠️ PlotAgent返回空输出!")
 
             # 转换为protobuf格式
             plot_proto_dict = plot_dict_to_proto_data(plot_output)

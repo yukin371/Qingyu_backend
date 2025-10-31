@@ -16,7 +16,7 @@ func InitCreativeRoutes(router *gin.RouterGroup, creativeAPI *aiAPI.CreativeAPI)
 		creative.GET("/health", creativeAPI.HealthCheck)
 
 		// 需要认证的路由
-		authGroup := creative.Group("").Use(middleware.JWTAuthMiddleware())
+		authGroup := creative.Group("").Use(middleware.JWTAuth())
 		{
 			// 大纲生成
 			authGroup.POST("/outline", creativeAPI.GenerateOutline)
