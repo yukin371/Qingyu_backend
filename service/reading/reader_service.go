@@ -357,6 +357,36 @@ func (s *ReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]
 	return progresses, nil
 }
 
+// DeleteReadingProgress 删除阅读进度
+func (s *ReaderService) DeleteReadingProgress(ctx context.Context, userID, bookID string) error {
+	if userID == "" || bookID == "" {
+		return fmt.Errorf("用户ID和书籍ID不能为空")
+	}
+
+	// 先获取进度记录ID
+	progress, err := s.progressRepo.GetByUserAndBook(ctx, userID, bookID)
+	if err != nil {
+		return fmt.Errorf("查询阅读进度失败: %w", err)
+	}
+
+	if progress == nil {
+		return fmt.Errorf("阅读进度记录不存在")
+	}
+
+	// 删除进度记录
+	err = s.progressRepo.Delete(ctx, progress.ID)
+	if err != nil {
+		return fmt.Errorf("删除阅读进度失败: %w", err)
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		_ = s.cacheService.InvalidateReadingProgress(ctx, userID, bookID)
+	}
+
+	return nil
+}
+
 // =========================
 // 标注相关方法
 // =========================
