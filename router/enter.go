@@ -83,18 +83,27 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Warn("获取书店服务失败", zap.Error(err))
 		logger.Info("书店路由未注册")
 	} else {
-		// TODO: 初始化其他书店服务
-		// bookDetailSvc := serviceContainer.GetBookDetailService()
-		// ratingSvc := serviceContainer.GetRatingService()
-		// statisticsSvc := serviceContainer.GetStatisticsService()
+		// 初始化其他书店服务
+		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
+		ratingSvc, _ := serviceContainer.GetBookRatingService()
+		statisticsSvc, _ := serviceContainer.GetBookStatisticsService()
 
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, nil, nil, nil)
+		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc)
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")
 		logger.Info("  - /api/v1/bookstore/books/* (书籍列表、搜索、详情)")
 		logger.Info("  - /api/v1/bookstore/categories/* (分类)")
 		logger.Info("  - /api/v1/bookstore/rankings/* (排行榜)")
+		if bookDetailSvc != nil {
+			logger.Info("  - /api/v1/bookstore/book-details/* (书籍详情)")
+		}
+		if ratingSvc != nil {
+			logger.Info("  - /api/v1/bookstore/ratings/* (书籍评分)")
+		}
+		if statisticsSvc != nil {
+			logger.Info("  - /api/v1/bookstore/statistics/* (书籍统计)")
+		}
 	}
 
 	// ============ 注册阅读器路由 ============
