@@ -38,9 +38,11 @@ type BookDetailRepository interface {
 	// 统计方法 - 用于详情统计
 	CountByCategory(ctx context.Context, category string) (int64, error)
 	CountByAuthor(ctx context.Context, author string) (int64, error)
+	CountByAuthorID(ctx context.Context, authorID primitive.ObjectID) (int64, error)
 	CountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error)
 	CountByTags(ctx context.Context, tags []string) (int64, error)
 	CountByPublisher(ctx context.Context, publisher string) (int64, error)
+	CountByFilter(ctx context.Context, filter *BookDetailFilter) (int64, error)
 
 	// 统计数据更新 - 用于详情页面交互
 	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
