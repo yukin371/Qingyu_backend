@@ -542,6 +542,19 @@ func (s *ContentAuditService) GetHighRiskAudits(ctx context.Context, minRiskLeve
 	return records, nil
 }
 
+// GetAuditStatistics 获取审核统计
+func (s *ContentAuditService) GetAuditStatistics(ctx context.Context) (interface{}, error) {
+	// 后续可实现真实统计逻辑，现在返回基础数据结构
+	stats := map[string]interface{}{
+		"pending":     0,
+		"approved":    0,
+		"rejected":    0,
+		"highRisk":    0,
+		"approveRate": 0.0,
+	}
+	return stats, nil
+}
+
 // 私有辅助方法
 
 // calculateRiskScore 计算风险分数
