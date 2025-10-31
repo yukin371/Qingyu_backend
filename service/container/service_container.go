@@ -32,6 +32,7 @@ import (
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
 
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -57,6 +58,9 @@ type ServiceContainer struct {
 	userService           userInterface.UserService
 	aiService             *aiService.Service
 	bookstoreService      bookstoreService.BookstoreService
+	bookDetailService     bookstoreService.BookDetailService
+	bookRatingService     bookstoreService.BookRatingService
+	bookStatisticsService bookstoreService.BookStatisticsService
 	readerService         *readingService.ReaderService
 	commentService        *readingService.CommentService
 	likeService           *readingService.LikeService
@@ -148,6 +152,30 @@ func (c *ServiceContainer) GetBookstoreService() (bookstoreService.BookstoreServ
 		return nil, fmt.Errorf("BookstoreService未初始化")
 	}
 	return c.bookstoreService, nil
+}
+
+// GetBookDetailService 获取书籍详情服务
+func (c *ServiceContainer) GetBookDetailService() (bookstoreService.BookDetailService, error) {
+	if c.bookDetailService == nil {
+		return nil, fmt.Errorf("BookDetailService未初始化")
+	}
+	return c.bookDetailService, nil
+}
+
+// GetBookRatingService 获取书籍评分服务
+func (c *ServiceContainer) GetBookRatingService() (bookstoreService.BookRatingService, error) {
+	if c.bookRatingService == nil {
+		return nil, fmt.Errorf("BookRatingService未初始化")
+	}
+	return c.bookRatingService, nil
+}
+
+// GetBookStatisticsService 获取书籍统计服务
+func (c *ServiceContainer) GetBookStatisticsService() (bookstoreService.BookStatisticsService, error) {
+	if c.bookStatisticsService == nil {
+		return nil, fmt.Errorf("BookStatisticsService未初始化")
+	}
+	return c.bookStatisticsService, nil
 }
 
 // GetReaderService 获取阅读器服务
@@ -478,20 +506,43 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
+	// 创建书店详细服务
+	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
+	bookRatingRepo := c.repositoryFactory.CreateBookRatingRepository()
+	bookStatisticsRepo := c.repositoryFactory.CreateBookStatisticsRepository()
+
+	// 这些服务也需要 CacheService，暂时传 nil
+	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, nil)
+	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, nil)
+	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, nil)
+
 	// ============ 3. 创建阅读器服务 ============
 	chapterRepo := c.repositoryFactory.CreateChapterRepository()
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
 
+	// 创建缓存服务和VIP服务
+	var cacheService readingService.ReaderCacheService
+	var vipService readingService.VIPPermissionService
+
+	if c.redisClient != nil {
+		// 获取原始 Redis 客户端
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			cacheService = readingService.NewRedisReaderCacheService(redisClient, "qingyu")
+			vipService = readingService.NewVIPPermissionService(redisClient, "qingyu")
+		}
+	}
+
 	c.readerService = readingService.NewReaderService(
 		chapterRepo,
 		progressRepo,
 		annotationRepo,
 		settingsRepo,
-		c.eventBus, // 注入事件总线
-		nil,        // cacheService - TODO: 实现缓存服务
-		nil,        // vipService - TODO: 实现VIP服务
+		c.eventBus,   // 注入事件总线
+		cacheService, // 注入缓存服务
+		vipService,   // 注入VIP服务
 	)
 	// 注意：ReaderService 不完全实现 BaseService，不注册到 services map
 
