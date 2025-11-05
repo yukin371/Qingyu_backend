@@ -1,7 +1,7 @@
 package recommendation
 
 import (
-	reco "Qingyu_backend/models/recommendation/reco"
+	reco "Qingyu_backend/models/recommendation"
 	"context"
 )
 

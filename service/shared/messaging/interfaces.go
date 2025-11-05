@@ -20,7 +20,7 @@ type MessagingService interface {
 	DeleteTopic(ctx context.Context, topic string) error
 	ListTopics(ctx context.Context) ([]string, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

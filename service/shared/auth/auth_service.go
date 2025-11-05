@@ -1,12 +1,14 @@
 package auth
 
 import (
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
 
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
-	userServiceInterface "Qingyu_backend/service/interfaces"
+
+	"go.uber.org/zap"
 )
 
 // AuthServiceImpl Auth服务实现（整合JWT、角色、权限、会话）
@@ -16,6 +18,9 @@ type AuthServiceImpl struct {
 	permissionService PermissionService
 	authRepo          sharedRepo.AuthRepository
 	userService       userServiceInterface.UserService // 依赖User服务
+	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
+	passwordValidator *PasswordValidator               // MVP: 密码强度验证
+	initialized       bool                             // 初始化标志
 }
 
 // NewAuthService 创建Auth服务
@@ -25,6 +30,7 @@ func NewAuthService(
 	permissionService PermissionService,
 	authRepo sharedRepo.AuthRepository,
 	userService userServiceInterface.UserService,
+	sessionService SessionService,
 ) AuthService {
 	return &AuthServiceImpl{
 		jwtService:        jwtService,
@@ -32,6 +38,8 @@ func NewAuthService(
 		permissionService: permissionService,
 		authRepo:          authRepo,
 		userService:       userService,
+		sessionService:    sessionService,
+		passwordValidator: NewPasswordValidator(), // MVP: 使用默认密码验证规则
 	}
 }
 
@@ -39,6 +47,11 @@ func NewAuthService(
 
 // Register 用户注册
 func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
+	// 0. MVP: 验证密码强度
+	if err := s.passwordValidator.ValidatePassword(req.Password); err != nil {
+		return nil, fmt.Errorf("密码不符合要求: %w", err)
+	}
+
 	// 1. 调用User服务创建用户
 	createUserReq := &userServiceInterface.CreateUserRequest{
 		Username: req.Username,
@@ -116,11 +129,27 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 		roleNames = []string{"reader"}
 	}
 
+	// 2.5. MVP: 检查多端登录限制（最多5台设备）
+	if err := s.sessionService.CheckDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
+		return nil, fmt.Errorf("登录失败: %w", err)
+	}
+
 	// 3. 生成JWT Token
 	token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID, roleNames)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
+
+	// 3.5. MVP: 创建会话
+	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
+	if err != nil {
+		// 会话创建失败不影响登录（降级处理）
+		zap.L().Warn("创建会话失败",
+			zap.String("user_id", loginResp.User.ID),
+			zap.Error(err),
+		)
+	}
+	_ = session // 暂时不使用，后续可添加到响应中
 
 	// 4. 返回响应
 	return &LoginResponse{
@@ -274,11 +303,67 @@ func (s *AuthServiceImpl) RefreshSession(ctx context.Context, sessionID string) 
 	return fmt.Errorf("会话管理功能待实现")
 }
 
-// ============ 健康检查 ============
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化认证服务
+func (s *AuthServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.jwtService == nil {
+		return fmt.Errorf("jwtService is nil")
+	}
+	if s.roleService == nil {
+		return fmt.Errorf("roleService is nil")
+	}
+	if s.permissionService == nil {
+		return fmt.Errorf("permissionService is nil")
+	}
+	if s.authRepo == nil {
+		return fmt.Errorf("authRepo is nil")
+	}
+	if s.userService == nil {
+		return fmt.Errorf("userService is nil")
+	}
+	if s.sessionService == nil {
+		return fmt.Errorf("sessionService is nil")
+	}
+
+	// 检查Repository健康状态
+	if err := s.authRepo.Health(ctx); err != nil {
+		return fmt.Errorf("authRepo health check failed: %w", err)
+	}
+
+	s.initialized = true
+	return nil
+}
 
 // Health 健康检查
 func (s *AuthServiceImpl) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
 	return s.authRepo.Health(ctx)
+}
+
+// Close 关闭服务，清理资源
+func (s *AuthServiceImpl) Close(ctx context.Context) error {
+	// 认证服务暂无需要清理的资源
+	// 未来如果有缓存等资源，在此处清理
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *AuthServiceImpl) GetServiceName() string {
+	return "AuthService"
+}
+
+// GetVersion 获取服务版本
+func (s *AuthServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }
 
 // ============ 辅助函数 ============

@@ -23,7 +23,7 @@ type StorageService interface {
 	ListFiles(ctx context.Context, req *ListFilesRequest) ([]*FileInfo, error)
 	GetDownloadURL(ctx context.Context, fileID string, expiresIn time.Duration) (string, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

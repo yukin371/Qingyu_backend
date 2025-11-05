@@ -27,8 +27,13 @@ func (m *MockCacheClient) Get(ctx context.Context, key string) (string, error) {
 	return "", fmt.Errorf("key not found")
 }
 
-func (m *MockCacheClient) Set(ctx context.Context, key string, value string, ttl time.Duration) error {
-	m.data[key] = value
+func (m *MockCacheClient) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+	// 将interface{}转换为string存储
+	if strValue, ok := value.(string); ok {
+		m.data[key] = strValue
+	} else {
+		m.data[key] = fmt.Sprintf("%v", value)
+	}
 	return nil
 }
 

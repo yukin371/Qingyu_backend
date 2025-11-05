@@ -33,7 +33,7 @@ type AuthService interface {
 	DestroySession(ctx context.Context, sessionID string) error
 	RefreshSession(ctx context.Context, sessionID string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -72,6 +72,10 @@ type SessionService interface {
 	UpdateSession(ctx context.Context, sessionID string, data map[string]interface{}) error
 	DestroySession(ctx context.Context, sessionID string) error
 	RefreshSession(ctx context.Context, sessionID string) error
+	// MVP: 多端登录限制相关方法
+	CheckDeviceLimit(ctx context.Context, userID string, maxDevices int) error
+	GetUserSessions(ctx context.Context, userID string) ([]*Session, error)
+	DestroyUserSessions(ctx context.Context, userID string) error
 }
 
 // ============ 请求/响应结构 ============

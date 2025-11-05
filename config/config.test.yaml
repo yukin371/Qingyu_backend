@@ -1,0 +1,103 @@
+# 测试环境配置
+server:
+  port: "8080"
+  mode: debug  # 测试环境使用debug模式
+  timeout: 30s
+
+mongodb:
+  uri: "mongodb://admin:password@localhost:27017/qingyu_test?authSource=admin"
+  database: "qingyu_test"
+  timeout: 30
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 1  # 使用不同的DB避免与开发环境冲突
+  poolsize: 10
+
+jwt:
+  secret: "test-secret-key-do-not-use-in-production"
+  expire: 7200  # 2小时
+  issuer: "qingyu-test"
+
+log:
+  level: "debug"
+  format: "json"
+  output: "stdout"
+
+# 测试特定配置
+test:
+  cleanup_after_test: true
+  parallel_tests: true
+  timeout: 300  # 5分钟测试超时
+
+# 审核配置（测试）
+audit:
+  enabled: true
+  realtime_check: true
+  auto_review_threshold: 0.8
+
+# 存储配置（测试）
+storage:
+  type: "local"
+  local_path: "./test_uploads"
+  max_size: 10485760  # 10MB
+
+# 性能配置（测试）
+performance:
+  max_goroutines: 100
+  request_timeout: 30s
+  db_timeout: 10s
+
+# 外部API配置（AI提供商 - 测试）
+external:
+  default_provider: "deepseek"  # 使用DeepSeek作为默认提供商
+  providers:
+    deepseek:
+      name: "deepseek"
+      api_key: "sk-98fab8718873455a9e66e42d30c46539"  # 请替换为您的DeepSeek API Key
+      base_url: "https://api.deepseek.com/beta"  # DeepSeek的文本补全API需要使用/beta endpoint
+      enabled: true
+      priority: 1
+      supported_models:
+        - "deepseek-chat"        # DeepSeek-V3.2-Exp 非思考模式
+        - "deepseek-reasoner"    # DeepSeek-V3.2-Exp 思考模式
+    gemini:
+      name: "gemini"
+      api_key: "AIzaSyA6aj4aqWOdkIfZAYPlM5fk_8e4gJtkceE"
+      base_url: "https://generativelanguage.googleapis.com"
+      enabled: false  # 暂时禁用gemini
+      priority: 2
+      supported_models:
+        - "gemini-1.5-flash"
+        - "gemini-1.5-pro"
+        - "gemini-1.0-pro"
+
+# AI配额配置（测试环境使用超大配额）
+ai_quota:
+  # 默认配额（当数据库中没有配额记录时使用）
+  default_quotas:
+    # 读者配额
+    reader:
+      normal: 100000      # 普通读者：10万tokens/天（测试环境）
+      vip: 999999         # VIP读者：百万tokens/天（测试环境，接近无限）
+    # 作者配额
+    writer:
+      novice: 100000      # 新手作者：10万tokens/天
+      signed: 500000      # 签约作者：50万tokens/天
+      master: 999999      # 大神作者：百万tokens/天（接近无限）
+    # 管理员配额
+    admin:
+      normal: 999999      # 管理员：百万tokens/天（无限制）
+
+  # 配额重置配置
+  reset:
+    daily_reset_hour: 0   # 每天0点重置
+    enable_auto_reset: true
+
+  # 配额警告阈值
+  warning_threshold: 0.1  # 剩余10%时警告
+
+  # 是否允许超额使用（测试环境允许）
+  allow_overdraft: true
+  overdraft_limit: 1000   # 超额限制（仅测试环境）

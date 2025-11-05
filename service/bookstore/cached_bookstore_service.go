@@ -1,10 +1,9 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"time"
-
-	"Qingyu_backend/models/reading/bookstore"
 )
 
 // CachedBookstoreService 带缓存的书城服务
@@ -52,7 +51,7 @@ func (c *CachedBookstoreService) GetHomepageData(ctx context.Context) (*Homepage
 }
 
 // GetBookByID 获取书籍详情（带缓存）
-func (c *CachedBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	// 尝试从缓存获取
 	if book, err := c.cache.GetBook(ctx, id); err == nil && book != nil {
 		return book, nil
@@ -73,7 +72,7 @@ func (c *CachedBookstoreService) GetBookByID(ctx context.Context, id string) (*b
 }
 
 // GetActiveBanners 获取激活的Banner列表（带缓存）
-func (c *CachedBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+func (c *CachedBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	// 尝试从缓存获取
 	if banners, err := c.cache.GetActiveBanners(ctx); err == nil && banners != nil {
 		// 如果缓存的数量足够，直接返回
@@ -100,7 +99,7 @@ func (c *CachedBookstoreService) GetActiveBanners(ctx context.Context, limit int
 }
 
 // GetCategoryTree 获取分类树（带缓存）
-func (c *CachedBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (c *CachedBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	// 尝试从缓存获取
 	if tree, err := c.cache.GetCategoryTree(ctx); err == nil && tree != nil {
 		return tree, nil
@@ -121,11 +120,11 @@ func (c *CachedBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookst
 }
 
 // GetRealtimeRanking 获取实时榜（带缓存）
-func (c *CachedBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
-	period := bookstore.GetPeriodString(bookstore.RankingTypeRealtime, time.Now())
+func (c *CachedBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error) {
+	period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, time.Now())
 
 	// 尝试从缓存获取
-	if items, err := c.cache.GetRanking(ctx, bookstore.RankingTypeRealtime, period); err == nil && items != nil {
+	if items, err := c.cache.GetRanking(ctx, bookstore2.RankingTypeRealtime, period); err == nil && items != nil {
 		if len(items) >= limit {
 			if limit > len(items) {
 				return items, nil
@@ -142,20 +141,20 @@ func (c *CachedBookstoreService) GetRealtimeRanking(ctx context.Context, limit i
 
 	// 设置缓存（异步）
 	go func() {
-		c.cache.SetRanking(context.Background(), bookstore.RankingTypeRealtime, period, items, RankingCacheExpiration)
+		c.cache.SetRanking(context.Background(), bookstore2.RankingTypeRealtime, period, items, RankingCacheExpiration)
 	}()
 
 	return items, nil
 }
 
 // GetWeeklyRanking 获取周榜（带缓存）
-func (c *CachedBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (c *CachedBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeWeekly, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, time.Now())
 	}
 
 	// 尝试从缓存获取
-	if items, err := c.cache.GetRanking(ctx, bookstore.RankingTypeWeekly, period); err == nil && items != nil {
+	if items, err := c.cache.GetRanking(ctx, bookstore2.RankingTypeWeekly, period); err == nil && items != nil {
 		if len(items) >= limit {
 			if limit > len(items) {
 				return items, nil
@@ -172,20 +171,20 @@ func (c *CachedBookstoreService) GetWeeklyRanking(ctx context.Context, period st
 
 	// 设置缓存（异步）
 	go func() {
-		c.cache.SetRanking(context.Background(), bookstore.RankingTypeWeekly, period, items, RankingCacheExpiration)
+		c.cache.SetRanking(context.Background(), bookstore2.RankingTypeWeekly, period, items, RankingCacheExpiration)
 	}()
 
 	return items, nil
 }
 
 // GetMonthlyRanking 获取月榜（带缓存）
-func (c *CachedBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (c *CachedBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeMonthly, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, time.Now())
 	}
 
 	// 尝试从缓存获取
-	if items, err := c.cache.GetRanking(ctx, bookstore.RankingTypeMonthly, period); err == nil && items != nil {
+	if items, err := c.cache.GetRanking(ctx, bookstore2.RankingTypeMonthly, period); err == nil && items != nil {
 		if len(items) >= limit {
 			if limit > len(items) {
 				return items, nil
@@ -202,20 +201,20 @@ func (c *CachedBookstoreService) GetMonthlyRanking(ctx context.Context, period s
 
 	// 设置缓存（异步）
 	go func() {
-		c.cache.SetRanking(context.Background(), bookstore.RankingTypeMonthly, period, items, RankingCacheExpiration)
+		c.cache.SetRanking(context.Background(), bookstore2.RankingTypeMonthly, period, items, RankingCacheExpiration)
 	}()
 
 	return items, nil
 }
 
 // GetNewbieRanking 获取新人榜（带缓存）
-func (c *CachedBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (c *CachedBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeNewbie, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeNewbie, time.Now())
 	}
 
 	// 尝试从缓存获取
-	if items, err := c.cache.GetRanking(ctx, bookstore.RankingTypeNewbie, period); err == nil && items != nil {
+	if items, err := c.cache.GetRanking(ctx, bookstore2.RankingTypeNewbie, period); err == nil && items != nil {
 		if len(items) >= limit {
 			if limit > len(items) {
 				return items, nil
@@ -232,16 +231,16 @@ func (c *CachedBookstoreService) GetNewbieRanking(ctx context.Context, period st
 
 	// 设置缓存（异步）
 	go func() {
-		c.cache.SetRanking(context.Background(), bookstore.RankingTypeNewbie, period, items, RankingCacheExpiration)
+		c.cache.SetRanking(context.Background(), bookstore2.RankingTypeNewbie, period, items, RankingCacheExpiration)
 	}()
 
 	return items, nil
 }
 
 // GetRankingByType 根据类型获取榜单（带缓存）
-func (c *CachedBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (c *CachedBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	if period == "" {
-		period = bookstore.GetPeriodString(rankingType, time.Now())
+		period = bookstore2.GetPeriodString(rankingType, time.Now())
 	}
 
 	// 尝试从缓存获取
@@ -270,43 +269,43 @@ func (c *CachedBookstoreService) GetRankingByType(ctx context.Context, rankingTy
 
 // 以下方法直接委托给原服务，不使用缓存
 
-func (c *CachedBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (c *CachedBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	return c.service.GetBooksByCategory(ctx, categoryID, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	return c.service.GetRecommendedBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	return c.service.GetFeaturedBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetHotBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetNewReleases(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (c *CachedBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetFreeBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (c *CachedBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.SearchBooks(ctx, keyword, page, pageSize)
 }
 
-func (c *CachedBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+func (c *CachedBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
 	return c.service.SearchBooksWithFilter(ctx, filter)
 }
 
-func (c *CachedBookstoreService) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+func (c *CachedBookstoreService) GetBookStats(ctx context.Context) (*bookstore2.BookStats, error) {
 	return c.service.GetBookStats(ctx)
 }
 
@@ -326,11 +325,11 @@ func (c *CachedBookstoreService) IncrementBookView(ctx context.Context, bookID s
 	return nil
 }
 
-func (c *CachedBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+func (c *CachedBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	return c.service.GetCategoryByID(ctx, id)
 }
 
-func (c *CachedBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+func (c *CachedBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
 	return c.service.GetRootCategories(ctx)
 }
 
@@ -350,7 +349,7 @@ func (c *CachedBookstoreService) IncrementBannerClick(ctx context.Context, banne
 	return nil
 }
 
-func (c *CachedBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (c *CachedBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	// 更新榜单后，清除相关缓存
 	err := c.service.UpdateRankings(ctx, rankingType, period)
 	if err != nil {

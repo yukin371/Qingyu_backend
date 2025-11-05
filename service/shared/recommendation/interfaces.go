@@ -20,7 +20,7 @@ type RecommendationService interface {
 	RefreshRecommendations(ctx context.Context, userID string) error
 	RefreshHotItems(ctx context.Context, itemType string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 

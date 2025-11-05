@@ -29,14 +29,14 @@ type MockMessage struct {
 
 // MockTopic 模拟主题模型
 type MockTopic struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name        string             `bson:"name" json:"name"`
-	Partitions  int32              `bson:"partitions" json:"partitions"`
-	Replicas    int16              `bson:"replicas" json:"replicas"`
-	Config      map[string]string  `bson:"config" json:"config"`
-	Status      string             `bson:"status" json:"status"`
-	CreatedAt   time.Time          `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time          `bson:"updated_at" json:"updatedAt"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name       string             `bson:"name" json:"name"`
+	Partitions int32              `bson:"partitions" json:"partitions"`
+	Replicas   int16              `bson:"replicas" json:"replicas"`
+	Config     map[string]string  `bson:"config" json:"config"`
+	Status     string             `bson:"status" json:"status"`
+	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // MockConsumerGroup 模拟消费者组模型
@@ -463,7 +463,7 @@ func TestMessagingService_PublishMessage_Success(t *testing.T) {
 	topic := "test-topic"
 	key := "test-key"
 	payload := map[string]interface{}{
-		"message": "Hello, World!",
+		"message":   "Hello, World!",
 		"timestamp": time.Now().Unix(),
 	}
 	headers := map[string]string{
@@ -545,7 +545,7 @@ func TestMessagingService_SubscribeToTopic_Success(t *testing.T) {
 	topicRepo.On("GetByName", ctx, topic).Return(existingTopic, nil)
 	consumerRepo.On("GetGroup", ctx, groupID).Return(nil, errors.New("not found"))
 	consumerRepo.On("CreateGroup", ctx, mock.AnythingOfType("*shared.MockConsumerGroup")).Return(nil)
-	broker.On("Subscribe", ctx, topic, groupID, handler).Return(nil)
+	broker.On("Subscribe", ctx, topic, groupID, mock.AnythingOfType("shared.MockMessageHandler")).Return(nil)
 
 	// 执行测试
 	err := service.SubscribeToTopic(ctx, topic, groupID, handler)

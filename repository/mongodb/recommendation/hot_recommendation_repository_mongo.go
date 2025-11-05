@@ -42,8 +42,8 @@ func (r *MongoHotRecommendationRepository) GetHotBooks(ctx context.Context, limi
 		bson.D{{Key: "$addFields", Value: bson.M{
 			"hot_score": bson.M{
 				"$add": []interface{}{
-					bson.M{"$multiply": []interface{}{"$views", 0.3}},         // 浏览量权重 0.3
-					bson.M{"$multiply": []interface{}{"$favorites", 0.5}},     // 收藏量权重 0.5
+					bson.M{"$multiply": []interface{}{"$views", 0.2}},         // 浏览量权重 0.2
+					bson.M{"$multiply": []interface{}{"$favorites", 0.7}},     // 收藏量权重 0.7（收藏行为更重要）
 					bson.M{"$multiply": []interface{}{"$average_rating", 20}}, // 评分权重（转换到相同量级）
 				},
 			},

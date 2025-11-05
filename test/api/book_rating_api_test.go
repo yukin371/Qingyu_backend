@@ -1,6 +1,7 @@
 package api
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -13,8 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	readingAPI "Qingyu_backend/api/v1/reading"
-	"Qingyu_backend/models/reading/bookstore"
+	bookstoreAPI "Qingyu_backend/api/v1/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -177,7 +177,7 @@ func setupRatingTestRouter(service bookstoreService.BookRatingService) *gin.Engi
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	api := readingAPI.NewBookRatingAPI(service)
+	api := bookstoreAPI.NewBookRatingAPI(service)
 
 	v1 := router.Group("/api/v1/reading")
 	{
@@ -224,7 +224,7 @@ func TestGetBookRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -244,7 +244,7 @@ func TestGetBookRating_InvalidID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -301,7 +301,7 @@ func TestGetRatingsByBookID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -335,7 +335,7 @@ func TestGetRatingsByUserID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -359,7 +359,7 @@ func TestGetAverageRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -390,7 +390,7 @@ func TestGetRatingDistribution(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "获取成功", response.Message)
@@ -419,7 +419,7 @@ func TestCreateRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 201, response.Code)
@@ -442,7 +442,7 @@ func TestCreateRating_InvalidJSON(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -471,7 +471,7 @@ func TestUpdateRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "更新成功", response.Message)
@@ -493,7 +493,7 @@ func TestDeleteRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "删除成功", response.Message)
@@ -510,7 +510,7 @@ func TestLikeRating(t *testing.T) {
 	router = gin.New()
 	gin.SetMode(gin.TestMode)
 
-	api := readingAPI.NewBookRatingAPI(mockService)
+	api := bookstoreAPI.NewBookRatingAPI(mockService)
 
 	v1 := router.Group("/api/v1/reading")
 	v1.Use(func(c *gin.Context) {
@@ -529,7 +529,7 @@ func TestLikeRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "点赞成功", response.Message)
@@ -550,7 +550,7 @@ func TestLikeRating_Unauthorized(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 401, response.Code)
@@ -567,7 +567,7 @@ func TestUnlikeRating(t *testing.T) {
 	router := gin.New()
 	gin.SetMode(gin.TestMode)
 
-	api := readingAPI.NewBookRatingAPI(mockService)
+	api := bookstoreAPI.NewBookRatingAPI(mockService)
 
 	v1 := router.Group("/api/v1/reading")
 	v1.Use(func(c *gin.Context) {
@@ -586,7 +586,7 @@ func TestUnlikeRating(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "取消点赞成功", response.Message)
@@ -605,7 +605,7 @@ func TestSearchRatings(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "搜索功能开发中", response.Message)
@@ -629,7 +629,7 @@ func TestGetRatingsByBookID_Pagination(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response readingAPI.PaginatedResponse
+	var response bookstoreAPI.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, response.Page)
@@ -659,7 +659,7 @@ func TestCreateRating_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
-	var response readingAPI.APIResponse
+	var response bookstoreAPI.APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.Code)

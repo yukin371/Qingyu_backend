@@ -18,9 +18,12 @@ import (
 
 func main() {
 	// 定义命令行参数
-	command := flag.String("command", "status", "Command to run: up, down, status, reset, seed")
+	command := flag.String("command", "status", "Command to run: up, down, status, reset, seed, import-novels, clean-novels")
 	steps := flag.String("steps", "0", "Number of steps for down command (0 means all)")
 	configPath := flag.String("config", ".", "Path to config file")
+	novelFile := flag.String("file", "data/novels.json", "Path to novels JSON file for import-novels command")
+	dryRun := flag.Bool("dry-run", false, "Dry run mode (validate only, don't insert)")
+	category := flag.String("category", "", "Category filter for clean-novels command")
 	flag.Parse()
 
 	// 加载配置
@@ -68,6 +71,10 @@ func main() {
 		}
 	case "seed":
 		err = runSeeds(ctx, db)
+	case "import-novels":
+		err = importNovels(ctx, db, *novelFile, *dryRun)
+	case "clean-novels":
+		err = cleanNovels(ctx, db, *category)
 	default:
 		log.Fatalf("Unknown command: %s", *command)
 	}
@@ -119,7 +126,7 @@ func registerMigrations(manager *migration.Manager) {
 
 // runSeeds 运行种子数据
 func runSeeds(ctx context.Context, db *mongo.Database) error {
-	fmt.Println("\n=== Running Seeds ===\n")
+	fmt.Println("\n=== Running Seeds ===")
 
 	// 运行用户种子
 	if err := seeds.SeedUsers(ctx, db); err != nil {
@@ -137,5 +144,84 @@ func runSeeds(ctx context.Context, db *mongo.Database) error {
 	}
 
 	fmt.Println("\n✓ All seeds completed")
+	return nil
+}
+
+// importNovels 导入小说数据
+func importNovels(ctx context.Context, db *mongo.Database, filepath string, dryRun bool) error {
+	fmt.Println("\n=== Importing Novels from CNNovel125K ===")
+
+	// 创建导入器
+	importer := seeds.NewNovelImporter(db, dryRun)
+
+	// 从 JSON 文件导入
+	if err := importer.ImportFromJSON(ctx, filepath); err != nil {
+		return fmt.Errorf("failed to import novels: %w", err)
+	}
+
+	// 如果不是试运行模式，创建索引
+	if !dryRun {
+		if err := importer.CreateIndexes(ctx); err != nil {
+			return fmt.Errorf("failed to create indexes: %w", err)
+		}
+
+		// 显示统计信息
+		if err := importer.GetStats(ctx); err != nil {
+			return fmt.Errorf("failed to get stats: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// cleanNovels 清理小说数据
+func cleanNovels(ctx context.Context, db *mongo.Database, category string) error {
+	fmt.Println("\n=== Cleaning Novel Data ===")
+
+	// 创建清理器
+	cleaner := seeds.NewNovelCleaner(db)
+
+	// 显示清理前统计
+	if err := cleaner.GetStats(ctx); err != nil {
+		return fmt.Errorf("failed to get stats: %w", err)
+	}
+
+	// 确认操作
+	if category == "" {
+		fmt.Println("\n⚠️  WARNING: This will delete ALL books and chapters!")
+		fmt.Print("Are you sure? (yes/no): ")
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm != "yes" {
+			fmt.Println("Clean cancelled")
+			return nil
+		}
+
+		// 清理所有数据
+		if err := cleaner.Clean(ctx); err != nil {
+			return fmt.Errorf("failed to clean novels: %w", err)
+		}
+	} else {
+		fmt.Printf("\n⚠️  WARNING: This will delete all books in category [%s]!\n", category)
+		fmt.Print("Are you sure? (yes/no): ")
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm != "yes" {
+			fmt.Println("Clean cancelled")
+			return nil
+		}
+
+		// 按分类清理
+		if err := cleaner.CleanByCategory(ctx, category); err != nil {
+			return fmt.Errorf("failed to clean novels by category: %w", err)
+		}
+	}
+
+	// 显示清理后统计
+	fmt.Println()
+	if err := cleaner.GetStats(ctx); err != nil {
+		return fmt.Errorf("failed to get stats: %w", err)
+	}
+
 	return nil
 }

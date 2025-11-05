@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"errors"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/reading/reader"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
 )

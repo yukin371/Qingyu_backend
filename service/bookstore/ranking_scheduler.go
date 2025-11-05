@@ -1,12 +1,11 @@
 package bookstore
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"fmt"
 	"log"
 	"time"
-
-	"Qingyu_backend/models/reading/bookstore"
 
 	"github.com/robfig/cron/v3"
 )

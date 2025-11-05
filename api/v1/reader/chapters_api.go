@@ -27,7 +27,7 @@ func NewChaptersAPI(readerService *reading.ReaderService) *ChaptersAPI {
 //	@Summary	获取章节信息
 //	@Tags		阅读器
 //	@Param		id	path		string	true	"章节ID"
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/{id} [get]
 func (api *ChaptersAPI) GetChapterByID(c *gin.Context) {
 	chapterID := c.Param("id")
@@ -46,7 +46,7 @@ func (api *ChaptersAPI) GetChapterByID(c *gin.Context) {
 //	@Summary	获取章节内容
 //	@Tags		阅读器
 //	@Param		id	path		string	true	"章节ID"
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/{id}/content [get]
 func (api *ChaptersAPI) GetChapterContent(c *gin.Context) {
 	chapterID := c.Param("id")
@@ -74,7 +74,7 @@ func (api *ChaptersAPI) GetChapterContent(c *gin.Context) {
 //	@Param		bookId	query		string	true	"书籍ID"
 //	@Param		page	query		int		false	"页码"	default(1)
 //	@Param		size	query		int		false	"每页数量"	default(20)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters [get]
 func (api *ChaptersAPI) GetBookChapters(c *gin.Context) {
 	bookID := c.Query("bookId")
@@ -106,7 +106,7 @@ func (api *ChaptersAPI) GetBookChapters(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId		query		string	true	"书籍ID"
 //	@Param		chapterNum	query		int		true	"当前章节号"
-//	@Success	200			{object}	response.Response
+//	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/navigation [get]
 func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 	bookID := c.Query("bookId")
@@ -123,8 +123,9 @@ func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 		return
 	}
 
-	prevChapter, _ := api.readerService.GetPrevChapter(c.Request.Context(), bookID, chapterNum)
-	nextChapter, _ := api.readerService.GetNextChapter(c.Request.Context(), bookID, chapterNum)
+	// 获取上一章和下一章（可能为 nil，这是正常的）
+	prevChapter, _ := api.readerService.GetPrevChapter(c.Request.Context(), bookID, chapterNum) //nolint:errcheck // 上一章可能不存在
+	nextChapter, _ := api.readerService.GetNextChapter(c.Request.Context(), bookID, chapterNum) //nolint:errcheck // 下一章可能不存在
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
 		"prevChapter": prevChapter,
@@ -137,7 +138,7 @@ func (api *ChaptersAPI) GetNavigationChapters(c *gin.Context) {
 //	@Summary	获取第一章
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/first [get]
 func (api *ChaptersAPI) GetFirstChapter(c *gin.Context) {
 	bookID := c.Query("bookId")
@@ -160,7 +161,7 @@ func (api *ChaptersAPI) GetFirstChapter(c *gin.Context) {
 //	@Summary	获取最后一章
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/last [get]
 func (api *ChaptersAPI) GetLastChapter(c *gin.Context) {
 	bookID := c.Query("bookId")

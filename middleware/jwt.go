@@ -105,7 +105,10 @@ func JWTAuthWithConfig(config AuthConfig) gin.HandlerFunc {
 			Roles:    claims.Roles,
 		}
 		c.Set("user", userContext)
-		c.Set("userId", claims.UserID)
+		// 同时设置两种命名方式以保持向后兼容
+		// TODO: 移除驼峰命名方式
+		c.Set("userId", claims.UserID)  // 驼峰命名（reader, ai, writer模块使用）
+		c.Set("user_id", claims.UserID) // 下划线命名（user, admin, shared模块使用）
 		c.Set("username", claims.Username)
 		c.Set("userRoles", claims.Roles)
 

@@ -143,7 +143,7 @@ func (r *AuthRepositoryImpl) DeleteRole(ctx context.Context, roleID string) erro
 
 // ListRoles 列出所有角色
 func (r *AuthRepositoryImpl) ListRoles(ctx context.Context) ([]*authModel.Role, error) {
-	cursor, err := r.roleCollection.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}}))
+	cursor, err := r.roleCollection.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{bson.E{Key: "created_at", Value: 1}}))
 	if err != nil {
 		return nil, fmt.Errorf("查询角色列表失败: %w", err)
 	}

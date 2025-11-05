@@ -1,6 +1,7 @@
-package recommendation_test
+package recommendation
 
 import (
+	reco "Qingyu_backend/models/recommendation"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	reco "Qingyu_backend/models/recommendation/reco"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	"Qingyu_backend/test/testutil"
 )
@@ -233,6 +233,7 @@ func TestBehaviorRepository_CompleteFlow(t *testing.T) {
 	ctx := context.Background()
 
 	userID := "test_user_flow"
+	now := time.Now()
 
 	// 1. 记录浏览行为
 	viewBehavior := &reco.Behavior{
@@ -240,6 +241,7 @@ func TestBehaviorRepository_CompleteFlow(t *testing.T) {
 		ItemID:       "book_001",
 		BehaviorType: "view",
 		Value:        1.0,
+		OccurredAt:   now.Add(-2 * time.Second), // 最早的行为
 	}
 	err := repo.Create(ctx, viewBehavior)
 	require.NoError(t, err)
@@ -255,6 +257,7 @@ func TestBehaviorRepository_CompleteFlow(t *testing.T) {
 			"readTime": 300,
 			"progress": 0.5,
 		},
+		OccurredAt: now.Add(-1 * time.Second), // 中间的行为
 	}
 	err = repo.Create(ctx, readBehavior)
 	require.NoError(t, err)
@@ -265,6 +268,7 @@ func TestBehaviorRepository_CompleteFlow(t *testing.T) {
 		ItemID:       "book_001",
 		BehaviorType: "collect",
 		Value:        1.0,
+		OccurredAt:   now, // 最近的行为
 	}
 	err = repo.Create(ctx, collectBehavior)
 	require.NoError(t, err)

@@ -1,10 +1,10 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"errors"
 
-	"Qingyu_backend/models/reading/reader"
 	"Qingyu_backend/repository/interfaces/reading"
 )
 

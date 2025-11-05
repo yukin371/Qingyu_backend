@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -29,9 +30,9 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 // @Accept json
 // @Produce json
 // @Param request body project.CreateProjectRequest true "创建项目请求"
-// @Success 201 {object} shared.Response{data=project.CreateProjectResponse}
-// @Failure 400 {object} shared.Response
-// @Failure 401 {object} shared.Response
+// @Success 201 {object} shared.APIResponse{data=project.CreateProjectResponse}
+// @Failure 400 {object} shared.APIResponse
+// @Failure 401 {object} shared.APIResponse
 // @Router /api/v1/projects [post]
 func (api *ProjectApi) CreateProject(c *gin.Context) {
 	var req project.CreateProjectRequest
@@ -40,7 +41,13 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 		return
 	}
 
-	resp, err := api.projectService.CreateProject(c.Request.Context(), &req)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	resp, err := api.projectService.CreateProject(ctx, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
 		return
@@ -56,8 +63,8 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.Response{data=document.Project}
-// @Failure 404 {object} shared.Response
+// @Success 200 {object} shared.APIResponse{data=document.Project}
+// @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/projects/{id} [get]
 func (api *ProjectApi) GetProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -81,7 +88,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 // @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "项目状态"
 // @Param category query string false "项目分类"
-// @Success 200 {object} shared.Response{data=project.ListProjectsResponse}
+// @Success 200 {object} shared.APIResponse{data=project.ListProjectsResponse}
 // @Router /api/v1/projects [get]
 func (api *ProjectApi) ListProjects(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -96,7 +103,13 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 		Category: category,
 	}
 
-	resp, err := api.projectService.ListMyProjects(c.Request.Context(), req)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	resp, err := api.projectService.ListMyProjects(ctx, req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "查询列表失败", err.Error())
 		return
@@ -113,9 +126,9 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param request body project.UpdateProjectRequest true "更新项目请求"
-// @Success 200 {object} shared.Response
-// @Failure 400 {object} shared.Response
-// @Failure 403 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.APIResponse
+// @Failure 403 {object} shared.APIResponse
 // @Router /api/v1/projects/{id} [put]
 func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -126,7 +139,13 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	if err := api.projectService.UpdateProject(c.Request.Context(), projectID, &req); err != nil {
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	if err := api.projectService.UpdateProject(ctx, projectID, &req); err != nil {
 		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
 		return
 	}
@@ -141,16 +160,49 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.Response
-// @Failure 403 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 403 {object} shared.APIResponse
 // @Router /api/v1/projects/{id} [delete]
 func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	if err := api.projectService.DeleteProject(c.Request.Context(), projectID); err != nil {
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	if err := api.projectService.DeleteProject(ctx, projectID); err != nil {
 		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
 		return
 	}
 
 	shared.Success(c, http.StatusOK, "删除成功", nil)
+}
+
+// UpdateProjectStatistics 更新项目统计信息
+// @Summary 更新项目统计信息
+// @Description 更新项目的统计信息（字数、章节数等）
+// @Tags 项目管理
+// @Accept json
+// @Produce json
+// @Param id path string true "项目ID"
+// @Success 200 {object} shared.APIResponse
+// @Router /api/v1/projects/{id}/statistics [put]
+func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
+	projectID := c.Param("id")
+
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("userId"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	// 调用Service计算并更新统计信息
+	if err := api.projectService.RecalculateProjectStatistics(ctx, projectID); err != nil {
+		shared.Error(c, http.StatusInternalServerError, "更新统计失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "更新成功", nil)
 }

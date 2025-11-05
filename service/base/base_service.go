@@ -6,26 +6,16 @@ import (
 	"time"
 
 	"Qingyu_backend/repository/interfaces"
+	baseInterface "Qingyu_backend/service/interfaces/base"
 )
 
-// BaseService 基础服务接口
-// 定义所有服务的通用方法和行为
-type BaseService interface {
-	// Initialize 初始化服务
-	Initialize(ctx context.Context) error
-
-	// Health 健康检查
-	Health(ctx context.Context) error
-
-	// Close 关闭服务
-	Close(ctx context.Context) error
-
-	// GetServiceName 获取服务名称
-	GetServiceName() string
-
-	// GetVersion 获取服务版本
-	GetVersion() string
-}
+// 类型别名：方便使用
+type (
+	BaseService  = baseInterface.BaseService
+	Event        = baseInterface.Event
+	EventHandler = baseInterface.EventHandler
+	EventBus     = baseInterface.EventBus
+)
 
 // ServiceContainer 服务容器
 // 用于依赖注入和服务管理
@@ -259,14 +249,6 @@ func (r *LengthRule) GetErrorMessage() string {
 	return r.errorMessage
 }
 
-// Event 事件接口
-type Event interface {
-	GetEventType() string
-	GetEventData() interface{}
-	GetTimestamp() time.Time
-	GetSource() string
-}
-
 // BaseEvent 基础事件实现
 type BaseEvent struct {
 	EventType string      `json:"event_type"`
@@ -293,21 +275,6 @@ func (e *BaseEvent) GetTimestamp() time.Time {
 // GetSource 获取事件源
 func (e *BaseEvent) GetSource() string {
 	return e.Source
-}
-
-// EventHandler 事件处理器接口
-type EventHandler interface {
-	Handle(ctx context.Context, event Event) error
-	GetHandlerName() string
-	GetSupportedEventTypes() []string
-}
-
-// EventBus 事件总线接口
-type EventBus interface {
-	Subscribe(eventType string, handler EventHandler) error
-	Unsubscribe(eventType string, handlerName string) error
-	Publish(ctx context.Context, event Event) error
-	PublishAsync(ctx context.Context, event Event) error
 }
 
 // SimpleEventBus 简单事件总线实现

@@ -53,7 +53,7 @@ func (r *RecommendationRepositoryImpl) GetUserBehaviors(ctx context.Context, use
 	query := bson.M{"user_id": userID}
 
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSort(bson.D{bson.E{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit))
 
 	cursor, err := r.behaviorCollection.Find(ctx, query, opts)
@@ -75,7 +75,7 @@ func (r *RecommendationRepositoryImpl) GetItemBehaviors(ctx context.Context, ite
 	query := bson.M{"item_id": itemID}
 
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSort(bson.D{bson.E{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit))
 
 	cursor, err := r.behaviorCollection.Find(ctx, query, opts)
@@ -95,10 +95,10 @@ func (r *RecommendationRepositoryImpl) GetItemBehaviors(ctx context.Context, ite
 // GetItemStatistics 获取物品统计信息
 func (r *RecommendationRepositoryImpl) GetItemStatistics(ctx context.Context, itemID string) (map[string]int64, error) {
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.D{{Key: "item_id", Value: itemID}}}},
-		{{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$action_type"},
-			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
+		bson.D{bson.E{Key: "$match", Value: bson.D{bson.E{Key: "item_id", Value: itemID}}}},
+		bson.D{bson.E{Key: "$group", Value: bson.D{
+			bson.E{Key: "_id", Value: "$action_type"},
+			bson.E{Key: "count", Value: bson.D{bson.E{Key: "$sum", Value: 1}}},
 		}}},
 	}
 
@@ -129,43 +129,43 @@ func (r *RecommendationRepositoryImpl) GetHotItems(ctx context.Context, itemType
 	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
 
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.D{
-			{Key: "item_type", Value: itemType},
-			{Key: "created_at", Value: bson.D{{Key: "$gte", Value: sevenDaysAgo}}},
+		bson.D{bson.E{Key: "$match", Value: bson.D{
+			bson.E{Key: "item_type", Value: itemType},
+			bson.E{Key: "created_at", Value: bson.D{bson.E{Key: "$gte", Value: sevenDaysAgo}}},
 		}}},
-		{{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$item_id"},
-			{Key: "view_count", Value: bson.D{{Key: "$sum", Value: bson.D{
-				{Key: "$cond", Value: bson.A{
-					bson.D{{Key: "$eq", Value: bson.A{"$action_type", "view"}}},
+		bson.D{bson.E{Key: "$group", Value: bson.D{
+			bson.E{Key: "_id", Value: "$item_id"},
+			bson.E{Key: "view_count", Value: bson.D{bson.E{Key: "$sum", Value: bson.D{
+				bson.E{Key: "$cond", Value: bson.A{
+					bson.D{bson.E{Key: "$eq", Value: bson.A{"$action_type", "view"}}},
 					1,
 					0,
 				}},
 			}}}},
-			{Key: "favorite_count", Value: bson.D{{Key: "$sum", Value: bson.D{
-				{Key: "$cond", Value: bson.A{
-					bson.D{{Key: "$eq", Value: bson.A{"$action_type", "favorite"}}},
+			bson.E{Key: "favorite_count", Value: bson.D{bson.E{Key: "$sum", Value: bson.D{
+				bson.E{Key: "$cond", Value: bson.A{
+					bson.D{bson.E{Key: "$eq", Value: bson.A{"$action_type", "favorite"}}},
 					1,
 					0,
 				}},
 			}}}},
-			{Key: "read_count", Value: bson.D{{Key: "$sum", Value: bson.D{
-				{Key: "$cond", Value: bson.A{
-					bson.D{{Key: "$eq", Value: bson.A{"$action_type", "read"}}},
+			bson.E{Key: "read_count", Value: bson.D{bson.E{Key: "$sum", Value: bson.D{
+				bson.E{Key: "$cond", Value: bson.A{
+					bson.D{bson.E{Key: "$eq", Value: bson.A{"$action_type", "read"}}},
 					1,
 					0,
 				}},
 			}}}},
 		}}},
-		{{Key: "$addFields", Value: bson.D{
-			{Key: "score", Value: bson.D{{Key: "$add", Value: bson.A{
+		bson.D{bson.E{Key: "$addFields", Value: bson.D{
+			bson.E{Key: "score", Value: bson.D{bson.E{Key: "$add", Value: bson.A{
 				"$view_count",
-				bson.D{{Key: "$multiply", Value: bson.A{"$favorite_count", 3}}},
-				bson.D{{Key: "$multiply", Value: bson.A{"$read_count", 2}}},
+				bson.D{bson.E{Key: "$multiply", Value: bson.A{"$favorite_count", 3}}},
+				bson.D{bson.E{Key: "$multiply", Value: bson.A{"$read_count", 2}}},
 			}}}},
 		}}},
-		{{Key: "$sort", Value: bson.D{{Key: "score", Value: -1}}}},
-		{{Key: "$limit", Value: limit}},
+		bson.D{bson.E{Key: "$sort", Value: bson.D{bson.E{Key: "score", Value: -1}}}},
+		bson.D{bson.E{Key: "$limit", Value: limit}},
 	}
 
 	cursor, err := r.behaviorCollection.Aggregate(ctx, pipeline)
@@ -194,14 +194,14 @@ func (r *RecommendationRepositoryImpl) GetUserPreferences(ctx context.Context, u
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.D{
-			{Key: "user_id", Value: userID},
-			{Key: "created_at", Value: bson.D{{Key: "$gte", Value: thirtyDaysAgo}}},
+		bson.D{bson.E{Key: "$match", Value: bson.D{
+			bson.E{Key: "user_id", Value: userID},
+			bson.E{Key: "created_at", Value: bson.D{bson.E{Key: "$gte", Value: thirtyDaysAgo}}},
 		}}},
-		{{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$item_type"},
-			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
-			{Key: "total_duration", Value: bson.D{{Key: "$sum", Value: "$duration"}}},
+		bson.D{bson.E{Key: "$group", Value: bson.D{
+			bson.E{Key: "_id", Value: "$item_type"},
+			bson.E{Key: "count", Value: bson.D{bson.E{Key: "$sum", Value: 1}}},
+			bson.E{Key: "total_duration", Value: bson.D{bson.E{Key: "$sum", Value: "$duration"}}},
 		}}},
 	}
 

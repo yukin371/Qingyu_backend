@@ -1,6 +1,7 @@
 package performance
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -18,7 +18,7 @@ type MockBookstoreServiceForBenchmark struct{}
 func (m *MockBookstoreServiceForBenchmark) GetHomepageData(ctx context.Context) (*bookstoreService.HomepageData, error) {
 	isActive := true
 	return &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{
 				ID:         primitive.NewObjectID(),
 				Title:      "测试Banner",
@@ -28,29 +28,29 @@ func (m *MockBookstoreServiceForBenchmark) GetHomepageData(ctx context.Context) 
 				IsActive:   isActive,
 			},
 		},
-		FeaturedBooks: []*bookstore.Book{
+		FeaturedBooks: []*bookstore2.Book{
 			{
 				ID:     primitive.NewObjectID(),
 				Title:  "测试书籍",
 				Author: "测试作者",
 			},
 		},
-		Rankings: make(map[string][]*bookstore.RankingItem),
+		Rankings: make(map[string][]*bookstore2.RankingItem),
 	}, nil
 }
 
-func (m *MockBookstoreServiceForBenchmark) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
-	return &bookstore.Book{
+func (m *MockBookstoreServiceForBenchmark) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
+	return &bookstore2.Book{
 		ID:     primitive.NewObjectID(),
 		Title:  "测试书籍",
 		Author: "测试作者",
 	}, nil
 }
 
-func (m *MockBookstoreServiceForBenchmark) GetRankings(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
-	items := make([]*bookstore.RankingItem, limit)
+func (m *MockBookstoreServiceForBenchmark) GetRankings(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
+	items := make([]*bookstore2.RankingItem, limit)
 	for i := 0; i < limit; i++ {
-		items[i] = &bookstore.RankingItem{
+		items[i] = &bookstore2.RankingItem{
 			BookID: primitive.NewObjectID(),
 			Rank:   i + 1,
 			Score:  float64(100 - i),
@@ -91,7 +91,7 @@ func BenchmarkGetRankings(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := service.GetRankings(ctx, bookstore.RankingTypeRealtime, "2025-10-16", 20)
+		_, err := service.GetRankings(ctx, bookstore2.RankingTypeRealtime, "2025-10-16", 20)
 		assert.NoError(b, err)
 	}
 }
@@ -125,7 +125,7 @@ func TestResponseTime(t *testing.T) {
 		{
 			name: "榜单查询响应时间",
 			testFunc: func() error {
-				_, err := service.GetRankings(ctx, bookstore.RankingTypeRealtime, "2025-10-16", 20)
+				_, err := service.GetRankings(ctx, bookstore2.RankingTypeRealtime, "2025-10-16", 20)
 				return err
 			},
 			maxTime: 100 * time.Millisecond,

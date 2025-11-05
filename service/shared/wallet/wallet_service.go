@@ -26,8 +26,11 @@ func NewWalletService(walletRepo sharedRepo.WalletRepository) *WalletServiceImpl
 // CreateWallet 创建钱包
 func (s *WalletServiceImpl) CreateWallet(ctx context.Context, userID string) (*Wallet, error) {
 	// 1. 检查是否已存在钱包
-	_, err := s.walletRepo.GetWallet(ctx, userID)
-	if err == nil {
+	existingWallet, err := s.walletRepo.GetWallet(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("检查钱包失败: %w", err)
+	}
+	if existingWallet != nil {
 		return nil, fmt.Errorf("用户已有钱包")
 	}
 
@@ -51,6 +54,9 @@ func (s *WalletServiceImpl) GetWallet(ctx context.Context, userID string) (*Wall
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
+	if wallet == nil {
+		return nil, fmt.Errorf("钱包不存在")
+	}
 
 	return convertToWalletResponse(wallet), nil
 }
@@ -69,6 +75,9 @@ func (s *WalletServiceImpl) GetBalance(ctx context.Context, userID string) (floa
 	if err != nil {
 		return 0, fmt.Errorf("获取余额失败: %w", err)
 	}
+	if wallet == nil {
+		return 0, fmt.Errorf("钱包不存在")
+	}
 
 	return wallet.Balance, nil
 }
@@ -79,6 +88,9 @@ func (s *WalletServiceImpl) FreezeWallet(ctx context.Context, userID string, rea
 	wallet, err := s.walletRepo.GetWallet(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("获取钱包失败: %w", err)
+	}
+	if wallet == nil {
+		return fmt.Errorf("钱包不存在")
 	}
 
 	// 2. 冻结钱包
@@ -99,6 +111,9 @@ func (s *WalletServiceImpl) UnfreezeWallet(ctx context.Context, userID string) e
 	wallet, err := s.walletRepo.GetWallet(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("获取钱包失败: %w", err)
+	}
+	if wallet == nil {
+		return fmt.Errorf("钱包不存在")
 	}
 
 	// 2. 解冻钱包
