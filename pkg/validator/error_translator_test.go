@@ -15,7 +15,7 @@ func TestTranslateError(t *testing.T) {
 		Username string  `validate:"required,username"`
 		Email    string  `validate:"required,email"`
 		Amount   float64 `validate:"required,positive_amount"`
-		Phone    string  `validate:"phone"`
+		Phone    string  `validate:"omitempty,phone"`
 	}
 
 	tests := []struct {

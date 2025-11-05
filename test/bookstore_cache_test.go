@@ -1,6 +1,7 @@
 package test
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"encoding/json"
 	"testing"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -101,13 +101,13 @@ func TestRedisCacheService_GetHomepageData(t *testing.T) {
 
 	// 测试缓存存在的情况
 	homepageData := &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{
 				ID:    primitive.NewObjectID(),
 				Title: "Test Banner",
 			},
 		},
-		Rankings: map[string][]*bookstore.RankingItem{
+		Rankings: map[string][]*bookstore2.RankingItem{
 			"realtime": {
 				{
 					ID:   primitive.NewObjectID(),
@@ -134,7 +134,7 @@ func TestRedisCacheService_SetHomepageData(t *testing.T) {
 	cacheService := bookstoreService.NewRedisCacheService(mockClient, "test")
 
 	homepageData := &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{
 				ID:    primitive.NewObjectID(),
 				Title: "Test Banner",
@@ -157,11 +157,11 @@ func TestRedisCacheService_GetRanking(t *testing.T) {
 	cacheService := bookstoreService.NewRedisCacheService(mockClient, "test")
 
 	// 准备测试数据
-	rankingItems := []*bookstore.RankingItem{
+	rankingItems := []*bookstore2.RankingItem{
 		{
 			ID:        primitive.NewObjectID(),
 			BookID:    primitive.NewObjectID(),
-			Type:      bookstore.RankingTypeRealtime,
+			Type:      bookstore2.RankingTypeRealtime,
 			Rank:      1,
 			Score:     100.0,
 			ViewCount: 1000,
@@ -176,7 +176,7 @@ func TestRedisCacheService_GetRanking(t *testing.T) {
 	mockClient.On("Get", mock.Anything, key).Return(nil)
 
 	ctx := context.Background()
-	result, err := cacheService.GetRanking(ctx, bookstore.RankingTypeRealtime, "2024-01-15")
+	result, err := cacheService.GetRanking(ctx, bookstore2.RankingTypeRealtime, "2024-01-15")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -194,7 +194,7 @@ func TestCachedBookstoreService(t *testing.T) {
 
 	// 测试获取首页数据（缓存命中）
 	expectedData := &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{ID: primitive.NewObjectID(), Title: "Cached Banner"},
 		},
 	}
@@ -220,7 +220,7 @@ func TestCachedBookstoreService_CacheMiss(t *testing.T) {
 	cachedService := bookstoreService.NewCachedBookstoreService(mockService, mockCache)
 
 	expectedData := &bookstoreService.HomepageData{
-		Banners: []*bookstore.Banner{
+		Banners: []*bookstore2.Banner{
 			{ID: primitive.NewObjectID(), Title: "Service Banner"},
 		},
 	}
@@ -252,40 +252,40 @@ func (m *MockBookstoreServiceCache) GetHomepageData(ctx context.Context) (*books
 	return args.Get(0).(*bookstoreService.HomepageData), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*bookstore.Book), args.Error(1)
+	return args.Get(0).(*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+func (m *MockBookstoreServiceCache) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+	return args.Get(0).([]*bookstore2.Banner), args.Error(1)
 }
 
 // 实现其他必需的接口方法（简化实现）
-func (m *MockBookstoreServiceCache) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreServiceCache) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, categoryID, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreServiceCache) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreServiceCache) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreServiceCache) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+func (m *MockBookstoreServiceCache) GetBookStats(ctx context.Context) (*bookstore2.BookStats, error) {
 	args := m.Called(ctx)
-	return args.Get(0).(*bookstore.BookStats), args.Error(1)
+	return args.Get(0).(*bookstore2.BookStats), args.Error(1)
 }
 
 func (m *MockBookstoreServiceCache) IncrementBookView(ctx context.Context, bookID string) error {
@@ -293,19 +293,19 @@ func (m *MockBookstoreServiceCache) IncrementBookView(ctx context.Context, bookI
 	return args.Error(0)
 }
 
-func (m *MockBookstoreServiceCache) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (m *MockBookstoreServiceCache) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.CategoryTree), args.Error(1)
+	return args.Get(0).([]*bookstore2.CategoryTree), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+func (m *MockBookstoreServiceCache) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*bookstore.Category), args.Error(1)
+	return args.Get(0).(*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+func (m *MockBookstoreServiceCache) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.Category), args.Error(1)
+	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
 func (m *MockBookstoreServiceCache) IncrementBannerClick(ctx context.Context, bannerID string) error {
@@ -313,54 +313,54 @@ func (m *MockBookstoreServiceCache) IncrementBannerClick(ctx context.Context, ba
 	return args.Error(0)
 }
 
-func (m *MockBookstoreServiceCache) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreServiceCache) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreServiceCache) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreServiceCache) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreServiceCache) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreServiceCache) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, rankingType, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (m *MockBookstoreServiceCache) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	args := m.Called(ctx, rankingType, period)
 	return args.Error(0)
 }
 
-func (m *MockBookstoreServiceCache) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreServiceCache) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreServiceCache) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreServiceCache) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, keyword, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
 // MockCacheService 模拟缓存服务
@@ -381,54 +381,54 @@ func (m *MockCacheService) SetHomepageData(ctx context.Context, data *bookstoreS
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetRanking(ctx context.Context, rankingType bookstore.RankingType, period string) ([]*bookstore.RankingItem, error) {
+func (m *MockCacheService) GetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, rankingType, period)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockCacheService) SetRanking(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem, expiration time.Duration) error {
+func (m *MockCacheService) SetRanking(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem, expiration time.Duration) error {
 	args := m.Called(ctx, rankingType, period, items, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore.Banner, error) {
+func (m *MockCacheService) GetActiveBanners(ctx context.Context) ([]*bookstore2.Banner, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+	return args.Get(0).([]*bookstore2.Banner), args.Error(1)
 }
 
-func (m *MockCacheService) SetActiveBanners(ctx context.Context, banners []*bookstore.Banner, expiration time.Duration) error {
+func (m *MockCacheService) SetActiveBanners(ctx context.Context, banners []*bookstore2.Banner, expiration time.Duration) error {
 	args := m.Called(ctx, banners, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetBook(ctx context.Context, bookID string) (*bookstore.Book, error) {
+func (m *MockCacheService) GetBook(ctx context.Context, bookID string) (*bookstore2.Book, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.Book), args.Error(1)
+	return args.Get(0).(*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockCacheService) SetBook(ctx context.Context, bookID string, book *bookstore.Book, expiration time.Duration) error {
+func (m *MockCacheService) SetBook(ctx context.Context, bookID string, book *bookstore2.Book, expiration time.Duration) error {
 	args := m.Called(ctx, bookID, book, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (m *MockCacheService) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.CategoryTree), args.Error(1)
+	return args.Get(0).([]*bookstore2.CategoryTree), args.Error(1)
 }
 
-func (m *MockCacheService) SetCategoryTree(ctx context.Context, tree []*bookstore.CategoryTree, expiration time.Duration) error {
+func (m *MockCacheService) SetCategoryTree(ctx context.Context, tree []*bookstore2.CategoryTree, expiration time.Duration) error {
 	args := m.Called(ctx, tree, expiration)
 	return args.Error(0)
 }
@@ -438,7 +438,7 @@ func (m *MockCacheService) InvalidateHomepageCache(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (m *MockCacheService) InvalidateRankingCache(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (m *MockCacheService) InvalidateRankingCache(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	args := m.Called(ctx, rankingType, period)
 	return args.Error(0)
 }
@@ -481,106 +481,106 @@ func (m *MockCacheService) SetBookAverageRating(ctx context.Context, bookID stri
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetBookDetail(ctx context.Context, bookID string) (*bookstore.BookDetail, error) {
+func (m *MockCacheService) GetBookDetail(ctx context.Context, bookID string) (*bookstore2.BookDetail, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.BookDetail), args.Error(1)
+	return args.Get(0).(*bookstore2.BookDetail), args.Error(1)
 }
 
-func (m *MockCacheService) SetBookDetail(ctx context.Context, bookID string, book *bookstore.BookDetail, expiration time.Duration) error {
+func (m *MockCacheService) SetBookDetail(ctx context.Context, bookID string, book *bookstore2.BookDetail, expiration time.Duration) error {
 	args := m.Called(ctx, bookID, book, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetBookRating(ctx context.Context, bookID string) (*bookstore.BookRating, error) {
+func (m *MockCacheService) GetBookRating(ctx context.Context, bookID string) (*bookstore2.BookRating, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.BookRating), args.Error(1)
+	return args.Get(0).(*bookstore2.BookRating), args.Error(1)
 }
 
-func (m *MockCacheService) SetBookRating(ctx context.Context, bookID string, rating *bookstore.BookRating, expiration time.Duration) error {
+func (m *MockCacheService) SetBookRating(ctx context.Context, bookID string, rating *bookstore2.BookRating, expiration time.Duration) error {
 	args := m.Called(ctx, bookID, rating, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetBookStatistics(ctx context.Context, bookID string) (*bookstore.BookStatistics, error) {
+func (m *MockCacheService) GetBookStatistics(ctx context.Context, bookID string) (*bookstore2.BookStatistics, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.BookStatistics), args.Error(1)
+	return args.Get(0).(*bookstore2.BookStatistics), args.Error(1)
 }
 
-func (m *MockCacheService) SetBookStatistics(ctx context.Context, bookID string, stats *bookstore.BookStatistics, expiration time.Duration) error {
+func (m *MockCacheService) SetBookStatistics(ctx context.Context, bookID string, stats *bookstore2.BookStatistics, expiration time.Duration) error {
 	args := m.Called(ctx, bookID, stats, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetChapter(ctx context.Context, chapterID string) (*bookstore.Chapter, error) {
+func (m *MockCacheService) GetChapter(ctx context.Context, chapterID string) (*bookstore2.Chapter, error) {
 	args := m.Called(ctx, chapterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.Chapter), args.Error(1)
+	return args.Get(0).(*bookstore2.Chapter), args.Error(1)
 }
 
-func (m *MockCacheService) SetChapter(ctx context.Context, chapterID string, chapter *bookstore.Chapter, expiration time.Duration) error {
+func (m *MockCacheService) SetChapter(ctx context.Context, chapterID string, chapter *bookstore2.Chapter, expiration time.Duration) error {
 	args := m.Called(ctx, chapterID, chapter, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetHottestBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (m *MockCacheService) GetHottestBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockCacheService) SetHottestBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (m *MockCacheService) SetHottestBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	args := m.Called(ctx, books, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetTopFavoritedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (m *MockCacheService) GetTopFavoritedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockCacheService) SetTopFavoritedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (m *MockCacheService) SetTopFavoritedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	args := m.Called(ctx, books, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetTopRatedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (m *MockCacheService) GetTopRatedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockCacheService) SetTopRatedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (m *MockCacheService) SetTopRatedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	args := m.Called(ctx, books, expiration)
 	return args.Error(0)
 }
 
-func (m *MockCacheService) GetTopViewedBooks(ctx context.Context) ([]*bookstore.Book, error) {
+func (m *MockCacheService) GetTopViewedBooks(ctx context.Context) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockCacheService) SetTopViewedBooks(ctx context.Context, books []*bookstore.Book, expiration time.Duration) error {
+func (m *MockCacheService) SetTopViewedBooks(ctx context.Context, books []*bookstore2.Book, expiration time.Duration) error {
 	args := m.Called(ctx, books, expiration)
 	return args.Error(0)
 }

@@ -1,13 +1,14 @@
 package infrastructure
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/models/document"
+	authModel "Qingyu_backend/models/shared/auth"
 	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +25,7 @@ type TransactionManager interface {
 	// 获取事务上下文
 	GetTransactionContext(ctx context.Context) (TransactionContext, error)
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }
 
@@ -68,7 +69,7 @@ type TransactionRepositoryFactory interface {
 
 // TransactionUserRepository 用户事务接口（简化版，用于事务上下文）
 type TransactionUserRepository interface {
-	CRUDRepository[*usersModel.User, usersModel.UserFilter]
+	CRUDRepository[*usersModel.User, string]
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	GetByEmail(ctx context.Context, email string) (*usersModel.User, error)
 }
@@ -81,14 +82,14 @@ type TransactionAIRepository interface {
 
 // TransactionDocumentRepository 文档事务Repository接口
 type TransactionDocumentRepository interface {
-	CRUDRepository[*document.Document, string]
-	GetByProjectID(ctx context.Context, projectID string) ([]*document.Document, error)
+	CRUDRepository[*writer.Document, string]
+	GetByProjectID(ctx context.Context, projectID string) ([]*writer.Document, error)
 }
 
 // TransactionRoleRepository 角色事务Repository接口
 type TransactionRoleRepository interface {
-	CRUDRepository[*usersModel.Role, string]
-	GetDefaultRole(ctx context.Context) (*usersModel.Role, error)
+	CRUDRepository[*authModel.Role, string]
+	GetDefaultRole(ctx context.Context) (*authModel.Role, error)
 	AssignRole(ctx context.Context, userID, roleID string) error
 }
 
@@ -368,6 +369,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 						UpdatedAt: time.Now(),
 					}
 
+					// Note: 实际实现中需要调用 userRepo.Create 方法
 					return userRepo.Create(txCtx, user)
 				},
 				Compensate: func(txCtx TransactionContext) error {
@@ -380,7 +382,7 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 删除用户
-					return userRepo.Delete(txCtx, usersModel.UserFilter{ID: user.ID})
+					return userRepo.Delete(txCtx, user.ID)
 				},
 			},
 			{

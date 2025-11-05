@@ -1,6 +1,7 @@
 package test
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"log"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/models/reading/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -19,75 +19,75 @@ type MockBookstoreService struct {
 	mock.Mock
 }
 
-func (m *MockBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+func (m *MockBookstoreService) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.Book), args.Error(1)
+	return args.Get(0).(*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, categoryID, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (m *MockBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Error(1)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, keyword, page, pageSize)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).([]*bookstore.Book), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*bookstore2.Book), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (m *MockBookstoreService) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.CategoryTree), args.Error(1)
+	return args.Get(0).([]*bookstore2.CategoryTree), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+func (m *MockBookstoreService) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.Category), args.Error(1)
+	return args.Get(0).(*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+func (m *MockBookstoreService) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]*bookstore.Category), args.Error(1)
+	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+func (m *MockBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.Banner), args.Error(1)
+	return args.Get(0).([]*bookstore2.Banner), args.Error(1)
 }
 
 func (m *MockBookstoreService) IncrementBannerClick(ctx context.Context, bannerID string) error {
@@ -95,32 +95,32 @@ func (m *MockBookstoreService) IncrementBannerClick(ctx context.Context, bannerI
 	return args.Error(0)
 }
 
-func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (m *MockBookstoreService) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	args := m.Called(ctx, rankingType, period, limit)
-	return args.Get(0).([]*bookstore.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
-func (m *MockBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
+func (m *MockBookstoreService) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
 	args := m.Called(ctx, rankingType, period)
 	return args.Error(0)
 }
@@ -133,12 +133,12 @@ func (m *MockBookstoreService) GetHomepageData(ctx context.Context) (*bookstoreS
 	return args.Get(0).(*bookstoreService.HomepageData), args.Error(1)
 }
 
-func (m *MockBookstoreService) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+func (m *MockBookstoreService) GetBookStats(ctx context.Context) (*bookstore2.BookStats, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*bookstore.BookStats), args.Error(1)
+	return args.Get(0).(*bookstore2.BookStats), args.Error(1)
 }
 
 func (m *MockBookstoreService) IncrementBookView(ctx context.Context, bookID string) error {
@@ -202,10 +202,10 @@ func TestRankingScheduler_UpdateRankingNow(t *testing.T) {
 	scheduler := bookstoreService.NewRankingScheduler(mockService, logger)
 
 	// 设置Mock期望
-	mockService.On("UpdateRankings", mock.Anything, bookstore.RankingTypeRealtime, mock.AnythingOfType("string")).Return(nil)
+	mockService.On("UpdateRankings", mock.Anything, bookstore2.RankingTypeRealtime, mock.AnythingOfType("string")).Return(nil)
 
 	// 立即更新实时榜
-	err := scheduler.UpdateRankingNow(bookstore.RankingTypeRealtime, "")
+	err := scheduler.UpdateRankingNow(bookstore2.RankingTypeRealtime, "")
 
 	assert.NoError(t, err, "立即更新榜单不应该出错")
 	mockService.AssertExpectations(t)
@@ -222,10 +222,10 @@ func TestRankingScheduler_UpdateRankingNow_WithPeriod(t *testing.T) {
 	period := "2025-10"
 
 	// 设置Mock期望
-	mockService.On("UpdateRankings", mock.Anything, bookstore.RankingTypeMonthly, period).Return(nil)
+	mockService.On("UpdateRankings", mock.Anything, bookstore2.RankingTypeMonthly, period).Return(nil)
 
 	// 立即更新月榜
-	err := scheduler.UpdateRankingNow(bookstore.RankingTypeMonthly, period)
+	err := scheduler.UpdateRankingNow(bookstore2.RankingTypeMonthly, period)
 
 	assert.NoError(t, err, "立即更新榜单不应该出错")
 	mockService.AssertExpectations(t)
@@ -240,10 +240,10 @@ func TestRankingScheduler_UpdateRankingNow_Error(t *testing.T) {
 
 	// 设置Mock期望 - 返回错误
 	expectedError := assert.AnError
-	mockService.On("UpdateRankings", mock.Anything, bookstore.RankingTypeWeekly, mock.AnythingOfType("string")).Return(expectedError)
+	mockService.On("UpdateRankings", mock.Anything, bookstore2.RankingTypeWeekly, mock.AnythingOfType("string")).Return(expectedError)
 
 	// 立即更新周榜
-	err := scheduler.UpdateRankingNow(bookstore.RankingTypeWeekly, "")
+	err := scheduler.UpdateRankingNow(bookstore2.RankingTypeWeekly, "")
 
 	assert.Error(t, err, "应该返回错误")
 	assert.Equal(t, expectedError, err, "错误应该是预期的错误")
@@ -330,22 +330,22 @@ func TestRankingScheduler_ConcurrentUpdates(t *testing.T) {
 	done := make(chan bool, 4)
 
 	go func() {
-		scheduler.UpdateRankingNow(bookstore.RankingTypeRealtime, "")
+		scheduler.UpdateRankingNow(bookstore2.RankingTypeRealtime, "")
 		done <- true
 	}()
 
 	go func() {
-		scheduler.UpdateRankingNow(bookstore.RankingTypeWeekly, "")
+		scheduler.UpdateRankingNow(bookstore2.RankingTypeWeekly, "")
 		done <- true
 	}()
 
 	go func() {
-		scheduler.UpdateRankingNow(bookstore.RankingTypeMonthly, "")
+		scheduler.UpdateRankingNow(bookstore2.RankingTypeMonthly, "")
 		done <- true
 	}()
 
 	go func() {
-		scheduler.UpdateRankingNow(bookstore.RankingTypeNewbie, "")
+		scheduler.UpdateRankingNow(bookstore2.RankingTypeNewbie, "")
 		done <- true
 	}()
 
@@ -366,11 +366,11 @@ func TestRankingScheduler_UpdateAllRankingTypes(t *testing.T) {
 	scheduler := bookstoreService.NewRankingScheduler(mockService, logger)
 
 	// 定义所有榜单类型
-	rankingTypes := []bookstore.RankingType{
-		bookstore.RankingTypeRealtime,
-		bookstore.RankingTypeWeekly,
-		bookstore.RankingTypeMonthly,
-		bookstore.RankingTypeNewbie,
+	rankingTypes := []bookstore2.RankingType{
+		bookstore2.RankingTypeRealtime,
+		bookstore2.RankingTypeWeekly,
+		bookstore2.RankingTypeMonthly,
+		bookstore2.RankingTypeNewbie,
 	}
 
 	// 为每种类型设置Mock期望
@@ -408,5 +408,3 @@ func TestRankingScheduler_Cleanup(t *testing.T) {
 	// 测试通过说明清理任务已经成功添加到调度器
 	assert.True(t, true, "清理任务测试通过")
 }
-
-

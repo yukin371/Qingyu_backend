@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -23,16 +24,28 @@ func NewViperConfigManager() *ViperConfigManager {
 
 // LoadFromFile 从文件加载配置
 func (m *ViperConfigManager) LoadFromFile(configPath string) error {
-	m.viper.SetConfigName("config")
-	m.viper.SetConfigType("yaml")
-	
-	// 添加多个可能的配置文件路径
-	if configPath != "" {
-		m.viper.AddConfigPath(configPath)
+	// 检查是否指定了完整的配置文件路径
+	configFile := os.Getenv("CONFIG_FILE")
+	fmt.Printf("[Config] CONFIG_FILE environment variable: '%s'\n", configFile)
+
+	if configFile != "" {
+		// 使用指定的配置文件
+		fmt.Printf("[Config] Loading config from specified file: %s\n", configFile)
+		m.viper.SetConfigFile(configFile)
+	} else {
+		// 使用默认配置文件查找
+		fmt.Println("[Config] CONFIG_FILE not set, using default search")
+		m.viper.SetConfigName("config")
+		m.viper.SetConfigType("yaml")
+
+		// 添加多个可能的配置文件路径
+		if configPath != "" {
+			m.viper.AddConfigPath(configPath)
+		}
+		m.viper.AddConfigPath("./config")     // 从项目根目录
+		m.viper.AddConfigPath("../../config") // 从cmd/server/运行
+		m.viper.AddConfigPath(".")
 	}
-	m.viper.AddConfigPath("./config")      // 从项目根目录
-	m.viper.AddConfigPath("../../config")  // 从cmd/server/运行
-	m.viper.AddConfigPath(".")
 
 	// 设置环境变量支持
 	m.viper.AutomaticEnv()

@@ -17,6 +17,8 @@ type UnifiedWalletService struct {
 	walletMgr      *WalletServiceImpl
 	transactionMgr *TransactionServiceImpl
 	withdrawMgr    *WithdrawServiceImpl
+
+	initialized bool // 初始化标志
 }
 
 // NewUnifiedWalletService 创建统一钱包服务
@@ -60,51 +62,51 @@ func (s *UnifiedWalletService) UnfreezeWallet(ctx context.Context, userID string
 
 // Recharge 充值（根据用户ID）
 func (s *UnifiedWalletService) Recharge(ctx context.Context, userID string, amount float64, method string) (*Transaction, error) {
-	// 1. 获取钱包
-	wallet, err := s.walletMgr.GetWallet(ctx, userID)
+	// 1. 验证钱包存在
+	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
 
-	// 2. 执行充值
+	// 2. 执行充值（注意：transactionMgr.Recharge的第二个参数实际是userID）
 	orderNo := generateOrderNo() // 生成订单号
-	return s.transactionMgr.Recharge(ctx, wallet.ID, amount, method, orderNo)
+	return s.transactionMgr.Recharge(ctx, userID, amount, method, orderNo)
 }
 
 // Consume 消费（根据用户ID）
 func (s *UnifiedWalletService) Consume(ctx context.Context, userID string, amount float64, reason string) (*Transaction, error) {
-	// 1. 获取钱包
-	wallet, err := s.walletMgr.GetWallet(ctx, userID)
+	// 1. 验证钱包存在
+	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
 
-	// 2. 执行消费
-	return s.transactionMgr.Consume(ctx, wallet.ID, amount, reason)
+	// 2. 执行消费（注意：transactionMgr.Consume的第二个参数实际是userID）
+	return s.transactionMgr.Consume(ctx, userID, amount, reason)
 }
 
 // Transfer 转账（根据用户ID）
 func (s *UnifiedWalletService) Transfer(ctx context.Context, fromUserID, toUserID string, amount float64, reason string) (*Transaction, error) {
-	// 1. 获取源钱包
-	fromWallet, err := s.walletMgr.GetWallet(ctx, fromUserID)
+	// 1. 验证源钱包存在
+	_, err := s.walletMgr.GetWallet(ctx, fromUserID)
 	if err != nil {
 		return nil, fmt.Errorf("获取源钱包失败: %w", err)
 	}
 
-	// 2. 获取目标钱包
-	toWallet, err := s.walletMgr.GetWallet(ctx, toUserID)
+	// 2. 验证目标钱包存在
+	_, err = s.walletMgr.GetWallet(ctx, toUserID)
 	if err != nil {
 		return nil, fmt.Errorf("获取目标钱包失败: %w", err)
 	}
 
-	// 3. 执行转账
-	if err := s.transactionMgr.Transfer(ctx, fromWallet.ID, toWallet.ID, amount, reason); err != nil {
+	// 3. 执行转账（注意：transactionMgr.Transfer的参数实际是userID）
+	if err := s.transactionMgr.Transfer(ctx, fromUserID, toUserID, amount, reason); err != nil {
 		return nil, err
 	}
 
 	// 4. 返回转出交易记录（最新的一条transfer_out记录）
 	// 注意：Transfer方法内部创建了两条记录，这里返回转出记录
-	transactions, err := s.transactionMgr.ListTransactions(ctx, fromWallet.ID, 1, 0)
+	transactions, err := s.transactionMgr.ListTransactions(ctx, fromUserID, 1, 0)
 	if err != nil || len(transactions) == 0 {
 		return nil, fmt.Errorf("获取交易记录失败")
 	}
@@ -121,8 +123,8 @@ func (s *UnifiedWalletService) GetTransaction(ctx context.Context, transactionID
 
 // ListTransactions 列出交易记录（根据用户ID）
 func (s *UnifiedWalletService) ListTransactions(ctx context.Context, userID string, req *ListTransactionsRequest) ([]*Transaction, error) {
-	// 1. 获取钱包
-	wallet, err := s.walletMgr.GetWallet(ctx, userID)
+	// 1. 验证钱包存在
+	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
@@ -137,23 +139,23 @@ func (s *UnifiedWalletService) ListTransactions(ctx context.Context, userID stri
 		offset = 0
 	}
 
-	// 3. 查询交易列表
-	return s.transactionMgr.ListTransactions(ctx, wallet.ID, limit, offset)
+	// 3. 查询交易列表（注意：transactionMgr.ListTransactions的第二个参数实际是userID）
+	return s.transactionMgr.ListTransactions(ctx, userID, limit, offset)
 }
 
 // ============ 提现管理 ============
 
 // RequestWithdraw 申请提现（根据用户ID）
 func (s *UnifiedWalletService) RequestWithdraw(ctx context.Context, userID string, amount float64, account string) (*WithdrawRequest, error) {
-	// 1. 获取钱包
-	wallet, err := s.walletMgr.GetWallet(ctx, userID)
+	// 1. 验证钱包存在
+	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
 
-	// 2. 创建提现申请（默认支付宝）
+	// 2. 创建提现申请（默认支付宝，注意：withdrawMgr的参数实际使用userID作为walletID）
 	method := "alipay"
-	return s.withdrawMgr.CreateWithdrawRequest(ctx, userID, wallet.ID, amount, method, account)
+	return s.withdrawMgr.CreateWithdrawRequest(ctx, userID, userID, amount, method, account)
 }
 
 // GetWithdrawRequest 获取提现申请
@@ -207,11 +209,61 @@ func (s *UnifiedWalletService) ProcessWithdraw(ctx context.Context, withdrawID s
 	return s.walletRepo.UpdateWithdrawRequest(ctx, withdrawID, updates)
 }
 
-// ============ 健康检查 ============
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化钱包服务
+func (s *UnifiedWalletService) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
+	}
+
+	// 验证依赖项
+	if s.walletRepo == nil {
+		return fmt.Errorf("walletRepo is nil")
+	}
+	if s.walletMgr == nil {
+		return fmt.Errorf("walletMgr is nil")
+	}
+	if s.transactionMgr == nil {
+		return fmt.Errorf("transactionMgr is nil")
+	}
+	if s.withdrawMgr == nil {
+		return fmt.Errorf("withdrawMgr is nil")
+	}
+
+	// 检查Repository健康状态
+	if err := s.walletRepo.Health(ctx); err != nil {
+		return fmt.Errorf("walletRepo health check failed: %w", err)
+	}
+
+	s.initialized = true
+	return nil
+}
 
 // Health 健康检查
 func (s *UnifiedWalletService) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
 	return s.walletRepo.Health(ctx)
+}
+
+// Close 关闭服务，清理资源
+func (s *UnifiedWalletService) Close(ctx context.Context) error {
+	// 钱包服务暂无需要清理的资源
+	// 未来如果有缓存、事务等资源，在此处清理
+	s.initialized = false
+	return nil
+}
+
+// GetServiceName 获取服务名称
+func (s *UnifiedWalletService) GetServiceName() string {
+	return "WalletService"
+}
+
+// GetVersion 获取服务版本
+func (s *UnifiedWalletService) GetVersion() string {
+	return "v1.0.0"
 }
 
 // ============ 辅助函数 ============

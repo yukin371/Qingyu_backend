@@ -28,7 +28,7 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.RegisterRequest	true	"注册信息"
-//	@Success		200		{object}	APIResponse{data=auth.RegisterResponse}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/shared/auth/register [post]
@@ -62,7 +62,7 @@ func (api *AuthAPI) Register(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.LoginRequest	true	"登录信息"
-//	@Success		200		{object}	APIResponse{data=auth.LoginResponse}
+//	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -143,7 +143,7 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	APIResponse{data=string}
+//	@Success 200 {object} APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/refresh [post]
@@ -186,7 +186,7 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	APIResponse{data=[]string}
+//	@Success 200 {object} APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/permissions [get]
@@ -225,7 +225,7 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	APIResponse{data=[]string}
+//	@Success 200 {object} APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/roles [get]

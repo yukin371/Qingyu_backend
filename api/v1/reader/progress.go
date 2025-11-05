@@ -1,6 +1,7 @@
 package reader
 
 import (
+	"Qingyu_backend/models/reader"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,6 +10,11 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/reading"
+)
+
+const (
+	hoursPerDay = 24
+	daysPerWeek = 7
 )
 
 // ProgressAPI 阅读进度API
@@ -41,7 +47,7 @@ type UpdateReadingTimeRequest struct {
 //	@Summary	获取阅读进度
 //	@Tags		阅读器
 //	@Param		bookId	path		string	true	"书籍ID"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/{bookId} [get]
 func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
@@ -67,7 +73,7 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 //	@Summary	保存阅读进度
 //	@Tags		阅读器
 //	@Param		request	body		SaveProgressRequest	true	"保存进度请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress [post]
 func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 	var req SaveProgressRequest
@@ -97,7 +103,7 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 //	@Summary	更新阅读时长
 //	@Tags		阅读器
 //	@Param		request	body		UpdateReadingTimeRequest	true	"更新时长请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/reading-time [put]
 func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 	var req UpdateReadingTimeRequest
@@ -127,7 +133,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 //	@Summary	获取最近阅读记录
 //	@Tags		阅读器
 //	@Param		limit	query		int	false	"数量限制"	default(20)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/recent [get]
 func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
@@ -154,7 +160,7 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		page	query		int	false	"页码"	default(1)
 //	@Param		size	query		int	false	"每页数量"	default(20)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/history [get]
 func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
@@ -186,7 +192,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 //	@Summary	获取阅读统计
 //	@Tags		阅读器
 //	@Param		period	query		string	false	"统计周期"	default("all")
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/stats [get]
 func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
@@ -204,18 +210,18 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	switch period {
 	case "today":
 		// 今天
-		start := time.Now().Truncate(24 * time.Hour)
-		end := start.Add(24 * time.Hour)
+		start := time.Now().Truncate(hoursPerDay * time.Hour)
+		end := start.Add(hoursPerDay * time.Hour)
 		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
 	case "week":
 		// 本周
 		now := time.Now()
 		weekday := int(now.Weekday())
 		if weekday == 0 {
-			weekday = 7
+			weekday = daysPerWeek
 		}
-		start := now.AddDate(0, 0, -(weekday - 1)).Truncate(24 * time.Hour)
-		end := start.AddDate(0, 0, 7)
+		start := now.AddDate(0, 0, -(weekday - 1)).Truncate(hoursPerDay * time.Hour)
+		end := start.AddDate(0, 0, daysPerWeek)
 		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
 	case "month":
 		// 本月
@@ -234,8 +240,15 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	}
 
 	// 获取未读完和已读完的书籍
-	unfinished, _ := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
-	finished, _ := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	unfinished, errUnfinished := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
+	if errUnfinished != nil {
+		unfinished = []*reader.ReadingProgress{} // 返回空列表而非失败
+	}
+
+	finished, errFinished := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	if errFinished != nil {
+		finished = []*reader.ReadingProgress{} // 返回空列表而非失败
+	}
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
 		"totalReadingTime": totalTime,
@@ -249,7 +262,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 //
 //	@Summary	获取未读完的书籍
 //	@Tags		阅读器
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/unfinished [get]
 func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
@@ -272,7 +285,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 //
 //	@Summary	获取已读完的书籍
 //	@Tags		阅读器
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object}	shared.APIResponse
 //	@Router		/api/v1/reader/progress/finished [get]
 func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	usersModel "Qingyu_backend/models/users"
+	authModel "Qingyu_backend/models/shared/auth"
 	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 )
@@ -42,7 +42,7 @@ func (r *MongoRoleRepository) Health(ctx context.Context) error {
 }
 
 // Create 创建角色
-func (r *MongoRoleRepository) Create(ctx context.Context, role *usersModel.Role) error {
+func (r *MongoRoleRepository) Create(ctx context.Context, role *authModel.Role) error {
 	if role == nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
@@ -82,8 +82,8 @@ func (r *MongoRoleRepository) Create(ctx context.Context, role *usersModel.Role)
 }
 
 // GetByID 根据ID获取角色
-func (r *MongoRoleRepository) GetByID(ctx context.Context, id string) (*usersModel.Role, error) {
-	var role usersModel.Role
+func (r *MongoRoleRepository) GetByID(ctx context.Context, id string) (*authModel.Role, error) {
+	var role authModel.Role
 
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&role)
 	if err != nil {
@@ -154,7 +154,7 @@ func (r *MongoRoleRepository) Delete(ctx context.Context, id string) error {
 }
 
 // List 获取角色列表
-func (r *MongoRoleRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*usersModel.Role, error) {
+func (r *MongoRoleRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*authModel.Role, error) {
 	opts := options.Find().SetSort(bson.M{"created_at": -1})
 
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
@@ -167,9 +167,9 @@ func (r *MongoRoleRepository) List(ctx context.Context, filter infrastructure.Fi
 	}
 	defer cursor.Close(ctx)
 
-	var roles []*usersModel.Role
+	var roles []*authModel.Role
 	for cursor.Next(ctx) {
-		var role usersModel.Role
+		var role authModel.Role
 		if err := cursor.Decode(&role); err != nil {
 			return nil, UserInterface.NewUserRepositoryError(
 				UserInterface.ErrorTypeInternal,
@@ -218,8 +218,8 @@ func (r *MongoRoleRepository) Exists(ctx context.Context, id string) (bool, erro
 }
 
 // GetByName 根据名称获取角色
-func (r *MongoRoleRepository) GetByName(ctx context.Context, name string) (*usersModel.Role, error) {
-	var role usersModel.Role
+func (r *MongoRoleRepository) GetByName(ctx context.Context, name string) (*authModel.Role, error) {
+	var role authModel.Role
 
 	err := r.collection.FindOne(ctx, bson.M{"name": name}).Decode(&role)
 	if err != nil {
@@ -241,8 +241,8 @@ func (r *MongoRoleRepository) GetByName(ctx context.Context, name string) (*user
 }
 
 // GetDefaultRole 获取默认角色
-func (r *MongoRoleRepository) GetDefaultRole(ctx context.Context) (*usersModel.Role, error) {
-	var role usersModel.Role
+func (r *MongoRoleRepository) GetDefaultRole(ctx context.Context) (*authModel.Role, error) {
+	var role authModel.Role
 
 	err := r.collection.FindOne(ctx, bson.M{"is_default": true}).Decode(&role)
 	if err != nil {
@@ -277,7 +277,7 @@ func (r *MongoRoleRepository) ExistsByName(ctx context.Context, name string) (bo
 }
 
 // ListAllRoles 列出所有角色
-func (r *MongoRoleRepository) ListAllRoles(ctx context.Context) ([]*usersModel.Role, error) {
+func (r *MongoRoleRepository) ListAllRoles(ctx context.Context) ([]*authModel.Role, error) {
 	opts := options.Find().SetSort(bson.M{"created_at": -1})
 
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
@@ -290,9 +290,9 @@ func (r *MongoRoleRepository) ListAllRoles(ctx context.Context) ([]*usersModel.R
 	}
 	defer cursor.Close(ctx)
 
-	var roles []*usersModel.Role
+	var roles []*authModel.Role
 	for cursor.Next(ctx) {
-		var role usersModel.Role
+		var role authModel.Role
 		if err := cursor.Decode(&role); err != nil {
 			return nil, UserInterface.NewUserRepositoryError(
 				UserInterface.ErrorTypeInternal,
@@ -315,10 +315,10 @@ func (r *MongoRoleRepository) ListAllRoles(ctx context.Context) ([]*usersModel.R
 }
 
 // ListDefaultRoles 列出默认角色
-func (r *MongoRoleRepository) ListDefaultRoles(ctx context.Context) ([]*usersModel.Role, error) {
+func (r *MongoRoleRepository) ListDefaultRoles(ctx context.Context) ([]*authModel.Role, error) {
 	opts := options.Find().SetSort(bson.M{"created_at": -1})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"is_default": true}, opts)
+	cursor, err := r.collection.Find(ctx, bson.M{"is_system": true}, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -328,9 +328,9 @@ func (r *MongoRoleRepository) ListDefaultRoles(ctx context.Context) ([]*usersMod
 	}
 	defer cursor.Close(ctx)
 
-	var roles []*usersModel.Role
+	var roles []*authModel.Role
 	for cursor.Next(ctx) {
-		var role usersModel.Role
+		var role authModel.Role
 		if err := cursor.Decode(&role); err != nil {
 			return nil, UserInterface.NewUserRepositoryError(
 				UserInterface.ErrorTypeInternal,

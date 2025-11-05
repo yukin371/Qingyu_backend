@@ -165,9 +165,9 @@ func (m *MockStorageProvider) GetPublicURL(path string) string {
 
 // MockStorageService 模拟存储服务
 type MockStorageService struct {
-	fileRepo       *MockFileRepository
-	versionRepo    *MockVersionRepository
-	permissionRepo *MockPermissionRepository
+	fileRepo        *MockFileRepository
+	versionRepo     *MockVersionRepository
+	permissionRepo  *MockPermissionRepository
 	storageProvider *MockStorageProvider
 }
 

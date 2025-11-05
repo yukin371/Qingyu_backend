@@ -1,11 +1,11 @@
 package reading
 
 import (
+	reader2 "Qingyu_backend/models/reader"
 	"context"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/reading/reader"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	"Qingyu_backend/service/base"
 )
@@ -89,7 +89,7 @@ func (s *ReaderService) GetVersion() string {
 // =========================
 
 // GetChapterByID 根据ID获取章节
-func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (*reader.Chapter, error) {
+func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节失败: %w", err)
@@ -98,7 +98,7 @@ func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (*
 }
 
 // GetChapterByNum 根据章节号获取章节
-func (s *ReaderService) GetChapterByNum(ctx context.Context, bookID string, chapterNum int) (*reader.Chapter, error) {
+func (s *ReaderService) GetChapterByNum(ctx context.Context, bookID string, chapterNum int) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetByChapterNum(ctx, bookID, chapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节失败: %w", err)
@@ -107,7 +107,7 @@ func (s *ReaderService) GetChapterByNum(ctx context.Context, bookID string, chap
 }
 
 // GetBookChapters 获取书籍的所有章节
-func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string) ([]*reader.Chapter, error) {
+func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
 	chapters, err := s.chapterRepo.GetByBookID(ctx, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节列表失败: %w", err)
@@ -116,7 +116,7 @@ func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string) ([]*
 }
 
 // GetBookChaptersWithPagination 分页获取书籍章节
-func (s *ReaderService) GetBookChaptersWithPagination(ctx context.Context, bookID string, page, size int) ([]*reader.Chapter, int64, error) {
+func (s *ReaderService) GetBookChaptersWithPagination(ctx context.Context, bookID string, page, size int) ([]*reader2.Chapter, int64, error) {
 	offset := int64((page - 1) * size)
 	limit := int64(size)
 
@@ -134,7 +134,7 @@ func (s *ReaderService) GetBookChaptersWithPagination(ctx context.Context, bookI
 }
 
 // GetPrevChapter 获取上一章
-func (s *ReaderService) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+func (s *ReaderService) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetPrevChapter(ctx, bookID, currentChapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("获取上一章失败: %w", err)
@@ -143,7 +143,7 @@ func (s *ReaderService) GetPrevChapter(ctx context.Context, bookID string, curre
 }
 
 // GetNextChapter 获取下一章
-func (s *ReaderService) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader.Chapter, error) {
+func (s *ReaderService) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetNextChapter(ctx, bookID, currentChapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("获取下一章失败: %w", err)
@@ -212,7 +212,7 @@ func (s *ReaderService) GetChapterContent(ctx context.Context, userID, chapterID
 }
 
 // GetFirstChapter 获取第一章
-func (s *ReaderService) GetFirstChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+func (s *ReaderService) GetFirstChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetFirstChapter(ctx, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取第一章失败: %w", err)
@@ -221,7 +221,7 @@ func (s *ReaderService) GetFirstChapter(ctx context.Context, bookID string) (*re
 }
 
 // GetLastChapter 获取最后一章
-func (s *ReaderService) GetLastChapter(ctx context.Context, bookID string) (*reader.Chapter, error) {
+func (s *ReaderService) GetLastChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
 	chapter, err := s.chapterRepo.GetLastChapter(ctx, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取最后一章失败: %w", err)
@@ -234,7 +234,7 @@ func (s *ReaderService) GetLastChapter(ctx context.Context, bookID string) (*rea
 // =========================
 
 // GetReadingProgress 获取阅读进度
-func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader.ReadingProgress, error) {
+func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID string) (*reader2.ReadingProgress, error) {
 	progress, err := s.progressRepo.GetByUserAndBook(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取阅读进度失败: %w", err)
@@ -242,7 +242,7 @@ func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID s
 
 	// 如果没有阅读记录，返回空进度
 	if progress == nil {
-		progress = &reader.ReadingProgress{
+		progress = &reader2.ReadingProgress{
 			UserID:      userID,
 			BookID:      bookID,
 			Progress:    0,
@@ -285,7 +285,7 @@ func (s *ReaderService) UpdateReadingTime(ctx context.Context, userID, bookID st
 }
 
 // GetRecentReading 获取最近阅读记录
-func (s *ReaderService) GetRecentReading(ctx context.Context, userID string, limit int) ([]*reader.ReadingProgress, error) {
+func (s *ReaderService) GetRecentReading(ctx context.Context, userID string, limit int) ([]*reader2.ReadingProgress, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
@@ -299,7 +299,7 @@ func (s *ReaderService) GetRecentReading(ctx context.Context, userID string, lim
 }
 
 // GetReadingHistory 获取阅读历史
-func (s *ReaderService) GetReadingHistory(ctx context.Context, userID string, page, size int) ([]*reader.ReadingProgress, int64, error) {
+func (s *ReaderService) GetReadingHistory(ctx context.Context, userID string, page, size int) ([]*reader2.ReadingProgress, int64, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -340,7 +340,7 @@ func (s *ReaderService) GetReadingTimeByPeriod(ctx context.Context, userID strin
 }
 
 // GetUnfinishedBooks 获取未读完的书籍
-func (s *ReaderService) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
+func (s *ReaderService) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
 	progresses, err := s.progressRepo.GetUnfinishedBooks(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取未读完书籍失败: %w", err)
@@ -349,7 +349,7 @@ func (s *ReaderService) GetUnfinishedBooks(ctx context.Context, userID string) (
 }
 
 // GetFinishedBooks 获取已读完的书籍
-func (s *ReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
+func (s *ReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
 	progresses, err := s.progressRepo.GetFinishedBooks(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取已读完书籍失败: %w", err)
@@ -362,7 +362,7 @@ func (s *ReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]
 // =========================
 
 // CreateAnnotation 创建标注
-func (s *ReaderService) CreateAnnotation(ctx context.Context, annotation *reader.Annotation) error {
+func (s *ReaderService) CreateAnnotation(ctx context.Context, annotation *reader2.Annotation) error {
 	// 参数验证
 	if err := s.validateAnnotation(annotation); err != nil {
 		return fmt.Errorf("标注参数验证失败: %w", err)
@@ -400,7 +400,7 @@ func (s *ReaderService) DeleteAnnotation(ctx context.Context, annotationID strin
 }
 
 // GetAnnotationsByChapter 获取章节的标注
-func (s *ReaderService) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	annotations, err := s.annotationRepo.GetByUserAndChapter(ctx, userID, bookID, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节标注失败: %w", err)
@@ -409,7 +409,7 @@ func (s *ReaderService) GetAnnotationsByChapter(ctx context.Context, userID, boo
 }
 
 // GetAnnotationsByBook 获取书籍的所有标注
-func (s *ReaderService) GetAnnotationsByBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetAnnotationsByBook(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	annotations, err := s.annotationRepo.GetByUserAndBook(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取书籍标注失败: %w", err)
@@ -418,7 +418,7 @@ func (s *ReaderService) GetAnnotationsByBook(ctx context.Context, userID, bookID
 }
 
 // GetNotes 获取笔记
-func (s *ReaderService) GetNotes(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetNotes(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	notes, err := s.annotationRepo.GetNotes(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取笔记失败: %w", err)
@@ -427,7 +427,7 @@ func (s *ReaderService) GetNotes(ctx context.Context, userID, bookID string) ([]
 }
 
 // SearchNotes 搜索笔记
-func (s *ReaderService) SearchNotes(ctx context.Context, userID, keyword string) ([]*reader.Annotation, error) {
+func (s *ReaderService) SearchNotes(ctx context.Context, userID, keyword string) ([]*reader2.Annotation, error) {
 	if keyword == "" {
 		return nil, fmt.Errorf("搜索关键词不能为空")
 	}
@@ -440,7 +440,7 @@ func (s *ReaderService) SearchNotes(ctx context.Context, userID, keyword string)
 }
 
 // GetBookmarks 获取书签
-func (s *ReaderService) GetBookmarks(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetBookmarks(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	bookmarks, err := s.annotationRepo.GetBookmarks(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取书签失败: %w", err)
@@ -449,7 +449,7 @@ func (s *ReaderService) GetBookmarks(ctx context.Context, userID, bookID string)
 }
 
 // GetLatestBookmark 获取最新的书签
-func (s *ReaderService) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader.Annotation, error) {
+func (s *ReaderService) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader2.Annotation, error) {
 	bookmark, err := s.annotationRepo.GetLatestBookmark(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取最新书签失败: %w", err)
@@ -458,7 +458,7 @@ func (s *ReaderService) GetLatestBookmark(ctx context.Context, userID, bookID st
 }
 
 // GetHighlights 获取高亮
-func (s *ReaderService) GetHighlights(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetHighlights(ctx context.Context, userID, bookID string) ([]*reader2.Annotation, error) {
 	highlights, err := s.annotationRepo.GetHighlights(ctx, userID, bookID)
 	if err != nil {
 		return nil, fmt.Errorf("获取高亮失败: %w", err)
@@ -467,7 +467,7 @@ func (s *ReaderService) GetHighlights(ctx context.Context, userID, bookID string
 }
 
 // GetRecentAnnotations 获取最近的标注
-func (s *ReaderService) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader2.Annotation, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
@@ -480,7 +480,7 @@ func (s *ReaderService) GetRecentAnnotations(ctx context.Context, userID string,
 }
 
 // GetPublicAnnotations 获取公开的标注
-func (s *ReaderService) GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader.Annotation, error) {
+func (s *ReaderService) GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader2.Annotation, error) {
 	annotations, err := s.annotationRepo.GetPublicAnnotations(ctx, bookID, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取公开标注失败: %w", err)
@@ -493,7 +493,7 @@ func (s *ReaderService) GetPublicAnnotations(ctx context.Context, bookID, chapte
 // =========================
 
 // GetReadingSettings 获取阅读设置
-func (s *ReaderService) GetReadingSettings(ctx context.Context, userID string) (*reader.ReadingSettings, error) {
+func (s *ReaderService) GetReadingSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error) {
 	// 1. 尝试从缓存获取
 	if s.cacheService != nil {
 		cachedSettings, err := s.cacheService.GetReadingSettings(ctx, userID)
@@ -522,7 +522,7 @@ func (s *ReaderService) GetReadingSettings(ctx context.Context, userID string) (
 }
 
 // SaveReadingSettings 保存阅读设置
-func (s *ReaderService) SaveReadingSettings(ctx context.Context, settings *reader.ReadingSettings) error {
+func (s *ReaderService) SaveReadingSettings(ctx context.Context, settings *reader2.ReadingSettings) error {
 	if settings.UserID == "" {
 		return fmt.Errorf("用户ID不能为空")
 	}
@@ -613,7 +613,7 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 // =========================
 
 // validateAnnotation 验证标注参数
-func (s *ReaderService) validateAnnotation(annotation *reader.Annotation) error {
+func (s *ReaderService) validateAnnotation(annotation *reader2.Annotation) error {
 	if annotation.UserID == "" {
 		return fmt.Errorf("用户ID不能为空")
 	}
@@ -634,8 +634,8 @@ func (s *ReaderService) validateAnnotation(annotation *reader.Annotation) error 
 }
 
 // getDefaultSettings 获取默认阅读设置
-func (s *ReaderService) getDefaultSettings(userID string) *reader.ReadingSettings {
-	return &reader.ReadingSettings{
+func (s *ReaderService) getDefaultSettings(userID string) *reader2.ReadingSettings {
+	return &reader2.ReadingSettings{
 		UserID:      userID,
 		FontSize:    16,
 		FontFamily:  "serif",
@@ -691,7 +691,7 @@ func (s *ReaderService) publishProgressEvent(ctx context.Context, userID, bookID
 }
 
 // publishAnnotationEvent 发布标注事件
-func (s *ReaderService) publishAnnotationEvent(ctx context.Context, action string, annotation *reader.Annotation) {
+func (s *ReaderService) publishAnnotationEvent(ctx context.Context, action string, annotation *reader2.Annotation) {
 	if s.eventBus == nil {
 		return
 	}
@@ -716,7 +716,7 @@ func (s *ReaderService) publishAnnotationEvent(ctx context.Context, action strin
 // =========================
 
 // BatchCreateAnnotations 批量创建注记
-func (s *ReaderService) BatchCreateAnnotations(ctx context.Context, annotations []*reader.Annotation) error {
+func (s *ReaderService) BatchCreateAnnotations(ctx context.Context, annotations []*reader2.Annotation) error {
 	if len(annotations) == 0 {
 		return nil
 	}
@@ -788,7 +788,7 @@ func (s *ReaderService) GetAnnotationStats(ctx context.Context, userID, bookID s
 type SyncAnnotationsRequest struct {
 	BookID           string
 	LastSyncTime     int64
-	LocalAnnotations []*reader.Annotation
+	LocalAnnotations []*reader2.Annotation
 }
 
 // SyncAnnotations 同步注记（多端同步）
@@ -806,7 +806,7 @@ func (s *ReaderService) SyncAnnotations(ctx context.Context, userID string, req 
 	}
 
 	// 2. 过滤出需要下发的注记（比lastSyncTime更新的）
-	newAnnotations := make([]*reader.Annotation, 0)
+	newAnnotations := make([]*reader2.Annotation, 0)
 	for _, ann := range serverAnnotations {
 		if ann.CreatedAt.Unix() > syncReq.LastSyncTime {
 			newAnnotations = append(newAnnotations, ann)

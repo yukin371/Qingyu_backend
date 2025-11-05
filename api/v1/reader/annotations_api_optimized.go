@@ -1,12 +1,12 @@
 package reader
 
 import (
+	"Qingyu_backend/models/reader"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reading/reader"
 )
 
 // BatchCreateAnnotationsRequest 批量创建注记请求
@@ -14,12 +14,15 @@ type BatchCreateAnnotationsRequest struct {
 	Annotations []CreateAnnotationRequest `json:"annotations" binding:"required,min=1,max=50"`
 }
 
+// AnnotationUpdate 单个注记更新
+type AnnotationUpdate struct {
+	ID      string                  `json:"id" binding:"required"`
+	Updates UpdateAnnotationRequest `json:"updates"`
+}
+
 // BatchUpdateAnnotationsRequest 批量更新注记请求
 type BatchUpdateAnnotationsRequest struct {
-	Updates []struct {
-		ID      string                  `json:"id" binding:"required"`
-		Updates UpdateAnnotationRequest `json:"updates"`
-	} `json:"updates" binding:"required,min=1,max=50"`
+	Updates []AnnotationUpdate `json:"updates" binding:"required,min=1,max=50"`
 }
 
 // BatchDeleteAnnotationsRequest 批量删除注记请求
@@ -40,7 +43,7 @@ type GetAnnotationStatsResponse struct {
 //	@Summary	批量创建注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchCreateAnnotationsRequest	true	"批量创建注记请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [post]
 func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	var req BatchCreateAnnotationsRequest
@@ -56,11 +59,17 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		return
+	}
+
 	// 转换为注记模型
 	annotations := make([]*reader.Annotation, len(req.Annotations))
 	for i, annReq := range req.Annotations {
 		annotations[i] = &reader.Annotation{
-			UserID:    userID.(string),
+			UserID:    userIDStr,
 			BookID:    annReq.BookID,
 			ChapterID: annReq.ChapterID,
 			Type:      annReq.Type,
@@ -88,7 +97,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 //	@Summary	批量更新注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchUpdateAnnotationsRequest	true	"批量更新注记请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [put]
 func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 	var req BatchUpdateAnnotationsRequest
@@ -128,7 +137,7 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 //	@Summary	批量删除注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchDeleteAnnotationsRequest	true	"批量删除注记请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [delete]
 func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	var req BatchDeleteAnnotationsRequest
@@ -154,13 +163,19 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 //	@Summary	获取注记统计
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/stats [get]
 func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
 		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
@@ -171,7 +186,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	}
 
 	// 获取统计数据
-	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userID.(string), bookID)
+	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取注记统计失败", err.Error())
 		return
@@ -186,13 +201,19 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
 //	@Param		format	query		string	false	"导出格式 (json/markdown/txt)"	default(json)
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/export [get]
 func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
 		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
@@ -209,7 +230,7 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	}
 
 	// 获取注记数据
-	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userID.(string), bookID)
+	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取注记失败", err.Error())
 		return
@@ -241,7 +262,7 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 }
 
 // 导出为JSON格式
-func (api *AnnotationsAPI) exportAsJSON(annotations []*reader.Annotation) string {
+func (api *AnnotationsAPI) exportAsJSON(_ []*reader.Annotation) string {
 	// 简单实现，实际可以使用json.Marshal
 	return `{"annotations": []}`
 }
@@ -283,13 +304,19 @@ func (api *AnnotationsAPI) exportAsText(annotations []*reader.Annotation) string
 //	@Summary	同步注记
 //	@Tags		阅读器
 //	@Param		request	body		SyncAnnotationsRequest	true	"同步注记请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
 		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
@@ -300,7 +327,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	}
 
 	// 执行同步逻辑
-	result, err := api.readerService.SyncAnnotations(c.Request.Context(), userID.(string), &req)
+	result, err := api.readerService.SyncAnnotations(c.Request.Context(), userIDStr, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "同步注记失败", err.Error())
 		return

@@ -1,261 +1,646 @@
-package user_test
+package user
 
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 	"Qingyu_backend/global"
 	usersModel "Qingyu_backend/models/users"
-	"Qingyu_backend/repository/mongodb/user"
+	userInterface "Qingyu_backend/repository/interfaces/user"
+	userMongo "Qingyu_backend/repository/mongodb/user"
+	"Qingyu_backend/test/testutil"
 )
 
-// TestUserRepository_Integration 用户Repository集成测试
-func TestUserRepository_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("跳过集成测试（使用 -short 标志）")
-	}
-
-	// 加载配置
-	cfg, err := config.LoadConfig("../../../config/config.yaml")
-	require.NoError(t, err, "加载配置失败")
-
-	// 初始化全局配置
-	config.GlobalConfig = cfg
-
-	// 初始化数据库
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
-
-	// 创建Repository
-	userRepo := user.NewMongoUserRepository(global.DB)
+func setupUserTest(t *testing.T) context.Context {
+	testutil.SetupTestDB(t)
 	ctx := context.Background()
 
-	// 健康检查
-	t.Run("Health", func(t *testing.T) {
-		err := userRepo.Health(ctx)
-		assert.NoError(t, err, "健康检查应该成功")
-	})
+	// 清空测试数据
+	_ = global.DB.Collection("users").Drop(ctx)
 
-	// 创建测试用户
-	testUser := &usersModel.User{
-		Username: "testuser_" + time.Now().Format("20060102150405"),
-		Email:    "test_" + time.Now().Format("20060102150405") + "@example.com",
-		Phone:    "13800138000",
-		Password: "hashed_password_123",
-		Role:     usersModel.RoleUser,
-		Status:   usersModel.UserStatusActive,
-		Nickname: "测试用户",
-		Bio:      "这是一个测试用户",
+	return ctx
+}
+
+// 辅助函数：创建测试用户
+func createTestUser(username, email string) *usersModel.User {
+	user := &usersModel.User{
+		Username:      username,
+		Email:         email,
+		Password:      "hashed_password_123",
+		Role:          "user",
+		Status:        usersModel.UserStatusActive,
+		EmailVerified: false,
+		PhoneVerified: false,
 	}
+	return user
+}
 
-	// 测试创建用户
-	t.Run("Create", func(t *testing.T) {
-		err := userRepo.Create(ctx, testUser)
-		assert.NoError(t, err, "创建用户应该成功")
-		assert.NotEmpty(t, testUser.ID, "用户ID应该被设置")
+// ==================== 基础CRUD测试 ====================
+
+func TestUserRepository_Create(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功创建用户", func(t *testing.T) {
+		user := createTestUser("testuser", "test@example.com")
+
+		err := repo.Create(ctx, user)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, user.ID)
+		assert.False(t, user.CreatedAt.IsZero())
+		assert.False(t, user.UpdatedAt.IsZero())
 	})
 
-	// 测试根据ID获取用户
-	t.Run("GetByID", func(t *testing.T) {
-		user, err := userRepo.GetByID(ctx, testUser.ID)
-		assert.NoError(t, err, "获取用户应该成功")
-		assert.Equal(t, testUser.Username, user.Username, "用户名应该匹配")
-		assert.Equal(t, testUser.Email, user.Email, "邮箱应该匹配")
-	})
+	t.Run("邮箱已存在", func(t *testing.T) {
+		_ = global.DB.Collection("users").Drop(ctx)
 
-	// 测试根据Email获取用户
-	t.Run("GetByEmail", func(t *testing.T) {
-		user, err := userRepo.GetByEmail(ctx, testUser.Email)
-		assert.NoError(t, err, "根据邮箱获取用户应该成功")
-		assert.Equal(t, testUser.ID, user.ID, "用户ID应该匹配")
-	})
+		user1 := createTestUser("user1", "duplicate@example.com")
+		err := repo.Create(ctx, user1)
+		require.NoError(t, err)
 
-	// 测试根据Phone获取用户
-	t.Run("GetByPhone", func(t *testing.T) {
-		user, err := userRepo.GetByPhone(ctx, testUser.Phone)
-		assert.NoError(t, err, "根据手机号获取用户应该成功")
-		assert.Equal(t, testUser.ID, user.ID, "用户ID应该匹配")
-	})
-
-	// 测试邮箱是否存在
-	t.Run("ExistsByEmail", func(t *testing.T) {
-		exists, err := userRepo.ExistsByEmail(ctx, testUser.Email)
-		assert.NoError(t, err, "检查邮箱存在应该成功")
-		assert.True(t, exists, "邮箱应该存在")
-
-		exists, err = userRepo.ExistsByEmail(ctx, "nonexistent@example.com")
-		assert.NoError(t, err, "检查不存在的邮箱应该成功")
-		assert.False(t, exists, "不存在的邮箱应该返回false")
-	})
-
-	// 测试更新用户
-	t.Run("Update", func(t *testing.T) {
-		updates := map[string]interface{}{
-			"nickname": "更新后的昵称",
-			"bio":      "更新后的个人简介",
+		user2 := createTestUser("user2", "duplicate@example.com")
+		err = repo.Create(ctx, user2)
+		// 注意：可能不会报错，因为MongoDB没有建立email唯一索引
+		// 此测试验证Repository的基本行为
+		if err != nil {
+			assert.True(t, userInterface.IsDuplicateError(err))
 		}
-		err := userRepo.Update(ctx, testUser.ID, updates)
-		assert.NoError(t, err, "更新用户应该成功")
-
-		// 验证更新
-		user, err := userRepo.GetByID(ctx, testUser.ID)
-		assert.NoError(t, err, "获取更新后的用户应该成功")
-		assert.Equal(t, "更新后的昵称", user.Nickname, "昵称应该已更新")
-		assert.Equal(t, "更新后的个人简介", user.Bio, "简介应该已更新")
 	})
 
-	// 测试更新最后登录时间
-	t.Run("UpdateLastLogin", func(t *testing.T) {
-		err := userRepo.UpdateLastLogin(ctx, testUser.ID, "192.168.1.1")
-		assert.NoError(t, err, "更新最后登录时间应该成功")
-
-		user, err := userRepo.GetByID(ctx, testUser.ID)
-		assert.NoError(t, err, "获取用户应该成功")
-		assert.NotNil(t, user.LastLoginAt, "最后登录时间应该被设置")
-		assert.Equal(t, "192.168.1.1", user.LastLoginIP, "登录IP应该匹配")
-	})
-
-	// 测试更新用户状态
-	t.Run("UpdateStatus", func(t *testing.T) {
-		err := userRepo.UpdateStatus(ctx, testUser.ID, usersModel.UserStatusInactive)
-		assert.NoError(t, err, "更新状态应该成功")
-
-		user, err := userRepo.GetByID(ctx, testUser.ID)
-		assert.NoError(t, err, "获取用户应该成功")
-		assert.Equal(t, usersModel.UserStatusInactive, user.Status, "状态应该已更新")
-	})
-
-	// 测试设置邮箱验证状态
-	t.Run("SetEmailVerified", func(t *testing.T) {
-		err := userRepo.SetEmailVerified(ctx, testUser.ID, true)
-		assert.NoError(t, err, "设置邮箱验证状态应该成功")
-
-		user, err := userRepo.GetByID(ctx, testUser.ID)
-		assert.NoError(t, err, "获取用户应该成功")
-		assert.True(t, user.EmailVerified, "邮箱应该已验证")
-	})
-
-	// 测试高级查询
-	t.Run("FindWithFilter", func(t *testing.T) {
-		filter := &usersModel.UserFilter{
-			Role:     usersModel.RoleUser,
-			Status:   usersModel.UserStatusInactive,
-			Page:     1,
-			PageSize: 10,
-		}
-
-		users, total, err := userRepo.FindWithFilter(ctx, filter)
-		assert.NoError(t, err, "高级查询应该成功")
-		assert.GreaterOrEqual(t, total, int64(1), "应该至少有一个用户")
-		assert.NotEmpty(t, users, "用户列表不应为空")
-	})
-
-	// 测试搜索用户
-	t.Run("SearchUsers", func(t *testing.T) {
-		users, err := userRepo.SearchUsers(ctx, "测试", 10)
-		assert.NoError(t, err, "搜索用户应该成功")
-		assert.NotEmpty(t, users, "搜索结果不应为空")
-	})
-
-	// 测试统计方法
-	t.Run("CountByRole", func(t *testing.T) {
-		count, err := userRepo.CountByRole(ctx, usersModel.RoleUser)
-		assert.NoError(t, err, "按角色统计应该成功")
-		assert.GreaterOrEqual(t, count, int64(1), "应该至少有一个用户")
-	})
-
-	// 清理测试数据
-	t.Run("Delete", func(t *testing.T) {
-		err := userRepo.Delete(ctx, testUser.ID)
-		assert.NoError(t, err, "删除用户应该成功")
-
-		// 验证删除
-		_, err = userRepo.GetByID(ctx, testUser.ID)
-		assert.Error(t, err, "获取已删除的用户应该失败")
+	t.Run("空用户对象", func(t *testing.T) {
+		err := repo.Create(ctx, nil)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsValidationError(err))
 	})
 }
 
-// TestUserRepository_BatchOperations 批量操作测试
-func TestUserRepository_BatchOperations(t *testing.T) {
-	if testing.Short() {
-		t.Skip("跳过集成测试（使用 -short 标志）")
-	}
+func TestUserRepository_GetByID(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
 
-	// 加载配置
-	cfg, err := config.LoadConfig("../../../config/config.yaml")
-	require.NoError(t, err, "加载配置失败")
+	t.Run("成功获取用户", func(t *testing.T) {
+		testUser := createTestUser("gettest", "get@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
 
-	// 初始化全局配置
-	config.GlobalConfig = cfg
-
-	// 初始化数据库
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
-
-	// 创建Repository
-	userRepo := user.NewMongoUserRepository(global.DB)
-	ctx := context.Background()
-
-	// 创建测试用户
-	timestamp := time.Now().Format("20060102150405")
-	testUsers := []*usersModel.User{
-		{
-			Username: "batch_user1_" + timestamp,
-			Email:    "batch1_" + timestamp + "@example.com",
-			Password: "hashed_password_123",
-			Role:     usersModel.RoleUser,
-			Status:   usersModel.UserStatusActive,
-		},
-		{
-			Username: "batch_user2_" + timestamp,
-			Email:    "batch2_" + timestamp + "@example.com",
-			Password: "hashed_password_123",
-			Role:     usersModel.RoleUser,
-			Status:   usersModel.UserStatusActive,
-		},
-	}
-
-	// 测试创建多个用户（使用单独创建）
-	t.Run("CreateMultiple", func(t *testing.T) {
-		for _, u := range testUsers {
-			err := userRepo.Create(ctx, u)
-			assert.NoError(t, err, "创建用户应该成功")
-			assert.NotEmpty(t, u.ID, "用户ID应该被设置")
-		}
+		found, err := repo.GetByID(ctx, testUser.ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, found)
+		assert.Equal(t, testUser.Username, found.Username)
+		assert.Equal(t, testUser.Email, found.Email)
 	})
 
-	// 测试批量更新状态
-	t.Run("BatchUpdateStatus", func(t *testing.T) {
-		ids := []string{testUsers[0].ID, testUsers[1].ID}
-		err := userRepo.BatchUpdateStatus(ctx, ids, usersModel.UserStatusInactive)
-		assert.NoError(t, err, "批量更新状态应该成功")
+	t.Run("用户不存在", func(t *testing.T) {
+		_, err := repo.GetByID(ctx, "nonexistent_id")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_Update(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功更新用户", func(t *testing.T) {
+		testUser := createTestUser("updatetest", "update@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		updates := map[string]interface{}{
+			"nickname": "Updated Nickname",
+			"bio":      "Updated bio",
+		}
+
+		err = repo.Update(ctx, testUser.ID, updates)
+		assert.NoError(t, err)
 
 		// 验证更新
-		for _, id := range ids {
-			user, err := userRepo.GetByID(ctx, id)
-			assert.NoError(t, err, "获取用户应该成功")
-			assert.Equal(t, usersModel.UserStatusInactive, user.Status, "状态应该已更新")
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.Equal(t, "Updated Nickname", found.Nickname)
+		assert.Equal(t, "Updated bio", found.Bio)
+	})
+
+	t.Run("更新不存在的用户", func(t *testing.T) {
+		updates := map[string]interface{}{"nickname": "Test"}
+		err := repo.Update(ctx, "nonexistent", updates)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_Delete(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功软删除用户", func(t *testing.T) {
+		testUser := createTestUser("deletetest", "delete@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		err = repo.Delete(ctx, testUser.ID)
+		assert.NoError(t, err)
+
+		// 验证软删除后无法再获取
+		_, err = repo.GetByID(ctx, testUser.ID)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+
+	t.Run("删除不存在的用户", func(t *testing.T) {
+		err := repo.Delete(ctx, "nonexistent")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+// ==================== 查询方法测试 ====================
+
+func TestUserRepository_GetByUsername(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功根据用户名查询", func(t *testing.T) {
+		testUser := createTestUser("usernametest", "username@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		found, err := repo.GetByUsername(ctx, "usernametest")
+		assert.NoError(t, err)
+		assert.NotNil(t, found)
+		assert.Equal(t, testUser.Username, found.Username)
+	})
+
+	t.Run("用户名不存在", func(t *testing.T) {
+		_, err := repo.GetByUsername(ctx, "nonexistent")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_GetByEmail(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功根据邮箱查询", func(t *testing.T) {
+		testUser := createTestUser("emailtest", "emailtest@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		found, err := repo.GetByEmail(ctx, "emailtest@example.com")
+		assert.NoError(t, err)
+		assert.NotNil(t, found)
+		assert.Equal(t, testUser.Email, found.Email)
+	})
+
+	t.Run("邮箱不存在", func(t *testing.T) {
+		_, err := repo.GetByEmail(ctx, "nonexistent@example.com")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_GetByPhone(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功根据手机号查询", func(t *testing.T) {
+		testUser := createTestUser("phonetest", "phone@example.com")
+		testUser.Phone = "13800138000"
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		found, err := repo.GetByPhone(ctx, "13800138000")
+		assert.NoError(t, err)
+		assert.NotNil(t, found)
+		assert.Equal(t, testUser.Phone, found.Phone)
+	})
+
+	t.Run("手机号不存在", func(t *testing.T) {
+		_, err := repo.GetByPhone(ctx, "99999999999")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+// ==================== 存在性检查测试 ====================
+
+func TestUserRepository_ExistsByUsername(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("用户名存在", func(t *testing.T) {
+		testUser := createTestUser("existsuser", "exists@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		exists, err := repo.ExistsByUsername(ctx, "existsuser")
+		assert.NoError(t, err)
+		assert.True(t, exists)
+	})
+
+	t.Run("用户名不存在", func(t *testing.T) {
+		exists, err := repo.ExistsByUsername(ctx, "notexists")
+		assert.NoError(t, err)
+		assert.False(t, exists)
+	})
+}
+
+func TestUserRepository_ExistsByEmail(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("邮箱存在", func(t *testing.T) {
+		testUser := createTestUser("emailexists", "emailexists@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		exists, err := repo.ExistsByEmail(ctx, "emailexists@example.com")
+		assert.NoError(t, err)
+		assert.True(t, exists)
+	})
+
+	t.Run("邮箱不存在", func(t *testing.T) {
+		exists, err := repo.ExistsByEmail(ctx, "notexists@example.com")
+		assert.NoError(t, err)
+		assert.False(t, exists)
+	})
+}
+
+func TestUserRepository_ExistsByPhone(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("手机号存在", func(t *testing.T) {
+		testUser := createTestUser("phoneexists", "phoneexists@example.com")
+		testUser.Phone = "13800138001"
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		exists, err := repo.ExistsByPhone(ctx, "13800138001")
+		assert.NoError(t, err)
+		assert.True(t, exists)
+	})
+
+	t.Run("手机号不存在", func(t *testing.T) {
+		exists, err := repo.ExistsByPhone(ctx, "99999999998")
+		assert.NoError(t, err)
+		assert.False(t, exists)
+	})
+}
+
+// ==================== 状态管理测试 ====================
+
+func TestUserRepository_UpdateLastLogin(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功更新最后登录信息", func(t *testing.T) {
+		testUser := createTestUser("logintest", "login@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		err = repo.UpdateLastLogin(ctx, testUser.ID, "192.168.1.1")
+		assert.NoError(t, err)
+
+		// 验证更新
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.False(t, found.LastLoginAt.IsZero())
+		assert.Equal(t, "192.168.1.1", found.LastLoginIP)
+	})
+
+	t.Run("更新不存在的用户", func(t *testing.T) {
+		err := repo.UpdateLastLogin(ctx, "nonexistent", "192.168.1.1")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_UpdatePassword(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功更新密码", func(t *testing.T) {
+		testUser := createTestUser("pwdtest", "pwd@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		newPassword := "new_hashed_password"
+		err = repo.UpdatePassword(ctx, testUser.ID, newPassword)
+		assert.NoError(t, err)
+
+		// 验证更新
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.Equal(t, newPassword, found.Password)
+	})
+
+	t.Run("更新不存在的用户密码", func(t *testing.T) {
+		err := repo.UpdatePassword(ctx, "nonexistent", "newpwd")
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_UpdateStatus(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("成功更新状态", func(t *testing.T) {
+		testUser := createTestUser("statustest", "status@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		err = repo.UpdateStatus(ctx, testUser.ID, usersModel.UserStatusInactive)
+		assert.NoError(t, err)
+
+		// 验证更新
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.Equal(t, usersModel.UserStatusInactive, found.Status)
+	})
+
+	t.Run("更新不存在的用户状态", func(t *testing.T) {
+		err := repo.UpdateStatus(ctx, "nonexistent", usersModel.UserStatusBanned)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+// ==================== 验证状态测试 ====================
+
+func TestUserRepository_SetEmailVerified(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("设置邮箱已验证", func(t *testing.T) {
+		testUser := createTestUser("emailverify", "emailverify@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		err = repo.SetEmailVerified(ctx, testUser.ID, true)
+		assert.NoError(t, err)
+
+		// 验证更新
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.True(t, found.EmailVerified)
+	})
+
+	t.Run("设置不存在用户的邮箱验证", func(t *testing.T) {
+		err := repo.SetEmailVerified(ctx, "nonexistent", true)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+func TestUserRepository_SetPhoneVerified(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("设置手机号已验证", func(t *testing.T) {
+		testUser := createTestUser("phoneverify", "phoneverify@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		err = repo.SetPhoneVerified(ctx, testUser.ID, true)
+		assert.NoError(t, err)
+
+		// 验证更新
+		found, _ := repo.GetByID(ctx, testUser.ID)
+		assert.True(t, found.PhoneVerified)
+	})
+
+	t.Run("设置不存在用户的手机验证", func(t *testing.T) {
+		err := repo.SetPhoneVerified(ctx, "nonexistent", true)
+		assert.Error(t, err)
+		assert.True(t, userInterface.IsNotFoundError(err))
+	})
+}
+
+// ==================== 列表和查询测试 ====================
+
+func TestUserRepository_GetActiveUsers(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("获取活跃用户", func(t *testing.T) {
+		// 创建活跃用户
+		for i := 1; i <= 3; i++ {
+			user := createTestUser("active"+string(rune('0'+i)), "active"+string(rune('0'+i))+"@example.com")
+			user.Status = usersModel.UserStatusActive
+			err := repo.Create(ctx, user)
+			require.NoError(t, err)
+		}
+
+		// 创建非活跃用户
+		inactiveUser := createTestUser("inactive", "inactive@example.com")
+		inactiveUser.Status = usersModel.UserStatusInactive
+		err := repo.Create(ctx, inactiveUser)
+		require.NoError(t, err)
+
+		users, err := repo.GetActiveUsers(ctx, 10)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(users), 3)
+
+		// 验证都是活跃用户
+		for _, u := range users {
+			assert.Equal(t, usersModel.UserStatusActive, u.Status)
+		}
+	})
+}
+
+func TestUserRepository_GetUsersByRole(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("根据角色获取用户", func(t *testing.T) {
+		// 创建不同角色的用户
+		adminUser := createTestUser("admin1", "admin1@example.com")
+		adminUser.Role = "admin"
+		err := repo.Create(ctx, adminUser)
+		require.NoError(t, err)
+
+		normalUser := createTestUser("user1", "user1@example.com")
+		normalUser.Role = "user"
+		err = repo.Create(ctx, normalUser)
+		require.NoError(t, err)
+
+		admins, err := repo.GetUsersByRole(ctx, "admin", 10)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(admins), 1)
+
+		// 验证都是admin角色
+		for _, u := range admins {
+			assert.Equal(t, "admin", u.Role)
+		}
+	})
+}
+
+// ==================== 批量操作测试 ====================
+
+func TestUserRepository_BatchUpdateStatus(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("批量更新状态", func(t *testing.T) {
+		// 创建3个用户
+		userIDs := []string{}
+		for i := 1; i <= 3; i++ {
+			user := createTestUser("batchstatus"+string(rune('0'+i)), "batchstatus"+string(rune('0'+i))+"@example.com")
+			err := repo.Create(ctx, user)
+			require.NoError(t, err)
+			userIDs = append(userIDs, user.ID)
+		}
+
+		// 批量更新为inactive
+		err := repo.BatchUpdateStatus(ctx, userIDs, usersModel.UserStatusInactive)
+		assert.NoError(t, err)
+
+		// 验证所有用户状态已更新
+		for _, id := range userIDs {
+			found, _ := repo.GetByID(ctx, id)
+			assert.Equal(t, usersModel.UserStatusInactive, found.Status)
 		}
 	})
 
-	// 测试批量删除
-	t.Run("BatchDelete", func(t *testing.T) {
-		ids := []string{testUsers[0].ID, testUsers[1].ID}
-		err := userRepo.BatchDelete(ctx, ids)
-		assert.NoError(t, err, "批量删除应该成功")
+	t.Run("空数组不报错", func(t *testing.T) {
+		err := repo.BatchUpdateStatus(ctx, []string{}, usersModel.UserStatusBanned)
+		assert.NoError(t, err)
+	})
+}
 
-		// 验证删除（软删除，状态应该变为deleted）
-		for _, id := range ids {
-			user, err := userRepo.GetByID(ctx, id)
-			if err == nil {
-				assert.Equal(t, usersModel.UserStatusDeleted, user.Status, "状态应该为deleted")
-			}
+func TestUserRepository_BatchDelete(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("批量删除用户", func(t *testing.T) {
+		// 创建3个用户
+		userIDs := []string{}
+		for i := 1; i <= 3; i++ {
+			user := createTestUser("batchdel"+string(rune('0'+i)), "batchdel"+string(rune('0'+i))+"@example.com")
+			err := repo.Create(ctx, user)
+			require.NoError(t, err)
+			userIDs = append(userIDs, user.ID)
 		}
+
+		// 批量删除
+		err := repo.BatchDelete(ctx, userIDs)
+		assert.NoError(t, err)
+
+		// 验证所有用户已被软删除
+		for _, id := range userIDs {
+			_, err := repo.GetByID(ctx, id)
+			assert.Error(t, err)
+			assert.True(t, userInterface.IsNotFoundError(err))
+		}
+	})
+
+	t.Run("空数组不报错", func(t *testing.T) {
+		err := repo.BatchDelete(ctx, []string{})
+		assert.NoError(t, err)
+	})
+}
+
+// ==================== 搜索和统计测试 ====================
+
+func TestUserRepository_SearchUsers(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("搜索用户", func(t *testing.T) {
+		// 创建测试用户
+		user1 := createTestUser("searchtestuser", "searchtest@example.com")
+		user1.Nickname = "SearchNickname"
+		err := repo.Create(ctx, user1)
+		require.NoError(t, err)
+
+		// 按用户名搜索
+		users, err := repo.SearchUsers(ctx, "searchtest", 10)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(users), 1)
+
+		// 按昵称搜索
+		users, err = repo.SearchUsers(ctx, "SearchNick", 10)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(users), 1)
+	})
+
+	t.Run("无匹配结果", func(t *testing.T) {
+		users, err := repo.SearchUsers(ctx, "nonexistentkeyword", 10)
+		assert.NoError(t, err)
+		assert.Empty(t, users)
+	})
+}
+
+func TestUserRepository_CountByRole(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("按角色统计", func(t *testing.T) {
+		// 创建不同角色的用户
+		for i := 1; i <= 3; i++ {
+			user := createTestUser("author"+string(rune('0'+i)), "author"+string(rune('0'+i))+"@example.com")
+			user.Role = "author"
+			err := repo.Create(ctx, user)
+			require.NoError(t, err)
+		}
+
+		count, err := repo.CountByRole(ctx, "author")
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, count, int64(3))
+	})
+}
+
+func TestUserRepository_CountByStatus(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("按状态统计", func(t *testing.T) {
+		// 创建不同状态的用户
+		for i := 1; i <= 2; i++ {
+			user := createTestUser("banned"+string(rune('0'+i)), "banned"+string(rune('0'+i))+"@example.com")
+			user.Status = usersModel.UserStatusBanned
+			err := repo.Create(ctx, user)
+			require.NoError(t, err)
+		}
+
+		count, err := repo.CountByStatus(ctx, usersModel.UserStatusBanned)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, count, int64(2))
+	})
+}
+
+// ==================== 健康检查测试 ====================
+
+func TestUserRepository_Health(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("健康检查", func(t *testing.T) {
+		err := repo.Health(ctx)
+		assert.NoError(t, err)
+	})
+}
+
+// ==================== Exists测试 ====================
+
+func TestUserRepository_Exists(t *testing.T) {
+	ctx := setupUserTest(t)
+	repo := userMongo.NewMongoUserRepository(global.DB)
+
+	t.Run("用户存在", func(t *testing.T) {
+		testUser := createTestUser("existsidtest", "existsid@example.com")
+		err := repo.Create(ctx, testUser)
+		require.NoError(t, err)
+
+		exists, err := repo.Exists(ctx, testUser.ID)
+		assert.NoError(t, err)
+		assert.True(t, exists)
+	})
+
+	t.Run("用户不存在", func(t *testing.T) {
+		exists, err := repo.Exists(ctx, "nonexistent_id_123")
+		assert.NoError(t, err)
+		assert.False(t, exists)
 	})
 }

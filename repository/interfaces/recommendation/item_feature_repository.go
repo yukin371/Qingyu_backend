@@ -1,9 +1,8 @@
 package recommendation
 
 import (
+	reco "Qingyu_backend/models/recommendation"
 	"context"
-
-	reco "Qingyu_backend/models/recommendation/reco"
 )
 
 // ItemFeatureRepository 物品特征仓储接口

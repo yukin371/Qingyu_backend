@@ -512,10 +512,13 @@ userRepo.On("Create", mock.Anything, mock.MatchedBy(func(user *User) bool {
 
 ## 📚 相关文档
 
-- [共享服务测试文档](../doc/testing/共享服务测试文档.md)
-- [API测试指南](../doc/testing/API测试指南.md)
-- [性能测试规范](../doc/testing/性能测试规范.md)
-- [测试最佳实践](../doc/testing/测试最佳实践.md)
+- [测试组织规范](../doc/testing/测试组织规范.md) - 测试分类和组织原则 ⭐ 必读
+- [测试运行指南](./README_测试运行指南.md) - 快速参考手册 ⭐ 必读
+- [测试最佳实践](../doc/testing/测试最佳实践.md) - 编写高质量测试的指南
+- [API测试指南](../doc/testing/API测试指南.md) - API测试完整指南
+- [性能测试规范](../doc/testing/性能测试规范.md) - 基准测试和压力测试
+- [共享服务测试文档](../doc/testing/共享服务测试文档.md) - 共享服务测试示例
+- [Postman测试指南](../doc/testing/Postman测试指南.md) - Postman使用指南
 
 ## 🤝 贡献指南
 
@@ -531,7 +534,3 @@ userRepo.On("Create", mock.Anything, mock.MatchedBy(func(user *User) bool {
 - [ ] 测试数据独立且可重复
 - [ ] 性能测试包含基准测试
 - [ ] 文档更新完整
-
----
-
-**Happy Testing! 🎉**

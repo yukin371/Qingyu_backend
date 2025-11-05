@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/models/reading/bookstore"
 	interfaces "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
@@ -169,7 +169,7 @@ func (r *MongoBannerRepository) GetActive(ctx context.Context, limit, offset int
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"sort_order", 1}, {"created_at", -1}})
+		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
@@ -190,7 +190,7 @@ func (r *MongoBannerRepository) GetByTargetType(ctx context.Context, targetType 
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"sort_order", 1}, {"created_at", -1}})
+		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{"target_type": targetType, "is_active": true}, opts)
 	if err != nil {
@@ -230,7 +230,7 @@ func (r *MongoBannerRepository) GetByTimeRange(ctx context.Context, startTime, e
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
-		SetSort(bson.D{{"sort_order", 1}, {"created_at", -1}})
+		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {

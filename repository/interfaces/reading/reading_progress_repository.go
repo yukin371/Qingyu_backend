@@ -1,10 +1,9 @@
 package reading
 
 import (
+	"Qingyu_backend/models/reader"
 	"context"
 	"time"
-
-	"Qingyu_backend/models/reading/reader"
 )
 
 // ReadingProgressRepository 阅读进度仓储接口
@@ -47,6 +46,6 @@ type ReadingProgressRepository interface {
 	DeleteOldProgress(ctx context.Context, beforeTime time.Time) error
 	DeleteByBook(ctx context.Context, bookID string) error
 
-	// 健康检查
+	// Health 健康检查
 	Health(ctx context.Context) error
 }

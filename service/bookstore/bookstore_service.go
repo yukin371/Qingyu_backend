@@ -1,14 +1,15 @@
 package bookstore
 
 import (
+	bookstore2 "Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reading/bookstore"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
@@ -16,38 +17,38 @@ import (
 // 用于书城首页、分类页面、搜索结果等列表场景
 type BookstoreService interface {
 	// 书籍列表相关服务 - 使用Book模型
-	GetBookByID(ctx context.Context, id string) (*bookstore.Book, error)
-	GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error)
-	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error)
-	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error)
-	SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error)
+	GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error)
+	GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error)
 
 	// 分类相关服务
-	GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error)
-	GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error)
-	GetRootCategories(ctx context.Context) ([]*bookstore.Category, error)
+	GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error)
+	GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error)
+	GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error)
 
 	// Banner相关方法
-	GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error)
+	GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error)
 	IncrementBannerClick(ctx context.Context, bannerID string) error
 
 	// 榜单相关方法
-	GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error)
-	GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error)
-	GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error)
-	GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error)
-	GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error)
-	UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error
+	GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error)
+	GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error)
+	GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error)
+	GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error)
+	GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error)
+	UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error
 
 	// 首页数据聚合
 	GetHomepageData(ctx context.Context) (*HomepageData, error)
 
 	// 统计和计数
-	GetBookStats(ctx context.Context) (*bookstore.BookStats, error)
+	GetBookStats(ctx context.Context) (*bookstore2.BookStats, error)
 	IncrementBookView(ctx context.Context, bookID string) error
 }
 
@@ -61,12 +62,12 @@ type BookstoreServiceImpl struct {
 
 // HomepageData 首页数据结构
 type HomepageData struct {
-	Banners          []*bookstore.Banner                 `json:"banners"`
-	RecommendedBooks []*bookstore.Book                   `json:"recommendedBooks"`
-	FeaturedBooks    []*bookstore.Book                   `json:"featuredBooks"`
-	Categories       []*bookstore.Category               `json:"categories"`
-	Stats            *bookstore.BookStats                `json:"stats"`
-	Rankings         map[string][]*bookstore.RankingItem `json:"rankings"` // 各类榜单
+	Banners          []*bookstore2.Banner                 `json:"banners"`
+	RecommendedBooks []*bookstore2.Book                   `json:"recommendedBooks"`
+	FeaturedBooks    []*bookstore2.Book                   `json:"featuredBooks"`
+	Categories       []*bookstore2.Category               `json:"categories"`
+	Stats            *bookstore2.BookStats                `json:"stats"`
+	Rankings         map[string][]*bookstore2.RankingItem `json:"rankings"` // 各类榜单
 }
 
 // NewBookstoreService 创建书城服务实例
@@ -85,7 +86,7 @@ func NewBookstoreService(
 }
 
 // GetBookByID 根据ID获取书籍详情
-func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid book ID: %w", err)
@@ -109,7 +110,7 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 }
 
 // GetBooksByCategory 根据分类获取书籍列表
-func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	objectID, err := primitive.ObjectIDFromHex(categoryID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid category ID: %w", err)
@@ -131,7 +132,7 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 	}
 
 	// 过滤只返回已发布的书籍
-	var publishedBooks []*bookstore.Book
+	var publishedBooks []*bookstore2.Book
 	for _, book := range books {
 		if book.Status == "published" {
 			publishedBooks = append(publishedBooks, book)
@@ -142,7 +143,7 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 }
 
 // GetRecommendedBooks 获取推荐书籍
-func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetRecommended(ctx, pageSize, offset)
@@ -154,10 +155,10 @@ func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pa
 }
 
 // GetFeaturedBooks 获取精选书籍
-func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	// 检查repository是否为nil
 	if s.bookRepo == nil {
-		return []*bookstore.Book{}, nil
+		return []*bookstore2.Book{}, nil
 	}
 
 	offset := (page - 1) * pageSize
@@ -171,7 +172,7 @@ func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageS
 }
 
 // GetHotBooks 获取热门书籍
-func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetHotBooks(ctx, pageSize, offset)
@@ -183,7 +184,7 @@ func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize i
 }
 
 // GetNewReleases 获取新书列表
-func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetNewReleases(ctx, pageSize, offset)
@@ -195,7 +196,7 @@ func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSiz
 }
 
 // GetFreeBooks 获取免费书籍列表
-func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore.Book, error) {
+func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetFreeBooks(ctx, pageSize, offset)
@@ -207,7 +208,7 @@ func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize 
 }
 
 // SearchBooks 搜索书籍 - 简单搜索
-func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Book, int64, error) {
+func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	if keyword == "" {
 		return nil, 0, errors.New("keyword is required")
 	}
@@ -221,9 +222,9 @@ func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, 
 	}
 
 	// 计算总数
-	publishedStatus := bookstore.BookStatusPublished
+	publishedStatus := bookstore2.BookStatusPublished
 	keywordPtr := keyword
-	filter := &bookstore.BookFilter{
+	filter := &bookstore2.BookFilter{
 		Keyword: &keywordPtr,
 		Status:  &publishedStatus,
 	}
@@ -236,14 +237,14 @@ func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, 
 }
 
 // SearchBooksWithFilter 搜索书籍 - 高级搜索
-func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, int64, error) {
+func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
 	if filter == nil {
 		return nil, 0, errors.New("filter is required")
 	}
 
 	// 确保只搜索已发布的书籍
 	if filter.Status == nil {
-		publishedStatus := bookstore.BookStatusPublished
+		publishedStatus := bookstore2.BookStatusPublished
 		filter.Status = &publishedStatus
 	}
 
@@ -263,10 +264,10 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 }
 
 // GetBookStats 获取书籍统计信息
-func (s *BookstoreServiceImpl) GetBookStats(ctx context.Context) (*bookstore.BookStats, error) {
+func (s *BookstoreServiceImpl) GetBookStats(ctx context.Context) (*bookstore2.BookStats, error) {
 	// 检查repository是否为nil
 	if s.bookRepo == nil {
-		return &bookstore.BookStats{}, nil
+		return &bookstore2.BookStats{}, nil
 	}
 
 	stats, err := s.bookRepo.GetStats(ctx)
@@ -308,7 +309,7 @@ func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID str
 }
 
 // GetCategoryTree 获取分类树
-func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
+func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
 	tree, err := s.categoryRepo.GetCategoryTree(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get category tree: %w", err)
@@ -318,7 +319,7 @@ func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstor
 }
 
 // GetCategoryByID 根据ID获取分类
-func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (*bookstore.Category, error) {
+func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid category ID: %w", err)
@@ -341,7 +342,7 @@ func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (
 }
 
 // GetRootCategories 获取根分类列表
-func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
+func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
 	categories, err := s.categoryRepo.GetRootCategories(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get root categories: %w", err)
@@ -351,10 +352,10 @@ func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookst
 }
 
 // GetActiveBanners 获取激活的Banner列表
-func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore.Banner, error) {
+func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	// 检查repository是否为nil
 	if s.bannerRepo == nil {
-		return []*bookstore.Banner{}, nil
+		return []*bookstore2.Banner{}, nil
 	}
 
 	banners, err := s.bannerRepo.GetActive(ctx, limit, 0)
@@ -407,7 +408,7 @@ func (s *BookstoreServiceImpl) IncrementBannerClick(ctx context.Context, bannerI
 // GetHomepageData 获取首页数据
 func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageData, error) {
 	data := &HomepageData{
-		Rankings: make(map[string][]*bookstore.RankingItem),
+		Rankings: make(map[string][]*bookstore2.RankingItem),
 	}
 
 	// 并发获取各种数据
@@ -468,6 +469,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 		errChan <- nil
 	}()
 
+	// 使用mutex保护并发写入map
+	var mu sync.Mutex
+
 	// 获取实时榜
 	go func() {
 		rankings, err := s.GetRealtimeRanking(ctx, 10)
@@ -475,7 +479,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get realtime ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["realtime"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
@@ -486,7 +492,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get weekly ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["weekly"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
@@ -497,7 +505,9 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 			errChan <- fmt.Errorf("failed to get monthly ranking: %w", err)
 			return
 		}
+		mu.Lock()
 		data.Rankings["monthly"] = rankings
+		mu.Unlock()
 		errChan <- nil
 	}()
 
@@ -512,76 +522,76 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 }
 
 // GetRealtimeRanking 获取实时榜
-func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore.RankingItem, error) {
+func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstore2.RankingItem, error) {
 	// 检查repository是否为nil
 	if s.rankingRepo == nil {
-		return []*bookstore.RankingItem{}, nil
+		return []*bookstore2.RankingItem{}, nil
 	}
 
-	period := bookstore.GetPeriodString(bookstore.RankingTypeRealtime, time.Now())
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore.RankingTypeRealtime, period, limit, 0)
+	period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, time.Now())
+	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeRealtime, period, limit, 0)
 }
 
 // GetWeeklyRanking 获取周榜
-func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	// 检查repository是否为nil
 	if s.rankingRepo == nil {
-		return []*bookstore.RankingItem{}, nil
+		return []*bookstore2.RankingItem{}, nil
 	}
 
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeWeekly, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, time.Now())
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore.RankingTypeWeekly, period, limit, 0)
+	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeWeekly, period, limit, 0)
 }
 
 // GetMonthlyRanking 获取月榜
-func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	// 检查repository是否为nil
 	if s.rankingRepo == nil {
-		return []*bookstore.RankingItem{}, nil
+		return []*bookstore2.RankingItem{}, nil
 	}
 
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeMonthly, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, time.Now())
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore.RankingTypeMonthly, period, limit, 0)
+	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeMonthly, period, limit, 0)
 }
 
 // GetNewbieRanking 获取新人榜
-func (s *BookstoreServiceImpl) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (s *BookstoreServiceImpl) GetNewbieRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	// 检查repository是否为nil
 	if s.rankingRepo == nil {
-		return []*bookstore.RankingItem{}, nil
+		return []*bookstore2.RankingItem{}, nil
 	}
 
 	if period == "" {
-		period = bookstore.GetPeriodString(bookstore.RankingTypeNewbie, time.Now())
+		period = bookstore2.GetPeriodString(bookstore2.RankingTypeNewbie, time.Now())
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore.RankingTypeNewbie, period, limit, 0)
+	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeNewbie, period, limit, 0)
 }
 
 // GetRankingByType 根据类型获取榜单
-func (s *BookstoreServiceImpl) GetRankingByType(ctx context.Context, rankingType bookstore.RankingType, period string, limit int) ([]*bookstore.RankingItem, error) {
+func (s *BookstoreServiceImpl) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	if period == "" {
-		period = bookstore.GetPeriodString(rankingType, time.Now())
+		period = bookstore2.GetPeriodString(rankingType, time.Now())
 	}
 	return s.rankingRepo.GetByTypeWithBooks(ctx, rankingType, period, limit, 0)
 }
 
 // UpdateRankings 更新榜单数据
-func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string) error {
-	var items []*bookstore.RankingItem
+func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
+	var items []*bookstore2.RankingItem
 	var err error
 
 	switch rankingType {
-	case bookstore.RankingTypeRealtime:
+	case bookstore2.RankingTypeRealtime:
 		items, err = s.rankingRepo.CalculateRealtimeRanking(ctx, period)
-	case bookstore.RankingTypeWeekly:
+	case bookstore2.RankingTypeWeekly:
 		items, err = s.rankingRepo.CalculateWeeklyRanking(ctx, period)
-	case bookstore.RankingTypeMonthly:
+	case bookstore2.RankingTypeMonthly:
 		items, err = s.rankingRepo.CalculateMonthlyRanking(ctx, period)
-	case bookstore.RankingTypeNewbie:
+	case bookstore2.RankingTypeNewbie:
 		items, err = s.rankingRepo.CalculateNewbieRanking(ctx, period)
 	default:
 		return fmt.Errorf("unsupported ranking type: %s", rankingType)

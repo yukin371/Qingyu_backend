@@ -2,14 +2,25 @@
 
 # 数据库配置
 database:
-  uri: "mongodb://mongodb:27017"  # Docker服务名
-  name: "Qingyu_writer"
-  connect_timeout: 10s
-  max_pool_size: 100
-  min_pool_size: 10
-  max_conn_idle_time: 60s
-  retry_writes: true
-  retry_reads: true
+  type: mongodb
+  primary:
+    type: mongodb
+    mongodb:
+      uri: "mongodb://admin:changeme@mongodb:27017"  # Docker服务名（含认证）
+      database: "Qingyu_writer"
+      connect_timeout: 10s
+      server_timeout: 30s
+      max_pool_size: 100
+      min_pool_size: 10
+  indexing:
+    auto_create: true
+    background: true
+  validation:
+    enabled: true
+    strict_mode: false
+  sync:
+    enabled: false
+    interval: 5m
 
 # Redis配置
 redis:

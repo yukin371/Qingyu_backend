@@ -1,0 +1,290 @@
+name: Simple CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+  # 允许手动触发（用于测试）
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.24.0'
+
+jobs:
+  # 代码检查和格式化
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=10m
+
+      - name: Check code formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -d .
+            exit 1
+          fi
+
+  # 安全扫描
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec
+        run: gosec ./...
+        continue-on-error: true
+
+  # 单元测试（不需要 MongoDB）
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: |
+          go test -v -race -short -coverprofile=coverage.txt -covermode=atomic \
+            $(go list ./... | grep -v /test/)
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.txt
+          flags: unittests
+        continue-on-error: true
+
+  # 集成测试（使用 Docker Compose）
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Start test infrastructure
+        run: |
+          docker-compose -f docker/docker-compose.test.yml up -d
+          echo "Waiting for services to be healthy..."
+
+      - name: Wait for MongoDB
+        run: |
+          for i in {1..30}; do
+            if docker exec qingyu-mongodb-test mongo --eval "db.adminCommand('ping')" --quiet > /dev/null 2>&1; then
+              echo "MongoDB is ready!"
+              exit 0
+            fi
+            echo "Waiting for MongoDB... ($i/30)"
+            sleep 2
+          done
+          echo "MongoDB failed to start"
+          docker-compose -f docker/docker-compose.test.yml logs mongodb-test
+          exit 1
+
+      - name: Wait for Redis
+        run: |
+          for i in {1..15}; do
+            if docker exec qingyu-redis-test redis-cli ping > /dev/null 2>&1; then
+              echo "Redis is ready!"
+              exit 0
+            fi
+            echo "Waiting for Redis... ($i/15)"
+            sleep 1
+          done
+          echo "Redis failed to start"
+          exit 1
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run integration tests
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
+          ENVIRONMENT: test
+        run: |
+          go test -v -race -timeout 10m \
+            ./test/integration/...
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== MongoDB Logs ==="
+          docker-compose -f docker/docker-compose.test.yml logs mongodb-test
+          echo "=== Redis Logs ==="
+          docker-compose -f docker/docker-compose.test.yml logs redis-test
+
+      - name: Stop test infrastructure
+        if: always()
+        run: docker-compose -f docker/docker-compose.test.yml down -v
+
+  # API 测试（使用 Docker Compose）
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Start test infrastructure
+        run: docker-compose -f docker/docker-compose.test.yml up -d
+
+      - name: Wait for MongoDB
+        run: |
+          for i in {1..30}; do
+            if docker exec qingyu-mongodb-test mongo --eval "db.adminCommand('ping')" --quiet > /dev/null 2>&1; then
+              echo "MongoDB is ready!"
+              exit 0
+            fi
+            echo "Waiting for MongoDB... ($i/30)"
+            sleep 2
+          done
+          echo "MongoDB failed to start"
+          docker-compose -f docker/docker-compose.test.yml logs mongodb-test
+          exit 1
+
+      - name: Wait for Redis
+        run: |
+          for i in {1..15}; do
+            if docker exec qingyu-redis-test redis-cli ping > /dev/null 2>&1; then
+              echo "Redis is ready!"
+              exit 0
+            fi
+            echo "Waiting for Redis... ($i/15)"
+            sleep 1
+          done
+          echo "Redis failed to start"
+          exit 1
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run API tests
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
+          ENVIRONMENT: test
+        run: |
+          go test -v -race -timeout 10m \
+            ./test/api/...
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker-compose -f docker/docker-compose.test.yml logs
+
+      - name: Stop test infrastructure
+        if: always()
+        run: docker-compose -f docker/docker-compose.test.yml down -v
+
+  # 依赖检查（仅在主分支运行，避免过于频繁）
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Check for vulnerabilities
+        run: govulncheck ./...
+        continue-on-error: true
+
+      - name: Verify dependencies
+        run: |
+          go mod verify
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+  # 所有检查通过
+  all-checks-passed:
+    name: All Checks Passed
+    needs: [lint, security, unit-tests, integration-tests, api-tests, dependency-check]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          # 核心检查必须通过
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ]; then
+            echo "❌ Core checks failed (lint or unit-tests)"
+            exit 1
+          fi
+
+          # 集成测试和API测试（如果运行了必须通过）
+          if [ "${{ needs.integration-tests.result }}" == "failure" ] || \
+             [ "${{ needs.api-tests.result }}" == "failure" ]; then
+            echo "❌ Integration or API tests failed"
+            exit 1
+          fi
+
+          # 安全扫描和依赖检查可以是警告
+          if [ "${{ needs.security.result }}" == "failure" ]; then
+            echo "⚠️ Security scan has warnings"
+          fi
+
+          if [ "${{ needs.dependency-check.result }}" == "failure" ]; then
+            echo "⚠️ Dependency check has warnings"
+          fi
+
+          echo "✅ All critical checks passed successfully!"
+

@@ -11,14 +11,14 @@ import (
 
 // Category 分类模型
 type Category struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        string             `bson:"name"`
-	Description string             `bson:"description"`
+	ID          primitive.ObjectID  `bson:"_id,omitempty"`
+	Name        string              `bson:"name"`
+	Description string              `bson:"description"`
 	ParentID    *primitive.ObjectID `bson:"parent_id,omitempty"`
-	Sort        int                `bson:"sort"`
-	IsActive    bool               `bson:"is_active"`
-	CreatedAt   time.Time          `bson:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at"`
+	Sort        int                 `bson:"sort"`
+	IsActive    bool                `bson:"is_active"`
+	CreatedAt   time.Time           `bson:"created_at"`
+	UpdatedAt   time.Time           `bson:"updated_at"`
 }
 
 // SeedCategories 分类种子数据
@@ -124,10 +124,3 @@ func SeedCategories(ctx context.Context, db *mongo.Database) error {
 
 	return nil
 }
-
-
-
-
-
-
-

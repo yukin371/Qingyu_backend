@@ -10,12 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 	"Qingyu_backend/global"
-	"Qingyu_backend/repository/mongodb/user"
-	"Qingyu_backend/router/users"
-	userService "Qingyu_backend/service/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -31,31 +26,16 @@ func TestUserAPI_Integration(t *testing.T) {
 		t.Skip("跳过集成测试（使用 -short 标志）")
 	}
 
-	// 1. 初始化配置和数据库
-	_, err := config.LoadConfig("../../config/config.yaml")
-	require.NoError(t, err, "加载配置失败")
+	// 使用统一的测试环境设置
+	router, cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
-	err = core.InitDB()
-	require.NoError(t, err, "初始化数据库失败")
-
-	// 获取数据库连接
-	mongoDB, err := getMongoDB()
-	require.NoError(t, err, "获取数据库连接失败")
+	// 获取数据库连接用于清理
+	mongoDB := global.DB
+	require.NotNil(t, mongoDB, "数据库连接未初始化")
 
 	// 确保测试结束后清理
 	defer cleanupTestData(t, mongoDB)
-
-	// 2. 创建Repository和Service
-	userRepo := user.NewMongoUserRepository(mongoDB)
-	userSvc := userService.NewUserService(userRepo)
-
-	// 3. 设置Gin为测试模式
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-
-	// 4. 注册路由
-	apiV1 := router.Group("/api/v1")
-	users.RegisterUserRoutes(apiV1, userSvc)
 
 	// 5. 运行测试场景
 	t.Run("完整用户生命周期", func(t *testing.T) {
@@ -159,19 +139,26 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 		// 更新token（使用登录获得的新token）
 		token = newToken
 
-		t.Logf("✓ 用户登录成功，获得新Token")
+		t.Logf("✓ 用户登录成功，获得新Token: %s", token[:20]+"...")
 	})
 
 	// ========== 阶段3：获取个人信息 ==========
 	t.Run("获取个人信息", func(t *testing.T) {
+		t.Logf("使用Token: %s", token[:20]+"...")
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/users/profile", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		resp := httptest.NewRecorder()
 
 		router.ServeHTTP(resp, req)
 
+		// 打印响应内容用于调试
+		t.Logf("获取个人信息响应状态码: %d", resp.Code)
+		t.Logf("获取个人信息响应内容: %s", resp.Body.String())
+
 		// 验证响应
-		assert.Equal(t, http.StatusOK, resp.Code, "获取个人信息应该返回200")
+		if resp.Code != http.StatusOK {
+			t.Fatalf("获取个人信息应该返回200，实际返回: %d, 响应: %s", resp.Code, resp.Body.String())
+		}
 
 		var response map[string]interface{}
 		err := json.Unmarshal(resp.Body.Bytes(), &response)
@@ -179,7 +166,11 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		assert.Equal(t, float64(200), response["code"])
 
-		data := response["data"].(map[string]interface{})
+		data, ok := response["data"].(map[string]interface{})
+		if !ok || data == nil {
+			t.Fatalf("响应数据格式错误: %+v", response)
+		}
+
 		assert.Equal(t, userID, data["user_id"])
 		assert.Equal(t, testUsername, data["username"])
 		assert.Equal(t, testEmail, data["email"])
@@ -202,8 +193,14 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		router.ServeHTTP(resp, req)
 
+		// 打印响应内容用于调试
+		t.Logf("更新个人信息响应状态码: %d", resp.Code)
+		t.Logf("更新个人信息响应内容: %s", resp.Body.String())
+
 		// 验证响应
-		assert.Equal(t, http.StatusOK, resp.Code, "更新个人信息应该返回200")
+		if resp.Code != http.StatusOK {
+			t.Fatalf("更新个人信息应该返回200，实际返回: %d, 响应: %s", resp.Code, resp.Body.String())
+		}
 
 		var response map[string]interface{}
 		err := json.Unmarshal(resp.Body.Bytes(), &response)
@@ -211,7 +208,11 @@ func testCompleteUserLifecycle(t *testing.T, router *gin.Engine) {
 
 		assert.Equal(t, float64(200), response["code"])
 
-		data := response["data"].(map[string]interface{})
+		data, ok := response["data"].(map[string]interface{})
+		if !ok || data == nil {
+			t.Fatalf("响应数据格式错误: %+v", response)
+		}
+
 		assert.Equal(t, "测试昵称", data["nickname"])
 		assert.Equal(t, "这是一个测试用户的个人简介", data["bio"])
 

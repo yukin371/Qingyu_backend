@@ -19,7 +19,7 @@ type PermissionServiceImpl struct {
 // CacheClient 缓存客户端接口
 type CacheClient interface {
 	Get(ctx context.Context, key string) (string, error)
-	Set(ctx context.Context, key string, value string, ttl time.Duration) error
+	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 	Delete(ctx context.Context, key string) error
 }
 
