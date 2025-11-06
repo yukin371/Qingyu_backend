@@ -76,6 +76,19 @@ class Settings(BaseSettings):
     redis_db: int = Field(default=0, alias="REDIS_DB")
     redis_password: str = Field(default="", alias="REDIS_PASSWORD")
 
+    # PostgreSQL (for Checkpointer persistence)
+    postgres_host: str = Field(default="localhost", alias="POSTGRES_HOST")
+    postgres_port: int = Field(default=5432, alias="POSTGRES_PORT")
+    postgres_user: str = Field(default="postgres", alias="POSTGRES_USER")
+    postgres_password: str = Field(default="", alias="POSTGRES_PASSWORD")
+    postgres_database: str = Field(default="qingyu_ai", alias="POSTGRES_DATABASE")
+
+    # Checkpointer configuration
+    enable_checkpointer: bool = Field(default=True, alias="ENABLE_CHECKPOINTER")
+    checkpointer_backend: str = Field(
+        default="postgres", alias="CHECKPOINTER_BACKEND"
+    )  # postgres or redis
+
     # Embedding
     embedding_provider: str = Field(default="local", alias="EMBEDDING_PROVIDER")  # local, openai, custom
     embedding_model_name: str = Field(
@@ -143,7 +156,20 @@ class Settings(BaseSettings):
         """Milvus 连接 URI"""
         return f"http://{self.milvus_host}:{self.milvus_port}"
 
+    @property
+    def postgres_dsn(self) -> str:
+        """PostgreSQL 连接 DSN"""
+        return (
+            f"postgresql://{self.postgres_user}:{self.postgres_password}@"
+            f"{self.postgres_host}:{self.postgres_port}/{self.postgres_database}"
+        )
+
 
 # 全局配置实例
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """获取全局配置实例"""
+    return settings
 
