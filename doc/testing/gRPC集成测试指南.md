@@ -569,4 +569,3 @@ go test -bench=. -benchmem ./test/integration
 **最后更新**: 2025-10-31  
 **维护者**: 青羽后端架构团队  
 **版本**: v1.0
-
