@@ -54,7 +54,7 @@ func InitProjectRouter(r *gin.RouterGroup, projectApi *writer.ProjectApi) {
 // InitDocumentRouter 初始化文档路由
 func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi) {
 	// 项目下的文档管理
-	projectDocGroup := r.Group("/projects/:projectId/documents")
+	projectDocGroup := r.Group("/project/:projectId/documents")
 	{
 		projectDocGroup.POST("", documentApi.CreateDocument)
 		projectDocGroup.GET("", documentApi.ListDocuments)
@@ -74,7 +74,7 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi) {
 
 // InitVersionRouter 初始化版本控制路由
 func InitVersionRouter(r *gin.RouterGroup, versionApi *writer.VersionApi) {
-	documentGroup := r.Group("/documents/:documentId")
+	documentGroup := r.Group("/document/:documentId")
 	{
 		versionGroup := documentGroup.Group("/versions")
 		{

@@ -59,9 +59,11 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	book, err := api.service.GetBookDetailByID(c.Request.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    http.StatusNotFound,
+			// 返回空数据而非404，前端可正常渲染占位
+			c.JSON(http.StatusOK, APIResponse{
+				Code:    http.StatusOK,
 				Message: "书籍不存在",
+				Data:    nil,
 			})
 			return
 		}

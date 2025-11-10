@@ -94,9 +94,11 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 	book, err := api.service.GetBookByID(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "book not found" || err.Error() == "book not available" {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
+			// 按需返回空数据而非404，便于前端容错显示
+			c.JSON(http.StatusOK, APIResponse{
+				Code:    200,
 				Message: "书籍不存在或不可用",
+				Data:    nil,
 			})
 			return
 		}
