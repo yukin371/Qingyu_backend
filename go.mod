@@ -6,9 +6,9 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.28.0
-	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/redis/go-redis/v9 v9.14.0
+	github.com/google/uuid v1.6.0
+	github.com/redis/go-redis/v9 v9.17.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -49,7 +49,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
