@@ -1,7 +1,7 @@
 package shared
 
 import (
-	messagingModel "Qingyu_backend/models/shared/messaging"
+	messagingModel "Qingyu_backend/models/messaging"
 	"Qingyu_backend/service/shared/messaging"
 	"strconv"
 
