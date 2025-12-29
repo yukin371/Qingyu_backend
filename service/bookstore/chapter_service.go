@@ -60,13 +60,19 @@ type ChapterService interface {
 // ChapterServiceImpl 章节服务实现
 type ChapterServiceImpl struct {
 	chapterRepo  BookstoreRepo.ChapterRepository
+	contentRepo  BookstoreRepo.ChapterContentRepository // ← 新增内容仓储
 	cacheService CacheService
 }
 
 // NewChapterService 创建章节服务实例
-func NewChapterService(chapterRepo BookstoreRepo.ChapterRepository, cacheService CacheService) ChapterService {
+func NewChapterService(
+	chapterRepo BookstoreRepo.ChapterRepository,
+	contentRepo BookstoreRepo.ChapterContentRepository, // ← 新增内容仓储参数
+	cacheService CacheService,
+) ChapterService {
 	return &ChapterServiceImpl{
 		chapterRepo:  chapterRepo,
+		contentRepo:  contentRepo, // ← 保存内容仓储
 		cacheService: cacheService,
 	}
 }
@@ -151,11 +157,10 @@ func (s *ChapterServiceImpl) UpdateChapter(ctx context.Context, chapter *booksto
 		return errors.New("chapter number must be positive")
 	}
 
-	// 准备更新数据
+	// 准备更新数据（注意：内容已移至 ChapterContent 表）
 	updates := map[string]interface{}{
 		"book_id":      chapter.BookID,
 		"title":        chapter.Title,
-		"content":      chapter.Content,
 		"chapter_num":  chapter.ChapterNum,
 		"word_count":   chapter.WordCount,
 		"is_free":      chapter.IsFree,
@@ -515,13 +520,13 @@ func (s *ChapterServiceImpl) GetChapterStats(ctx context.Context, bookID primiti
 	return stats, nil
 }
 
-// GetChapterContent 获取章节内容（考虑权限）
+// GetChapterContent 获取章节内容（从 ChapterContent 表）
 func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID primitive.ObjectID, userID primitive.ObjectID) (string, error) {
 	if chapterID.IsZero() {
 		return "", errors.New("chapter ID cannot be empty")
 	}
 
-	// 获取章节信息
+	// 获取章节元数据
 	chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get chapter: %w", err)
@@ -535,19 +540,21 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID pr
 		return "", errors.New("chapter is not published")
 	}
 
-	// 如果是免费章节，直接返回内容
-	if chapter.IsFree {
-		return chapter.Content, nil
-	}
-
-	// 付费章节需要检查用户权限（这里简化处理）
-	if userID.IsZero() {
+	// 检查权限（付费章节）
+	if !chapter.IsFree && userID.IsZero() {
 		return "", errors.New("user authentication required for paid content")
 	}
 
-	// TODO: 实际应该检查用户是否已购买该章节
-	// 这里简化处理，假设已购买
-	return chapter.Content, nil
+	// 从 ChapterContent 表获取内容
+	content, err := s.contentRepo.GetByChapterID(ctx, chapterID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get chapter content: %w", err)
+	}
+	if content == nil {
+		return "", errors.New("chapter content not found")
+	}
+
+	return content.Content, nil
 }
 
 // UpdateChapterContent 更新章节内容
@@ -559,7 +566,7 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 		return errors.New("content cannot be empty")
 	}
 
-	// 获取章节信息
+	// 获取章节元数据
 	chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
 	if err != nil {
 		return fmt.Errorf("failed to get chapter: %w", err)
@@ -568,15 +575,31 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 		return errors.New("chapter not found")
 	}
 
-	// 更新内容和字数
-	updates := map[string]interface{}{
-		"content":    content,
-		"word_count": int64(len([]rune(content))), // 使用rune计算字符数
+	// 更新内容到 ChapterContent 表
+	updatedContent, err := s.contentRepo.UpdateContent(ctx, chapterID, content)
+	if err != nil {
+		return fmt.Errorf("failed to update chapter content: %w", err)
 	}
 
-	// 保存更新
-	if err := s.chapterRepo.Update(ctx, chapterID, updates); err != nil {
-		return fmt.Errorf("failed to update chapter content: %w", err)
+	// 更新章节元数据（内容大小、哈希、版本）
+	chapter.UpdateContentInfo(
+		fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapterID.Hex()),
+		int64(len([]rune(content))),
+		updatedContent.CalculateHash(),
+		updatedContent.Version,
+	)
+
+	// 准备更新数据
+	updates := map[string]interface{}{
+		"content_url":      chapter.ContentURL,
+		"content_size":     chapter.ContentSize,
+		"content_hash":     chapter.ContentHash,
+		"content_version":  chapter.ContentVersion,
+		"updated_at":       chapter.UpdatedAt,
+	}
+
+	if err := s.chapterRepo.Update(ctx, chapter.ID, updates); err != nil {
+		return fmt.Errorf("failed to update chapter metadata: %w", err)
 	}
 
 	// 清除相关缓存

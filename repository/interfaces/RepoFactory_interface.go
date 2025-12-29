@@ -45,6 +45,7 @@ type RepositoryFactory interface {
 	CreateBookStatisticsRepository() BookstoreInterfaces.BookStatisticsRepository
 	CreateBookRatingRepository() BookstoreInterfaces.BookRatingRepository
 	CreateBookstoreChapterRepository() BookstoreInterfaces.ChapterRepository
+	CreateChapterContentRepository() BookstoreInterfaces.ChapterContentRepository
 	CreateBannerRepository() BookstoreInterfaces.BannerRepository
 	CreateRankingRepository() BookstoreInterfaces.RankingRepository
 
