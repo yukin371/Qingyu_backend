@@ -12,16 +12,6 @@ import (
 
 // ReaderCacheService 阅读器缓存服务接口
 type ReaderCacheService interface {
-	// 章节内容缓存
-	GetChapterContent(ctx context.Context, chapterID string) (string, error)
-	SetChapterContent(ctx context.Context, chapterID string, content string, expiration time.Duration) error
-	InvalidateChapterContent(ctx context.Context, chapterID string) error
-
-	// 章节信息缓存
-	GetChapter(ctx context.Context, chapterID string) (*reader2.Chapter, error)
-	SetChapter(ctx context.Context, chapterID string, chapter *reader2.Chapter, expiration time.Duration) error
-	InvalidateChapter(ctx context.Context, chapterID string) error
-
 	// 阅读设置缓存
 	GetReadingSettings(ctx context.Context, userID string) (*reader2.ReadingSettings, error)
 	SetReadingSettings(ctx context.Context, userID string, settings *reader2.ReadingSettings, expiration time.Duration) error
@@ -32,8 +22,12 @@ type ReaderCacheService interface {
 	SetReadingProgress(ctx context.Context, userID, bookID string, progress *reader2.ReadingProgress, expiration time.Duration) error
 	InvalidateReadingProgress(ctx context.Context, userID, bookID string) error
 
+	// 标注缓存
+	GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error)
+	SetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string, annotations []*reader2.Annotation, expiration time.Duration) error
+	InvalidateAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) error
+
 	// 批量清理
-	InvalidateBookChapters(ctx context.Context, bookID string) error
 	InvalidateUserData(ctx context.Context, userID string) error
 }
 
@@ -57,75 +51,6 @@ func NewRedisReaderCacheService(client *redis.Client, prefix string) ReaderCache
 // 缓存键生成
 func (c *RedisReaderCacheService) getKey(key string) string {
 	return fmt.Sprintf("%s:reader:%s", c.prefix, key)
-}
-
-// =========================
-// 章节内容缓存
-// =========================
-
-// GetChapterContent 获取章节内容缓存
-func (c *RedisReaderCacheService) GetChapterContent(ctx context.Context, chapterID string) (string, error) {
-	key := c.getKey(fmt.Sprintf("chapter_content:%s", chapterID))
-	content, err := c.client.Get(ctx, key).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return "", nil // 缓存不存在
-		}
-		return "", fmt.Errorf("failed to get chapter content cache: %w", err)
-	}
-	return content, nil
-}
-
-// SetChapterContent 设置章节内容缓存
-func (c *RedisReaderCacheService) SetChapterContent(ctx context.Context, chapterID string, content string, expiration time.Duration) error {
-	key := c.getKey(fmt.Sprintf("chapter_content:%s", chapterID))
-	return c.client.Set(ctx, key, content, expiration).Err()
-}
-
-// InvalidateChapterContent 清除章节内容缓存
-func (c *RedisReaderCacheService) InvalidateChapterContent(ctx context.Context, chapterID string) error {
-	key := c.getKey(fmt.Sprintf("chapter_content:%s", chapterID))
-	return c.client.Del(ctx, key).Err()
-}
-
-// =========================
-// 章节信息缓存
-// =========================
-
-// GetChapter 获取章节信息缓存
-func (c *RedisReaderCacheService) GetChapter(ctx context.Context, chapterID string) (*reader2.Chapter, error) {
-	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
-	data, err := c.client.Get(ctx, key).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil, nil // 缓存不存在
-		}
-		return nil, fmt.Errorf("failed to get chapter cache: %w", err)
-	}
-
-	var chapter reader2.Chapter
-	if err := json.Unmarshal([]byte(data), &chapter); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal chapter data: %w", err)
-	}
-
-	return &chapter, nil
-}
-
-// SetChapter 设置章节信息缓存
-func (c *RedisReaderCacheService) SetChapter(ctx context.Context, chapterID string, chapter *reader2.Chapter, expiration time.Duration) error {
-	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
-	jsonData, err := json.Marshal(chapter)
-	if err != nil {
-		return fmt.Errorf("failed to marshal chapter data: %w", err)
-	}
-
-	return c.client.Set(ctx, key, jsonData, expiration).Err()
-}
-
-// InvalidateChapter 清除章节信息缓存
-func (c *RedisReaderCacheService) InvalidateChapter(ctx context.Context, chapterID string) error {
-	key := c.getKey(fmt.Sprintf("chapter:%s", chapterID))
-	return c.client.Del(ctx, key).Err()
 }
 
 // =========================
@@ -209,22 +134,48 @@ func (c *RedisReaderCacheService) InvalidateReadingProgress(ctx context.Context,
 }
 
 // =========================
-// 批量清理
+// 标注缓存
 // =========================
 
-// InvalidateBookChapters 清除书籍所有章节缓存
-func (c *RedisReaderCacheService) InvalidateBookChapters(ctx context.Context, bookID string) error {
-	pattern := c.getKey(fmt.Sprintf("chapter*:%s:*", bookID))
-	keys, err := c.client.Keys(ctx, pattern).Result()
+// GetAnnotationsByChapter 获取章节标注缓存
+func (c *RedisReaderCacheService) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader2.Annotation, error) {
+	key := c.getKey(fmt.Sprintf("annotations:%s:%s:%s", userID, bookID, chapterID))
+	data, err := c.client.Get(ctx, key).Result()
 	if err != nil {
-		return fmt.Errorf("failed to get chapter cache keys: %w", err)
+		if err == redis.Nil {
+			return nil, nil // 缓存不存在
+		}
+		return nil, fmt.Errorf("failed to get annotations cache: %w", err)
 	}
 
-	if len(keys) > 0 {
-		return c.client.Del(ctx, keys...).Err()
+	var annotations []*reader2.Annotation
+	if err := json.Unmarshal([]byte(data), &annotations); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal annotations data: %w", err)
 	}
-	return nil
+
+	return annotations, nil
 }
+
+// SetAnnotationsByChapter 设置章节标注缓存
+func (c *RedisReaderCacheService) SetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string, annotations []*reader2.Annotation, expiration time.Duration) error {
+	key := c.getKey(fmt.Sprintf("annotations:%s:%s:%s", userID, bookID, chapterID))
+	jsonData, err := json.Marshal(annotations)
+	if err != nil {
+		return fmt.Errorf("failed to marshal annotations data: %w", err)
+	}
+
+	return c.client.Set(ctx, key, jsonData, expiration).Err()
+}
+
+// InvalidateAnnotationsByChapter 清除章节标注缓存
+func (c *RedisReaderCacheService) InvalidateAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) error {
+	key := c.getKey(fmt.Sprintf("annotations:%s:%s:%s", userID, bookID, chapterID))
+	return c.client.Del(ctx, key).Err()
+}
+
+// =========================
+// 批量清理
+// =========================
 
 // InvalidateUserData 清除用户所有缓存数据
 func (c *RedisReaderCacheService) InvalidateUserData(ctx context.Context, userID string) error {

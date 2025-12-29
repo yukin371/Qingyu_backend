@@ -7,37 +7,40 @@ import (
 	"time"
 
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/base"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ReaderService 阅读器服务
 type ReaderService struct {
-	chapterRepo    readingRepo.ChapterRepository
-	progressRepo   readingRepo.ReadingProgressRepository
-	annotationRepo readingRepo.AnnotationRepository
-	settingsRepo   readingRepo.ReadingSettingsRepository
-	eventBus       base.EventBus
-	cacheService   ReaderCacheService
-	vipService     VIPPermissionService
-	serviceName    string
-	version        string
+	progressRepo    readingRepo.ReadingProgressRepository
+	annotationRepo  readingRepo.AnnotationRepository
+	settingsRepo    readingRepo.ReadingSettingsRepository
+	chapterService  bookstoreService.ChapterService // ← 依赖 Bookstore 的 ChapterService
+	eventBus        base.EventBus
+	cacheService    ReaderCacheService
+	vipService      VIPPermissionService
+	serviceName     string
+	version         string
 }
 
 // NewReaderService 创建阅读器服务实例
 func NewReaderService(
-	chapterRepo readingRepo.ChapterRepository,
 	progressRepo readingRepo.ReadingProgressRepository,
 	annotationRepo readingRepo.AnnotationRepository,
 	settingsRepo readingRepo.ReadingSettingsRepository,
+	chapterService bookstoreService.ChapterService, // ← 注入 ChapterService
 	eventBus base.EventBus,
 	cacheService ReaderCacheService,
 	vipService VIPPermissionService,
 ) *ReaderService {
 	return &ReaderService{
-		chapterRepo:    chapterRepo,
 		progressRepo:   progressRepo,
 		annotationRepo: annotationRepo,
 		settingsRepo:   settingsRepo,
+		chapterService: chapterService, // ← 保存 ChapterService
 		eventBus:       eventBus,
 		cacheService:   cacheService,
 		vipService:     vipService,
@@ -57,9 +60,6 @@ func (s *ReaderService) Initialize(ctx context.Context) error {
 
 // Health 健康检查
 func (s *ReaderService) Health(ctx context.Context) error {
-	if err := s.chapterRepo.Health(ctx); err != nil {
-		return fmt.Errorf("章节Repository健康检查失败: %w", err)
-	}
 	if err := s.progressRepo.Health(ctx); err != nil {
 		return fmt.Errorf("进度Repository健康检查失败: %w", err)
 	}
@@ -85,148 +85,61 @@ func (s *ReaderService) GetVersion() string {
 }
 
 // =========================
-// 章节相关方法
+// 章节相关方法（通过 ChapterService 调用）
 // =========================
 
-// GetChapterByID 根据ID获取章节
-func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("获取章节失败: %w", err)
-	}
-	return chapter, nil
-}
-
-// GetChapterByNum 根据章节号获取章节
-func (s *ReaderService) GetChapterByNum(ctx context.Context, bookID string, chapterNum int) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetByChapterNum(ctx, bookID, chapterNum)
-	if err != nil {
-		return nil, fmt.Errorf("获取章节失败: %w", err)
-	}
-	return chapter, nil
-}
-
-// GetBookChapters 获取书籍的所有章节
-func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string) ([]*reader2.Chapter, error) {
-	chapters, err := s.chapterRepo.GetByBookID(ctx, bookID)
-	if err != nil {
-		return nil, fmt.Errorf("获取章节列表失败: %w", err)
-	}
-	return chapters, nil
-}
-
-// GetBookChaptersWithPagination 分页获取书籍章节
-func (s *ReaderService) GetBookChaptersWithPagination(ctx context.Context, bookID string, page, size int) ([]*reader2.Chapter, int64, error) {
-	offset := int64((page - 1) * size)
-	limit := int64(size)
-
-	chapters, err := s.chapterRepo.GetByBookIDWithPagination(ctx, bookID, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("获取章节列表失败: %w", err)
-	}
-
-	total, err := s.chapterRepo.CountByBookID(ctx, bookID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("统计章节数失败: %w", err)
-	}
-
-	return chapters, total, nil
-}
-
-// GetPrevChapter 获取上一章
-func (s *ReaderService) GetPrevChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetPrevChapter(ctx, bookID, currentChapterNum)
-	if err != nil {
-		return nil, fmt.Errorf("获取上一章失败: %w", err)
-	}
-	return chapter, nil
-}
-
-// GetNextChapter 获取下一章
-func (s *ReaderService) GetNextChapter(ctx context.Context, bookID string, currentChapterNum int) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetNextChapter(ctx, bookID, currentChapterNum)
-	if err != nil {
-		return nil, fmt.Errorf("获取下一章失败: %w", err)
-	}
-	return chapter, nil
-}
-
-// GetChapterContent 获取章节内容
+// GetChapterContent 获取章节内容（调用 Bookstore 的 ChapterService）
+// 这个方法为前端提供便捷的章节内容获取接口
 func (s *ReaderService) GetChapterContent(ctx context.Context, userID, chapterID string) (string, error) {
-	// 1. 尝试从缓存获取章节内容
-	if s.cacheService != nil {
-		cachedContent, err := s.cacheService.GetChapterContent(ctx, chapterID)
-		if err == nil && cachedContent != "" {
-			// 缓存命中，仍需验证VIP权限
-			isVIP, _ := s.chapterRepo.CheckVIPAccess(ctx, chapterID)
-			if isVIP {
-				hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapterID, true)
-				if err != nil {
-					return "", fmt.Errorf("检查VIP权限失败: %w", err)
-				}
-				if !hasAccess {
-					return "", fmt.Errorf("该章节为VIP章节，需要VIP权限或购买后才能阅读")
-				}
-			}
-
-			// 发布阅读事件
-			s.publishReadingEvent(ctx, userID, chapterID)
-			return cachedContent, nil
-		}
-	}
-
-	// 2. 检查VIP权限
-	isVIP, err := s.chapterRepo.CheckVIPAccess(ctx, chapterID)
+	// 将字符串 ID 转换为 ObjectID
+	oid, err := primitive.ObjectIDFromHex(chapterID)
 	if err != nil {
-		return "", fmt.Errorf("检查VIP权限失败: %w", err)
+		return "", fmt.Errorf("无效的章节ID: %w", err)
 	}
 
-	if isVIP {
-		// 验证用户是否有VIP权限或已购买该章节
-		if s.vipService != nil {
-			hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapterID, true)
-			if err != nil {
-				return "", fmt.Errorf("检查VIP权限失败: %w", err)
-			}
-			if !hasAccess {
-				return "", fmt.Errorf("该章节为VIP章节，需要VIP权限或购买后才能阅读")
-			}
-		}
+	// 将字符串 userID 转换为 ObjectID
+	userOid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return "", fmt.Errorf("无效的用户ID: %w", err)
 	}
 
-	// 3. 从数据库获取章节内容
-	content, err := s.chapterRepo.GetChapterContent(ctx, chapterID)
+	// 调用 Bookstore 的 ChapterService 获取章节内容
+	content, err := s.chapterService.GetChapterContent(ctx, oid, userOid)
 	if err != nil {
 		return "", fmt.Errorf("获取章节内容失败: %w", err)
 	}
 
-	// 4. 缓存章节内容（30分钟）
-	if s.cacheService != nil {
-		_ = s.cacheService.SetChapterContent(ctx, chapterID, content, 30*time.Minute)
-	}
-
-	// 5. 发布阅读事件
-	s.publishReadingEvent(ctx, userID, chapterID)
-
 	return content, nil
 }
 
-// GetFirstChapter 获取第一章
-func (s *ReaderService) GetFirstChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetFirstChapter(ctx, bookID)
+// GetChapterByID 获取章节信息（调用 Bookstore 的 ChapterService）
+func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (interface{}, error) {
+	oid, err := primitive.ObjectIDFromHex(chapterID)
 	if err != nil {
-		return nil, fmt.Errorf("获取第一章失败: %w", err)
+		return nil, fmt.Errorf("无效的章节ID: %w", err)
 	}
+
+	chapter, err := s.chapterService.GetChapterByID(ctx, oid)
+	if err != nil {
+		return nil, fmt.Errorf("获取章节信息失败: %w", err)
+	}
+
 	return chapter, nil
 }
 
-// GetLastChapter 获取最后一章
-func (s *ReaderService) GetLastChapter(ctx context.Context, bookID string) (*reader2.Chapter, error) {
-	chapter, err := s.chapterRepo.GetLastChapter(ctx, bookID)
+// GetBookChapters 获取书籍的章节列表（调用 Bookstore 的 ChapterService）
+func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string, page, size int) (interface{}, int64, error) {
+	oid, err := primitive.ObjectIDFromHex(bookID)
 	if err != nil {
-		return nil, fmt.Errorf("获取最后一章失败: %w", err)
+		return nil, 0, fmt.Errorf("无效的书籍ID: %w", err)
 	}
-	return chapter, nil
+
+	chapters, total, err := s.chapterService.GetChaptersByBookID(ctx, oid, page, size)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取章节列表失败: %w", err)
+	}
+
+	return chapters, total, nil
 }
 
 // =========================
