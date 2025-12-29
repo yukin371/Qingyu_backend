@@ -31,7 +31,6 @@ type RepositoryFactory interface {
 
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository
-	CreateChapterRepository() ReadingInterfaces.ChapterRepository
 	CreateReadingProgressRepository() ReadingInterfaces.ReadingProgressRepository
 	CreateAnnotationRepository() ReadingInterfaces.AnnotationRepository
 	CreateCommentRepository() ReadingInterfaces.CommentRepository

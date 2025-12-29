@@ -19,7 +19,6 @@ func InitReaderRouter(
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
-	chaptersApiHandler := readerApi.NewChaptersAPI(readerService)
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)
@@ -81,19 +80,6 @@ func InitReaderRouter(
 				books.DELETE("/:bookId/like", likeApiHandler.UnlikeBook)        // 取消点赞书籍
 				books.GET("/:bookId/like/info", likeApiHandler.GetBookLikeInfo) // 获取点赞信息
 			}
-		}
-
-		// 章节内容（阅读）
-		chapters := readerGroup.Group("/chapters")
-		{
-			// 注意：查询参数形式的路由必须在参数化路由之前
-			chapters.GET("", chaptersApiHandler.GetBookChapters)                      // 获取书籍章节列表（查询参数：bookId）
-			chapters.GET("/:id", chaptersApiHandler.GetChapterByID)                   // 获取章节信息
-			chapters.GET("/:id/content", chaptersApiHandler.GetChapterContent)        // 获取章节内容
-			chapters.GET("/:id/navigation", chaptersApiHandler.GetNavigationChapters) // 获取导航章节
-			chapters.GET("/book/:bookId", chaptersApiHandler.GetBookChapters)         // 获取书籍章节列表（路径参数）
-			chapters.GET("/book/:bookId/first", chaptersApiHandler.GetFirstChapter)   // 获取第一章
-			chapters.GET("/book/:bookId/last", chaptersApiHandler.GetLastChapter)     // 获取最后一章
 		}
 
 		// 阅读进度

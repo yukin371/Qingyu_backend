@@ -148,11 +148,6 @@ func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() readingRepo.R
 	return mongoReading.NewMongoReadingSettingsRepository(f.database)
 }
 
-// CreateChapterRepository 创建章节Repository
-func (f *MongoRepositoryFactory) CreateChapterRepository() readingRepo.ChapterRepository {
-	return mongoReading.NewMongoChapterRepository(f.database)
-}
-
 // CreateReadingProgressRepository 创建阅读进度Repository
 func (f *MongoRepositoryFactory) CreateReadingProgressRepository() readingRepo.ReadingProgressRepository {
 	return mongoReading.NewMongoReadingProgressRepository(f.database)

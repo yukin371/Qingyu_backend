@@ -64,6 +64,7 @@ type ServiceContainer struct {
 	userService           userInterface.UserService
 	aiService             *aiService.Service
 	bookstoreService      bookstoreService.BookstoreService
+	chapterService        bookstoreService.ChapterService
 	bookDetailService     bookstoreService.BookDetailService
 	bookRatingService     bookstoreService.BookRatingService
 	bookStatisticsService bookstoreService.BookStatisticsService
@@ -185,6 +186,19 @@ func (c *ServiceContainer) GetBookStatisticsService() (bookstoreService.BookStat
 		return nil, fmt.Errorf("BookStatisticsService未初始化")
 	}
 	return c.bookStatisticsService, nil
+}
+
+// GetChapterService 获取章节服务
+func (c *ServiceContainer) GetChapterService() (bookstoreService.ChapterService, error) {
+	if c.chapterService == nil {
+		return nil, fmt.Errorf("ChapterService未初始化")
+	}
+	return c.chapterService, nil
+}
+
+// getChapterService 内部方法：获取章节服务（简化版，用于依赖注入）
+func (c *ServiceContainer) getChapterService() bookstoreService.ChapterService {
+	return c.chapterService
 }
 
 // GetReaderService 获取阅读器服务
@@ -514,6 +528,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
+	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository() // ← 创建章节仓储
 
 	c.bookstoreService = bookstoreService.NewBookstoreService(
 		bookRepo,
@@ -522,6 +537,9 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		rankingRepo,
 	)
 	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
+
+	// 创建章节服务
+	c.chapterService = bookstoreService.NewChapterService(chapterRepo, nil) // ← 创建 ChapterService
 
 	// 创建书店详细服务
 	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
@@ -534,10 +552,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, nil)
 
 	// ============ 3. 创建阅读器服务 ============
-	chapterRepo := c.repositoryFactory.CreateChapterRepository()
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
+	chapterService := c.getChapterService() // ← 获取 ChapterService
 
 	// 创建缓存服务和VIP服务
 	var cacheService readingService.ReaderCacheService
@@ -553,13 +571,13 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	c.readerService = readingService.NewReaderService(
-		chapterRepo,
 		progressRepo,
 		annotationRepo,
 		settingsRepo,
-		c.eventBus,   // 注入事件总线
-		cacheService, // 注入缓存服务
-		vipService,   // 注入VIP服务
+		chapterService, // ← 注入 ChapterService
+		c.eventBus,     // 注入事件总线
+		cacheService,   // 注入缓存服务
+		vipService,     // 注入VIP服务
 	)
 	// 注意：ReaderService 不完全实现 BaseService，不注册到 services map
 
