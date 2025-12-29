@@ -1,13 +1,12 @@
 package admin
 
 import (
+	adminModel "Qingyu_backend/models/users"
 	"context"
 	"encoding/csv"
 	"fmt"
 	"strings"
 	"time"
-
-	adminModel "Qingyu_backend/models/shared/admin"
 )
 
 // TODO: 完善审核流程

@@ -17,6 +17,7 @@ type Character struct {
 	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty"` // 角色性格提示
 	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty"`         // 角色语音模式
 	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty"`           // 角色当前状态
+	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty"`   // 角色摘要
 
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`

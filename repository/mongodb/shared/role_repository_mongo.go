@@ -1,9 +1,9 @@
 package shared
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 
-	authModel "Qingyu_backend/models/shared/auth"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 

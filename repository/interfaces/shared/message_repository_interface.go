@@ -1,10 +1,9 @@
 package shared
 
 import (
+	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"time"
-
-	messagingModel "Qingyu_backend/models/shared/messaging"
 )
 
 // MessageRepository 消息相关Repository

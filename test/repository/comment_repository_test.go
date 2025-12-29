@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/mongodb/reading"
 )
 
@@ -26,7 +26,7 @@ func TestCommentRepository(t *testing.T) {
 	testBookID := primitive.NewObjectID().Hex()
 
 	t.Run("Create_Success", func(t *testing.T) {
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "这是一条测试评论",
@@ -45,7 +45,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("GetByID_Success", func(t *testing.T) {
 		// 先创建一条评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "测试获取评论",
@@ -78,7 +78,7 @@ func TestCommentRepository(t *testing.T) {
 	t.Run("GetCommentsByBookID_WithPagination", func(t *testing.T) {
 		// 创建多条评论
 		for i := 0; i < 5; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBookID,
 				Content:   "测试评论" + string(rune(i)),
@@ -102,7 +102,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("Update_Success", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "原始内容",
@@ -133,7 +133,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("Delete_Success", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "待删除的评论",
@@ -159,7 +159,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("IncrementLikeCount_Success", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "点赞测试",
@@ -185,7 +185,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("DecrementLikeCount_Success", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "取消点赞测试",
@@ -211,7 +211,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("UpdateCommentStatus_Success", func(t *testing.T) {
 		// 创建待审核评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "待审核评论",
@@ -237,7 +237,7 @@ func TestCommentRepository(t *testing.T) {
 
 	t.Run("GetRepliesByCommentID_Success", func(t *testing.T) {
 		// 创建父评论
-		parentComment := &reader.Comment{
+		parentComment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "父评论",
@@ -249,7 +249,7 @@ func TestCommentRepository(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 创建回复
-		reply := &reader.Comment{
+		reply := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "回复内容",
@@ -292,7 +292,7 @@ func TestCommentRepositoryStatistics(t *testing.T) {
 		// 创建不同评分的评论
 		ratings := []int{5, 5, 4, 3, 5}
 		for _, rating := range ratings {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBookID,
 				Content:   "测试评论",

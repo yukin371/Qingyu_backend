@@ -1,13 +1,13 @@
 package auth_test
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"fmt"
 	"sync"
 	"testing"
 	"time"
 
-	authModel "Qingyu_backend/models/shared/auth"
 	authService "Qingyu_backend/service/shared/auth"
 
 	"github.com/stretchr/testify/assert"

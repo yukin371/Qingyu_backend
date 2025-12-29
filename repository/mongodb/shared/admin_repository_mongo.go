@@ -1,11 +1,11 @@
 package shared
 
 import (
+	adminModel "Qingyu_backend/models/users"
 	"context"
 	"fmt"
 	"time"
 
-	adminModel "Qingyu_backend/models/shared/admin"
 	"Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"

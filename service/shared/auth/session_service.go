@@ -1,6 +1,7 @@
 package auth
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -9,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	authModel "Qingyu_backend/models/shared/auth"
 
 	"go.uber.org/zap"
 )

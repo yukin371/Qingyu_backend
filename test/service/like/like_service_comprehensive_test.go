@@ -1,6 +1,7 @@
 package like
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"errors"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/service/reading"
 )
 
@@ -31,7 +31,7 @@ func TestLikeServiceBusinessRules(t *testing.T) {
 
 		// 第一次点赞成功
 		mockRepo.On("AddLike", ctx, mock.AnythingOfType("*reader.Like")).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
 
 		err := service.LikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err)
@@ -52,14 +52,14 @@ func TestLikeServiceBusinessRules(t *testing.T) {
 		testBookID := primitive.NewObjectID().Hex()
 
 		// 第一次取消点赞成功
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).Return(nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
 
 		err := service.UnlikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err)
 
 		// 第二次取消点赞（不存在）
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).Return(errors.New("点赞记录不存在")).Once()
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).Return(errors.New("点赞记录不存在")).Once()
 
 		err = service.UnlikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err) // 应该不报错，幂等性处理
@@ -86,7 +86,7 @@ func TestLikeServiceCommentInteraction(t *testing.T) {
 		// 点赞评论应该增加评论点赞数
 		mockRepo.On("AddLike", ctx, mock.AnythingOfType("*reader.Like")).Return(nil).Once()
 		mockCommentRepo.On("IncrementLikeCount", ctx, testCommentID).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
 
 		err := service.LikeComment(ctx, testUserID, testCommentID)
 		assert.NoError(t, err)
@@ -99,9 +99,9 @@ func TestLikeServiceCommentInteraction(t *testing.T) {
 
 	t.Run("UnlikeComment_DecrementCount", func(t *testing.T) {
 		// 取消点赞评论应该减少评论点赞数
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeComment, testCommentID).Return(nil).Once()
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeComment, testCommentID).Return(nil).Once()
 		mockCommentRepo.On("DecrementLikeCount", ctx, testCommentID).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).Return(int64(0), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).Return(int64(0), nil).Once()
 
 		err := service.UnlikeComment(ctx, testUserID, testCommentID)
 		assert.NoError(t, err)
@@ -117,7 +117,7 @@ func TestLikeServiceCommentInteraction(t *testing.T) {
 		mockRepo.On("AddLike", ctx, mock.AnythingOfType("*reader.Like")).Return(nil).Once()
 		mockCommentRepo.On("IncrementLikeCount", ctx, testCommentID).Return(errors.New("increment failed")).Once()
 		// 虽然IncrementLikeCount失败，但publishLikeEvent仍然会被调用，获取点赞数
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
 
 		err := service.LikeComment(ctx, testUserID, testCommentID)
 		// 虽然IncrementLikeCount失败，但函数返回nil（因为错误被吞掉了）
@@ -154,7 +154,7 @@ func TestLikeServiceBatchOperations(t *testing.T) {
 			bookIDs[2]: 30,
 		}
 
-		mockRepo.On("GetLikesCountBatch", ctx, reader.LikeTargetTypeBook, bookIDs).
+		mockRepo.On("GetLikesCountBatch", ctx, community.LikeTargetTypeBook, bookIDs).
 			Return(expectedCounts, nil).Once()
 
 		counts, err := service.GetBooksLikeCount(ctx, bookIDs)
@@ -179,7 +179,7 @@ func TestLikeServiceBatchOperations(t *testing.T) {
 			bookIDs[2]: true,
 		}
 
-		mockRepo.On("GetUserLikeStatusBatch", ctx, testUserID, reader.LikeTargetTypeBook, bookIDs).
+		mockRepo.On("GetUserLikeStatusBatch", ctx, testUserID, community.LikeTargetTypeBook, bookIDs).
 			Return(expectedStatus, nil).Once()
 
 		status, err := service.GetUserLikeStatus(ctx, testUserID, bookIDs)
@@ -226,10 +226,10 @@ func TestLikeServiceTargetTypes(t *testing.T) {
 	t.Run("LikeBook_TargetType", func(t *testing.T) {
 		testBookID := primitive.NewObjectID().Hex()
 
-		mockRepo.On("AddLike", ctx, mock.MatchedBy(func(like *reader.Like) bool {
-			return like.TargetType == reader.LikeTargetTypeBook && like.TargetID == testBookID
+		mockRepo.On("AddLike", ctx, mock.MatchedBy(func(like *community.Like) bool {
+			return like.TargetType == community.LikeTargetTypeBook && like.TargetID == testBookID
 		})).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
 
 		err := service.LikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err)
@@ -242,11 +242,11 @@ func TestLikeServiceTargetTypes(t *testing.T) {
 	t.Run("LikeComment_TargetType", func(t *testing.T) {
 		testCommentID := primitive.NewObjectID().Hex()
 
-		mockRepo.On("AddLike", ctx, mock.MatchedBy(func(like *reader.Like) bool {
-			return like.TargetType == reader.LikeTargetTypeComment && like.TargetID == testCommentID
+		mockRepo.On("AddLike", ctx, mock.MatchedBy(func(like *community.Like) bool {
+			return like.TargetType == community.LikeTargetTypeComment && like.TargetID == testCommentID
 		})).Return(nil).Once()
 		mockCommentRepo.On("IncrementLikeCount", ctx, testCommentID).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
 
 		err := service.LikeComment(ctx, testUserID, testCommentID)
 		assert.NoError(t, err)
@@ -284,7 +284,7 @@ func TestLikeServiceError(t *testing.T) {
 	})
 
 	t.Run("RepositoryError_RemoveLike", func(t *testing.T) {
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).
 			Return(errors.New("database error")).Once()
 
 		err := service.UnlikeBook(ctx, testUserID, testBookID)
@@ -336,7 +336,7 @@ func TestLikeServiceStatistics(t *testing.T) {
 	t.Run("GetBookLikeCount_Zero", func(t *testing.T) {
 		testBookID := primitive.NewObjectID().Hex()
 
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
 
 		count, err := service.GetBookLikeCount(ctx, testBookID)
 		assert.NoError(t, err)
@@ -350,7 +350,7 @@ func TestLikeServiceStatistics(t *testing.T) {
 	t.Run("GetBookLikeCount_Large", func(t *testing.T) {
 		testBookID := primitive.NewObjectID().Hex()
 
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(999999), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(999999), nil).Once()
 
 		count, err := service.GetBookLikeCount(ctx, testBookID)
 		assert.NoError(t, err)
@@ -374,11 +374,11 @@ func TestLikeServicePagination(t *testing.T) {
 	testUserID := primitive.NewObjectID().Hex()
 
 	t.Run("GetUserLikedBooks_FirstPage", func(t *testing.T) {
-		likes := []*reader.Like{
+		likes := []*community.Like{
 			{ID: primitive.NewObjectID(), TargetID: "book1"},
 			{ID: primitive.NewObjectID(), TargetID: "book2"},
 		}
-		mockRepo.On("GetUserLikes", ctx, testUserID, reader.LikeTargetTypeBook, 1, 20).
+		mockRepo.On("GetUserLikes", ctx, testUserID, community.LikeTargetTypeBook, 1, 20).
 			Return(likes, int64(50), nil).Once()
 
 		result, total, err := service.GetUserLikedBooks(ctx, testUserID, 1, 20)
@@ -392,8 +392,8 @@ func TestLikeServicePagination(t *testing.T) {
 	})
 
 	t.Run("GetUserLikedBooks_EmptyResult", func(t *testing.T) {
-		mockRepo.On("GetUserLikes", ctx, testUserID, reader.LikeTargetTypeBook, 10, 20).
-			Return([]*reader.Like{}, int64(0), nil).Once()
+		mockRepo.On("GetUserLikes", ctx, testUserID, community.LikeTargetTypeBook, 10, 20).
+			Return([]*community.Like{}, int64(0), nil).Once()
 
 		result, total, err := service.GetUserLikedBooks(ctx, testUserID, 10, 20)
 		assert.NoError(t, err)
@@ -420,7 +420,7 @@ func TestLikeServiceEventPublishing(t *testing.T) {
 
 	t.Run("LikeBook_EventPublished", func(t *testing.T) {
 		mockRepo.On("AddLike", ctx, mock.AnythingOfType("*reader.Like")).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Once()
 
 		err := service.LikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err)
@@ -438,8 +438,8 @@ func TestLikeServiceEventPublishing(t *testing.T) {
 		mockEventBus := NewMockEventBus() // 新建EventBus以清空之前的事件
 		service := reading.NewLikeService(mockRepo, mockCommentRepo, mockEventBus)
 
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).Return(nil).Once()
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).Return(nil).Once()
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Once()
 
 		err := service.UnlikeBook(ctx, testUserID, testBookID)
 		assert.NoError(t, err)
@@ -468,7 +468,7 @@ func TestLikeServiceConcurrency(t *testing.T) {
 
 		// Mock多次调用
 		mockRepo.On("AddLike", ctx, mock.AnythingOfType("*reader.Like")).Return(nil).Times(10)
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Times(10)
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(1), nil).Times(10)
 
 		// 10个用户并发点赞同一本书
 		var wg sync.WaitGroup
@@ -500,8 +500,8 @@ func TestLikeServiceConcurrency(t *testing.T) {
 		testBookID := primitive.NewObjectID().Hex()
 
 		// Mock多次调用
-		mockRepo.On("RemoveLike", ctx, mock.AnythingOfType("string"), reader.LikeTargetTypeBook, testBookID).Return(nil).Times(10)
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Times(10)
+		mockRepo.On("RemoveLike", ctx, mock.AnythingOfType("string"), community.LikeTargetTypeBook, testBookID).Return(nil).Times(10)
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).Return(int64(0), nil).Times(10)
 
 		// 10个用户并发取消点赞同一本书
 		var wg sync.WaitGroup

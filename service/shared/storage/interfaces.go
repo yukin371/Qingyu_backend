@@ -1,11 +1,10 @@
 package storage
 
 import (
+	storageModel "Qingyu_backend/models/storage"
 	"context"
 	"io"
 	"time"
-	
-	storageModel "Qingyu_backend/models/shared/storage"
 )
 
 // FileInfo 文件信息类型别名（使用models中的定义）

@@ -1,12 +1,12 @@
 package reading
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"Qingyu_backend/models/reader"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	"Qingyu_backend/service/base"
@@ -73,7 +73,7 @@ func (s *CommentService) GetVersion() string {
 // =========================
 
 // PublishComment 发表评论
-func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, chapterID, content string, rating int) (*reader.Comment, error) {
+func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, chapterID, content string, rating int) (*community.Comment, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -89,7 +89,7 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 	}
 
 	// 创建评论对象
-	comment := &reader.Comment{
+	comment := &community.Comment{
 		BookID:     bookID,
 		ChapterID:  chapterID,
 		UserID:     userID,
@@ -122,7 +122,7 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 }
 
 // ReplyComment 回复评论
-func (s *CommentService) ReplyComment(ctx context.Context, userID, parentCommentID, content string) (*reader.Comment, error) {
+func (s *CommentService) ReplyComment(ctx context.Context, userID, parentCommentID, content string) (*community.Comment, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -146,7 +146,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 创建回复评论
-	comment := &reader.Comment{
+	comment := &community.Comment{
 		BookID:      parentComment.BookID,
 		ChapterID:   parentComment.ChapterID,
 		UserID:      userID,
@@ -176,7 +176,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 增加父评论的回复数
-	if comment.Status == reader.CommentStatusApproved {
+	if comment.Status == community.CommentStatusApproved {
 		if err := s.commentRepo.IncrementReplyCount(ctx, parentCommentID); err != nil {
 			// 非致命错误，只记录日志
 			fmt.Printf("Warning: Failed to increment reply count: %v\n", err)
@@ -190,7 +190,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 }
 
 // GetCommentList 获取评论列表
-func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sortBy string, page, size int) ([]*reader.Comment, int64, error) {
+func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
 	if bookID == "" {
 		return nil, 0, fmt.Errorf("书籍ID不能为空")
 	}
@@ -204,8 +204,8 @@ func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sort
 	}
 
 	// 验证排序方式
-	if sortBy != reader.CommentSortByLatest && sortBy != reader.CommentSortByHot {
-		sortBy = reader.CommentSortByLatest
+	if sortBy != community.CommentSortByLatest && sortBy != community.CommentSortByHot {
+		sortBy = community.CommentSortByLatest
 	}
 
 	// 获取评论列表
@@ -218,7 +218,7 @@ func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sort
 }
 
 // GetCommentDetail 获取评论详情
-func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string) (*reader.Comment, error) {
+func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string) (*community.Comment, error) {
 	if commentID == "" {
 		return nil, fmt.Errorf("评论ID不能为空")
 	}
@@ -349,25 +349,25 @@ func (s *CommentService) UnlikeComment(ctx context.Context, userID, commentID st
 // =========================
 
 // AutoReviewComment 自动审核评论
-func (s *CommentService) AutoReviewComment(ctx context.Context, comment *reader.Comment) (string, string, error) {
+func (s *CommentService) AutoReviewComment(ctx context.Context, comment *community.Comment) (string, string, error) {
 	// 如果敏感词库未配置，默认通过
 	if s.sensitiveWordRepo == nil {
-		return reader.CommentStatusApproved, "", nil
+		return community.CommentStatusApproved, "", nil
 	}
 
 	// 检查敏感词
 	hasSensitive, sensitiveWords, err := s.checkSensitiveWords(ctx, comment.Content)
 	if err != nil {
-		return reader.CommentStatusPending, "", fmt.Errorf("敏感词检测失败: %w", err)
+		return community.CommentStatusPending, "", fmt.Errorf("敏感词检测失败: %w", err)
 	}
 
 	if hasSensitive {
 		reason := fmt.Sprintf("评论包含敏感词: %s", strings.Join(sensitiveWords, ", "))
-		return reader.CommentStatusRejected, reason, nil
+		return community.CommentStatusRejected, reason, nil
 	}
 
 	// 通过审核
-	return reader.CommentStatusApproved, "", nil
+	return community.CommentStatusApproved, "", nil
 }
 
 // =========================
@@ -401,7 +401,7 @@ func (s *CommentService) GetBookCommentStats(ctx context.Context, bookID string)
 }
 
 // GetUserComments 获取用户评论列表
-func (s *CommentService) GetUserComments(ctx context.Context, userID string, page, size int) ([]*reader.Comment, int64, error) {
+func (s *CommentService) GetUserComments(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -452,7 +452,7 @@ func (s *CommentService) checkSensitiveWords(ctx context.Context, content string
 }
 
 // getRootID 获取根评论ID
-func (s *CommentService) getRootID(comment *reader.Comment) string {
+func (s *CommentService) getRootID(comment *community.Comment) string {
 	if comment.RootID != "" {
 		return comment.RootID
 	}
@@ -463,7 +463,7 @@ func (s *CommentService) getRootID(comment *reader.Comment) string {
 }
 
 // publishCommentEvent 发布评论事件
-func (s *CommentService) publishCommentEvent(ctx context.Context, eventType string, comment *reader.Comment) {
+func (s *CommentService) publishCommentEvent(ctx context.Context, eventType string, comment *community.Comment) {
 	if s.eventBus == nil {
 		return
 	}
@@ -488,7 +488,7 @@ func (s *CommentService) publishCommentEvent(ctx context.Context, eventType stri
 // =========================
 
 // GetCommentThread 获取评论线程（树状结构）
-func (s *CommentService) GetCommentThread(ctx context.Context, commentID string) (*reader.CommentThread, error) {
+func (s *CommentService) GetCommentThread(ctx context.Context, commentID string) (*community.CommentThread, error) {
 	if commentID == "" {
 		return nil, fmt.Errorf("评论ID不能为空")
 	}
@@ -506,9 +506,9 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 	}
 
 	// 构建回复线程（简化版，只支持一级回复）
-	replyThreads := make([]*reader.CommentThread, len(replies))
+	replyThreads := make([]*community.CommentThread, len(replies))
 	for i, reply := range replies {
-		replyThreads[i] = &reader.CommentThread{
+		replyThreads[i] = &community.CommentThread{
 			Comment: reply,
 			Replies: nil, // 简化版不递归获取嵌套回复
 			Total:   0,
@@ -516,7 +516,7 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 		}
 	}
 
-	thread := &reader.CommentThread{
+	thread := &community.CommentThread{
 		Comment: comment,
 		Replies: replyThreads,
 		Total:   total,
@@ -527,7 +527,7 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 }
 
 // GetTopComments 获取热门评论（按点赞数排序）
-func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limit int) ([]*reader.Comment, error) {
+func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limit int) ([]*community.Comment, error) {
 	if bookID == "" {
 		return nil, fmt.Errorf("书籍ID不能为空")
 	}
@@ -537,7 +537,7 @@ func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limi
 	}
 
 	// 使用热度排序获取评论列表
-	comments, _, err := s.GetCommentList(ctx, bookID, reader.CommentSortByHot, 1, limit)
+	comments, _, err := s.GetCommentList(ctx, bookID, community.CommentSortByHot, 1, limit)
 	if err != nil {
 		return nil, fmt.Errorf("获取热门评论失败: %w", err)
 	}
@@ -546,7 +546,7 @@ func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limi
 }
 
 // GetCommentReplies 获取评论的所有回复
-func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*reader.Comment, int64, error) {
+func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*community.Comment, int64, error) {
 	if commentID == "" {
 		return nil, 0, fmt.Errorf("评论ID不能为空")
 	}
@@ -571,7 +571,7 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string
 	end := start + size
 
 	if start >= len(allReplies) {
-		return []*reader.Comment{}, total, nil
+		return []*community.Comment{}, total, nil
 	}
 
 	if end > len(allReplies) {

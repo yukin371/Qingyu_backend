@@ -1,11 +1,11 @@
 package shared
 
 import (
+	walletModel "Qingyu_backend/models/wallet"
 	"context"
 	"fmt"
 	"time"
 
-	walletModel "Qingyu_backend/models/shared/wallet"
 	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
