@@ -528,7 +528,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
-	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository() // ← 创建章节仓储
+	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()    // ← 创建章节仓储
+	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
 	c.bookstoreService = bookstoreService.NewBookstoreService(
 		bookRepo,
@@ -538,8 +539,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
-	// 创建章节服务
-	c.chapterService = bookstoreService.NewChapterService(chapterRepo, nil) // ← 创建 ChapterService
+	// 创建章节服务（注入 ChapterContentRepository）
+	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, nil) // ← 创建 ChapterService (CacheService暂时为nil)
 
 	// 创建书店详细服务
 	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
