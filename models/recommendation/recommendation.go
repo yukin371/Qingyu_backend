@@ -2,8 +2,9 @@ package recommendation
 
 import "time"
 
-// UserBehavior 用户行为记录
-type UserBehavior struct {
+// UserBehaviorRecord 用户行为记录（旧版，保留用于兼容）
+// 注意：新的推荐系统应使用 Behavior 模型
+type UserBehaviorRecord struct {
 	ID         string                 `json:"id" bson:"_id,omitempty"`
 	UserID     string                 `json:"user_id" bson:"user_id"`
 	ItemID     string                 `json:"item_id" bson:"item_id"`
@@ -18,6 +19,10 @@ type UserBehavior struct {
 	CreatedAt  time.Time              `json:"created_at" bson:"created_at"`
 }
 
+// UserBehavior 是 UserBehaviorRecord 的别名，用于向后兼容
+// Deprecated: 使用 UserBehaviorRecord 或 Behavior 代替
+type UserBehavior = UserBehaviorRecord
+
 // RecommendedItem 推荐项（主要存储在缓存中）
 type RecommendedItem struct {
 	ItemID      string                 `json:"item_id"`
@@ -28,18 +33,6 @@ type RecommendedItem struct {
 	Algorithm   string                 `json:"algorithm,omitempty"`    // 推荐算法
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`     // 额外信息
 	GeneratedAt time.Time              `json:"generated_at,omitempty"` // 生成时间
-}
-
-// UserProfile 用户画像（可选，用于推荐算法）
-type UserProfile struct {
-	UserID          string         `json:"user_id" bson:"user_id"`
-	FavoriteGenres  []string       `json:"favorite_genres,omitempty" bson:"favorite_genres,omitempty"` // 偏好类型
-	FavoriteAuthors []string       `json:"favorite_authors,omitempty" bson:"favorite_authors,omitempty"`
-	ReadingHabits   map[string]int `json:"reading_habits,omitempty" bson:"reading_habits,omitempty"`       // 阅读习惯统计
-	AverageReadTime int64          `json:"average_read_time,omitempty" bson:"average_read_time,omitempty"` // 平均阅读时长
-	PreferredLength string         `json:"preferred_length,omitempty" bson:"preferred_length,omitempty"`   // 偏好长度：short, medium, long
-	Tags            []string       `json:"tags,omitempty" bson:"tags,omitempty"`                           // 用户标签
-	LastUpdated     time.Time      `json:"last_updated,omitempty" bson:"last_updated,omitempty"`
 }
 
 // 行为类型
