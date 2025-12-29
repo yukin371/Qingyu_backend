@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"time"
@@ -9,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"Qingyu_backend/models/reader"
 )
 
 // MongoLikeRepository MongoDB点赞仓储实现
@@ -64,7 +63,7 @@ func NewMongoLikeRepository(db *mongo.Database) *MongoLikeRepository {
 }
 
 // AddLike 添加点赞
-func (r *MongoLikeRepository) AddLike(ctx context.Context, like *reader.Like) error {
+func (r *MongoLikeRepository) AddLike(ctx context.Context, like *community.Like) error {
 	if like.ID.IsZero() {
 		like.ID = primitive.NewObjectID()
 	}
@@ -140,13 +139,13 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 }
 
 // GetByID 根据ID获取点赞记录
-func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*reader.Like, error) {
+func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*community.Like, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid like ID: %w", err)
 	}
 
-	var like reader.Like
+	var like community.Like
 	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&like)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -159,7 +158,7 @@ func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*reader.L
 }
 
 // GetUserLikes 获取用户点赞列表
-func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*reader.Like, int64, error) {
+func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*community.Like, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -190,7 +189,7 @@ func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetTy
 	}
 	defer cursor.Close(ctx)
 
-	var likes []*reader.Like
+	var likes []*community.Like
 	if err := cursor.All(ctx, &likes); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode user likes: %w", err)
 	}
@@ -290,7 +289,7 @@ func (r *MongoLikeRepository) GetUserLikeStatusBatch(ctx context.Context, userID
 
 	// 标记已点赞的
 	for cursor.Next(ctx) {
-		var like reader.Like
+		var like community.Like
 		if err := cursor.Decode(&like); err != nil {
 			continue
 		}

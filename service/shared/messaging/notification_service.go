@@ -1,12 +1,11 @@
 package messaging
 
 import (
+	msgModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"strings"
 	"time"
-
-	msgModel "Qingyu_backend/models/shared/messaging"
 )
 
 // NotificationServiceImpl 通知服务实现

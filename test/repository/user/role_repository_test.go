@@ -1,6 +1,7 @@
 package user_test
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"testing"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
 	"Qingyu_backend/global"
-	authModel "Qingyu_backend/models/shared/auth"
 	"Qingyu_backend/repository/mongodb/user"
 )
 

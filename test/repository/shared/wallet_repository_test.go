@@ -1,7 +1,7 @@
 package shared_test
 
 import (
-	walletModel "Qingyu_backend/models/shared/wallet"
+	walletModel "Qingyu_backend/models/wallet"
 	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 	"Qingyu_backend/repository/mongodb/shared"
 	"Qingyu_backend/test/testutil"

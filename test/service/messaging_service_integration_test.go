@@ -1,11 +1,11 @@
 package service
 
 import (
+	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"testing"
 	"time"
 
-	messagingModel "Qingyu_backend/models/shared/messaging"
 	"Qingyu_backend/service/shared/messaging"
 
 	"github.com/stretchr/testify/assert"

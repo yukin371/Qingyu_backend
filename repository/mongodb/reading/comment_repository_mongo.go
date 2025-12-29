@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"time"
@@ -9,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"Qingyu_backend/models/reader"
 )
 
 // MongoCommentRepository MongoDB评论仓储实现
@@ -74,7 +73,7 @@ func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
 }
 
 // Create 创建评论
-func (r *MongoCommentRepository) Create(ctx context.Context, comment *reader.Comment) error {
+func (r *MongoCommentRepository) Create(ctx context.Context, comment *community.Comment) error {
 	if comment.ID.IsZero() {
 		comment.ID = primitive.NewObjectID()
 	}
@@ -94,7 +93,7 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *reader.Com
 
 	// 默认状态为待审核
 	if comment.Status == "" {
-		comment.Status = reader.CommentStatusPending
+		comment.Status = community.CommentStatusPending
 	}
 
 	_, err := r.collection.InsertOne(ctx, comment)
@@ -106,13 +105,13 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *reader.Com
 }
 
 // GetByID 根据ID获取评论
-func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*reader.Comment, error) {
+func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*community.Comment, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid comment ID: %w", err)
 	}
 
-	var comment reader.Comment
+	var comment community.Comment
 	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -181,10 +180,10 @@ func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
 }
 
 // GetCommentsByBookID 获取书籍的评论列表
-func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*reader.Comment, int64, error) {
+func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
 		"book_id":   bookID,
-		"status":    reader.CommentStatusApproved,
+		"status":    community.CommentStatusApproved,
 		"parent_id": bson.M{"$exists": false}, // 只获取顶级评论
 	}
 
@@ -192,16 +191,16 @@ func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID
 }
 
 // GetCommentsByUserID 获取用户的评论列表
-func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*reader.Comment, int64, error) {
+func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{"user_id": userID}
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
 }
 
 // GetRepliesByCommentID 获取评论的回复列表
-func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*reader.Comment, error) {
+func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*community.Comment, error) {
 	filter := bson.M{
 		"parent_id": commentID,
-		"status":    reader.CommentStatusApproved,
+		"status":    community.CommentStatusApproved,
 	}
 
 	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}}))
@@ -210,7 +209,7 @@ func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, comm
 	}
 	defer cursor.Close(ctx)
 
-	var replies []*reader.Comment
+	var replies []*community.Comment
 	if err := cursor.All(ctx, &replies); err != nil {
 		return nil, fmt.Errorf("failed to decode replies: %w", err)
 	}
@@ -219,10 +218,10 @@ func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, comm
 }
 
 // GetCommentsByChapterID 获取章节的评论列表
-func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*reader.Comment, int64, error) {
+func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
 		"chapter_id": chapterID,
-		"status":     reader.CommentStatusApproved,
+		"status":     community.CommentStatusApproved,
 		"parent_id":  bson.M{"$exists": false},
 	}
 
@@ -230,18 +229,18 @@ func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, cha
 }
 
 // GetCommentsByBookIDSorted 获取书籍的排序评论列表
-func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*reader.Comment, int64, error) {
+func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
 		"book_id":   bookID,
-		"status":    reader.CommentStatusApproved,
+		"status":    community.CommentStatusApproved,
 		"parent_id": bson.M{"$exists": false},
 	}
 
 	var sort bson.D
 	switch sortBy {
-	case reader.CommentSortByHot:
+	case community.CommentSortByHot:
 		sort = bson.D{{Key: "like_count", Value: -1}, {Key: "created_at", Value: -1}}
-	case reader.CommentSortByLatest:
+	case community.CommentSortByLatest:
 		fallthrough
 	default:
 		sort = bson.D{{Key: "created_at", Value: -1}}
@@ -284,8 +283,8 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 }
 
 // GetPendingComments 获取待审核评论列表
-func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*reader.Comment, int64, error) {
-	filter := bson.M{"status": reader.CommentStatusPending}
+func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*community.Comment, int64, error) {
+	filter := bson.M{"status": community.CommentStatusPending}
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: 1}})
 }
 
@@ -386,7 +385,7 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
 			"book_id": bookID,
-			"status":  reader.CommentStatusApproved,
+			"status":  community.CommentStatusApproved,
 			"rating":  bson.M{"$gt": 0},
 		}}},
 		{{Key: "$group", Value: bson.M{
@@ -431,7 +430,7 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID string) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{
 		"book_id":   bookID,
-		"status":    reader.CommentStatusApproved,
+		"status":    community.CommentStatusApproved,
 		"parent_id": bson.M{"$exists": false},
 	})
 	if err != nil {
@@ -442,7 +441,7 @@ func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID str
 }
 
 // GetCommentsByIDs 批量获取评论
-func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*reader.Comment, error) {
+func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*community.Comment, error) {
 	objectIDs := make([]primitive.ObjectID, 0, len(ids))
 	for _, id := range ids {
 		objectID, err := primitive.ObjectIDFromHex(id)
@@ -458,7 +457,7 @@ func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []str
 	}
 	defer cursor.Close(ctx)
 
-	var comments []*reader.Comment
+	var comments []*community.Comment
 	if err := cursor.All(ctx, &comments); err != nil {
 		return nil, fmt.Errorf("failed to decode comments: %w", err)
 	}
@@ -492,7 +491,7 @@ func (r *MongoCommentRepository) Health(ctx context.Context) error {
 }
 
 // findComments 通用的查询评论方法
-func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*reader.Comment, int64, error) {
+func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*community.Comment, int64, error) {
 	// 计算总数
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -514,7 +513,7 @@ func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M
 	}
 	defer cursor.Close(ctx)
 
-	var comments []*reader.Comment
+	var comments []*community.Comment
 	if err := cursor.All(ctx, &comments); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
 	}

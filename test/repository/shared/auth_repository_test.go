@@ -1,6 +1,7 @@
 package shared
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"testing"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/global"
-	authModel "Qingyu_backend/models/shared/auth"
 	"Qingyu_backend/repository/mongodb/shared"
 	"Qingyu_backend/test/testutil"
 )

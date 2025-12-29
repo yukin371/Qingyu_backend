@@ -1,13 +1,12 @@
 package messaging
 
 import (
+	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"net/smtp"
 	"strings"
 	"time"
-
-	messagingModel "Qingyu_backend/models/shared/messaging"
 )
 
 // EmailService 邮件服务接口

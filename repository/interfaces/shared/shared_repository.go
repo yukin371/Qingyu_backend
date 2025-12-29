@@ -1,14 +1,13 @@
 package shared
 
 import (
+	authModel "Qingyu_backend/models/auth"
+	recommendationModel "Qingyu_backend/models/recommendation"
+	storageModel "Qingyu_backend/models/storage"
+	adminModel "Qingyu_backend/models/users"
+	walletModel "Qingyu_backend/models/wallet"
 	"context"
 	"time"
-
-	adminModel "Qingyu_backend/models/shared/admin"
-	authModel "Qingyu_backend/models/shared/auth"
-	recommendationModel "Qingyu_backend/models/shared/recommendation"
-	storageModel "Qingyu_backend/models/shared/storage"
-	walletModel "Qingyu_backend/models/shared/wallet"
 )
 
 // ============ Auth Repository ============

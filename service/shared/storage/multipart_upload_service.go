@@ -1,7 +1,7 @@
 package storage
 
 import (
-	storageModel "Qingyu_backend/models/shared/storage"
+	storageModel "Qingyu_backend/models/storage"
 	"Qingyu_backend/repository/interfaces/shared"
 	"context"
 	"crypto/md5"

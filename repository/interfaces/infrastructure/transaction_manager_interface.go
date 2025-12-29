@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"Qingyu_backend/models/ai"
-	authModel "Qingyu_backend/models/shared/auth"
 	usersModel "Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"

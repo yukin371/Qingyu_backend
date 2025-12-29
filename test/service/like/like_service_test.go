@@ -1,6 +1,7 @@
 package like
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/service/base"
 	"Qingyu_backend/service/reading"
 )
@@ -19,17 +19,17 @@ type MockCommentRepository struct {
 	mock.Mock
 }
 
-func (m *MockCommentRepository) Create(ctx context.Context, comment *reader.Comment) error {
+func (m *MockCommentRepository) Create(ctx context.Context, comment *community.Comment) error {
 	args := m.Called(ctx, comment)
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetByID(ctx context.Context, id string) (*reader.Comment, error) {
+func (m *MockCommentRepository) GetByID(ctx context.Context, id string) (*community.Comment, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Comment), args.Error(1)
+	return args.Get(0).(*community.Comment), args.Error(1)
 }
 
 func (m *MockCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -42,52 +42,52 @@ func (m *MockCommentRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, bookID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, bookID, sortBy, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, chapterID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*reader.Comment, error) {
+func (m *MockCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*community.Comment, error) {
 	args := m.Called(ctx, ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Comment), args.Error(1)
+	return args.Get(0).([]*community.Comment), args.Error(1)
 }
 
-func (m *MockCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, userID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*reader.Comment, error) {
+func (m *MockCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*community.Comment, error) {
 	args := m.Called(ctx, commentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Comment), args.Error(1)
+	return args.Get(0).([]*community.Comment), args.Error(1)
 }
 
 func (m *MockCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
@@ -95,12 +95,12 @@ func (m *MockCommentRepository) UpdateCommentStatus(ctx context.Context, id, sta
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockCommentRepository) IncrementLikeCount(ctx context.Context, id string) error {
@@ -151,7 +151,7 @@ type MockLikeRepository struct {
 	mock.Mock
 }
 
-func (m *MockLikeRepository) AddLike(ctx context.Context, like *reader.Like) error {
+func (m *MockLikeRepository) AddLike(ctx context.Context, like *community.Like) error {
 	args := m.Called(ctx, like)
 	return args.Error(0)
 }
@@ -171,12 +171,12 @@ func (m *MockLikeRepository) GetLikeCount(ctx context.Context, targetType, targe
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*reader.Like, int64, error) {
+func (m *MockLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*community.Like, int64, error) {
 	args := m.Called(ctx, userID, targetType, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Like), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Like), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockLikeRepository) CountUserLikes(ctx context.Context, userID string) (int64, error) {
@@ -205,12 +205,12 @@ func (m *MockLikeRepository) GetUserLikeStatusBatch(ctx context.Context, userID,
 	return args.Get(0).(map[string]bool), args.Error(1)
 }
 
-func (m *MockLikeRepository) GetByID(ctx context.Context, id string) (*reader.Like, error) {
+func (m *MockLikeRepository) GetByID(ctx context.Context, id string) (*community.Like, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Like), args.Error(1)
+	return args.Get(0).(*community.Like), args.Error(1)
 }
 
 func (m *MockLikeRepository) Health(ctx context.Context) error {
@@ -285,7 +285,7 @@ func TestLikeService_LikeBook(t *testing.T) {
 			Return(nil).Once()
 
 		// Mock获取点赞数（用于事件发布）
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).
 			Return(int64(1), nil).Once()
 
 		// 点赞书籍
@@ -336,11 +336,11 @@ func TestLikeService_UnlikeBook(t *testing.T) {
 
 	t.Run("UnlikeBook_Success", func(t *testing.T) {
 		// Mock移除点赞
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).
 			Return(nil).Once()
 
 		// Mock获取点赞数（用于事件发布）
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).
 			Return(int64(0), nil).Once()
 
 		// 取消点赞
@@ -355,7 +355,7 @@ func TestLikeService_UnlikeBook(t *testing.T) {
 
 	t.Run("UnlikeBook_NotLiked", func(t *testing.T) {
 		// Mock移除点赞（返回未点赞错误）
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeBook, testBookID).
 			Return(fmt.Errorf("点赞记录不存在")).Once()
 
 		// 取消点赞（幂等性：不报错）
@@ -391,7 +391,7 @@ func TestLikeService_LikeComment(t *testing.T) {
 			Return(nil).Once()
 
 		// Mock获取点赞数（用于事件发布）
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).
 			Return(int64(1), nil).Once()
 
 		// 点赞评论
@@ -435,7 +435,7 @@ func TestLikeService_UnlikeComment(t *testing.T) {
 
 	t.Run("UnlikeComment_Success", func(t *testing.T) {
 		// Mock移除点赞
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeComment, testCommentID).
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeComment, testCommentID).
 			Return(nil).Once()
 
 		// Mock减少评论点赞数
@@ -443,7 +443,7 @@ func TestLikeService_UnlikeComment(t *testing.T) {
 			Return(nil).Once()
 
 		// Mock获取点赞数（用于事件发布）
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeComment, testCommentID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeComment, testCommentID).
 			Return(int64(0), nil).Once()
 
 		// 取消点赞
@@ -459,7 +459,7 @@ func TestLikeService_UnlikeComment(t *testing.T) {
 
 	t.Run("UnlikeComment_NotLiked", func(t *testing.T) {
 		// Mock移除点赞（返回未点赞错误）
-		mockRepo.On("RemoveLike", ctx, testUserID, reader.LikeTargetTypeComment, testCommentID).
+		mockRepo.On("RemoveLike", ctx, testUserID, community.LikeTargetTypeComment, testCommentID).
 			Return(fmt.Errorf("点赞记录不存在")).Once()
 
 		// 取消点赞（幂等性：不报错）
@@ -486,7 +486,7 @@ func TestLikeService_GetBookLikeCount(t *testing.T) {
 
 	t.Run("GetBookLikeCount_Success", func(t *testing.T) {
 		// Mock获取点赞数
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).
 			Return(int64(100), nil).Once()
 
 		// 获取点赞数
@@ -514,11 +514,11 @@ func TestLikeService_GetUserLikedBooks(t *testing.T) {
 
 	t.Run("GetUserLikedBooks_Success", func(t *testing.T) {
 		// Mock查询
-		likes := []*reader.Like{
+		likes := []*community.Like{
 			{ID: primitive.NewObjectID(), TargetID: "book1"},
 			{ID: primitive.NewObjectID(), TargetID: "book2"},
 		}
-		mockRepo.On("GetUserLikes", ctx, testUserID, reader.LikeTargetTypeBook, 1, 20).
+		mockRepo.On("GetUserLikes", ctx, testUserID, community.LikeTargetTypeBook, 1, 20).
 			Return(likes, int64(2), nil).Once()
 
 		// 获取列表
@@ -581,7 +581,7 @@ func TestLikeService_ConcurrentLike(t *testing.T) {
 			Return(nil).Once()
 
 		// Mock获取点赞数（用于事件发布）
-		mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, testBookID).
+		mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, testBookID).
 			Return(int64(1), nil).Once()
 
 		// 第二次添加（返回已点赞错误，幂等性处理）
@@ -622,7 +622,7 @@ func TestLikeService_AntiSpam(t *testing.T) {
 				Return(nil).Once()
 
 			// Mock获取点赞数（用于事件发布）
-			mockRepo.On("GetLikeCount", ctx, reader.LikeTargetTypeBook, bookID).
+			mockRepo.On("GetLikeCount", ctx, community.LikeTargetTypeBook, bookID).
 				Return(int64(1), nil).Once()
 
 			err := service.LikeBook(ctx, testUserID, bookID)

@@ -1,12 +1,11 @@
 package admin
 
 import (
+	adminModel "Qingyu_backend/models/users"
 	"context"
 	"errors"
 	"testing"
 	"time"
-
-	adminModel "Qingyu_backend/models/shared/admin"
 )
 
 // ============ Mock Repositories ============

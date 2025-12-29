@@ -1,11 +1,11 @@
 package wallet
 
 import (
+	walletModel "Qingyu_backend/models/wallet"
 	"context"
 	"fmt"
 	"time"
 
-	walletModel "Qingyu_backend/models/shared/wallet"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 

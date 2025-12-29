@@ -1,11 +1,11 @@
 package shared
 
 import (
+	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"time"
 
-	messagingModel "Qingyu_backend/models/shared/messaging"
 	"Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"

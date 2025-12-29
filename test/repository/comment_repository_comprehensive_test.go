@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/mongodb/reading"
 )
 
@@ -28,12 +28,12 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 	t.Run("GetCommentsByUserID_Success", func(t *testing.T) {
 		// 创建多条用户评论
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBookID,
 				Content:   fmt.Sprintf("用户评论%d", i),
 				Rating:    5,
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -54,12 +54,12 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 		testChapterID := primitive.NewObjectID().Hex()
 
 		// 创建章节评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			ChapterID: testChapterID,
 			Content:   "章节评论",
-			Status:    reader.CommentStatusApproved,
+			Status:    community.CommentStatusApproved,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -80,12 +80,12 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 
 		// 创建不同点赞数的评论
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBook2,
 				Content:   fmt.Sprintf("评论%d", i),
 				LikeCount: i * 10, // 0, 10, 20
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -95,7 +95,7 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 		}
 
 		// 按热度排序查询
-		comments, total, err := repo.GetCommentsByBookIDSorted(ctx, testBook2, reader.CommentSortByHot, 1, 10)
+		comments, total, err := repo.GetCommentsByBookIDSorted(ctx, testBook2, community.CommentSortByHot, 1, 10)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(3), total)
 		assert.Equal(t, 3, len(comments))
@@ -114,11 +114,11 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 		// 创建多条评论
 		var createdIDs []string
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBook3,
 				Content:   fmt.Sprintf("评论%d", i),
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -129,7 +129,7 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 		}
 
 		// 按最新排序查询
-		comments, total, err := repo.GetCommentsByBookIDSorted(ctx, testBook3, reader.CommentSortByLatest, 1, 10)
+		comments, total, err := repo.GetCommentsByBookIDSorted(ctx, testBook3, community.CommentSortByLatest, 1, 10)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(3), total)
 
@@ -142,11 +142,11 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 	t.Run("GetPendingComments_Success", func(t *testing.T) {
 		// 创建待审核评论
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBookID,
 				Content:   fmt.Sprintf("待审核评论%d", i),
-				Status:    reader.CommentStatusPending,
+				Status:    community.CommentStatusPending,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -162,19 +162,19 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 
 		// 验证所有评论都是待审核状态
 		for _, comment := range comments {
-			assert.Equal(t, reader.CommentStatusPending, comment.Status)
+			assert.Equal(t, community.CommentStatusPending, comment.Status)
 		}
 
 		t.Logf("✓ 获取待审核评论成功，总数: %d", total)
 	})
 
 	t.Run("IncrementReplyCount_Success", func(t *testing.T) {
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:     testUserID,
 			BookID:     testBookID,
 			Content:    "测试回复计数",
 			ReplyCount: 0,
-			Status:     reader.CommentStatusApproved,
+			Status:     community.CommentStatusApproved,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		}
@@ -194,12 +194,12 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 	})
 
 	t.Run("DecrementReplyCount_Success", func(t *testing.T) {
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:     testUserID,
 			BookID:     testBookID,
 			Content:    "测试减少回复",
 			ReplyCount: 5,
-			Status:     reader.CommentStatusApproved,
+			Status:     community.CommentStatusApproved,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		}
@@ -223,11 +223,11 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 
 		// 创建多条评论
 		for i := 0; i < 5; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBook4,
 				Content:   fmt.Sprintf("评论%d", i),
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -247,11 +247,11 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 		// 创建多条评论
 		var ids []string
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBookID,
 				Content:   fmt.Sprintf("批量查询评论%d", i),
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -273,11 +273,11 @@ func TestCommentRepositoryAdvanced(t *testing.T) {
 
 		// 创建多条评论
 		for i := 0; i < 3; i++ {
-			comment := &reader.Comment{
+			comment := &community.Comment{
 				UserID:    testUserID,
 				BookID:    testBook5,
 				Content:   fmt.Sprintf("待删除评论%d", i),
-				Status:    reader.CommentStatusApproved,
+				Status:    community.CommentStatusApproved,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -308,7 +308,7 @@ func TestCommentRepositoryBoundary(t *testing.T) {
 
 	t.Run("Create_WithInvalidData", func(t *testing.T) {
 		// 空内容
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    "",
 			BookID:    "",
 			Content:   "",
@@ -405,12 +405,12 @@ func TestCommentRepositoryConcurrency(t *testing.T) {
 
 	t.Run("ConcurrentIncrementLikeCount", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "并发点赞测试",
 			LikeCount: 0,
-			Status:    reader.CommentStatusApproved,
+			Status:    community.CommentStatusApproved,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -452,11 +452,11 @@ func TestCommentRepositoryConcurrency(t *testing.T) {
 		for i := 0; i < goroutines; i++ {
 			go func(index int) {
 				defer wg.Done()
-				comment := &reader.Comment{
+				comment := &community.Comment{
 					UserID:    testUserID,
 					BookID:    testBookID,
 					Content:   fmt.Sprintf("并发创建评论%d", index),
-					Status:    reader.CommentStatusApproved,
+					Status:    community.CommentStatusApproved,
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				}
@@ -478,11 +478,11 @@ func TestCommentRepositoryConcurrency(t *testing.T) {
 
 	t.Run("ConcurrentUpdateStatus", func(t *testing.T) {
 		// 创建评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "并发更新状态测试",
-			Status:    reader.CommentStatusPending,
+			Status:    community.CommentStatusPending,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -497,9 +497,9 @@ func TestCommentRepositoryConcurrency(t *testing.T) {
 		for i := 0; i < goroutines; i++ {
 			go func(index int) {
 				defer wg.Done()
-				status := reader.CommentStatusApproved
+				status := community.CommentStatusApproved
 				if index%2 == 0 {
-					status = reader.CommentStatusRejected
+					status = community.CommentStatusRejected
 				}
 				err := repo.UpdateCommentStatus(ctx, comment.ID.Hex(), status, "测试原因")
 				assert.NoError(t, err)
@@ -511,7 +511,7 @@ func TestCommentRepositoryConcurrency(t *testing.T) {
 		// 验证最终状态（会是最后一个更新的状态）
 		found, err := repo.GetByID(ctx, comment.ID.Hex())
 		assert.NoError(t, err)
-		assert.Contains(t, []string{reader.CommentStatusApproved, reader.CommentStatusRejected}, found.Status)
+		assert.Contains(t, []string{community.CommentStatusApproved, community.CommentStatusRejected}, found.Status)
 
 		t.Logf("✓ 并发更新状态测试通过，最终状态: %s", found.Status)
 	})
@@ -530,11 +530,11 @@ func TestCommentRepositoryReplyThread(t *testing.T) {
 
 	t.Run("NestedReplyThread", func(t *testing.T) {
 		// 创建根评论
-		rootComment := &reader.Comment{
+		rootComment := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "根评论",
-			Status:    reader.CommentStatusApproved,
+			Status:    community.CommentStatusApproved,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -542,13 +542,13 @@ func TestCommentRepositoryReplyThread(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 创建一级回复
-		reply1 := &reader.Comment{
+		reply1 := &community.Comment{
 			UserID:    testUserID,
 			BookID:    testBookID,
 			Content:   "一级回复",
 			ParentID:  rootComment.ID.Hex(),
 			RootID:    rootComment.ID.Hex(),
-			Status:    reader.CommentStatusApproved,
+			Status:    community.CommentStatusApproved,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -556,14 +556,14 @@ func TestCommentRepositoryReplyThread(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 创建二级回复
-		reply2 := &reader.Comment{
+		reply2 := &community.Comment{
 			UserID:      testUserID,
 			BookID:      testBookID,
 			Content:     "二级回复",
 			ParentID:    reply1.ID.Hex(),
 			RootID:      rootComment.ID.Hex(),
 			ReplyToUser: testUserID,
-			Status:      reader.CommentStatusApproved,
+			Status:      community.CommentStatusApproved,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
@@ -583,4 +583,3 @@ func TestCommentRepositoryReplyThread(t *testing.T) {
 		t.Logf("✓ 嵌套回复测试通过")
 	})
 }
-

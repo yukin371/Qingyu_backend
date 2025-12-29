@@ -1,6 +1,7 @@
 package comment
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"errors"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/audit"
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/service/reading"
 )
 
@@ -177,7 +177,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		// 回复根评论 - 使用实际的testCommentID
 		localCommentID := primitive.NewObjectID().Hex()
 		objID, _ := primitive.ObjectIDFromHex(localCommentID)
-		parentComment := &reader.Comment{
+		parentComment := &community.Comment{
 			ID:       objID,
 			UserID:   primitive.NewObjectID().Hex(),
 			BookID:   primitive.NewObjectID().Hex(),
@@ -211,7 +211,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
 
 		// 回复嵌套评论
-		nestedComment := &reader.Comment{
+		nestedComment := &community.Comment{
 			ID:       primitive.NewObjectID(),
 			UserID:   primitive.NewObjectID().Hex(),
 			BookID:   primitive.NewObjectID().Hex(),
@@ -245,7 +245,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		service := reading.NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
 
 		// 回复已删除评论
-		deletedComment := &reader.Comment{
+		deletedComment := &community.Comment{
 			ID:     primitive.NewObjectID(),
 			Status: "deleted",
 		}

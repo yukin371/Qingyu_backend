@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// ReadingProgress 阅读进度
+
 type ReadingProgress struct {
 	ID          string    `bson:"_id,omitempty" json:"id"`
 	UserID      string    `bson:"user_id" json:"userId"`           // 用户ID

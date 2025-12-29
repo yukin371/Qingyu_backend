@@ -1,11 +1,11 @@
 package messaging
 
 import (
+	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"time"
 
-	messagingModel "Qingyu_backend/models/shared/messaging"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 

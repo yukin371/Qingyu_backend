@@ -1,6 +1,7 @@
 package comment
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"errors"
 	"testing"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/audit"
-	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/base"
 	"Qingyu_backend/service/reading"
@@ -22,17 +22,17 @@ type MockCommentRepository struct {
 	mock.Mock
 }
 
-func (m *MockCommentRepository) Create(ctx context.Context, comment *reader.Comment) error {
+func (m *MockCommentRepository) Create(ctx context.Context, comment *community.Comment) error {
 	args := m.Called(ctx, comment)
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetByID(ctx context.Context, id string) (*reader.Comment, error) {
+func (m *MockCommentRepository) GetByID(ctx context.Context, id string) (*community.Comment, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Comment), args.Error(1)
+	return args.Get(0).(*community.Comment), args.Error(1)
 }
 
 func (m *MockCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
@@ -45,52 +45,52 @@ func (m *MockCommentRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, bookID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, bookID, sortBy, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, chapterID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*reader.Comment, error) {
+func (m *MockCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*community.Comment, error) {
 	args := m.Called(ctx, ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Comment), args.Error(1)
+	return args.Get(0).([]*community.Comment), args.Error(1)
 }
 
-func (m *MockCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, userID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*reader.Comment, error) {
+func (m *MockCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*community.Comment, error) {
 	args := m.Called(ctx, commentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.Comment), args.Error(1)
+	return args.Get(0).([]*community.Comment), args.Error(1)
 }
 
 func (m *MockCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
@@ -98,12 +98,12 @@ func (m *MockCommentRepository) UpdateCommentStatus(ctx context.Context, id, sta
 	return args.Error(0)
 }
 
-func (m *MockCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*reader.Comment, int64, error) {
+func (m *MockCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*community.Comment, int64, error) {
 	args := m.Called(ctx, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Comment), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockCommentRepository) IncrementLikeCount(ctx context.Context, id string) error {
@@ -407,7 +407,7 @@ func TestCommentService_ReplyComment(t *testing.T) {
 
 	t.Run("ReplyComment_Success", func(t *testing.T) {
 		// Mock获取父评论
-		parentComment := &reader.Comment{
+		parentComment := &community.Comment{
 			ID:     primitive.NewObjectID(),
 			UserID: primitive.NewObjectID().Hex(),
 			BookID: primitive.NewObjectID().Hex(),
@@ -468,7 +468,7 @@ func TestCommentService_UpdateComment(t *testing.T) {
 
 	t.Run("UpdateComment_Success", func(t *testing.T) {
 		// Mock获取评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			ID:        primitive.NewObjectID(),
 			UserID:    testUserID,
 			CreatedAt: time.Now().Add(-10 * time.Minute), // 10分钟前
@@ -498,7 +498,7 @@ func TestCommentService_UpdateComment(t *testing.T) {
 
 	t.Run("UpdateComment_NotOwner", func(t *testing.T) {
 		// Mock获取评论（不是自己的）
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			ID:        primitive.NewObjectID(),
 			UserID:    primitive.NewObjectID().Hex(),
 			CreatedAt: time.Now(),
@@ -517,7 +517,7 @@ func TestCommentService_UpdateComment(t *testing.T) {
 
 	t.Run("UpdateComment_TooLate", func(t *testing.T) {
 		// Mock获取评论（超过30分钟）
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			ID:        primitive.NewObjectID(),
 			UserID:    testUserID,
 			CreatedAt: time.Now().Add(-31 * time.Minute),
@@ -549,7 +549,7 @@ func TestCommentService_DeleteComment(t *testing.T) {
 
 	t.Run("DeleteComment_Success", func(t *testing.T) {
 		// Mock获取评论
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			ID:       primitive.NewObjectID(),
 			UserID:   testUserID,
 			ParentID: "",
@@ -573,7 +573,7 @@ func TestCommentService_DeleteComment(t *testing.T) {
 
 	t.Run("DeleteComment_NotOwner", func(t *testing.T) {
 		// Mock获取评论（不是自己的）
-		comment := &reader.Comment{
+		comment := &community.Comment{
 			ID:     primitive.NewObjectID(),
 			UserID: primitive.NewObjectID().Hex(),
 		}
@@ -603,7 +603,7 @@ func TestCommentService_GetCommentList(t *testing.T) {
 
 	t.Run("GetCommentList_Success", func(t *testing.T) {
 		// Mock查询
-		comments := []*reader.Comment{
+		comments := []*community.Comment{
 			{ID: primitive.NewObjectID(), Content: "评论1"},
 			{ID: primitive.NewObjectID(), Content: "评论2"},
 		}
