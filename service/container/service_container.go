@@ -662,37 +662,52 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		return fmt.Errorf("WalletService 未实现 BaseService 接口")
 	}
 
-	// 5.2 创建 AuthService（完整实现）
+	// 5.2 创建 AuthService（完整实现，支持Redis降级）
+	authRepo = c.repositoryFactory.CreateAuthRepository()
+
+	// 创建Redis适配器或内存降级方案
+	// 注意：使用具体类型而不是接口，以便同时实现RedisClient和CacheClient接口
+	var redisAdapter interface{}
 	if c.redisClient != nil {
-		authRepo := c.repositoryFactory.CreateAuthRepository()
-
-		// 创建Redis适配器
-		redisAdapter := auth.NewRedisAdapter(c.redisClient)
-
-		// 创建子服务
-		jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), redisAdapter)
-		roleService := auth.NewRoleService(authRepo)
-		permissionService := auth.NewPermissionService(authRepo, redisAdapter)
-		sessionService := auth.NewSessionService(redisAdapter)
-
-		// 创建AuthService
-		c.authService = auth.NewAuthService(
-			jwtService,
-			roleService,
-			permissionService,
-			authRepo,
-			c.userService,
-			sessionService,
-		)
-
-		// 类型断言为BaseService，以便注册到服务映射
-		if baseAuthSvc, ok := c.authService.(serviceInterfaces.BaseService); ok {
-			if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
-				return fmt.Errorf("注册认证服务失败: %w", err)
-			}
-		}
+		// 使用Redis Token黑名单
+		redisImpl := auth.NewRedisAdapter(c.redisClient)
+		redisAdapter = redisImpl
+		fmt.Println("✓ AuthService使用Redis Token黑名单")
 	} else {
-		fmt.Println("警告: Redis客户端未初始化，跳过AuthService创建")
+		// 降级到内存Token黑名单
+		redisImpl := auth.NewInMemoryTokenBlacklist()
+		redisAdapter = redisImpl
+		fmt.Println("⚠ Redis不可用，AuthService使用内存Token黑名单（降级模式）")
+		fmt.Println("  注意：内存模式不支持分布式部署，服务器重启后黑名单会丢失")
+	}
+
+	// 创建子服务
+	jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), redisAdapter.(auth.RedisClient))
+	roleService := auth.NewRoleService(authRepo)
+
+	// 类型断言为CacheClient
+	cacheClient, ok := redisAdapter.(auth.CacheClient)
+	if !ok {
+		return fmt.Errorf("redisAdapter does not implement CacheClient")
+	}
+	permissionService := auth.NewPermissionService(authRepo, cacheClient)
+	sessionService := auth.NewSessionService(cacheClient)
+
+	// 创建AuthService
+	c.authService = auth.NewAuthService(
+		jwtService,
+		roleService,
+		permissionService,
+		authRepo,
+		c.userService,
+		sessionService,
+	)
+
+	// 类型断言为BaseService，以便注册到服务映射
+	if baseAuthSvc, ok := c.authService.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
+			return fmt.Errorf("注册认证服务失败: %w", err)
+		}
 	}
 
 	// 5.3 创建 RecommendationService

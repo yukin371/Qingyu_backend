@@ -11,7 +11,7 @@ import (
 	"Qingyu_backend/service/shared/wallet"
 )
 
-// RegisterRoutes 注册共享服务路由
+// RegisterRoutes 注册共享服务路由（向后兼容）
 // 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
 func RegisterRoutes(
 	r *gin.RouterGroup,
@@ -28,11 +28,22 @@ func RegisterRoutes(
 	r.Use(middleware.Recovery())                    // Panic恢复
 	r.Use(response.GzipMiddleware(5))               // Gzip压缩（压缩级别5）
 
+	// 调用各个独立的注册函数
+	if authService != nil {
+		RegisterAuthRoutes(r, authService)
+	}
+	if walletService != nil {
+		RegisterWalletRoutes(r, walletService)
+	}
+	if storageService != nil {
+		RegisterStorageRoutes(r, storageService, multipartService, imageProcessor)
+	}
+}
+
+// RegisterAuthRoutes 注册认证服务路由
+func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService) {
 	// 创建API处理器
 	authAPI := shared.NewAuthAPI(authService)
-	walletAPI := shared.NewWalletAPI(walletService)
-	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)
-	// 注意：AdminAPI已迁移到 admin 模块
 
 	// ============ 认证服务路由 ============
 	authGroup := r.Group("/auth")
@@ -56,6 +67,12 @@ func RegisterRoutes(
 			authProtected.GET("/roles", authAPI.GetUserRoles)
 		}
 	}
+}
+
+// RegisterWalletRoutes 注册钱包服务路由
+func RegisterWalletRoutes(r *gin.RouterGroup, walletService wallet.WalletService) {
+	// 创建API处理器
+	walletAPI := shared.NewWalletAPI(walletService)
 
 	// ============ 钱包服务路由 ============
 	walletGroup := r.Group("/wallet")
@@ -74,6 +91,17 @@ func RegisterRoutes(
 		walletGroup.POST("/transfer", walletAPI.Transfer)
 		walletGroup.POST("/withdraw", walletAPI.RequestWithdraw)
 	}
+}
+
+// RegisterStorageRoutes 注册存储服务路由
+func RegisterStorageRoutes(
+	r *gin.RouterGroup,
+	storageService *storage.StorageServiceImpl,
+	multipartService *storage.MultipartUploadService,
+	imageProcessor *storage.ImageProcessor,
+) {
+	// 创建API处理器
+	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)
 
 	// ============ 存储服务路由 ============
 	storageGroup := r.Group("/storage")
@@ -88,7 +116,7 @@ func RegisterRoutes(
 		storageGroup.GET("/files", storageAPI.ListFiles)
 		storageGroup.GET("/files/:file_id/url", storageAPI.GetDownloadURL)
 	}
-
-	// 注意：管理员路由已迁移到 /api/v1/admin
-	// 参见: router/admin/admin_router.go
 }
+
+// 注意：管理员路由已迁移到 /api/v1/admin
+// 参见: router/admin/admin_router.go
