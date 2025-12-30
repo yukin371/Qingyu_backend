@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"os"
 
 	adminRouter "Qingyu_backend/router/admin"
@@ -41,7 +42,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	logger.Info("✓ 服务容器已初始化，开始注册路由...")
 
-	// ============ 注册共享服务路由（如果已配置） ============
+	// ============ 注册共享服务路由（渐进式注册） ============
 	// 尝试从服务容器获取共享服务
 	authSvc, authErr := serviceContainer.GetAuthService()
 	walletSvc, walletErr := serviceContainer.GetWalletService()
@@ -51,22 +52,37 @@ func RegisterRoutes(r *gin.Engine) {
 	multipartService, multipartErr := serviceContainer.GetMultipartUploadService()
 	imageProcessor, imageErr := serviceContainer.GetImageProcessor()
 
-	// 只有当所有共享服务都可用时，才注册共享服务路由
-	if authErr == nil && walletErr == nil && storageErr == nil && multipartErr == nil && imageErr == nil {
-		sharedGroup := v1.Group("/shared")
-		sharedRouter.RegisterRoutes(sharedGroup, authSvc, walletSvc, storageServiceImpl, multipartService, imageProcessor)
-		logger.Info("✓ 共享服务路由已注册到: /api/v1/shared/")
-		logger.Info("  - /api/v1/shared/auth/* (认证服务)")
-		logger.Info("  - /api/v1/shared/wallet/* (钱包服务)")
-		logger.Info("  - /api/v1/shared/storage/* (存储服务)")
+	// 创建共享路由组（即使部分服务不可用也创建）
+	sharedGroup := v1.Group("/shared")
+
+	// 按可用服务逐个注册（渐进式注册策略）
+	registeredCount := 0
+
+	// 1. 注册认证服务路由
+	if authErr == nil && authSvc != nil {
+		sharedRouter.RegisterAuthRoutes(sharedGroup, authSvc)
+		logger.Info("✓ 认证服务路由已注册: /api/v1/shared/auth/*")
+		registeredCount++
 	} else {
-		logger.Warn("⚠ 共享服务路由未注册（服务未配置）")
-		if authErr != nil {
-			logger.Warn("  - AuthService", zap.Error(authErr))
-		}
-		if walletErr != nil {
-			logger.Warn("  - WalletService", zap.Error(walletErr))
-		}
+		logger.Warn("⚠ AuthService未配置，跳过认证路由注册", zap.Error(authErr))
+	}
+
+	// 2. 注册钱包服务路由
+	if walletErr == nil && walletSvc != nil {
+		sharedRouter.RegisterWalletRoutes(sharedGroup, walletSvc)
+		logger.Info("✓ 钱包服务路由已注册: /api/v1/shared/wallet/*")
+		registeredCount++
+	} else {
+		logger.Warn("⚠ WalletService未配置，跳过钱包路由注册", zap.Error(walletErr))
+	}
+
+	// 3. 注册存储服务路由
+	if storageErr == nil && storageServiceImpl != nil && multipartErr == nil && multipartService != nil && imageErr == nil && imageProcessor != nil {
+		sharedRouter.RegisterStorageRoutes(sharedGroup, storageServiceImpl, multipartService, imageProcessor)
+		logger.Info("✓ 存储服务路由已注册: /api/v1/shared/storage/*")
+		registeredCount++
+	} else {
+		logger.Warn("⚠ 存储服务未完全配置，跳过存储路由注册")
 		if storageErr != nil {
 			logger.Warn("  - StorageService", zap.Error(storageErr))
 		}
@@ -76,6 +92,13 @@ func RegisterRoutes(r *gin.Engine) {
 		if imageErr != nil {
 			logger.Warn("  - ImageProcessor", zap.Error(imageErr))
 		}
+	}
+
+	// 总结注册情况
+	if registeredCount > 0 {
+		logger.Info(fmt.Sprintf("✓ 已注册 %d 个共享服务模块到 /api/v1/shared/", registeredCount))
+	} else {
+		logger.Warn("⚠ 所有共享服务均未配置，共享路由组为空")
 	}
 
 	// ============ 注册书店路由 ============
