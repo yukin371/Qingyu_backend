@@ -271,11 +271,12 @@ func (ni *NovelImporter) importChapters(ctx context.Context, bookID primitive.Ob
 
 		for j, chapterData := range batch {
 			chapterNum := i + j + 1
+			// 注意：Content字段已从Chapter模型中移除，内容现在存储在ChapterContent中
+			// 如果需要导入内容，应该使用ChapterContent模型
 			chapter := &bookstore2.Chapter{
 				BookID:      bookID,
 				Title:       chapterData.Title,
 				ChapterNum:  chapterNum,
-				Content:     chapterData.Content,
 				WordCount:   chapterData.WordCount,
 				IsFree:      true,
 				Price:       0,
