@@ -36,15 +36,15 @@ func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Docume
 	}
 
 	// 生成ID
-	if doc.ID == "" {
-		doc.ID = primitive.NewObjectID().Hex()
+	if doc.IdentifiedEntity.ID == "" {
+		doc.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
 	}
 
 	// 设置时间戳和默认值
 	doc.TouchForCreate()
 
-	// 验证数据
-	if err := doc.Validate(); err != nil {
+	// 基础验证（不验证文档类型，因为需要项目的writing_type）
+	if err := doc.ValidateWithoutType(); err != nil {
 		return fmt.Errorf("文档数据验证失败: %w", err)
 	}
 
