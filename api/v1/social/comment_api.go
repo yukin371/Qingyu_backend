@@ -1,4 +1,4 @@
-package reader
+package social
 
 import (
 	"net/http"
@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	socialService "Qingyu_backend/service/social"
+	"Qingyu_backend/service/social"
 )
 
 // CommentAPI 评论API处理器
 type CommentAPI struct {
-	commentService *socialService.CommentService
+	commentService *social.CommentService
 }
 
 // NewCommentAPI 创建评论API实例
-func NewCommentAPI(commentService *socialService.CommentService) *CommentAPI {
+func NewCommentAPI(commentService *social.CommentService) *CommentAPI {
 	return &CommentAPI{
 		commentService: commentService,
 	}

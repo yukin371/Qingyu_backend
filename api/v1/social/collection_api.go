@@ -1,4 +1,4 @@
-package reader
+package social
 
 import (
 	"net/http"
@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	socialService "Qingyu_backend/service/social"
+	"Qingyu_backend/service/social"
 )
 
 // CollectionAPI 收藏API处理器
 type CollectionAPI struct {
-	collectionService *socialService.CollectionService
+	collectionService *social.CollectionService
 }
 
 // NewCollectionAPI 创建收藏API实例
-func NewCollectionAPI(collectionService *socialService.CollectionService) *CollectionAPI {
+func NewCollectionAPI(collectionService *social.CollectionService) *CollectionAPI {
 	return &CollectionAPI{
 		collectionService: collectionService,
 	}
