@@ -7,10 +7,12 @@ import (
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
+	messagingRouter "Qingyu_backend/router/messaging"
 	projectRouter "Qingyu_backend/router/project"
 	readerRouter "Qingyu_backend/router/reader"
 	recommendationRouter "Qingyu_backend/router/recommendation"
 	sharedRouter "Qingyu_backend/router/shared"
+	socialRouter "Qingyu_backend/router/social"
 	systemRouter "Qingyu_backend/router/system"
 	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
@@ -18,6 +20,7 @@ import (
 	"Qingyu_backend/service"
 	sharedService "Qingyu_backend/service/shared"
 
+	socialApi "Qingyu_backend/api/v1/social"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 
 	"github.com/gin-gonic/gin"
@@ -177,6 +180,61 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 	}
 
+	// ============ 注册社交路由（新统一入口） ============
+	// 获取评论服务
+	commentSvc, commentErr := serviceContainer.GetCommentService()
+	var commentAPI *socialApi.CommentAPI
+	if commentErr != nil {
+		logger.Warn("评论服务未配置", zap.Error(commentErr))
+	} else {
+		commentAPI = socialApi.NewCommentAPI(commentSvc)
+	}
+
+	// 获取点赞服务
+	likeSvc, likeErr := serviceContainer.GetLikeService()
+	var likeAPI *socialApi.LikeAPI
+	if likeErr != nil {
+		logger.Warn("点赞服务未配置", zap.Error(likeErr))
+	} else {
+		likeAPI = socialApi.NewLikeAPI(likeSvc)
+	}
+
+	// 获取收藏服务
+	collectionSvc, collectionErr := serviceContainer.GetCollectionService()
+	var collectionAPI *socialApi.CollectionAPI
+	if collectionErr != nil {
+		logger.Warn("收藏服务未配置", zap.Error(collectionErr))
+	} else {
+		collectionAPI = socialApi.NewCollectionAPI(collectionSvc)
+	}
+
+	// 尝试获取用户关系服务（新功能）
+	var relationAPI *socialApi.UserRelationAPI
+	// TODO: 添加 UserRelationService 到服务容器后获取
+	// relationSvc, relationErr := serviceContainer.GetUserRelationService()
+	// if relationErr == nil && relationSvc != nil {
+	//     relationAPI = socialApi.NewUserRelationAPI(relationSvc)
+	// }
+
+	// 注册统一社交路由
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil {
+		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI)
+
+		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
+		if commentAPI != nil {
+			logger.Info("  - /api/v1/social/comments/* (评论系统)")
+		}
+		if likeAPI != nil {
+			logger.Info("  - /api/v1/social/books/:bookId/like (点赞系统)")
+		}
+		if collectionAPI != nil {
+			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
+		}
+		if relationAPI != nil {
+			logger.Info("  - /api/v1/social/follow/* (关注系统)")
+		}
+	}
+
 	// ============ 注册推荐系统路由 ============
 	recommendationSvc, err := serviceContainer.GetRecommendationService()
 	if err != nil {
@@ -196,19 +254,42 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
 	}
 
+	// ============ 注册Messaging路由 ============
+	announcementSvc, announcementErr := serviceContainer.GetAnnouncementService()
+	if announcementErr != nil {
+		logger.Warn("获取公告服务失败", zap.Error(announcementErr))
+		logger.Info("Messaging路由未注册")
+	} else {
+		messagingRouter.RegisterRoutes(v1, announcementSvc)
+		logger.Info("✓ Messaging路由已注册到: /api/v1/announcements/")
+		logger.Info("  - GET /api/v1/announcements/effective (获取有效公告)")
+		logger.Info("  - GET /api/v1/announcements/:id (获取公告详情)")
+		logger.Info("  - POST /api/v1/announcements/:id/view (增加查看次数)")
+	}
+
 	// ============ 注册用户路由 ============
 	userSvc, err := serviceContainer.GetUserService()
 	if err != nil {
 		logger.Fatal("获取用户服务失败", zap.Error(err))
 	}
 
-	userRouter.RegisterUserRoutes(v1, userSvc)
+	// 获取书店服务（可选）
+	bookstoreSvc, bookstoreErr := serviceContainer.GetBookstoreService()
+	if bookstoreErr != nil {
+		logger.Warn("获取书店服务失败，用户作品列表功能将不可用", zap.Error(bookstoreErr))
+		userRouter.RegisterUserRoutes(v1, userSvc)
+	} else {
+		userRouter.RegisterUserRoutesWithBookstore(v1, userSvc, bookstoreSvc)
+	}
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/")
 	logger.Info("  - /api/v1/register (用户注册)")
 	logger.Info("  - /api/v1/login (用户登录)")
 	logger.Info("  - /api/v1/users/profile (个人信息)")
 	logger.Info("  - /api/v1/users/password (修改密码)")
+	if bookstoreErr == nil {
+		logger.Info("  - /api/v1/users/:userId/books (用户作品列表)")
+	}
 
 	// ============ 注册文档路由 ============
 	projectRouter.RegisterRoutes(v1)
@@ -282,7 +363,14 @@ func RegisterRoutes(r *gin.Engine) {
 		auditSvc = nil
 	}
 
-	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc)
+	// 获取公告服务（用于管理员）
+	announcementSvc, announcementSvcErr := serviceContainer.GetAnnouncementService()
+	if announcementSvcErr != nil {
+		logger.Warn("⚠ AnnouncementService未配置", zap.Error(announcementSvcErr))
+		announcementSvc = nil
+	}
+
+	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc)
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")

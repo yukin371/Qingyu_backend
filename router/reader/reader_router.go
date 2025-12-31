@@ -4,6 +4,7 @@ import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/service/reading"
+	socialService "Qingyu_backend/service/social"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,9 +13,9 @@ import (
 func InitReaderRouter(
 	r *gin.RouterGroup,
 	readerService *reading.ReaderService,
-	commentService *reading.CommentService,
-	likeService *reading.LikeService,
-	collectionService *reading.CollectionService,
+	commentService *socialService.CommentService,
+	likeService *socialService.LikeService,
+	collectionService *socialService.CollectionService,
 	readingHistoryService *reading.ReadingHistoryService,
 ) {
 	// 创建API实例
