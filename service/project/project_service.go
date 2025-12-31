@@ -8,13 +8,13 @@ import (
 
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/service/base"
+	serviceBase "Qingyu_backend/service/base"
 )
 
 // ProjectService 项目服务
 type ProjectService struct {
 	projectRepo writingRepo.ProjectRepository
-	eventBus    base.EventBus
+	eventBus    serviceBase.EventBus
 	serviceName string
 	version     string
 }
@@ -22,7 +22,7 @@ type ProjectService struct {
 // NewProjectService 创建项目服务
 func NewProjectService(
 	projectRepo writingRepo.ProjectRepository,
-	eventBus base.EventBus,
+	eventBus serviceBase.EventBus,
 ) *ProjectService {
 	return &ProjectService{
 		projectRepo: projectRepo,
@@ -45,17 +45,17 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	// 3. 创建项目对象
-	project := &writer.Project{
-		AuthorID:   userID,
-		Title:      req.Title,
-		Summary:    req.Summary,
-		CoverURL:   req.CoverURL,
-		Category:   req.Category,
-		Tags:       req.Tags,
-		Status:     writer.StatusDraft,       // 默认状态为草稿
-		Visibility: writer.VisibilityPrivate, // 默认为私密
-	}
+	// 3. 创建项目对象（使用base mixins）
+	project := &writer.Project{}
+	project.AuthorID = userID
+	project.Title = req.Title
+	project.Summary = req.Summary
+	project.CoverURL = req.CoverURL
+	project.Category = req.Category
+	project.Tags = req.Tags
+	project.Status = writer.StatusDraft       // 默认状态为草稿
+	project.Visibility = writer.VisibilityPrivate // 默认为私密
+	project.WritingType = "novel"             // 默认为小说类型
 
 	// 4. 保存到数据库
 	if err := s.projectRepo.Create(ctx, project); err != nil {
@@ -64,7 +64,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 
 	// 5. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.created",
 			EventData: map[string]interface{}{
 				"project_id": project.ID,
@@ -217,7 +217,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 
 	// 5. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.updated",
 			EventData: map[string]interface{}{
 				"project_id": projectID,
@@ -260,7 +260,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) er
 
 	// 4. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.deleted",
 			EventData: map[string]interface{}{
 				"project_id": projectID,
@@ -399,7 +399,7 @@ func (s *ProjectService) RestoreProjectByID(ctx context.Context, projectID, user
 
 	// 4. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.restored",
 			EventData: map[string]interface{}{
 				"project_id": projectID,
@@ -425,7 +425,7 @@ func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error
 
 	// 2. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.hard_deleted",
 			EventData: map[string]interface{}{
 				"project_id": projectID,

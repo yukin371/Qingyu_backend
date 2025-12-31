@@ -37,19 +37,18 @@ func (s *CharacterService) Create(
 	// 验证关系类型（如果有）
 	// TODO: 验证项目权限
 
-	// 构建角色对象
-	character := &writer.Character{
-		ProjectID:         projectID,
-		Name:              req.Name,
-		Alias:             req.Alias,
-		Summary:           req.Summary,
-		Traits:            req.Traits,
-		Background:        req.Background,
-		AvatarURL:         req.AvatarURL,
-		PersonalityPrompt: req.PersonalityPrompt,
-		SpeechPattern:     req.SpeechPattern,
-		CurrentState:      req.CurrentState,
-	}
+	// 构建角色对象（使用base mixins）
+	character := &writer.Character{}
+	character.ProjectID = projectID
+	character.Name = req.Name
+	character.Alias = req.Alias
+	character.Summary = req.Summary
+	character.Traits = req.Traits
+	character.Background = req.Background
+	character.AvatarURL = req.AvatarURL
+	character.PersonalityPrompt = req.PersonalityPrompt
+	character.SpeechPattern = req.SpeechPattern
+	character.CurrentState = req.CurrentState
 
 	// 保存到数据库
 	if err := s.characterRepo.Create(ctx, character); err != nil {
@@ -223,15 +222,14 @@ func (s *CharacterService) CreateRelation(
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid relation type", "", nil)
 	}
 
-	// 创建关系
-	relation := &writer.CharacterRelation{
-		ProjectID: projectID,
-		FromID:    req.FromID,
-		ToID:      req.ToID,
-		Type:      writer.RelationType(req.Type),
-		Strength:  req.Strength,
-		Notes:     req.Notes,
-	}
+	// 创建关系（使用base mixins）
+	relation := &writer.CharacterRelation{}
+	relation.ProjectID = projectID
+	relation.FromID = req.FromID
+	relation.ToID = req.ToID
+	relation.Type = writer.RelationType(req.Type)
+	relation.Strength = req.Strength
+	relation.Notes = req.Notes
 
 	if err := s.characterRepo.CreateRelation(ctx, relation); err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorInternal, "create character relation failed", "", err)
