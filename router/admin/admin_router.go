@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/middleware"
 	aiService "Qingyu_backend/service/ai"
 	auditService "Qingyu_backend/service/interfaces/audit"
+	messagingService "Qingyu_backend/service/messaging"
 	userService "Qingyu_backend/service/interfaces/user"
 	sharedService "Qingyu_backend/service/shared"
 	adminService "Qingyu_backend/service/shared/admin"
@@ -20,6 +21,7 @@ func RegisterAdminRoutes(
 	auditSvc auditService.ContentAuditService,
 	adminSvc adminService.AdminService,
 	configSvc *sharedService.ConfigService,
+	announcementSvc messagingService.AnnouncementService,
 ) {
 	// 创建admin API实例
 	userAdminAPI := adminApi.NewUserAdminAPI(userSvc)
@@ -27,6 +29,7 @@ func RegisterAdminRoutes(
 	auditAdminAPI := adminApi.NewAuditAdminAPI(auditSvc)
 	systemAdminAPI := adminApi.NewSystemAdminAPI(adminSvc)
 	configAdminAPI := adminApi.NewConfigAPI(configSvc)
+	announcementAdminAPI := adminApi.NewAnnouncementAPI(announcementSvc)
 
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
 	adminGroup := r.Group("/admin")
@@ -110,8 +113,18 @@ func RegisterAdminRoutes(
 		// 提现管理
 		adminGroup.POST("/withdraw/review", systemAdminAPI.ReviewWithdraw)
 
+		// ===========================
 		// 公告管理
-		adminGroup.GET("/announcements", systemAdminAPI.GetAnnouncements)
-		adminGroup.POST("/announcements", systemAdminAPI.CreateAnnouncement)
+		// ===========================
+		announcementsGroup := adminGroup.Group("/announcements")
+		{
+			announcementsGroup.GET("", announcementAdminAPI.GetAnnouncements)           // 获取公告列表
+			announcementsGroup.GET("/:id", announcementAdminAPI.GetAnnouncementByID)    // 获取公告详情
+			announcementsGroup.POST("", announcementAdminAPI.CreateAnnouncement)          // 创建公告
+			announcementsGroup.PUT("/:id", announcementAdminAPI.UpdateAnnouncement)       // 更新公告
+			announcementsGroup.DELETE("/:id", announcementAdminAPI.DeleteAnnouncement)    // 删除公告
+			announcementsGroup.PUT("/batch-status", announcementAdminAPI.BatchUpdateStatus) // 批量更新状态
+			announcementsGroup.DELETE("/batch-delete", announcementAdminAPI.BatchDelete)      // 批量删除
+		}
 	}
 }
