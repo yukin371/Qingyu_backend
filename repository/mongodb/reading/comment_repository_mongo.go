@@ -74,8 +74,8 @@ func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
 
 // Create 创建评论
 func (r *MongoCommentRepository) Create(ctx context.Context, comment *community.Comment) error {
-	if comment.ID.IsZero() {
-		comment.ID = primitive.NewObjectID()
+	if comment.ID == "" {
+		comment.ID = primitive.NewObjectID().Hex()
 	}
 
 	if comment.CreatedAt.IsZero() {
@@ -83,17 +83,14 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *community.
 	}
 	comment.UpdatedAt = time.Now()
 
-	// 初始化统计字段
-	if comment.LikeCount == 0 {
-		comment.LikeCount = 0
-	}
-	if comment.ReplyCount == 0 {
-		comment.ReplyCount = 0
+	// 初始化统计字段（使用mixin字段）
+	if comment.ThreadSize == 0 {
+		comment.ThreadSize = 0
 	}
 
-	// 默认状态为待审核
-	if comment.Status == "" {
-		comment.Status = community.CommentStatusPending
+	// 默认状态为正常
+	if comment.State == "" {
+		comment.State = community.CommentStateNormal
 	}
 
 	_, err := r.collection.InsertOne(ctx, comment)
@@ -106,13 +103,8 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *community.
 
 // GetByID 根据ID获取评论
 func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*community.Comment, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid comment ID: %w", err)
-	}
-
 	var comment community.Comment
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&comment)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("comment not found")
@@ -125,16 +117,11 @@ func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*commu
 
 // Update 更新评论
 func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{"$set": updates},
 	)
 
@@ -151,18 +138,13 @@ func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates 
 
 // Delete 删除评论（软删除）
 func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
 	// 软删除：标记为已删除状态
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{
 			"$set": bson.M{
-				"status":     "deleted",
+				"state":      community.CommentStateDeleted,
 				"updated_at": time.Now(),
 			},
 		},
@@ -182,9 +164,10 @@ func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
 // GetCommentsByBookID 获取书籍的评论列表
 func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
-		"book_id":   bookID,
-		"status":    community.CommentStatusApproved,
-		"parent_id": bson.M{"$exists": false}, // 只获取顶级评论
+		"target_id":  bookID,
+		"target_type": community.CommentTargetTypeBook,
+		"state":      community.CommentStateNormal,
+		"parent_id":  nil, // 只获取顶级评论
 	}
 
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
@@ -192,7 +175,7 @@ func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID
 
 // GetCommentsByUserID 获取用户的评论列表
 func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
-	filter := bson.M{"user_id": userID}
+	filter := bson.M{"author_id": userID}
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
 }
 
@@ -200,7 +183,7 @@ func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID
 func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*community.Comment, error) {
 	filter := bson.M{
 		"parent_id": commentID,
-		"status":    community.CommentStatusApproved,
+		"state":     community.CommentStateNormal,
 	}
 
 	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}}))
@@ -220,9 +203,10 @@ func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, comm
 // GetCommentsByChapterID 获取章节的评论列表
 func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
-		"chapter_id": chapterID,
-		"status":     community.CommentStatusApproved,
-		"parent_id":  bson.M{"$exists": false},
+		"target_id":  chapterID,
+		"target_type": community.CommentTargetTypeChapter,
+		"state":      community.CommentStateNormal,
+		"parent_id":  nil,
 	}
 
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
@@ -231,9 +215,10 @@ func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, cha
 // GetCommentsByBookIDSorted 获取书籍的排序评论列表
 func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
 	filter := bson.M{
-		"book_id":   bookID,
-		"status":    community.CommentStatusApproved,
-		"parent_id": bson.M{"$exists": false},
+		"target_id":  bookID,
+		"target_type": community.CommentTargetTypeBook,
+		"state":      community.CommentStateNormal,
+		"parent_id":  nil,
 	}
 
 	var sort bson.D
@@ -251,14 +236,9 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 
 // UpdateCommentStatus 更新评论审核状态
 func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
 	updates := bson.M{
-		"status":     status,
-		"updated_at": time.Now(),
+		"state":       community.CommentState(status),
+		"updated_at":  time.Now(),
 	}
 
 	if reason != "" {
@@ -267,7 +247,7 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{"$set": updates},
 	)
 
@@ -284,20 +264,15 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 
 // GetPendingComments 获取待审核评论列表
 func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*community.Comment, int64, error) {
-	filter := bson.M{"status": community.CommentStatusPending}
+	filter := bson.M{"state": community.CommentStateNormal} // 或根据业务需求使用pending状态
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: 1}})
 }
 
 // IncrementLikeCount 增加点赞数
 func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
-	_, err = r.collection.UpdateOne(
+	_, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{
 			"$inc": bson.M{"like_count": 1},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -313,14 +288,9 @@ func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id stri
 
 // DecrementLikeCount 减少点赞数
 func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
-	_, err = r.collection.UpdateOne(
+	_, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{
 			"$inc": bson.M{"like_count": -1},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -336,16 +306,11 @@ func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id stri
 
 // IncrementReplyCount 增加回复数
 func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
-	_, err = r.collection.UpdateOne(
+	_, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{
-			"$inc": bson.M{"reply_count": 1},
+			"$inc": bson.M{"thread_size": 1},
 			"$set": bson.M{"updated_at": time.Now()},
 		},
 	)
@@ -359,16 +324,11 @@ func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id str
 
 // DecrementReplyCount 减少回复数
 func (r *MongoCommentRepository) DecrementReplyCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid comment ID: %w", err)
-	}
-
-	_, err = r.collection.UpdateOne(
+	_, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": id},
 		bson.M{
-			"$inc": bson.M{"reply_count": -1},
+			"$inc": bson.M{"thread_size": -1},
 			"$set": bson.M{"updated_at": time.Now()},
 		},
 	)
@@ -384,9 +344,10 @@ func (r *MongoCommentRepository) DecrementReplyCount(ctx context.Context, id str
 func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID string) (map[string]interface{}, error) {
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"book_id": bookID,
-			"status":  community.CommentStatusApproved,
-			"rating":  bson.M{"$gt": 0},
+			"target_id":  bookID,
+			"target_type": community.CommentTargetTypeBook,
+			"state":      community.CommentStateNormal,
+			"rating":     bson.M{"$gt": 0},
 		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":         nil,
@@ -429,9 +390,10 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 // GetCommentCount 获取书籍评论总数
 func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID string) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{
-		"book_id":   bookID,
-		"status":    community.CommentStatusApproved,
-		"parent_id": bson.M{"$exists": false},
+		"target_id":  bookID,
+		"target_type": community.CommentTargetTypeBook,
+		"state":      community.CommentStateNormal,
+		"parent_id":  nil,
 	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count comments: %w", err)
@@ -442,16 +404,7 @@ func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID str
 
 // GetCommentsByIDs 批量获取评论
 func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*community.Comment, error) {
-	objectIDs := make([]primitive.ObjectID, 0, len(ids))
-	for _, id := range ids {
-		objectID, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			continue
-		}
-		objectIDs = append(objectIDs, objectID)
-	}
-
-	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": objectIDs}})
+	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comments by IDs: %w", err)
 	}
@@ -469,10 +422,13 @@ func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []str
 func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, bookID string) error {
 	_, err := r.collection.UpdateMany(
 		ctx,
-		bson.M{"book_id": bookID},
+		bson.M{
+			"target_id":  bookID,
+			"target_type": community.CommentTargetTypeBook,
+		},
 		bson.M{
 			"$set": bson.M{
-				"status":     "deleted",
+				"state":      community.CommentStateDeleted,
 				"updated_at": time.Now(),
 			},
 		},
