@@ -1,26 +1,48 @@
 package writer
 
-import "time"
+import (
+	"Qingyu_backend/models/writer/base"
+)
 
 // Character 角色卡片
 type Character struct {
-	ID         string   `bson:"_id,omitempty" json:"id"`
-	ProjectID  string   `bson:"project_id" json:"projectId"`
-	Name       string   `bson:"name" json:"name"`
-	Alias      []string `bson:"alias,omitempty" json:"alias,omitempty"`
-	Summary    string   `bson:"summary,omitempty" json:"summary,omitempty"`
-	Traits     []string `bson:"traits,omitempty" json:"traits,omitempty"` // 性格标签
-	Background string   `bson:"background,omitempty" json:"background,omitempty"`
-	AvatarURL  string   `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty"`
+	base.IdentifiedEntity    // ID
+	base.Timestamps          // 时间戳
+	base.ProjectScopedEntity // ProjectID
+	base.NamedEntity         // Name
+
+	// 基本信息（保持BSON字段名不变，确保数据库兼容）
+	Alias         []string `bson:"alias,omitempty" json:"alias,omitempty" validate:"max=10"`
+	Summary       string   `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=500"`
+	Traits        []string `bson:"traits,omitempty" json:"traits,omitempty" validate:"max=20"`
+	Background    string   `bson:"background,omitempty" json:"background,omitempty" validate:"max=2000"`
+	AvatarURL     string   `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty" validate:"omitempty,url"`
 
 	// AI相关字段
-	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty"` // 角色性格提示
-	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty"`         // 角色语音模式
-	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty"`           // 角色当前状态
-	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty"`   // 角色摘要
+	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty" validate:"max=1000"` // 角色性格提示
+	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty" validate:"max=500"`         // 角色语音模式
+	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty" validate:"max=200"`           // 角色当前状态
+	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty" validate:"max=200"`    // 角色摘要
+}
 
-	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
+// TouchForCreate 创建时设置默认值
+func (c *Character) TouchForCreate() {
+	c.IdentifiedEntity.GenerateID()
+	c.Timestamps.TouchForCreate()
+}
+
+// Validate 验证角色数据
+func (c *Character) Validate() error {
+	if err := base.ValidateName(c.Name, 100); err != nil {
+		return err
+	}
+	if c.ProjectID == "" {
+		return base.ErrProjectIDRequired
+	}
+	if err := base.ValidateURL(c.AvatarURL); err != nil {
+		return err
+	}
+	return nil
 }
 
 // RelationType 关系类型
@@ -35,9 +57,40 @@ const (
 	RelationOther   RelationType = "其他"
 )
 
-// IsValidRelationType 验证关系类型是否合法
-func IsValidRelationType(t string) bool {
-	switch RelationType(t) {
+// CharacterRelation 角色关系（边表）
+// 允许有方向，也可约定对称关系由 Service 保持双向两条边
+type CharacterRelation struct {
+	base.IdentifiedEntity
+	base.Timestamps
+	base.ProjectScopedEntity
+
+	FromID   string       `bson:"from_id" json:"fromId" validate:"required"`
+	ToID     string       `bson:"to_id" json:"toId" validate:"required"`
+	Type     RelationType `bson:"type" json:"type" validate:"required"`
+	Strength int          `bson:"strength" json:"strength" validate:"min=0,max=100"`
+	Notes    string       `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
+}
+
+// TouchForCreate 创建时设置默认值
+func (cr *CharacterRelation) TouchForCreate() {
+	cr.IdentifiedEntity.GenerateID()
+	cr.Timestamps.TouchForCreate()
+}
+
+// Validate 验证角色关系
+func (cr *CharacterRelation) Validate() error {
+	if cr.ProjectID == "" {
+		return base.ErrProjectIDRequired
+	}
+	if !cr.Type.IsValid() {
+		return base.ErrInvalidEnum
+	}
+	return nil
+}
+
+// IsValid 验证关系类型是否合法
+func (rt RelationType) IsValid() bool {
+	switch rt {
 	case RelationFriend, RelationFamily, RelationEnemy, RelationRomance, RelationAlly, RelationOther:
 		return true
 	default:
@@ -45,21 +98,7 @@ func IsValidRelationType(t string) bool {
 	}
 }
 
-// CharacterRelation 角色关系（边表）
-// 允许有方向，也可约定对称关系由 Service 保持双向两条边
-type CharacterRelation struct {
-	ID        string       `bson:"_id,omitempty" json:"id"`
-	ProjectID string       `bson:"project_id" json:"projectId"`
-	FromID    string       `bson:"from_id" json:"fromId"`
-	ToID      string       `bson:"to_id" json:"toId"`
-	Type      RelationType `bson:"type" json:"type"`
-	Strength  int          `bson:"strength" json:"strength"` // 0-100 强度
-	Notes     string       `bson:"notes,omitempty" json:"notes,omitempty"`
-	CreatedAt time.Time    `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time    `bson:"updated_at" json:"updatedAt"`
-}
-
-// IsValidRelationType 验证关系类型是否合法
-func (r *CharacterRelation) IsValidRelationType() bool {
-	return IsValidRelationType(string(r.Type))
+// IsValidRelationType 验证关系类型是否合法（保持向后兼容）
+func IsValidRelationType(t string) bool {
+	return RelationType(t).IsValid()
 }
