@@ -1,4 +1,4 @@
-package community
+package social
 
 import (
 	"time"
