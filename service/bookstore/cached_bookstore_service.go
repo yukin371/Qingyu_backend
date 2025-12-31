@@ -364,3 +364,8 @@ func (c *CachedBookstoreService) UpdateRankings(ctx context.Context, rankingType
 
 	return nil
 }
+
+// GetBooksByAuthorID 根据作者ID获取书籍列表（直接委托，不使用缓存）
+func (c *CachedBookstoreService) GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	return c.service.GetBooksByAuthorID(ctx, authorID, page, pageSize)
+}

@@ -3,6 +3,7 @@ package user
 import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	"context"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,8 @@ import (
 
 // UserAPI 用户管理API处理器
 type UserAPI struct {
-	userService userServiceInterface.UserService
+	userService      userServiceInterface.UserService
+	bookstoreService interface{} // 使用interface{}以避免循环依赖，运行时类型断言
 }
 
 // NewUserAPI 创建用户API实例
@@ -22,6 +24,11 @@ func NewUserAPI(userService userServiceInterface.UserService) *UserAPI {
 	return &UserAPI{
 		userService: userService,
 	}
+}
+
+// SetBookstoreService 设置BookstoreService（可选依赖注入）
+func (api *UserAPI) SetBookstoreService(bookstoreSvc interface{}) {
+	api.bookstoreService = bookstoreSvc
 }
 
 // Register 用户注册
@@ -408,28 +415,42 @@ func (api *UserAPI) GetUserBooks(c *gin.Context) {
 	// 获取分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	_ = c.Query("status") // status 参数预留，待 BookService 实现时使用
+	_ = c.Query("status") // status 参数预留，可用于进一步筛选
 
-	// TODO: 调用BookService查询用户的已发布作品
-	// 这里简化实现，返回模拟数据
-	// 实际应该调用 bookService.GetBooksByAuthor(ctx, userID, page, size, status)
-
-	books := []map[string]interface{}{
-		{
-			"book_id":     "book123",
-			"title":       "示例作品",
-			"cover":       "",
-			"description": "这是一部精彩的作品",
-			"category":    "玄幻",
-			"status":      "published",
-			"word_count":  100000,
-			"created_at":  "2024-01-01T00:00:00Z",
-		},
+	// 如果没有设置BookstoreService，返回空列表
+	if api.bookstoreService == nil {
+		shared.Success(c, http.StatusOK, "获取成功", UserBooksResponse{
+			Books: []map[string]interface{}{},
+			Total: 0,
+			Page:  page,
+			Size:  size,
+		})
+		return
 	}
 
+	// 使用类型断言调用BookstoreService的GetBooksByAuthorID方法
+	type BookstoreService interface {
+		GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) (interface{}, int64, error)
+	}
+
+	bookstoreSvc, ok := api.bookstoreService.(BookstoreService)
+	if !ok {
+		shared.InternalError(c, "服务配置错误", nil)
+		return
+	}
+
+	// 调用BookstoreService查询用户的已发布作品
+	booksRaw, total, err := bookstoreSvc.GetBooksByAuthorID(c.Request.Context(), userID, page, size)
+	if err != nil {
+		shared.InternalError(c, "获取用户作品失败", err)
+		return
+	}
+
+	// 将返回的书籍转换为响应格式
+	// booksRaw 应该是 []*bookstore.Book 类型，转换为 []map[string]interface{}
 	response := UserBooksResponse{
-		Books: books,
-		Total: len(books),
+		Books: booksRaw,
+		Total: int(total),
 		Page:  page,
 		Size:  size,
 	}

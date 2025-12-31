@@ -19,6 +19,7 @@ type BookstoreService interface {
 	// 书籍列表相关服务 - 使用Book模型
 	GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error)
 	GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error)
 	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
 	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
 	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
@@ -129,6 +130,39 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 	total, err := s.bookRepo.CountByCategory(ctx, objectID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count books by category: %w", err)
+	}
+
+	// 过滤只返回已发布的书籍
+	var publishedBooks []*bookstore2.Book
+	for _, book := range books {
+		if book.Status == "published" {
+			publishedBooks = append(publishedBooks, book)
+		}
+	}
+
+	return publishedBooks, total, nil
+}
+
+// GetBooksByAuthorID 根据作者ID获取书籍列表
+func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	objectID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid author ID: %w", err)
+	}
+
+	// 计算偏移量
+	offset := (page - 1) * pageSize
+
+	// 获取书籍列表
+	books, err := s.bookRepo.GetByAuthorID(ctx, objectID, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get books by author: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookRepo.CountByAuthor(ctx, authorID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count books by author: %w", err)
 	}
 
 	// 过滤只返回已发布的书籍
