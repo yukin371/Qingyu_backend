@@ -26,6 +26,62 @@ func RegisterUserRoutes(r *gin.RouterGroup, userService serviceInterfaces.UserSe
 	}
 
 	// =========================
+	// 公开用户信息路由（无需认证）
+	// =========================
+	{
+		// 获取用户公开信息（用于用户主页）
+		r.GET("/users/:userId/profile", userAPI.GetUserProfile)
+
+		// 获取用户作品列表（用于作者主页）
+		r.GET("/users/:userId/books", userAPI.GetUserBooks)
+	}
+
+	// =========================
+	// 需要认证的路由
+	// =========================
+	authenticated := r.Group("/users")
+	authenticated.Use(middleware.JWTAuth()) // 启用JWT认证中间件
+	{
+		// 获取当前用户信息
+		authenticated.GET("/profile", userAPI.GetProfile)
+
+		// 更新当前用户信息
+		authenticated.PUT("/profile", userAPI.UpdateProfile)
+
+		// 修改密码
+		authenticated.PUT("/password", userAPI.ChangePassword)
+	}
+}
+
+// RegisterUserRoutesWithBookstore 注册用户相关路由（包含书店服务）
+func RegisterUserRoutesWithBookstore(r *gin.RouterGroup, userService serviceInterfaces.UserService, bookstoreService interface{}) {
+	// 创建UserAPI
+	userAPI := userApi.NewUserAPI(userService)
+	userAPI.SetBookstoreService(bookstoreService)
+
+	// =========================
+	// 公开路由（无需认证）
+	// =========================
+	{
+		// 用户注册
+		r.POST("/register", userAPI.Register)
+
+		// 用户登录
+		r.POST("/login", userAPI.Login)
+	}
+
+	// =========================
+	// 公开用户信息路由（无需认证）
+	// =========================
+	{
+		// 获取用户公开信息（用于用户主页）
+		r.GET("/users/:userId/profile", userAPI.GetUserProfile)
+
+		// 获取用户作品列表（用于作者主页）
+		r.GET("/users/:userId/books", userAPI.GetUserBooks)
+	}
+
+	// =========================
 	// 需要认证的路由
 	// =========================
 	authenticated := r.Group("/users")

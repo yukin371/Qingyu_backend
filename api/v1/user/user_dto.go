@@ -89,8 +89,8 @@ type PublicUserProfileResponse struct {
 
 // UserBooksResponse 用户作品列表响应
 type UserBooksResponse struct {
-	Books []map[string]interface{} `json:"books"`
-	Total int                      `json:"total"`
-	Page  int                      `json:"page"`
-	Size  int                      `json:"size"`
+	Books interface{} `json:"books"`
+	Total int         `json:"total"`
+	Page  int         `json:"page"`
+	Size  int         `json:"size"`
 }
