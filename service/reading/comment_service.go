@@ -90,25 +90,29 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 
 	// 创建评论对象
 	comment := &community.Comment{
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		UserID:     userID,
+		TargetType: community.CommentTargetTypeBook,
+		TargetID:   bookID,
+		AuthorID:   userID,
 		Content:    strings.TrimSpace(content),
 		Rating:     rating,
-		LikeCount:  0,
-		ReplyCount: 0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		State:      community.CommentStateNormal,
+	}
+
+	// 兼容旧字段（可选）
+	if chapterID != "" {
+		comment.ChapterID = chapterID
 	}
 
 	// 自动审核
-	status, reason, err := s.AutoReviewComment(ctx, comment)
+	state, reason, err := s.AutoReviewComment(ctx, comment)
 	if err != nil {
 		return nil, fmt.Errorf("评论审核失败: %w", err)
 	}
 
-	comment.Status = status
-	comment.RejectReason = reason
+	comment.State = state
+	if reason != "" {
+		comment.RejectReason = reason
+	}
 
 	// 保存评论
 	if err := s.commentRepo.Create(ctx, comment); err != nil {
@@ -141,34 +145,41 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 检查父评论是否已删除
-	if parentComment.Status == "deleted" {
+	if parentComment.State == community.CommentStateDeleted {
 		return nil, fmt.Errorf("无法回复已删除的评论")
 	}
 
 	// 创建回复评论
-	comment := &community.Comment{
-		BookID:      parentComment.BookID,
-		ChapterID:   parentComment.ChapterID,
-		UserID:      userID,
-		Content:     strings.TrimSpace(content),
-		Rating:      0, // 回复不包含评分
-		ParentID:    parentCommentID,
-		RootID:      s.getRootID(parentComment),
-		ReplyToUser: parentComment.UserID,
-		LikeCount:   0,
-		ReplyCount:  0,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	parentID := parentCommentID
+	rootID := parentComment.RootID
+	if rootID == nil {
+		rootID = &parentCommentID
 	}
+	replyToUserID := parentComment.AuthorID
+
+	comment := &community.Comment{
+		TargetType:        parentComment.TargetType,
+		TargetID:          parentComment.TargetID,
+		AuthorID:          userID,
+		Content:           strings.TrimSpace(content),
+		Rating:            0, // 回复不包含评分
+		State:             community.CommentStateNormal,
+	}
+	// 设置嵌入字段的字段
+	comment.ParentID = &parentID
+	comment.RootID = rootID
+	comment.ReplyToUserID = &replyToUserID
 
 	// 自动审核
-	status, reason, err := s.AutoReviewComment(ctx, comment)
+	state, reason, err := s.AutoReviewComment(ctx, comment)
 	if err != nil {
 		return nil, fmt.Errorf("回复审核失败: %w", err)
 	}
 
-	comment.Status = status
-	comment.RejectReason = reason
+	comment.State = state
+	if reason != "" {
+		comment.RejectReason = reason
+	}
 
 	// 保存回复
 	if err := s.commentRepo.Create(ctx, comment); err != nil {
@@ -176,7 +187,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 增加父评论的回复数
-	if comment.Status == community.CommentStatusApproved {
+	if comment.State == community.CommentStateNormal {
 		if err := s.commentRepo.IncrementReplyCount(ctx, parentCommentID); err != nil {
 			// 非致命错误，只记录日志
 			fmt.Printf("Warning: Failed to increment reply count: %v\n", err)
@@ -250,7 +261,7 @@ func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, c
 	}
 
 	// 权限检查
-	if comment.UserID != userID {
+	if comment.AuthorID != userID {
 		return fmt.Errorf("没有权限修改此评论")
 	}
 
@@ -298,7 +309,7 @@ func (s *CommentService) DeleteComment(ctx context.Context, userID, commentID st
 	}
 
 	// 权限检查
-	if comment.UserID != userID {
+	if comment.AuthorID != userID {
 		return fmt.Errorf("没有权限删除此评论")
 	}
 
@@ -308,8 +319,8 @@ func (s *CommentService) DeleteComment(ctx context.Context, userID, commentID st
 	}
 
 	// 如果是回复，减少父评论的回复数
-	if comment.ParentID != "" {
-		if err := s.commentRepo.DecrementReplyCount(ctx, comment.ParentID); err != nil {
+	if comment.ParentID != nil && *comment.ParentID != "" {
+		if err := s.commentRepo.DecrementReplyCount(ctx, *comment.ParentID); err != nil {
 			fmt.Printf("Warning: Failed to decrement reply count: %v\n", err)
 		}
 	}
@@ -349,25 +360,25 @@ func (s *CommentService) UnlikeComment(ctx context.Context, userID, commentID st
 // =========================
 
 // AutoReviewComment 自动审核评论
-func (s *CommentService) AutoReviewComment(ctx context.Context, comment *community.Comment) (string, string, error) {
+func (s *CommentService) AutoReviewComment(ctx context.Context, comment *community.Comment) (community.CommentState, string, error) {
 	// 如果敏感词库未配置，默认通过
 	if s.sensitiveWordRepo == nil {
-		return community.CommentStatusApproved, "", nil
+		return community.CommentStateNormal, "", nil
 	}
 
 	// 检查敏感词
 	hasSensitive, sensitiveWords, err := s.checkSensitiveWords(ctx, comment.Content)
 	if err != nil {
-		return community.CommentStatusPending, "", fmt.Errorf("敏感词检测失败: %w", err)
+		return community.CommentStateNormal, "", fmt.Errorf("敏感词检测失败: %w", err)
 	}
 
 	if hasSensitive {
 		reason := fmt.Sprintf("评论包含敏感词: %s", strings.Join(sensitiveWords, ", "))
-		return community.CommentStatusRejected, reason, nil
+		return community.CommentStateRejected, reason, nil
 	}
 
 	// 通过审核
-	return community.CommentStatusApproved, "", nil
+	return community.CommentStateNormal, "", nil
 }
 
 // =========================
@@ -452,14 +463,14 @@ func (s *CommentService) checkSensitiveWords(ctx context.Context, content string
 }
 
 // getRootID 获取根评论ID
-func (s *CommentService) getRootID(comment *community.Comment) string {
-	if comment.RootID != "" {
+func (s *CommentService) getRootID(comment *community.Comment) *string {
+	if comment.RootID != nil {
 		return comment.RootID
 	}
-	if comment.ParentID != "" {
+	if comment.ParentID != nil {
 		return comment.ParentID
 	}
-	return comment.ID.Hex()
+	return &comment.ID
 }
 
 // publishCommentEvent 发布评论事件
@@ -471,10 +482,11 @@ func (s *CommentService) publishCommentEvent(ctx context.Context, eventType stri
 	event := &base.BaseEvent{
 		EventType: eventType,
 		EventData: map[string]interface{}{
-			"comment_id": comment.ID.Hex(),
-			"book_id":    comment.BookID,
-			"user_id":    comment.UserID,
-			"status":     comment.Status,
+			"comment_id":  comment.ID,
+			"target_id":   comment.TargetID,
+			"target_type": comment.TargetType,
+			"author_id":   comment.AuthorID,
+			"state":       comment.State,
 		},
 		Timestamp: time.Now(),
 		Source:    s.serviceName,
