@@ -1,4 +1,4 @@
-package reader
+package social
 
 import (
 	"net/http"
@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	socialService "Qingyu_backend/service/social"
+	"Qingyu_backend/service/social"
 )
 
 // LikeAPI 点赞API处理器
 type LikeAPI struct {
-	likeService *socialService.LikeService
+	likeService *social.LikeService
 }
 
 // NewLikeAPI 创建点赞API实例
-func NewLikeAPI(likeService *socialService.LikeService) *LikeAPI {
+func NewLikeAPI(likeService *social.LikeService) *LikeAPI {
 	return &LikeAPI{
 		likeService: likeService,
 	}
