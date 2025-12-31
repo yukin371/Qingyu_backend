@@ -12,6 +12,7 @@ import (
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
@@ -22,6 +23,7 @@ import (
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
 	mongoAudit "Qingyu_backend/repository/mongodb/audit"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
+	mongoMessaging "Qingyu_backend/repository/mongodb/messaging"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	mongoShared "Qingyu_backend/repository/mongodb/shared"
@@ -267,6 +269,11 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 // CreateStorageRepository 创建存储Repository
 func (f *MongoRepositoryFactory) CreateStorageRepository() sharedRepo.StorageRepository {
 	return NewMongoStorageRepository(f.database)
+}
+
+// CreateAnnouncementRepository 创建公告Repository
+func (f *MongoRepositoryFactory) CreateAnnouncementRepository() messagingRepo.AnnouncementRepository {
+	return mongoMessaging.NewMongoAnnouncementRepository(f.client, f.database.Name())
 }
 
 // CreateAdminRepository 创建管理后台Repository

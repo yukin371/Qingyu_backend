@@ -6,6 +6,7 @@ import (
 	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
+	messagingInterfaces "Qingyu_backend/repository/interfaces/messaging"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
 	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
@@ -63,6 +64,9 @@ type RepositoryFactory interface {
 	CreateWalletRepository() SharedInterfaces.WalletRepository
 	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
 	CreateStorageRepository() SharedInterfaces.StorageRepository
+
+	// Messaging相关Repository
+	CreateAnnouncementRepository() messagingInterfaces.AnnouncementRepository
 
 	// 审核相关Repository
 	CreateSensitiveWordRepository() AuditInterfaces.SensitiveWordRepository
