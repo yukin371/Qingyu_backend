@@ -17,15 +17,19 @@ import (
 	bookstoreService "Qingyu_backend/service/bookstore"
 	projectService "Qingyu_backend/service/project"
 	readingService "Qingyu_backend/service/reading"
+	socialService "Qingyu_backend/service/social"
 	userService "Qingyu_backend/service/user"
 
 	// Audit service
 	auditSvc "Qingyu_backend/service/audit"
 
+	// Messaging service
+	messagingSvc "Qingyu_backend/service/messaging"
+
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
-	"Qingyu_backend/service/shared/messaging"
+	sharedMessaging "Qingyu_backend/service/shared/messaging"
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
@@ -69,9 +73,9 @@ type ServiceContainer struct {
 	bookRatingService     bookstoreService.BookRatingService
 	bookStatisticsService bookstoreService.BookStatisticsService
 	readerService         *readingService.ReaderService
-	commentService        *readingService.CommentService
-	likeService           *readingService.LikeService
-	collectionService     *readingService.CollectionService
+	commentService        *socialService.CommentService
+	likeService           *socialService.LikeService
+	collectionService     *socialService.CollectionService
 	readingHistoryService *readingService.ReadingHistoryService
 	projectService        *projectService.ProjectService
 
@@ -80,13 +84,14 @@ type ServiceContainer struct {
 	chatService  *aiService.ChatService
 	phase3Client *aiService.Phase3Client
 
-	// 共享服务
+	// Shared services
 	authService           auth.AuthService
 	walletService         wallet.WalletService
 	recommendationService recommendation.RecommendationService
-	messagingService      messaging.MessagingService
+	messagingService      sharedMessaging.MessagingService
 	storageService        storage.StorageService
 	adminService          admin.AdminService
+	announcementService   messagingSvc.AnnouncementService
 
 	// 审核服务
 	auditService *auditSvc.ContentAuditService
@@ -210,7 +215,7 @@ func (c *ServiceContainer) GetReaderService() (*readingService.ReaderService, er
 }
 
 // GetCommentService 获取评论服务
-func (c *ServiceContainer) GetCommentService() (*readingService.CommentService, error) {
+func (c *ServiceContainer) GetCommentService() (*socialService.CommentService, error) {
 	if c.commentService == nil {
 		return nil, fmt.Errorf("CommentService未初始化")
 	}
@@ -218,7 +223,7 @@ func (c *ServiceContainer) GetCommentService() (*readingService.CommentService, 
 }
 
 // GetLikeService 获取点赞服务
-func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error) {
+func (c *ServiceContainer) GetLikeService() (*socialService.LikeService, error) {
 	if c.likeService == nil {
 		return nil, fmt.Errorf("LikeService未初始化")
 	}
@@ -226,7 +231,7 @@ func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error)
 }
 
 // GetCollectionService 获取收藏服务
-func (c *ServiceContainer) GetCollectionService() (*readingService.CollectionService, error) {
+func (c *ServiceContainer) GetCollectionService() (*socialService.CollectionService, error) {
 	if c.collectionService == nil {
 		return nil, fmt.Errorf("CollectionService未初始化")
 	}
@@ -292,7 +297,7 @@ func (c *ServiceContainer) GetRecommendationService() (recommendation.Recommenda
 }
 
 // GetMessagingService 获取消息服务
-func (c *ServiceContainer) GetMessagingService() (messaging.MessagingService, error) {
+func (c *ServiceContainer) GetMessagingService() (sharedMessaging.MessagingService, error) {
 	if c.messagingService == nil {
 		return nil, fmt.Errorf("MessagingService未初始化")
 	}
@@ -321,6 +326,14 @@ func (c *ServiceContainer) GetAuditService() (*auditSvc.ContentAuditService, err
 		return nil, fmt.Errorf("AuditService未初始化")
 	}
 	return c.auditService, nil
+}
+
+// GetAnnouncementService 获取公告服务
+func (c *ServiceContainer) GetAnnouncementService() (messagingSvc.AnnouncementService, error) {
+	if c.announcementService == nil {
+		return nil, fmt.Errorf("AnnouncementService未初始化")
+	}
+	return c.announcementService, nil
 }
 
 // GetEventBus 获取事件总线
@@ -586,7 +599,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	commentRepo := c.repositoryFactory.CreateCommentRepository()
 	sensitiveWordRepo := c.repositoryFactory.CreateSensitiveWordRepository()
 
-	c.commentService = readingService.NewCommentService(
+	c.commentService = socialService.NewCommentService(
 		commentRepo,
 		sensitiveWordRepo, // 可以为nil，表示不启用敏感词检测
 		c.eventBus,        // 注入事件总线
@@ -596,7 +609,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 4.5 创建点赞服务 ============
 	likeRepo := c.repositoryFactory.CreateLikeRepository()
 
-	c.likeService = readingService.NewLikeService(
+	c.likeService = socialService.NewLikeService(
 		likeRepo,
 		commentRepo, // 用于更新评论点赞数
 		c.eventBus,  // 注入事件总线
@@ -606,7 +619,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 4.6 创建收藏服务 ============
 	collectionRepo := c.repositoryFactory.CreateCollectionRepository()
 
-	c.collectionService = readingService.NewCollectionService(
+	c.collectionService = socialService.NewCollectionService(
 		collectionRepo,
 		c.eventBus, // 注入事件总线
 	)
@@ -781,8 +794,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	if c.redisClient != nil {
 		rawClient := c.redisClient.GetClient()
 		if redisClient, ok := rawClient.(*redis.Client); ok {
-			queueClient := messaging.NewRedisQueueClient(redisClient)
-			messagingSvc := messaging.NewMessagingService(queueClient)
+			queueClient := sharedMessaging.NewRedisQueueClient(redisClient)
+			messagingSvc := sharedMessaging.NewMessagingService(queueClient)
 			c.messagingService = messagingSvc
 
 			if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
@@ -798,7 +811,19 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
 	}
 
-	// 5.7 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
+	// 5.7 AnnouncementService
+	announcementRepo := c.repositoryFactory.CreateAnnouncementRepository()
+	announcementSvc := messagingSvc.NewAnnouncementService(announcementRepo)
+	c.announcementService = announcementSvc
+
+	if baseAnnouncementSvc, ok := announcementSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AnnouncementService", baseAnnouncementSvc); err != nil {
+			return fmt.Errorf("注册公告服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ AnnouncementService初始化完成")
+
+	// 5.8 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
 	// TODO: 完整的AuditService初始化逻辑需要在service/audit完全实现后添加
 	fmt.Println("  ℹ AuditService初始化跳过（标记为可选）")
 
@@ -830,7 +855,7 @@ func (c *ServiceContainer) SetRecommendationService(service recommendation.Recom
 }
 
 // SetMessagingService 设置消息服务
-func (c *ServiceContainer) SetMessagingService(service messaging.MessagingService) {
+func (c *ServiceContainer) SetMessagingService(service sharedMessaging.MessagingService) {
 	c.messagingService = service
 }
 
