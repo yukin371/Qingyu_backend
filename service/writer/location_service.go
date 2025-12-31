@@ -34,17 +34,17 @@ func (s *LocationService) Create(
 	projectID, userID string,
 	req *serviceInterfaces.CreateLocationRequest,
 ) (*writer.Location, error) {
-	location := &writer.Location{
-		ProjectID:   projectID,
-		Name:        req.Name,
-		Description: req.Description,
-		Climate:     req.Climate,
-		Culture:     req.Culture,
-		Geography:   req.Geography,
-		Atmosphere:  req.Atmosphere,
-		ParentID:    req.ParentID,
-		ImageURL:    req.ImageURL,
-	}
+	// 构建地点对象（使用base mixins）
+	location := &writer.Location{}
+	location.ProjectID = projectID
+	location.Name = req.Name
+	location.Description = req.Description
+	location.Climate = req.Climate
+	location.Culture = req.Culture
+	location.Geography = req.Geography
+	location.Atmosphere = req.Atmosphere
+	location.ParentID = req.ParentID
+	location.ImageURL = req.ImageURL
 
 	if err := s.locationRepo.Create(ctx, location); err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorInternal, "create location failed", "", err)
@@ -232,14 +232,14 @@ func (s *LocationService) CreateRelation(
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid relation type", "", nil)
 	}
 
-	relation := &writer.LocationRelation{
-		ProjectID: projectID,
-		FromID:    req.FromID,
-		ToID:      req.ToID,
-		Type:      writer.LocationRelationType(req.Type),
-		Distance:  req.Distance,
-		Notes:     req.Notes,
-	}
+	// 创建关系（使用base mixins）
+	relation := &writer.LocationRelation{}
+	relation.ProjectID = projectID
+	relation.FromID = req.FromID
+	relation.ToID = req.ToID
+	relation.Type = writer.LocationRelationType(req.Type)
+	relation.Distance = req.Distance
+	relation.Notes = req.Notes
 
 	if err := s.locationRepo.CreateRelation(ctx, relation); err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorInternal, "create location relation failed", "", err)

@@ -8,7 +8,7 @@ import (
 
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writingRepo "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/service/base"
+	serviceBase "Qingyu_backend/service/base"
 )
 
 // DocumentService 文档服务
@@ -16,7 +16,7 @@ type DocumentService struct {
 	documentRepo        writingRepo.DocumentRepository
 	documentContentRepo writingRepo.DocumentContentRepository
 	projectRepo         writingRepo.ProjectRepository
-	eventBus            base.EventBus
+	eventBus            serviceBase.EventBus
 	serviceName         string
 	version             string
 }
@@ -26,7 +26,7 @@ func NewDocumentService(
 	documentRepo writingRepo.DocumentRepository,
 	documentContentRepo writingRepo.DocumentContentRepository,
 	projectRepo writingRepo.ProjectRepository,
-	eventBus base.EventBus,
+	eventBus serviceBase.EventBus,
 ) *DocumentService {
 	return &DocumentService{
 		documentRepo:        documentRepo,
@@ -76,29 +76,28 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "父文档不存在", "", nil)
 		}
 
-		if !parent.CanHaveChildren() {
-			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "该文档不能添加子文档（最多3层）", "", nil)
+		if !parent.CanHaveChildren(project.WritingType) {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "该文档不能添加子文档（达到最大层级）", "", nil)
 		}
 
 		level = parent.GetNextLevel()
 	}
 
-	// 4. 创建文档对象
-	doc := &writer.Document{
-		ProjectID:    req.ProjectID,
-		ParentID:     req.ParentID,
-		Title:        req.Title,
-		Type:         writer.DocumentType(req.Type),
-		Level:        level,
-		Order:        req.Order,
-		Status:       "planned",
-		WordCount:    0,
-		CharacterIDs: req.CharacterIDs,
-		LocationIDs:  req.LocationIDs,
-		TimelineIDs:  req.TimelineIDs,
-		Tags:         req.Tags,
-		Notes:        req.Notes,
-	}
+	// 4. 创建文档对象（使用base mixins）
+	doc := &writer.Document{}
+	doc.ProjectID = req.ProjectID
+	doc.Title = req.Title
+	doc.ParentID = req.ParentID
+	doc.Type = req.Type // DocumentType现在是string类型
+	doc.Level = level
+	doc.Order = req.Order
+	doc.Status = "planned"
+	doc.WordCount = 0
+	doc.CharacterIDs = req.CharacterIDs
+	doc.LocationIDs = req.LocationIDs
+	doc.TimelineIDs = req.TimelineIDs
+	doc.Tags = req.Tags
+	doc.Notes = req.Notes
 
 	// 5. 保存文档
 	if err := s.documentRepo.Create(ctx, doc); err != nil {
@@ -110,7 +109,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 
 	// 7. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.created",
 			EventData: map[string]interface{}{
 				"document_id": doc.ID,
@@ -259,7 +258,7 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 
 	// 5. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.updated",
 			EventData: map[string]interface{}{
 				"document_id": documentID,
@@ -310,7 +309,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 
 	// 5. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.deleted",
 			EventData: map[string]interface{}{
 				"document_id": documentID,
@@ -368,11 +367,8 @@ func (s *DocumentService) validateCreateDocumentRequest(req *CreateDocumentReque
 		return fmt.Errorf("文档类型不能为空")
 	}
 
-	// 验证文档类型
-	docType := writer.DocumentType(req.Type)
-	if !docType.IsValid() {
-		return fmt.Errorf("无效的文档类型: %s", req.Type)
-	}
+	// 注意：文档类型的具体验证需要在服务层进行，因为需要项目的writing_type
+	// 这里只做基础验证
 
 	return nil
 }
@@ -518,8 +514,8 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "目标父文档不存在", "", nil)
 		}
 
-		if !parent.CanHaveChildren() {
-			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "目标节点不能添加子文档（最多3层）", "", nil)
+		if !parent.CanHaveChildren(project.WritingType) {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "目标节点不能添加子文档（达到最大层级）", "", nil)
 		}
 
 		level = parent.GetNextLevel()
@@ -538,7 +534,7 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 
 	// 6. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.moved",
 			EventData: map[string]interface{}{
 				"document_id":   req.DocumentID,
@@ -591,7 +587,7 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 
 	// 4. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "documents.reordered",
 			EventData: map[string]interface{}{
 				"project_id": req.ProjectID,
@@ -711,7 +707,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 
 	// 6. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.autosaved",
 			EventData: map[string]interface{}{
 				"document_id": req.DocumentID,
@@ -937,7 +933,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 
 	// 7. 发布事件
 	if s.eventBus != nil {
-		s.eventBus.PublishAsync(ctx, &base.BaseEvent{
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.content_updated",
 			EventData: map[string]interface{}{
 				"document_id": req.DocumentID,

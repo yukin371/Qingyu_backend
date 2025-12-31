@@ -45,7 +45,9 @@ func (s *NodeService) RenameNode(projectID, nodeID, newName string) error {
 		}
 		parentPath = parent.RelativePath
 	}
-	newPath, err := (&model.Node{Name: newName}).BuildRelativePath(parentPath)
+	tempNode := &model.Node{}
+	tempNode.Name = newName
+	newPath, err := tempNode.BuildRelativePath(parentPath)
 	if err != nil {
 		return err
 	}
@@ -116,7 +118,9 @@ func (s *NodeService) MoveNode(projectID, nodeID, newParentID string) error {
 		}
 		parentPath = parent.RelativePath
 	}
-	newPath, err := (&model.Node{Name: n.Name}).BuildRelativePath(parentPath)
+	tempNode := &model.Node{}
+	tempNode.Name = n.Name
+	newPath, err := tempNode.BuildRelativePath(parentPath)
 	if err != nil {
 		return err
 	}
