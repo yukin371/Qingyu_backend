@@ -104,6 +104,11 @@ func (r *MembershipRepositoryImpl) ListPlans(ctx context.Context, enabledOnly bo
 		return nil, fmt.Errorf("解析套餐列表失败: %w", err)
 	}
 
+	// 确保返回空切片而不是 nil
+	if plans == nil {
+		plans = []*financeModel.MembershipPlan{}
+	}
+
 	return plans, nil
 }
 
