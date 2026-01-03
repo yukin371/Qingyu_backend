@@ -183,6 +183,11 @@ func Success(c *gin.Context, statusCode int, message string, data interface{}) {
 	})
 }
 
+// SuccessData 返回成功响应（简化版，使用默认状态码和消息）
+func SuccessData(c *gin.Context, data interface{}) {
+	Success(c, http.StatusOK, "操作成功", data)
+}
+
 // Error 返回错误响应
 // 统一的错误响应格式，用于所有API错误情况
 func Error(c *gin.Context, statusCode int, message string, errorDetail string) {

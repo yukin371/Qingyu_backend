@@ -7,7 +7,10 @@ import (
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
+	financeRouter "Qingyu_backend/router/finance"
 	messagingRouter "Qingyu_backend/router/messaging"
+	notificationsRouter "Qingyu_backend/router/notifications"
+	usermanagementRouter "Qingyu_backend/router/usermanagement"
 	projectRouter "Qingyu_backend/router/project"
 	readerRouter "Qingyu_backend/router/reader"
 	recommendationRouter "Qingyu_backend/router/recommendation"
@@ -19,9 +22,12 @@ import (
 
 	"Qingyu_backend/service"
 	sharedService "Qingyu_backend/service/shared"
+	statsService "Qingyu_backend/service/shared/stats"
 
 	socialApi "Qingyu_backend/api/v1/social"
+financeApi "Qingyu_backend/api/v1/finance"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
+	notificationsAPI "Qingyu_backend/api/v1/notifications"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -54,6 +60,9 @@ func RegisterRoutes(r *gin.Engine) {
 	storageServiceImpl, storageErr := serviceContainer.GetStorageServiceImpl()
 	multipartService, multipartErr := serviceContainer.GetMultipartUploadService()
 	imageProcessor, imageErr := serviceContainer.GetImageProcessor()
+
+	// 搜索服务（SearchService）将在writer路由初始化时创建
+	// TODO: 将SearchService添加到服务容器，以便在shared路由中注册搜索建议功能
 
 	// 创建共享路由组（即使部分服务不可用也创建）
 	sharedGroup := v1.Group("/shared")
@@ -102,6 +111,45 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info(fmt.Sprintf("✓ 已注册 %d 个共享服务模块到 /api/v1/shared/", registeredCount))
 	} else {
 		logger.Warn("⚠ 所有共享服务均未配置，共享路由组为空")
+	}
+
+	// ============ 注册财务路由 ============
+	walletSvc, walletErr = serviceContainer.GetWalletService()
+	if walletErr != nil {
+		logger.Warn("获取钱包服务失败", zap.Error(walletErr))
+		logger.Info("财务路由未注册")
+	} else {
+		walletAPI := financeApi.NewWalletAPI(walletSvc)
+
+		// 获取会员服务
+		membershipSvc, membershipErr := serviceContainer.GetMembershipService()
+		var membershipAPI *financeApi.MembershipAPI
+		if membershipErr != nil {
+			logger.Warn("获取会员服务失败", zap.Error(membershipErr))
+		} else {
+			membershipAPI = financeApi.NewMembershipAPI(membershipSvc)
+		}
+
+		// 获取作者收入服务
+		authorRevenueSvc, revenueErr := serviceContainer.GetAuthorRevenueService()
+		var authorRevenueAPI *financeApi.AuthorRevenueAPI
+		if revenueErr != nil {
+			logger.Warn("获取作者收入服务失败", zap.Error(revenueErr))
+		} else {
+			authorRevenueAPI = financeApi.NewAuthorRevenueAPI(authorRevenueSvc)
+		}
+
+		// 注册财务路由
+		financeRouter.RegisterFinanceRoutes(v1, walletAPI, membershipAPI, authorRevenueAPI)
+		logger.Info("✓ 财务路由已注册到: /api/v1/finance/")
+		logger.Info("  - /api/v1/finance/wallet/* (钱包管理)")
+		if membershipAPI != nil {
+			logger.Info("  - /api/v1/finance/membership/* (会员系统)")
+		}
+		if authorRevenueAPI != nil {
+			logger.Info("  - /api/v1/finance/author/* (作者收入)")
+		}
+		logger.Info("  - ⚠️  旧路由 /api/v1/shared/wallet/* 继续保留以向后兼容")
 	}
 
 	// ============ 注册书店路由 ============
@@ -267,6 +315,28 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - POST /api/v1/announcements/:id/view (增加查看次数)")
 	}
 
+	// ============ 注册通知路由 ============
+	notificationSvc, notificationErr := serviceContainer.GetNotificationService()
+	if notificationErr != nil {
+		logger.Warn("获取通知服务失败", zap.Error(notificationErr))
+		logger.Info("通知路由未注册")
+	} else {
+		notificationAPI := notificationsAPI.NewNotificationAPI(notificationSvc)
+		notificationsRouter.RegisterRoutes(v1, notificationAPI)
+		notificationsRouter.RegisterUserManagementRoutes(v1, notificationAPI)
+		logger.Info("✓ 通知路由已注册到: /api/v1/notifications/")
+		logger.Info("  - GET /api/v1/notifications (获取通知列表)")
+		logger.Info("  - GET /api/v1/notifications/:id (获取通知详情)")
+		logger.Info("  - PUT /api/v1/notifications/:id/read (标记为已读)")
+		logger.Info("  - PUT /api/v1/notifications/read-all (全部标记为已读)")
+		logger.Info("  - DELETE /api/v1/notifications/:id (删除通知)")
+		logger.Info("  - DELETE /api/v1/notifications/batch-delete (批量删除)")
+		logger.Info("  - /api/v1/notifications/preferences (通知偏好设置)")
+		logger.Info("  - /api/v1/notifications/push/* (推送设备管理)")
+		logger.Info("  - /api/v1/user-management/email-notifications (邮件通知设置)")
+		logger.Info("  - /api/v1/user-management/sms-notifications (短信通知设置)")
+	}
+
 	// ============ 注册用户路由 ============
 	userSvc, err := serviceContainer.GetUserService()
 	if err != nil {
@@ -301,6 +371,7 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/writer/projects/* (项目管理)")
 	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
 	logger.Info("  - /api/v1/writer/versions/* (版本控制)")
+	logger.Info("  - /api/v1/writer/search/documents (文档搜索)")
 
 	// ============ 注册AI路由 ============
 	aiSvc, err := serviceContainer.GetAIService()
@@ -378,6 +449,45 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/admin/audit/* (审核管理)")
 	logger.Info("  - /api/v1/admin/stats (系统统计)")
 	logger.Info("  - /api/v1/admin/config/* (配置管理)")
+
+	// ============ 注册新的用户管理路由（按功能领域组织） ============
+	// ⭐ 新架构：按功能领域组织，而非按角色组织
+	// 获取书店服务（用于用户作品列表功能）
+	bookstoreSvcForUM, bookstoreErrForUM := serviceContainer.GetBookstoreService()
+	var bookstoreSvcInterface interface{}
+	if bookstoreErrForUM == nil && bookstoreSvcForUM != nil {
+		bookstoreSvcInterface = bookstoreSvcForUM
+	}
+
+	// 获取统计服务（用于用户统计功能）
+	var statsSvc statsService.PlatformStatsService
+	repositoryFactory := serviceContainer.GetRepositoryFactory()
+	if repositoryFactory != nil {
+		// 创建统计服务所需的 Repository
+		userRepo := repositoryFactory.CreateUserRepository()
+		bookRepo := repositoryFactory.CreateBookRepository()
+		projectRepo := repositoryFactory.CreateProjectRepository()
+		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
+
+		if userRepo != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
+			statsSvc = statsService.NewPlatformStatsService(userRepo, bookRepo, projectRepo, chapterRepo)
+		}
+	}
+
+	// 注册新的 user-management 路由
+	usermanagementRouter.RegisterUsermanagementRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
+
+	logger.Info("✓ 新用户管理路由已注册到: /api/v1/user-management/")
+	logger.Info("  - /api/v1/user-management/auth/register (用户注册)")
+	logger.Info("  - /api/v1/user-management/auth/login (用户登录)")
+	logger.Info("  - /api/v1/user-management/users/:id (获取用户信息-公开)")
+	logger.Info("  - /api/v1/user-management/users/:id/profile (用户详细资料-公开)")
+	logger.Info("  - /api/v1/user-management/users/:id/books (用户作品列表-公开)")
+	logger.Info("  - /api/v1/user-management/profile (当前用户信息-需认证)")
+	logger.Info("  - /api/v1/user-management/password (修改密码-需认证)")
+	logger.Info("  - /api/v1/user-management/stats/my/* (用户统计-需认证)")
+	logger.Info("  - /api/v1/user-management/users/* (用户管理-需管理员)")
+	logger.Info("  ⚠️  旧路由继续保留以保持向后兼容")
 
 	// ============ 注册系统监控路由 ============
 	systemRouter.InitSystemRoutes(v1)

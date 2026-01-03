@@ -12,6 +12,7 @@ import (
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
 	readingRepo "Qingyu_backend/repository/interfaces/reading"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
@@ -23,6 +24,7 @@ import (
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
 	mongoAudit "Qingyu_backend/repository/mongodb/audit"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
+	mongoFinance "Qingyu_backend/repository/mongodb/finance"
 	mongoMessaging "Qingyu_backend/repository/mongodb/messaging"
 	mongoReading "Qingyu_backend/repository/mongodb/reading"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
@@ -180,6 +182,11 @@ func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readingRepo.Re
 	return mongoReading.NewMongoReadingHistoryRepository(f.database)
 }
 
+// CreateReaderThemeRepository 创建阅读器主题Repository
+func (f *MongoRepositoryFactory) CreateReaderThemeRepository() readingRepo.ReaderThemeRepository {
+	return mongoReading.NewReaderThemeRepositoryMongo(f.database)
+}
+
 // ========== Bookstore Module Repositories ==========
 
 // CreateBookRepository 创建书籍Repository
@@ -298,6 +305,18 @@ func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository 
 // CreateSensitiveWordRepository 创建敏感词Repository
 func (f *MongoRepositoryFactory) CreateSensitiveWordRepository() auditRepo.SensitiveWordRepository {
 	return mongoAudit.NewSensitiveWordRepository(f.database)
+}
+
+// ========== Finance Module Repositories ==========
+
+// CreateMembershipRepository 创建会员Repository
+func (f *MongoRepositoryFactory) CreateMembershipRepository() financeRepo.MembershipRepository {
+	return mongoFinance.NewMembershipRepository(f.database)
+}
+
+// CreateAuthorRevenueRepository 创建作者收入Repository
+func (f *MongoRepositoryFactory) CreateAuthorRevenueRepository() financeRepo.AuthorRevenueRepository {
+	return mongoFinance.NewAuthorRevenueRepository(f.database)
 }
 
 // ========== Factory Management Methods ==========
