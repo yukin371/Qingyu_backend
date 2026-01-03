@@ -7,10 +7,20 @@ import (
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/service/document"
 	"Qingyu_backend/service/project"
+	searchService "Qingyu_backend/service/shared/search"
+	"Qingyu_backend/service/interfaces"
 )
 
 // InitWriterRouter 初始化写作端路由
-func InitWriterRouter(r *gin.RouterGroup, projectService *project.ProjectService, documentService *document.DocumentService, versionService *project.VersionService) {
+func InitWriterRouter(
+	r *gin.RouterGroup,
+	projectService *project.ProjectService,
+	documentService *document.DocumentService,
+	versionService *project.VersionService,
+	searchSvc searchService.SearchService,
+	exportService interfaces.ExportService,
+	publishService interfaces.PublishService,
+) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
 	documentApi := writer.NewDocumentApi(documentService)
@@ -32,6 +42,21 @@ func InitWriterRouter(r *gin.RouterGroup, projectService *project.ProjectService
 
 		// 编辑器路由
 		InitEditorRouter(writerGroup, editorApi)
+
+		// 搜索路由
+		if searchSvc != nil {
+			InitSearchRouter(writerGroup, searchSvc)
+		}
+
+		// 导出功能路由
+		if exportService != nil {
+			InitExportRoutes(writerGroup, exportService)
+		}
+
+		// 发布管理路由
+		if publishService != nil {
+			InitPublishRoutes(writerGroup, publishService)
+		}
 	}
 }
 
@@ -120,5 +145,18 @@ func InitEditorRouter(r *gin.RouterGroup, editorApi *writer.EditorApi) {
 			shortcutGroup.POST("/reset", editorApi.ResetUserShortcuts)
 			shortcutGroup.GET("/help", editorApi.GetShortcutHelp)
 		}
+	}
+}
+
+// InitSearchRouter 初始化搜索路由
+func InitSearchRouter(r *gin.RouterGroup, searchSvc searchService.SearchService) {
+	// 创建搜索API实例
+	searchAPI := writer.NewSearchAPI(searchSvc)
+
+	// 搜索路由组
+	searchGroup := r.Group("/search")
+	{
+		// 文档搜索
+		searchGroup.GET("/documents", searchAPI.SearchDocuments)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/shared/auth"
+	searchService "Qingyu_backend/service/shared/search"
 	"Qingyu_backend/service/shared/storage"
 	"Qingyu_backend/service/shared/wallet"
 )
@@ -38,6 +39,7 @@ func RegisterRoutes(
 	if storageService != nil {
 		RegisterStorageRoutes(r, storageService, multipartService, imageProcessor)
 	}
+	// TODO: 注册搜索建议路由（需要SearchService，将在writer路由初始化后创建）
 }
 
 // RegisterAuthRoutes 注册认证服务路由
@@ -115,6 +117,26 @@ func RegisterStorageRoutes(
 		storageGroup.GET("/files/:file_id", storageAPI.GetFileInfo)
 		storageGroup.GET("/files", storageAPI.ListFiles)
 		storageGroup.GET("/files/:file_id/url", storageAPI.GetDownloadURL)
+	}
+}
+
+// RegisterSearchRoutes 注册搜索建议服务路由
+// 注意：此路由只提供通用的搜索建议功能
+// - 书籍搜索已迁移到 /api/v1/bookstore/search
+// - 文档搜索已迁移到 /api/v1/writer/search
+func RegisterSearchRoutes(r *gin.RouterGroup, searchSvc searchService.SearchService) {
+	// 创建API处理器
+	searchAPI := shared.NewSearchAPI(searchSvc)
+
+	// ============ 搜索建议路由 ============
+	searchGroup := r.Group("/search")
+	{
+		// 公开路由（无需认证）
+		publicSearch := searchGroup.Group("")
+		publicSearch.Use(middleware.RateLimitMiddleware(30, 60)) // 30次/分钟
+		{
+			publicSearch.GET("/suggest", searchAPI.GetSearchSuggestions)
+		}
 	}
 }
 
