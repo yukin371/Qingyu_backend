@@ -22,6 +22,12 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 		creativeApiHandler = aiApi.NewCreativeAPI(phase3Client)
 	}
 
+	// 创建写作辅助服务实例
+	summarizeService := ai.NewSummarizeService(aiService.GetAdapterManager())
+	proofreadService := ai.NewProofreadService(aiService.GetAdapterManager())
+	sensitiveWordsService := ai.NewSensitiveWordsService(aiService.GetAdapterManager())
+	writingAssistantApiHandler := aiApi.NewWritingAssistantApi(summarizeService, proofreadService, sensitiveWordsService)
+
 	// AI主路由组
 	aiGroup := r.Group("/ai")
 	aiGroup.Use(middleware.JWTAuth()) // 需要认证
@@ -51,6 +57,24 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 			// 内容改写
 			writingGroup.POST("/rewrite", writingApiHandler.RewriteText)
 			writingGroup.POST("/rewrite/stream", writingApiHandler.RewriteTextStream)
+
+			// ============ 新增：写作辅助功能 ============
+			// 内容总结
+			writingGroup.POST("/summarize", writingAssistantApiHandler.SummarizeContent)
+			writingGroup.POST("/summarize-chapter", writingAssistantApiHandler.SummarizeChapter)
+
+			// 文本校对
+			writingGroup.POST("/proofread", writingAssistantApiHandler.ProofreadContent)
+			writingGroup.GET("/suggestions/:id", writingAssistantApiHandler.GetProofreadSuggestion)
+		}
+
+		// AI内容审核功能
+		auditGroup := aiGroup.Group("/audit")
+		auditGroup.Use(middleware.QuotaCheckMiddleware(quotaService))
+		{
+			// 敏感词检测
+			auditGroup.POST("/sensitive-words", writingAssistantApiHandler.CheckSensitiveWords)
+			auditGroup.GET("/sensitive-words/:id", writingAssistantApiHandler.GetSensitiveWordsDetail)
 		}
 
 		// AI聊天功能（轻量级配额检查）

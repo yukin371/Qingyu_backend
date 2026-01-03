@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/service"
+	documentService "Qingyu_backend/service/document"
 	projectService "Qingyu_backend/service/project"
 )
 
@@ -47,9 +48,19 @@ func RegisterRoutes(r *gin.RouterGroup) {
 	projectSvc := projectService.NewProjectService(projectRepo, eventBus)
 	logger.Info("ProjectService已创建")
 
-	// 创建ProjectApi实例
+	// 创建DocumentService所需的Repository
+	documentRepo := repositoryFactory.CreateDocumentRepository()
+	documentContentRepo := repositoryFactory.CreateDocumentContentRepository()
+	projectRepoForDoc := repositoryFactory.CreateProjectRepository()
+
+	// 创建DocumentService
+	documentSvc := documentService.NewDocumentService(documentRepo, documentContentRepo, projectRepoForDoc, eventBus)
+	logger.Info("DocumentService已创建")
+
+	// 创建API实例
 	projectApi := writer.NewProjectApi(projectSvc)
-	logger.Info("ProjectApi已创建")
+	documentApi := writer.NewDocumentApi(documentSvc)
+	logger.Info("ProjectApi和DocumentApi已创建")
 
 	// 项目管理路由组 - 需要JWT认证
 	projectGroup := r.Group("/projects")
@@ -64,6 +75,13 @@ func RegisterRoutes(r *gin.RouterGroup) {
 
 		// 项目统计
 		projectGroup.PUT("/:id/statistics", projectApi.UpdateProjectStatistics) // 更新项目统计
+
+		// 文档管理（在 /api/v1/projects 下）
+		// 注意：将文档路由放在项目详情路由之后，使用相同的参数名
+		projectGroup.GET("/:id/documents/tree", documentApi.GetDocumentTree)       // 获取文档树
+		projectGroup.GET("/:id/documents", documentApi.ListDocuments)              // 获取文档列表
+		projectGroup.POST("/:id/documents", documentApi.CreateDocument)            // 创建文档
+		projectGroup.PUT("/:id/documents/reorder", documentApi.ReorderDocuments)  // 重新排序文档
 	}
 
 	logger.Info("✓ 项目路由已成功注册到: /api/v1/projects/")

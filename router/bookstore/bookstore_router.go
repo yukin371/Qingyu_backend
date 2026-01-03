@@ -48,6 +48,8 @@ func InitBookstoreRouter(
 	bookDetailService bookstore.BookDetailService,
 	ratingService bookstore.BookRatingService,
 	statisticsService bookstore.BookStatisticsService,
+	chapterService bookstore.ChapterService,
+	purchaseService bookstore.ChapterPurchaseService,
 ) {
 	// 创建API实例
 	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService)
@@ -64,11 +66,17 @@ func InitBookstoreRouter(
 		ratingApiHandler = bookstoreApi.NewBookRatingAPI(ratingService)
 	}
 
-	// 初始化Chapter API处理器（暂时跳过，需要ChapterService）
-	// var chapterApiHandler *bookstoreApi.ChapterAPI
-	// if chapterService != nil {
-	// 	chapterApiHandler = bookstoreApi.NewChapterAPI(chapterService)
-	// }
+	// 初始化Chapter API处理器
+	var chapterApiHandler *bookstoreApi.ChapterAPI
+	if chapterService != nil {
+		chapterApiHandler = bookstoreApi.NewChapterAPI(chapterService)
+	}
+
+	// 初始化Chapter Catalog API处理器（章节目录和购买）
+	var chapterCatalogApiHandler *bookstoreApi.ChapterCatalogAPI
+	if chapterService != nil && purchaseService != nil {
+		chapterCatalogApiHandler = bookstoreApi.NewChapterCatalogAPI(chapterService, purchaseService)
+	}
 
 	// ℹ️ Statistics API已通过BookDetailAPI实现
 	// 如需单独的Statistics API处理器，可在这里初始化
@@ -88,6 +96,7 @@ func InitBookstoreRouter(
 			public.GET("/homepage", bookstoreApiHandler.GetHomepage)
 
 			// 书籍列表和搜索 - 注意：具体路由必须放在参数化路由之前
+			public.GET("/books", bookstoreApiHandler.GetBooks) // 必须放在 /books/:id 之前
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
@@ -121,13 +130,24 @@ func InitBookstoreRouter(
 			// 注意：BookDetailAPI中已包含GetBookStatistics
 			// Statistics API在BookDetail中已实现，这里备注即可
 
-			// ℹ️ Chapter API路由需要ChapterService支持
-			// 当ChapterService实现后，可以启用以下路由:
-			// if chapterApiHandler != nil {
-			// 	public.GET("/chapters/:id", chapterApiHandler.GetChapter)
-			// 	public.GET("/chapters/book/:id", chapterApiHandler.GetChaptersByBookID)
-			// }
+			// ✅ Chapter Catalog API（章节目录和试读）- 公开接口
+			if chapterCatalogApiHandler != nil {
+				public.GET("/books/:id/chapters", chapterCatalogApiHandler.GetChapterCatalog)           // 获取章节目录
+				public.GET("/books/:id/chapters/:chapterId", chapterCatalogApiHandler.GetChapterInfo)  // 获取单个章节信息
+				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters)     // 获取试读章节
+				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)         // 获取VIP章节列表
+				public.GET("/chapters/:chapterId/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
+				public.GET("/chapters/:chapterId/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限
+			}
+
+			// ✅ Chapter API（章节管理）- 公开接口
+			if chapterApiHandler != nil {
+				public.GET("/chapters/:id", chapterApiHandler.GetChapter)
+				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID)
+			}
 		}
+	}
+
 
 		// 需要认证的接口
 		authenticated := bookstoreGroup.Group("")
@@ -145,5 +165,32 @@ func InitBookstoreRouter(
 				authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
 			}
 		}
+	}
+
+
+// InitReaderPurchaseRouter 初始化读者购买路由（用于章节购买相关接口）
+// 这些接口放在 /api/v1/reader 路径下，因为它们与读者的个人购买记录相关
+func InitReaderPurchaseRouter(
+	r *gin.RouterGroup,
+	purchaseService bookstore.ChapterPurchaseService,
+) {
+	// 如果没有提供购买服务，直接返回
+	if purchaseService == nil {
+		return
+	}
+
+	readerGroup := r.Group("/reader")
+	readerGroup.Use(middleware.JWTAuth())
+	{
+		// 创建章节目录API处理器
+		chapterCatalogApiHandler := bookstoreApi.NewChapterCatalogAPI(nil, purchaseService)
+
+		// ✅ 购买相关接口（需要认证）
+		readerGroup.POST("/chapters/:chapterId/purchase", chapterCatalogApiHandler.PurchaseChapter) // 购买单个章节
+		readerGroup.POST("/books/:id/buy-all", chapterCatalogApiHandler.PurchaseBook)              // 购买全书
+
+		// ✅ 购买记录查询（需要认证）
+		readerGroup.GET("/purchases", chapterCatalogApiHandler.GetPurchases)           // 获取所有购买记录
+		readerGroup.GET("/purchases/:id", chapterCatalogApiHandler.GetBookPurchases)  // 获取某本书的购买记录
 	}
 }
