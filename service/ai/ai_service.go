@@ -427,3 +427,8 @@ func (s *Service) UpdateContextWithFeedback(ctx context.Context, projectID, chap
 	// 更新上下文
 	return s.contextService.UpdateContextWithFeedback(ctx, aiContext, feedback)
 }
+
+// GetAdapterManager 获取适配器管理器
+func (s *Service) GetAdapterManager() *adapter.AdapterManager {
+	return s.adapterManager
+}
