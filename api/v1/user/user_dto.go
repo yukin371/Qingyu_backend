@@ -1,7 +1,7 @@
 package user
 
 import (
-	"time"
+	"Qingyu_backend/api/v1/shared"
 )
 
 // DTO (Data Transfer Object) - 用户API层的请求和响应结构
@@ -31,36 +31,22 @@ type LoginRequest struct {
 
 // LoginResponse 登录响应
 type LoginResponse struct {
-	Token string        `json:"token"`
-	User  UserBasicInfo `json:"user"`
+	Token string              `json:"token"`
+	User  shared.UserBasicInfo `json:"user"`
 }
 
-// UserBasicInfo 基本用户信息
-type UserBasicInfo struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Role     string `json:"role,omitempty"`
-}
+// ===========================
+// 用户相关 DTO（引用共享定义，保持向后兼容）
+// ===========================
 
-// UserProfileResponse 用户信息响应
-type UserProfileResponse struct {
-	UserID        string    `json:"user_id"`
-	Username      string    `json:"username"`
-	Email         string    `json:"email"`
-	Phone         string    `json:"phone,omitempty"`
-	Role          string    `json:"role"`
-	Status        string    `json:"status"`
-	Avatar        string    `json:"avatar,omitempty"`
-	Nickname      string    `json:"nickname,omitempty"`
-	Bio           string    `json:"bio,omitempty"`
-	EmailVerified bool      `json:"email_verified"`
-	PhoneVerified bool      `json:"phone_verified"`
-	LastLoginAt   time.Time `json:"last_login_at,omitempty"`
-	LastLoginIP   string    `json:"last_login_ip,omitempty"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-}
+// UserProfileResponse 用户信息响应（引用共享定义）
+type UserProfileResponse = shared.UserProfileResponse
+
+// PublicUserProfileResponse 用户公开信息响应（引用共享定义）
+type PublicUserProfileResponse = shared.PublicUserProfileResponse
+
+// UserBasicInfo 基本用户信息（引用共享定义）
+type UserBasicInfo = shared.UserBasicInfo
 
 // UpdateProfileRequest 更新个人信息请求
 type UpdateProfileRequest struct {
@@ -74,17 +60,6 @@ type UpdateProfileRequest struct {
 type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required" validate:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=6" validate:"required,min=6"`
-}
-
-// PublicUserProfileResponse 用户公开信息响应（用于用户主页）
-type PublicUserProfileResponse struct {
-	UserID    string    `json:"user_id"`
-	Username  string    `json:"username"`
-	Avatar    string    `json:"avatar,omitempty"`
-	Nickname  string    `json:"nickname,omitempty"`
-	Bio       string    `json:"bio,omitempty"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"created_at"`
 }
 
 // UserBooksResponse 用户作品列表响应

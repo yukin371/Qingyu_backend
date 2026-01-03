@@ -29,6 +29,9 @@ type Book struct {
 	Categories    []string             `bson:"categories" json:"categories"`                           // 分类名称（冗余字段，便于展示）
 	Tags          []string             `bson:"tags" json:"tags"`                                       // 标签
 	Status        BookStatus           `bson:"status" json:"status" validate:"required"`               // 状态
+	Rating        float64              `bson:"rating" json:"rating"`                                   // 评分 (0-10)
+	RatingCount   int64                `bson:"rating_count" json:"ratingCount"`                       // 评分人数
+	ViewCount     int64                `bson:"view_count" json:"viewCount"`                           // 浏览量
 	WordCount     int64                `bson:"word_count" json:"wordCount"`                            // 字数
 	ChapterCount  int                  `bson:"chapter_count" json:"chapterCount"`                      // 章节数
 	Price         float64              `bson:"price" json:"price"`                                     // 价格
