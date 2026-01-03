@@ -15,6 +15,7 @@ import (
 	// Service implementations
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
+	financeService "Qingyu_backend/service/finance"
 	projectService "Qingyu_backend/service/project"
 	readingService "Qingyu_backend/service/reading"
 	socialService "Qingyu_backend/service/social"
@@ -25,6 +26,10 @@ import (
 
 	// Messaging service
 	messagingSvc "Qingyu_backend/service/messaging"
+
+	// Notification service
+	notificationService "Qingyu_backend/service/notification"
+	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
@@ -92,6 +97,12 @@ type ServiceContainer struct {
 	storageService        storage.StorageService
 	adminService          admin.AdminService
 	announcementService   messagingSvc.AnnouncementService
+	notificationService   notificationService.NotificationService
+	templateService       notificationService.TemplateService
+
+	// 财务服务
+	membershipService     financeService.MembershipService
+	authorRevenueService  financeService.AuthorRevenueService
 
 	// 审核服务
 	auditService *auditSvc.ContentAuditService
@@ -334,6 +345,38 @@ func (c *ServiceContainer) GetAnnouncementService() (messagingSvc.AnnouncementSe
 		return nil, fmt.Errorf("AnnouncementService未初始化")
 	}
 	return c.announcementService, nil
+}
+
+// GetNotificationService 获取通知服务
+func (c *ServiceContainer) GetNotificationService() (notificationService.NotificationService, error) {
+	if c.notificationService == nil {
+		return nil, fmt.Errorf("NotificationService未初始化")
+	}
+	return c.notificationService, nil
+}
+
+// GetTemplateService 获取通知模板服务
+func (c *ServiceContainer) GetTemplateService() (notificationService.TemplateService, error) {
+	if c.templateService == nil {
+		return nil, fmt.Errorf("TemplateService未初始化")
+	}
+	return c.templateService, nil
+}
+
+// GetMembershipService 获取会员服务
+func (c *ServiceContainer) GetMembershipService() (financeService.MembershipService, error) {
+	if c.membershipService == nil {
+		return nil, fmt.Errorf("MembershipService未初始化")
+	}
+	return c.membershipService, nil
+}
+
+// GetAuthorRevenueService 获取作者收入服务
+func (c *ServiceContainer) GetAuthorRevenueService() (financeService.AuthorRevenueService, error) {
+	if c.authorRevenueService == nil {
+		return nil, fmt.Errorf("AuthorRevenueService未初始化")
+	}
+	return c.authorRevenueService, nil
 }
 
 // GetEventBus 获取事件总线
@@ -823,7 +866,45 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 	fmt.Println("  ✓ AnnouncementService初始化完成")
 
-	// 5.8 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
+	// 5.8 NotificationService
+	notificationRepo := mongoNotification.NewNotificationRepository(c.mongoDB)
+	preferenceRepo := mongoNotification.NewNotificationPreferenceRepository(c.mongoDB)
+	pushDeviceRepo := mongoNotification.NewPushDeviceRepository(c.mongoDB)
+	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
+
+	notificationSvc := notificationService.NewNotificationService(
+		notificationRepo,
+		preferenceRepo,
+		pushDeviceRepo,
+		templateRepo,
+	)
+	c.notificationService = notificationSvc
+
+	templateSvc := notificationService.NewTemplateService(templateRepo)
+	c.templateService = templateSvc
+
+	// 初始化默认模板
+	if err := templateSvc.InitializeDefaultTemplates(context.Background()); err != nil {
+		fmt.Printf("警告: 初始化默认通知模板失败: %v\n", err)
+	}
+
+	if baseNotificationSvc, ok := notificationSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("NotificationService", baseNotificationSvc); err != nil {
+			return fmt.Errorf("注册通知服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ NotificationService初始化完成")
+
+	// 5.10 Finance Services
+	membershipRepo := c.repositoryFactory.CreateMembershipRepository()
+	c.membershipService = financeService.NewMembershipService(membershipRepo)
+
+	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
+	c.authorRevenueService = financeService.NewAuthorRevenueService(authorRevenueRepo)
+
+	fmt.Println("  ✓ Finance服务初始化完成")
+
+	// 5.11 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
 	// TODO: 完整的AuditService初始化逻辑需要在service/audit完全实现后添加
 	fmt.Println("  ℹ AuditService初始化跳过（标记为可选）")
 

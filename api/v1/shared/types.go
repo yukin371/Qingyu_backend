@@ -46,20 +46,6 @@ type WithdrawResponse struct {
 	RejectReason string             `json:"rejectReason,omitempty"`
 }
 
-// UserProfileResponse 用户资料响应
-type UserProfileResponse struct {
-	ID            primitive.ObjectID `json:"id"`
-	Username      string             `json:"username"`
-	Email         string             `json:"email"`
-	Avatar        string             `json:"avatar"`
-	Role          string             `json:"role"`
-	VIPLevel      int                `json:"vipLevel"`
-	VIPExpireAt   *time.Time         `json:"vipExpireAt,omitempty"`
-	CreatedAt     time.Time          `json:"createdAt"`
-	EmailVerified bool               `json:"emailVerified"`
-	PhoneVerified bool               `json:"phoneVerified"`
-}
-
 // LoginResponse 登录响应
 type LoginResponse struct {
 	Token     string              `json:"token"`

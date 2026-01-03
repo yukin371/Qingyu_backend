@@ -6,6 +6,7 @@ import (
 	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
+	FinanceInterfaces "Qingyu_backend/repository/interfaces/finance"
 	messagingInterfaces "Qingyu_backend/repository/interfaces/messaging"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
@@ -38,6 +39,7 @@ type RepositoryFactory interface {
 	CreateLikeRepository() ReadingInterfaces.LikeRepository
 	CreateCollectionRepository() ReadingInterfaces.CollectionRepository
 	CreateReadingHistoryRepository() ReadingInterfaces.ReadingHistoryRepository
+	CreateReaderThemeRepository() ReadingInterfaces.ReaderThemeRepository
 
 	// 书城相关Repository
 	CreateBookRepository() BookstoreInterfaces.BookRepository
@@ -70,6 +72,10 @@ type RepositoryFactory interface {
 
 	// 审核相关Repository
 	CreateSensitiveWordRepository() AuditInterfaces.SensitiveWordRepository
+
+	// 财务相关Repository
+	CreateMembershipRepository() FinanceInterfaces.MembershipRepository
+	CreateAuthorRevenueRepository() FinanceInterfaces.AuthorRevenueRepository
 
 	// Health 基础设施方法
 	Health(ctx context.Context) error
