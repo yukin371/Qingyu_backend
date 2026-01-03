@@ -56,6 +56,8 @@ func (m *AdapterManager) initializeAdapters() {
 			adapter = NewWenxinAdapter(providerConfig.APIKey, providerConfig.SecretKey, providerConfig.BaseURL)
 		case "qwen":
 			adapter = NewQwenAdapter(providerConfig.APIKey, providerConfig.BaseURL)
+		case "glm", "zhipu":
+			adapter = NewGLMAdapter(providerConfig.APIKey, providerConfig.BaseURL)
 		default:
 			continue
 		}
