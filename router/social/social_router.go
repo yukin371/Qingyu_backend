@@ -12,13 +12,17 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 	relationAPI *socialApi.UserRelationAPI,
 	commentAPI *socialApi.CommentAPI,
 	likeAPI *socialApi.LikeAPI,
-	collectionAPI *socialApi.CollectionAPI) {
+	collectionAPI *socialApi.CollectionAPI,
+	followAPI *socialApi.FollowAPI,
+	messageAPI *socialApi.MessageAPI,
+	reviewAPI *socialApi.ReviewAPI,
+	bookListAPI *socialApi.BookListAPI) {
 
 	// 社交路由需要认证
 	socialGroup := r.Group("/social")
 	socialGroup.Use(middleware.JWTAuth())
 	{
-		// ========== 用户关注相关 ==========
+		// ========== 用户关注相关（原有） ==========
 		if relationAPI != nil {
 			socialGroup.POST("/follow/:userId", relationAPI.FollowUser)
 			socialGroup.DELETE("/follow/:userId", relationAPI.UnfollowUser)
@@ -66,6 +70,60 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 			socialGroup.DELETE("/collections/:id/share", collectionAPI.UnshareCollection)
 			socialGroup.GET("/collections/public", collectionAPI.GetPublicCollections)
 			socialGroup.GET("/collections/stats", collectionAPI.GetCollectionStats)
+		}
+
+		// ========== 新增：关注系统 ==========
+		if followAPI != nil {
+			// 用户关注
+			socialGroup.POST("/users/:userId/follow", followAPI.FollowUser)
+			socialGroup.DELETE("/users/:userId/unfollow", followAPI.UnfollowUser)
+			socialGroup.GET("/users/:userId/followers", followAPI.GetFollowers)
+			socialGroup.GET("/users/:userId/following", followAPI.GetFollowing)
+			socialGroup.GET("/users/:userId/follow-status", followAPI.CheckFollowStatus)
+
+			// 作者关注
+			socialGroup.POST("/authors/:authorId/follow", followAPI.FollowAuthor)
+			socialGroup.DELETE("/authors/:authorId/unfollow", followAPI.UnfollowAuthor)
+			socialGroup.GET("/following/authors", followAPI.GetFollowingAuthors)
+		}
+
+		// ========== 新增：私信系统 ==========
+		if messageAPI != nil {
+			// 会话管理
+			socialGroup.GET("/messages/conversations", messageAPI.GetConversations)
+			socialGroup.GET("/messages/:conversationId", messageAPI.GetConversationMessages)
+
+			// 消息管理
+			socialGroup.POST("/messages", messageAPI.SendMessage)
+			socialGroup.PUT("/messages/:id/read", messageAPI.MarkMessageAsRead)
+			socialGroup.DELETE("/messages/:id", messageAPI.DeleteMessage)
+
+			// @提醒
+			socialGroup.POST("/mentions", messageAPI.CreateMention)
+			socialGroup.GET("/mentions", messageAPI.GetMentions)
+			socialGroup.PUT("/mentions/:id/read", messageAPI.MarkMentionAsRead)
+		}
+
+		// ========== 新增：书评系统 ==========
+		if reviewAPI != nil {
+			socialGroup.GET("/reviews", reviewAPI.GetReviews)
+			socialGroup.POST("/reviews", reviewAPI.CreateReview)
+			socialGroup.GET("/reviews/:id", reviewAPI.GetReviewDetail)
+			socialGroup.PUT("/reviews/:id", reviewAPI.UpdateReview)
+			socialGroup.DELETE("/reviews/:id", reviewAPI.DeleteReview)
+			socialGroup.POST("/reviews/:id/like", reviewAPI.LikeReview)
+		}
+
+		// ========== 新增：书单系统 ==========
+		if bookListAPI != nil {
+			socialGroup.GET("/booklists", bookListAPI.GetBookLists)
+			socialGroup.POST("/booklists", bookListAPI.CreateBookList)
+			socialGroup.GET("/booklists/:id", bookListAPI.GetBookListDetail)
+			socialGroup.PUT("/booklists/:id", bookListAPI.UpdateBookList)
+			socialGroup.DELETE("/booklists/:id", bookListAPI.DeleteBookList)
+			socialGroup.POST("/booklists/:id/like", bookListAPI.LikeBookList)
+			socialGroup.POST("/booklists/:id/fork", bookListAPI.ForkBookList)
+			socialGroup.GET("/booklists/:id/books", bookListAPI.GetBooksInList)
 		}
 	}
 }
