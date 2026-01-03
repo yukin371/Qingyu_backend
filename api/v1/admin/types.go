@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"Qingyu_backend/api/v1/shared"
 	"time"
 )
 
@@ -32,24 +33,9 @@ type AdminUpdateUserRequest struct {
 	PhoneVerified *bool   `json:"phone_verified,omitempty"`
 }
 
-// UserProfileResponse 用户信息响应
-type UserProfileResponse struct {
-	UserID        string    `json:"user_id"`
-	Username      string    `json:"username"`
-	Email         string    `json:"email"`
-	Phone         string    `json:"phone,omitempty"`
-	Role          string    `json:"role"`
-	Status        string    `json:"status"`
-	Avatar        string    `json:"avatar,omitempty"`
-	Nickname      string    `json:"nickname,omitempty"`
-	Bio           string    `json:"bio,omitempty"`
-	EmailVerified bool      `json:"email_verified"`
-	PhoneVerified bool      `json:"phone_verified"`
-	LastLoginAt   time.Time `json:"last_login_at,omitempty"`
-	LastLoginIP   string    `json:"last_login_ip,omitempty"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-}
+// UserProfileResponse 用户信息响应（引用共享定义）
+// 保留类型别名以保持向后兼容
+type UserProfileResponse = shared.UserProfileResponse
 
 // ===========================
 // AI配额管理相关DTO

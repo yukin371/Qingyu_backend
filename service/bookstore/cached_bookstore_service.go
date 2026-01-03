@@ -71,6 +71,12 @@ func (c *CachedBookstoreService) GetBookByID(ctx context.Context, id string) (*b
 	return book, nil
 }
 
+// GetAllBooks 获取所有书籍列表（带缓存）
+func (c *CachedBookstoreService) GetAllBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	// 不缓存，直接从服务获取（因为分页参数多变）
+	return c.service.GetAllBooks(ctx, page, pageSize)
+}
+
 // GetActiveBanners 获取激活的Banner列表（带缓存）
 func (c *CachedBookstoreService) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
 	// 尝试从缓存获取
@@ -273,25 +279,25 @@ func (c *CachedBookstoreService) GetBooksByCategory(ctx context.Context, categor
 	return c.service.GetBooksByCategory(ctx, categoryID, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (c *CachedBookstoreService) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	return c.service.GetRecommendedBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (c *CachedBookstoreService) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	return c.service.GetFeaturedBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (c *CachedBookstoreService) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetHotBooks(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (c *CachedBookstoreService) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetNewReleases(ctx, page, pageSize)
 }
 
-func (c *CachedBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (c *CachedBookstoreService) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	// 暂不使用缓存，直接调用服务
 	return c.service.GetFreeBooks(ctx, page, pageSize)
 }

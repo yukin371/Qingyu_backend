@@ -9,6 +9,22 @@ import (
 	"time"
 )
 
+// 全局密码重置Token管理器实例
+var (
+	globalPasswordResetTokenManager *PasswordResetTokenManager
+	passwordResetTokenManagerOnce  sync.Once
+)
+
+// GetGlobalPasswordResetTokenManager 获取全局密码重置Token管理器（单例）
+func GetGlobalPasswordResetTokenManager() *PasswordResetTokenManager {
+	passwordResetTokenManagerOnce.Do(func() {
+		globalPasswordResetTokenManager = &PasswordResetTokenManager{
+			tokens: make(map[string]*ResetTokenInfo),
+		}
+	})
+	return globalPasswordResetTokenManager
+}
+
 // PasswordResetTokenManager 密码重置Token管理器
 type PasswordResetTokenManager struct {
 	tokens map[string]*ResetTokenInfo // email -> token info

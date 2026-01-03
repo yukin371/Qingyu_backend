@@ -68,6 +68,48 @@ func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 	})
 }
 
+// GetBooks 获取书籍列表
+//
+//	@Summary		获取书籍列表
+//	@Description	获取所有书籍列表，支持分页
+//	@Tags			书籍
+//	@Accept			json
+//	@Produce		json
+//	@Param			page	query		int	false	"页码"	default(1)
+//	@Param			size	query		int	false	"每页数量"	default(20)
+//	@Success 200 {object} PaginatedResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/bookstore/books [get]
+func (api *BookstoreAPI) GetBooks(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 || size > 100 {
+		size = 20
+	}
+
+	books, total, err := api.service.GetAllBooks(c.Request.Context(), page, size)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取书籍列表失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, PaginatedResponse{
+		Code:    200,
+		Message: "获取书籍列表成功",
+		Data:    books,
+		Total:   total,
+		Page:    page,
+		Size:    size,
+	})
+}
+
 // GetBookByID 根据ID获取书籍详情
 //
 //	@Summary		获取书籍详情
@@ -132,7 +174,7 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/categories/{categoryId}/books [get]
 func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
-	categoryID := c.Param("categoryId")
+	categoryID := c.Param("id")
 	if categoryID == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
@@ -202,7 +244,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
+	books, total, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -215,6 +257,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 		Code:    200,
 		Message: "获取推荐书籍成功",
 		Data:    books,
+		Total:   total,
 		Page:    page,
 		Size:    size,
 	})
@@ -243,7 +286,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
+	books, total, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -256,6 +299,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 		Code:    200,
 		Message: "获取精选书籍成功",
 		Data:    books,
+		Total:   total,
 		Page:    page,
 		Size:    size,
 	})
@@ -377,6 +421,11 @@ func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 			Message: "获取分类树失败: " + err.Error(),
 		})
 		return
+	}
+
+	// 确保返回空数组而不是 nil
+	if tree == nil {
+		tree = []*bookstore2.CategoryTree{}
 	}
 
 	c.JSON(http.StatusOK, APIResponse{

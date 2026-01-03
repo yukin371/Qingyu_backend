@@ -40,6 +40,42 @@ ai:
     redis_host: "localhost"  # Docker: redis
     redis_port: 6379
 
+# 外部API配置（AI提供商）
+external_api:
+  default_provider: "glm"  # 使用智谱AI作为默认提供商
+  providers:
+    glm:
+      name: "glm"
+      api_key: "cca56a2012804d44b1368407d3de9216.EaRHFTIUuwjfmNiV"  # 智谱AI API Key
+      base_url: "https://open.bigmodel.cn/api/paas/v4"
+      enabled: true
+      priority: 1
+      supported_models:
+        - "glm-4-flash"      # 闪现版，速度快，价格低
+        - "glm-4-plus"       # 增强版
+        - "glm-4-air"        # 轻量版
+        - "glm-4"            # 基础版
+        - "glm-3-turbo"      # Turbo版
+    deepseek:
+      name: "deepseek"
+      api_key: "YOUR_DEEPSEEK_API_KEY_HERE"  # 备用：DeepSeek
+      base_url: "https://api.deepseek.com"
+      enabled: false
+      priority: 2
+      supported_models:
+        - "deepseek-chat"        # DeepSeek-V3 非思考模式
+        - "deepseek-reasoner"    # DeepSeek-V3 思考模式
+    openai:
+      name: "openai"
+      api_key: "${OPENAI_API_KEY}"  # 备用：OpenAI API密钥（从环境变量读取）
+      base_url: "https://api.openai.com/v1"
+      enabled: false
+      priority: 3
+      supported_models:
+        - "gpt-4"
+        - "gpt-4-turbo-preview"
+        - "gpt-3.5-turbo"
+
 # Redis配置
 redis:
   host: "localhost"  # Docker: redis | 本地: localhost

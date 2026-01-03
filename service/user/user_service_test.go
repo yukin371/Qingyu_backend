@@ -18,7 +18,8 @@ import (
 // TestNewUserService 测试服务创建
 func TestNewUserService(t *testing.T) {
 	mockRepo := new(mocks.MockUserRepository)
-	service := NewUserService(mockRepo)
+	mockAuthRepo := new(mocks.MockAuthRepository)
+	service := NewUserService(mockRepo, mockAuthRepo)
 
 	assert.NotNil(t, service, "服务不应为空")
 	assert.Equal(t, "UserService", service.GetServiceName())
@@ -54,8 +55,9 @@ func TestUserService_Initialize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Arrange
 			mockRepo := new(mocks.MockUserRepository)
+			mockAuthRepo := new(mocks.MockAuthRepository)
 			tt.setupMock(mockRepo)
-			service := NewUserService(mockRepo)
+			service := NewUserService(mockRepo, mockAuthRepo)
 
 			// Act
 			err := service.Initialize(context.Background())
@@ -168,7 +170,7 @@ func TestUserService_CreateUser(t *testing.T) {
 			// Arrange
 			mockRepo := new(mocks.MockUserRepository)
 			tt.setupMock(mockRepo)
-			service := NewUserService(mockRepo)
+			service := NewUserService(mockRepo, new(mocks.MockAuthRepository))
 
 			// Act
 			resp, err := service.CreateUser(context.Background(), tt.request)
@@ -243,7 +245,7 @@ func TestUserService_GetUser(t *testing.T) {
 			// Arrange
 			mockRepo := new(mocks.MockUserRepository)
 			tt.setupMock(mockRepo)
-			service := NewUserService(mockRepo)
+			service := NewUserService(mockRepo, new(mocks.MockAuthRepository))
 
 			// Act
 			resp, err := service.GetUser(context.Background(), tt.request)
@@ -295,7 +297,7 @@ func TestUserService_Health(t *testing.T) {
 			// Arrange
 			mockRepo := new(mocks.MockUserRepository)
 			tt.setupMock(mockRepo)
-			service := NewUserService(mockRepo)
+			service := NewUserService(mockRepo, new(mocks.MockAuthRepository))
 
 			// Act
 			err := service.Health(context.Background())

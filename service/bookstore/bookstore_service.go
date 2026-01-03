@@ -17,14 +17,15 @@ import (
 // 用于书城首页、分类页面、搜索结果等列表场景
 type BookstoreService interface {
 	// 书籍列表相关服务 - 使用Book模型
+	GetAllBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
 	GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error)
 	GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error)
 	GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error)
-	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
-	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
-	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
-	GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
-	GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error)
+	GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
+	GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error)
 	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error)
 	SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error)
 
@@ -84,6 +85,25 @@ func NewBookstoreService(
 		bannerRepo:   bannerRepo,
 		rankingRepo:  rankingRepo,
 	}
+}
+
+// GetAllBooks 获取所有书籍列表（分页）
+func (s *BookstoreServiceImpl) GetAllBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	offset := (page - 1) * pageSize
+
+	// 获取所有已发布的书籍
+	books, err := s.bookRepo.GetHotBooks(ctx, pageSize, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get all books: %w", err)
+	}
+
+	// 获取总数
+	total, err := s.bookRepo.CountByFilter(ctx, &bookstore2.BookFilter{})
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count books: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetBookByID 根据ID获取书籍详情
@@ -176,69 +196,108 @@ func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID 
 	return publishedBooks, total, nil
 }
 
-// GetRecommendedBooks 获取推荐书籍
-func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+// GetRecommendedBooks 获取所有书籍（书库列表）
+// 修改：返回所有书籍，按创建时间倒序排序
+func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	offset := (page - 1) * pageSize
 
+	// 直接调用 repository 的 GetRecommended 方法
+	// repository 已修改为返回所有书籍
 	books, err := s.bookRepo.GetRecommended(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get recommended books: %w", err)
+		return nil, 0, fmt.Errorf("failed to get all books: %w", err)
 	}
 
-	return books, nil
+	// 获取所有书籍总数
+	total, err := s.bookRepo.Count(ctx, nil)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count books: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetFeaturedBooks 获取精选书籍
-func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	// 检查repository是否为nil
 	if s.bookRepo == nil {
-		return []*bookstore2.Book{}, nil
+		return []*bookstore2.Book{}, 0, nil
 	}
 
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetFeatured(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get featured books: %w", err)
+		return nil, 0, fmt.Errorf("failed to get featured books: %w", err)
 	}
 
-	return books, nil
+	// 获取精选书籍总数
+	filter := &bookstore2.BookFilter{
+		IsFeatured: boolPtr(true),
+	}
+	total, err := s.bookRepo.CountByFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count featured books: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetHotBooks 获取热门书籍
-func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetHotBooks(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get hot books: %w", err)
+		return nil, 0, fmt.Errorf("failed to get hot books: %w", err)
 	}
 
-	return books, nil
+	// 获取热门书籍总数（所有已发布状态的书籍）
+	total, err := s.bookRepo.CountByFilter(ctx, &bookstore2.BookFilter{})
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count hot books: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetNewReleases 获取新书列表
-func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetNewReleases(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get new releases: %w", err)
+		return nil, 0, fmt.Errorf("failed to get new releases: %w", err)
 	}
 
-	return books, nil
+	// 获取新书总数（所有已发布状态的书籍）
+	total, err := s.bookRepo.CountByFilter(ctx, &bookstore2.BookFilter{})
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count new releases: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // GetFreeBooks 获取免费书籍列表
-func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, error) {
+func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetFreeBooks(ctx, pageSize, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get free books: %w", err)
+		return nil, 0, fmt.Errorf("failed to get free books: %w", err)
 	}
 
-	return books, nil
+	// 获取免费书籍总数
+	filter := &bookstore2.BookFilter{
+		IsFree: boolPtr(true),
+	}
+	total, err := s.bookRepo.CountByFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count free books: %w", err)
+	}
+
+	return books, total, nil
 }
 
 // SearchBooks 搜索书籍 - 简单搜索
@@ -461,7 +520,7 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 
 	// 获取推荐书籍
 	go func() {
-		books, err := s.GetRecommendedBooks(ctx, 1, 10)
+		books, _, err := s.GetRecommendedBooks(ctx, 1, 10)
 		if err != nil {
 			errChan <- fmt.Errorf("failed to get recommended books: %w", err)
 			return
@@ -472,7 +531,7 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 
 	// 获取精选书籍
 	go func() {
-		books, err := s.GetFeaturedBooks(ctx, 1, 10)
+		books, _, err := s.GetFeaturedBooks(ctx, 1, 10)
 		if err != nil {
 			errChan <- fmt.Errorf("failed to get featured books: %w", err)
 			return
@@ -636,4 +695,9 @@ func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType b
 	}
 
 	return s.rankingRepo.UpdateRankings(ctx, rankingType, period, items)
+}
+
+// boolPtr 返回bool值的指针
+func boolPtr(b bool) *bool {
+	return &b
 }
