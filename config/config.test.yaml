@@ -5,8 +5,8 @@ server:
   timeout: 30s
 
 mongodb:
-  uri: "mongodb://admin:password@localhost:27017/qingyu_test?authSource=admin"
-  database: "qingyu_test"
+  uri: "mongodb://admin:password@localhost:27017/qingyu?authSource=admin"
+  database: "qingyu"
   timeout: 30
 
 redis:

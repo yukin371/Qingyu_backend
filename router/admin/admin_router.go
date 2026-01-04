@@ -5,6 +5,7 @@ import (
 
 	"Qingyu_backend/middleware"
 	aiService "Qingyu_backend/service/ai"
+	adminservice "Qingyu_backend/service/admin"
 	auditService "Qingyu_backend/service/interfaces/audit"
 	messagingService "Qingyu_backend/service/messaging"
 	userService "Qingyu_backend/service/interfaces/user"
@@ -22,6 +23,8 @@ func RegisterAdminRoutes(
 	adminSvc adminService.AdminService,
 	configSvc *sharedService.ConfigService,
 	announcementSvc messagingService.AnnouncementService,
+	userAdminSvc adminservice.UserAdminService,
+	permissionSvc sharedService.PermissionService,
 ) {
 	// 创建admin API实例
 	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
@@ -30,17 +33,43 @@ func RegisterAdminRoutes(
 	configAdminAPI := admin.NewConfigAPI(configSvc)
 	announcementAdminAPI := admin.NewAnnouncementAPI(announcementSvc)
 
+	// 权限管理API
+	var permissionAPI *admin.PermissionAPI
+	if permissionSvc != nil {
+		permissionAPI = admin.NewPermissionAPI(permissionSvc)
+	}
+
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
 	adminGroup := r.Group("/admin")
 	adminGroup.Use(middleware.JWTAuth())            // JWT认证
 	adminGroup.Use(middleware.RequireRole("admin")) // 管理员权限验证
 	{
 		// ===========================
-		// 用户管理
-		// ⚠️ 注意：用户管理功能已迁移到 user-management 模块
-		// 新路由位置：/api/v1/user-management/users/* (需管理员权限)
-		// 此处保留注释说明，实际路由已在 router/enter.go 中注册
+		// 用户管理（管理员专用）
 		// ===========================
+		if userAdminSvc != nil {
+			userAdminAPI := admin.NewUserAdminAPI(userAdminSvc)
+			usersGroup := adminGroup.Group("/users")
+			{
+				// 用户列表和搜索
+				usersGroup.GET("", userAdminAPI.ListUsers)                 // 获取用户列表
+				usersGroup.GET("/search", userAdminAPI.SearchUsers)        // 搜索用户
+				usersGroup.GET("/count-by-status", userAdminAPI.CountByStatus) // 按状态统计
+
+				// 单个用户操作
+				usersGroup.GET("/:id", userAdminAPI.GetUserDetail)                  // 获取用户详情
+				usersGroup.DELETE("/:id", userAdminAPI.DeleteUser)                // 删除用户
+				usersGroup.PUT("/:id/status", userAdminAPI.UpdateUserStatus)      // 更新用户状态
+				usersGroup.PUT("/:id/role", userAdminAPI.UpdateUserRole)          // 更新用户角色
+				usersGroup.POST("/:id/reset-password", userAdminAPI.ResetUserPassword) // 重置密码
+				usersGroup.GET("/:id/activities", userAdminAPI.GetUserActivities)     // 获取活动记录
+				usersGroup.GET("/:id/statistics", userAdminAPI.GetUserStatistics)    // 获取统计信息
+
+				// 批量操作
+				usersGroup.POST("/batch-update-status", userAdminAPI.BatchUpdateStatus) // 批量更新状态
+				usersGroup.POST("/batch-delete", userAdminAPI.BatchDeleteUsers)        // 批量删除
+			}
+		}
 
 		// ===========================
 		// AI配额管理
@@ -124,6 +153,34 @@ func RegisterAdminRoutes(
 				announcementsGroup.DELETE("/:id", announcementAdminAPI.DeleteAnnouncement)    // 删除公告
 				announcementsGroup.PUT("/batch-status", announcementAdminAPI.BatchUpdateStatus) // 批量更新状态
 				announcementsGroup.DELETE("/batch-delete", announcementAdminAPI.BatchDelete)      // 批量删除
+			}
+		}
+
+		// ===========================
+		// 权限和角色管理
+		// ===========================
+		if permissionAPI != nil {
+			// 权限管理
+			permissionsGroup := adminGroup.Group("/permissions")
+			{
+				permissionsGroup.GET("", permissionAPI.GetAllPermissions)                         // 获取所有权限
+				permissionsGroup.GET("/:code", permissionAPI.GetPermission)                     // 获取权限详情
+				permissionsGroup.POST("", permissionAPI.CreatePermission)                       // 创建权限
+				permissionsGroup.PUT("/:code", permissionAPI.UpdatePermission)                  // 更新权限
+				permissionsGroup.DELETE("/:code", permissionAPI.DeletePermission)               // 删除权限
+			}
+
+			// 角色管理
+			rolesGroup := adminGroup.Group("/roles")
+			{
+				rolesGroup.GET("", permissionAPI.GetAllRoles)                               // 获取所有角色
+				rolesGroup.GET("/:id", permissionAPI.GetRole)                               // 获取角色详情
+				rolesGroup.POST("", permissionAPI.CreateRole)                               // 创建角色
+				rolesGroup.PUT("/:id", permissionAPI.UpdateRole)                            // 更新角色
+				rolesGroup.DELETE("/:id", permissionAPI.DeleteRole)                         // 删除角色
+				rolesGroup.GET("/:id/permissions", permissionAPI.GetRolePermissions)        // 获取角色权限
+				rolesGroup.POST("/:id/permissions/:permissionCode", permissionAPI.AssignPermissionToRole)  // 为角色分配权限
+				rolesGroup.DELETE("/:id/permissions/:permissionCode", permissionAPI.RemovePermissionFromRole)  // 移除角色权限
 			}
 		}
 	}

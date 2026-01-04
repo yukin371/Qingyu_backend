@@ -11,7 +11,7 @@ import (
 func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notifications.NotificationAPI) {
 	// 通知路由组（需要认证）
 	notificationGroup := r.Group("/notifications")
-	notificationGroup.Use(middleware.AuthMiddleware())
+	notificationGroup.Use(middleware.JWTAuth())
 
 	// 通知基础操作
 	notificationGroup.GET("", notificationAPI.GetNotifications)
@@ -52,7 +52,7 @@ func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notifications.Notificat
 func RegisterUserManagementRoutes(r *gin.RouterGroup, notificationAPI *notifications.NotificationAPI) {
 	// 用户管理路由组（需要认证）
 	userManagementGroup := r.Group("/user-management")
-	userManagementGroup.Use(middleware.AuthMiddleware())
+	userManagementGroup.Use(middleware.JWTAuth())
 
 	// 邮件通知设置
 	userManagementGroup.GET("/email-notifications", notificationAPI.GetEmailNotificationSettings)

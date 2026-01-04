@@ -21,6 +21,9 @@ import (
 	writerRouter "Qingyu_backend/router/writer"
 
 	"Qingyu_backend/service"
+	adminservice "Qingyu_backend/service/admin"
+	adminrep "Qingyu_backend/repository/mongodb/admin"
+	authRep "Qingyu_backend/repository/mongodb/auth"
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
 	bookstore "Qingyu_backend/service/bookstore"
@@ -489,7 +492,27 @@ func RegisterRoutes(r *gin.Engine) {
 		announcementSvc = nil
 	}
 
-	adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc)
+	// 创建用户管理服务（UserAdminService - 管理员专用）
+	// 和权限管理服务（PermissionService）
+	// 获取 MongoDB 数据库
+	mongoDB := serviceContainer.GetMongoDB()
+	if mongoDB != nil {
+		// 创建用户管理仓储
+		userAdminRepo := adminrep.NewMongoUserAdminRepository(mongoDB)
+
+		// 创建用户管理服务
+		userAdminSvc := adminservice.NewUserAdminService(userAdminRepo)
+
+		// 创建权限管理仓储和服务
+		permissionRepo := authRep.NewMongoPermissionRepository(mongoDB)
+		permissionSvc := sharedService.NewPermissionService(permissionRepo)
+
+		// 注册管理员路由（包含用户管理和权限管理）
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc)
+	} else {
+		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil)
+	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")
@@ -497,6 +520,8 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/admin/audit/* (审核管理)")
 	logger.Info("  - /api/v1/admin/stats (系统统计)")
 	logger.Info("  - /api/v1/admin/config/* (配置管理)")
+	logger.Info("  - /api/v1/admin/permissions/* (权限管理)")
+	logger.Info("  - /api/v1/admin/roles/* (角色管理)")
 
 	// ============ 注册新的用户管理路由（按功能领域组织） ============
 	// ⭐ 新架构：按功能领域组织，而非按角色组织

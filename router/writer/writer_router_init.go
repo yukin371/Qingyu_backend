@@ -3,11 +3,13 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service"
 	documentService "Qingyu_backend/service/document"
 	projectService "Qingyu_backend/service/project"
 	searchService "Qingyu_backend/service/shared/search"
-	writerService "Qingyu_backend/service/writer"
+	writerservice "Qingyu_backend/service/writer"
+	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -66,6 +68,20 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 	// publishSvc := writerService.NewPublishService(projectRepo, documentRepo, publicationRepo, bookstoreClient, eventBus)
 	var publishSvc interfaces.PublishService
 
+	// 创建DocumentLockService（文档锁服务）
+	// 从服务容器获取Redis客户端
+	var lockSvc lock.DocumentLockService
+	redisClient := serviceContainer.GetRedisClient()
+	if redisClient != nil {
+		lockSvc = lock.NewRedisDocumentLockService(redisClient, "doclock")
+	}
+
+	// 创建CommentService（批注服务）
+	var commentSvc writerservice.CommentService
+	// 直接创建 writer comment repository（因为 factory 的 CreateCommentRepository 返回的是 reading 模块的）
+	commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
+	commentSvc = writerservice.NewCommentService(commentRepo)
+
 	// 调用InitWriterRouter初始化所有写作路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc)
 }

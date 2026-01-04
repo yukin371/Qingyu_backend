@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	apperrors "Qingyu_backend/pkg/errors"
 )
 
 // APIResponse 统一API响应格式
@@ -163,9 +164,70 @@ func NewPagination(total int64, page, pageSize int) *Pagination {
 // HandleServiceError 处理Service层错误
 // 将ServiceError转换为HTTP响应
 func HandleServiceError(c *gin.Context, err error) {
-	// 导入errors包处理ServiceError
-	// 暂时使用通用错误处理
+	// 检查是否为UnifiedError类型
+	if unifiedErr, ok := err.(*apperrors.UnifiedError); ok {
+		HandleUnifiedError(c, unifiedErr)
+		return
+	}
+
+	// 默认错误处理
 	Error(c, http.StatusInternalServerError, "操作失败", err.Error())
+}
+
+// HandleUnifiedError 处理UnifiedError错误
+// 将UnifiedError转换为标准HTTP响应
+func HandleUnifiedError(c *gin.Context, err *apperrors.UnifiedError) {
+	statusCode := err.GetHTTPStatus()
+	response := ErrorResponse{
+		Code:      statusCode,
+		Message:   err.Message,
+		Error:     err.Code,
+		Timestamp: time.Now().Unix(),
+		RequestID: err.RequestID,
+	}
+
+	// 在开发环境中添加调试信息
+	// TODO: 从配置中读取环境变量
+	if err.Details != "" {
+		response.Debug = err.Details
+	}
+
+	c.JSON(statusCode, response)
+}
+
+// HandleError 处理任意类型的错误
+// 自动识别错误类型并返回适当的HTTP响应
+func HandleError(c *gin.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	// 检查是否为UnifiedError
+	if unifiedErr, ok := err.(*apperrors.UnifiedError); ok {
+		HandleUnifiedError(c, unifiedErr)
+		return
+	}
+
+	// 默认错误处理
+	Error(c, http.StatusInternalServerError, "操作失败", err.Error())
+}
+
+// WrapServiceError 包装服务层错误为UnifiedError
+// 用于在API层将服务层错误转换为统一的错误格式
+func WrapServiceError(serviceName, operation string, err error) *apperrors.UnifiedError {
+	if err == nil {
+		return nil
+	}
+
+	// 如果已经是UnifiedError，直接返回
+	if unifiedErr, ok := err.(*apperrors.UnifiedError); ok {
+		return unifiedErr.WithService(serviceName, operation)
+	}
+
+	// 否则创建新的UnifiedError
+	factory := apperrors.NewErrorFactory(serviceName)
+	return factory.InternalError("INTERNAL_ERROR", "操作失败", err).
+		WithService(serviceName, operation)
 }
 
 // =========================

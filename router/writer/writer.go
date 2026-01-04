@@ -5,27 +5,43 @@ import (
 
 	"Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/middleware"
+	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/document"
-	"Qingyu_backend/service/project"
+	projectService "Qingyu_backend/service/project"
 	searchService "Qingyu_backend/service/shared/search"
+	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/service/interfaces"
 )
 
 // InitWriterRouter 初始化写作端路由
 func InitWriterRouter(
 	r *gin.RouterGroup,
-	projectService *project.ProjectService,
+	projectService *projectService.ProjectService,
 	documentService *document.DocumentService,
-	versionService *project.VersionService,
+	versionService *projectService.VersionService,
 	searchSvc searchService.SearchService,
 	exportService interfaces.ExportService,
 	publishService interfaces.PublishService,
+	lockService lock.DocumentLockService,
+	commentService writerservice.CommentService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
 	documentApi := writer.NewDocumentApi(documentService)
 	versionApi := writer.NewVersionApi(versionService)
 	editorApi := writer.NewEditorApi(documentService)
+
+	// 锁定API（如果可用）
+	var lockApi *writer.LockAPI
+	if lockService != nil {
+		lockApi = writer.NewLockAPI(lockService)
+	}
+
+	// 批注API（如果可用）
+	var commentApi *writer.CommentAPI
+	if commentService != nil {
+		commentApi = writer.NewCommentAPI(commentService)
+	}
 
 	// 写作端路由组
 	writerGroup := r.Group("/writer")
@@ -35,7 +51,7 @@ func InitWriterRouter(
 		InitProjectRouter(writerGroup, projectApi)
 
 		// 文档管理路由
-		InitDocumentRouter(writerGroup, documentApi)
+		InitDocumentRouter(writerGroup, documentApi, lockApi)
 
 		// 版本控制路由
 		InitVersionRouter(writerGroup, versionApi)
@@ -57,6 +73,11 @@ func InitWriterRouter(
 		if publishService != nil {
 			InitPublishRoutes(writerGroup, publishService)
 		}
+
+		// 批注路由
+		if commentApi != nil {
+			InitCommentRouter(writerGroup, commentApi)
+		}
 	}
 }
 
@@ -77,7 +98,7 @@ func InitProjectRouter(r *gin.RouterGroup, projectApi *writer.ProjectApi) {
 }
 
 // InitDocumentRouter 初始化文档路由
-func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi) {
+func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi, lockApi *writer.LockAPI) {
 	// 项目下的文档管理
 	projectDocGroup := r.Group("/project/:projectId/documents")
 	{
@@ -94,6 +115,16 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi) {
 		documentGroup.PUT("/:id", documentApi.UpdateDocument)
 		documentGroup.DELETE("/:id", documentApi.DeleteDocument)
 		documentGroup.PUT("/:id/move", documentApi.MoveDocument)
+
+		// 文档锁定路由
+		if lockApi != nil {
+			documentGroup.POST("/:id/lock", lockApi.LockDocument)
+			documentGroup.DELETE("/:id/lock", lockApi.UnlockDocument)
+			documentGroup.PUT("/:id/lock/refresh", lockApi.RefreshLock)
+			documentGroup.GET("/:id/lock/status", lockApi.GetLockStatus)
+			documentGroup.POST("/:id/lock/force", lockApi.ForceUnlock)
+			documentGroup.POST("/:id/lock/extend", lockApi.ExtendLock)
+		}
 	}
 }
 
@@ -160,3 +191,37 @@ func InitSearchRouter(r *gin.RouterGroup, searchSvc searchService.SearchService)
 		searchGroup.GET("/documents", searchAPI.SearchDocuments)
 	}
 }
+
+// InitCommentRouter 初始化批注路由
+func InitCommentRouter(r *gin.RouterGroup, commentApi *writer.CommentAPI) {
+	// 文档批注路由
+	documentGroup := r.Group("/documents/:id")
+	{
+		// 批注管理
+		documentGroup.POST("/comments", commentApi.CreateComment)
+		documentGroup.GET("/comments", commentApi.GetComments)
+		documentGroup.GET("/comments/stats", commentApi.GetCommentStats)
+		documentGroup.GET("/comments/search", commentApi.SearchComments)
+	}
+
+	// 批注操作路由
+	commentGroup := r.Group("/comments")
+	{
+		// 单个批注操作
+		commentGroup.GET("/:id", commentApi.GetComment)
+		commentGroup.PUT("/:id", commentApi.UpdateComment)
+		commentGroup.DELETE("/:id", commentApi.DeleteComment)
+
+		// 批注状态
+		commentGroup.POST("/:id/resolve", commentApi.ResolveComment)
+		commentGroup.POST("/:id/unresolve", commentApi.UnresolveComment)
+		commentGroup.POST("/:id/reply", commentApi.ReplyComment)
+
+		// 批注线程
+		commentGroup.GET("/threads/:threadId", commentApi.GetCommentThread)
+
+		// 批量操作
+		commentGroup.POST("/batch-delete", commentApi.BatchDeleteComments)
+	}
+}
+
