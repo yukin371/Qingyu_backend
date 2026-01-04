@@ -4,8 +4,11 @@ import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	socialApi "Qingyu_backend/api/v1/social"
 	"Qingyu_backend/middleware"
+	"Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/reading"
+	readerservice "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
+	syncService "Qingyu_backend/pkg/sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,10 +17,13 @@ import (
 func InitReaderRouter(
 	r *gin.RouterGroup,
 	readerService *reading.ReaderService,
+	chapterService bookstore.ChapterService,
 	commentService *socialService.CommentService,
 	likeService *socialService.LikeService,
 	collectionService *socialService.CollectionService,
 	readingHistoryService *reading.ReadingHistoryService,
+	progressSyncService *syncService.ProgressSyncService,
+	bookmarkService readerservice.BookmarkService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService)
@@ -27,6 +33,24 @@ func InitReaderRouter(
 	themeApiHandler := readerApi.NewThemeAPI()
 	fontApiHandler := readerApi.NewFontAPI()
 	chapterCommentApiHandler := readerApi.NewChapterCommentAPI()
+
+	// 章节API（使用阅读器专属服务）
+	chapterServiceForReader := readerservice.NewChapterService(chapterService, readerService, nil)
+	chapterApiHandler := readerApi.NewChapterAPI(chapterServiceForReader)
+
+	// 书签API（如果可用）
+	var bookmarkApiHandler *readerApi.BookmarkAPI
+	if bookmarkService != nil {
+		bookmarkApiHandler = readerApi.NewBookmarkAPI(bookmarkService)
+	}
+
+	// 进度同步API（如果syncService可用）
+	var syncApiHandler *readerApi.SyncAPI
+	if progressSyncService != nil {
+		syncApiHandler = readerApi.NewSyncAPI(progressSyncService)
+		// 启动同步服务
+		progressSyncService.Start()
+	}
 
 	// 评论API（如果commentService可用，使用 social 包的统一实现）
 	var commentApiHandler *socialApi.CommentAPI
@@ -87,6 +111,23 @@ func InitReaderRouter(
 			}
 		}
 
+		// 章节阅读
+		{
+			// 章节内容获取（支持按ID和按章节号）
+			readerGroup.GET("/books/:bookId/chapters/:chapterId", chapterApiHandler.GetChapterContent)
+			readerGroup.GET("/books/:bookId/chapters/by-number/:chapterNum", chapterApiHandler.GetChapterByNumber)
+
+			// 章节导航
+			readerGroup.GET("/books/:bookId/chapters/:chapterId/next", chapterApiHandler.GetNextChapter)
+			readerGroup.GET("/books/:bookId/chapters/:chapterId/previous", chapterApiHandler.GetPreviousChapter)
+
+			// 章节目录
+			readerGroup.GET("/books/:bookId/chapters", chapterApiHandler.GetChapterList)
+
+			// 章节信息（不含内容）
+			readerGroup.GET("/chapters/:chapterId/info", chapterApiHandler.GetChapterInfo)
+		}
+
 		// 阅读进度
 		progress := readerGroup.Group("/progress")
 		{
@@ -98,6 +139,14 @@ func InitReaderRouter(
 			progress.GET("/stats", progressApiHandler.GetReadingStats)         // 获取阅读统计
 			progress.GET("/unfinished", progressApiHandler.GetUnfinishedBooks) // 获取未读完的书
 			progress.GET("/finished", progressApiHandler.GetFinishedBooks)     // 获取已读完的书
+
+			// 进度同步（如果syncApiHandler可用）
+			if syncApiHandler != nil {
+				progress.GET("/ws", syncApiHandler.SyncWebSocket)              // WebSocket同步
+				progress.POST("/sync", syncApiHandler.SyncProgress)            // HTTP同步
+				progress.POST("/merge", syncApiHandler.MergeOfflineProgresses) // 合并离线进度
+				progress.GET("/sync-status", syncApiHandler.GetSyncStatus)     // 同步状态
+			}
 		}
 
 		// 标注管理
@@ -132,6 +181,29 @@ func InitReaderRouter(
 			annotations.POST("/sync", annotationsApiHandler.SyncAnnotations)             // 同步标注
 			annotations.GET("/export", annotationsApiHandler.ExportAnnotations)          // 导出标注
 			annotations.GET("/bookmark/latest", annotationsApiHandler.GetLatestBookmark) // 获取最新书签
+		}
+
+		// 书签管理（如果bookmarkApiHandler可用）
+		if bookmarkApiHandler != nil {
+			bookmarks := readerGroup.Group("/bookmarks")
+			{
+				// 基础CRUD
+				bookmarks.GET("", bookmarkApiHandler.GetBookmarks)                // 获取书签列表
+				bookmarks.GET("/:id", bookmarkApiHandler.GetBookmark)            // 获取书签详情
+				bookmarks.PUT("/:id", bookmarkApiHandler.UpdateBookmark)         // 更新书签
+				bookmarks.DELETE("/:id", bookmarkApiHandler.DeleteBookmark)      // 删除书签
+
+				// 按书籍获取
+				readerGroup.GET("/books/:bookId/bookmarks", bookmarkApiHandler.GetBookmarks) // 获取某本书的书签
+				readerGroup.POST("/books/:bookId/bookmarks", bookmarkApiHandler.CreateBookmark) // 创建书签
+
+				// 搜索和统计
+				bookmarks.GET("/search", bookmarkApiHandler.SearchBookmarks) // 搜索书签
+				bookmarks.GET("/stats", bookmarkApiHandler.GetBookmarkStats) // 书签统计
+
+				// 导出
+				bookmarks.GET("/export", bookmarkApiHandler.ExportBookmarks) // 导出书签
+			}
 		}
 
 		// 阅读设置

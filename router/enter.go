@@ -23,11 +23,14 @@ import (
 	"Qingyu_backend/service"
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
+	bookstore "Qingyu_backend/service/bookstore"
 
 	socialApi "Qingyu_backend/api/v1/social"
 financeApi "Qingyu_backend/api/v1/finance"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
+	syncService "Qingyu_backend/pkg/sync"
+	readerservice "Qingyu_backend/service/reader"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -163,7 +166,20 @@ func RegisterRoutes(r *gin.Engine) {
 		ratingSvc, _ := serviceContainer.GetBookRatingService()
 		statisticsSvc, _ := serviceContainer.GetBookStatisticsService()
 
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc)
+		// 获取章节服务（如果可用）
+		var chapterSvc bookstore.ChapterService
+		if svc, err := serviceContainer.GetChapterService(); err == nil {
+			chapterSvc = svc
+		}
+
+		// 获取章节购买服务（如果可用）
+		var chapterPurchaseSvc bookstore.ChapterPurchaseService
+		// TODO: 添加 GetChapterPurchaseService 到服务容器
+		// if svc, err := serviceContainer.GetChapterPurchaseService(); err == nil {
+		//     chapterPurchaseSvc = svc
+		// }
+
+		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc)
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")
@@ -187,6 +203,14 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Warn("获取阅读器服务失败", zap.Error(err))
 		logger.Info("阅读器路由未注册")
 	} else {
+		// 获取章节服务（用于章节阅读）
+		var chapterSvc bookstore.ChapterService
+		if svc, err := serviceContainer.GetChapterService(); err == nil {
+			chapterSvc = svc
+		} else {
+			logger.Warn("章节服务未配置，章节阅读功能将不可用", zap.Error(err))
+		}
+
 		// 获取评论服务（如果可用）
 		commentSvc, commentErr := serviceContainer.GetCommentService()
 		if commentErr != nil {
@@ -215,12 +239,30 @@ func RegisterRoutes(r *gin.Engine) {
 			readingHistorySvc = nil
 		}
 
-		readerRouter.InitReaderRouter(v1, readerSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc)
+		// 进度同步服务（TODO: 需要添加到服务容器）
+		var progressSyncSvc *syncService.ProgressSyncService = nil
+
+		// 书签服务（TODO: 需要添加到服务容器）
+		var bookmarkSvc readerservice.BookmarkService = nil
+
+		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")
-		logger.Info("  - /api/v1/reader/chapters/* (章节内容)")
+		if chapterSvc != nil {
+			logger.Info("  - /api/v1/reader/books/:bookId/chapters/* (章节阅读)")
+			logger.Info("    - GET /:chapterId (获取章节内容)")
+			logger.Info("    - GET /:chapterId/next (下一章)")
+			logger.Info("    - GET /:chapterId/previous (上一章)")
+			logger.Info("    - GET /by-number/:chapterNum (按章节号获取)")
+		}
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
+		if progressSyncSvc != nil {
+			logger.Info("  - /api/v1/reader/progress/ws (WebSocket同步)")
+			logger.Info("  - /api/v1/reader/progress/sync (进度同步)")
+			logger.Info("  - /api/v1/reader/progress/merge (合并离线进度)")
+			logger.Info("  - /api/v1/reader/progress/sync-status (同步状态)")
+		}
 		logger.Info("  - /api/v1/reader/annotations/* (标注管理)")
 		logger.Info("  - /api/v1/reader/settings/* (阅读设置)")
 		if commentSvc != nil {
@@ -264,9 +306,15 @@ func RegisterRoutes(r *gin.Engine) {
 	//     relationAPI = socialApi.NewUserRelationAPI(relationSvc)
 	// }
 
+	// 新增社交 API（待实现）
+	var followAPI *socialApi.FollowAPI
+	var messageAPI *socialApi.MessageAPI
+	var reviewAPI *socialApi.ReviewAPI
+	var booklistAPI *socialApi.BookListAPI
+
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil {
-		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI)
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil || followAPI != nil || messageAPI != nil || reviewAPI != nil || booklistAPI != nil {
+		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
 		if commentAPI != nil {
