@@ -51,7 +51,6 @@ Thumbs.db
 *.disabled
 
 # IDE 相关
-
 .trae/
 .vscode/
 .idea/
@@ -98,3 +97,4 @@ tmp/
 # 其他
 *.bak
 *.backup
+scripts/
