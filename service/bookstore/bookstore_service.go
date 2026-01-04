@@ -335,11 +335,8 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		return nil, 0, errors.New("filter is required")
 	}
 
-	// 确保只搜索已发布的书籍
-	if filter.Status == nil {
-		publishedStatus := bookstore2.BookStatusPublished
-		filter.Status = &publishedStatus
-	}
+	// 不设置默认状态过滤器，让搜索查找所有状态的书籍
+	// 如果需要只搜索已发布的书籍，可以在API层或请求参数中指定
 
 	// 执行搜索
 	books, err := s.bookRepo.SearchWithFilter(ctx, filter)
@@ -348,9 +345,25 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 	}
 
 	// 计算总数
-	total, err := s.bookRepo.CountByFilter(ctx, filter)
-	if err != nil {
-		return books, 0, fmt.Errorf("failed to count search results: %w", err)
+	// 如果有关键词，CountByFilter会使用MongoDB的$indexOfCP，对中文支持不佳
+	// 因此当有关键词时，使用SearchWithFilter返回的结果数量作为总数
+	var total int64
+	if filter.Keyword != nil && *filter.Keyword != "" {
+		// 先获取所有匹配的书籍（不分页）来计算总数
+		totalFilter := *filter
+		totalFilter.Limit = 0 // 不限制数量
+		totalFilter.Offset = 0
+		allBooks, err := s.bookRepo.SearchWithFilter(ctx, &totalFilter)
+		if err != nil {
+			return books, int64(len(books)), nil // 降级：使用当前页数量
+		}
+		total = int64(len(allBooks))
+	} else {
+		// 没有关键词时，使用CountByFilter
+		total, err = s.bookRepo.CountByFilter(ctx, filter)
+		if err != nil {
+			return books, int64(len(books)), nil // 降级：使用当前页数量
+		}
 	}
 
 	return books, total, nil

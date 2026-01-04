@@ -35,6 +35,10 @@ func InitServer() (*gin.Engine, error) {
 	r.Use(middleware.Logger())
 	r.Use(middleware.CORSMiddleware())
 
+	// 自定义JSON渲染 - 设置不转义HTML字符（包括中文）
+	// 注意：我们通过在API层使用response.JSON()函数来实现
+	// 在pkg/response/json_renderer.go中提供了JsonWithNoEscape函数
+
 	// 注册路由
 	router.RegisterRoutes(r)
 

@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -485,6 +486,7 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 
 // SearchWithFilter 使用过滤器搜索书籍
 func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *bookstore.BookFilter) ([]*bookstore.Book, error) {
+	// 先构建基础查询（不包括关键词）
 	query := bson.M{}
 
 	if filter.Status != nil {
@@ -494,13 +496,7 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 		query["category_ids"] = *filter.CategoryID
 	}
 	if filter.Author != nil {
-		// 使用 $indexOfCP 避免正则表达式编码问题
-		query["$expr"] = bson.M{
-			"$gt": bson.A{
-				bson.M{"$indexOfCP": bson.A{"$author", *filter.Author}},
-				-1,
-			},
-		}
+		query["author"] = *filter.Author
 	}
 	if filter.IsRecommended != nil {
 		query["is_recommended"] = *filter.IsRecommended
@@ -508,42 +504,64 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	if filter.IsFeatured != nil {
 		query["is_featured"] = *filter.IsFeatured
 	}
-	// 忽略最小评分过滤以兼容当前模型
 	if len(filter.Tags) > 0 {
 		query["tags"] = bson.M{"$in": filter.Tags}
 	}
-	if filter.Keyword != nil {
+
+	// 如果有关键词，使用Go代码进行过滤（避免MongoDB正则表达式的UTF-8问题）
+	if filter.Keyword != nil && *filter.Keyword != "" {
 		keyword := *filter.Keyword
-		// 使用 $or 条件配合 $indexOfCP 进行关键词搜索
-		orConditions := []bson.M{
-			{
-				"$expr": bson.M{
-					"$gt": bson.A{
-						bson.M{"$indexOfCP": bson.A{"$title", keyword}},
-						-1,
-					},
-				},
-			},
-			{
-				"$expr": bson.M{
-					"$gt": bson.A{
-						bson.M{"$indexOfCP": bson.A{"$author", keyword}},
-						-1,
-					},
-				},
-			},
-			{
-				"$expr": bson.M{
-					"$gt": bson.A{
-						bson.M{"$indexOfCP": bson.A{"$introduction", keyword}},
-						-1,
-					},
-				},
-			},
+		log.Printf("[DEBUG] 搜索关键词: %s, status: %v", keyword, filter.Status)
+
+		// 先获取符合其他条件的所有书籍（不设置limit以获取所有数据）
+		opts := options.Find()
+
+		// 排序
+		sortBy := "created_at"
+		sortOrder := -1
+		if filter.SortBy != "" {
+			sortBy = filter.SortBy
 		}
-		query["$or"] = orConditions
+		if filter.SortOrder == "asc" {
+			sortOrder = 1
+		}
+		opts.SetSort(bson.D{{Key: sortBy, Value: sortOrder}})
+
+		cursor, err := r.collection.Find(ctx, query, opts)
+		if err != nil {
+			log.Printf("[ERROR] MongoDB查询失败: %v", err)
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		var allBooks []*bookstore.Book
+		if err = cursor.All(ctx, &allBooks); err != nil {
+			return nil, err
+		}
+
+		// 在Go代码中进行关键词过滤
+		var filteredBooks []*bookstore.Book
+		for _, book := range allBooks {
+			// 直接使用 Contains 进行匹配，避免 ToLower 导致的编码问题
+			titleMatch := strings.Contains(book.Title, keyword)
+			authorMatch := strings.Contains(book.Author, keyword)
+			introMatch := strings.Contains(book.Introduction, keyword)
+
+			if titleMatch || authorMatch || introMatch {
+				filteredBooks = append(filteredBooks, book)
+			}
+		}
+
+		// 应用分页限制
+		if filter.Limit > 0 && len(filteredBooks) > filter.Limit {
+			filteredBooks = filteredBooks[:filter.Limit]
+		}
+
+		log.Printf("[DEBUG] 过滤后匹配 %d 本书，返回 %d 本", len(filteredBooks), len(filteredBooks))
+		return filteredBooks, nil
 	}
 
+	// 没有关键词，直接查询
 	opts := options.Find()
 	if filter.Limit > 0 {
 		opts.SetLimit(int64(filter.Limit))
@@ -575,6 +593,11 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	}
 
 	return books, nil
+}
+
+// containsStringIgnoreCase 检查字符串是否包含子字符串（不区分大小写）
+func containsStringIgnoreCase(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
 // CountByCategory 统计分类下的书籍数量

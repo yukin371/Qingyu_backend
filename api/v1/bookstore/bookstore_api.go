@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	bookstoreService "Qingyu_backend/service/bookstore"
+	"Qingyu_backend/pkg/response"
 )
 
 // BookstoreAPI 书城API处理器
@@ -100,14 +101,8 @@ func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取书籍列表成功",
-		Data:    books,
-		Total:   total,
-		Page:    page,
-		Size:    size,
-	})
+	// 使用自定义JSON渲染器，不转义中文字符
+	response.PaginatedJSON(c, "获取书籍列表成功", books, total, page, size)
 }
 
 // GetBookByID 根据ID获取书籍详情
@@ -393,13 +388,14 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		"total": total,
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "搜索书籍成功",
-		Data:    responseData,
-		Total:   total,
-		Page:    page,
-		Size:    size,
+	// 使用自定义JSON渲染器，不转义中文字符
+	response.JSON(c, http.StatusOK, gin.H{
+		"code":    200,
+		"message": "搜索书籍成功",
+		"data":    responseData,
+		"total":   total,
+		"page":    page,
+		"size":    size,
 	})
 }
 
