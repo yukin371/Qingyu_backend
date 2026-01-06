@@ -3,12 +3,12 @@ package notifications
 import (
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/notifications"
+	notificationsAPI "Qingyu_backend/api/v1/communications/notifications"
 	"Qingyu_backend/middleware"
 )
 
 // RegisterRoutes 注册通知路由
-func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notifications.NotificationAPI) {
+func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI) {
 	// 通知路由组（需要认证）
 	notificationGroup := r.Group("/notifications")
 	notificationGroup.Use(middleware.JWTAuth())
@@ -49,7 +49,7 @@ func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notifications.Notificat
 }
 
 // RegisterUserManagementRoutes 注册用户管理路由（包含邮件和短信通知设置）
-func RegisterUserManagementRoutes(r *gin.RouterGroup, notificationAPI *notifications.NotificationAPI) {
+func RegisterUserManagementRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI) {
 	// 用户管理路由组（需要认证）
 	userManagementGroup := r.Group("/user-management")
 	userManagementGroup.Use(middleware.JWTAuth())

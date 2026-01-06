@@ -11,7 +11,6 @@ import (
 	messagingRouter "Qingyu_backend/router/messaging"
 	notificationsRouter "Qingyu_backend/router/notifications"
 	usermanagementRouter "Qingyu_backend/router/usermanagement"
-	projectRouter "Qingyu_backend/router/project"
 	readerRouter "Qingyu_backend/router/reader"
 	recommendationRouter "Qingyu_backend/router/recommendation"
 	sharedRouter "Qingyu_backend/router/shared"
@@ -29,9 +28,10 @@ import (
 	bookstore "Qingyu_backend/service/bookstore"
 
 	socialApi "Qingyu_backend/api/v1/social"
+	messagesApi "Qingyu_backend/api/v1/communications/messages"
 financeApi "Qingyu_backend/api/v1/finance"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
-	notificationsAPI "Qingyu_backend/api/v1/notifications"
+	notificationsAPI "Qingyu_backend/api/v1/communications/notifications"
 	syncService "Qingyu_backend/pkg/sync"
 	readerservice "Qingyu_backend/service/reader"
 
@@ -311,7 +311,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 新增社交 API（待实现）
 	var followAPI *socialApi.FollowAPI
-	var messageAPI *socialApi.MessageAPI
+	var messageAPI *messagesApi.MessageAPI
 	var reviewAPI *socialApi.ReviewAPI
 	var booklistAPI *socialApi.BookListAPI
 
@@ -411,10 +411,6 @@ func RegisterRoutes(r *gin.Engine) {
 	if bookstoreErr == nil {
 		logger.Info("  - /api/v1/users/:userId/books (用户作品列表)")
 	}
-
-	// ============ 注册文档路由 ============
-	projectRouter.RegisterRoutes(v1)
-	logger.Info("✓ 文档路由已注册到: /api/v1/projects/")
 
 	// ============ 注册写作端路由 ============
 	writerRouter.RegisterWriterRoutes(v1)
