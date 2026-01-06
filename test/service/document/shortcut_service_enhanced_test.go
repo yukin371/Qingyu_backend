@@ -1,4 +1,4 @@
-package document
+package document_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"Qingyu_backend/models/writer"
-	documentSvc "Qingyu_backend/service/document"
+	documentSvc "Qingyu_backend/service/writer/document"
 )
 
 // TestShortcutService_GetUserShortcuts 测试获取用户快捷键配置

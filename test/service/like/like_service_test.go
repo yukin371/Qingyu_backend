@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // MockCommentRepository Mock评论Repository（为LikeService测试提供）

@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/audit"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // TestCommentServiceBusinessRules 业务规则测试

@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	baseinfra "Qingyu_backend/repository/interfaces/infrastructure"
-	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	writingRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/interfaces/base"
-	projectService "Qingyu_backend/service/project"
+	projectService "Qingyu_backend/service/writer/project"
 )
 
 // ============ Mock ============

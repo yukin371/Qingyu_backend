@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"Qingyu_backend/service/interfaces/base"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // Mock EventBus

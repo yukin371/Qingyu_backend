@@ -14,7 +14,7 @@ import (
 	"Qingyu_backend/models/users"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	userRepo "Qingyu_backend/repository/interfaces/user"
-	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	writingRepo "Qingyu_backend/repository/interfaces/writer"
 	statsService "Qingyu_backend/service/shared/stats"
 )
 

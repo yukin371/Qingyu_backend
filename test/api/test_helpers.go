@@ -359,20 +359,25 @@ func (m *MockEventBus) PublishAsync(ctx context.Context, event base.Event) error
 
 func createTestProject(authorID string) *writer.Project {
 	now := time.Now()
-	return &writer.Project{
-		ID:         "project123",
-		AuthorID:   authorID,
-		Title:      "测试项目",
-		Summary:    "测试项目描述",
-		Visibility: writer.VisibilityPrivate,
-		Status:     writer.StatusDraft,
+	project := &writer.Project{
+		WritingType: "novel",
+		Summary:     "测试项目描述",
+		Visibility:  writer.VisibilityPrivate,
+		Status:      writer.StatusDraft,
 		Statistics: writer.ProjectStats{
 			TotalWords:    10000,
 			ChapterCount:  10,
 			DocumentCount: 20,
 			LastUpdateAt:  now,
 		},
-		CreatedAt: now,
-		UpdatedAt: now,
+		Settings: writer.ProjectSettings{
+			AutoBackup:     false,
+			BackupInterval: 24,
+		},
 	}
+	project.OwnedEntity.AuthorID = authorID
+	project.TitledEntity.Title = "测试项目"
+	project.Timestamps.CreatedAt = now
+	project.Timestamps.UpdatedAt = now
+	return project
 }

@@ -84,15 +84,29 @@ func NewProjectFactory() *ProjectFactory {
 // Create 创建项目
 func (f *ProjectFactory) Create(authorID string, opts ...func(*writer.Project)) *writer.Project {
 	f.counter++
+	now := time.Now()
 	project := &writer.Project{
-		ID:        primitive.NewObjectID().Hex(),
-		Title:     fmt.Sprintf("测试项目 %d", f.counter),
-		Summary:   fmt.Sprintf("这是第%d个测试项目", f.counter),
-		AuthorID:  authorID,
-		Status:    writer.StatusDraft,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		WritingType: "novel",
+		Summary:     fmt.Sprintf("这是第%d个测试项目", f.counter),
+		Status:      writer.StatusDraft,
+		Visibility:  writer.VisibilityPrivate,
+		Statistics: writer.ProjectStats{
+			TotalWords:    0,
+			ChapterCount:  0,
+			DocumentCount: 0,
+			LastUpdateAt:  now,
+		},
+		Settings: writer.ProjectSettings{
+			AutoBackup:     false,
+			BackupInterval: 24,
+		},
 	}
+	// 设置嵌入字段
+	project.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
+	project.OwnedEntity.AuthorID = authorID
+	project.TitledEntity.Title = fmt.Sprintf("测试项目 %d", f.counter)
+	project.Timestamps.CreatedAt = now
+	project.Timestamps.UpdatedAt = now
 
 	// 应用自定义选项
 	for _, opt := range opts {
@@ -136,16 +150,18 @@ func NewDocumentFactory() *DocumentFactory {
 // 如需创建文档内容，请使用CreateDocumentContent方法
 func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document)) *writer.Document {
 	f.counter++
+	now := time.Now()
 	doc := &writer.Document{
-		ID:        primitive.NewObjectID().Hex(),
-		ProjectID: projectID,
-		Title:     fmt.Sprintf("第%d章", f.counter),
 		Type:      writer.TypeChapter,
 		Status:    "draft",
 		WordCount: 1000 + f.counter*100,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
+	// 设置嵌入字段
+	doc.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
+	doc.ProjectScopedEntity.ProjectID = projectID
+	doc.TitledEntity.Title = fmt.Sprintf("第%d章", f.counter)
+	doc.Timestamps.CreatedAt = now
+	doc.Timestamps.UpdatedAt = now
 
 	// 应用自定义选项
 	for _, opt := range opts {

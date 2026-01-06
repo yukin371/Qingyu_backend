@@ -2,8 +2,8 @@ package writing_test
 
 import (
 	"Qingyu_backend/models/writer"
-	writingInterface "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/repository/mongodb/writing"
+	writingInterface "Qingyu_backend/repository/interfaces/writer"
+	writerRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
 	"context"
 	"testing"
@@ -16,7 +16,7 @@ import (
 // 测试辅助函数
 func setupDocumentContentRepo(t *testing.T) (writingInterface.DocumentContentRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := writing.NewMongoDocumentContentRepository(db)
+	repo := writerRepo.NewMongoDocumentContentRepository(db)
 	ctx := context.Background()
 	return repo, ctx, cleanup
 }

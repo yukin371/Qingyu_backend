@@ -2,8 +2,8 @@ package reading_test
 
 import (
 	"Qingyu_backend/models/reader"
-	readingInterfaces "Qingyu_backend/repository/interfaces/reading"
-	"Qingyu_backend/repository/mongodb/reading"
+	readingInterfaces "Qingyu_backend/repository/interfaces/reader"
+	readerRepo "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/test/testutil"
 	"context"
 	"testing"
@@ -15,7 +15,7 @@ import (
 // 测试辅助函数
 func setupReadingSettingsRepo(t *testing.T) (readingInterfaces.ReadingSettingsRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := reading.NewMongoReadingSettingsRepository(db)
+	repo := readerRepo.NewMongoReadingSettingsRepository(db)
 	ctx := context.Background()
 	return repo, ctx, cleanup
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/repository/mongodb/reading"
+	"Qingyu_backend/repository/mongodb/reader"
 )
 
 // TestLikeRepositoryAdvanced 高级点赞Repository测试
