@@ -2,7 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/api/v1/writer"
-	readingStats "Qingyu_backend/service/reading/stats"
+	readingStats "Qingyu_backend/service/reader/stats"
 
 	"github.com/gin-gonic/gin"
 )
