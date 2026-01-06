@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,10 +33,10 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 	builtinOnly := c.Query("builtin") == "true"
 
 	// 获取内置字体
-	fonts := reader.BuiltInFonts
+	fonts := readerModels.BuiltInFonts
 
 	// 过滤字体
-	filteredFonts := make([]*reader.ReaderFont, 0)
+	filteredFonts := make([]*readerModels.ReaderFont, 0)
 	for _, font := range fonts {
 		if builtinOnly && !font.IsBuiltIn {
 			continue
@@ -51,7 +51,7 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 	}
 
 	// 按分类组织
-	fontsByCategory := make(map[string][]*reader.ReaderFont)
+	fontsByCategory := make(map[string][]*readerModels.ReaderFont)
 	for _, font := range filteredFonts {
 		fontsByCategory[font.Category] = append(fontsByCategory[font.Category], font)
 	}
@@ -78,7 +78,7 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 	}
 
 	// 从内置字体中查找
-	for _, font := range reader.BuiltInFonts {
+	for _, font := range readerModels.BuiltInFonts {
 		if font.Name == name {
 			shared.Success(c, http.StatusOK, "获取成功", font)
 			return
@@ -103,14 +103,14 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 		return
 	}
 
-	var req reader.CreateCustomFontRequest
+	var req readerModels.CreateCustomFontRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
 	}
 
 	// 创建自定义字体
-	font := &reader.ReaderFont{
+	font := &readerModels.ReaderFont{
 		ID:          "", // 应该使用ObjectID生成
 		Name:        req.Name,
 		DisplayName: req.DisplayName,
@@ -154,7 +154,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 		return
 	}
 
-	var req reader.UpdateFontRequest
+	var req readerModels.UpdateFontRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -213,7 +213,7 @@ func (api *FontAPI) SetFontPreference(c *gin.Context) {
 		return
 	}
 
-	var preference reader.FontPreference
+	var preference readerModels.FontPreference
 	if err := c.ShouldBindJSON(&preference); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -221,7 +221,7 @@ func (api *FontAPI) SetFontPreference(c *gin.Context) {
 
 	// 验证字体是否存在
 	fontExists := false
-	for _, font := range reader.BuiltInFonts {
+	for _, font := range readerModels.BuiltInFonts {
 		if font.Name == preference.FontName {
 			fontExists = true
 			break

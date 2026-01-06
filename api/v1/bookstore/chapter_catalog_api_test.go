@@ -1,10 +1,8 @@
 package bookstore
 
 import (
-	"Qingyu_backend/api/v1/bookstore"
 	"Qingyu_backend/models/bookstore"
-	"Qingyu_backend/service/bookstore"
-	"bytes"
+	service "Qingyu_backend/service/bookstore"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -142,11 +140,11 @@ func (m *MockChapterServiceForAPI) GetChapterByID(ctx context.Context, chapterID
 
 // Test Helper Functions
 
-func setupTestRouter(purchaseService bookstore.ChapterPurchaseService, chapterService bookstore.ChapterService) *gin.Engine {
+func setupTestRouter(purchaseService service.ChapterPurchaseService, chapterService service.ChapterService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	api := bookstore.NewChapterCatalogAPI(chapterService, purchaseService)
+	api := NewChapterCatalogAPI(chapterService, purchaseService)
 
 	router.GET("/api/v1/bookstore/books/:id/chapters", func(c *gin.Context) {
 		c.Set("userId", primitive.NewObjectID().Hex())
@@ -217,7 +215,7 @@ func TestChapterCatalogAPI_GetChapterCatalog_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -239,7 +237,7 @@ func TestChapterCatalogAPI_GetChapterCatalog_InvalidBookID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -259,7 +257,7 @@ func TestChapterCatalogAPI_GetChapterCatalog_EmptyBookID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, response.Code)
@@ -296,7 +294,7 @@ func TestChapterCatalogAPI_GetChapterInfo_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -363,7 +361,7 @@ func TestChapterCatalogAPI_GetTrialChapters_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -404,7 +402,7 @@ func TestChapterCatalogAPI_GetVIPChapters_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -431,7 +429,7 @@ func TestChapterCatalogAPI_GetChapterPrice_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -469,7 +467,7 @@ func TestChapterCatalogAPI_PurchaseChapter_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -540,7 +538,7 @@ func TestChapterCatalogAPI_PurchaseBook_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)
@@ -661,7 +659,7 @@ func TestChapterCatalogAPI_CheckChapterAccess_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response bookstore.APIResponse
+	var response APIResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.Code)

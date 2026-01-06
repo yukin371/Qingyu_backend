@@ -8,17 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
-	readermodels "Qingyu_backend/models/reader"
-	readerservice "Qingyu_backend/service/reader"
+	readerModels "Qingyu_backend/models/reader"
+	"Qingyu_backend/service/reader"
 )
 
 // BookmarkAPI 书签API
 type BookmarkAPI struct {
-	bookmarkService readerservice.BookmarkService
+	bookmarkService reader.BookmarkService
 }
 
 // NewBookmarkAPI 创建书签API实例
-func NewBookmarkAPI(bookmarkService readerservice.BookmarkService) *BookmarkAPI {
+func NewBookmarkAPI(bookmarkService reader.BookmarkService) *BookmarkAPI {
 	return &BookmarkAPI{
 		bookmarkService: bookmarkService,
 	}
@@ -61,7 +61,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 
 	// 创建书签
 	if err := api.bookmarkService.CreateBookmark(c.Request.Context(), bookmark); err != nil {
-		if err == readerservice.ErrBookmarkAlreadyExists {
+		if err == reader.ErrBookmarkAlreadyExists {
 			shared.Error(c, http.StatusConflict, "书签已存在", err.Error())
 			return
 		}
@@ -102,7 +102,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
 	// 构建筛选条件
-	filter := &readermodels.BookmarkFilter{
+	filter := &readerModels.BookmarkFilter{
 		Color:    c.Query("color"),
 		Tag:      c.Query("tag"),
 		IsPublic: nil,
@@ -154,7 +154,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 
 	bookmark, err := api.bookmarkService.GetBookmark(c.Request.Context(), bookmarkID)
 	if err != nil {
-		if err == readerservice.ErrBookmarkNotFound {
+		if err == reader.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
@@ -188,7 +188,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 		return
 	}
 
-	bookmark := &readermodels.Bookmark{
+	bookmark := &readerModels.Bookmark{
 		Note:      req.Note,
 		Color:     req.Color,
 		Quote:     req.Quote,
@@ -197,7 +197,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	}
 
 	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), bookmarkID, bookmark); err != nil {
-		if err == readerservice.ErrBookmarkNotFound {
+		if err == reader.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
@@ -224,7 +224,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
 
 	if err := api.bookmarkService.DeleteBookmark(c.Request.Context(), bookmarkID); err != nil {
-		if err == readerservice.ErrBookmarkNotFound {
+		if err == reader.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
@@ -346,7 +346,7 @@ type CreateBookmarkRequest struct {
 }
 
 // ToBookmark 转换为书签模型
-func (r *CreateBookmarkRequest) ToBookmark(userID string) (*readermodels.Bookmark, error) {
+func (r *CreateBookmarkRequest) ToBookmark(userID string) (*readerModels.Bookmark, error) {
 	bookID, err := primitive.ObjectIDFromHex(r.BookID)
 	if err != nil {
 		return nil, err
@@ -362,7 +362,7 @@ func (r *CreateBookmarkRequest) ToBookmark(userID string) (*readermodels.Bookmar
 		return nil, err
 	}
 
-	return &readermodels.Bookmark{
+	return &readerModels.Bookmark{
 		UserID:    userOID,
 		BookID:    bookID,
 		ChapterID: chapterID,

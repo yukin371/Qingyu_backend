@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,10 +34,10 @@ func (api *ThemeAPI) GetThemes(c *gin.Context) {
 	publicOnly := c.Query("public") == "true"
 
 	// 获取内置主题（实际应用中应该从数据库查询）
-	themes := reader.BuiltInThemes
+	themes := readerModels.BuiltInThemes
 
 	// 过滤主题
-	filteredThemes := make([]*reader.ReaderTheme, 0)
+	filteredThemes := make([]*readerModels.ReaderTheme, 0)
 	for _, theme := range themes {
 		if builtinOnly && !theme.IsBuiltIn {
 			continue
@@ -69,7 +69,7 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 	}
 
 	// 从内置主题中查找
-	for _, theme := range reader.BuiltInThemes {
+	for _, theme := range readerModels.BuiltInThemes {
 		if theme.Name == name {
 			shared.Success(c, http.StatusOK, "获取成功", theme)
 			return
@@ -94,14 +94,14 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 		return
 	}
 
-	var req reader.CreateCustomThemeRequest
+	var req readerModels.CreateCustomThemeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
 	}
 
 	// 创建自定义主题
-	theme := &reader.ReaderTheme{
+	theme := &readerModels.ReaderTheme{
 		ID:          generateID(), // 应该使用ObjectID生成
 		Name:        req.Name,
 		DisplayName: req.DisplayName,
@@ -143,7 +143,7 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 		return
 	}
 
-	var req reader.UpdateThemeRequest
+	var req readerModels.UpdateThemeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -216,7 +216,7 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 
 	// 验证主题是否存在
 	themeExists := false
-	for _, theme := range reader.BuiltInThemes {
+	for _, theme := range readerModels.BuiltInThemes {
 		if theme.Name == themeName {
 			themeExists = true
 			break
