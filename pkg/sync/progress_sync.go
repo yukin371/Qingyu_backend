@@ -8,17 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/pkg/websocket"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // ProgressSyncService 阅读进度同步服务
 type ProgressSyncService struct {
-	readerService *reading.ReaderService
+	readerService *reader.ReaderService
 	hub           *websocket.ProgressHub
 }
 
 // NewProgressSyncService 创建进度同步服务
-func NewProgressSyncService(readerService *reading.ReaderService) *ProgressSyncService {
+func NewProgressSyncService(readerService *reader.ReaderService) *ProgressSyncService {
 	return &ProgressSyncService{
 		readerService: readerService,
 		hub:           websocket.NewProgressHub(),
