@@ -1,4 +1,4 @@
-package writing
+package writer
 
 import (
 	"Qingyu_backend/models/writer"
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	writingInterface "Qingyu_backend/repository/interfaces/writing"
+	writingInterface "Qingyu_backend/repository/interfaces/writer"
 )
 
 // MongoDocumentContentRepository MongoDB文档内容仓储实现

@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	readerModel "Qingyu_backend/models/reader"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 )
 
 // ReaderThemeRepositoryMongo MongoDB实现的读者主题仓储
@@ -21,7 +21,7 @@ type ReaderThemeRepositoryMongo struct {
 }
 
 // NewReaderThemeRepositoryMongo 创建MongoDB读者主题仓储
-func NewReaderThemeRepositoryMongo(db *mongo.Database) readingRepo.ReaderThemeRepository {
+func NewReaderThemeRepositoryMongo(db *mongo.Database) readerRepo.ReaderThemeRepository {
 	return &ReaderThemeRepositoryMongo{
 		collection: db.Collection("reader_themes"),
 	}
