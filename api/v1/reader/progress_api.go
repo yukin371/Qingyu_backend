@@ -1,7 +1,7 @@
 package reader
 
 import (
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 const (
@@ -19,11 +19,11 @@ const (
 
 // ProgressAPI 阅读进度API
 type ProgressAPI struct {
-	readerService *reading.ReaderService
+	readerService *reader.ReaderService
 }
 
 // NewProgressAPI 创建阅读进度API实例
-func NewProgressAPI(readerService *reading.ReaderService) *ProgressAPI {
+func NewProgressAPI(readerService *reader.ReaderService) *ProgressAPI {
 	return &ProgressAPI{
 		readerService: readerService,
 	}
@@ -242,12 +242,12 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取未读完和已读完的书籍
 	unfinished, errUnfinished := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
 	if errUnfinished != nil {
-		unfinished = []*reader.ReadingProgress{} // 返回空列表而非失败
+		unfinished = []*readerModels.ReadingProgress{} // 返回空列表而非失败
 	}
 
 	finished, errFinished := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
 	if errFinished != nil {
-		finished = []*reader.ReadingProgress{} // 返回空列表而非失败
+		finished = []*readerModels.ReadingProgress{} // 返回空列表而非失败
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
