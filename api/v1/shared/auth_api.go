@@ -40,10 +40,7 @@ func (api *AuthAPI) Register(c *gin.Context) {
 
 	resp, err := api.authService.Register(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "注册失败: " + err.Error(),
-		})
+		InternalError(c, "注册失败", err)
 		return
 	}
 
@@ -122,10 +119,7 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 
 	err := api.authService.Logout(c.Request.Context(), token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "登出失败: " + err.Error(),
-		})
+		InternalError(c, "登出失败", err)
 		return
 	}
 
@@ -203,10 +197,7 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 
 	permissions, err := api.authService.GetUserPermissions(c.Request.Context(), userID.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取权限失败: " + err.Error(),
-		})
+		InternalError(c, "获取权限失败", err)
 		return
 	}
 
@@ -242,10 +233,7 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 
 	roles, err := api.authService.GetUserRoles(c.Request.Context(), userID.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取角色失败: " + err.Error(),
-		})
+		InternalError(c, "获取角色失败", err)
 		return
 	}
 
