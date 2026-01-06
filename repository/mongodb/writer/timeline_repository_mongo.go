@@ -1,4 +1,4 @@
-package mongodb
+package writer
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +20,7 @@ type TimelineRepositoryMongo struct {
 }
 
 // NewTimelineRepository 创建TimelineRepository实例
-func NewTimelineRepository(db *mongo.Database) writing.TimelineRepository {
+func NewTimelineRepository(db *mongo.Database) writerRepo.TimelineRepository {
 	return &TimelineRepositoryMongo{
 		db:         db,
 		collection: db.Collection("timelines"),
@@ -121,7 +121,7 @@ type TimelineEventRepositoryMongo struct {
 }
 
 // NewTimelineEventRepository 创建TimelineEventRepository实例
-func NewTimelineEventRepository(db *mongo.Database) writing.TimelineEventRepository {
+func NewTimelineEventRepository(db *mongo.Database) writerRepo.TimelineEventRepository {
 	return &TimelineEventRepositoryMongo{
 		db:         db,
 		collection: db.Collection("timeline_events"),

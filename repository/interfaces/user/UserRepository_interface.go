@@ -3,7 +3,7 @@ package user
 import (
 	usersModel "Qingyu_backend/models/users"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
-	writingRepoInterface "Qingyu_backend/repository/interfaces/writing"
+	writingRepoInterface "Qingyu_backend/repository/interfaces/writer"
 	"context"
 	"fmt"
 	"time"

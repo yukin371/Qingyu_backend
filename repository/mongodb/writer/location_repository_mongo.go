@@ -1,4 +1,4 @@
-package mongodb
+package writer
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,7 +22,7 @@ type LocationRepositoryMongo struct {
 }
 
 // NewLocationRepository 创建LocationRepository实例
-func NewLocationRepository(db *mongo.Database) writing.LocationRepository {
+func NewLocationRepository(db *mongo.Database) writerRepo.LocationRepository {
 	return &LocationRepositoryMongo{
 		db:                 db,
 		locationCollection: db.Collection("locations"),
