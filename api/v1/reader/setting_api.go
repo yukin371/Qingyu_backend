@@ -1,22 +1,22 @@
 package reader
 
 import (
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // SettingAPI 设置API
 type SettingAPI struct {
-	readerService *reading.ReaderService
+	readerService *reader.ReaderService
 }
 
 // NewSettingAPI 创建设置API实例
-func NewSettingAPI(readerService *reading.ReaderService) *SettingAPI {
+func NewSettingAPI(readerService *reader.ReaderService) *SettingAPI {
 	return &SettingAPI{
 		readerService: readerService,
 	}
@@ -72,7 +72,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 		return
 	}
 
-	var settings reader.ReadingSettings
+	var settings readerModels.ReadingSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
 		shared.ValidationError(c, err)
 		return

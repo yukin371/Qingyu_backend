@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	aiService "Qingyu_backend/service/ai"
+	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
 
 	"github.com/gin-gonic/gin"
@@ -38,9 +39,9 @@ func setupTestRouter(api *WritingAssistantApi) *gin.Engine {
 // TestWritingAssistantApi_SummarizeContent_Success 测试成功总结内容
 func TestWritingAssistantApi_SummarizeContent_Success(t *testing.T) {
 	// 创建模拟服务
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -80,9 +81,9 @@ func TestWritingAssistantApi_SummarizeContent_Success(t *testing.T) {
 
 // TestWritingAssistantApi_SummarizeContent_InvalidJSON 测试无效JSON
 func TestWritingAssistantApi_SummarizeContent_InvalidJSON(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -104,9 +105,9 @@ func TestWritingAssistantApi_SummarizeContent_InvalidJSON(t *testing.T) {
 
 // TestWritingAssistantApi_SummarizeContent_EmptyContent 测试空内容
 func TestWritingAssistantApi_SummarizeContent_EmptyContent(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -133,9 +134,9 @@ func TestWritingAssistantApi_SummarizeContent_EmptyContent(t *testing.T) {
 
 // TestWritingAssistantApi_SummarizeChapter_Success 测试章节总结
 func TestWritingAssistantApi_SummarizeChapter_Success(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -171,9 +172,9 @@ func TestWritingAssistantApi_SummarizeChapter_Success(t *testing.T) {
 
 // TestWritingAssistantApi_SummarizeChapter_MissingChapterID 测试缺少章节ID
 func TestWritingAssistantApi_SummarizeChapter_MissingChapterID(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -201,9 +202,9 @@ func TestWritingAssistantApi_SummarizeChapter_MissingChapterID(t *testing.T) {
 
 // TestWritingAssistantApi_ProofreadContent_Success 测试成功校对
 func TestWritingAssistantApi_ProofreadContent_Success(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -238,9 +239,9 @@ func TestWritingAssistantApi_ProofreadContent_Success(t *testing.T) {
 
 // TestWritingAssistantApi_ProofreadContent_EmptyContent 测试空内容校对
 func TestWritingAssistantApi_ProofreadContent_EmptyContent(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -266,9 +267,9 @@ func TestWritingAssistantApi_ProofreadContent_EmptyContent(t *testing.T) {
 
 // TestWritingAssistantApi_GetProofreadSuggestion_Success 测试获取校对建议
 func TestWritingAssistantApi_GetProofreadSuggestion_Success(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -297,9 +298,9 @@ func TestWritingAssistantApi_GetProofreadSuggestion_Success(t *testing.T) {
 
 // TestWritingAssistantApi_GetProofreadSuggestion_EmptyID 测试空建议ID
 func TestWritingAssistantApi_GetProofreadSuggestion_EmptyID(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -320,9 +321,9 @@ func TestWritingAssistantApi_GetProofreadSuggestion_EmptyID(t *testing.T) {
 
 // TestWritingAssistantApi_CheckSensitiveWords_Success 测试成功检测敏感词
 func TestWritingAssistantApi_CheckSensitiveWords_Success(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -364,9 +365,9 @@ func TestWritingAssistantApi_CheckSensitiveWords_Success(t *testing.T) {
 
 // TestWritingAssistantApi_CheckSensitiveWords_EmptyContent 测试空内容
 func TestWritingAssistantApi_CheckSensitiveWords_EmptyContent(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -392,9 +393,9 @@ func TestWritingAssistantApi_CheckSensitiveWords_EmptyContent(t *testing.T) {
 
 // TestWritingAssistantApi_GetSensitiveWordsDetail_Success 测试获取检测详情
 func TestWritingAssistantApi_GetSensitiveWordsDetail_Success(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -423,9 +424,9 @@ func TestWritingAssistantApi_GetSensitiveWordsDetail_Success(t *testing.T) {
 
 // TestWritingAssistantApi_GetSensitiveWordsDetail_EmptyID 测试空检测ID
 func TestWritingAssistantApi_GetSensitiveWordsDetail_EmptyID(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -445,9 +446,9 @@ func TestWritingAssistantApi_GetSensitiveWordsDetail_EmptyID(t *testing.T) {
 
 // TestWritingAssistantApi_ResponseHeaders 测试响应头
 func TestWritingAssistantApi_ResponseHeaders(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -475,9 +476,9 @@ func TestWritingAssistantApi_ResponseHeaders(t *testing.T) {
 
 // TestWritingAssistantApi_HTTPMethods 测试HTTP方法
 func TestWritingAssistantApi_HTTPMethods(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -513,9 +514,9 @@ func TestWritingAssistantApi_HTTPMethods(t *testing.T) {
 
 // TestWritingAssistantApi_MissingContentType 测试缺少Content-Type
 func TestWritingAssistantApi_MissingContentType(t *testing.T) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,
@@ -543,9 +544,9 @@ func TestWritingAssistantApi_MissingContentType(t *testing.T) {
 // TestWritingAssistantApi_Integration 测试API集成场景
 func TestWritingAssistantApi_Integration(t *testing.T) {
 	t.Run("完整的API请求流程", func(t *testing.T) {
-		summarizeService := &aiService.SummarizeService{}
-		proofreadService := &aiService.ProofreadService{}
-		sensitiveWordsService := &aiService.SensitiveWordsService{}
+		summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+		proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+		sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 		api := NewWritingAssistantApi(
 			summarizeService,
@@ -635,9 +636,9 @@ func TestWritingAssistantApi_Integration(t *testing.T) {
 
 // BenchmarkWritingAssistantApi_SummarizeContent API性能测试
 func BenchmarkWritingAssistantApi_SummarizeContent(b *testing.B) {
-	summarizeService := &aiService.SummarizeService{}
-	proofreadService := &aiService.ProofreadService{}
-	sensitiveWordsService := &aiService.SensitiveWordsService{}
+	summarizeService := aiService.NewSummarizeService(&adapter.AdapterManager{})
+	proofreadService := aiService.NewProofreadService(&adapter.AdapterManager{})
+	sensitiveWordsService := aiService.NewSensitiveWordsService(&adapter.AdapterManager{})
 
 	api := NewWritingAssistantApi(
 		summarizeService,

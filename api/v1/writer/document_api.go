@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/document"
+	"Qingyu_backend/service/writer/document"
 )
 
 // DocumentApi 文档API
