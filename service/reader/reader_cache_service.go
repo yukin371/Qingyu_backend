@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	reader2 "Qingyu_backend/models/reader"

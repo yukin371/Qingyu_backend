@@ -147,9 +147,9 @@ func (s *MessageService) SendMessage(ctx context.Context, senderID, receiverID, 
 		conversation = &social.Conversation{
 			Participants: participantIDs,
 			UnreadCount:  make(map[string]int),
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
 		}
+		conversation.CreatedAt = time.Now()
+		conversation.UpdatedAt = time.Now()
 		if err := s.messageRepo.CreateConversation(ctx, conversation); err != nil {
 			return nil, fmt.Errorf("创建会话失败: %w", err)
 		}
@@ -162,9 +162,10 @@ func (s *MessageService) SendMessage(ctx context.Context, senderID, receiverID, 
 		ReceiverID:     receiverID,
 		Content:        content,
 		MessageType:    messageType,
-		IsRead:         false,
-		CreatedAt:      time.Now(),
 	}
+	message.IsRead = false
+	message.CreatedAt = time.Now()
+	message.UpdatedAt = time.Now()
 
 	if err := s.messageRepo.CreateMessage(ctx, message); err != nil {
 		return nil, fmt.Errorf("发送消息失败: %w", err)
@@ -264,9 +265,10 @@ func (s *MessageService) CreateMention(ctx context.Context, senderID, userID, co
 		ContentType: contentType,
 		ContentID:   contentID,
 		Content:     content,
-		IsRead:      false,
-		CreatedAt:   time.Now(),
 	}
+	mention.IsRead = false
+	mention.CreatedAt = time.Now()
+	mention.UpdatedAt = time.Now()
 
 	if err := s.messageRepo.CreateMention(ctx, mention); err != nil {
 		return fmt.Errorf("创建@提醒失败: %w", err)

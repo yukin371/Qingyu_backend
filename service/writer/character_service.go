@@ -6,20 +6,20 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // CharacterService 角色服务实现
 type CharacterService struct {
-	characterRepo writing.CharacterRepository
+	characterRepo writerRepo.CharacterRepository
 	eventBus      base.EventBus
 }
 
 // NewCharacterService 创建CharacterService实例
 func NewCharacterService(
-	characterRepo writing.CharacterRepository,
+	characterRepo writerRepo.CharacterRepository,
 	eventBus base.EventBus,
 ) serviceInterfaces.CharacterService {
 	return &CharacterService{

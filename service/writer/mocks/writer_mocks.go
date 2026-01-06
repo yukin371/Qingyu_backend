@@ -182,50 +182,6 @@ func (m *MockPublicationRepository) FindPublishedByProjectID(ctx context.Context
 	return args.Get(0).(*serviceInterfaces.PublicationRecord), args.Error(1)
 }
 
-// MockBookstoreClient Mock书城客户端
-type MockBookstoreClient struct {
-	mock.Mock
-}
-
-func (m *MockBookstoreClient) PublishProject(ctx context.Context, req interface{}) (interface{}, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0), args.Error(1)
-}
-
-func (m *MockBookstoreClient) UnpublishProject(ctx context.Context, projectID, bookstoreID string) error {
-	args := m.Called(ctx, projectID, bookstoreID)
-	return args.Error(0)
-}
-
-func (m *MockBookstoreClient) PublishChapter(ctx context.Context, req interface{}) (interface{}, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0), args.Error(1)
-}
-
-func (m *MockBookstoreClient) UnpublishChapter(ctx context.Context, chapterID, bookstoreID string) error {
-	args := m.Called(ctx, chapterID, bookstoreID)
-	return args.Error(0)
-}
-
-func (m *MockBookstoreClient) UpdateChapter(ctx context.Context, req interface{}) error {
-	args := m.Called(ctx, req)
-	return args.Error(0)
-}
-
-func (m *MockBookstoreClient) GetStatistics(ctx context.Context, projectID, bookstoreID string) (*serviceInterfaces.PublicationStatistics, error) {
-	args := m.Called(ctx, projectID, bookstoreID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*serviceInterfaces.PublicationStatistics), args.Error(1)
-}
-
 // MockEventBus Mock事件总线
 type MockEventBus struct {
 	mock.Mock
