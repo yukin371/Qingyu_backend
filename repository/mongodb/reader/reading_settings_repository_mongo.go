@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"Qingyu_backend/models/reader"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	base "Qingyu_backend/repository/interfaces/infrastructure"
-	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
+	ReadingInterfaces "Qingyu_backend/repository/interfaces/reader"
 )
 
 // MongoReadingSettingsRepository MongoDB阅读设置仓储实现

@@ -1,4 +1,4 @@
-package writing
+package writer
 
 import (
 	"Qingyu_backend/models/writer"

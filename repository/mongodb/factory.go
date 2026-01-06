@@ -14,11 +14,11 @@ import (
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	financeRepo "Qingyu_backend/repository/interfaces/finance"
 	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	userRepo "Qingyu_backend/repository/interfaces/user"
-	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	// 导入各个子包的具体实现
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
@@ -26,11 +26,12 @@ import (
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoFinance "Qingyu_backend/repository/mongodb/finance"
 	mongoMessaging "Qingyu_backend/repository/mongodb/messaging"
-	mongoReading "Qingyu_backend/repository/mongodb/reading"
+	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	mongoShared "Qingyu_backend/repository/mongodb/shared"
+	mongoStorage "Qingyu_backend/repository/mongodb/storage"
 	mongoUser "Qingyu_backend/repository/mongodb/user"
-	mongoWriting "Qingyu_backend/repository/mongodb/writing"
+	mongoWriter "Qingyu_backend/repository/mongodb/writer"
 )
 
 // MongoRepositoryFactory MongoDB仓储工厂实现
@@ -111,79 +112,79 @@ func (f *MongoRepositoryFactory) CreateRoleRepository() userRepo.RoleRepository 
 // ========== Writing Module Repositories ==========
 
 // CreateProjectRepository 创建项目Repository
-func (f *MongoRepositoryFactory) CreateProjectRepository() writingRepo.ProjectRepository {
-	return mongoWriting.NewMongoProjectRepository(f.database)
+func (f *MongoRepositoryFactory) CreateProjectRepository() writerRepo.ProjectRepository {
+	return mongoWriter.NewMongoProjectRepository(f.database)
 }
 
 // CreateDocumentRepository 创建文档Repository
-func (f *MongoRepositoryFactory) CreateDocumentRepository() writingRepo.DocumentRepository {
-	return mongoWriting.NewMongoDocumentRepository(f.database)
+func (f *MongoRepositoryFactory) CreateDocumentRepository() writerRepo.DocumentRepository {
+	return mongoWriter.NewMongoDocumentRepository(f.database)
 }
 
 // CreateDocumentContentRepository 创建文档内容Repository
-func (f *MongoRepositoryFactory) CreateDocumentContentRepository() writingRepo.DocumentContentRepository {
-	return mongoWriting.NewMongoDocumentContentRepository(f.database)
+func (f *MongoRepositoryFactory) CreateDocumentContentRepository() writerRepo.DocumentContentRepository {
+	return mongoWriter.NewMongoDocumentContentRepository(f.database)
 }
 
 // CreateCharacterRepository 创建角色Repository
-func (f *MongoRepositoryFactory) CreateCharacterRepository() writingRepo.CharacterRepository {
-	return NewCharacterRepository(f.database)
+func (f *MongoRepositoryFactory) CreateCharacterRepository() writerRepo.CharacterRepository {
+	return mongoWriter.NewCharacterRepository(f.database)
 }
 
 // CreateLocationRepository 创建地点Repository
-func (f *MongoRepositoryFactory) CreateLocationRepository() writingRepo.LocationRepository {
-	return NewLocationRepository(f.database)
+func (f *MongoRepositoryFactory) CreateLocationRepository() writerRepo.LocationRepository {
+	return mongoWriter.NewLocationRepository(f.database)
 }
 
 // CreateTimelineRepository 创建时间线Repository
-func (f *MongoRepositoryFactory) CreateTimelineRepository() writingRepo.TimelineRepository {
-	return NewTimelineRepository(f.database)
+func (f *MongoRepositoryFactory) CreateTimelineRepository() writerRepo.TimelineRepository {
+	return mongoWriter.NewTimelineRepository(f.database)
 }
 
 // CreateTimelineEventRepository 创建时间线事件Repository
-func (f *MongoRepositoryFactory) CreateTimelineEventRepository() writingRepo.TimelineEventRepository {
-	return NewTimelineEventRepository(f.database)
+func (f *MongoRepositoryFactory) CreateTimelineEventRepository() writerRepo.TimelineEventRepository {
+	return mongoWriter.NewTimelineEventRepository(f.database)
 }
 
 // ========== Reading Module Repositories ==========
 
 // CreateReadingSettingsRepository 创建阅读设置Repository
-func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() readingRepo.ReadingSettingsRepository {
+func (f *MongoRepositoryFactory) CreateReadingSettingsRepository() readerRepo.ReadingSettingsRepository {
 	return mongoReading.NewMongoReadingSettingsRepository(f.database)
 }
 
 // CreateReadingProgressRepository 创建阅读进度Repository
-func (f *MongoRepositoryFactory) CreateReadingProgressRepository() readingRepo.ReadingProgressRepository {
+func (f *MongoRepositoryFactory) CreateReadingProgressRepository() readerRepo.ReadingProgressRepository {
 	return mongoReading.NewMongoReadingProgressRepository(f.database)
 }
 
 // CreateAnnotationRepository 创建注记Repository
-func (f *MongoRepositoryFactory) CreateAnnotationRepository() readingRepo.AnnotationRepository {
+func (f *MongoRepositoryFactory) CreateAnnotationRepository() readerRepo.AnnotationRepository {
 	return mongoReading.NewMongoAnnotationRepository(f.database)
 }
 
 // CreateCommentRepository 创建评论Repository
-func (f *MongoRepositoryFactory) CreateCommentRepository() readingRepo.CommentRepository {
+func (f *MongoRepositoryFactory) CreateCommentRepository() readerRepo.CommentRepository {
 	return mongoReading.NewMongoCommentRepository(f.database)
 }
 
 // CreateLikeRepository 创建点赞Repository
-func (f *MongoRepositoryFactory) CreateLikeRepository() readingRepo.LikeRepository {
+func (f *MongoRepositoryFactory) CreateLikeRepository() readerRepo.LikeRepository {
 	return mongoReading.NewMongoLikeRepository(f.database)
 }
 
 // CreateCollectionRepository 创建收藏Repository
-func (f *MongoRepositoryFactory) CreateCollectionRepository() readingRepo.CollectionRepository {
+func (f *MongoRepositoryFactory) CreateCollectionRepository() readerRepo.CollectionRepository {
 	return mongoReading.NewMongoCollectionRepository(f.database)
 }
 
 // CreateReadingHistoryRepository 创建阅读历史Repository
-func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readingRepo.ReadingHistoryRepository {
+func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readerRepo.ReadingHistoryRepository {
 	return mongoReading.NewMongoReadingHistoryRepository(f.database)
 }
 
 // CreateReaderThemeRepository 创建阅读器主题Repository
-func (f *MongoRepositoryFactory) CreateReaderThemeRepository() readingRepo.ReaderThemeRepository {
+func (f *MongoRepositoryFactory) CreateReaderThemeRepository() readerRepo.ReaderThemeRepository {
 	return mongoReading.NewReaderThemeRepositoryMongo(f.database)
 }
 
@@ -275,7 +276,7 @@ func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.Rec
 
 // CreateStorageRepository 创建存储Repository
 func (f *MongoRepositoryFactory) CreateStorageRepository() sharedRepo.StorageRepository {
-	return NewMongoStorageRepository(f.database)
+	return mongoStorage.NewMongoStorageRepository(f.database)
 }
 
 // CreateAnnouncementRepository 创建公告Repository

@@ -1,4 +1,4 @@
-package mongodb
+package writer
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,7 +22,7 @@ type CharacterRepositoryMongo struct {
 }
 
 // NewCharacterRepository 创建CharacterRepository实例
-func NewCharacterRepository(db *mongo.Database) writing.CharacterRepository {
+func NewCharacterRepository(db *mongo.Database) writerRepo.CharacterRepository {
 	return &CharacterRepositoryMongo{
 		db:                  db,
 		characterCollection: db.Collection("characters"),

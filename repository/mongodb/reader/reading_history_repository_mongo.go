@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/reader"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 )
 
 // MongoReadingHistoryRepository MongoDB实现的阅读历史Repository
@@ -20,7 +20,7 @@ type MongoReadingHistoryRepository struct {
 }
 
 // NewMongoReadingHistoryRepository 创建MongoDB阅读历史Repository
-func NewMongoReadingHistoryRepository(db *mongo.Database) readingRepo.ReadingHistoryRepository {
+func NewMongoReadingHistoryRepository(db *mongo.Database) readerRepo.ReadingHistoryRepository {
 	collection := db.Collection("reading_histories")
 
 	// 创建索引
@@ -272,7 +272,7 @@ func (r *MongoReadingHistoryRepository) CountUserHistories(ctx context.Context, 
 }
 
 // GetUserReadingStats 获取用户阅读统计
-func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context, userID string) (*readingRepo.ReadingStats, error) {
+func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context, userID string) (*readerRepo.ReadingStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -315,7 +315,7 @@ func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context,
 
 	// 如果没有数据，返回空统计
 	if len(results) == 0 {
-		return &readingRepo.ReadingStats{
+		return &readerRepo.ReadingStats{
 			TotalDuration:    0,
 			TotalBooks:       0,
 			TotalChapters:    0,
@@ -342,7 +342,7 @@ func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context,
 		}
 	}
 
-	return &readingRepo.ReadingStats{
+	return &readerRepo.ReadingStats{
 		TotalDuration:    result.TotalDuration,
 		TotalBooks:       result.TotalBooks,
 		TotalChapters:    result.TotalChapters,
@@ -352,7 +352,7 @@ func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context,
 }
 
 // GetUserDailyReadingStats 获取用户每日阅读统计
-func (r *MongoReadingHistoryRepository) GetUserDailyReadingStats(ctx context.Context, userID string, days int) ([]readingRepo.DailyReadingStats, error) {
+func (r *MongoReadingHistoryRepository) GetUserDailyReadingStats(ctx context.Context, userID string, days int) ([]readerRepo.DailyReadingStats, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
@@ -394,13 +394,13 @@ func (r *MongoReadingHistoryRepository) GetUserDailyReadingStats(ctx context.Con
 	}
 	defer cursor.Close(ctx)
 
-	var stats []readingRepo.DailyReadingStats
+	var stats []readerRepo.DailyReadingStats
 	if err := cursor.All(ctx, &stats); err != nil {
 		return nil, fmt.Errorf("解析统计结果失败: %w", err)
 	}
 
 	if stats == nil {
-		stats = []readingRepo.DailyReadingStats{}
+		stats = []readerRepo.DailyReadingStats{}
 	}
 
 	return stats, nil

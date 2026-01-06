@@ -1,4 +1,4 @@
-package mongodb
+package storage
 
 import (
 	storageModel "Qingyu_backend/models/storage"
