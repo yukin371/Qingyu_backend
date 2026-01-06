@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	socialApi "Qingyu_backend/api/v1/social"
+	messagesApi "Qingyu_backend/api/v1/communications/messages"
 	"Qingyu_backend/middleware"
 )
 
@@ -14,7 +15,7 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 	likeAPI *socialApi.LikeAPI,
 	collectionAPI *socialApi.CollectionAPI,
 	followAPI *socialApi.FollowAPI,
-	messageAPI *socialApi.MessageAPI,
+	messageAPI *messagesApi.MessageAPI,
 	reviewAPI *socialApi.ReviewAPI,
 	bookListAPI *socialApi.BookListAPI) {
 

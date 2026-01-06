@@ -5,8 +5,8 @@ import (
 
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service"
-	documentService "Qingyu_backend/service/document"
-	projectService "Qingyu_backend/service/project"
+	documentService "Qingyu_backend/service/writer/document"
+	projectService "Qingyu_backend/service/writer/project"
 	searchService "Qingyu_backend/service/shared/search"
 	writerservice "Qingyu_backend/service/writer"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
