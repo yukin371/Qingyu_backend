@@ -6,20 +6,20 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // LocationService 地点服务实现
 type LocationService struct {
-	locationRepo writing.LocationRepository
+	locationRepo writerRepo.LocationRepository
 	eventBus     base.EventBus
 }
 
 // NewLocationService 创建LocationService实例
 func NewLocationService(
-	locationRepo writing.LocationRepository,
+	locationRepo writerRepo.LocationRepository,
 	eventBus base.EventBus,
 ) serviceInterfaces.LocationService {
 	return &LocationService{

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/ai"
-	documentService "Qingyu_backend/service/project"
+	documentService "Qingyu_backend/service/writer/project"
 )
 
 // NovelContextService 小说上下文管理服务（已弃用）

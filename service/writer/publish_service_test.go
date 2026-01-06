@@ -8,43 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/writer"
-	"Qingyu_backend/models/writer/base"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/service/writer/mocks"
 )
 
 // ============ 测试辅助函数 ============
-
-// createTestDocument 创建测试文档
-func createTestDocument(id, projectID, title string) *writer.Document {
-	return &writer.Document{
-		IdentifiedEntity: base.IdentifiedEntity{ID: id},
-		ProjectScopedEntity: base.ProjectScopedEntity{ProjectID: projectID},
-		TitledEntity: base.TitledEntity{Title: title},
-		Timestamps: base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		Type:       "chapter",
-		Level:      0,
-		Order:      1,
-		Status:     writer.DocumentStatusCompleted,
-		WordCount:  1000,
-		Tags:       []string{"test", "sample"},
-	}
-}
-
-// createTestProject 创建测试项目
-func createTestProject(id, authorID, title string) *writer.Project {
-	return &writer.Project{
-		IdentifiedEntity: base.IdentifiedEntity{ID: id},
-		OwnedEntity: base.OwnedEntity{AuthorID: authorID},
-		TitledEntity: base.TitledEntity{Title: title},
-		Timestamps: base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		Summary:   "Test project summary",
-		Status:    writer.StatusDraft,
-	}
-}
 
 // createTestPublicationRecord 创建测试发布记录
 func createTestPublicationRecord(id, resourceID, resourceTitle, bookstoreID, createdBy string) *interfaces.PublicationRecord {
@@ -95,7 +65,7 @@ func TestPublishProject_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -140,7 +110,7 @@ func TestPublishProject_ProjectNotFound(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -174,7 +144,7 @@ func TestPublishProject_Forbidden(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -211,7 +181,7 @@ func TestPublishProject_AlreadyPublished(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -252,7 +222,7 @@ func TestPublishProject_CreateRecordFailed(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -294,7 +264,7 @@ func TestUnpublishProject_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -336,7 +306,7 @@ func TestUnpublishProject_NotPublished(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -368,7 +338,7 @@ func TestUnpublishProject_Forbidden(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -406,7 +376,7 @@ func TestGetProjectPublicationStatus_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -468,7 +438,7 @@ func TestGetProjectPublicationStatus_NotPublished(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -512,7 +482,7 @@ func TestPublishDocument_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -562,7 +532,7 @@ func TestPublishDocument_DocumentNotFound(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -598,7 +568,7 @@ func TestPublishDocument_Forbidden(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -637,7 +607,7 @@ func TestPublishDocument_AlreadyPublished(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -686,7 +656,7 @@ func TestBatchPublishDocuments_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -760,7 +730,7 @@ func TestBatchPublishDocuments_PartialFailure(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -821,7 +791,7 @@ func TestBatchPublishDocuments_Forbidden(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -868,7 +838,7 @@ func TestGetPublicationRecords_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -907,7 +877,7 @@ func TestGetPublicationRecord_Success(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(
@@ -940,7 +910,7 @@ func TestGetPublicationRecord_NotFound(t *testing.T) {
 	mockProjectRepo := new(mocks.MockProjectRepository)
 	mockDocumentRepo := new(mocks.MockDocumentRepository)
 	mockPublicationRepo := new(mocks.MockPublicationRepository)
-	mockBookstoreClient := new(mocks.MockBookstoreClient)
+	mockBookstoreClient := new(MockBookstoreClient)
 	mockEventBus := new(mocks.MockEventBus)
 
 	service := NewPublishService(

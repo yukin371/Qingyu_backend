@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
-	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 )
 
 // TODO(Phase3): 集成Elasticsearch实现高级搜索
@@ -70,14 +70,14 @@ type SearchResult struct {
 // SearchServiceImpl 搜索服务实现（MongoDB）
 type SearchServiceImpl struct {
 	bookRepo     bookstoreRepo.BookRepository
-	documentRepo writingRepo.DocumentRepository
+	documentRepo writerRepo.DocumentRepository
 	initialized  bool
 }
 
 // NewSearchService 创建搜索服务
 func NewSearchService(
 	bookRepo bookstoreRepo.BookRepository,
-	documentRepo writingRepo.DocumentRepository,
+	documentRepo writerRepo.DocumentRepository,
 ) SearchService {
 	return &SearchServiceImpl{
 		bookRepo:     bookRepo,
