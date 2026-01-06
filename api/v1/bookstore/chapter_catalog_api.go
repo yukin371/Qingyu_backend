@@ -1,13 +1,15 @@
-package bookstore
+﻿package bookstore
 
 import (
-	"Qingyu_backend/service/bookstore"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/service/bookstore"
 )
 
 // ChapterCatalogAPI 章节目录和购买API处理器
@@ -43,19 +45,13 @@ func NewChapterCatalogAPI(
 func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
@@ -70,16 +66,10 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 	catalog, err := api.purchaseService.GetChapterCatalog(c.Request.Context(), userID, bookID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "书籍不存在",
-			})
+			shared.NotFound(c, "书籍不存在")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取章节目录失败",
-		})
+		shared.InternalError(c, "获取章节目录失败", err)
 		return
 	}
 
@@ -107,35 +97,23 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "章节ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
 	chapterID, err := primitive.ObjectIDFromHex(chapterIdStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的章节ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的章节ID格式")
 		return
 	}
 
 	chapter, err := api.chapterService.GetChapterByID(c.Request.Context(), chapterID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "章节不存在",
-			})
+			shared.NotFound(c, "章节不存在")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取章节信息失败",
-		})
+		shared.InternalError(c, "获取章节信息失败", err)
 		return
 	}
 
@@ -162,19 +140,13 @@ func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
@@ -185,10 +157,7 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 
 	chapters, err := api.purchaseService.GetTrialChapters(c.Request.Context(), bookID, trialCount)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取试读章节失败",
-		})
+		shared.InternalError(c, "获取试读章节失败", err)
 		return
 	}
 
@@ -218,28 +187,19 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
 	chapters, err := api.purchaseService.GetVIPChapters(c.Request.Context(), bookID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取VIP章节失败",
-		})
+		shared.InternalError(c, "获取VIP章节失败", err)
 		return
 	}
 
@@ -270,35 +230,23 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "章节ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
 	chapterID, err := primitive.ObjectIDFromHex(chapterIdStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的章节ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的章节ID格式")
 		return
 	}
 
 	price, err := api.purchaseService.GetChapterPrice(c.Request.Context(), chapterID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "章节不存在",
-			})
+			shared.NotFound(c, "章节不存在")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取章节价格失败",
-		})
+		shared.InternalError(c, "获取章节价格失败", err)
 		return
 	}
 
@@ -328,19 +276,13 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "章节ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
 	chapterID, err := primitive.ObjectIDFromHex(chapterIdStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的章节ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的章节ID格式")
 		return
 	}
 
@@ -365,10 +307,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的用户ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -389,16 +328,10 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 			return
 		}
 		if strings.Contains(err.Error(), "free chapter") {
-			c.JSON(http.StatusBadRequest, APIResponse{
-				Code:    400,
-				Message: "免费章节无需购买",
-			})
+			shared.BadRequest(c, "参数错误", "免费章节无需购买")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "购买章节失败",
-		})
+		shared.InternalError(c, "购买章节失败", err)
 		return
 	}
 
@@ -425,19 +358,13 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
@@ -462,10 +389,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的用户ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -485,10 +409,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "购买全书失败",
-		})
+		shared.InternalError(c, "购买全书失败", err)
 		return
 	}
 
@@ -534,10 +455,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的用户ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -553,10 +471,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 
 	purchases, total, err := api.purchaseService.GetChapterPurchases(c.Request.Context(), userID, page, size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取购买记录失败",
-		})
+		shared.InternalError(c, "获取购买记录失败", err)
 		return
 	}
 
@@ -587,19 +502,13 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
@@ -624,10 +533,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的用户ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -643,10 +549,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 
 	purchases, total, err := api.purchaseService.GetBookPurchases(c.Request.Context(), userID, bookID, page, size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取购买记录失败",
-		})
+		shared.InternalError(c, "获取购买记录失败", err)
 		return
 	}
 
@@ -676,19 +579,13 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "章节ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
 	chapterID, err := primitive.ObjectIDFromHex(chapterIdStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的章节ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的章节ID格式")
 		return
 	}
 
@@ -703,16 +600,10 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 	accessInfo, err := api.purchaseService.CheckChapterAccess(c.Request.Context(), userID, chapterID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "章节不存在",
-			})
+			shared.NotFound(c, "章节不存在")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "检查访问权限失败",
-		})
+		shared.InternalError(c, "检查访问权限失败", err)
 		return
 	}
 
