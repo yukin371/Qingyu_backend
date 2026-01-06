@@ -1,7 +1,7 @@
 package reader
 
 import (
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,9 +66,9 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	}
 
 	// 转换为注记模型
-	annotations := make([]*reader.Annotation, len(req.Annotations))
+	annotations := make([]*readerModels.Annotation, len(req.Annotations))
 	for i, annReq := range req.Annotations {
-		annotations[i] = &reader.Annotation{
+		annotations[i] = &readerModels.Annotation{
 			UserID:    userIDStr,
 			BookID:    annReq.BookID,
 			ChapterID: annReq.ChapterID,
@@ -262,13 +262,13 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 }
 
 // 导出为JSON格式
-func (api *AnnotationsAPI) exportAsJSON(_ []*reader.Annotation) string {
+func (api *AnnotationsAPI) exportAsJSON(_ []*readerModels.Annotation) string {
 	// 简单实现，实际可以使用json.Marshal
 	return `{"annotations": []}`
 }
 
 // 导出为Markdown格式
-func (api *AnnotationsAPI) exportAsMarkdown(annotations []*reader.Annotation) string {
+func (api *AnnotationsAPI) exportAsMarkdown(annotations []*readerModels.Annotation) string {
 	content := "# 我的笔记\n\n"
 	for _, ann := range annotations {
 		content += "## " + ann.Type + "\n\n"
@@ -284,7 +284,7 @@ func (api *AnnotationsAPI) exportAsMarkdown(annotations []*reader.Annotation) st
 }
 
 // 导出为文本格式
-func (api *AnnotationsAPI) exportAsText(annotations []*reader.Annotation) string {
+func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) string {
 	content := "我的笔记\n\n"
 	for _, ann := range annotations {
 		content += ann.Type + "\n"
@@ -338,7 +338,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 
 // SyncAnnotationsRequest 同步注记请求
 type SyncAnnotationsRequest struct {
-	BookID           string               `json:"bookId" binding:"required"`
-	LastSyncTime     int64                `json:"lastSyncTime"` // Unix时间戳
-	LocalAnnotations []*reader.Annotation `json:"localAnnotations"`
+	BookID           string                    `json:"bookId" binding:"required"`
+	LastSyncTime     int64                     `json:"lastSyncTime"` // Unix时间戳
+	LocalAnnotations []*readerModels.Annotation `json:"localAnnotations"`
 }

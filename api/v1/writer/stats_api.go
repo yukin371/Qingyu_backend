@@ -3,7 +3,7 @@ package writer
 import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/stats"
-	readingStats "Qingyu_backend/service/reading/stats"
+	readingStats "Qingyu_backend/service/reader/stats"
 	"net/http"
 	"strconv"
 	"time"

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/reader"
+	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -39,13 +39,13 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	// 验证章节ID格式
 	if _, err := primitive.ObjectIDFromHex(chapterID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID格式无效")
+		shared.Error(c, http.StatusBadRequest, "章节ID格式无效", "章节ID格式无效")
 		return
 	}
 
@@ -97,7 +97,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 
 	// 实际应用中应该从数据库查询
 	// 这里返回模拟数据
-	comments := make([]*reader.ChapterComment, 0)
+	comments := make([]*readerModels.ChapterComment, 0)
 	total := int64(0)
 
 	// 计算总页数
@@ -107,7 +107,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	avgRating := 0.0
 	ratingCount := 0
 
-	shared.Success(c, http.StatusOK, "获取成功", reader.ChapterCommentListResponse{
+	shared.Success(c, http.StatusOK, "获取成功", readerModels.ChapterCommentListResponse{
 		Comments:    comments,
 		Total:       total,
 		Page:        page,
@@ -136,17 +136,17 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	// 验证章节ID格式
 	if _, err := primitive.ObjectIDFromHex(chapterID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID格式无效")
+		shared.Error(c, http.StatusBadRequest, "章节ID格式无效", "章节ID格式无效")
 		return
 	}
 
-	var req reader.CreateChapterCommentRequest
+	var req readerModels.CreateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -157,7 +157,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	// 验证评分
 	if req.Rating < 0 || req.Rating > 5 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评分必须在0-5之间")
+		shared.Error(c, http.StatusBadRequest, "评分必须在0-5之间", "评分必须在0-5之间")
 		return
 	}
 
@@ -165,14 +165,14 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 	if req.ParentID != nil && *req.ParentID != "" {
 		// 验证父评论ID格式
 		if _, err := primitive.ObjectIDFromHex(*req.ParentID); err != nil {
-			shared.Error(c, http.StatusBadRequest, "参数错误", "父评论ID格式无效")
+			shared.Error(c, http.StatusBadRequest, "父评论ID格式无效", "父评论ID格式无效")
 			return
 		}
 		// 实际应用中应该查询数据库验证父评论存在
 	}
 
 	// 创建评论
-	comment := &reader.ChapterComment{
+	comment := &readerModels.ChapterComment{
 		ID:          primitive.NewObjectID().Hex(),
 		ChapterID:   req.ChapterID,
 		BookID:      req.BookID,
@@ -217,13 +217,13 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
 	// 验证评论ID格式
 	if _, err := primitive.ObjectIDFromHex(commentID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID格式无效")
+		shared.Error(c, http.StatusBadRequest, "评论ID格式无效", "评论ID格式无效")
 		return
 	}
 
@@ -248,11 +248,11 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
-	var req reader.UpdateChapterCommentRequest
+	var req readerModels.UpdateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -260,7 +260,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 
 	// 验证评分
 	if req.Rating != nil && (*req.Rating < 0 || *req.Rating > 5) {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评分必须在0-5之间")
+		shared.Error(c, http.StatusBadRequest, "评分必须在0-5之间", "评分必须在0-5之间")
 		return
 	}
 
@@ -294,7 +294,7 @@ func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -328,7 +328,7 @@ func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -360,7 +360,7 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -382,26 +382,26 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	paragraphIndexStr := c.Param("paragraphIndex")
 	if paragraphIndexStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "段落索引不能为空")
+		shared.Error(c, http.StatusBadRequest, "段落索引不能为空", "段落索引不能为空")
 		return
 	}
 
 	paragraphIndex, err := strconv.Atoi(paragraphIndexStr)
 	if err != nil || paragraphIndex < 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "段落索引格式无效")
+		shared.Error(c, http.StatusBadRequest, "段落索引格式无效", "段落索引格式无效")
 		return
 	}
 
 	// 实际应用中应该从数据库查询
-	comments := make([]*reader.ChapterComment, 0)
+	comments := make([]*readerModels.ChapterComment, 0)
 
-	shared.Success(c, http.StatusOK, "获取成功", reader.ParagraphCommentResponse{
+	shared.Success(c, http.StatusOK, "获取成功", readerModels.ParagraphCommentResponse{
 		ParagraphIndex: paragraphIndex,
 		ParagraphText:  "", // 应该从章节内容中获取
 		CommentCount:   len(comments),
@@ -426,11 +426,11 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
-	var req reader.CreateChapterCommentRequest
+	var req readerModels.CreateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.ValidationError(c, err)
 		return
@@ -438,12 +438,12 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	// 段落级评论必须指定段落索引
 	if req.ParagraphIndex == nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "段落索引不能为空")
+		shared.Error(c, http.StatusBadRequest, "段落索引不能为空", "段落索引不能为空")
 		return
 	}
 
 	// 创建段落评论
-	comment := &reader.ChapterComment{
+	comment := &readerModels.ChapterComment{
 		ID:            primitive.NewObjectID().Hex(),
 		ChapterID:     chapterID,
 		BookID:        req.BookID,
@@ -478,7 +478,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetChapterParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 

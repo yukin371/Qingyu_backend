@@ -51,6 +51,40 @@ func (m *MockUserService) ConfirmPasswordReset(ctx context.Context, req *user2.C
 	return args.Get(0).(*user2.ConfirmPasswordResetResponse), args.Error(1)
 }
 
+// UserService 接口要求的其他方法实现
+
+func (m *MockUserService) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.AssignRoleResponse), args.Error(1)
+}
+
+func (m *MockUserService) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.RemoveRoleResponse), args.Error(1)
+}
+
+func (m *MockUserService) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.GetUserRolesResponse), args.Error(1)
+}
+
+func (m *MockUserService) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.GetUserPermissionsResponse), args.Error(1)
+}
+
 // 辅助函数：创建测试上下文
 func setupTestContext(method, path string, body interface{}) (*gin.Context, *httptest.ResponseRecorder) {
 	gin.SetMode(gin.TestMode)
