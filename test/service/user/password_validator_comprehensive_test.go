@@ -13,7 +13,7 @@ func TestPasswordValidator_ValidateStrength(t *testing.T) {
 	validator := userSvc.NewPasswordValidator()
 
 	t.Run("ValidStrongPassword", func(t *testing.T) {
-		password := "StrongPass123"
+		password := "StrongP@ss9k2"
 		valid, msg := validator.ValidateStrength(password)
 
 		assert.True(t, valid, "should be valid password")
@@ -91,7 +91,7 @@ func TestPasswordValidator_ValidateStrength(t *testing.T) {
 	})
 
 	t.Run("ValidLongPassword", func(t *testing.T) {
-		password := "MyVeryLongSecurePassword123XYZ"
+		password := "MyVeryLongSecureMk9k2XZW"
 		valid, msg := validator.ValidateStrength(password)
 
 		assert.True(t, valid, "should be valid password")
@@ -100,7 +100,7 @@ func TestPasswordValidator_ValidateStrength(t *testing.T) {
 	})
 
 	t.Run("MinimumValidPassword", func(t *testing.T) {
-		password := "Aa123456"
+		password := "Aa9k2m4Q"
 		valid, msg := validator.ValidateStrength(password)
 
 		assert.True(t, valid, "should be valid password")

@@ -14,9 +14,9 @@ import (
 
 	"Qingyu_backend/models/audit"
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	mongoReading "Qingyu_backend/repository/mongodb/reading"
+	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // ===========================

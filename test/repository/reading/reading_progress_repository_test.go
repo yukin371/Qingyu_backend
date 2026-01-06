@@ -10,18 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/global"
-	"Qingyu_backend/repository/mongodb/reading"
+	readerRepo "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/test/testutil"
 )
 
-var repo *reading.MongoReadingProgressRepository
+var repo *readerRepo.MongoReadingProgressRepository
 
 func setupTest(t *testing.T) {
 	// 设置测试数据库
 	testutil.SetupTestDB(t)
 
 	// 创建Repository实例
-	repo = reading.NewMongoReadingProgressRepository(global.DB)
+	repo = readerRepo.NewMongoReadingProgressRepository(global.DB)
 
 	// 清理当前测试的数据
 	ctx := context.Background()

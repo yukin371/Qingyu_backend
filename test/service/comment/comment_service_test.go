@@ -14,7 +14,7 @@ import (
 	"Qingyu_backend/models/audit"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // MockCommentRepository Mock评论Repository

@@ -6,11 +6,11 @@ import (
 
 	aiRepoInterfaces "Qingyu_backend/repository/interfaces/ai"
 	bookstoreRepoInterfaces "Qingyu_backend/repository/interfaces/bookstore"
-	readingRepoInterfaces "Qingyu_backend/repository/interfaces/reading"
+	readerRepoInterfaces "Qingyu_backend/repository/interfaces/reader"
 	recommendationRepoInterfaces "Qingyu_backend/repository/interfaces/recommendation"
 	sharedRepoInterfaces "Qingyu_backend/repository/interfaces/shared"
 	userRepoInterfaces "Qingyu_backend/repository/interfaces/user"
-	writingRepoInterfaces "Qingyu_backend/repository/interfaces/writing"
+	writingRepoInterfaces "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/container"
 
 	"github.com/stretchr/testify/assert"
@@ -42,22 +42,22 @@ func (m *MockRepositoryFactory) CreateBannerRepository() bookstoreRepoInterfaces
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateChapterRepository() readingRepoInterfaces.ChapterRepository {
+func (m *MockRepositoryFactory) CreateChapterRepository() readerRepoInterfaces.ChapterRepository {
 	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingProgressRepository() readingRepoInterfaces.ReadingProgressRepository {
+func (m *MockRepositoryFactory) CreateReadingProgressRepository() readerRepoInterfaces.ReadingProgressRepository {
 	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateAnnotationRepository() readingRepoInterfaces.AnnotationRepository {
+func (m *MockRepositoryFactory) CreateAnnotationRepository() readerRepoInterfaces.AnnotationRepository {
 	m.Called()
 	return nil
 }
 
-func (m *MockRepositoryFactory) CreateReadingSettingsRepository() readingRepoInterfaces.ReadingSettingsRepository {
+func (m *MockRepositoryFactory) CreateReadingSettingsRepository() readerRepoInterfaces.ReadingSettingsRepository {
 	m.Called()
 	return nil
 }

@@ -17,7 +17,7 @@ import (
 
 	writerAPI "Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	"Qingyu_backend/service/document"
+	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/service/interfaces/base"
 )
 
