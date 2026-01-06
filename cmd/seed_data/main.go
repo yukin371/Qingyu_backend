@@ -1,3 +1,5 @@
+//go:build !auto
+
 package main
 
 import (
@@ -12,6 +14,7 @@ import (
 	"Qingyu_backend/migration/seeds"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
@@ -67,9 +70,9 @@ func main() {
 		switch choice {
 		case 1:
 			cleanAllData(ctx)
-			createAllData(ctx)
+			createAllData(ctx, global.DB)
 		case 2:
-			createAllData(ctx)
+			createAllData(ctx, global.DB)
 		case 3:
 			cleanAllData(ctx)
 		case 4:
@@ -124,14 +127,14 @@ func cleanAllData(ctx context.Context) {
 	fmt.Println()
 }
 
-func createAllData(ctx context.Context) {
+func createAllData(ctx context.Context, db *mongo.Database) {
 	fmt.Println("✨ 开始创建测试数据...")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println()
 
 	// 1. 创建用户
 	fmt.Println("【1/5】创建用户数据")
-	if err := seeds.SeedEnhancedUsers(ctx, global.DB); err != nil {
+	if err := seeds.SeedEnhancedUsers(ctx, db); err != nil {
 		fmt.Printf("❌ 创建用户失败: %v\n", err)
 	} else {
 		fmt.Println("✓ 用户数据创建完成")
@@ -140,7 +143,7 @@ func createAllData(ctx context.Context) {
 
 	// 2. 创建书籍
 	fmt.Println("【2/5】创建书籍数据")
-	if err := seeds.SeedBooks(ctx, global.DB); err != nil {
+	if err := seeds.SeedBooks(ctx, db); err != nil {
 		fmt.Printf("❌ 创建书籍失败: %v\n", err)
 	} else {
 		fmt.Println("✓ 书籍数据创建完成")
@@ -149,7 +152,7 @@ func createAllData(ctx context.Context) {
 
 	// 3. 创建章节
 	fmt.Println("【3/5】创建章节数据")
-	if err := seeds.SeedChapters(ctx, global.DB); err != nil {
+	if err := seeds.SeedChapters(ctx, db); err != nil {
 		fmt.Printf("❌ 创建章节失败: %v\n", err)
 	} else {
 		fmt.Println("✓ 章节数据创建完成")
@@ -158,7 +161,7 @@ func createAllData(ctx context.Context) {
 
 	// 4. 创建钱包
 	fmt.Println("【4/5】创建钱包数据")
-	if err := seeds.SeedWallets(ctx, global.DB); err != nil {
+	if err := seeds.SeedWallets(ctx, db); err != nil {
 		fmt.Printf("❌ 创建钱包失败: %v\n", err)
 	} else {
 		fmt.Println("✓ 钱包数据创建完成")
@@ -167,7 +170,7 @@ func createAllData(ctx context.Context) {
 
 	// 5. 创建社交数据
 	fmt.Println("【5/5】创建社交数据")
-	if err := seeds.SeedSocialData(ctx, global.DB); err != nil {
+	if err := seeds.SeedSocialData(ctx, db); err != nil {
 		fmt.Printf("❌ 创建社交数据失败: %v\n", err)
 	} else {
 		fmt.Println("✓ 社交数据创建完成")
