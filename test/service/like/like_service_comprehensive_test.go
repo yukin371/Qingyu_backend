@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // TestLikeServiceBusinessRules 业务规则测试

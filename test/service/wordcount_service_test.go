@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"Qingyu_backend/service/document"
+	"Qingyu_backend/service/writer/document"
 
 	"github.com/stretchr/testify/assert"
 )

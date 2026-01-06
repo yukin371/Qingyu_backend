@@ -13,7 +13,7 @@ import (
 	pkgErrors "Qingyu_backend/pkg/errors"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/service/interfaces/base"
-	"Qingyu_backend/service/project"
+	"Qingyu_backend/service/writer/project"
 )
 
 // MockProjectRepository 模拟ProjectRepository

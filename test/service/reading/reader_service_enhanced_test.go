@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // ===========================

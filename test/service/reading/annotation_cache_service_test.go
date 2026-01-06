@@ -11,7 +11,7 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // setupAnnotationCacheMock 创建AnnotationCacheService和Redis Mock

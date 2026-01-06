@@ -123,15 +123,27 @@ type ProjectOption func(*writer.Project)
 
 // CreateTestProject 创建测试项目
 func CreateTestProject(userID string, opts ...ProjectOption) *writer.Project {
+	now := time.Now()
 	project := &writer.Project{
-		ID:        primitive.NewObjectID().Hex(),
-		Title:     "测试项目",
-		Summary:   "这是一个测试项目",
-		AuthorID:  userID,
-		Status:    writer.StatusDraft,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		WritingType: "novel",
+		Summary:     "这是一个测试项目",
+		Status:      writer.StatusDraft,
+		Visibility:  writer.VisibilityPrivate,
+		Statistics: writer.ProjectStats{
+			TotalWords:    0,
+			ChapterCount:  0,
+			DocumentCount: 0,
+			LastUpdateAt:  now,
+		},
+		Settings: writer.ProjectSettings{
+			AutoBackup:     false,
+			BackupInterval: 24,
+		},
 	}
+	project.OwnedEntity.AuthorID = userID
+	project.TitledEntity.Title = "测试项目"
+	project.Timestamps.CreatedAt = now
+	project.Timestamps.UpdatedAt = now
 
 	// 应用选项
 	for _, opt := range opts {
@@ -192,15 +204,15 @@ type DocumentOption func(*writer.Document)
 // 注意：此方法只创建Document元数据，不包含内容
 // 如需创建文档内容，请使用CreateTestDocumentContent
 func CreateTestDocument(projectID string, opts ...DocumentOption) *writer.Document {
+	now := time.Now()
 	doc := &writer.Document{
-		ID:        primitive.NewObjectID().Hex(),
-		ProjectID: projectID,
-		Title:     "测试文档",
-		Type:      writer.TypeChapter,
-		Status:    "draft",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Type:   writer.TypeChapter,
+		Status: "draft",
 	}
+	doc.TitledEntity.Title = "测试文档"
+	doc.ProjectScopedEntity.ProjectID = projectID
+	doc.Timestamps.CreatedAt = now
+	doc.Timestamps.UpdatedAt = now
 
 	// 应用选项
 	for _, opt := range opts {

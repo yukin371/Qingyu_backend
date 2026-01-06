@@ -1,11 +1,11 @@
-package document
+package document_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	documentSvc "Qingyu_backend/service/document"
+	documentSvc "Qingyu_backend/service/writer/document"
 )
 
 // TestWordCountService_CalculateWordCount 测试字数统计功能
