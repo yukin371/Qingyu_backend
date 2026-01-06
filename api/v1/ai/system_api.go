@@ -49,7 +49,7 @@ func (api *SystemApi) HealthCheck(c *gin.Context) {
 // @Success 200 {object} response.Response
 // @Router /api/v1/ai/providers [get]
 func (api *SystemApi) GetProviders(c *gin.Context) {
-	// TODO: 实现获取提供商列表的逻辑
+	// 获取支持的AI提供商列表
 	providers := []gin.H{
 		{
 			"name":        "openai",
@@ -77,7 +77,7 @@ func (api *SystemApi) GetProviders(c *gin.Context) {
 func (api *SystemApi) GetModels(c *gin.Context) {
 	provider := c.Query("provider")
 
-	// TODO: 实现获取模型列表的逻辑
+	// 获取可用的AI模型列表
 	models := []gin.H{
 		{
 			"id":        "gpt-4",

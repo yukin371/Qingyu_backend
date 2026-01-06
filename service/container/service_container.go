@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
@@ -13,14 +15,26 @@ import (
 	// Service implementations
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
-	projectService "Qingyu_backend/service/project"
-	readingService "Qingyu_backend/service/reading"
+	financeService "Qingyu_backend/service/finance"
+	projectService "Qingyu_backend/service/writer/project"
+	readingService "Qingyu_backend/service/reader"
+	socialService "Qingyu_backend/service/social"
 	userService "Qingyu_backend/service/user"
+
+	// Audit service
+	auditSvc "Qingyu_backend/service/audit"
+
+	// Messaging service
+	messagingSvc "Qingyu_backend/service/messaging"
+
+	// Notification service
+	notificationService "Qingyu_backend/service/notification"
+	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 
 	// Shared services
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
-	"Qingyu_backend/service/shared/messaging"
+	sharedMessaging "Qingyu_backend/service/shared/messaging"
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
@@ -31,7 +45,9 @@ import (
 	"Qingyu_backend/global"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
+	mongoShared "Qingyu_backend/repository/mongodb/shared"
 
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -57,24 +73,39 @@ type ServiceContainer struct {
 	userService           userInterface.UserService
 	aiService             *aiService.Service
 	bookstoreService      bookstoreService.BookstoreService
+	chapterService        bookstoreService.ChapterService
+	bookDetailService     bookstoreService.BookDetailService
+	bookRatingService     bookstoreService.BookRatingService
+	bookStatisticsService bookstoreService.BookStatisticsService
 	readerService         *readingService.ReaderService
-	commentService        *readingService.CommentService
-	likeService           *readingService.LikeService
-	collectionService     *readingService.CollectionService
+	commentService        *socialService.CommentService
+	likeService           *socialService.LikeService
+	collectionService     *socialService.CollectionService
 	readingHistoryService *readingService.ReadingHistoryService
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
 	quotaService *aiService.QuotaService
 	chatService  *aiService.ChatService
+	phase3Client *aiService.Phase3Client
 
-	// 共享服务
+	// Shared services
 	authService           auth.AuthService
 	walletService         wallet.WalletService
 	recommendationService recommendation.RecommendationService
-	messagingService      messaging.MessagingService
+	messagingService      sharedMessaging.MessagingService
 	storageService        storage.StorageService
 	adminService          admin.AdminService
+	announcementService   messagingSvc.AnnouncementService
+	notificationService   notificationService.NotificationService
+	templateService       notificationService.TemplateService
+
+	// 财务服务
+	membershipService     financeService.MembershipService
+	authorRevenueService  financeService.AuthorRevenueService
+
+	// 审核服务
+	auditService *auditSvc.ContentAuditService
 
 	// 存储相关具体实现（用于API层）
 	storageServiceImpl *storage.StorageServiceImpl
@@ -149,6 +180,43 @@ func (c *ServiceContainer) GetBookstoreService() (bookstoreService.BookstoreServ
 	return c.bookstoreService, nil
 }
 
+// GetBookDetailService 获取书籍详情服务
+func (c *ServiceContainer) GetBookDetailService() (bookstoreService.BookDetailService, error) {
+	if c.bookDetailService == nil {
+		return nil, fmt.Errorf("BookDetailService未初始化")
+	}
+	return c.bookDetailService, nil
+}
+
+// GetBookRatingService 获取书籍评分服务
+func (c *ServiceContainer) GetBookRatingService() (bookstoreService.BookRatingService, error) {
+	if c.bookRatingService == nil {
+		return nil, fmt.Errorf("BookRatingService未初始化")
+	}
+	return c.bookRatingService, nil
+}
+
+// GetBookStatisticsService 获取书籍统计服务
+func (c *ServiceContainer) GetBookStatisticsService() (bookstoreService.BookStatisticsService, error) {
+	if c.bookStatisticsService == nil {
+		return nil, fmt.Errorf("BookStatisticsService未初始化")
+	}
+	return c.bookStatisticsService, nil
+}
+
+// GetChapterService 获取章节服务
+func (c *ServiceContainer) GetChapterService() (bookstoreService.ChapterService, error) {
+	if c.chapterService == nil {
+		return nil, fmt.Errorf("ChapterService未初始化")
+	}
+	return c.chapterService, nil
+}
+
+// getChapterService 内部方法：获取章节服务（简化版，用于依赖注入）
+func (c *ServiceContainer) getChapterService() bookstoreService.ChapterService {
+	return c.chapterService
+}
+
 // GetReaderService 获取阅读器服务
 func (c *ServiceContainer) GetReaderService() (*readingService.ReaderService, error) {
 	if c.readerService == nil {
@@ -158,7 +226,7 @@ func (c *ServiceContainer) GetReaderService() (*readingService.ReaderService, er
 }
 
 // GetCommentService 获取评论服务
-func (c *ServiceContainer) GetCommentService() (*readingService.CommentService, error) {
+func (c *ServiceContainer) GetCommentService() (*socialService.CommentService, error) {
 	if c.commentService == nil {
 		return nil, fmt.Errorf("CommentService未初始化")
 	}
@@ -166,7 +234,7 @@ func (c *ServiceContainer) GetCommentService() (*readingService.CommentService, 
 }
 
 // GetLikeService 获取点赞服务
-func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error) {
+func (c *ServiceContainer) GetLikeService() (*socialService.LikeService, error) {
 	if c.likeService == nil {
 		return nil, fmt.Errorf("LikeService未初始化")
 	}
@@ -174,7 +242,7 @@ func (c *ServiceContainer) GetLikeService() (*readingService.LikeService, error)
 }
 
 // GetCollectionService 获取收藏服务
-func (c *ServiceContainer) GetCollectionService() (*readingService.CollectionService, error) {
+func (c *ServiceContainer) GetCollectionService() (*socialService.CollectionService, error) {
 	if c.collectionService == nil {
 		return nil, fmt.Errorf("CollectionService未初始化")
 	}
@@ -205,6 +273,14 @@ func (c *ServiceContainer) GetChatService() (*aiService.ChatService, error) {
 	return c.chatService, nil
 }
 
+// GetPhase3Client 获取Phase3 gRPC客户端
+func (c *ServiceContainer) GetPhase3Client() (*aiService.Phase3Client, error) {
+	if c.phase3Client == nil {
+		return nil, fmt.Errorf("Phase3Client未初始化")
+	}
+	return c.phase3Client, nil
+}
+
 // ============ 共享服务获取方法 ============
 
 // GetAuthService 获取认证服务
@@ -232,7 +308,7 @@ func (c *ServiceContainer) GetRecommendationService() (recommendation.Recommenda
 }
 
 // GetMessagingService 获取消息服务
-func (c *ServiceContainer) GetMessagingService() (messaging.MessagingService, error) {
+func (c *ServiceContainer) GetMessagingService() (sharedMessaging.MessagingService, error) {
 	if c.messagingService == nil {
 		return nil, fmt.Errorf("MessagingService未初始化")
 	}
@@ -253,6 +329,54 @@ func (c *ServiceContainer) GetAdminService() (admin.AdminService, error) {
 		return nil, fmt.Errorf("AdminService未初始化")
 	}
 	return c.adminService, nil
+}
+
+// GetAuditService 获取审核服务
+func (c *ServiceContainer) GetAuditService() (*auditSvc.ContentAuditService, error) {
+	if c.auditService == nil {
+		return nil, fmt.Errorf("AuditService未初始化")
+	}
+	return c.auditService, nil
+}
+
+// GetAnnouncementService 获取公告服务
+func (c *ServiceContainer) GetAnnouncementService() (messagingSvc.AnnouncementService, error) {
+	if c.announcementService == nil {
+		return nil, fmt.Errorf("AnnouncementService未初始化")
+	}
+	return c.announcementService, nil
+}
+
+// GetNotificationService 获取通知服务
+func (c *ServiceContainer) GetNotificationService() (notificationService.NotificationService, error) {
+	if c.notificationService == nil {
+		return nil, fmt.Errorf("NotificationService未初始化")
+	}
+	return c.notificationService, nil
+}
+
+// GetTemplateService 获取通知模板服务
+func (c *ServiceContainer) GetTemplateService() (notificationService.TemplateService, error) {
+	if c.templateService == nil {
+		return nil, fmt.Errorf("TemplateService未初始化")
+	}
+	return c.templateService, nil
+}
+
+// GetMembershipService 获取会员服务
+func (c *ServiceContainer) GetMembershipService() (financeService.MembershipService, error) {
+	if c.membershipService == nil {
+		return nil, fmt.Errorf("MembershipService未初始化")
+	}
+	return c.membershipService, nil
+}
+
+// GetAuthorRevenueService 获取作者收入服务
+func (c *ServiceContainer) GetAuthorRevenueService() (financeService.AuthorRevenueService, error) {
+	if c.authorRevenueService == nil {
+		return nil, fmt.Errorf("AuthorRevenueService未初始化")
+	}
+	return c.authorRevenueService, nil
 }
 
 // GetEventBus 获取事件总线
@@ -447,7 +571,8 @@ func (c *ServiceContainer) GetRepositoryFactory() repoInterfaces.RepositoryFacto
 func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 1. 创建用户服务 ============
 	userRepo := c.repositoryFactory.CreateUserRepository()
-	c.userService = userService.NewUserService(userRepo)
+	authRepo := c.repositoryFactory.CreateAuthRepository()
+	c.userService = userService.NewUserService(userRepo, authRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
 		return fmt.Errorf("注册用户服务失败: %w", err)
@@ -459,6 +584,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
+	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()    // ← 创建章节仓储
+	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
 	c.bookstoreService = bookstoreService.NewBookstoreService(
 		bookRepo,
@@ -468,20 +595,46 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
+	// 创建章节服务（注入 ChapterContentRepository）
+	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, nil) // ← 创建 ChapterService (CacheService暂时为nil)
+
+	// 创建书店详细服务
+	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
+	bookRatingRepo := c.repositoryFactory.CreateBookRatingRepository()
+	bookStatisticsRepo := c.repositoryFactory.CreateBookStatisticsRepository()
+
+	// 这些服务也需要 CacheService，暂时传 nil
+	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, nil)
+	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, nil)
+	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, nil)
+
 	// ============ 3. 创建阅读器服务 ============
-	chapterRepo := c.repositoryFactory.CreateChapterRepository()
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
+	chapterService := c.getChapterService() // ← 获取 ChapterService
+
+	// 创建缓存服务和VIP服务
+	var cacheService readingService.ReaderCacheService
+	var vipService readingService.VIPPermissionService
+
+	if c.redisClient != nil {
+		// 获取原始 Redis 客户端
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			cacheService = readingService.NewRedisReaderCacheService(redisClient, "qingyu")
+			vipService = readingService.NewVIPPermissionService(redisClient, "qingyu")
+		}
+	}
 
 	c.readerService = readingService.NewReaderService(
-		chapterRepo,
 		progressRepo,
 		annotationRepo,
 		settingsRepo,
-		c.eventBus, // 注入事件总线
-		nil,        // cacheService - TODO: 实现缓存服务
-		nil,        // vipService - TODO: 实现VIP服务
+		chapterService, // ← 注入 ChapterService
+		c.eventBus,     // 注入事件总线
+		cacheService,   // 注入缓存服务
+		vipService,     // 注入VIP服务
 	)
 	// 注意：ReaderService 不完全实现 BaseService，不注册到 services map
 
@@ -489,7 +642,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	commentRepo := c.repositoryFactory.CreateCommentRepository()
 	sensitiveWordRepo := c.repositoryFactory.CreateSensitiveWordRepository()
 
-	c.commentService = readingService.NewCommentService(
+	c.commentService = socialService.NewCommentService(
 		commentRepo,
 		sensitiveWordRepo, // 可以为nil，表示不启用敏感词检测
 		c.eventBus,        // 注入事件总线
@@ -499,7 +652,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 4.5 创建点赞服务 ============
 	likeRepo := c.repositoryFactory.CreateLikeRepository()
 
-	c.likeService = readingService.NewLikeService(
+	c.likeService = socialService.NewLikeService(
 		likeRepo,
 		commentRepo, // 用于更新评论点赞数
 		c.eventBus,  // 注入事件总线
@@ -509,7 +662,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 4.6 创建收藏服务 ============
 	collectionRepo := c.repositoryFactory.CreateCollectionRepository()
 
-	c.collectionService = readingService.NewCollectionService(
+	c.collectionService = socialService.NewCollectionService(
 		collectionRepo,
 		c.eventBus, // 注入事件总线
 	)
@@ -565,37 +718,52 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		return fmt.Errorf("WalletService 未实现 BaseService 接口")
 	}
 
-	// 5.2 创建 AuthService（完整实现）
+	// 5.2 创建 AuthService（完整实现，支持Redis降级）
+	authRepo = c.repositoryFactory.CreateAuthRepository()
+
+	// 创建Redis适配器或内存降级方案
+	// 注意：使用具体类型而不是接口，以便同时实现RedisClient和CacheClient接口
+	var redisAdapter interface{}
 	if c.redisClient != nil {
-		authRepo := c.repositoryFactory.CreateAuthRepository()
-
-		// 创建Redis适配器
-		redisAdapter := auth.NewRedisAdapter(c.redisClient)
-
-		// 创建子服务
-		jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), redisAdapter)
-		roleService := auth.NewRoleService(authRepo)
-		permissionService := auth.NewPermissionService(authRepo, redisAdapter)
-		sessionService := auth.NewSessionService(redisAdapter)
-
-		// 创建AuthService
-		c.authService = auth.NewAuthService(
-			jwtService,
-			roleService,
-			permissionService,
-			authRepo,
-			c.userService,
-			sessionService,
-		)
-
-		// 类型断言为BaseService，以便注册到服务映射
-		if baseAuthSvc, ok := c.authService.(serviceInterfaces.BaseService); ok {
-			if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
-				return fmt.Errorf("注册认证服务失败: %w", err)
-			}
-		}
+		// 使用Redis Token黑名单
+		redisImpl := auth.NewRedisAdapter(c.redisClient)
+		redisAdapter = redisImpl
+		fmt.Println("✓ AuthService使用Redis Token黑名单")
 	} else {
-		fmt.Println("警告: Redis客户端未初始化，跳过AuthService创建")
+		// 降级到内存Token黑名单
+		redisImpl := auth.NewInMemoryTokenBlacklist()
+		redisAdapter = redisImpl
+		fmt.Println("⚠ Redis不可用，AuthService使用内存Token黑名单（降级模式）")
+		fmt.Println("  注意：内存模式不支持分布式部署，服务器重启后黑名单会丢失")
+	}
+
+	// 创建子服务
+	jwtService := auth.NewJWTService(config.GetJWTConfigEnhanced(), redisAdapter.(auth.RedisClient))
+	roleService := auth.NewRoleService(authRepo)
+
+	// 类型断言为CacheClient
+	cacheClient, ok := redisAdapter.(auth.CacheClient)
+	if !ok {
+		return fmt.Errorf("redisAdapter does not implement CacheClient")
+	}
+	permissionService := auth.NewPermissionService(authRepo, cacheClient)
+	sessionService := auth.NewSessionService(cacheClient)
+
+	// 创建AuthService
+	c.authService = auth.NewAuthService(
+		jwtService,
+		roleService,
+		permissionService,
+		authRepo,
+		c.userService,
+		sessionService,
+	)
+
+	// 类型断言为BaseService，以便注册到服务映射
+	if baseAuthSvc, ok := c.authService.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
+			return fmt.Errorf("注册认证服务失败: %w", err)
+		}
 	}
 
 	// 5.3 创建 RecommendationService
@@ -615,21 +783,130 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
-	// 5.4 其他共享服务（暂未实现Repository）
-	// TODO: MessagingService - 需要 Redis/RabbitMQ 等消息队列客户端
-	//   messagingSvc := messaging.NewMessagingService(queueClient)
-	//   c.messagingService = messagingSvc
-	//   if err := c.RegisterService("MessagingService", messagingSvc); err != nil { ... }
-	//
-	// TODO: StorageService - 需要 StorageBackend 和 FileRepository
-	//   storageSvc := storage.NewStorageService(backend, fileRepo)
-	//   c.storageService = storageSvc
-	//   if err := c.RegisterService("StorageService", storageSvc); err != nil { ... }
-	//
-	// TODO: AdminService - 需要 AuditRepository, LogRepository, UserRepository
-	//   adminSvc := admin.NewAdminService(auditRepo, logRepo, userRepo)
-	//   c.adminService = adminSvc
-	//   if err := c.RegisterService("AdminService", adminSvc); err != nil { ... }
+	// 5.4 StorageService（Phase2快速通道）
+	fmt.Println("初始化 StorageService...")
+	storageRepo := c.repositoryFactory.CreateStorageRepository()
+
+	// 使用本地文件系统Backend（快速通道方案）
+	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:8080/api/v1/files")
+
+	// 适配StorageRepository到FileRepository接口
+	fileRepo := storage.NewRepositoryAdapter(storageRepo)
+	storageSvc := storage.NewStorageService(localBackend, fileRepo)
+	c.storageServiceImpl = storageSvc.(*storage.StorageServiceImpl)
+	c.storageService = storageSvc
+
+	// 注册为BaseService
+	if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
+			return fmt.Errorf("注册存储服务失败: %w", err)
+		}
+		fmt.Println("  ✓ StorageService 已注册")
+	}
+
+	// 初始化MultipartUploadService
+	multipartSvc := storage.NewMultipartUploadService(localBackend, storageRepo)
+	c.multipartService = multipartSvc
+
+	// 初始化ImageProcessor
+	imageProcessor := storage.NewImageProcessor(localBackend)
+	c.imageProcessor = imageProcessor
+
+	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
+
+	// 5.5 AdminService
+	// 创建 AdminLog 和 AdminAudit Repository
+	adminLogRepo := mongoShared.NewAdminLogRepository(c.mongoDB)
+	adminAuditRepo := mongoShared.NewAdminAuditRepository(c.mongoDB)
+
+	// 创建 AdminService 需要的简化 UserRepository 适配器
+	adminUserRepo := &adminUserRepositoryAdapter{userRepo: c.repositoryFactory.CreateUserRepository()}
+
+	// 创建 AdminService
+	adminSvc := admin.NewAdminService(adminAuditRepo, adminLogRepo, adminUserRepo)
+	c.adminService = adminSvc
+
+	if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AdminService", baseAdminSvc); err != nil {
+			return fmt.Errorf("注册管理服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ AdminService初始化完成")
+
+	// 5.6 MessagingService
+	if c.redisClient != nil {
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			queueClient := sharedMessaging.NewRedisQueueClient(redisClient)
+			messagingSvc := sharedMessaging.NewMessagingService(queueClient)
+			c.messagingService = messagingSvc
+
+			if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
+				if err := c.RegisterService("MessagingService", baseMessagingSvc); err != nil {
+					return fmt.Errorf("注册消息服务失败: %w", err)
+				}
+			}
+			fmt.Println("  ✓ MessagingService初始化完成（Redis Stream）")
+		} else {
+			fmt.Println("警告: Redis客户端类型转换失败，跳过MessagingService创建")
+		}
+	} else {
+		fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
+	}
+
+	// 5.7 AnnouncementService
+	announcementRepo := c.repositoryFactory.CreateAnnouncementRepository()
+	announcementSvc := messagingSvc.NewAnnouncementService(announcementRepo)
+	c.announcementService = announcementSvc
+
+	if baseAnnouncementSvc, ok := announcementSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("AnnouncementService", baseAnnouncementSvc); err != nil {
+			return fmt.Errorf("注册公告服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ AnnouncementService初始化完成")
+
+	// 5.8 NotificationService
+	notificationRepo := mongoNotification.NewNotificationRepository(c.mongoDB)
+	preferenceRepo := mongoNotification.NewNotificationPreferenceRepository(c.mongoDB)
+	pushDeviceRepo := mongoNotification.NewPushDeviceRepository(c.mongoDB)
+	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
+
+	notificationSvc := notificationService.NewNotificationService(
+		notificationRepo,
+		preferenceRepo,
+		pushDeviceRepo,
+		templateRepo,
+	)
+	c.notificationService = notificationSvc
+
+	templateSvc := notificationService.NewTemplateService(templateRepo)
+	c.templateService = templateSvc
+
+	// 初始化默认模板
+	if err := templateSvc.InitializeDefaultTemplates(context.Background()); err != nil {
+		fmt.Printf("警告: 初始化默认通知模板失败: %v\n", err)
+	}
+
+	if baseNotificationSvc, ok := notificationSvc.(serviceInterfaces.BaseService); ok {
+		if err := c.RegisterService("NotificationService", baseNotificationSvc); err != nil {
+			return fmt.Errorf("注册通知服务失败: %w", err)
+		}
+	}
+	fmt.Println("  ✓ NotificationService初始化完成")
+
+	// 5.10 Finance Services
+	membershipRepo := c.repositoryFactory.CreateMembershipRepository()
+	c.membershipService = financeService.NewMembershipService(membershipRepo)
+
+	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
+	c.authorRevenueService = financeService.NewAuthorRevenueService(authorRevenueRepo)
+
+	fmt.Println("  ✓ Finance服务初始化完成")
+
+	// 5.11 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
+	// TODO: 完整的AuditService初始化逻辑需要在service/audit完全实现后添加
+	fmt.Println("  ℹ AuditService初始化跳过（标记为可选）")
 
 	// ============ 6. 初始化所有已注册的服务 ============
 	// 注意：SetupDefaultServices 在 Initialize 之后调用，所以这里需要手动初始化新注册的服务
@@ -659,7 +936,7 @@ func (c *ServiceContainer) SetRecommendationService(service recommendation.Recom
 }
 
 // SetMessagingService 设置消息服务
-func (c *ServiceContainer) SetMessagingService(service messaging.MessagingService) {
+func (c *ServiceContainer) SetMessagingService(service sharedMessaging.MessagingService) {
 	c.messagingService = service
 }
 
@@ -719,6 +996,60 @@ func (c *ServiceContainer) GetServiceNames() []string {
 		names = append(names, name)
 	}
 	return names
+}
+
+// ============ AdminService 适配器 ============
+
+// adminUserRepositoryAdapter 将 UserRepository 适配为 AdminService 需要的接口
+type adminUserRepositoryAdapter struct {
+	userRepo userRepo.UserRepository
+}
+
+// 确保实现了 admin.UserRepository 接口
+var _ admin.UserRepository = (*adminUserRepositoryAdapter)(nil)
+
+// GetStatistics 获取用户统计信息
+func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID string) (*admin.UserStatistics, error) {
+	// 简化实现，返回基本统计信息
+	user, err := a.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &admin.UserStatistics{
+		UserID:           user.ID,
+		TotalBooks:       0,   // TODO: 从 BookRepository 获取
+		TotalChapters:    0,   // TODO: 从 ChapterRepository 获取
+		TotalWords:       0,   // TODO: 从统计数据获取
+		TotalReads:       0,   // TODO: 从 ReadingProgress 获取
+		TotalIncome:      0.0, // TODO: 从 Wallet 获取
+		RegistrationDate: user.CreatedAt,
+		LastLoginDate:    user.LastLoginAt,
+	}, nil
+}
+
+// BanUser 封禁用户
+func (a *adminUserRepositoryAdapter) BanUser(ctx context.Context, userID, reason string, until time.Time) error {
+	// 使用 UserRepository 的 Update 方法
+	updates := map[string]interface{}{
+		"status":     "banned",
+		"ban_reason": reason,
+		"ban_until":  until,
+		"updated_at": time.Now(),
+	}
+	return a.userRepo.Update(ctx, userID, updates)
+}
+
+// UnbanUser 解封用户
+func (a *adminUserRepositoryAdapter) UnbanUser(ctx context.Context, userID string) error {
+	// 使用 UserRepository 的 Update 方法
+	updates := map[string]interface{}{
+		"status":     "active",
+		"ban_reason": "",
+		"ban_until":  nil,
+		"updated_at": time.Now(),
+	}
+	return a.userRepo.Update(ctx, userID, updates)
 }
 
 // IsInitialized 检查是否已初始化

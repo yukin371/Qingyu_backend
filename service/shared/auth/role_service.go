@@ -1,10 +1,10 @@
 package auth
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"fmt"
 
-	authModel "Qingyu_backend/models/shared/auth"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 

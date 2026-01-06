@@ -1,9 +1,8 @@
 package mocks
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
-
-	authModel "Qingyu_backend/models/shared/auth"
 
 	"github.com/stretchr/testify/mock"
 )

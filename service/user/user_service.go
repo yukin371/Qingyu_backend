@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/middleware"
 	usersModel "Qingyu_backend/models/users"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 
 	"go.uber.org/zap"
@@ -17,14 +18,16 @@ import (
 // UserServiceImpl 用户服务实现
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
+	authRepo sharedRepo.AuthRepository
 	name     string
 	version  string
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repoInterfaces.UserRepository) user2.UserService {
+func NewUserService(userRepo repoInterfaces.UserRepository, authRepo sharedRepo.AuthRepository) user2.UserService {
 	return &UserServiceImpl{
 		userRepo: userRepo,
+		authRepo: authRepo,
 		name:     "UserService",
 		version:  "1.0.0",
 	}
@@ -356,8 +359,10 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	// 5. 更新最后登录时间
-	// IP 地址应该从 context 中获取，这里暂时使用默认值
-	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	ip := req.ClientIP
+	if ip == "" {
+		ip = "unknown"
+	}
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
 		// 记录错误但不影响登录流程
 		zap.L().Warn("更新最后登录时间失败",
@@ -381,8 +386,17 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 
 // LogoutUser 登出用户
 func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserRequest) (*user2.LogoutUserResponse, error) {
-	// 这里简化处理，实际应该将令牌加入黑名单
-	// TODO: 实现JWT令牌黑名单机制
+	// 注意：完整的实现应该：
+	// 1. 将 JWT Token 加入黑名单（Redis）
+	// 2. 设置过期时间等于 Token 的剩余有效期
+	// 当前实现：简化处理，仅返回成功
+	// TODO(Production): 集成 TokenBlacklistRepository
+	// if s.tokenBlacklistRepo != nil {
+	// 	err := s.tokenBlacklistRepo.AddToBlacklist(ctx, req.Token, tokenExpiry)
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "加入黑名单失败", err)
+	// 	}
+	// }
 	return &user2.LogoutUserResponse{
 		Success: true,
 	}, nil
@@ -390,10 +404,20 @@ func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserR
 
 // ValidateToken 验证令牌
 func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *user2.ValidateTokenRequest) (*user2.ValidateTokenResponse, error) {
-	// 这里简化处理，实际应该验证JWT令牌
-	// TODO: 实现JWT令牌验证
+	// 注意：完整的实现应该：
+	// 1. 验证 JWT Token 的签名和过期时间
+	// 2. 检查 Token 是否在黑名单中
+	// 3. 返回 Token 中的用户信息
+	// 当前实现：简化处理，JWT 验证在中间件中完成
+	// TODO(Production): 集成 JWT 验证库和黑名单检查
+	// if s.tokenBlacklistRepo != nil {
+	// 	isBlacklisted, _ := s.tokenBlacklistRepo.IsBlacklisted(ctx, req.Token)
+	// 	if isBlacklisted {
+	// 		return &user2.ValidateTokenResponse{Valid: false}, nil
+	// 	}
+	// }
 	return &user2.ValidateTokenResponse{
-		Valid: false, // 暂时返回false
+		Valid: false, // 暂时返回false，实际验证在 JWT 中间件中完成
 	}, nil
 }
 
@@ -405,8 +429,9 @@ func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *user2.Update
 	}
 
 	// 2. 更新最后登录时间
-	// IP 地址应该从 context 中获取，这里暂时使用默认值
-	ip := "unknown" // TODO: 从 context 中获取客户端 IP
+	// IP 地址应该从 API 层通过参数传递
+	// API 层使用 utils.GetClientIP(c) 获取真实客户端 IP
+	ip := "unknown" // 默认值，实际应该从请求参数中获取
 	if err := s.userRepo.UpdateLastLogin(ctx, req.ID, ip); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新最后登录时间失败", err)
 	}
@@ -454,6 +479,11 @@ func (s *UserServiceImpl) UpdatePassword(ctx context.Context, req *user2.UpdateP
 }
 
 // ResetPassword 重置密码
+// TODO:注意：这是简化实现。完整的密码重置流程应该包含：
+// 1. 用户请求重置 -> 生成Token并发送到邮箱
+// 2. 用户点击邮件链接 -> 验证Token
+// 3. 用户输入新密码 -> 更新密码
+// 当前实现：生成Token并模拟发送邮件（实际未发送）
 func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPasswordRequest) (*user2.ResetPasswordResponse, error) {
 	// 1. 验证请求数据
 	if req.Email == "" {
@@ -464,7 +494,7 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if repoInterfaces.IsNotFoundError(err) {
-			// 为了安全，即使用户不存在也返回成功
+			// 为了安全，即使用户不存在也返回成功（防止邮箱枚举攻击）
 			return &user2.ResetPasswordResponse{
 				Success: true,
 			}, nil
@@ -472,19 +502,43 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户失败", err)
 	}
 
-	// 3. 生成新密码（这里简化处理，实际应该发送邮件）
-	newPassword := "new_password_placeholder" // TODO: 实现密码重置邮件发送
-
-	// 4. 更新密码
-	(*user).Password = newPassword
-	if err := (*user).SetPassword(newPassword); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "密码哈希失败", err)
+	// 3. 生成密码重置Token
+	tokenManager := NewPasswordResetTokenManager()
+	resetToken, err := tokenManager.GenerateToken(ctx, req.Email)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成重置Token失败", err)
 	}
-	hashedPassword := (*user).Password
 
-	if err := s.userRepo.UpdatePassword(ctx, (*user).ID, hashedPassword); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
-	}
+	// 4. 构建重置邮件内容
+	resetLink := fmt.Sprintf("https://qingyu.example.com/reset-password?token=%s&email=%s", resetToken, req.Email)
+	emailBody := fmt.Sprintf(`
+		<h2>密码重置请求</h2>
+		<p>您好，%s，</p>
+		<p>我们收到了您的密码重置请求。请点击下面的链接重置您的密码：</p>
+		<p><a href="%s">重置密码</a></p>
+		<p>该链接将在1小时后过期。</p>
+		<p>如果您没有请求重置密码，请忽略此邮件。</p>
+		<p>青羽写作团队</p>
+	`, user.Username, resetLink)
+
+	// 5. 发送重置邮件（当前为模拟发送）
+	// 注意：EmailService 需要在 ServiceContainer 中注入
+	// TODO(Production): 集成真实的邮件发送服务
+	// if s.emailService != nil {
+	// 	err := s.emailService.SendEmail(ctx, &messaging.EmailRequest{
+	// 		To:      []string{req.Email},
+	// 		Subject: "青羽写作 - 密码重置",
+	// 		Body:    emailBody,
+	// 		IsHTML:  true,
+	// 	})
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送重置邮件失败", err)
+	// 	}
+	// }
+
+	// 模拟：打印日志代替发送邮件
+	fmt.Printf("[Password Reset] Token generated for %s: %s\n", req.Email, resetToken)
+	fmt.Printf("[Password Reset] Email content:\n%s\n", emailBody)
 
 	return &user2.ResetPasswordResponse{
 		Success: true,
@@ -493,33 +547,113 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 
 // AssignRole 分配角色
 func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
-	// TODO: 实现角色分配逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+	if req.RoleID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 检查角色是否存在
+	_, err = s.authRepo.GetRole(ctx, req.RoleID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "角色不存在", err)
+	}
+
+	// 4. 分配角色
+	if err := s.authRepo.AssignUserRole(ctx, req.UserID, req.RoleID); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "分配角色失败", err)
+	}
+
 	return &user2.AssignRoleResponse{
-		Assigned: false, // 暂时返回false
+		Assigned: true,
 	}, nil
 }
 
 // RemoveRole 移除角色
 func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
-	// TODO: 实现角色移除逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+	if req.RoleID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 移除角色
+	if err := s.authRepo.RemoveUserRole(ctx, req.UserID, req.RoleID); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "移除角色失败", err)
+	}
+
 	return &user2.RemoveRoleResponse{
-		Removed: false, // 暂时返回false
+		Removed: true,
 	}, nil
 }
 
 // GetUserRoles 获取用户角色
 func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
-	// TODO: 实现获取用户角色逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 获取用户角色
+	roles, err := s.authRepo.GetUserRoles(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户角色失败", err)
+	}
+
+	// 4. 转换为角色名称列表
+	roleNames := make([]string, len(roles))
+	for i, role := range roles {
+		roleNames[i] = role.Name
+	}
+
 	return &user2.GetUserRolesResponse{
-		Roles: []string{}, // 暂时返回空列表
+		Roles: roleNames,
 	}, nil
 }
 
 // GetUserPermissions 获取用户权限
 func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
-	// TODO: 实现获取用户权限逻辑
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	_, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 3. 获取用户权限（通过角色获取）
+	permissions, err := s.authRepo.GetUserPermissions(ctx, req.UserID)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户权限失败", err)
+	}
+
 	return &user2.GetUserPermissionsResponse{
-		Permissions: []string{}, // 暂时返回空列表
+		Permissions: permissions,
 	}, nil
 }
 
@@ -572,4 +706,239 @@ func (s *UserServiceImpl) generateToken(userID, role string) (string, error) {
 	// 使用middleware包中的GenerateToken函数
 	// 导入: "Qingyu_backend/middleware"
 	return middleware.GenerateToken(userID, "", []string{role})
+}
+
+// ==================== 邮箱验证相关方法 ====================
+
+// SendEmailVerification 发送邮箱验证码
+func (s *UserServiceImpl) SendEmailVerification(ctx context.Context, req *user2.SendEmailVerificationRequest) (*user2.SendEmailVerificationResponse, error) {
+	// 1. 验证请求数据
+	if req.UserID == "" || req.Email == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID和邮箱不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	user, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
+	}
+
+	// 3. 验证邮箱是否匹配
+	if user.Email != req.Email {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "邮箱不匹配", nil)
+	}
+
+	// 4. 如果已经验证过，直接返回
+	if user.EmailVerified {
+		return &user2.SendEmailVerificationResponse{
+			Success:   true,
+			Message:   "邮箱已验证",
+			ExpiresIn: 0,
+		}, nil
+	}
+
+	// 5. 生成验证码
+	tokenManager := NewEmailVerificationTokenManager()
+	code, err := tokenManager.GenerateCode(ctx, req.UserID, req.Email)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成验证码失败", err)
+	}
+
+	// 6. 构建验证邮件内容
+	emailBody := fmt.Sprintf(`
+		<h2>邮箱验证</h2>
+		<p>您好，%s，</p>
+		<p>感谢您注册青羽写作平台！</p>
+		<p>您的邮箱验证码是：<strong style="font-size: 24px; color: #007bff;">%s</strong></p>
+		<p>验证码有效期为30分钟，请尽快完成验证。</p>
+		<p>如果您没有注册青羽写作平台，请忽略此邮件。</p>
+		<p>青羽写作团队</p>
+	`, user.Username, code)
+
+	// 7. 发送验证邮件（当前为模拟发送）
+	// TODO(Production): 集成真实的邮件发送服务
+	// if s.emailService != nil {
+	// 	err := s.emailService.SendEmail(ctx, &messaging.EmailRequest{
+	// 		To:      []string{req.Email},
+	// 		Subject: "青羽写作 - 邮箱验证",
+	// 		Body:    emailBody,
+	// 		IsHTML:  true,
+	// 	})
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送验证邮件失败", err)
+	// 	}
+	// }
+
+	// 模拟：打印日志代替发送邮件
+	fmt.Printf("[Email Verification] Code generated for %s (UserID: %s): %s\n", req.Email, req.UserID, code)
+	fmt.Printf("[Email Verification] Email content:\n%s\n", emailBody)
+
+	return &user2.SendEmailVerificationResponse{
+		Success:   true,
+		Message:   "验证码已发送到您的邮箱",
+		ExpiresIn: 1800, // 30分钟 = 1800秒
+	}, nil
+}
+
+// VerifyEmail 验证邮箱
+func (s *UserServiceImpl) VerifyEmail(ctx context.Context, req *user2.VerifyEmailRequest) (*user2.VerifyEmailResponse, error) {
+	// 1. 验证请求数据
+	if req.UserID == "" || req.Code == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID和验证码不能为空", nil)
+	}
+
+	// 2. 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
+	}
+
+	// 3. 验证验证码
+	tokenManager := NewEmailVerificationTokenManager()
+	if err := tokenManager.ValidateCode(ctx, req.UserID, user.Email, req.Code); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "验证码无效: "+err.Error(), nil)
+	}
+
+	// 4. 标记验证码为已使用
+	if err := tokenManager.MarkCodeAsUsed(ctx, user.Email); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "标记验证码失败", err)
+	}
+
+	// 5. 更新用户邮箱验证状态
+	updates := map[string]interface{}{
+		"email_verified": true,
+		"status":         usersModel.UserStatusActive, // 激活账户
+	}
+	if err := s.userRepo.Update(ctx, req.UserID, updates); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户状态失败", err)
+	}
+
+	return &user2.VerifyEmailResponse{
+		Success: true,
+		Message: "邮箱验证成功",
+	}, nil
+}
+
+// ==================== 完整密码重置流程相关方法 ====================
+
+// RequestPasswordReset 请求密码重置（发送重置邮件）
+func (s *UserServiceImpl) RequestPasswordReset(ctx context.Context, req *user2.RequestPasswordResetRequest) (*user2.RequestPasswordResetResponse, error) {
+	// 1. 验证请求数据
+	if req.Email == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "邮箱不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			// 为了安全，即使用户不存在也返回成功（防止邮箱枚举攻击）
+			return &user2.RequestPasswordResetResponse{
+				Success:   true,
+				Message:   "如果该邮箱已注册，您将收到密码重置邮件",
+				ExpiresIn: 3600,
+			}, nil
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户失败", err)
+	}
+
+	// 3. 生成密码重置Token
+	tokenManager := NewPasswordResetTokenManager()
+	resetToken, err := tokenManager.GenerateToken(ctx, req.Email)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成重置Token失败", err)
+	}
+
+	// 4. 构建重置邮件内容
+	resetLink := fmt.Sprintf("https://qingyu.example.com/reset-password?token=%s&email=%s", resetToken, req.Email)
+	emailBody := fmt.Sprintf(`
+		<h2>密码重置请求</h2>
+		<p>您好，%s，</p>
+		<p>我们收到了您的密码重置请求。请点击下面的链接重置您的密码：</p>
+		<p><a href="%s" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">重置密码</a></p>
+		<p>或者复制以下链接到浏览器：</p>
+		<p><code>%s</code></p>
+		<p>该链接将在1小时后过期。</p>
+		<p>如果您没有请求重置密码，请忽略此邮件，您的密码不会被更改。</p>
+		<p>青羽写作团队</p>
+	`, user.Username, resetLink, resetLink)
+
+	// 5. 发送重置邮件（当前为模拟发送）
+	// TODO(Production): 集成真实的邮件发送服务
+	// if s.emailService != nil {
+	// 	err := s.emailService.SendEmail(ctx, &messaging.EmailRequest{
+	// 		To:      []string{req.Email},
+	// 		Subject: "青羽写作 - 密码重置",
+	// 		Body:    emailBody,
+	// 		IsHTML:  true,
+	// 	})
+	// 	if err != nil {
+	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送重置邮件失败", err)
+	// 	}
+	// }
+
+	// 模拟：打印日志代替发送邮件
+	fmt.Printf("[Password Reset] Token generated for %s: %s\n", req.Email, resetToken)
+	fmt.Printf("[Password Reset] Reset link: %s\n", resetLink)
+	fmt.Printf("[Password Reset] Email content:\n%s\n", emailBody)
+
+	return &user2.RequestPasswordResetResponse{
+		Success:   true,
+		Message:   "密码重置邮件已发送",
+		ExpiresIn: 3600, // 1小时 = 3600秒
+	}, nil
+}
+
+// ConfirmPasswordReset 确认密码重置（使用Token设置新密码）
+func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.ConfirmPasswordResetRequest) (*user2.ConfirmPasswordResetResponse, error) {
+	// 1. 验证请求数据
+	if req.Email == "" || req.Token == "" || req.Password == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "邮箱、Token和新密码不能为空", nil)
+	}
+
+	// 2. 检查用户是否存在
+	user, err := s.userRepo.GetByEmail(ctx, req.Email)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
+	}
+
+	// 3. 验证Token
+	tokenManager := GetGlobalPasswordResetTokenManager()
+	if err := tokenManager.ValidateToken(ctx, req.Email, req.Token); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "Token验证失败: "+err.Error(), nil)
+	}
+
+	// 4. 设置新密码
+	if err := user.SetPassword(req.Password); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "密码哈希失败", err)
+	}
+	hashedPassword := user.Password
+
+	// 5. 更新密码
+	if err := s.userRepo.UpdatePassword(ctx, user.ID, hashedPassword); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
+	}
+
+	// 6. 标记Token为已使用
+	if err := tokenManager.MarkTokenAsUsed(ctx, req.Email); err != nil {
+		// 记录警告但不影响流程
+		zap.L().Warn("标记重置Token为已使用失败",
+			zap.String("email", req.Email),
+			zap.Error(err),
+		)
+	}
+
+	return &user2.ConfirmPasswordResetResponse{
+		Success: true,
+		Message: "密码重置成功，请使用新密码登录",
+	}, nil
 }

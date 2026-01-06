@@ -276,8 +276,11 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 		return
 	}
 
-	// TODO: 检查是否为管理员
-	if currentUserID.(string) != userID {
+	// 检查是否为管理员或用户本身
+	currentRole, roleExists := c.Get("role")
+	isAdmin := roleExists && currentRole.(string) == "admin"
+
+	if !isAdmin && currentUserID.(string) != userID {
 		shared.Error(c, http.StatusForbidden, "无权限", "只能查看自己的违规记录")
 		return
 	}
@@ -315,8 +318,11 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 		return
 	}
 
-	// TODO: 检查是否为管理员
-	if currentUserID.(string) != userID {
+	// 检查是否为管理员或用户本身
+	currentRole, roleExists := c.Get("role")
+	isAdmin := roleExists && currentRole.(string) == "admin"
+
+	if !isAdmin && currentUserID.(string) != userID {
 		shared.Error(c, http.StatusForbidden, "无权限", "只能查看自己的违规统计")
 		return
 	}

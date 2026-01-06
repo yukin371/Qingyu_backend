@@ -25,6 +25,16 @@ type AdminService interface {
 	GetOperationLogs(ctx context.Context, req *GetLogsRequest) ([]*AdminLog, error)
 	ExportLogs(ctx context.Context, startDate, endDate time.Time) ([]byte, error)
 
+	// 系统管理
+	GetSystemStats(ctx context.Context) (interface{}, error)
+	GetSystemConfig(ctx context.Context) (interface{}, error)
+	UpdateSystemConfig(ctx context.Context, req interface{}) error
+	CreateAnnouncement(ctx context.Context, adminID, title, content, announceType, priority string) (interface{}, error)
+	GetAnnouncements(ctx context.Context, page, pageSize int) (interface{}, int64, error)
+
+	// 审核管理
+	GetAuditStatistics(ctx context.Context) (interface{}, error)
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }

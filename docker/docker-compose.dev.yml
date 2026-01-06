@@ -37,8 +37,68 @@ services:
       timeout: 5s
       retries: 5
 
-  # 后端服务
-  backend:
+  # Milvus向量数据库 (新增，用于Python AI的RAG)
+  milvus:
+    image: milvusdb/milvus:v2.3.0
+    container_name: qingyu-milvus
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    ports:
+      - "19530:19530"
+      - "9091:9091"  # 管理端口
+    volumes:
+      - milvus_data:/var/lib/milvus
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MINIO_ADDRESS=minio:9000
+    depends_on:
+      - etcd
+      - minio
+    networks:
+      - qingyu-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+
+  # etcd (Milvus依赖)
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: qingyu-etcd
+    restart: unless-stopped
+    ports:
+      - "2379:2379"
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd_data:/etcd_data
+    command: etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://etcd:2379 --listen-peer-urls=http://0.0.0.0:2380 --initial-advertise-peer-urls=http://etcd:2380 --initial-cluster=default=http://etcd:2380 --data-dir=/etcd_data
+    networks:
+      - qingyu-network
+
+  # MinIO (Milvus存储)
+  minio:
+    image: minio/minio:latest
+    container_name: qingyu-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - qingyu-network
+
+  # Go后端服务 (重命名)
+  go-backend:
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
@@ -53,11 +113,51 @@ services:
       - /app/tmp
     environment:
       - GIN_MODE=debug
+      # 共享环境变量 (从宿主机.env加载)
+      - QINGYU_AI_API_KEY=${OPENAI_API_KEY}
+      - QINGYU_AI_PYTHON_HOST=python-ai-service
+      - QINGYU_AI_PYTHON_GRPC_PORT=50052
+      - QINGYU_REDIS_HOST=redis
+      - QINGYU_REDIS_PORT=6379
     depends_on:
       mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - qingyu-network
+    stdin_open: true
+    tty: true
+
+  # Python AI服务 (新增)
+  python-ai-service:
+    build:
+      context: ./python_ai_service
+      dockerfile: Dockerfile
+    container_name: qingyu-python-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # FastAPI
+      - "50052:50052"  # gRPC
+    environment:
+      # 共享AI密钥
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # gRPC连接Go
+      - GO_GRPC_HOST=go-backend
+      - GO_GRPC_PORT=50051
+      # 向量DB和缓存
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # 服务端口
+      - SERVICE_PORT=8000
+    depends_on:
+      - milvus
+      - redis
+    volumes:
+      - ./shared_config:/app/shared_config  # 可选：共享配置
     networks:
       - qingyu-network
     stdin_open: true
@@ -74,5 +174,11 @@ volumes:
   mongodb_config:
     driver: local
   redis_data:
+    driver: local
+  milvus_data:
+    driver: local
+  etcd_data:
+    driver: local
+  minio_data:
     driver: local
 

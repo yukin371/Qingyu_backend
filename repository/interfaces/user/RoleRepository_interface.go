@@ -1,7 +1,7 @@
 package user
 
 import (
-	authModel "Qingyu_backend/models/shared/auth"
+	authModel "Qingyu_backend/models/auth"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	"context"
 )

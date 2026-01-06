@@ -1,4 +1,4 @@
-package bookstore
+﻿package bookstore
 
 import (
 	"net/http"
@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -285,11 +286,7 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "增加浏览量成功",
-		Data:    nil,
-	})
+	shared.Success(c, http.StatusOK, "增加浏览量成功", nil)
 }
 
 // IncrementFavoriteCount 增加收藏量
@@ -334,11 +331,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "增加收藏量成功",
-		Data:    nil,
-	})
+	shared.Success(c, http.StatusOK, "增加收藏量成功", nil)
 }
 
 // GetAggregatedStatistics 获取聚合统计信息

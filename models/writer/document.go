@@ -1,52 +1,57 @@
 package writer
 
 import (
-	"fmt"
-	"time"
+	"Qingyu_backend/models/writer/base"
+	"Qingyu_backend/models/writer/types"
 )
 
 // Document 文档模型（用于文档内容）
+// 文档类型现在是动态的，由项目的writing_type决定
 type Document struct {
-	ID        string       `bson:"_id,omitempty" json:"id"`
-	ProjectID string       `bson:"project_id" json:"projectId" validate:"required"`
-	ParentID  string       `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空表示根文档
-	Title     string       `bson:"title" json:"title" validate:"required,min=1,max=200"`
-	Type      DocumentType `bson:"type" json:"type" validate:"required"`
-	Level     int          `bson:"level" json:"level"`   // 层级深度（0-2）
-	Order     int          `bson:"order" json:"order"`   // 同级排序
-	Status    string       `bson:"status" json:"status"` // planned | writing | completed
+	base.IdentifiedEntity    // ID
+	base.Timestamps          // CreatedAt, UpdatedAt, DeletedAt
+	base.ProjectScopedEntity // ProjectID
+	base.TitledEntity        // Title
+
+	// 层级结构（保持BSON字段名不变，确保数据库兼容）
+	ParentID string `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空表示根文档
+	Type     string `bson:"type" json:"type" validate:"required"`          // 动态类型（如：volume, chapter, section, scene, article, act, beat等）
+	Level    int    `bson:"level" json:"level" validate:"min=0"`           // 层级深度
+	Order    int    `bson:"order" json:"order" validate:"min=0"`           // 同级排序
+	Status   string `bson:"status" json:"status"`                          // planned | writing | completed
 
 	// 统计信息（从DocumentContent同步）
 	WordCount int `bson:"word_count" json:"wordCount"` // 字数统计
 
-	// 关联信息
-	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty"` // 关联角色
-	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty"`   // 关联地点
-	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty"`   // 关联时间线
+	// 关联信息（保持BSON字段名不变，确保数据库兼容）
+	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty" validate:"max=50"` // 关联角色
+	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty" validate:"max=50"`   // 关联地点
+	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty" validate:"max=20"`   // 关联时间线
 
 	// 写作辅助（AI上下文需要）
-	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty"`   // 情节线索
-	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty"`       // 关键点
-	WritingHints []string `bson:"writing_hints,omitempty" json:"writingHints,omitempty"` // 写作提示
+	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty" validate:"max=20"`   // 情节线索
+	KeyPoints    []string `bson:"key_points,omitempty" json:"keyPoints,omitempty" validate:"max=20"`       // 关键点
+	WritingHints []string `bson:"writing_hints,omitempty" json:"writingHints,omitempty" validate:"max=20"` // 写作提示
 
 	// 标签和备注
-	Tags  []string `bson:"tags,omitempty" json:"tags,omitempty"`
-	Notes string   `bson:"notes,omitempty" json:"notes,omitempty"`
-
-	// 时间戳
-	CreatedAt time.Time  `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time  `bson:"updated_at" json:"updatedAt"`
-	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deletedAt,omitempty"`
+	Tags  []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=10"`
+	Notes string   `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
 }
 
-// DocumentType 文档类型
-type DocumentType string
-
+// DocumentStatus 文档状态常量（保持向后兼容）
 const (
-	TypeVolume  DocumentType = "volume"  // 卷
-	TypeChapter DocumentType = "chapter" // 章
-	TypeSection DocumentType = "section" // 节
-	TypeScene   DocumentType = "scene"   // 场景
+	DocumentStatusPlanned    = "planned"    // 计划中
+	DocumentStatusWriting    = "writing"    // 写作中
+	DocumentStatusCompleted  = "completed"  // 已完成
+)
+
+// 历史文档类型常量（保持向后兼容，但已废弃，建议使用WritingType系统）
+// 这些常量仅用于小说类型的项目
+const (
+	TypeVolume  = "volume"  // 卷（小说专用）
+	TypeChapter = "chapter" // 章（小说专用）
+	TypeSection = "section" // 节（小说/文章通用）
+	TypeScene   = "scene"   // 场景（小说/剧本通用）
 )
 
 // IsRoot 判断是否为根文档
@@ -55,8 +60,31 @@ func (d *Document) IsRoot() bool {
 }
 
 // CanHaveChildren 判断是否可以有子文档
-func (d *Document) CanHaveChildren() bool {
-	return d.Level < 2 // 最多3层，0-2
+// 需要传入项目的writing_type来动态判断
+func (d *Document) CanHaveChildren(writingType string) bool {
+	wt, ok := types.GlobalRegistry.Get(writingType)
+	if !ok {
+		return false // 未知的writing_type，不允许子节点
+	}
+	return wt.CanHaveChildren(d.Type)
+}
+
+// GetParentType 获取父级文档类型
+func (d *Document) GetParentType(writingType string) (string, bool) {
+	wt, ok := types.GlobalRegistry.Get(writingType)
+	if !ok {
+		return "", false
+	}
+	return wt.GetParentType(d.Type)
+}
+
+// GetChildTypes 获取允许的子文档类型列表
+func (d *Document) GetChildTypes(writingType string) []string {
+	wt, ok := types.GlobalRegistry.Get(writingType)
+	if !ok {
+		return nil
+	}
+	return wt.GetChildTypes(d.Type)
 }
 
 // GetNextLevel 获取下一层级
@@ -67,58 +95,70 @@ func (d *Document) GetNextLevel() int {
 // UpdateWordCount 更新字数统计
 func (d *Document) UpdateWordCount(count int) {
 	d.WordCount = count
-	d.UpdatedAt = time.Now()
+	d.Timestamps.Touch()
+}
+
+// TouchForCreate 创建时设置默认值
+func (d *Document) TouchForCreate() {
+	d.IdentifiedEntity.GenerateID()
+	d.Timestamps.TouchForCreate()
+	if d.Status == "" {
+		d.Status = DocumentStatusPlanned
+	}
+}
+
+// TouchForUpdate 更新时设置默认值
+func (d *Document) TouchForUpdate() {
+	d.Timestamps.Touch()
 }
 
 // Validate 验证文档数据
-func (d *Document) Validate() error {
+// 需要传入项目的writing_type来验证document type是否有效
+func (d *Document) Validate(writingType string) error {
+	// 验证标题
+	if err := base.ValidateTitle(d.Title, 200); err != nil {
+		return err
+	}
+
+	// 验证项目ID
 	if d.ProjectID == "" {
-		return fmt.Errorf("项目ID不能为空")
+		return base.ErrProjectIDRequired
 	}
-	if d.Title == "" {
-		return fmt.Errorf("文档标题不能为空")
+
+	// 验证文档类型（基于writing_type）
+	wt, ok := types.GlobalRegistry.Get(writingType)
+	if !ok {
+		return base.ErrInvalidWritingType
 	}
-	if len(d.Title) > 200 {
-		return fmt.Errorf("文档标题不能超过200字符")
+	if !wt.ValidateDocumentType(d.Type) {
+		return base.ErrInvalidDocumentType
 	}
-	if !d.Type.IsValid() {
-		return fmt.Errorf("无效的文档类型: %s", d.Type)
+
+	// 验证层级（基于writing_type的最大层级）
+	maxDepth := wt.GetMaxDepth()
+	if d.Level < 0 || d.Level >= maxDepth {
+		return base.ErrInvalidLevel
 	}
-	if d.Level < 0 || d.Level > 2 {
-		return fmt.Errorf("文档层级必须在0-2之间")
-	}
+
 	return nil
 }
 
-// IsValid 验证文档类型是否有效
-func (t DocumentType) IsValid() bool {
-	switch t {
-	case TypeVolume, TypeChapter, TypeSection, TypeScene:
-		return true
+// ValidateWithoutType 验证文档数据（不验证类型，用于向后兼容）
+func (d *Document) ValidateWithoutType() error {
+	// 验证标题
+	if err := base.ValidateTitle(d.Title, 200); err != nil {
+		return err
 	}
-	return false
-}
 
-// String 返回文档类型的字符串表示
-func (t DocumentType) String() string {
-	return string(t)
-}
+	// 验证项目ID
+	if d.ProjectID == "" {
+		return base.ErrProjectIDRequired
+	}
 
-// TouchForCreate 设置创建时的默认值
-func (d *Document) TouchForCreate() {
-	now := time.Now()
-	if d.CreatedAt.IsZero() {
-		d.CreatedAt = now
+	// 验证层级（通用验证）
+	if d.Level < 0 || d.Level > 10 {
+		return base.ErrInvalidLevel
 	}
-	if d.UpdatedAt.IsZero() {
-		d.UpdatedAt = now
-	}
-	if d.Status == "" {
-		d.Status = "planned"
-	}
-}
 
-// TouchForUpdate 设置更新时的默认值
-func (d *Document) TouchForUpdate() {
-	d.UpdatedAt = time.Now()
+	return nil
 }

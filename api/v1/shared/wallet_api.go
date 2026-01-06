@@ -45,10 +45,7 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 
 	balance, err := api.walletService.GetBalance(c.Request.Context(), userID.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "查询余额失败: " + err.Error(),
-		})
+		InternalError(c, "查询余额失败", err)
 		return
 	}
 
@@ -83,10 +80,7 @@ func (api *WalletAPI) GetWallet(c *gin.Context) {
 
 	walletInfo, err := api.walletService.GetWallet(c.Request.Context(), userID.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取钱包信息失败: " + err.Error(),
-		})
+		InternalError(c, "获取钱包信息失败", err)
 		return
 	}
 
@@ -134,10 +128,7 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 
 	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), req.Amount, req.Method)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "充值失败: " + err.Error(),
-		})
+		InternalError(c, "充值失败", err)
 		return
 	}
 
@@ -185,10 +176,7 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 
 	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), req.Amount, req.Reason)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "消费失败: " + err.Error(),
-		})
+		InternalError(c, "消费失败", err)
 		return
 	}
 
@@ -237,10 +225,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 
 	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID.(string), req.ToUserID, req.Amount, req.Reason)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "转账失败: " + err.Error(),
-		})
+		InternalError(c, "转账失败", err)
 		return
 	}
 
@@ -289,10 +274,7 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 
 	transactions, err := api.walletService.ListTransactions(c.Request.Context(), userID.(string), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "查询交易记录失败: " + err.Error(),
-		})
+		InternalError(c, "查询交易记录失败", err)
 		return
 	}
 
@@ -342,10 +324,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 
 	withdrawReq, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), req.Amount, req.Account)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "申请提现失败: " + err.Error(),
-		})
+		InternalError(c, "申请提现失败", err)
 		return
 	}
 
@@ -395,10 +374,7 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 
 	requests, err := api.walletService.ListWithdrawRequests(c.Request.Context(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "查询提现申请失败: " + err.Error(),
-		})
+		InternalError(c, "查询提现申请失败", err)
 		return
 	}
 

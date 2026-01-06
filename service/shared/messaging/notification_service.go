@@ -1,12 +1,11 @@
 package messaging
 
 import (
+	msgModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"strings"
 	"time"
-
-	msgModel "Qingyu_backend/models/shared/messaging"
 )
 
 // NotificationServiceImpl 通知服务实现
@@ -88,14 +87,14 @@ func (s *NotificationServiceImpl) SendPush(ctx context.Context, userID, title, c
 // SendSystemNotification 发送系统通知
 func (s *NotificationServiceImpl) SendSystemNotification(ctx context.Context, userID, title, content string) error {
 	notification := &msgModel.Notification{
-		UserID:    userID,
-		Type:      msgModel.NotificationTypeSystem,
-		Title:     title,
-		Content:   content,
-		Status:    msgModel.NotificationStatusSent,
-		IsRead:    false,
-		CreatedAt: time.Now(),
+		UserID:  userID,
+		Type:    msgModel.NotificationTypeSystem,
+		Title:   title,
+		Content: content,
+		Status:  msgModel.NotificationStatusSent,
 	}
+	notification.IsRead = false
+	notification.CreatedAt = time.Now()
 
 	// 直接保存到数据库或通过消息队列
 	return s.messagingService.Publish(ctx, "notification.system", notification)

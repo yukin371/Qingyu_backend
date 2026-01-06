@@ -1,13 +1,13 @@
 package auth_test
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"fmt"
 	"sync"
 	"testing"
 	"time"
 
-	authModel "Qingyu_backend/models/shared/auth"
 	authService "Qingyu_backend/service/shared/auth"
 
 	"github.com/stretchr/testify/assert"
@@ -199,10 +199,10 @@ func (m *MockCacheClient) Get(ctx context.Context, key string) (string, error) {
 	return "", fmt.Errorf("key not found")
 }
 
-func (m *MockCacheClient) Set(ctx context.Context, key string, value string, ttl time.Duration) error {
+func (m *MockCacheClient) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.data[key] = value
+	m.data[key] = fmt.Sprintf("%v", value) // 转换为字符串存储
 	return nil
 }
 

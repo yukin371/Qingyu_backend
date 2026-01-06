@@ -1,23 +1,23 @@
 package reader
 
 import (
-	"Qingyu_backend/models/reader"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reading"
+	readerModels "Qingyu_backend/models/reader"
+	"Qingyu_backend/service/reader"
 )
 
 // AnnotationsAPI 标注API
 type AnnotationsAPI struct {
-	readerService *reading.ReaderService
+	readerService *reader.ReaderService
 }
 
 // NewAnnotationsAPI 创建标注API实例
-func NewAnnotationsAPI(readerService *reading.ReaderService) *AnnotationsAPI {
+func NewAnnotationsAPI(readerService *reader.ReaderService) *AnnotationsAPI {
 	return &AnnotationsAPI{
 		readerService: readerService,
 	}
@@ -67,7 +67,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		return
 	}
 
-	annotation := &reader.Annotation{
+	annotation := &readerModels.Annotation{
 		UserID:    userIDStr,
 		BookID:    req.BookID,
 		ChapterID: req.ChapterID,

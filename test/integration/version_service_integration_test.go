@@ -10,7 +10,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
-	"Qingyu_backend/service/project"
+	"Qingyu_backend/service/writer/project"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

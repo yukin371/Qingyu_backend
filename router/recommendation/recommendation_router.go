@@ -8,12 +8,12 @@ import (
 )
 
 // RegisterRecommendationRoutes 注册推荐系统路由
-func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.RecommendationAPI, authMiddleware *middleware.AuthMiddleware) {
+func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.RecommendationAPI) {
 	reco := router.Group("/recommendation")
 	{
 		// 需要认证的路由
 		authenticated := reco.Group("")
-		authenticated.Use(authMiddleware.RequireAuth())
+		authenticated.Use(middleware.JWTAuth())
 		{
 			// 个性化推荐
 			authenticated.GET("/personalized", api.GetPersonalizedRecommendations)

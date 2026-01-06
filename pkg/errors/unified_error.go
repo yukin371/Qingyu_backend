@@ -127,6 +127,12 @@ func (e *UnifiedError) WithService(service, operation string) *UnifiedError {
 	return e
 }
 
+// WithRequestID 设置请求ID
+func (e *UnifiedError) WithRequestID(requestID string) *UnifiedError {
+	e.RequestID = requestID
+	return e
+}
+
 // WithOperation 设置操作信息
 func (e *UnifiedError) WithOperation(operation string) *UnifiedError {
 	e.Operation = operation

@@ -4,40 +4,38 @@ import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 
 	"github.com/gin-gonic/gin"
-
-	userApi "Qingyu_backend/api/v1/user"
-	"Qingyu_backend/middleware"
 )
 
 // RegisterUserRoutes 注册用户相关路由
+// ⚠️ 注意：用户管理功能已迁移到 user-management 模块
+// 新路由位置：/api/v1/user-management/*
+// 此函数保留以向后兼容，但不再注册任何路由
 func RegisterUserRoutes(r *gin.RouterGroup, userService serviceInterfaces.UserService) {
-	// 创建UserAPI
-	userAPI := userApi.NewUserAPI(userService)
+	// 用户管理功能已迁移到新的 user-management 模块
+	// 新路由在 router/enter.go 中通过 usermanagementRouter.RegisterRoutes() 注册
+	// 请使用新的路由：
+	// - POST   /api/v1/user-management/auth/register
+	// - POST   /api/v1/user-management/auth/login
+	// - GET    /api/v1/user-management/profile
+	// - PUT    /api/v1/user-management/profile
+	// - PUT    /api/v1/user-management/password
+	// - GET    /api/v1/user-management/users/:id/profile
+	// - GET    /api/v1/user-management/users/:id/books
+}
 
-	// =========================
-	// 公开路由（无需认证）
-	// =========================
-	{
-		// 用户注册
-		r.POST("/register", userAPI.Register)
-
-		// 用户登录
-		r.POST("/login", userAPI.Login)
-	}
-
-	// =========================
-	// 需要认证的路由
-	// =========================
-	authenticated := r.Group("/users")
-	authenticated.Use(middleware.JWTAuth()) // 启用JWT认证中间件
-	{
-		// 获取当前用户信息
-		authenticated.GET("/profile", userAPI.GetProfile)
-
-		// 更新当前用户信息
-		authenticated.PUT("/profile", userAPI.UpdateProfile)
-
-		// 修改密码
-		authenticated.PUT("/password", userAPI.ChangePassword)
-	}
+// RegisterUserRoutesWithBookstore 注册用户相关路由（包含书店服务）
+// ⚠️ 注意：用户管理功能已迁移到 user-management 模块
+// 新路由位置：/api/v1/user-management/*
+// 此函数保留以向后兼容，但不再注册任何路由
+func RegisterUserRoutesWithBookstore(r *gin.RouterGroup, userService serviceInterfaces.UserService, bookstoreService interface{}) {
+	// 用户管理功能已迁移到新的 user-management 模块
+	// 新路由在 router/enter.go 中通过 usermanagementRouter.RegisterRoutes() 注册
+	// 请使用新的路由：
+	// - POST   /api/v1/user-management/auth/register
+	// - POST   /api/v1/user-management/auth/login
+	// - GET    /api/v1/user-management/profile
+	// - PUT    /api/v1/user-management/profile
+	// - PUT    /api/v1/user-management/password
+	// - GET    /api/v1/user-management/users/:id/profile
+	// - GET    /api/v1/user-management/users/:id/books
 }

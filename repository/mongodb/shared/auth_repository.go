@@ -1,11 +1,11 @@
 package shared
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"fmt"
 	"time"
 
-	authModel "Qingyu_backend/models/shared/auth"
 	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -221,16 +221,13 @@ func (r *AuthRepositoryImpl) RemoveUserRole(ctx context.Context, userID, roleID 
 func (r *AuthRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([]*authModel.Role, error) {
 	userCollection := r.db.Collection("users")
 
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, fmt.Errorf("无效的用户ID: %w", err)
-	}
-
-	// 查询用户的roles数组
+	// 查询用户 - 同时支持 role（字符串）和 roles（数组）字段
+	// 注意：users集合的_id字段是string类型，不是ObjectID，所以直接使用userID
 	var user struct {
-		Roles []string `bson:"roles"`
+		Role  string   `bson:"role"`  // 单个角色（旧格式）
+		Roles []string `bson:"roles"` // 多个角色（新格式）
 	}
-	err = userCollection.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
+	err := userCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("用户不存在: %s", userID)
@@ -238,28 +235,62 @@ func (r *AuthRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([
 		return nil, fmt.Errorf("查询用户失败: %w", err)
 	}
 
-	// 如果没有角色，返回空列表
-	if len(user.Roles) == 0 {
+	// 收集所有角色名称
+	roleNames := []string{}
+
+	// 1. 处理旧的 role 字段（字符串）
+	if user.Role != "" {
+		roleNames = append(roleNames, user.Role)
+	}
+
+	// 2. 处理新的 roles 字段（数组）
+	for _, role := range user.Roles {
+		if role != "" && role != user.Role {
+			roleNames = append(roleNames, role)
+		}
+	}
+
+	// 如果没有任何角色，返回空列表
+	if len(roleNames) == 0 {
 		return []*authModel.Role{}, nil
 	}
 
-	// 查询角色详情
-	roleObjectIDs := make([]primitive.ObjectID, 0, len(user.Roles))
-	for _, roleID := range user.Roles {
+	// 尝试从 roles 集合查询角色对象（如果存在）
+	roleObjectIDs := make([]primitive.ObjectID, 0, len(roleNames))
+	for _, roleID := range roleNames {
 		if oid, err := primitive.ObjectIDFromHex(roleID); err == nil {
 			roleObjectIDs = append(roleObjectIDs, oid)
 		}
 	}
 
-	cursor, err := r.roleCollection.Find(ctx, bson.M{"_id": bson.M{"$in": roleObjectIDs}})
-	if err != nil {
-		return nil, fmt.Errorf("查询角色失败: %w", err)
-	}
-	defer cursor.Close(ctx)
-
 	var roles []*authModel.Role
-	if err = cursor.All(ctx, &roles); err != nil {
-		return nil, fmt.Errorf("解析角色失败: %w", err)
+
+	// 如果有有效的ObjectID，尝试从roles集合查询
+	if len(roleObjectIDs) > 0 {
+		cursor, err := r.roleCollection.Find(ctx, bson.M{"_id": bson.M{"$in": roleObjectIDs}})
+		if err == nil {
+			defer cursor.Close(ctx)
+			if err = cursor.All(ctx, &roles); err == nil && len(roles) > 0 {
+				return roles, nil
+			}
+		}
+	}
+
+	// 如果roles集合不存在或没有数据，从角色名称创建虚拟角色对象（向后兼容）
+	roles = make([]*authModel.Role, 0, len(roleNames))
+	for _, roleName := range roleNames {
+		// 跳过ObjectID格式的字符串（已经尝试查询过了）
+		if _, err := primitive.ObjectIDFromHex(roleName); err == nil {
+			continue
+		}
+
+		// 为角色名称创建虚拟角色对象
+		role := &authModel.Role{
+			ID:          roleName, // 使用名称作为ID
+			Name:        roleName,
+			Description: roleName + " role",
+		}
+		roles = append(roles, role)
 	}
 
 	return roles, nil

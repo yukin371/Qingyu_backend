@@ -3,7 +3,7 @@ package writer
 import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/stats"
-	statsService "Qingyu_backend/service/stats"
+	readingStats "Qingyu_backend/service/reader/stats"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,13 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// StatsApi 统计API
+// StatsApi 阅读/书店统计API
+// 职责：处理作品、章节的阅读统计
 type StatsApi struct {
-	statsService *statsService.StatsService
+	statsService *readingStats.ReadingStatsService
 }
 
 // NewStatsApi 创建统计API
-func NewStatsApi(statsService *statsService.StatsService) *StatsApi {
+func NewStatsApi(statsService *readingStats.ReadingStatsService) *StatsApi {
 	return &StatsApi{
 		statsService: statsService,
 	}

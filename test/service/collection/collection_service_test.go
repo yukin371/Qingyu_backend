@@ -10,7 +10,7 @@ import (
 
 	"Qingyu_backend/models/reader"
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // MockCollectionRepository Mock收藏Repository

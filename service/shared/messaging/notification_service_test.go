@@ -1,12 +1,11 @@
 package messaging
 
 import (
+	msgModel "Qingyu_backend/models/messaging"
 	"context"
 	"errors"
 	"testing"
 	"time"
-
-	msgModel "Qingyu_backend/models/shared/messaging"
 )
 
 // ============ Mock Services ============

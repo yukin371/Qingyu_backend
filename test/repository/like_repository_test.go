@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"Qingyu_backend/models/community"
 	"context"
 	"testing"
 	"time"
@@ -8,8 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/reader"
-	"Qingyu_backend/repository/mongodb/reading"
+	"Qingyu_backend/repository/mongodb/reader"
 )
 
 // TestLikeRepository 点赞Repository测试
@@ -24,9 +24,9 @@ func TestLikeRepository(t *testing.T) {
 	testBookID := primitive.NewObjectID().Hex()
 
 	t.Run("AddLike_Success", func(t *testing.T) {
-		like := &reader.Like{
+		like := &community.Like{
 			UserID:     testUserID,
-			TargetType: reader.LikeTargetTypeBook,
+			TargetType: community.LikeTargetTypeBook,
 			TargetID:   testBookID,
 			CreatedAt:  time.Now(),
 		}
@@ -39,9 +39,9 @@ func TestLikeRepository(t *testing.T) {
 	})
 
 	t.Run("AddLike_Duplicate", func(t *testing.T) {
-		like := &reader.Like{
+		like := &community.Like{
 			UserID:     testUserID,
-			TargetType: reader.LikeTargetTypeBook,
+			TargetType: community.LikeTargetTypeBook,
 			TargetID:   testBookID,
 			CreatedAt:  time.Now(),
 		}
@@ -55,7 +55,7 @@ func TestLikeRepository(t *testing.T) {
 	})
 
 	t.Run("IsLiked_True", func(t *testing.T) {
-		isLiked, err := repo.IsLiked(ctx, testUserID, reader.LikeTargetTypeBook, testBookID)
+		isLiked, err := repo.IsLiked(ctx, testUserID, community.LikeTargetTypeBook, testBookID)
 		assert.NoError(t, err)
 		assert.True(t, isLiked, "应该已经点赞")
 
@@ -64,7 +64,7 @@ func TestLikeRepository(t *testing.T) {
 
 	t.Run("IsLiked_False", func(t *testing.T) {
 		fakeBookID := primitive.NewObjectID().Hex()
-		isLiked, err := repo.IsLiked(ctx, testUserID, reader.LikeTargetTypeBook, fakeBookID)
+		isLiked, err := repo.IsLiked(ctx, testUserID, community.LikeTargetTypeBook, fakeBookID)
 		assert.NoError(t, err)
 		assert.False(t, isLiked, "应该未点赞")
 
@@ -72,7 +72,7 @@ func TestLikeRepository(t *testing.T) {
 	})
 
 	t.Run("GetLikeCount_Success", func(t *testing.T) {
-		count, err := repo.GetLikeCount(ctx, reader.LikeTargetTypeBook, testBookID)
+		count, err := repo.GetLikeCount(ctx, community.LikeTargetTypeBook, testBookID)
 		assert.NoError(t, err)
 		assert.Greater(t, count, int64(0))
 
@@ -80,11 +80,11 @@ func TestLikeRepository(t *testing.T) {
 	})
 
 	t.Run("RemoveLike_Success", func(t *testing.T) {
-		err := repo.RemoveLike(ctx, testUserID, reader.LikeTargetTypeBook, testBookID)
+		err := repo.RemoveLike(ctx, testUserID, community.LikeTargetTypeBook, testBookID)
 		assert.NoError(t, err)
 
 		// 验证已取消
-		isLiked, err := repo.IsLiked(ctx, testUserID, reader.LikeTargetTypeBook, testBookID)
+		isLiked, err := repo.IsLiked(ctx, testUserID, community.LikeTargetTypeBook, testBookID)
 		assert.NoError(t, err)
 		assert.False(t, isLiked, "应该已取消点赞")
 
@@ -93,7 +93,7 @@ func TestLikeRepository(t *testing.T) {
 
 	t.Run("RemoveLike_NotFound", func(t *testing.T) {
 		fakeBookID := primitive.NewObjectID().Hex()
-		err := repo.RemoveLike(ctx, testUserID, reader.LikeTargetTypeBook, fakeBookID)
+		err := repo.RemoveLike(ctx, testUserID, community.LikeTargetTypeBook, fakeBookID)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "不存在")
 
@@ -104,9 +104,9 @@ func TestLikeRepository(t *testing.T) {
 		// 添加多个点赞
 		for i := 0; i < 5; i++ {
 			bookID := primitive.NewObjectID().Hex()
-			like := &reader.Like{
+			like := &community.Like{
 				UserID:     testUserID,
-				TargetType: reader.LikeTargetTypeBook,
+				TargetType: community.LikeTargetTypeBook,
 				TargetID:   bookID,
 				CreatedAt:  time.Now(),
 			}
@@ -115,7 +115,7 @@ func TestLikeRepository(t *testing.T) {
 		}
 
 		// 查询
-		likes, total, err := repo.GetUserLikes(ctx, testUserID, reader.LikeTargetTypeBook, 1, 3)
+		likes, total, err := repo.GetUserLikes(ctx, testUserID, community.LikeTargetTypeBook, 1, 3)
 		assert.NoError(t, err)
 		assert.Greater(t, total, int64(0))
 		assert.LessOrEqual(t, len(likes), 3)
@@ -155,9 +155,9 @@ func TestLikeRepositoryBatch(t *testing.T) {
 		bookIDs[i] = primitive.NewObjectID().Hex()
 		// 为前3本书添加点赞
 		if i < 3 {
-			like := &reader.Like{
+			like := &community.Like{
 				UserID:     testUserID,
-				TargetType: reader.LikeTargetTypeBook,
+				TargetType: community.LikeTargetTypeBook,
 				TargetID:   bookIDs[i],
 				CreatedAt:  time.Now(),
 			}
@@ -167,7 +167,7 @@ func TestLikeRepositoryBatch(t *testing.T) {
 	}
 
 	t.Run("GetLikesCountBatch_Success", func(t *testing.T) {
-		counts, err := repo.GetLikesCountBatch(ctx, reader.LikeTargetTypeBook, bookIDs)
+		counts, err := repo.GetLikesCountBatch(ctx, community.LikeTargetTypeBook, bookIDs)
 		assert.NoError(t, err)
 		assert.Equal(t, len(bookIDs), len(counts))
 
@@ -184,7 +184,7 @@ func TestLikeRepositoryBatch(t *testing.T) {
 	})
 
 	t.Run("GetUserLikeStatusBatch_Success", func(t *testing.T) {
-		status, err := repo.GetUserLikeStatusBatch(ctx, testUserID, reader.LikeTargetTypeBook, bookIDs)
+		status, err := repo.GetUserLikeStatusBatch(ctx, testUserID, community.LikeTargetTypeBook, bookIDs)
 		assert.NoError(t, err)
 		assert.Equal(t, len(bookIDs), len(status))
 
@@ -213,9 +213,9 @@ func TestLikeRepositoryCommentLike(t *testing.T) {
 	testCommentID := primitive.NewObjectID().Hex()
 
 	t.Run("LikeComment_Success", func(t *testing.T) {
-		like := &reader.Like{
+		like := &community.Like{
 			UserID:     testUserID,
-			TargetType: reader.LikeTargetTypeComment,
+			TargetType: community.LikeTargetTypeComment,
 			TargetID:   testCommentID,
 			CreatedAt:  time.Now(),
 		}
@@ -224,7 +224,7 @@ func TestLikeRepositoryCommentLike(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 验证点赞状态
-		isLiked, err := repo.IsLiked(ctx, testUserID, reader.LikeTargetTypeComment, testCommentID)
+		isLiked, err := repo.IsLiked(ctx, testUserID, community.LikeTargetTypeComment, testCommentID)
 		assert.NoError(t, err)
 		assert.True(t, isLiked)
 
@@ -232,11 +232,11 @@ func TestLikeRepositoryCommentLike(t *testing.T) {
 	})
 
 	t.Run("UnlikeComment_Success", func(t *testing.T) {
-		err := repo.RemoveLike(ctx, testUserID, reader.LikeTargetTypeComment, testCommentID)
+		err := repo.RemoveLike(ctx, testUserID, community.LikeTargetTypeComment, testCommentID)
 		assert.NoError(t, err)
 
 		// 验证已取消
-		isLiked, err := repo.IsLiked(ctx, testUserID, reader.LikeTargetTypeComment, testCommentID)
+		isLiked, err := repo.IsLiked(ctx, testUserID, community.LikeTargetTypeComment, testCommentID)
 		assert.NoError(t, err)
 		assert.False(t, isLiked)
 

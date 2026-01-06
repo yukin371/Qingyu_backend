@@ -1,12 +1,12 @@
 package recommendation
 
 import (
+	recModel "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
 	"sort"
 	"time"
 
-	recModel "Qingyu_backend/models/shared/recommendation"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
