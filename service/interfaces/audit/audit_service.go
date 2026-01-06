@@ -34,6 +34,7 @@ type ContentAuditService interface {
 	// 管理方法
 	GetPendingReviews(ctx context.Context, limit int) ([]*audit.AuditRecord, error)
 	GetHighRiskAudits(ctx context.Context, minRiskLevel int, limit int) ([]*audit.AuditRecord, error)
+	GetAuditStatistics(ctx context.Context) (interface{}, error)
 }
 
 // AuditCheckResult 审核检测结果

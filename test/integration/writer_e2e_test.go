@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/stats"
 	"Qingyu_backend/repository/mongodb"
 	"Qingyu_backend/service/audit"
-	documentService "Qingyu_backend/service/document"
-	projectService "Qingyu_backend/service/project"
-	statsService "Qingyu_backend/service/stats"
+	documentService "Qingyu_backend/service/writer/document"
+	projectService "Qingyu_backend/service/writer/project"
+	statsService "Qingyu_backend/service/shared/stats"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -74,7 +74,7 @@ func TestWriterE2E_CompleteWorkflow(t *testing.T) {
 		req := &documentService.CreateDocumentRequest{
 			ProjectID: projectID,
 			Title:     "第一章：穿越异世",
-			Type:      document.DocumentTypeChapter,
+			Type:      writer.DocumentTypeChapter,
 			ParentID:  "",
 			Order:     1,
 		}
@@ -354,7 +354,7 @@ func TestWriterE2E_ConcurrentOperations(t *testing.T) {
 	req := &documentService.CreateDocumentRequest{
 		ProjectID: projectID,
 		Title:     "并发测试章节",
-		Type:      document.DocumentTypeChapter,
+		Type:      writer.DocumentTypeChapter,
 	}
 
 	resp, err := documentSvc.CreateDocument(ctx, req)

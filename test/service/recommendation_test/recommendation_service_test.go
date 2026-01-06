@@ -2,14 +2,13 @@ package recommendation_test
 
 import (
 	recommendation2 "Qingyu_backend/models/recommendation"
+	recommendationService "Qingyu_backend/service/recommendation"
 	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"Qingyu_backend/service/recommendation"
 )
 
 // ===========================
@@ -66,7 +65,7 @@ func TestRecommendationService_RecordBehavior(t *testing.T) {
 	mockItemFeatureRepo := new(MockItemFeatureRepo)
 	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
+	service := recommendationService.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("成功记录行为", func(t *testing.T) {
 		ctx := context.Background()
@@ -105,7 +104,7 @@ func TestRecommendationService_GetPersonalizedRecommendations(t *testing.T) {
 	mockItemFeatureRepo := new(MockItemFeatureRepo)
 	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
+	service := recommendationService.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("获取推荐-用户有画像", func(t *testing.T) {
 		ctx := context.Background()
@@ -163,10 +162,15 @@ func TestRecommendationService_GetSimilarItems(t *testing.T) {
 	mockItemFeatureRepo := new(MockItemFeatureRepo)
 	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
+	service := recommendationService.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	t.Run("获取相似物品", func(t *testing.T) {
 		ctx := context.Background()
+
+		// Mock GetByItemID返回nil（物品特征不存在）
+		mockItemFeatureRepo.On("GetByItemID", ctx, "book123").Return(nil, nil)
+		// Mock热门推荐作为fallback
+		mockHotRepo.On("GetHotBooks", ctx, 10, 7).Return([]string{}, nil)
 
 		similarItems, err := service.GetSimilarItems(ctx, "book123", 10)
 
@@ -174,6 +178,9 @@ func TestRecommendationService_GetSimilarItems(t *testing.T) {
 		assert.NotNil(t, similarItems)
 		// 当前是占位实现，返回空列表
 		assert.Empty(t, similarItems)
+
+		mockItemFeatureRepo.AssertExpectations(t)
+		mockHotRepo.AssertExpectations(t)
 	})
 }
 
@@ -183,7 +190,7 @@ func TestRecommendationService_ServiceInfo(t *testing.T) {
 	mockItemFeatureRepo := new(MockItemFeatureRepo)
 	mockHotRepo := new(MockHotRecommendationRepo)
 
-	service := recommendation.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
+	service := recommendationService.NewRecommendationService(mockBehaviorRepo, mockProfileRepo, mockItemFeatureRepo, mockHotRepo)
 
 	name, version := service.ServiceInfo()
 

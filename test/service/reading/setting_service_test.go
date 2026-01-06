@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
-	"Qingyu_backend/service/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
+	"Qingyu_backend/service/reader"
 )
 
 // MockReadingSettingsRepository Mock实现
 type MockReadingSettingsRepository struct {
 	mock.Mock
-	readingRepo.ReadingSettingsRepository // 嵌入接口避免实现所有方法
+	readerRepo.ReadingSettingsRepository // 嵌入接口避免实现所有方法
 }
 
 func (m *MockReadingSettingsRepository) GetByUserID(ctx context.Context, userID string) (*reader.ReadingSettings, error) {

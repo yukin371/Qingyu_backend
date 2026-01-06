@@ -31,6 +31,14 @@ type UserService interface {
 	UpdatePassword(ctx context.Context, req *UpdatePasswordRequest) (*UpdatePasswordResponse, error)
 	ResetPassword(ctx context.Context, req *ResetPasswordRequest) (*ResetPasswordResponse, error)
 
+	// 邮箱验证
+	SendEmailVerification(ctx context.Context, req *SendEmailVerificationRequest) (*SendEmailVerificationResponse, error)
+	VerifyEmail(ctx context.Context, req *VerifyEmailRequest) (*VerifyEmailResponse, error)
+
+	// 完整密码重置流程
+	RequestPasswordReset(ctx context.Context, req *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
+	ConfirmPasswordReset(ctx context.Context, req *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)
+
 	// 用户权限管理
 	AssignRole(ctx context.Context, req *AssignRoleRequest) (*AssignRoleResponse, error)
 	RemoveRole(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
@@ -122,6 +130,7 @@ type RegisterUserResponse struct {
 type LoginUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
+	ClientIP string `json:"client_ip,omitempty"` // 客户端IP地址
 }
 
 // LoginUserResponse 登录用户响应
@@ -223,4 +232,58 @@ type GetUserPermissionsRequest struct {
 // GetUserPermissionsResponse 获取用户权限响应
 type GetUserPermissionsResponse struct {
 	Permissions []string `json:"permissions"`
+}
+
+// 邮箱验证相关请求/响应
+
+// SendEmailVerificationRequest 发送邮箱验证请求
+type SendEmailVerificationRequest struct {
+	UserID string `json:"user_id" validate:"required"`
+	Email  string `json:"email" validate:"required,email"`
+}
+
+// SendEmailVerificationResponse 发送邮箱验证响应
+type SendEmailVerificationResponse struct {
+	Success      bool   `json:"success"`
+	Message      string `json:"message,omitempty"`
+	ExpiresIn    int    `json:"expires_in"` // 验证码有效期（秒）
+}
+
+// VerifyEmailRequest 验证邮箱请求
+type VerifyEmailRequest struct {
+	UserID string `json:"user_id" validate:"required"`
+	Code   string `json:"code" validate:"required"`
+}
+
+// VerifyEmailResponse 验证邮箱响应
+type VerifyEmailResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
+}
+
+// 完整密码重置流程相关请求/响应
+
+// RequestPasswordResetRequest 请求密码重置
+type RequestPasswordResetRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+// RequestPasswordResetResponse 请求密码重置响应
+type RequestPasswordResetResponse struct {
+	Success   bool   `json:"success"`
+	Message   string `json:"message,omitempty"`
+	ExpiresIn int    `json:"expires_in"` // Token有效期（秒）
+}
+
+// ConfirmPasswordResetRequest 确认密码重置
+type ConfirmPasswordResetRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Token    string `json:"token" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
+}
+
+// ConfirmPasswordResetResponse 确认密码重置响应
+type ConfirmPasswordResetResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
 }

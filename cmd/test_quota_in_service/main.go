@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	fmt.Println("========== 测试服务中的配额检查 ==========\n")
+	fmt.Println("========== 测试服务中的配额检查 ==========")
 
 	// 1. 加载配置
 	_, err := config.LoadConfig(".")

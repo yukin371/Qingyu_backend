@@ -129,9 +129,13 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 		roleNames = []string{"reader"}
 	}
 
-	// 2.5. MVP: 检查多端登录限制（最多5台设备）
-	if err := s.sessionService.CheckDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
-		return nil, fmt.Errorf("登录失败: %w", err)
+	// 2.5. MVP: 强制执行多端登录限制（最多5台设备，超限自动踢出最老设备）
+	if err := s.sessionService.EnforceDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
+		// 记录错误但不中断登录（宽松策略）
+		zap.L().Warn("设备限制执行失败，允许登录",
+			zap.String("user_id", loginResp.User.ID),
+			zap.Error(err),
+		)
 	}
 
 	// 3. 生成JWT Token

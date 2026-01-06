@@ -53,11 +53,11 @@ Thumbs.db
 *.disabled
 
 # IDE 相关
-
 .vscode/
 .idea/
 .cursor/
 .trae/
+.claude/
 *.swp
 *.swo
 *~
@@ -100,3 +100,4 @@ tmp/
 # 其他
 *.bak
 *.backup
+scripts/

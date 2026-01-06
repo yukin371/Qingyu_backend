@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/reader"
-	"Qingyu_backend/repository/mongodb/reading"
+	readerRepo "Qingyu_backend/repository/mongodb/reader"
 )
 
 // TestCollectionRepository 收藏Repository测试
@@ -17,7 +17,7 @@ func TestCollectionRepository(t *testing.T) {
 	db := setupTestDB(t)
 	defer cleanupTestDB(t, db)
 
-	repo := reading.NewMongoCollectionRepository(db)
+	repo := readerRepo.NewMongoCollectionRepository(db)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -193,7 +193,7 @@ func TestCollectionRepositoryTags(t *testing.T) {
 	db := setupTestDB(t)
 	defer cleanupTestDB(t, db)
 
-	repo := reading.NewMongoCollectionRepository(db)
+	repo := readerRepo.NewMongoCollectionRepository(db)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -232,7 +232,7 @@ func TestCollectionFolderRepository(t *testing.T) {
 	db := setupTestDB(t)
 	defer cleanupTestDB(t, db)
 
-	repo := reading.NewMongoCollectionRepository(db)
+	repo := readerRepo.NewMongoCollectionRepository(db)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -387,7 +387,7 @@ func TestCollectionRepositoryPublic(t *testing.T) {
 	db := setupTestDB(t)
 	defer cleanupTestDB(t, db)
 
-	repo := reading.NewMongoCollectionRepository(db)
+	repo := readerRepo.NewMongoCollectionRepository(db)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -441,7 +441,7 @@ func TestCollectionRepositoryFolderQuery(t *testing.T) {
 	db := setupTestDB(t)
 	defer cleanupTestDB(t, db)
 
-	repo := reading.NewMongoCollectionRepository(db)
+	repo := readerRepo.NewMongoCollectionRepository(db)
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()

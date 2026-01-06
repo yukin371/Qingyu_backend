@@ -37,10 +37,22 @@ type JWTConfig struct {
 
 // AIConfig AI配置
 type AIConfig struct {
-	APIKey      string `mapstructure:"api_key"`
-	BaseURL     string `mapstructure:"base_url"`
-	MaxTokens   int    `mapstructure:"max_tokens"`
-	Temperature int    `mapstructure:"temperature"`
+	APIKey        string                 `mapstructure:"api_key"`
+	BaseURL       string                 `mapstructure:"base_url"`
+	MaxTokens     int                    `mapstructure:"max_tokens"`
+	Temperature   int                    `mapstructure:"temperature"`
+	PythonService *PythonAIServiceConfig `mapstructure:"python_service"`
+}
+
+// PythonAIServiceConfig Python AI服务配置
+type PythonAIServiceConfig struct {
+	Host           string `mapstructure:"host"`
+	GrpcPort       int    `mapstructure:"grpc_port"`
+	EmbeddingModel string `mapstructure:"embedding_model"`
+	MilvusHost     string `mapstructure:"milvus_host"`
+	MilvusPort     int    `mapstructure:"milvus_port"`
+	RedisHost      string `mapstructure:"redis_host"`
+	RedisPort      int    `mapstructure:"redis_port"`
 }
 
 // ExternalAPIConfig 外部API配置（用于适配器管理器）
@@ -311,6 +323,15 @@ func setDefaults() {
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)
+
+	// Python AI服务默认配置
+	v.SetDefault("ai.python_service.host", "localhost")
+	v.SetDefault("ai.python_service.grpc_port", 50052)
+	v.SetDefault("ai.python_service.embedding_model", "BAAI/bge-large-zh-v1.5")
+	v.SetDefault("ai.python_service.milvus_host", "localhost")
+	v.SetDefault("ai.python_service.milvus_port", 19530)
+	v.SetDefault("ai.python_service.redis_host", "localhost")
+	v.SetDefault("ai.python_service.redis_port", 6379)
 
 	// 邮件默认配置
 	v.SetDefault("email.enabled", false)

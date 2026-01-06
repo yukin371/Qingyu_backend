@@ -6,9 +6,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 
-	"Qingyu_backend/pkg/validator"
+	appValidator "Qingyu_backend/pkg/validator"
 )
+
+// GetValidator 获取全局验证器实例
+func GetValidator() *validator.Validate {
+	return appValidator.GetValidator()
+}
 
 // ValidateRequest 验证请求并返回友好错误
 func ValidateRequest(c *gin.Context, req interface{}) bool {
@@ -28,7 +34,7 @@ func ValidateRequest(c *gin.Context, req interface{}) bool {
 	}
 
 	// 验证请求
-	validationErrors := validator.ValidateStructWithErrors(req)
+	validationErrors := appValidator.ValidateStructWithErrors(req)
 	if len(validationErrors) > 0 {
 		c.JSON(http.StatusBadRequest, ValidationErrorResponse{
 			Code:    400,
@@ -54,7 +60,7 @@ func ValidateQueryParams(c *gin.Context, params interface{}) bool {
 	}
 
 	// 验证参数
-	validationErrors := validator.ValidateStructWithErrors(params)
+	validationErrors := appValidator.ValidateStructWithErrors(params)
 	if len(validationErrors) > 0 {
 		c.JSON(http.StatusBadRequest, ValidationErrorResponse{
 			Code:    400,
@@ -65,6 +71,17 @@ func ValidateQueryParams(c *gin.Context, params interface{}) bool {
 	}
 
 	return true
+}
+
+// HandleValidationError 处理验证错误
+func HandleValidationError(c *gin.Context, err error) {
+	c.JSON(http.StatusBadRequest, ValidationErrorResponse{
+		Code:    400,
+		Message: "请求参数验证失败",
+		Errors:  map[string]string{
+			"validation": err.Error(),
+		},
+	})
 }
 
 // ValidationErrorResponse 验证错误响应（字段级错误）

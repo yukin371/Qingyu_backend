@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	bookstoreService "Qingyu_backend/service/bookstore"
+	"Qingyu_backend/api/v1/shared"
 )
 
 // BookstoreAPI 书城API处理器
@@ -54,18 +55,43 @@ type PaginatedResponse struct {
 func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 	data, err := api.service.GetHomepageData(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取首页数据失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取首页数据失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取首页数据成功",
-		Data:    data,
-	})
+	shared.Success(c, http.StatusOK, "获取首页数据成功", data)
+}
+
+// GetBooks 获取书籍列表
+//
+//	@Summary		获取书籍列表
+//	@Description	获取所有书籍列表，支持分页
+//	@Tags			书籍
+//	@Accept			json
+//	@Produce		json
+//	@Param			page	query		int	false	"页码"	default(1)
+//	@Param			size	query		int	false	"每页数量"	default(20)
+//	@Success 200 {object} PaginatedResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/bookstore/books [get]
+func (api *BookstoreAPI) GetBooks(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 || size > 100 {
+		size = 20
+	}
+
+	books, total, err := api.service.GetAllBooks(c.Request.Context(), page, size)
+	if err != nil {
+		shared.InternalError(c, "获取书籍列表失败", err)
+		return
+	}
+
+	shared.Paginated(c, books, total, page, size, "获取书籍列表成功")
 }
 
 // GetBookByID 根据ID获取书籍详情
@@ -84,35 +110,23 @@ func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	book, err := api.service.GetBookByID(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "book not found" || err.Error() == "book not available" {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "书籍不存在或不可用",
-			})
+			// 按需返回空数据而非404，便于前端容错显示
+			shared.Success(c, http.StatusOK, "书籍不存在或不可用", nil)
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取书籍详情失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取书籍详情失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取书籍详情成功",
-		Data:    book,
-	})
+	shared.Success(c, http.StatusOK, "获取书籍详情成功", book)
 }
 
 // GetBooksByCategory 根据分类获取书籍列表
@@ -130,21 +144,15 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/categories/{categoryId}/books [get]
 func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
-	categoryID := c.Param("categoryId")
+	categoryID := c.Param("id")
 	if categoryID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "分类ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "分类ID不能为空")
 		return
 	}
 
 	// 验证ObjectID格式
 	if _, err := primitive.ObjectIDFromHex(categoryID); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "分类ID格式无效",
-		})
+		shared.BadRequest(c, "参数错误", "分类ID格式无效")
 		return
 	}
 
@@ -160,21 +168,11 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 
 	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), categoryID, page, size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取分类书籍失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取分类书籍失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取分类书籍成功",
-		Data:    books,
-		Total:   total,
-		Page:    page,
-		Size:    size,
-	})
+	shared.Paginated(c, books, total, page, size, "获取分类书籍成功")
 }
 
 // GetRecommendedBooks 获取推荐书籍
@@ -200,22 +198,13 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
+	books, total, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取推荐书籍失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取推荐书籍失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取推荐书籍成功",
-		Data:    books,
-		Page:    page,
-		Size:    size,
-	})
+	shared.Paginated(c, books, total, page, size, "获取推荐书籍成功")
 }
 
 // GetFeaturedBooks 获取精选书籍
@@ -241,22 +230,13 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
+	books, total, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取精选书籍失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取精选书籍失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取精选书籍成功",
-		Data:    books,
-		Page:    page,
-		Size:    size,
-	})
+	shared.Paginated(c, books, total, page, size, "获取精选书籍成功")
 }
 
 // SearchBooks 搜索书籍
@@ -315,10 +295,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	filter.Offset = (page - 1) * size
 
 	if keyword == "" && filter.CategoryID == nil && filter.Author == nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请提供搜索关键词或过滤条件",
-		})
+		shared.BadRequest(c, "参数错误", "请提供搜索关键词或过滤条件")
 		return
 	}
 
@@ -329,10 +306,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 
 	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "搜索书籍失败: " + err.Error(),
-		})
+		shared.InternalError(c, "搜索书籍失败", err)
 		return
 	}
 
@@ -347,13 +321,12 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		"total": total,
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "搜索书籍成功",
-		Data:    responseData,
-		Total:   total,
-		Page:    page,
-		Size:    size,
+	// 使用shared包的分页响应，带上额外数据
+	c.JSON(http.StatusOK, shared.APIResponse{
+		Code:      http.StatusOK,
+		Message:   "搜索书籍成功",
+		Data:      responseData,
+		Timestamp: 0, // shared.Success会设置这个
 	})
 }
 
@@ -370,18 +343,16 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 	tree, err := api.service.GetCategoryTree(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取分类树失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取分类树失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取分类树成功",
-		Data:    tree,
-	})
+	// 确保返回空数组而不是 nil
+	if tree == nil {
+		tree = []*bookstore2.CategoryTree{}
+	}
+
+	shared.Success(c, http.StatusOK, "获取分类树成功", tree)
 }
 
 // GetCategoryByID 根据ID获取分类详情
@@ -400,35 +371,22 @@ func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "分类ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "分类ID不能为空")
 		return
 	}
 
 	category, err := api.service.GetCategoryByID(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "category not found" || err.Error() == "category not available" {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "分类不存在或不可用",
-			})
+			shared.NotFound(c, "分类不存在或不可用")
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取分类详情失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取分类详情失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取分类详情成功",
-		Data:    category,
-	})
+	shared.Success(c, http.StatusOK, "获取分类详情成功", category)
 }
 
 // GetActiveBanners 获取激活的Banner列表
@@ -450,18 +408,11 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 
 	banners, err := api.service.GetActiveBanners(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取Banner列表失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取Banner列表失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取Banner列表成功",
-		Data:    banners,
-	})
+	shared.Success(c, http.StatusOK, "获取Banner列表成功", banners)
 }
 
 // IncrementBookView 增加书籍浏览量
@@ -480,35 +431,23 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "书籍ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的书籍ID格式",
-		})
+		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
 	}
 
 	err = api.service.IncrementBookView(c.Request.Context(), id.Hex())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "增加浏览量失败: " + err.Error(),
-		})
+		shared.InternalError(c, "增加浏览量失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "浏览量增加成功",
-	})
+	shared.Success(c, http.StatusOK, "浏览量增加成功", nil)
 }
 
 // IncrementBannerClick 增加Banner点击次数
@@ -527,34 +466,22 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "Banner ID不能为空",
-		})
+		shared.BadRequest(c, "参数错误", "Banner ID不能为空")
 		return
 	}
 
 	err := api.service.IncrementBannerClick(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "banner not found" || err.Error() == "banner not available" {
-			c.JSON(http.StatusNotFound, APIResponse{
-				Code:    404,
-				Message: "Banner不存在或不可用",
-			})
+			shared.NotFound(c, "Banner不存在或不可用")
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "增加点击次数失败: " + err.Error(),
-		})
+		shared.InternalError(c, "增加点击次数失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "点击次数增加成功",
-	})
+	shared.Success(c, http.StatusOK, "点击次数增加成功", nil)
 }
 
 // GetRealtimeRanking 获取实时榜
@@ -576,18 +503,11 @@ func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetRealtimeRanking(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取实时榜失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取实时榜失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取实时榜成功",
-		Data:    rankings,
-	})
+	shared.Success(c, http.StatusOK, "获取实时榜成功", rankings)
 }
 
 // GetWeeklyRanking 获取周榜
@@ -611,18 +531,11 @@ func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetWeeklyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取周榜失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取周榜失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取周榜成功",
-		Data:    rankings,
-	})
+	shared.Success(c, http.StatusOK, "获取周榜成功", rankings)
 }
 
 // GetMonthlyRanking 获取月榜
@@ -646,18 +559,11 @@ func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetMonthlyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取月榜失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取月榜失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取月榜成功",
-		Data:    rankings,
-	})
+	shared.Success(c, http.StatusOK, "获取月榜成功", rankings)
 }
 
 // GetNewbieRanking 获取新人榜
@@ -681,18 +587,11 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetNewbieRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取新人榜失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取新人榜失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取新人榜成功",
-		Data:    rankings,
-	})
+	shared.Success(c, http.StatusOK, "获取新人榜成功", rankings)
 }
 
 // GetRankingByType 根据类型获取榜单
@@ -712,10 +611,7 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 	rankingType := c.Param("type")
 	if !bookstore2.IsValidRankingType(rankingType) {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的榜单类型",
-		})
+		shared.BadRequest(c, "参数错误", "无效的榜单类型")
 		return
 	}
 
@@ -727,16 +623,9 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 
 	rankings, err := api.service.GetRankingByType(c.Request.Context(), bookstore2.RankingType(rankingType), period, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取榜单失败: " + err.Error(),
-		})
+		shared.InternalError(c, "获取榜单失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取榜单成功",
-		Data:    rankings,
-	})
+	shared.Success(c, http.StatusOK, "获取榜单成功", rankings)
 }

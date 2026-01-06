@@ -1,12 +1,11 @@
 package auth
 
 import (
+	authModel "Qingyu_backend/models/auth"
 	"context"
 	"fmt"
 	"testing"
 	"time"
-
-	authModel "Qingyu_backend/models/shared/auth"
 )
 
 // MockAuthRepository Mock认证Repository

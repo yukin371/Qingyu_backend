@@ -5,18 +5,18 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
-	sharedService "Qingyu_backend/service/shared"
+	messagingService "Qingyu_backend/service/messaging"
 
 	"github.com/gin-gonic/gin"
 )
 
 // AnnouncementAPI 公告管理API
 type AnnouncementAPI struct {
-	announcementService sharedService.AnnouncementService
+	announcementService messagingService.AnnouncementService
 }
 
 // NewAnnouncementAPI 创建公告管理API实例
-func NewAnnouncementAPI(announcementService sharedService.AnnouncementService) *AnnouncementAPI {
+func NewAnnouncementAPI(announcementService messagingService.AnnouncementService) *AnnouncementAPI {
 	return &AnnouncementAPI{
 		announcementService: announcementService,
 	}
@@ -36,13 +36,13 @@ func NewAnnouncementAPI(announcementService sharedService.AnnouncementService) *
 // @Param offset query int false "偏移量" default(0)
 // @Param sortBy query string false "排序字段(priority/created_at/view_count)" default(priority)
 // @Param sortOrder query string false "排序方向(asc/desc)" default(desc)
-// @Success 200 {object} shared.APIResponse{data=sharedService.GetAnnouncementsResponse}
+// @Success 200 {object} shared.APIResponse{data=messagingService.GetAnnouncementsResponse}
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements [get]
 func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 	// 解析查询参数
-	req := &sharedService.GetAnnouncementsRequest{
+	req := &messagingService.GetAnnouncementsRequest{
 		Limit:     20,
 		Offset:    0,
 		SortBy:    "priority",
@@ -64,7 +64,7 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 
 	// 解析targetUsers
 	if targetUsers := c.Query("targetUsers"); targetUsers != "" {
-		req.TargetUsers = &targetUsers
+		req.TargetRole = &targetUsers
 	}
 
 	// 解析limit
@@ -137,14 +137,14 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body sharedService.CreateAnnouncementRequest true "创建公告请求"
+// @Param request body messagingService.CreateAnnouncementRequest true "创建公告请求"
 // @Success 201 {object} shared.APIResponse{data=models.Announcement}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements [post]
 func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
-	var req sharedService.CreateAnnouncementRequest
+	var req messagingService.CreateAnnouncementRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.BadRequest(c, "参数错误", err.Error())
 		return
@@ -172,7 +172,7 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Param request body sharedService.UpdateAnnouncementRequest true "更新公告请求"
+// @Param request body messagingService.UpdateAnnouncementRequest true "更新公告请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
@@ -186,7 +186,7 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 		return
 	}
 
-	var req sharedService.UpdateAnnouncementRequest
+	var req messagingService.UpdateAnnouncementRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.BadRequest(c, "参数错误", err.Error())
 		return
@@ -236,14 +236,14 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body sharedService.BatchUpdateAnnouncementStatusRequest true "批量更新状态请求"
+// @Param request body messagingService.BatchUpdateAnnouncementStatusRequest true "批量更新状态请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/batch-status [put]
 func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
-	var req sharedService.BatchUpdateAnnouncementStatusRequest
+	var req messagingService.BatchUpdateAnnouncementStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.BadRequest(c, "参数错误", err.Error())
 		return

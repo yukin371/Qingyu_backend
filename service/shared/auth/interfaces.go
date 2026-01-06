@@ -73,7 +73,8 @@ type SessionService interface {
 	DestroySession(ctx context.Context, sessionID string) error
 	RefreshSession(ctx context.Context, sessionID string) error
 	// MVP: 多端登录限制相关方法
-	CheckDeviceLimit(ctx context.Context, userID string, maxDevices int) error
+	CheckDeviceLimit(ctx context.Context, userID string, maxDevices int) error   // 只检查不踢出
+	EnforceDeviceLimit(ctx context.Context, userID string, maxDevices int) error // 检查+自动踢出（FIFO）
 	GetUserSessions(ctx context.Context, userID string) ([]*Session, error)
 	DestroyUserSessions(ctx context.Context, userID string) error
 }

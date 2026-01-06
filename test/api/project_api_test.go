@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	writerAPI "Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/service/project"
+	"Qingyu_backend/service/writer/project"
 )
 
 // === 测试辅助函数 ===

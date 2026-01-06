@@ -787,3 +787,37 @@ func (r *MongoBookDetailRepository) Exists(ctx context.Context, id primitive.Obj
 	}
 	return count > 0, nil
 }
+
+// CountByAuthorID 根据作者ID统计书籍数量
+func (r *MongoBookDetailRepository) CountByAuthorID(ctx context.Context, authorID primitive.ObjectID) (int64, error) {
+	filter := bson.M{"author_id": authorID}
+	return r.collection.CountDocuments(ctx, filter)
+}
+
+// CountByFilter 根据过滤条件统计书籍数量
+// 注意：复用现有 SearchByFilter 的过滤逻辑
+func (r *MongoBookDetailRepository) CountByFilter(ctx context.Context, filterObj *BookstoreInterface.BookDetailFilter) (int64, error) {
+	// 构建查询条件（与 SearchByFilter 中的逻辑保持一致）
+	query := bson.M{}
+
+	if filterObj.Title != "" {
+		query["title"] = bson.M{"$regex": filterObj.Title, "$options": "i"}
+	}
+	if filterObj.Author != "" {
+		query["author"] = bson.M{"$regex": filterObj.Author, "$options": "i"}
+	}
+	if filterObj.AuthorID != nil {
+		query["author_id"] = *filterObj.AuthorID
+	}
+	if len(filterObj.CategoryIDs) > 0 {
+		query["category_ids"] = bson.M{"$in": filterObj.CategoryIDs}
+	}
+	if len(filterObj.Tags) > 0 {
+		query["tags"] = bson.M{"$in": filterObj.Tags}
+	}
+	if filterObj.Status != nil {
+		query["status"] = *filterObj.Status
+	}
+
+	return r.collection.CountDocuments(ctx, query)
+}

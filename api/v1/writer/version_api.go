@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/project"
+	"Qingyu_backend/service/writer/project"
 )
 
 // VersionApi 版本API

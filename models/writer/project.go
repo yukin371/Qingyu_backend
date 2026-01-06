@@ -1,21 +1,29 @@
 package writer
 
 import (
-	"fmt"
 	"time"
+
+	"Qingyu_backend/models/writer/base"
+	"Qingyu_backend/models/writer/types"
 )
 
 // Project 项目模型
 type Project struct {
-	ID         string        `bson:"_id,omitempty" json:"id"`
-	AuthorID   string        `bson:"author_id" json:"authorId" validate:"required"`
-	Title      string        `bson:"title" json:"title" validate:"required,min=1,max=100"`
-	Summary    string        `bson:"summary,omitempty" json:"summary,omitempty"`
-	CoverURL   string        `bson:"cover_url,omitempty" json:"coverUrl,omitempty"`
-	Status     ProjectStatus `bson:"status" json:"status"`
-	Category   string        `bson:"category,omitempty" json:"category,omitempty"`
-	Tags       []string      `bson:"tags,omitempty" json:"tags,omitempty"`
-	Visibility Visibility    `bson:"visibility" json:"visibility"`
+	base.IdentifiedEntity // ID
+	base.OwnedEntity      // AuthorID
+	base.TitledEntity     // Title
+	base.Timestamps       // CreatedAt, UpdatedAt, DeletedAt
+
+	// 写作类型（保持BSON字段名不变，确保数据库兼容）
+	WritingType string `bson:"writing_type" json:"writingType" validate:"required"` // novel, article, script
+
+	// 详细信息（保持BSON字段名不变，确保数据库兼容）
+	Summary    string        `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=500"`
+	CoverURL   string        `bson:"cover_url,omitempty" json:"coverUrl,omitempty" validate:"omitempty,url"`
+	Status     ProjectStatus `bson:"status" json:"status" validate:"required"`
+	Category   string        `bson:"category,omitempty" json:"category,omitempty" validate:"max=50"`
+	Tags       []string      `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=10"`
+	Visibility Visibility    `bson:"visibility" json:"visibility" validate:"required"`
 
 	// 统计信息
 	Statistics ProjectStats `bson:"statistics" json:"statistics"`
@@ -26,11 +34,8 @@ type Project struct {
 	// 协作信息
 	Collaborators []Collaborator `bson:"collaborators,omitempty" json:"collaborators,omitempty"`
 
-	// 时间戳
-	CreatedAt   time.Time  `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time  `bson:"updated_at" json:"updatedAt"`
+	// 发布时间（项目特有字段）
 	PublishedAt *time.Time `bson:"published_at,omitempty" json:"publishedAt,omitempty"`
-	DeletedAt   *time.Time `bson:"deleted_at,omitempty" json:"deletedAt,omitempty"`
 }
 
 // ProjectStatus 项目状态
@@ -86,7 +91,7 @@ const (
 
 // IsOwner 判断用户是否为项目所有者
 func (p *Project) IsOwner(userID string) bool {
-	return p.AuthorID == userID
+	return p.OwnedEntity.AuthorID == userID
 }
 
 // CanEdit 判断用户是否可以编辑项目
@@ -169,20 +174,36 @@ func (r CollaboratorRole) String() string {
 
 // Validate 验证项目数据的有效性
 func (p *Project) Validate() error {
+	// 验证标题
+	if err := base.ValidateTitle(p.Title, 100); err != nil {
+		return err
+	}
+
+	// 验证作者ID
 	if p.AuthorID == "" {
-		return fmt.Errorf("作者ID不能为空")
+		return base.ErrAuthorIDRequired
 	}
-	if p.Title == "" {
-		return fmt.Errorf("项目标题不能为空")
+
+	// 验证写作类型
+	if p.WritingType == "" {
+		p.WritingType = "novel" // 默认为小说类型
 	}
-	if len(p.Title) > 100 {
-		return fmt.Errorf("项目标题不能超过100字符")
+	if !types.GlobalRegistry.ValidateWritingType(p.WritingType) {
+		return base.ErrInvalidWritingType
 	}
+
+	// 验证封面URL
+	if err := base.ValidateURL(p.CoverURL); err != nil {
+		return err
+	}
+
+	// 验证状态和可见性
 	if !p.Status.IsValid() {
-		return fmt.Errorf("无效的项目状态: %s", p.Status)
+		return base.ErrInvalidStatus
 	}
 	if !p.Visibility.IsValid() {
-		return fmt.Errorf("无效的可见性设置: %s", p.Visibility)
+		return base.ErrInvalidVisibility
 	}
+
 	return nil
 }

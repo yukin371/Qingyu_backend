@@ -12,15 +12,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"Qingyu_backend/global"
-	"Qingyu_backend/repository/mongodb/reading"
+	readerRepo "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/test/testutil"
 )
 
-var annotationRepo *reading.MongoAnnotationRepository
+var annotationRepo *readerRepo.MongoAnnotationRepository
 
 func setupAnnotationTest(t *testing.T) {
 	testutil.SetupTestDB(t)
-	annotationRepo = reading.NewMongoAnnotationRepository(global.DB)
+	annotationRepo = readerRepo.NewMongoAnnotationRepository(global.DB)
 
 	// 清理测试数据
 	ctx := context.Background()

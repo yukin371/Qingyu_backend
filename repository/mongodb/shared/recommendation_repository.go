@@ -1,11 +1,11 @@
 package shared
 
 import (
+	recModel "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
 	"time"
 
-	recModel "Qingyu_backend/models/shared/recommendation"
 	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"

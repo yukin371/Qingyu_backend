@@ -17,7 +17,7 @@ import (
 
 	writerAPI "Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	"Qingyu_backend/service/document"
+	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/service/interfaces/base"
 )
 
@@ -127,6 +127,99 @@ func (m *MockDocumentRepository) Exists(ctx context.Context, id string) (bool, e
 
 func (m *MockDocumentRepository) Health(ctx context.Context) error {
 	return nil
+}
+
+// === Mock DocumentContentRepository ===
+
+type MockDocumentContentRepository struct {
+	mock.Mock
+}
+
+func (m *MockDocumentContentRepository) Create(ctx context.Context, content *documentModel.DocumentContent) error {
+	args := m.Called(ctx, content)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) GetByID(ctx context.Context, id string) (*documentModel.DocumentContent, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*documentModel.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*documentModel.DocumentContent, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*documentModel.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) GetByDocumentID(ctx context.Context, documentID string) (*documentModel.DocumentContent, error) {
+	args := m.Called(ctx, documentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*documentModel.DocumentContent), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
+	args := m.Called(ctx, documentID, content, expectedVersion)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) BatchUpdateContent(ctx context.Context, updates map[string]string) error {
+	args := m.Called(ctx, updates)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) GetContentStats(ctx context.Context, documentID string) (wordCount, charCount int, err error) {
+	args := m.Called(ctx, documentID)
+	return args.Int(0), args.Int(1), args.Error(2)
+}
+
+func (m *MockDocumentContentRepository) StoreToGridFS(ctx context.Context, documentID string, content []byte) (gridFSID string, err error) {
+	args := m.Called(ctx, documentID, content)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) LoadFromGridFS(ctx context.Context, gridFSID string) (content []byte, err error) {
+	args := m.Called(ctx, gridFSID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockDocumentContentRepository) CreateWithTransaction(ctx context.Context, content *documentModel.DocumentContent, callback func(ctx context.Context) error) error {
+	args := m.Called(ctx, content, callback)
+	return args.Error(0)
+}
+
+func (m *MockDocumentContentRepository) Health(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
 }
 
 // === Mock EventBus ===
@@ -282,7 +375,8 @@ func TestDocumentApi_CreateDocument(t *testing.T) {
 			mockEventBus := new(MockDocumentEventBus)
 			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			mockDocContentRepo := new(MockDocumentContentRepository)
+			documentService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, mockEventBus)
 			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			body, _ := json.Marshal(tt.requestBody)
@@ -353,7 +447,8 @@ func TestDocumentApi_GetDocument(t *testing.T) {
 			mockEventBus := new(MockDocumentEventBus)
 			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			mockDocContentRepo := new(MockDocumentContentRepository)
+			documentService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, mockEventBus)
 			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("GET", "/api/v1/documents/"+tt.documentID, nil)
@@ -415,7 +510,8 @@ func TestDocumentApi_UpdateDocument(t *testing.T) {
 			mockEventBus := new(MockDocumentEventBus)
 			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			mockDocContentRepo := new(MockDocumentContentRepository)
+			documentService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, mockEventBus)
 			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			body, _ := json.Marshal(tt.requestBody)
@@ -477,7 +573,8 @@ func TestDocumentApi_DeleteDocument(t *testing.T) {
 			mockEventBus := new(MockDocumentEventBus)
 			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			mockDocContentRepo := new(MockDocumentContentRepository)
+			documentService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, mockEventBus)
 			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("DELETE", "/api/v1/documents/"+tt.documentID, nil)
@@ -539,7 +636,8 @@ func TestDocumentApi_ListDocuments(t *testing.T) {
 			mockEventBus := new(MockDocumentEventBus)
 			tt.setupMock(mockDocRepo, mockProjRepo)
 
-			documentService := document.NewDocumentService(mockDocRepo, mockProjRepo, mockEventBus)
+			mockDocContentRepo := new(MockDocumentContentRepository)
+			documentService := document.NewDocumentService(mockDocRepo, mockDocContentRepo, mockProjRepo, mockEventBus)
 			router := setupDocumentTestRouter(documentService, tt.userID)
 
 			req := httptest.NewRequest("GET", "/api/v1/projects/"+tt.projectID+"/documents"+tt.queryParams, nil)

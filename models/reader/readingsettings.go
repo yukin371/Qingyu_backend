@@ -2,6 +2,8 @@ package reader
 
 import "time"
 
+// ReaddingSettings 阅读设置
+
 type ReadingSettings struct {
 	ID          string    `bson:"_id,omitempty" json:"id"`
 	UserID      string    `bson:"user_id" json:"userId"`           // 用户ID

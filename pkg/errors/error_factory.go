@@ -92,6 +92,22 @@ func (f *ErrorFactory) AuthError(code, message string) *UnifiedError {
 	}
 }
 
+// ForbiddenError 创建禁止访问错误
+func (f *ErrorFactory) ForbiddenError(code, message string) *UnifiedError {
+	return &UnifiedError{
+		ID:         generateErrorID(),
+		Code:       code,
+		Category:   CategoryAuth,
+		Level:      LevelWarning,
+		Message:    message,
+		Service:    f.service,
+		Timestamp:  time.Now(),
+		HTTPStatus: 403,
+		Retryable:  false,
+		Metadata:   make(map[string]interface{}),
+	}
+}
+
 // InternalError 创建内部错误
 func (f *ErrorFactory) InternalError(code, message string, cause error) *UnifiedError {
 	return &UnifiedError{

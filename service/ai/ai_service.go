@@ -8,13 +8,18 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
-	documentService "Qingyu_backend/service/project"
+	documentService "Qingyu_backend/service/writer/project"
+
+	pb "Qingyu_backend/pkg/grpc/pb" // 假设proto路径
+
+	"google.golang.org/grpc"
 )
 
 // Service AI服务
 type Service struct {
 	contextService *ContextService
 	adapterManager *adapter.AdapterManager
+	PythonConfig   *config.PythonAIServiceConfig // 新增：Python配置
 }
 
 // NewService 创建AI服务（向后兼容，但不推荐使用）
@@ -60,6 +65,7 @@ func NewService() *Service {
 	return &Service{
 		contextService: contextService,
 		adapterManager: adapterManager,
+		PythonConfig:   cfg.AI.PythonService, // 注入Python配置
 	}
 }
 
@@ -91,6 +97,7 @@ func NewServiceWithDependencies(projectService *documentService.ProjectService) 
 	return &Service{
 		contextService: contextService,
 		adapterManager: adapterManager,
+		PythonConfig:   cfg.AI.PythonService, // 注入Python配置
 	}
 }
 
@@ -132,7 +139,43 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 		return nil, fmt.Errorf("AI适配器管理器未初始化，请检查配置文件中的External API配置")
 	}
 
-	// 使用适配器管理器生成内容
+	// 新增：如果Python服务配置可用，优先使用gRPC调用Python AI服务
+	if s.PythonConfig != nil && s.PythonConfig.GrpcPort > 0 {
+		pythonAddr := fmt.Sprintf("%s:%d", s.PythonConfig.Host, s.PythonConfig.GrpcPort)
+		conn, err := grpc.Dial(pythonAddr, grpc.WithInsecure())
+		if err != nil {
+			fmt.Printf("警告: 无法连接Python AI服务 (%s)，回退到本地适配器: %v\n", pythonAddr, err)
+		} else {
+			defer conn.Close()
+			client := pb.NewAIServiceClient(conn)
+
+			// 示例gRPC调用 (假设proto定义了GenerateContent方法)
+			grpcReq := &pb.GenerateContentRequest{
+				Prompt:    req.Prompt,
+				ProjectId: req.ProjectID,
+				ChapterId: req.ChapterID,
+				Options: &pb.GenerateOptions{
+					Temperature: float32(options.Temperature),
+					MaxTokens:   int32(options.MaxTokens),
+					Model:       options.Model,
+				},
+			}
+			grpcResp, err := client.GenerateContent(ctx, grpcReq)
+			if err != nil {
+				fmt.Printf("gRPC调用Python AI失败，回退到本地: %v\n", err)
+			} else {
+				// 使用gRPC响应
+				return &GenerateContentResponse{
+					Content:     grpcResp.Content,
+					TokensUsed:  int(grpcResp.TokensUsed),
+					Model:       grpcResp.Model,
+					GeneratedAt: time.Now(),
+				}, nil
+			}
+		}
+	}
+
+	// 回退：使用原有适配器逻辑
 	adapterReq := &adapter.TextGenerationRequest{
 		Prompt:      req.Prompt,
 		Temperature: options.Temperature,
@@ -383,4 +426,9 @@ func (s *Service) UpdateContextWithFeedback(ctx context.Context, projectID, chap
 
 	// 更新上下文
 	return s.contextService.UpdateContextWithFeedback(ctx, aiContext, feedback)
+}
+
+// GetAdapterManager 获取适配器管理器
+func (s *Service) GetAdapterManager() *adapter.AdapterManager {
+	return s.adapterManager
 }

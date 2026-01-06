@@ -305,9 +305,12 @@ func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, au
 		return nil, 0, fmt.Errorf("failed to get book details by author ID: %w", err)
 	}
 
-	// TODO: 需要在 Repository 添加 CountByAuthorID 方法
-	// 暂时返回书籍列表长度作为总数
-	total := int64(len(bookDetails))
+	// 获取总数
+	total, err := s.bookDetailRepo.CountByAuthorID(ctx, authorID)
+	if err != nil {
+		// 如果计数失败，使用列表长度作为降级方案
+		total = int64(len(bookDetails))
+	}
 
 	return bookDetails, total, nil
 }
@@ -438,12 +441,39 @@ func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context,
 		pageSize = 20
 	}
 
-	offset := (page - 1) * pageSize
+	// 使用 Repository 的 SearchByFilter 方法（已实现）
+	repoFilter := (*BookstoreRepo.BookDetailFilter)(filter)
+	bookDetails, err := s.bookDetailRepo.SearchByFilter(ctx, repoFilter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search book details with filter: %w", err)
+	}
 
-	// TODO: Repository 层需要实现 SearchWithFilter 方法
-	// 暂时使用简单搜索方式
+	// 获取总数
+	total, err2 := s.bookDetailRepo.CountByFilter(ctx, repoFilter)
+	if err2 != nil {
+		// 如果计数失败，使用列表长度作为降级方案
+		total = int64(len(bookDetails))
+	}
+
+	// 应用分页
+	offset := (page - 1) * pageSize
+	if offset >= len(bookDetails) {
+		return []*bookstore2.BookDetail{}, total, nil
+	}
+	endIndex := offset + pageSize
+	if endIndex > len(bookDetails) {
+		endIndex = len(bookDetails)
+	}
+
+	return bookDetails[offset:endIndex], total, nil
+}
+
+// 临时保留的旧方法
+func (s *BookDetailServiceImpl) searchBookDetailsOld(ctx context.Context, filter *BookDetailFilter, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
+	// 降级方案：使用基础查询方法
 	var bookDetails []*bookstore2.BookDetail
 	var err error
+	offset := (page - 1) * pageSize
 
 	// 根据过滤器条件调用不同的查询方法
 	if filter.Title != "" {
@@ -453,7 +483,6 @@ func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context,
 	} else if filter.Author != "" {
 		bookDetails, err = s.bookDetailRepo.GetByAuthor(ctx, filter.Author, pageSize, offset)
 	} else {
-		// 默认搜索
 		bookDetails, err = s.bookDetailRepo.Search(ctx, "", pageSize, offset)
 	}
 
@@ -461,7 +490,6 @@ func (s *BookDetailServiceImpl) SearchBookDetailsWithFilter(ctx context.Context,
 		return nil, 0, fmt.Errorf("failed to search book details with filter: %w", err)
 	}
 
-	// 暂时返回结果长度作为总数
 	total := int64(len(bookDetails))
 
 	return bookDetails, total, nil

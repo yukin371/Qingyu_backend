@@ -1,12 +1,11 @@
 package recommendation
 
 import (
+	recModel "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
 	"testing"
 	"time"
-
-	recModel "Qingyu_backend/models/shared/recommendation"
 )
 
 // MockRecommendationRepository Mock推荐Repository

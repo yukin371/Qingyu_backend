@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"Qingyu_backend/models/ai"
-	"Qingyu_backend/repository/interfaces/writing"
-	documentService "Qingyu_backend/service/project"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	documentService "Qingyu_backend/service/writer/project"
 )
 
 // ContextService AI上下文服务
@@ -22,7 +22,7 @@ type ContextService struct {
 	// TODO(架构重构): 当前使用 nil 是因为 ai_service.go 中采用了旧的直接实例化方式
 	// 而非依赖注入。待整体架构迁移到 Repository Factory 模式后统一解决。
 	// 相关讨论: doc/architecture/架构设计规范.md - 依赖注入原则
-	documentContentRepo writing.DocumentContentRepository
+	documentContentRepo writerRepo.DocumentContentRepository
 }
 
 // NewContextService 创建AI上下文服务
@@ -31,7 +31,7 @@ func NewContextService(
 	projectService *documentService.ProjectService,
 	nodeService *documentService.NodeService,
 	versionService *documentService.VersionService,
-	documentContentRepo writing.DocumentContentRepository,
+	documentContentRepo writerRepo.DocumentContentRepository,
 ) *ContextService {
 	return &ContextService{
 		documentService:     documentService,

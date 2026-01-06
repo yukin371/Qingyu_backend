@@ -19,7 +19,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerAPI "Qingyu_backend/api/v1/reader"
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 	"Qingyu_backend/test/testutil"
 )
 
