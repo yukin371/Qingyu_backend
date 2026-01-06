@@ -1,20 +1,20 @@
-package reading
+package reader
 
 import (
 	"Qingyu_backend/models/reader"
 	"context"
 	"errors"
 
-	"Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 )
 
 // SettingService 阅读设置服务
 type SettingService struct {
-	settingsRepo reading.ReadingSettingsRepository
+	settingsRepo readerRepo.ReadingSettingsRepository
 }
 
 // NewSettingService 创建设置服务
-func NewSettingService(settingsRepo reading.ReadingSettingsRepository) *SettingService {
+func NewSettingService(settingsRepo readerRepo.ReadingSettingsRepository) *SettingService {
 	return &SettingService{
 		settingsRepo: settingsRepo,
 	}

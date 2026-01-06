@@ -213,6 +213,11 @@ func (m *MockChapterRepository) Transaction(ctx context.Context, fn func(ctx con
 	return args.Error(0)
 }
 
+func (m *MockChapterRepository) Count(ctx context.Context, filter map[string]interface{}) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 type MockChapterPurchaseRepository struct {
 	mock.Mock
 }
@@ -390,6 +395,11 @@ func (m *MockBookStoreRepository) GetByID(ctx context.Context, id primitive.Obje
 	return args.Get(0), args.Error(1)
 }
 
+func (m *MockBookStoreRepository) BatchUpdateCategory(ctx context.Context, bookIDs []primitive.ObjectID, categoryID primitive.ObjectID) error {
+	args := m.Called(ctx, bookIDs, categoryID)
+	return args.Error(0)
+}
+
 type MockWalletService struct {
 	mock.Mock
 }
@@ -409,6 +419,11 @@ func (m *MockWalletService) Refund(ctx context.Context, userID string, amount fl
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockWalletService) ApproveWithdraw(ctx context.Context, userID string, amount float64, description string) (string, error) {
+	args := m.Called(ctx, userID, amount, description)
+	return args.String(0), args.Error(1)
+}
+
 type MockCacheService struct {
 	mock.Mock
 }
@@ -423,6 +438,14 @@ func (m *MockCacheService) InvalidateBookChaptersCache(ctx context.Context, book
 
 func (m *MockCacheService) InvalidateBookDetailCache(ctx context.Context, bookID string) {
 	m.Called(ctx, bookID)
+}
+
+func (m *MockCacheService) GetActiveBanners(ctx context.Context) ([]interface{}, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]interface{}), args.Error(1)
 }
 
 // Test Helper Functions

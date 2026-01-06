@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"Qingyu_backend/models/community"
@@ -8,13 +8,13 @@ import (
 	"time"
 
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
 
 // CommentService 评论服务
 type CommentService struct {
-	commentRepo       readingRepo.CommentRepository
+	commentRepo       readerRepo.CommentRepository
 	sensitiveWordRepo auditRepo.SensitiveWordRepository
 	eventBus          base.EventBus
 	serviceName       string
@@ -23,7 +23,7 @@ type CommentService struct {
 
 // NewCommentService 创建评论服务实例
 func NewCommentService(
-	commentRepo readingRepo.CommentRepository,
+	commentRepo readerRepo.CommentRepository,
 	sensitiveWordRepo auditRepo.SensitiveWordRepository,
 	eventBus base.EventBus,
 ) *CommentService {

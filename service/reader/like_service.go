@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"Qingyu_backend/models/community"
@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
 
 // LikeService 点赞服务
 type LikeService struct {
-	likeRepo    readingRepo.LikeRepository
-	commentRepo readingRepo.CommentRepository
+	likeRepo    readerRepo.LikeRepository
+	commentRepo readerRepo.CommentRepository
 	eventBus    base.EventBus
 	serviceName string
 	version     string
@@ -21,8 +21,8 @@ type LikeService struct {
 
 // NewLikeService 创建点赞服务实例
 func NewLikeService(
-	likeRepo readingRepo.LikeRepository,
-	commentRepo readingRepo.CommentRepository,
+	likeRepo readerRepo.LikeRepository,
+	commentRepo readerRepo.CommentRepository,
 	eventBus base.EventBus,
 ) *LikeService {
 	return &LikeService{

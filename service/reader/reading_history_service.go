@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"context"
@@ -6,19 +6,19 @@ import (
 	"time"
 
 	"Qingyu_backend/models/reader"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
 
 // ReadingHistoryService 阅读历史Service
 type ReadingHistoryService struct {
-	historyRepo readingRepo.ReadingHistoryRepository
+	historyRepo readerRepo.ReadingHistoryRepository
 	eventBus    base.EventBus
 }
 
 // NewReadingHistoryService 创建阅读历史服务
 func NewReadingHistoryService(
-	historyRepo readingRepo.ReadingHistoryRepository,
+	historyRepo readerRepo.ReadingHistoryRepository,
 	eventBus base.EventBus,
 ) *ReadingHistoryService {
 	return &ReadingHistoryService{
@@ -276,7 +276,7 @@ func (s *ReadingHistoryService) GetUserHistoriesByTimeRange(
 func (s *ReadingHistoryService) GetUserReadingStats(
 	ctx context.Context,
 	userID string,
-) (*readingRepo.ReadingStats, error) {
+) (*readerRepo.ReadingStats, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -296,7 +296,7 @@ func (s *ReadingHistoryService) GetUserDailyReadingStats(
 	ctx context.Context,
 	userID string,
 	days int,
-) ([]readingRepo.DailyReadingStats, error) {
+) ([]readerRepo.DailyReadingStats, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -431,7 +431,7 @@ type ReadingRecordedEvent struct {
 
 // GetEventType 获取事件类型
 func (e *ReadingRecordedEvent) GetEventType() string {
-	return "reading.recorded"
+	return "readerRepo.recorded"
 }
 
 // GetEventData 获取事件数据
@@ -458,7 +458,7 @@ type HistoryDeletedEvent struct {
 
 // GetEventType 获取事件类型
 func (e *HistoryDeletedEvent) GetEventType() string {
-	return "reading.history.deleted"
+	return "readerRepo.history.deleted"
 }
 
 // GetEventData 获取事件数据
@@ -484,7 +484,7 @@ type HistoryClearedEvent struct {
 
 // GetEventType 获取事件类型
 func (e *HistoryClearedEvent) GetEventType() string {
-	return "reading.history.cleared"
+	return "readerRepo.history.cleared"
 }
 
 // GetEventData 获取事件数据

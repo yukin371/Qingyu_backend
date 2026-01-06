@@ -3,7 +3,7 @@ package stats
 import (
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	userRepo "Qingyu_backend/repository/interfaces/user"
-	writingRepo "Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"context"
 	"fmt"
 	"time"
@@ -37,7 +37,7 @@ type PlatformStatsService interface {
 type PlatformStatsServiceImpl struct {
 	userRepo    userRepo.UserRepository
 	bookRepo    bookstoreRepo.BookRepository
-	projectRepo writingRepo.ProjectRepository
+	projectRepo writerRepo.ProjectRepository
 	chapterRepo bookstoreRepo.ChapterRepository
 
 	initialized bool
@@ -47,7 +47,7 @@ type PlatformStatsServiceImpl struct {
 func NewPlatformStatsService(
 	userRepository userRepo.UserRepository,
 	bookRepository bookstoreRepo.BookRepository,
-	projectRepository writingRepo.ProjectRepository,
+	projectRepository writerRepo.ProjectRepository,
 	chapterRepository bookstoreRepo.ChapterRepository,
 ) PlatformStatsService {
 	return &PlatformStatsServiceImpl{

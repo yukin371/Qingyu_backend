@@ -16,8 +16,8 @@ import (
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	financeService "Qingyu_backend/service/finance"
-	projectService "Qingyu_backend/service/project"
-	readingService "Qingyu_backend/service/reading"
+	projectService "Qingyu_backend/service/writer/project"
+	readingService "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
 	userService "Qingyu_backend/service/user"
 
