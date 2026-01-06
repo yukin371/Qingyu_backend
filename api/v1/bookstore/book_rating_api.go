@@ -1,13 +1,14 @@
-package bookstore
+﻿package bookstore
 
 import (
-	"Qingyu_backend/models/bookstore"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -442,11 +443,7 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "删除成功",
-		Data:    nil,
-	})
+	shared.Success(c, http.StatusOK, "删除成功", nil)
 }
 
 // LikeRating 点赞评分
@@ -525,11 +522,7 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "点赞成功",
-		Data:    nil,
-	})
+	shared.Success(c, http.StatusOK, "点赞成功", nil)
 }
 
 // UnlikeRating 取消点赞评分
@@ -608,11 +601,7 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "取消点赞成功",
-		Data:    nil,
-	})
+	shared.Success(c, http.StatusOK, "取消点赞成功", nil)
 }
 
 // SearchRatings 搜索评分
