@@ -53,6 +53,7 @@ Thumbs.db
 *.disabled
 
 # IDE 相关
+.trae/
 .vscode/
 .idea/
 .cursor/
