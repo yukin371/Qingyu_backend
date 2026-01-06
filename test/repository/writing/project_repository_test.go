@@ -2,8 +2,8 @@ package writing_test
 
 import (
 	"Qingyu_backend/models/writer"
-	writingInterface "Qingyu_backend/repository/interfaces/writing"
-	"Qingyu_backend/repository/mongodb/writing"
+	writingInterface "Qingyu_backend/repository/interfaces/writer"
+	writerRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
 	"context"
 	"testing"
@@ -17,21 +17,22 @@ import (
 // 测试辅助函数
 func setupProjectRepo(t *testing.T) (writingInterface.ProjectRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := writing.NewMongoProjectRepository(db)
+	repo := writerRepo.NewMongoProjectRepository(db)
 	ctx := context.Background()
 	return repo, ctx, cleanup
 }
 
 func createTestProject(authorID, title string) *writer.Project {
-	return &writer.Project{
-		AuthorID:   authorID,
-		Title:      title,
+	project := &writer.Project{
 		Summary:    "Test project summary",
 		Status:     writer.StatusDraft,
 		Visibility: writer.VisibilityPrivate,
 		Tags:       []string{"test", "novel"},
 		Category:   "fantasy",
 	}
+	project.AuthorID = authorID
+	project.Title = title
+	return project
 }
 
 // 1. 测试项目创建
@@ -74,16 +75,20 @@ func TestProjectRepository_Create_MissingFields(t *testing.T) {
 	}{
 		{
 			name: "Missing AuthorID",
-			project: &writer.Project{
-				Title: "Test Project",
-			},
+			project: func() *writer.Project {
+				p := &writer.Project{}
+				p.Title = "Test Project"
+				return p
+			}(),
 			errMsg: "作者ID不能为空",
 		},
 		{
 			name: "Missing Title",
-			project: &writer.Project{
-				AuthorID: "author123",
-			},
+			project: func() *writer.Project {
+				p := &writer.Project{}
+				p.AuthorID = "author123"
+				return p
+			}(),
 			errMsg: "项目标题不能为空",
 		},
 	}

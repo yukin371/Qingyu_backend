@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/service/document"
+	"Qingyu_backend/service/writer/document"
 )
 
 // setupSimpleEditorRouter 设置简化的测试路由（用于不需要DocumentService的测试）

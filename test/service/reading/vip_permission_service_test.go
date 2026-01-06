@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 
-	"Qingyu_backend/service/reading"
+	"Qingyu_backend/service/reader"
 )
 
 // setupVIPPermissionMock 创建VIP权限服务和Redis Mock
