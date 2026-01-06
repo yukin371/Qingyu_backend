@@ -10,7 +10,6 @@ import (
 
 	bookstoremodels "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/service/bookstore"
-	"Qingyu_backend/service/reading"
 )
 
 var (
@@ -42,8 +41,8 @@ type ChapterService interface {
 // ChapterServiceImpl 章节服务实现
 type ChapterServiceImpl struct {
 	chapterService    bookstore.ChapterService
-	readerService     *reading.ReaderService
-	vipService        reading.VIPPermissionService
+	readerService     *ReaderService
+	vipService        VIPPermissionService
 }
 
 // ChapterContentResponse 章节内容响应
@@ -94,8 +93,8 @@ type ChapterListResponse struct {
 // NewChapterService 创建章节服务
 func NewChapterService(
 	chapterService bookstore.ChapterService,
-	readerService *reading.ReaderService,
-	vipService reading.VIPPermissionService,
+	readerService *ReaderService,
+	vipService VIPPermissionService,
 ) ChapterService {
 	return &ChapterServiceImpl{
 		chapterService: chapterService,

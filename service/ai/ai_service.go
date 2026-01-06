@@ -8,7 +8,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
-	documentService "Qingyu_backend/service/project"
+	documentService "Qingyu_backend/service/writer/project"
 
 	pb "Qingyu_backend/pkg/grpc/pb" // 假设proto路径
 

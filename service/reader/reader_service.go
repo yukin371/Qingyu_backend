@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	reader2 "Qingyu_backend/models/reader"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/base"
 
@@ -15,9 +15,9 @@ import (
 
 // ReaderService 阅读器服务
 type ReaderService struct {
-	progressRepo    readingRepo.ReadingProgressRepository
-	annotationRepo  readingRepo.AnnotationRepository
-	settingsRepo    readingRepo.ReadingSettingsRepository
+	progressRepo    readerRepo.ReadingProgressRepository
+	annotationRepo  readerRepo.AnnotationRepository
+	settingsRepo    readerRepo.ReadingSettingsRepository
 	chapterService  bookstoreService.ChapterService // ← 依赖 Bookstore 的 ChapterService
 	eventBus        base.EventBus
 	cacheService    ReaderCacheService
@@ -28,9 +28,9 @@ type ReaderService struct {
 
 // NewReaderService 创建阅读器服务实例
 func NewReaderService(
-	progressRepo readingRepo.ReadingProgressRepository,
-	annotationRepo readingRepo.AnnotationRepository,
-	settingsRepo readingRepo.ReadingSettingsRepository,
+	progressRepo readerRepo.ReadingProgressRepository,
+	annotationRepo readerRepo.AnnotationRepository,
+	settingsRepo readerRepo.ReadingSettingsRepository,
 	chapterService bookstoreService.ChapterService, // ← 注入 ChapterService
 	eventBus base.EventBus,
 	cacheService ReaderCacheService,

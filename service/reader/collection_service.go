@@ -1,4 +1,4 @@
-package reading
+package reader
 
 import (
 	"context"
@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"Qingyu_backend/models/reader"
-	readingRepo "Qingyu_backend/repository/interfaces/reading"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
 
 // CollectionService 收藏服务
 type CollectionService struct {
-	collectionRepo readingRepo.CollectionRepository
+	collectionRepo readerRepo.CollectionRepository
 	eventBus       base.EventBus
 	serviceName    string
 	version        string
@@ -20,7 +20,7 @@ type CollectionService struct {
 
 // NewCollectionService 创建收藏服务实例
 func NewCollectionService(
-	collectionRepo readingRepo.CollectionRepository,
+	collectionRepo readerRepo.CollectionRepository,
 	eventBus base.EventBus,
 ) *CollectionService {
 	return &CollectionService{

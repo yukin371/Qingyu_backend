@@ -6,22 +6,22 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/interfaces/writing"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // TimelineService 时间线服务实现
 type TimelineService struct {
-	timelineRepo      writing.TimelineRepository
-	timelineEventRepo writing.TimelineEventRepository
+	timelineRepo      writerRepo.TimelineRepository
+	timelineEventRepo writerRepo.TimelineEventRepository
 	eventBus          base.EventBus
 }
 
 // NewTimelineService 创建TimelineService实例
 func NewTimelineService(
-	timelineRepo writing.TimelineRepository,
-	timelineEventRepo writing.TimelineEventRepository,
+	timelineRepo writerRepo.TimelineRepository,
+	timelineEventRepo writerRepo.TimelineEventRepository,
 	eventBus base.EventBus,
 ) serviceInterfaces.TimelineService {
 	return &TimelineService{
