@@ -3,7 +3,7 @@ package messaging
 import (
 	"github.com/gin-gonic/gin"
 
-	messagingAPI "Qingyu_backend/api/v1/messaging"
+	announcementsAPI "Qingyu_backend/api/v1/communications/announcements"
 	messagingService "Qingyu_backend/service/messaging"
 	"Qingyu_backend/middleware"
 )
@@ -20,7 +20,7 @@ func RegisterRoutes(
 	r.Use(middleware.Recovery())
 
 	// 创建API处理器
-	announcementPublicAPI := messagingAPI.NewAnnouncementPublicAPI(announcementService)
+	announcementPublicAPI := announcementsAPI.NewAnnouncementPublicAPI(announcementService)
 
 	// ============ 公告公开路由 ============
 	announcementGroup := r.Group("/announcements")

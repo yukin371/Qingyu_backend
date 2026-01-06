@@ -5,7 +5,6 @@ import (
 	socialApi "Qingyu_backend/api/v1/social"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/service/bookstore"
-	"Qingyu_backend/service/reading"
 	readerservice "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
 	syncService "Qingyu_backend/pkg/sync"
@@ -16,12 +15,12 @@ import (
 // InitReaderRouter 初始化阅读器路由
 func InitReaderRouter(
 	r *gin.RouterGroup,
-	readerService *reading.ReaderService,
+	readerService *readerservice.ReaderService,
 	chapterService bookstore.ChapterService,
 	commentService *socialService.CommentService,
 	likeService *socialService.LikeService,
 	collectionService *socialService.CollectionService,
-	readingHistoryService *reading.ReadingHistoryService,
+	readingHistoryService *readerservice.ReadingHistoryService,
 	progressSyncService *syncService.ProgressSyncService,
 	bookmarkService readerservice.BookmarkService,
 ) {
