@@ -8,16 +8,16 @@ import (
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	FinanceInterfaces "Qingyu_backend/repository/interfaces/finance"
 	messagingInterfaces "Qingyu_backend/repository/interfaces/messaging"
-	ReadingInterfaces "Qingyu_backend/repository/interfaces/reading"
+	ReadingInterfaces "Qingyu_backend/repository/interfaces/reader"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
 	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
-	"Qingyu_backend/repository/interfaces/writing"
+	"Qingyu_backend/repository/interfaces/writer"
 )
 
 // ProjectInterface 项目仓储接口
 type ProjectInterface interface {
-	GetProjectRepository() writing.ProjectRepository
+	GetProjectRepository() writer.ProjectRepository
 }
 
 // RepositoryFactory 仓储工厂接口
@@ -27,9 +27,9 @@ type RepositoryFactory interface {
 	CreateRoleRepository() UserInterface.RoleRepository
 
 	// 写作相关Repository
-	CreateProjectRepository() writing.ProjectRepository
-	CreateDocumentRepository() writing.DocumentRepository
-	CreateDocumentContentRepository() writing.DocumentContentRepository
+	CreateProjectRepository() writer.ProjectRepository
+	CreateDocumentRepository() writer.DocumentRepository
+	CreateDocumentContentRepository() writer.DocumentContentRepository
 
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository
