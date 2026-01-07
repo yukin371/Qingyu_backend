@@ -688,18 +688,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.services["ReadingHistoryService"] = c.readingHistoryService
 
 	// ============ 4.8 创建阅读统计服务 ============
-	// TODO: 需要在 RepositoryFactory 中添加 CreateChapterStatsRepository,
-	//       CreateReaderBehaviorRepository, CreateBookStatsRepository 方法
-	// readingStatsRepo := c.repositoryFactory.CreateChapterStatsRepository()
-	// readerBehaviorRepo := c.repositoryFactory.CreateReaderBehaviorRepository()
-	// bookStatsRepo := c.repositoryFactory.CreateBookStatsRepository()
-	// c.readingStatsService = readingStatsService.NewReadingStatsService(
-	//     readingStatsRepo,
-	//     readerBehaviorRepo,
-	//     bookStatsRepo,
-	// )
-	// c.services["ReadingStatsService"] = c.readingStatsService
-	fmt.Println("  ℹ ReadingStatsService 初始化跳过（需要 stats 模块仓储）")
+	chapterStatsRepo := c.repositoryFactory.CreateChapterStatsRepository()
+	readerBehaviorRepo := c.repositoryFactory.CreateReaderBehaviorRepository()
+	bookStatsRepo := c.repositoryFactory.CreateBookStatsRepository()
+	c.readingStatsService = readingStatsService.NewReadingStatsService(
+		chapterStatsRepo,
+		readerBehaviorRepo,
+		bookStatsRepo,
+	)
+	c.services["ReadingStatsService"] = c.readingStatsService
 
 	// ============ 4.9 创建项目服务 ============
 	projectRepo := c.repositoryFactory.CreateProjectRepository()

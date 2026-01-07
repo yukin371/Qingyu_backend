@@ -8,7 +8,7 @@ import (
 	aiRouter "Qingyu_backend/router/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	booklistRouter "Qingyu_backend/router/booklist"
-	// readingstatsRouter "Qingyu_backend/router/reading-stats" // TODO: 需要实现服务容器方法后启用
+	readingstatsRouter "Qingyu_backend/router/reading-stats"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
 	notificationsRouter "Qingyu_backend/router/notifications"
@@ -276,16 +276,14 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// ============ 注册阅读统计路由 ============
-		// TODO: 需要在 RepositoryFactory 中添加 stats 模块仓储方法后启用
-		// readingStatsSvc, readingStatsErr := serviceContainer.GetReadingStatsService()
-		// if readingStatsErr != nil {
-		//     logger.Warn("获取阅读统计服务失败", zap.Error(readingStatsErr))
-		//     logger.Info("阅读统计路由未注册")
-		// } else {
-		//     readingstatsRouter.RegisterReadingStatsRoutes(v1, readingStatsSvc)
-		//     logger.Info("✓ 阅读统计路由已注册到: /api/v1/reading-stats/")
-		// }
-		logger.Info("ℹ 阅读统计路由未注册（需要 stats 模块仓储）")
+		readingStatsSvc, readingStatsErr := serviceContainer.GetReadingStatsService()
+		if readingStatsErr != nil {
+			logger.Warn("获取阅读统计服务失败", zap.Error(readingStatsErr))
+			logger.Info("阅读统计路由未注册")
+		} else {
+			readingstatsRouter.RegisterReadingStatsRoutes(v1, readingStatsSvc)
+			logger.Info("✓ 阅读统计路由已注册到: /api/v1/reading-stats/")
+		}
 	}
 
 	// ============ 注册社交路由（新统一入口） ============
