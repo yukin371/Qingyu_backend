@@ -39,7 +39,6 @@ financeApi "Qingyu_backend/api/v1/finance"
 	readerservice "Qingyu_backend/service/reader"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -584,9 +583,8 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/system/metrics (所有服务指标)")
 	logger.Info("  - /api/v1/system/metrics/:service (特定服务指标)")
 
-	// ============ 注册Prometheus metrics端点 ============
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	logger.Info("✓ Prometheus metrics端点已注册: /metrics")
+	// ============ 健康检查 ============
+	// 注意: /metrics 端点已在 core/server.go 中注册
 
 	// ============ 健康检查 ============
 	r.GET("/ping", func(c *gin.Context) {

@@ -79,20 +79,9 @@ func RegisterUsermanagementRoutes(
 	}
 
 	// ========================================
-	// 需要管理员权限的路由
+	// 管理员路由已移至 /api/v1/admin/ 路由器
+	// 避免重复注册导致路由冲突
 	// ========================================
-	adminGroup := r.Group("/admin/users")
-	adminGroup.Use(middleware.JWTAuth())
-	adminGroup.Use(middleware.RequireRole("admin"))
-	{
-		// 用户管理
-		adminGroup.GET("", handlers.AdminUserHandler.ListUsers)
-		adminGroup.GET("/:id", handlers.AdminUserHandler.GetUser)
-		adminGroup.PUT("/:id", handlers.AdminUserHandler.UpdateUser)
-		adminGroup.DELETE("/:id", handlers.AdminUserHandler.DeleteUser)
-		adminGroup.POST("/:id/ban", handlers.AdminUserHandler.BanUser)
-		adminGroup.POST("/:id/unban", handlers.AdminUserHandler.UnbanUser)
-	}
 }
 
 // Handlers 聚合所有处理器
