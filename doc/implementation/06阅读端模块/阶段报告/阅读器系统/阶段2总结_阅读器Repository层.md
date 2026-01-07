@@ -260,7 +260,7 @@ collection.BulkWrite(ctx, models, opts)
 
 ### 设计文档来源
 
-- `doc/design/reading/阅读器设计.md`
+- `doc/design/reader/阅读器设计.md`
 
 ### 对照结果
 

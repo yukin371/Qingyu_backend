@@ -569,10 +569,10 @@ Qingyu/
 ## 相关文档
 
 ### 设计文档
-- [书城系统设计](../../design/reading/书城系统设计.md)
-- [阅读器设计](../../design/reading/阅读器设计.md)
-- [推荐系统设计](../../design/reading/推荐系统设计.md)
-- [社交功能设计](../../design/reading/社交功能设计.md)
+- [书城系统设计](../../design/reader/书城系统设计.md)
+- [阅读器设计](../../design/reader/阅读器设计.md)
+- [推荐系统设计](../../design/reader/推荐系统设计.md)
+- [社交功能设计](../../design/reader/社交功能设计.md)
 
 ### 实施文档
 - [整体实施规划](../青羽平台整体实施规划.md)

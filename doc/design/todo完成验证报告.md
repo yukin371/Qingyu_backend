@@ -57,12 +57,12 @@
 **内容**: Saga Log、补偿操作、关键业务场景Saga、最终一致性
 
 ### 11. ✅ 稿费结算系统设计.md
-**路径**: `doc/design/writing/稿费结算系统设计.md`  
+**路径**: `doc/design/writer/稿费结算系统设计.md`  
 **状态**: 已完成  
 **内容**: Monetization模块职责、接口、数据模型、与Wallet协作
 
 ### 12. ✅ 阅读任务系统设计v2.md
-**路径**: `doc/design/reading/阅读任务系统设计v2.md`  
+**路径**: `doc/design/reader/阅读任务系统设计v2.md`  
 **状态**: 已完成  
 **内容**: 重新设计职责边界、事件发布机制
 
@@ -105,13 +105,13 @@
 
 ### 2. ✅ 模块README更新（5个）
 - `doc/design/ai/README.md` - v2.1架构索引
-- `doc/design/reading/README_阅读端模块设计文档.md` - 对齐1.1-1.5
-- `doc/design/writing/README_写作端模块设计文档.md` - 对齐2.1-2.7
+- `doc/design/reader/README_阅读端模块设计文档.md` - 对齐1.1-1.5
+- `doc/design/writer/README_写作端模块设计文档.md` - 对齐2.1-2.7
 - `doc/design/core/README_核心功能设计文档.md` - 添加v2.1新设计
 - `doc/design/platform/README_平台设计文档.md` - 用户中心+平台服务
 
 ### 3. ✅ 过时文档标记（2个）
-- `doc/design/reading/阅读任务设计.md` - ⚠️ 已过时，替代：阅读任务系统设计v2.md
+- `doc/design/reader/阅读任务设计.md` - ⚠️ 已过时，替代：阅读任务系统设计v2.md
 - ~~`doc/design/core/项目CRUD.md`~~ - 已移至archived，需恢复并标记
 
 ### 4. ✅ 主索引文档更新（2个）
