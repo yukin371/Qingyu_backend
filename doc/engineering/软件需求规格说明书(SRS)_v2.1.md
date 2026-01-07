@@ -1254,10 +1254,10 @@ User (1) -----> (N) Transaction
 
 | 需求ID | 设计文档 | 代码模块 | 测试用例 | 状态 |
 |--------|----------|----------|----------|------|
-| REQ-READING-BOOKSTORE-001 | [书城系统设计](../design/reading/书城系统设计.md) | api/v1/bookstore/ | test/api/bookstore_test.go | ✅ |
-| REQ-READING-READER-001 | [阅读器设计](../design/reading/阅读器设计.md) | api/v1/reader/ | test/api/reader_test.go | ✅ |
-| REQ-WRITING-PROJECT-001 | [项目管理系统设计](../design/writing/项目管理系统设计.md) | service/writer/project_service.go | test/service/project_service_test.go | ✅ |
-| REQ-WRITING-AI-001 | [AI智能辅助系统](../design/writing/AI智能辅助系统.md) | api/v1/ai/writing_api.go | test/api/ai_writing_test.go | ✅ |
+| REQ-READING-BOOKSTORE-001 | [书城系统设计](../design/reader/书城系统设计.md) | api/v1/bookstore/ | test/api/bookstore_test.go | ✅ |
+| REQ-READING-READER-001 | [阅读器设计](../design/reader/阅读器设计.md) | api/v1/reader/ | test/api/reader_test.go | ✅ |
+| REQ-WRITING-PROJECT-001 | [项目管理系统设计](../design/writer/项目管理系统设计.md) | service/writer/project_service.go | test/service/project_service_test.go | ✅ |
+| REQ-WRITING-AI-001 | [AI智能辅助系统](../design/writer/AI智能辅助系统.md) | api/v1/ai/writing_api.go | test/api/ai_writing_test.go | ✅ |
 | REQ-AI-ADAPTER-001 | [AI模块README](../design/ai/README.md) | service/ai/adapters/ | test/service/ai_adapter_test.go | ✅ |
 | REQ-AI-QUOTA-001 | [AI模块README](../design/ai/README.md) | api/v1/ai/quota_api.go | test/api/quota_test.go | ✅ |
 | REQ-USER-MANAGEMENT-001 | [用户管理系统设计](../design/platform/用户管理系统设计.md) | service/user/user_service.go | test/service/user_service_test.go | ✅ |
@@ -1268,8 +1268,8 @@ User (1) -----> (N) Transaction
 
 | 需求ID | 设计文档 | 代码模块 | 测试用例 | 状态 |
 |--------|----------|----------|----------|------|
-| REQ-WRITING-EDITOR-001 | [编辑器系统设计](../design/writing/编辑器系统设计.md) | service/writer/editor_service.go | - | 🔄 |
-| REQ-WRITING-ANALYTICS-001 | [数据统计系统设计](../design/writing/数据统计系统设计.md) | service/stats/ | - | 🔄 |
+| REQ-WRITING-EDITOR-001 | [编辑器系统设计](../design/writer/编辑器系统设计.md) | service/writer/editor_service.go | - | 🔄 |
+| REQ-WRITING-ANALYTICS-001 | [数据统计系统设计](../design/writer/数据统计系统设计.md) | service/stats/ | - | 🔄 |
 | REQ-USER-RBAC-001 | 平台设计文档 | service/user/permission_service.go | - | 🔄 |
 | REQ-SHARED-NOTIFICATION-001 | [消息通知系统](../design/platform/消息通知系统.md) | service/shared/notification_service.go | - | 🔄 |
 
@@ -1280,7 +1280,7 @@ User (1) -----> (N) Transaction
 | REQ-AI-AGENT-001 | [Python AI Agent系统架构设计](../design/ai/07.Python_AI_Agent系统架构设计.md) | python_ai_service/ | - | 📋 |
 | REQ-AI-AGENT-006 | [Agent工具调用集成设计](../design/ai/09.Agent工具调用集成设计.md) | python_ai_service/tools/ | - | 📋 |
 | REQ-AI-AGENT-007 | [RAG检索增强系统设计](../design/ai/10.RAG检索增强系统设计.md) | python_ai_service/rag/ | - | 📋 |
-| REQ-READING-SOCIAL-001 | [社交功能设计](../design/reading/社交功能设计.md) | service/reading/social_service.go | - | 📋 |
+| REQ-READING-SOCIAL-001 | [社交功能设计](../design/reader/社交功能设计.md) | service/reading/social_service.go | - | 📋 |
 | REQ-USER-LEVEL-001 | [用户等级成就系统设计](../design/platform/用户等级成就系统设计.md) | service/user/level_service.go | - | 📋 |
 
 ---

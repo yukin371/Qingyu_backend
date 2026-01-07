@@ -450,7 +450,7 @@ eventBus.PublishAsync(ctx, &base.BaseEvent{
 
 ## 📚 已创建文档
 
-### 设计文档（doc/design/writing/）
+### 设计文档（doc/design/writer/）
 - [x] 编辑器系统设计.md
 - [x] 项目管理系统设计.md
 - [x] 文档管理系统设计.md

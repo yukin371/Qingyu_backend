@@ -601,7 +601,7 @@ Qingyu/
 ### 设计文档
 - [AI服务架构设计](../../design/ai/01.AI服务架构设计.md)
 - [AI功能总体设计](../../design/ai/02.AI功能总体设计.md)
-- [AI智能辅助系统](../../design/writing/AI智能辅助系统.md)
+- [AI智能辅助系统](../../design/writer/AI智能辅助系统.md)
 
 ### 实施文档
 - [整体实施规划](../青羽平台整体实施规划.md)

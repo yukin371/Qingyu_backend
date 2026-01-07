@@ -213,10 +213,10 @@ MVP核心模块: 100% ✅  全部模块: 60%
 
 ### 设计文档
 
-- [阅读端模块设计文档](../../design/reading/README_阅读端模块设计文档.md)
-- [书城系统设计](../../design/reading/书城系统设计.md)
-- [阅读器设计](../../design/reading/阅读器设计.md)
-- [推荐系统设计](../../design/reading/推荐系统设计.md)
+- [阅读端模块设计文档](../../design/reader/README_阅读端模块设计文档.md)
+- [书城系统设计](../../design/reader/书城系统设计.md)
+- [阅读器设计](../../design/reader/阅读器设计.md)
+- [推荐系统设计](../../design/reader/推荐系统设计.md)
 
 ### 架构文档
 

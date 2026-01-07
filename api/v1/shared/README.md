@@ -1,14 +1,21 @@
 # Shared API 模块结构说明
 
+> **⚠️ 重要提示**: 本模块提供向后兼容的 API 端点。
+>
+> **推荐使用新的模块化路由**:
+> - 认证功能 → `/api/v1/user-management/auth/*`
+> - 钱包功能 → `/api/v1/finance/wallet/*`
+> - 存储功能 → `/api/v1/shared/storage/*` (保持不变)
+
 ## 📁 文件结构
 
 ```
 api/v1/shared/
-├── auth_api.go           # 认证API
-├── wallet_api.go         # 钱包API
-├── storage_api.go        # 存储API
-├── response.go           # 统一响应格式
-├── request_validator.go  # 请求验证器
+├── auth_api.go           # ⚠️ 已废弃，请使用 user-management 模块
+├── wallet_api.go         # ⚠️ 已废弃，请使用 finance 模块
+├── storage_api.go        # ✅ 仍在使用
+├── response.go           # 统一响应格式（通用工具）
+├── request_validator.go  # 请求验证器（通用工具）
 ├── types.go              # 公共类型定义
 └── README.md             # 本文件
 ```
@@ -20,17 +27,44 @@ api/v1/shared/
 **核心功能**:
 - ✅ 统一响应格式
 - ✅ 请求验证工具
-- ✅ 认证相关功能
-- ✅ 钱包和交易
-- ✅ 文件存储
+- ✅ 文件存储服务
+- ⚠️ 认证相关功能（已迁移到 user-management）
+- ⚠️ 钱包和交易（已迁移到 finance）
 
-**注意**: 管理员功能已迁移到 `admin` 模块。
+**注意**:
+- 管理员功能已迁移到 `admin` 模块
+- 认证功能已迁移到 `user-management` 模块
+- 钱包功能已迁移到 `finance` 模块
 
 ---
 
 ## 📋 API端点列表
 
-### 认证API（AuthAPI）
+### ⚠️ 已废弃的API端点
+
+以下端点保留用于向后兼容，但推荐使用新的模块化路由：
+
+#### 认证API（AuthAPI）⚠️ 已废弃
+
+| 旧路由 | 新路由 | 状态 |
+|--------|--------|------|
+| `POST /api/v1/shared/auth/register` | `POST /api/v1/user-management/auth/register` | ⚠️ 推荐使用新路由 |
+| `POST /api/v1/shared/auth/login` | `POST /api/v1/user-management/auth/login` | ⚠️ 推荐使用新路由 |
+| `POST /api/v1/shared/auth/logout` | `POST /api/v1/user-management/auth/logout` | ⚠️ 推荐使用新路由 |
+| `POST /api/v1/shared/auth/refresh` | `POST /api/v1/user-management/auth/refresh` | ⚠️ 推荐使用新路由 |
+
+#### 钱包API（WalletAPI）⚠️ 已废弃
+
+| 旧路由 | 新路由 | 状态 |
+|--------|--------|------|
+| `GET /api/v1/shared/wallet/balance` | `GET /api/v1/finance/wallet/balance` | ⚠️ 推荐使用新路由 |
+| `GET /api/v1/shared/wallet/transactions` | `GET /api/v1/finance/wallet/transactions` | ⚠️ 推荐使用新路由 |
+| `POST /api/v1/shared/wallet/recharge` | `POST /api/v1/finance/wallet/recharge` | ⚠️ 推荐使用新路由 |
+| `POST /api/v1/shared/wallet/withdraw` | `POST /api/v1/finance/wallet/withdraw` | ⚠️ 推荐使用新路由 |
+
+### ✅ 仍在使用的API端点
+
+#### 存储API（StorageAPI）
 
 | 方法 | 路径 | 说明 | Handler |
 |------|------|------|---------|
