@@ -6,9 +6,11 @@ import (
 
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
+	announcementsRouter "Qingyu_backend/router/announcements"
+	booklistRouter "Qingyu_backend/router/booklist"
+	// readingstatsRouter "Qingyu_backend/router/reading-stats" // TODO: 需要实现服务容器方法后启用
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
-	messagingRouter "Qingyu_backend/router/messaging"
 	notificationsRouter "Qingyu_backend/router/notifications"
 	usermanagementRouter "Qingyu_backend/router/usermanagement"
 	readerRouter "Qingyu_backend/router/reader"
@@ -16,7 +18,6 @@ import (
 	sharedRouter "Qingyu_backend/router/shared"
 	socialRouter "Qingyu_backend/router/social"
 	systemRouter "Qingyu_backend/router/system"
-	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
 
 	"Qingyu_backend/service"
@@ -26,12 +27,14 @@ import (
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
 	bookstore "Qingyu_backend/service/bookstore"
+	socialService "Qingyu_backend/service/social"
 
 	socialApi "Qingyu_backend/api/v1/social"
-	messagesApi "Qingyu_backend/api/v1/communications/messages"
+	messagesApi "Qingyu_backend/api/v1/messages"
+	booklistApi "Qingyu_backend/api/v1/booklist"
 financeApi "Qingyu_backend/api/v1/finance"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
-	notificationsAPI "Qingyu_backend/api/v1/communications/notifications"
+	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	syncService "Qingyu_backend/pkg/sync"
 	readerservice "Qingyu_backend/service/reader"
 
@@ -271,6 +274,18 @@ func RegisterRoutes(r *gin.Engine) {
 		if commentSvc != nil {
 			logger.Info("  - /api/v1/reader/comments/* (评论系统)")
 		}
+
+		// ============ 注册阅读统计路由 ============
+		// TODO: 需要在 RepositoryFactory 中添加 stats 模块仓储方法后启用
+		// readingStatsSvc, readingStatsErr := serviceContainer.GetReadingStatsService()
+		// if readingStatsErr != nil {
+		//     logger.Warn("获取阅读统计服务失败", zap.Error(readingStatsErr))
+		//     logger.Info("阅读统计路由未注册")
+		// } else {
+		//     readingstatsRouter.RegisterReadingStatsRoutes(v1, readingStatsSvc)
+		//     logger.Info("✓ 阅读统计路由已注册到: /api/v1/reading-stats/")
+		// }
+		logger.Info("ℹ 阅读统计路由未注册（需要 stats 模块仓储）")
 	}
 
 	// ============ 注册社交路由（新统一入口） ============
@@ -353,14 +368,37 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
 	}
 
-	// ============ 注册Messaging路由 ============
+	// ============ 注册书单路由 ============
+	repositoryFactory := serviceContainer.GetRepositoryFactory()
+	if repositoryFactory != nil {
+		// 创建书单 Repository 和 Service
+		bookListRepo := repositoryFactory.CreateBookListRepository()
+
+		// 获取事件总线
+		eventBus := serviceContainer.GetEventBus()
+
+		// 创建书单服务
+		bookListService := socialService.NewBookListService(bookListRepo, eventBus)
+
+		// 创建书单 API
+		booklistAPI := booklistApi.NewBookListAPI(bookListService)
+
+		// 注册书单路由
+		booklistRouter.RegisterBooklistRoutes(v1, booklistAPI)
+
+		logger.Info("✓ 书单路由已注册到: /api/v1/booklists/")
+	} else {
+		logger.Warn("RepositoryFactory 不可用，书单路由未注册")
+	}
+
+	// ============ 注册Announcements路由 ============
 	announcementSvc, announcementErr := serviceContainer.GetAnnouncementService()
 	if announcementErr != nil {
 		logger.Warn("获取公告服务失败", zap.Error(announcementErr))
-		logger.Info("Messaging路由未注册")
+		logger.Info("Announcements路由未注册")
 	} else {
-		messagingRouter.RegisterRoutes(v1, announcementSvc)
-		logger.Info("✓ Messaging路由已注册到: /api/v1/announcements/")
+		announcementsRouter.RegisterAnnouncementRoutes(v1, announcementSvc)
+		logger.Info("✓ Announcements路由已注册到: /api/v1/announcements/")
 		logger.Info("  - GET /api/v1/announcements/effective (获取有效公告)")
 		logger.Info("  - GET /api/v1/announcements/:id (获取公告详情)")
 		logger.Info("  - POST /api/v1/announcements/:id/view (增加查看次数)")
@@ -386,30 +424,6 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/notifications/push/* (推送设备管理)")
 		logger.Info("  - /api/v1/user-management/email-notifications (邮件通知设置)")
 		logger.Info("  - /api/v1/user-management/sms-notifications (短信通知设置)")
-	}
-
-	// ============ 注册用户路由 ============
-	userSvc, err := serviceContainer.GetUserService()
-	if err != nil {
-		logger.Fatal("获取用户服务失败", zap.Error(err))
-	}
-
-	// 获取书店服务（可选）
-	bookstoreSvc, bookstoreErr := serviceContainer.GetBookstoreService()
-	if bookstoreErr != nil {
-		logger.Warn("获取书店服务失败，用户作品列表功能将不可用", zap.Error(bookstoreErr))
-		userRouter.RegisterUserRoutes(v1, userSvc)
-	} else {
-		userRouter.RegisterUserRoutesWithBookstore(v1, userSvc, bookstoreSvc)
-	}
-
-	logger.Info("✓ 用户路由已注册到: /api/v1/")
-	logger.Info("  - /api/v1/register (用户注册)")
-	logger.Info("  - /api/v1/login (用户登录)")
-	logger.Info("  - /api/v1/users/profile (个人信息)")
-	logger.Info("  - /api/v1/users/password (修改密码)")
-	if bookstoreErr == nil {
-		logger.Info("  - /api/v1/users/:userId/books (用户作品列表)")
 	}
 
 	// ============ 注册写作端路由 ============
@@ -488,6 +502,12 @@ func RegisterRoutes(r *gin.Engine) {
 		announcementSvc = nil
 	}
 
+	// 获取用户服务（用于管理员和用户管理路由）
+	userSvc, err := serviceContainer.GetUserService()
+	if err != nil {
+		logger.Fatal("获取用户服务失败", zap.Error(err))
+	}
+
 	// 创建用户管理服务（UserAdminService - 管理员专用）
 	// 和权限管理服务（PermissionService）
 	// 获取 MongoDB 数据库
@@ -530,7 +550,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 获取统计服务（用于用户统计功能）
 	var statsSvc statsService.PlatformStatsService
-	repositoryFactory := serviceContainer.GetRepositoryFactory()
+	repositoryFactory = serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
 		userRepo := repositoryFactory.CreateUserRepository()

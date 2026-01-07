@@ -18,6 +18,7 @@ import (
 	financeService "Qingyu_backend/service/finance"
 	projectService "Qingyu_backend/service/writer/project"
 	readingService "Qingyu_backend/service/reader"
+	readingStatsService "Qingyu_backend/service/reader/stats"
 	socialService "Qingyu_backend/service/social"
 	userService "Qingyu_backend/service/user"
 
@@ -78,6 +79,7 @@ type ServiceContainer struct {
 	bookRatingService     bookstoreService.BookRatingService
 	bookStatisticsService bookstoreService.BookStatisticsService
 	readerService         *readingService.ReaderService
+	readingStatsService   *readingStatsService.ReadingStatsService
 	commentService        *socialService.CommentService
 	likeService           *socialService.LikeService
 	collectionService     *socialService.CollectionService
@@ -255,6 +257,14 @@ func (c *ServiceContainer) GetReadingHistoryService() (*readingService.ReadingHi
 		return nil, fmt.Errorf("ReadingHistoryService未初始化")
 	}
 	return c.readingHistoryService, nil
+}
+
+// GetReadingStatsService 获取阅读统计服务
+func (c *ServiceContainer) GetReadingStatsService() (*readingStatsService.ReadingStatsService, error) {
+	if c.readingStatsService == nil {
+		return nil, fmt.Errorf("ReadingStatsService未初始化")
+	}
+	return c.readingStatsService, nil
 }
 
 // GetQuotaService 获取配额服务
@@ -677,7 +687,21 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	c.services["ReadingHistoryService"] = c.readingHistoryService
 
-	// ============ 4.8 创建项目服务 ============
+	// ============ 4.8 创建阅读统计服务 ============
+	// TODO: 需要在 RepositoryFactory 中添加 CreateChapterStatsRepository,
+	//       CreateReaderBehaviorRepository, CreateBookStatsRepository 方法
+	// readingStatsRepo := c.repositoryFactory.CreateChapterStatsRepository()
+	// readerBehaviorRepo := c.repositoryFactory.CreateReaderBehaviorRepository()
+	// bookStatsRepo := c.repositoryFactory.CreateBookStatsRepository()
+	// c.readingStatsService = readingStatsService.NewReadingStatsService(
+	//     readingStatsRepo,
+	//     readerBehaviorRepo,
+	//     bookStatsRepo,
+	// )
+	// c.services["ReadingStatsService"] = c.readingStatsService
+	fmt.Println("  ℹ ReadingStatsService 初始化跳过（需要 stats 模块仓储）")
+
+	// ============ 4.9 创建项目服务 ============
 	projectRepo := c.repositoryFactory.CreateProjectRepository()
 	c.projectService = projectService.NewProjectService(
 		projectRepo,
