@@ -11,6 +11,7 @@ import (
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reader"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
 	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
+	SocialInterfaces "Qingyu_backend/repository/interfaces/social"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/repository/interfaces/writer"
 )
@@ -69,6 +70,9 @@ type RepositoryFactory interface {
 
 	// Messaging相关Repository
 	CreateAnnouncementRepository() messagingInterfaces.AnnouncementRepository
+
+	// Social相关Repository
+	CreateBookListRepository() SocialInterfaces.BookListRepository
 
 	// 审核相关Repository
 	CreateSensitiveWordRepository() AuditInterfaces.SensitiveWordRepository

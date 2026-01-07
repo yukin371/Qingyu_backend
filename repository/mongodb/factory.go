@@ -17,6 +17,7 @@ import (
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	socialRepo "Qingyu_backend/repository/interfaces/social"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
@@ -29,6 +30,7 @@ import (
 	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	mongoShared "Qingyu_backend/repository/mongodb/shared"
+	mongoSocial "Qingyu_backend/repository/mongodb/social"
 	mongoStorage "Qingyu_backend/repository/mongodb/storage"
 	mongoUser "Qingyu_backend/repository/mongodb/user"
 	mongoWriter "Qingyu_backend/repository/mongodb/writer"
@@ -178,6 +180,11 @@ func (f *MongoRepositoryFactory) CreateCollectionRepository() readerRepo.Collect
 	return mongoReading.NewMongoCollectionRepository(f.database)
 }
 
+// CreateBookListRepository 创建书单Repository
+func (f *MongoRepositoryFactory) CreateBookListRepository() socialRepo.BookListRepository {
+	return mongoSocial.NewMongoBookListRepository(f.database)
+}
+
 // CreateReadingHistoryRepository 创建阅读历史Repository
 func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readerRepo.ReadingHistoryRepository {
 	return mongoReading.NewMongoReadingHistoryRepository(f.database)
@@ -284,7 +291,7 @@ func (f *MongoRepositoryFactory) CreateAnnouncementRepository() messagingRepo.An
 	return mongoMessaging.NewMongoAnnouncementRepository(f.client, f.database.Name())
 }
 
-// CreateAdminRepository 创建管理后台Repository
+// ========== AI Module Repositories ==========
 func (f *MongoRepositoryFactory) CreateAdminRepository() sharedRepo.AdminRepository {
 	return mongoShared.NewMongoAdminRepository(f.database)
 }
