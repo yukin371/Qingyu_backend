@@ -349,3 +349,15 @@ func (s *ReadingStatsService) GetServiceName() string {
 func (s *ReadingStatsService) GetVersion() string {
 	return s.version
 }
+
+// Initialize 初始化服务
+func (s *ReadingStatsService) Initialize(ctx context.Context) error {
+	// ReadingStatsService 无需特殊初始化
+	return nil
+}
+
+// Close 关闭服务
+func (s *ReadingStatsService) Close(ctx context.Context) error {
+	// ReadingStatsService 无需清理资源
+	return nil
+}
