@@ -18,6 +18,7 @@ import (
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
+	statsRepo "Qingyu_backend/repository/interfaces/stats"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
@@ -31,6 +32,7 @@ import (
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
 	mongoShared "Qingyu_backend/repository/mongodb/shared"
 	mongoSocial "Qingyu_backend/repository/mongodb/social"
+	mongoStats "Qingyu_backend/repository/mongodb/stats"
 	mongoStorage "Qingyu_backend/repository/mongodb/storage"
 	mongoUser "Qingyu_backend/repository/mongodb/user"
 	mongoWriter "Qingyu_backend/repository/mongodb/writer"
@@ -289,6 +291,23 @@ func (f *MongoRepositoryFactory) CreateStorageRepository() sharedRepo.StorageRep
 // CreateAnnouncementRepository 创建公告Repository
 func (f *MongoRepositoryFactory) CreateAnnouncementRepository() messagingRepo.AnnouncementRepository {
 	return mongoMessaging.NewMongoAnnouncementRepository(f.client, f.database.Name())
+}
+
+// ========== Stats Module Repositories ==========
+
+// CreateChapterStatsRepository 创建章节统计Repository
+func (f *MongoRepositoryFactory) CreateChapterStatsRepository() statsRepo.ChapterStatsRepository {
+	return mongoStats.NewMongoChapterStatsRepository(f.database)
+}
+
+// CreateReaderBehaviorRepository 创建读者行为Repository
+func (f *MongoRepositoryFactory) CreateReaderBehaviorRepository() statsRepo.ReaderBehaviorRepository {
+	return mongoStats.NewMongoReaderBehaviorRepository(f.database)
+}
+
+// CreateBookStatsRepository 创建作品统计Repository
+func (f *MongoRepositoryFactory) CreateBookStatsRepository() statsRepo.BookStatsRepository {
+	return mongoStats.NewMongoBookStatsRepository(f.database)
 }
 
 // ========== AI Module Repositories ==========
