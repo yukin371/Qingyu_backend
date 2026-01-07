@@ -307,14 +307,6 @@ func (m *MockEventBus) Initialize(ctx context.Context) error {
 	return nil
 }
 
-func (m *MockEventBus) Health(ctx context.Context) error {
-	return nil
-}
-
-func (m *MockEventBus) Close(ctx context.Context) error {
-	return nil
-}
-
 // TestCommentService_PublishComment 发表评论测试
 func TestCommentService_PublishComment(t *testing.T) {
 	mockRepo := new(MockCommentRepository)

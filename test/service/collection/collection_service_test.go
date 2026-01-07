@@ -181,14 +181,6 @@ func (m *MockEventBus) Initialize(ctx context.Context) error {
 	return nil
 }
 
-func (m *MockEventBus) Health(ctx context.Context) error {
-	return nil
-}
-
-func (m *MockEventBus) Close(ctx context.Context) error {
-	return nil
-}
-
 // TestCollectionService_AddCollection 添加收藏测试
 func TestCollectionService_AddCollection(t *testing.T) {
 	mockRepo := new(MockCollectionRepository)

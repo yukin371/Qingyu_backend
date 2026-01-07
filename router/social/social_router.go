@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	socialApi "Qingyu_backend/api/v1/social"
-	messagesApi "Qingyu_backend/api/v1/communications/messages"
+	messagesApi "Qingyu_backend/api/v1/messages"
 	"Qingyu_backend/middleware"
 )
 

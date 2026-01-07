@@ -259,14 +259,6 @@ func (m *MockEventBus) Initialize(ctx context.Context) error {
 	return nil
 }
 
-func (m *MockEventBus) Health(ctx context.Context) error {
-	return nil
-}
-
-func (m *MockEventBus) Close(ctx context.Context) error {
-	return nil
-}
-
 // TestLikeService_LikeBook 点赞书籍测试
 func TestLikeService_LikeBook(t *testing.T) {
 	mockRepo := new(MockLikeRepository)
