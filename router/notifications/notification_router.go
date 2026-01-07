@@ -3,7 +3,7 @@ package notifications
 import (
 	"github.com/gin-gonic/gin"
 
-	notificationsAPI "Qingyu_backend/api/v1/communications/notifications"
+	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	"Qingyu_backend/middleware"
 )
 

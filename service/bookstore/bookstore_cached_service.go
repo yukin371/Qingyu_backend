@@ -56,7 +56,7 @@ func (s *BookstoreCachedService) GetBookWithCache(ctx context.Context, bookID st
 // GetBooksWithCache 获取书籍列表（使用缓存）
 func (s *BookstoreCachedService) GetBooksWithCache(ctx context.Context, page, size int) (interface{}, error) {
 	// 构建缓存key
-	cacheKey := fmt.Sprintf("book:hot:list:page:%d:size:%d", page, size)
+	cacheKey := fmt.Sprintf("book:all:list:page:%d:size:%d", page, size)
 
 	var result interface{}
 
@@ -69,7 +69,8 @@ func (s *BookstoreCachedService) GetBooksWithCache(ctx context.Context, page, si
 
 	// 缓存未命中，从数据库获取
 	logger.Debug("缓存未命中，从数据库获取书籍列表", zap.Int("page", page))
-	result, err = s.service.GetBooks(ctx, page, size)
+	// 使用正确的接口方法 GetAllBooks，接收 3 个返回值
+	result, _, err = s.service.GetAllBooks(ctx, page, size)
 	if err != nil {
 		return nil, fmt.Errorf("获取书籍列表失败: %w", err)
 	}
@@ -101,58 +102,14 @@ func (s *BookstoreCachedService) GetHomepageDataWithCache(ctx context.Context) (
 	return data, nil
 }
 
-// UpdateBook 更新书籍（并删除缓存）
-func (s *BookstoreCachedService) UpdateBook(ctx context.Context, bookID string, book interface{}) error {
-	// 1. 更新数据库
-	err := s.service.UpdateBook(ctx, bookID, book)
-	if err != nil {
-		return fmt.Errorf("更新书籍失败: %w", err)
-	}
-
-	// 2. 删除相关缓存
-	cacheKey := cache.BuildBookKey(bookID, "detail")
-	s.cacheStrategy.Delete(ctx, cacheKey)
-
-	// 删除列表缓存（需要重新加载）
-	listCacheKey := "book:hot:list"
-	s.cacheStrategy.Delete(ctx, listCacheKey)
-
-	logger.Info("书籍缓存已删除", zap.String("book_id", bookID))
-
-	return nil
-}
-
-// DeleteBook 删除书籍（并删除缓存）
-func (s *BookstoreCachedService) DeleteBook(ctx context.Context, bookID string) error {
-	// 1. 删除数据库记录
-	err := s.service.DeleteBook(ctx, bookID)
-	if err != nil {
-		return fmt.Errorf("删除书籍失败: %w", err)
-	}
-
-	// 2. 删除所有相关缓存
-	cacheKeys := []string{
-		cache.BuildBookKey(bookID, "detail"),
-		cache.BuildBookKey(bookID, "catalog"),
-		fmt.Sprintf("book:detail:%s", bookID),
-		fmt.Sprintf("book:catalog:%s", bookID),
-	}
-
-	s.cacheStrategy.Delete(ctx, cacheKeys...)
-
-	logger.Info("书籍相关缓存已删除", zap.String("book_id", bookID))
-
-	return nil
-}
-
 // WarmUpCache 预热热门书籍缓存
 func (s *BookstoreCachedService) WarmUpCache(ctx context.Context) error {
 	logger.Info("开始预热热门书籍缓存")
 
 	// 使用缓存预热功能
 	err := s.cacheStrategy.WarmUpCache(ctx, func() (map[string]interface{}, error) {
-		// 获取热门书籍列表
-		hotBooks, err := s.service.GetHotBooks(ctx, 100)
+		// 获取热门书籍列表 - 修正参数数量，GetHotBooks 需要 (page, pageSize) 两个参数
+		hotBooks, _, err := s.service.GetHotBooks(ctx, 1, 100)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +117,8 @@ func (s *BookstoreCachedService) WarmUpCache(ctx context.Context) error {
 		// 构建预热数据
 		data := make(map[string]interface{})
 		for _, book := range hotBooks {
-			bookID := book.(interface{ GetID() string }).GetID()
+			// 使用 book.ID.Hex() 获取字符串形式的 ID
+			bookID := book.ID.Hex()
 			cacheKey := cache.BuildBookKey(bookID, "detail")
 			data[cacheKey] = book
 		}

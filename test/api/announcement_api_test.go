@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/api/v1/messaging"
+	"Qingyu_backend/api/v1/announcements"
 	"Qingyu_backend/models/messaging"
 	messagingService "Qingyu_backend/service/messaging"
 )
@@ -94,7 +94,7 @@ func TestAnnouncementPublicAPI_GetEffectiveAnnouncements(t *testing.T) {
 	router := setupTestRouter()
 	mockService := new(MockAnnouncementService)
 
-	api := messaging.NewAnnouncementPublicAPI(mockService)
+	api := announcements.NewAnnouncementPublicAPI(mockService)
 	router.GET("/announcements/effective", api.GetEffectiveAnnouncements)
 
 	t.Run("成功获取有效公告", func(t *testing.T) {
@@ -150,7 +150,7 @@ func TestAnnouncementPublicAPI_GetEffectiveAnnouncements(t *testing.T) {
 
 	t.Run("服务错误", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router := setupTestRouter()
 		router.GET("/announcements/effective", api.GetEffectiveAnnouncements)
 
@@ -188,7 +188,7 @@ func TestAnnouncementPublicAPI_GetAnnouncementByID(t *testing.T) {
 
 	t.Run("成功获取公告详情", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router.GET("/announcements/:id", api.GetAnnouncementByID)
 
 		now := time.Now()
@@ -232,7 +232,7 @@ func TestAnnouncementPublicAPI_GetAnnouncementByID(t *testing.T) {
 
 	t.Run("公告不存在", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router := setupTestRouter()
 		router.GET("/announcements/:id", api.GetAnnouncementByID)
 
@@ -252,7 +252,7 @@ func TestAnnouncementPublicAPI_GetAnnouncementByID(t *testing.T) {
 
 	t.Run("空ID参数", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router := setupTestRouter()
 		router.GET("/announcements/:id", api.GetAnnouncementByID)
 
@@ -271,7 +271,7 @@ func TestAnnouncementPublicAPI_IncrementViewCount(t *testing.T) {
 
 	t.Run("成功增加查看次数", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router.POST("/announcements/:id/view", api.IncrementViewCount)
 
 		mockService.On("IncrementViewCount", mock.Anything, "123").
@@ -296,7 +296,7 @@ func TestAnnouncementPublicAPI_IncrementViewCount(t *testing.T) {
 
 	t.Run("空ID参数", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router := setupTestRouter()
 		router.POST("/announcements/:id/view", api.IncrementViewCount)
 
@@ -311,7 +311,7 @@ func TestAnnouncementPublicAPI_IncrementViewCount(t *testing.T) {
 
 	t.Run("服务错误", func(t *testing.T) {
 		mockService := new(MockAnnouncementService)
-		api := messaging.NewAnnouncementPublicAPI(mockService)
+		api := announcements.NewAnnouncementPublicAPI(mockService)
 		router := setupTestRouter()
 		router.POST("/announcements/:id/view", api.IncrementViewCount)
 
@@ -346,7 +346,7 @@ func TestAnnouncementAPI_Integration(t *testing.T) {
 		mockService := new(MockAnnouncementService)
 
 		// 设置路由
-		publicAPI := messaging.NewAnnouncementPublicAPI(mockService)
+		publicAPI := announcements.NewAnnouncementPublicAPI(mockService)
 		router.GET("/announcements/effective", publicAPI.GetEffectiveAnnouncements)
 		router.GET("/announcements/:id", publicAPI.GetAnnouncementByID)
 		router.POST("/announcements/:id/view", publicAPI.IncrementViewCount)
@@ -435,7 +435,7 @@ func TestAnnouncementAPI_Performance(t *testing.T) {
 	router := setupTestRouter()
 	mockService := new(MockAnnouncementService)
 
-	api := messaging.NewAnnouncementPublicAPI(mockService)
+	api := announcements.NewAnnouncementPublicAPI(mockService)
 	router.GET("/announcements/effective", api.GetEffectiveAnnouncements)
 
 	// 准备大量数据

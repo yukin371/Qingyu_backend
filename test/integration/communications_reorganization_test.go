@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	announcementsAPI "Qingyu_backend/api/v1/communications/announcements"
-	messagesAPI "Qingyu_backend/api/v1/communications/messages"
-	notificationsAPI "Qingyu_backend/api/v1/communications/notifications"
+	announcementsAPI "Qingyu_backend/api/v1/announcements"
+	messagesAPI "Qingyu_backend/api/v1/messages"
+	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	socialModel "Qingyu_backend/models/social"
 )
 
