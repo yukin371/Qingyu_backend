@@ -3,6 +3,10 @@ package auth
 import (
 	"context"
 	"time"
+
+	"golang.org/x/oauth2"
+
+	authModel "Qingyu_backend/models/auth"
 )
 
 // AuthService 认证服务接口（对外暴露）
@@ -10,6 +14,7 @@ type AuthService interface {
 	// 用户认证
 	Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error)
 	Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error)
+	OAuthLogin(ctx context.Context, req *OAuthLoginRequest) (*LoginResponse, error)
 	Logout(ctx context.Context, token string) error
 	RefreshToken(ctx context.Context, token string) (string, error)
 	ValidateToken(ctx context.Context, token string) (*TokenClaims, error)
@@ -35,6 +40,24 @@ type AuthService interface {
 
 	// Health 健康检查
 	Health(ctx context.Context) error
+}
+
+// OAuthServiceInterface OAuth服务接口（用于API层）
+type OAuthServiceInterface interface {
+	// 获取授权URL
+	GetAuthURL(ctx context.Context, provider authModel.OAuthProvider, redirectURI, state string, linkMode bool, userID ...string) (string, error)
+	// 交换授权码
+	ExchangeCode(ctx context.Context, provider authModel.OAuthProvider, code, state string) (*oauth2.Token, *authModel.OAuthSession, error)
+	// 获取用户信息
+	GetUserInfo(ctx context.Context, provider authModel.OAuthProvider, token *oauth2.Token) (*authModel.UserIdentity, error)
+	// 绑定账号
+	LinkAccount(ctx context.Context, userID string, provider authModel.OAuthProvider, token *oauth2.Token, identity *authModel.UserIdentity) (*authModel.OAuthAccount, error)
+	// 解绑账号
+	UnlinkAccount(ctx context.Context, userID, accountID string) error
+	// 获取绑定账号列表
+	GetLinkedAccounts(ctx context.Context, userID string) ([]*authModel.OAuthAccount, error)
+	// 设置主账号
+	SetPrimaryAccount(ctx context.Context, userID, accountID string) error
 }
 
 // JWTService JWT令牌服务接口
@@ -99,6 +122,16 @@ type RegisterResponse struct {
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+// OAuthLoginRequest OAuth登录请求
+type OAuthLoginRequest struct {
+	Provider   authModel.OAuthProvider `json:"provider" binding:"required"`
+	ProviderID string               `json:"provider_id" binding:"required"`
+	Email      string               `json:"email"`
+	Name       string               `json:"name"`
+	Avatar     string               `json:"avatar"`
+	Username   string               `json:"username"`
 }
 
 // LoginResponse 登录响应

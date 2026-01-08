@@ -3,10 +3,15 @@ package auth
 import (
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
+	"time"
 
 	usersModel "Qingyu_backend/models/users"
+	authModel "Qingyu_backend/models/auth"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 
 	"go.uber.org/zap"
 )
@@ -17,6 +22,7 @@ type AuthServiceImpl struct {
 	roleService       RoleService
 	permissionService PermissionService
 	authRepo          sharedRepo.AuthRepository
+	oauthRepo         authRepo.OAuthRepository // OAuth仓储
 	userService       userServiceInterface.UserService // 依赖User服务
 	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
 	passwordValidator *PasswordValidator               // MVP: 密码强度验证
@@ -29,6 +35,7 @@ func NewAuthService(
 	roleService RoleService,
 	permissionService PermissionService,
 	authRepo sharedRepo.AuthRepository,
+	oauthRepo authRepo.OAuthRepository,
 	userService userServiceInterface.UserService,
 	sessionService SessionService,
 ) AuthService {
@@ -37,6 +44,7 @@ func NewAuthService(
 		roleService:       roleService,
 		permissionService: permissionService,
 		authRepo:          authRepo,
+		oauthRepo:         oauthRepo,
 		userService:       userService,
 		sessionService:    sessionService,
 		passwordValidator: NewPasswordValidator(), // MVP: 使用默认密码验证规则
@@ -162,6 +170,124 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 			Username: loginResp.User.Username,
 			Email:    loginResp.User.Email,
 			Roles:    roleNames,
+		},
+		Token: token,
+	}, nil
+}
+
+// OAuthLogin OAuth登录
+func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest) (*LoginResponse, error) {
+	// 1. 查找OAuth账号是否已存在
+	oauthAccount, err := s.oauthRepo.FindByProviderAndProviderID(ctx, req.Provider, req.ProviderID)
+	if err != nil {
+		return nil, fmt.Errorf("查询OAuth账号失败: %w", err)
+	}
+
+	// 2. 如果OAuth账号已存在，直接登录
+	if oauthAccount != nil {
+		// 获取用户信息
+		getUserReq := &userServiceInterface.GetUserRequest{ID: oauthAccount.UserID}
+		userResp, err := s.userService.GetUser(ctx, getUserReq)
+		if err != nil {
+			return nil, fmt.Errorf("获取用户信息失败: %w", err)
+		}
+
+		// 更新最后登录时间
+		_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID)
+
+		// 获取用户角色
+		userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID)
+		if err != nil {
+			return nil, fmt.Errorf("获取用户角色失败: %w", err)
+		}
+
+		roleNames := make([]string, len(userRoles))
+		for i, role := range userRoles {
+			roleNames[i] = role.Name
+		}
+
+		// 如果没有角色，分配默认角色
+		if len(roleNames) == 0 {
+			roleNames = []string{"reader"}
+		}
+
+		// 生成JWT Token
+		token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roleNames)
+		if err != nil {
+			return nil, fmt.Errorf("生成Token失败: %w", err)
+		}
+
+		return &LoginResponse{
+			User: &UserInfo{
+				ID:       userResp.User.ID,
+				Username: userResp.User.Username,
+				Email:    userResp.User.Email,
+				Roles:    roleNames,
+			},
+			Token: token,
+		}, nil
+	}
+
+	// 3. OAuth账号不存在，创建新用户
+	// 生成随机密码（OAuth用户不需要密码）
+	randomPassword := generateRandomPassword(16)
+
+	// 生成用户名（如果未提供）
+	username := req.Username
+	if username == "" {
+		username = generateUsernameFromProvider(req.Provider, req.ProviderID)
+	}
+
+	// 创建用户
+	createUserReq := &userServiceInterface.CreateUserRequest{
+		Username: username,
+		Email:    req.Email,
+		Password: randomPassword,
+	}
+
+	userResp, err := s.userService.CreateUser(ctx, createUserReq)
+	if err != nil {
+		return nil, fmt.Errorf("创建用户失败: %w", err)
+	}
+
+	// 4. 分配默认角色
+	defaultRole := "reader"
+	role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
+	if err == nil && role != nil {
+		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+	}
+
+	// 5. 创建OAuth账号记录
+	oauthAccount = &authModel.OAuthAccount{
+		UserID:         userResp.User.ID,
+		Provider:       req.Provider,
+		ProviderUserID: req.ProviderID,
+		Email:          req.Email,
+		Username:       req.Username,
+		Avatar:         req.Avatar,
+		IsPrimary:      true, // 第一个OAuth账号设为主账号
+		LastLoginAt:    time.Now(),
+		Metadata:       make(map[string]interface{}),
+	}
+
+	if err := s.oauthRepo.Create(ctx, oauthAccount); err != nil {
+		return nil, fmt.Errorf("创建OAuth账号失败: %w", err)
+	}
+
+	// 6. 生成JWT Token
+	roles := []string{defaultRole}
+	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+	if err != nil {
+		return nil, fmt.Errorf("生成Token失败: %w", err)
+	}
+
+	// 7. 返回响应
+	return &LoginResponse{
+		User: &UserInfo{
+			ID:       userResp.User.ID,
+			Username: userResp.User.Username,
+			Email:    userResp.User.Email,
+			Roles:    roles,
 		},
 		Token: token,
 	}, nil
@@ -379,5 +505,37 @@ func convertUserToUserInfo(user *usersModel.User, roles []string) *UserInfo {
 		Username: user.Username,
 		Email:    user.Email,
 		Roles:    roles,
+	}
+}
+
+// generateRandomPassword 生成随机密码（用于OAuth用户）
+func generateRandomPassword(length int) string {
+	b := make([]byte, length)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)[:length]
+}
+
+// generateUsernameFromProvider 从OAuth提供商生成用户名
+func generateUsernameFromProvider(provider authModel.OAuthProvider, providerID string) string {
+	// 取providerID的前8位作为用户名
+	shortID := providerID
+	if len(shortID) > 8 {
+		shortID = shortID[:8]
+	}
+
+	// 根据提供商生成不同的用户名格式
+	switch provider {
+	case authModel.OAuthProviderGoogle:
+		return "google_" + shortID
+	case authModel.OAuthProviderGitHub:
+		return "github_" + shortID
+	case authModel.OAuthProviderQQ:
+		return "qq_" + shortID
+	case authModel.OAuthProviderWeChat:
+		return "wechat_" + shortID
+	case authModel.OAuthProviderWeibo:
+		return "weibo_" + shortID
+	default:
+		return "oauth_" + shortID
 	}
 }

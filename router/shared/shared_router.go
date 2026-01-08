@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/middleware"
@@ -17,6 +18,8 @@ import (
 func RegisterRoutes(
 	r *gin.RouterGroup,
 	authService auth.AuthService,
+	oauthService *auth.OAuthService,
+	logger *zap.Logger,
 	walletService wallet.WalletService,
 	storageService *storage.StorageServiceImpl,
 	multipartService *storage.MultipartUploadService,
@@ -30,8 +33,8 @@ func RegisterRoutes(
 	r.Use(response.GzipMiddleware(5))               // Gzip压缩（压缩级别5）
 
 	// 调用各个独立的注册函数
-	if authService != nil {
-		RegisterAuthRoutes(r, authService)
+	if authService != nil && oauthService != nil {
+		RegisterAuthRoutes(r, authService, oauthService, logger)
 	}
 	if walletService != nil {
 		RegisterWalletRoutes(r, walletService)
@@ -43,9 +46,10 @@ func RegisterRoutes(
 }
 
 // RegisterAuthRoutes 注册认证服务路由
-func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService) {
+func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthService *auth.OAuthService, logger *zap.Logger) {
 	// 创建API处理器
 	authAPI := shared.NewAuthAPI(authService)
+	oauthAPI := shared.NewOAuthAPI(oauthService, authService, logger)
 
 	// ============ 认证服务路由 ============
 	authGroup := r.Group("/auth")
@@ -67,6 +71,33 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService) {
 			authProtected.POST("/refresh", authAPI.RefreshToken)
 			authProtected.GET("/permissions", authAPI.GetUserPermissions)
 			authProtected.GET("/roles", authAPI.GetUserRoles)
+		}
+	}
+
+	// ============ OAuth认证路由 ============
+	oauthGroup := r.Group("/oauth")
+	{
+		// 公开路由（添加速率限制）
+		publicOAuth := oauthGroup.Group("")
+		publicOAuth.Use(middleware.RateLimitMiddleware(10, 60)) // 10次/分钟
+		{
+			// 获取授权URL
+			publicOAuth.POST("/:provider/authorize", oauthAPI.GetAuthorizeURL)
+			// OAuth回调
+			publicOAuth.POST("/:provider/callback", oauthAPI.HandleCallback)
+		}
+
+		// 需要认证的路由
+		oauthProtected := oauthGroup.Group("")
+		oauthProtected.Use(middleware.JWTAuth())
+		oauthProtected.Use(middleware.RateLimitMiddleware(20, 60)) // 20次/分钟
+		{
+			// 获取绑定的账号列表
+			oauthProtected.GET("/accounts", oauthAPI.GetLinkedAccounts)
+			// 解绑账号
+			oauthProtected.DELETE("/accounts/:accountID", oauthAPI.UnlinkAccount)
+			// 设置主账号
+			oauthProtected.PUT("/accounts/:accountID/primary", oauthAPI.SetPrimaryAccount)
 		}
 	}
 }
