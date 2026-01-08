@@ -51,6 +51,9 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
+
+	authModel "Qingyu_backend/models/auth"
 )
 
 // ServiceContainer 服务容器
@@ -93,6 +96,7 @@ type ServiceContainer struct {
 
 	// Shared services
 	authService           auth.AuthService
+	oauthService          *auth.OAuthService
 	walletService         wallet.WalletService
 	recommendationService recommendation.RecommendationService
 	messagingService      sharedMessaging.MessagingService
@@ -299,6 +303,14 @@ func (c *ServiceContainer) GetAuthService() (auth.AuthService, error) {
 		return nil, fmt.Errorf("AuthService未初始化")
 	}
 	return c.authService, nil
+}
+
+// GetOAuthService 获取OAuth服务
+func (c *ServiceContainer) GetOAuthService() (*auth.OAuthService, error) {
+	if c.oauthService == nil {
+		return nil, fmt.Errorf("OAuthService未初始化")
+	}
+	return c.oauthService, nil
 }
 
 // GetWalletService 获取钱包服务
@@ -741,6 +753,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 5.2 创建 AuthService（完整实现，支持Redis降级）
 	authRepo = c.repositoryFactory.CreateAuthRepository()
+	oauthRepo := c.repositoryFactory.CreateOAuthRepository()
 
 	// 创建Redis适配器或内存降级方案
 	// 注意：使用具体类型而不是接口，以便同时实现RedisClient和CacheClient接口
@@ -776,6 +789,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		roleService,
 		permissionService,
 		authRepo,
+		oauthRepo,
 		c.userService,
 		sessionService,
 	)
@@ -785,6 +799,34 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
 			return fmt.Errorf("注册认证服务失败: %w", err)
 		}
+	}
+
+	// 5.2.1 创建 OAuthService（可选，需要配置）
+	// 获取OAuth配置
+	oauthConfigs := make(map[string]*authModel.OAuthConfig)
+	// TODO: 从配置文件加载OAuth配置
+	// oauthConfigs["google"] = &authModel.OAuthConfig{
+	//     Enabled: true,
+	//     ClientID: config.GetOAuthConfig("google").ClientID,
+	//     ClientSecret: config.GetOAuthConfig("google").ClientSecret,
+	//     RedirectURI: config.GetOAuthConfig("google").RedirectURI,
+	//     Scopes: "openid profile email",
+	// }
+
+	if len(oauthConfigs) > 0 {
+		// 如果有OAuth配置，创建OAuthService
+		logger, err := zap.NewProduction()
+		if err == nil {
+			oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
+			if err != nil {
+				fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
+			} else {
+				c.oauthService = oauthSvc
+				fmt.Println("  ✓ OAuthService初始化完成")
+			}
+		}
+	} else {
+		fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
 	}
 
 	// 5.3 创建 RecommendationService
@@ -944,6 +986,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 // SetAuthService 设置认证服务
 func (c *ServiceContainer) SetAuthService(service auth.AuthService) {
 	c.authService = service
+}
+
+// SetOAuthService 设置OAuth服务
+func (c *ServiceContainer) SetOAuthService(service *auth.OAuthService) {
+	c.oauthService = service
 }
 
 // SetWalletService 设置钱包服务
