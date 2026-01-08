@@ -1,15 +1,16 @@
 # 后端生产环境 Dockerfile - 多阶段构建
 # 构建阶段
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
 # 安装构建依赖
-RUN apk add --no-cache git make
+RUN apk add --no-cache git make ca-certificates
 
-# 设置Go代理
-ENV GOPROXY=https://goproxy.cn,direct
+# 设置Go环境
+ENV GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 ENV GO111MODULE=on
+ENV GOSUMDB=off
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
@@ -17,8 +18,11 @@ ENV GOARCH=amd64
 # 复制依赖文件
 COPY go.mod go.sum ./
 
-# 下载依赖
-RUN go mod download
+# 下载依赖并验证（带重试）
+RUN echo "开始下载Go依赖..." && \
+    go mod download || (echo "依赖下载失败，重试中..." && sleep 2 && go mod download) && \
+    go mod verify && \
+    echo "✓ 依赖下载成功"
 
 # 复制源代码
 COPY . .
