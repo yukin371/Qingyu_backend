@@ -20,7 +20,7 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:${{ env.MONGODB_VERSION }}
+        image: mongo:7.0
         env:
           MONGO_INITDB_ROOT_USERNAME: admin
           MONGO_INITDB_ROOT_PASSWORD: password
@@ -33,7 +33,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
@@ -119,7 +119,7 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:${{ env.MONGODB_VERSION }}
+        image: mongo:7.0
         env:
           MONGO_INITDB_ROOT_USERNAME: admin
           MONGO_INITDB_ROOT_PASSWORD: password
@@ -132,7 +132,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
@@ -185,7 +185,7 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:${{ env.MONGODB_VERSION }}
+        image: mongo:7.0
         env:
           MONGO_INITDB_ROOT_USERNAME: admin
           MONGO_INITDB_ROOT_PASSWORD: password
@@ -198,7 +198,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
@@ -295,7 +295,7 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:${{ env.MONGODB_VERSION }}
+        image: mongo:7.0
         env:
           MONGO_INITDB_ROOT_USERNAME: admin
           MONGO_INITDB_ROOT_PASSWORD: password
@@ -308,7 +308,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
