@@ -2,14 +2,14 @@ name: Simple CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, test, develop ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, test, develop ]
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.24.0'
+  GO_VERSION: '1.23'
 
 jobs:
   # 代码检查和格式化

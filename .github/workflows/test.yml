@@ -2,15 +2,15 @@ name: Test
 
 on:
   push:
-    branches: [ master, main, develop ]
+    branches: [ master, main, develop, dev, test ]
   pull_request:
-    branches: [ master, main, develop ]
+    branches: [ master, main, develop, dev, test ]
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.21'
-  MONGODB_VERSION: '6.0'
-  REDIS_VERSION: '7'
+  GO_VERSION: '1.23'
+  MONGODB_VERSION: '7.0'
+  REDIS_VERSION: '7-alpine'
 
 jobs:
   # 单元测试和覆盖率
