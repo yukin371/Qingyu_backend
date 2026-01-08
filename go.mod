@@ -1,10 +1,9 @@
 module Qingyu_backend
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.23
 
 require (
+	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
@@ -41,7 +40,6 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/alicebob/miniredis/v2 v2.35.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.14.1 // indirect
