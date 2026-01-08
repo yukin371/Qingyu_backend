@@ -1,0 +1,2980 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>auth: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">Qingyu_backend/service/shared/auth/auth_service.go (71.2%)</option>
+				
+				<option value="file1">Qingyu_backend/service/shared/auth/jwt_service.go (72.2%)</option>
+				
+				<option value="file2">Qingyu_backend/service/shared/auth/memory_blacklist.go (0.0%)</option>
+				
+				<option value="file3">Qingyu_backend/service/shared/auth/oauth_service.go (41.5%)</option>
+				
+				<option value="file4">Qingyu_backend/service/shared/auth/password_validator.go (18.6%)</option>
+				
+				<option value="file5">Qingyu_backend/service/shared/auth/permission_service.go (87.8%)</option>
+				
+				<option value="file6">Qingyu_backend/service/shared/auth/redis_adapter.go (0.0%)</option>
+				
+				<option value="file7">Qingyu_backend/service/shared/auth/role_service.go (81.3%)</option>
+				
+				<option value="file8">Qingyu_backend/service/shared/auth/session_service.go (72.6%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package auth
+
+import (
+        userServiceInterface "Qingyu_backend/service/interfaces/user"
+        "context"
+        "crypto/rand"
+        "encoding/base64"
+        "fmt"
+        "time"
+
+        usersModel "Qingyu_backend/models/users"
+        authModel "Qingyu_backend/models/auth"
+        sharedRepo "Qingyu_backend/repository/interfaces/shared"
+        authRepo "Qingyu_backend/repository/interfaces/auth"
+
+        "go.uber.org/zap"
+)
+
+// AuthServiceImpl Auth服务实现（整合JWT、角色、权限、会话）
+type AuthServiceImpl struct {
+        jwtService        JWTService
+        roleService       RoleService
+        permissionService PermissionService
+        authRepo          sharedRepo.AuthRepository
+        oauthRepo         authRepo.OAuthRepository // OAuth仓储
+        userService       userServiceInterface.UserService // 依赖User服务
+        sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
+        passwordValidator *PasswordValidator               // MVP: 密码强度验证
+        initialized       bool                             // 初始化标志
+}
+
+// NewAuthService 创建Auth服务
+func NewAuthService(
+        jwtService JWTService,
+        roleService RoleService,
+        permissionService PermissionService,
+        authRepo sharedRepo.AuthRepository,
+        oauthRepo authRepo.OAuthRepository,
+        userService userServiceInterface.UserService,
+        sessionService SessionService,
+) AuthService <span class="cov10" title="20">{
+        return &amp;AuthServiceImpl{
+                jwtService:        jwtService,
+                roleService:       roleService,
+                permissionService: permissionService,
+                authRepo:          authRepo,
+                oauthRepo:         oauthRepo,
+                userService:       userService,
+                sessionService:    sessionService,
+                passwordValidator: NewPasswordValidator(), // MVP: 使用默认密码验证规则
+        }
+}</span>
+
+// ============ 用户认证 ============
+
+// Register 用户注册
+func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) <span class="cov6" title="7">{
+        // 0. MVP: 验证密码强度
+        if err := s.passwordValidator.ValidatePassword(req.Password); err != nil </span><span class="cov3" title="2">{
+                return nil, fmt.Errorf("密码不符合要求: %w", err)
+        }</span>
+
+        // 1. 调用User服务创建用户
+        <span class="cov5" title="5">createUserReq := &amp;userServiceInterface.CreateUserRequest{
+                Username: req.Username,
+                Email:    req.Email,
+                Password: req.Password,
+        }
+
+        userResp, err := s.userService.CreateUser(ctx, createUserReq)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("创建用户失败: %w", err)
+        }</span>
+
+        // 2. 分配默认角色
+        <span class="cov5" title="5">defaultRole := req.Role
+        if defaultRole == "" </span><span class="cov5" title="4">{
+                defaultRole = "reader" // 默认为reader角色
+        }</span>
+
+        // 查找角色
+        <span class="cov5" title="5">role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
+        if err != nil </span><span class="cov0" title="0">{
+                // 如果角色不存在，使用默认角色
+                role, _ = s.authRepo.GetRoleByName(ctx, "reader")
+        }</span>
+
+        <span class="cov5" title="5">if role != nil </span><span class="cov5" title="5">{
+                _ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+        }</span>
+
+        // 3. 生成JWT Token
+        <span class="cov5" title="5">roles := []string{defaultRole}
+        token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("生成Token失败: %w", err)
+        }</span>
+
+        // 4. 返回响应
+        <span class="cov5" title="5">return &amp;RegisterResponse{
+                User: &amp;UserInfo{
+                        ID:       userResp.User.ID,
+                        Username: userResp.User.Username,
+                        Email:    userResp.User.Email,
+                        Roles:    roles,
+                },
+                Token: token,
+        }, nil</span>
+}
+
+// Login 用户登录
+func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) <span class="cov3" title="2">{
+        // 1. 调用User服务登录
+        loginReq := &amp;userServiceInterface.LoginUserRequest{
+                Username: req.Username,
+                Password: req.Password,
+        }
+
+        loginResp, err := s.userService.LoginUser(ctx, loginReq)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("登录失败: %w", err)
+        }</span>
+
+        // 2. 获取用户角色
+        <span class="cov1" title="1">userRoles, err := s.authRepo.GetUserRoles(ctx, loginResp.User.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("获取用户角色失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">roleNames := make([]string, len(userRoles))
+        for i, role := range userRoles </span><span class="cov1" title="1">{
+                roleNames[i] = role.Name
+        }</span>
+
+        // 如果没有角色，分配默认角色
+        <span class="cov1" title="1">if len(roleNames) == 0 </span><span class="cov0" title="0">{
+                roleNames = []string{"reader"}
+        }</span>
+
+        // 2.5. MVP: 强制执行多端登录限制（最多5台设备，超限自动踢出最老设备）
+        <span class="cov1" title="1">if err := s.sessionService.EnforceDeviceLimit(ctx, loginResp.User.ID, 5); err != nil </span><span class="cov0" title="0">{
+                // 记录错误但不中断登录（宽松策略）
+                zap.L().Warn("设备限制执行失败，允许登录",
+                        zap.String("user_id", loginResp.User.ID),
+                        zap.Error(err),
+                )
+        }</span>
+
+        // 3. 生成JWT Token
+        <span class="cov1" title="1">token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID, roleNames)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("生成Token失败: %w", err)
+        }</span>
+
+        // 3.5. MVP: 创建会话
+        <span class="cov1" title="1">session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                // 会话创建失败不影响登录（降级处理）
+                zap.L().Warn("创建会话失败",
+                        zap.String("user_id", loginResp.User.ID),
+                        zap.Error(err),
+                )
+        }</span>
+        <span class="cov1" title="1">_ = session // 暂时不使用，后续可添加到响应中
+
+        // 4. 返回响应
+        return &amp;LoginResponse{
+                User: &amp;UserInfo{
+                        ID:       loginResp.User.ID,
+                        Username: loginResp.User.Username,
+                        Email:    loginResp.User.Email,
+                        Roles:    roleNames,
+                },
+                Token: token,
+        }, nil</span>
+}
+
+// OAuthLogin OAuth登录
+func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest) (*LoginResponse, error) <span class="cov4" title="3">{
+        // 1. 查找OAuth账号是否已存在
+        oauthAccount, err := s.oauthRepo.FindByProviderAndProviderID(ctx, req.Provider, req.ProviderID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("查询OAuth账号失败: %w", err)
+        }</span>
+
+        // 2. 如果OAuth账号已存在，直接登录
+        <span class="cov4" title="3">if oauthAccount != nil </span><span class="cov1" title="1">{
+                // 获取用户信息
+                getUserReq := &amp;userServiceInterface.GetUserRequest{ID: oauthAccount.UserID}
+                userResp, err := s.userService.GetUser(ctx, getUserReq)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("获取用户信息失败: %w", err)
+                }</span>
+
+                // 更新最后登录时间
+                <span class="cov1" title="1">_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID)
+
+                // 获取用户角色
+                userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("获取用户角色失败: %w", err)
+                }</span>
+
+                <span class="cov1" title="1">roleNames := make([]string, len(userRoles))
+                for i, role := range userRoles </span><span class="cov1" title="1">{
+                        roleNames[i] = role.Name
+                }</span>
+
+                // 如果没有角色，分配默认角色
+                <span class="cov1" title="1">if len(roleNames) == 0 </span><span class="cov0" title="0">{
+                        roleNames = []string{"reader"}
+                }</span>
+
+                // 生成JWT Token
+                <span class="cov1" title="1">token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roleNames)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("生成Token失败: %w", err)
+                }</span>
+
+                <span class="cov1" title="1">return &amp;LoginResponse{
+                        User: &amp;UserInfo{
+                                ID:       userResp.User.ID,
+                                Username: userResp.User.Username,
+                                Email:    userResp.User.Email,
+                                Roles:    roleNames,
+                        },
+                        Token: token,
+                }, nil</span>
+        }
+
+        // 3. OAuth账号不存在，创建新用户
+        // 生成随机密码（OAuth用户不需要密码）
+        <span class="cov3" title="2">randomPassword := generateRandomPassword(16)
+
+        // 生成用户名（如果未提供）
+        username := req.Username
+        if username == "" </span><span class="cov1" title="1">{
+                username = generateUsernameFromProvider(req.Provider, req.ProviderID)
+        }</span>
+
+        // 创建用户
+        <span class="cov3" title="2">createUserReq := &amp;userServiceInterface.CreateUserRequest{
+                Username: username,
+                Email:    req.Email,
+                Password: randomPassword,
+        }
+
+        userResp, err := s.userService.CreateUser(ctx, createUserReq)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("创建用户失败: %w", err)
+        }</span>
+
+        // 4. 分配默认角色
+        <span class="cov3" title="2">defaultRole := "reader"
+        role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
+        if err == nil &amp;&amp; role != nil </span><span class="cov3" title="2">{
+                _ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+        }</span>
+
+        // 5. 创建OAuth账号记录
+        <span class="cov3" title="2">oauthAccount = &amp;authModel.OAuthAccount{
+                UserID:         userResp.User.ID,
+                Provider:       req.Provider,
+                ProviderUserID: req.ProviderID,
+                Email:          req.Email,
+                Username:       req.Username,
+                Avatar:         req.Avatar,
+                IsPrimary:      true, // 第一个OAuth账号设为主账号
+                LastLoginAt:    time.Now(),
+                Metadata:       make(map[string]interface{}),
+        }
+
+        if err := s.oauthRepo.Create(ctx, oauthAccount); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("创建OAuth账号失败: %w", err)
+        }</span>
+
+        // 6. 生成JWT Token
+        <span class="cov3" title="2">roles := []string{defaultRole}
+        token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("生成Token失败: %w", err)
+        }</span>
+
+        // 7. 返回响应
+        <span class="cov3" title="2">return &amp;LoginResponse{
+                User: &amp;UserInfo{
+                        ID:       userResp.User.ID,
+                        Username: userResp.User.Username,
+                        Email:    userResp.User.Email,
+                        Roles:    roles,
+                },
+                Token: token,
+        }, nil</span>
+}
+
+// Logout 用户登出
+func (s *AuthServiceImpl) Logout(ctx context.Context, token string) error <span class="cov1" title="1">{
+        // 将Token加入黑名单
+        if err := s.jwtService.RevokeToken(ctx, token); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("登出失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// RefreshToken 刷新Token
+func (s *AuthServiceImpl) RefreshToken(ctx context.Context, token string) (string, error) <span class="cov1" title="1">{
+        // 使用JWT服务刷新Token
+        newToken, err := s.jwtService.RefreshToken(ctx, token)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("刷新Token失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return newToken, nil</span>
+}
+
+// ValidateToken 验证Token
+func (s *AuthServiceImpl) ValidateToken(ctx context.Context, token string) (*TokenClaims, error) <span class="cov1" title="1">{
+        // 使用JWT服务验证Token
+        claims, err := s.jwtService.ValidateToken(ctx, token)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("验证Token失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return claims, nil</span>
+}
+
+// ============ 权限管理 ============
+
+// CheckPermission 检查权限
+func (s *AuthServiceImpl) CheckPermission(ctx context.Context, userID, permission string) (bool, error) <span class="cov3" title="2">{
+        return s.permissionService.CheckPermission(ctx, userID, permission)
+}</span>
+
+// GetUserPermissions 获取用户权限
+func (s *AuthServiceImpl) GetUserPermissions(ctx context.Context, userID string) ([]string, error) <span class="cov1" title="1">{
+        return s.permissionService.GetUserPermissions(ctx, userID)
+}</span>
+
+// HasRole 检查角色
+func (s *AuthServiceImpl) HasRole(ctx context.Context, userID, role string) (bool, error) <span class="cov3" title="2">{
+        return s.permissionService.HasRole(ctx, userID, role)
+}</span>
+
+// GetUserRoles 获取用户角色
+func (s *AuthServiceImpl) GetUserRoles(ctx context.Context, userID string) ([]string, error) <span class="cov1" title="1">{
+        roles, err := s.authRepo.GetUserRoles(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("获取用户角色失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">roleNames := make([]string, len(roles))
+        for i, role := range roles </span><span class="cov3" title="2">{
+                roleNames[i] = role.Name
+        }</span>
+
+        <span class="cov1" title="1">return roleNames, nil</span>
+}
+
+// ============ 角色管理 ============
+
+// CreateRole 创建角色
+func (s *AuthServiceImpl) CreateRole(ctx context.Context, req *CreateRoleRequest) (*Role, error) <span class="cov0" title="0">{
+        return s.roleService.CreateRole(ctx, req)
+}</span>
+
+// UpdateRole 更新角色
+func (s *AuthServiceImpl) UpdateRole(ctx context.Context, roleID string, req *UpdateRoleRequest) error <span class="cov0" title="0">{
+        return s.roleService.UpdateRole(ctx, roleID, req)
+}</span>
+
+// DeleteRole 删除角色
+func (s *AuthServiceImpl) DeleteRole(ctx context.Context, roleID string) error <span class="cov0" title="0">{
+        return s.roleService.DeleteRole(ctx, roleID)
+}</span>
+
+// AssignRole 分配角色
+func (s *AuthServiceImpl) AssignRole(ctx context.Context, userID, roleID string) error <span class="cov1" title="1">{
+        // 分配角色
+        if err := s.authRepo.AssignUserRole(ctx, userID, roleID); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("分配角色失败: %w", err)
+        }</span>
+
+        // 清除权限缓存
+        <span class="cov1" title="1">if permSvc, ok := s.permissionService.(*PermissionServiceImpl); ok </span><span class="cov1" title="1">{
+                _ = permSvc.InvalidateUserPermissionsCache(ctx, userID)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// RemoveRole 移除角色
+func (s *AuthServiceImpl) RemoveRole(ctx context.Context, userID, roleID string) error <span class="cov1" title="1">{
+        // 移除角色
+        if err := s.authRepo.RemoveUserRole(ctx, userID, roleID); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("移除角色失败: %w", err)
+        }</span>
+
+        // 清除权限缓存
+        <span class="cov1" title="1">if permSvc, ok := s.permissionService.(*PermissionServiceImpl); ok </span><span class="cov1" title="1">{
+                _ = permSvc.InvalidateUserPermissionsCache(ctx, userID)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// ============ 会话管理（预留） ============
+
+// CreateSession 创建会话
+func (s *AuthServiceImpl) CreateSession(ctx context.Context, userID string) (*Session, error) <span class="cov0" title="0">{
+        // TODO: 实现会话管理
+        return &amp;Session{
+                ID:     "session_placeholder",
+                UserID: userID,
+        }, nil
+}</span>
+
+// GetSession 获取会话
+func (s *AuthServiceImpl) GetSession(ctx context.Context, sessionID string) (*Session, error) <span class="cov0" title="0">{
+        // TODO: 实现会话管理
+        return nil, fmt.Errorf("会话管理功能待实现")
+}</span>
+
+// DestroySession 销毁会话
+func (s *AuthServiceImpl) DestroySession(ctx context.Context, sessionID string) error <span class="cov0" title="0">{
+        // TODO: 实现会话管理
+        return fmt.Errorf("会话管理功能待实现")
+}</span>
+
+// RefreshSession 刷新会话
+func (s *AuthServiceImpl) RefreshSession(ctx context.Context, sessionID string) error <span class="cov0" title="0">{
+        // TODO: 实现会话管理
+        return fmt.Errorf("会话管理功能待实现")
+}</span>
+
+// ============ BaseService 接口实现 ============
+
+// Initialize 初始化认证服务
+func (s *AuthServiceImpl) Initialize(ctx context.Context) error <span class="cov10" title="20">{
+        if s.initialized </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        // 验证依赖项
+        <span class="cov10" title="20">if s.jwtService == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("jwtService is nil")
+        }</span>
+        <span class="cov10" title="20">if s.roleService == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("roleService is nil")
+        }</span>
+        <span class="cov10" title="20">if s.permissionService == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("permissionService is nil")
+        }</span>
+        <span class="cov10" title="20">if s.authRepo == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("authRepo is nil")
+        }</span>
+        <span class="cov10" title="20">if s.userService == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("userService is nil")
+        }</span>
+        <span class="cov10" title="20">if s.sessionService == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("sessionService is nil")
+        }</span>
+
+        // 检查Repository健康状态
+        <span class="cov10" title="20">if err := s.authRepo.Health(ctx); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("authRepo health check failed: %w", err)
+        }</span>
+
+        <span class="cov10" title="20">s.initialized = true
+        return nil</span>
+}
+
+// Health 健康检查
+func (s *AuthServiceImpl) Health(ctx context.Context) error <span class="cov1" title="1">{
+        if !s.initialized </span><span class="cov0" title="0">{
+                return fmt.Errorf("service not initialized")
+        }</span>
+        <span class="cov1" title="1">return s.authRepo.Health(ctx)</span>
+}
+
+// Close 关闭服务，清理资源
+func (s *AuthServiceImpl) Close(ctx context.Context) error <span class="cov0" title="0">{
+        // 认证服务暂无需要清理的资源
+        // 未来如果有缓存等资源，在此处清理
+        s.initialized = false
+        return nil
+}</span>
+
+// GetServiceName 获取服务名称
+func (s *AuthServiceImpl) GetServiceName() string <span class="cov1" title="1">{
+        return "AuthService"
+}</span>
+
+// GetVersion 获取服务版本
+func (s *AuthServiceImpl) GetVersion() string <span class="cov1" title="1">{
+        return "v1.0.0"
+}</span>
+
+// ============ 辅助函数 ============
+
+// convertUserToUserInfo 转换User为UserInfo
+func convertUserToUserInfo(user *usersModel.User, roles []string) *UserInfo <span class="cov0" title="0">{
+        return &amp;UserInfo{
+                ID:       user.ID,
+                Username: user.Username,
+                Email:    user.Email,
+                Roles:    roles,
+        }
+}</span>
+
+// generateRandomPassword 生成随机密码（用于OAuth用户）
+func generateRandomPassword(length int) string <span class="cov3" title="2">{
+        b := make([]byte, length)
+        rand.Read(b)
+        return base64.URLEncoding.EncodeToString(b)[:length]
+}</span>
+
+// generateUsernameFromProvider 从OAuth提供商生成用户名
+func generateUsernameFromProvider(provider authModel.OAuthProvider, providerID string) string <span class="cov1" title="1">{
+        // 取providerID的前8位作为用户名
+        shortID := providerID
+        if len(shortID) &gt; 8 </span><span class="cov1" title="1">{
+                shortID = shortID[:8]
+        }</span>
+
+        // 根据提供商生成不同的用户名格式
+        <span class="cov1" title="1">switch provider </span>{
+        case authModel.OAuthProviderGoogle:<span class="cov1" title="1">
+                return "google_" + shortID</span>
+        case authModel.OAuthProviderGitHub:<span class="cov0" title="0">
+                return "github_" + shortID</span>
+        case authModel.OAuthProviderQQ:<span class="cov0" title="0">
+                return "qq_" + shortID</span>
+        case authModel.OAuthProviderWeChat:<span class="cov0" title="0">
+                return "wechat_" + shortID</span>
+        case authModel.OAuthProviderWeibo:<span class="cov0" title="0">
+                return "weibo_" + shortID</span>
+        default:<span class="cov0" title="0">
+                return "oauth_" + shortID</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package auth
+
+import (
+        "context"
+        "crypto/hmac"
+        "crypto/sha256"
+        "encoding/base64"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "strings"
+        "time"
+
+        "Qingyu_backend/config"
+)
+
+// JWTService接口已在interfaces.go中定义，这里直接实现
+
+// JWTServiceImpl JWT服务实现
+type JWTServiceImpl struct {
+        config      *config.JWTConfigEnhanced
+        redisClient RedisClient // Redis客户端接口（用于黑名单）
+}
+
+// RedisClient Redis客户端接口（简化版）
+type RedisClient interface {
+        Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
+        Get(ctx context.Context, key string) (string, error)
+        Exists(ctx context.Context, keys ...string) (int64, error)
+}
+
+// NewJWTService 创建JWT服务
+func NewJWTService(cfg *config.JWTConfigEnhanced, redisClient RedisClient) JWTService <span class="cov10" title="27">{
+        if cfg == nil </span><span class="cov0" title="0">{
+                cfg = config.GetJWTConfigEnhanced()
+        }</span>
+        <span class="cov10" title="27">return &amp;JWTServiceImpl{
+                config:      cfg,
+                redisClient: redisClient,
+        }</span>
+}
+
+// ============ Token生成 ============
+
+// GenerateToken 生成访问Token（匹配interfaces.go中的定义）
+func (s *JWTServiceImpl) GenerateToken(ctx context.Context, userID string, roles []string) (string, error) <span class="cov8" title="18">{
+        if userID == "" </span><span class="cov0" title="0">{
+                return "", errors.New("user_id不能为空")
+        }</span>
+
+        <span class="cov8" title="18">now := time.Now()
+        claims := &amp;TokenClaims{
+                UserID: userID,
+                Roles:  roles,
+                Exp:    now.Add(s.config.Expiration).Unix(),
+        }
+
+        return s.generateJWT(claims)</span>
+}
+
+// GenerateTokenWithUsername 生成带用户名的访问Token（扩展方法）
+func (s *JWTServiceImpl) GenerateTokenWithUsername(ctx context.Context, userID string, username string, roles []string) (string, error) <span class="cov0" title="0">{
+        if userID == "" </span><span class="cov0" title="0">{
+                return "", errors.New("user_id不能为空")
+        }</span>
+
+        <span class="cov0" title="0">now := time.Now()
+        claims := &amp;TokenClaims{
+                UserID: userID,
+                Roles:  roles,
+                Exp:    now.Add(s.config.Expiration).Unix(),
+        }
+
+        return s.generateJWT(claims)</span>
+}
+
+// GenerateTokenPair 生成Token对（访问Token + 刷新Token）- 扩展方法
+func (s *JWTServiceImpl) GenerateTokenPair(ctx context.Context, userID string, roles []string) (accessToken, refreshToken string, err error) <span class="cov0" title="0">{
+        // 1. 生成访问Token
+        accessToken, err = s.GenerateToken(ctx, userID, roles)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", "", fmt.Errorf("生成访问Token失败: %w", err)
+        }</span>
+
+        // 2. 生成刷新Token
+        <span class="cov0" title="0">now := time.Now()
+        refreshClaims := &amp;TokenClaims{
+                UserID: userID,
+                Roles:  roles,
+                Exp:    now.Add(s.config.RefreshDuration).Unix(),
+        }
+
+        refreshToken, err = s.generateJWT(refreshClaims)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", "", fmt.Errorf("生成刷新Token失败: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return accessToken, refreshToken, nil</span>
+}
+
+// generateJWT 内部方法：生成JWT
+func (s *JWTServiceImpl) generateJWT(claims *TokenClaims) (string, error) <span class="cov8" title="18">{
+        // 1. 创建Header
+        header := map[string]string{
+                "alg": "HS256",
+                "typ": "JWT",
+        }
+        headerJSON, _ := json.Marshal(header)
+        headerBase64 := base64.RawURLEncoding.EncodeToString(headerJSON)
+
+        // 2. 创建Payload
+        payloadJSON, err := json.Marshal(claims)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("序列化claims失败: %w", err)
+        }</span>
+        <span class="cov8" title="18">payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
+
+        // 3. 创建签名
+        message := headerBase64 + "." + payloadBase64
+        signature := s.createSignature(message)
+
+        // 4. 组合JWT
+        token := message + "." + signature
+
+        return token, nil</span>
+}
+
+// createSignature 创建HMAC-SHA256签名
+func (s *JWTServiceImpl) createSignature(message string) string <span class="cov9" title="26">{
+        h := hmac.New(sha256.New, []byte(s.config.SecretKey))
+        h.Write([]byte(message))
+        signature := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+        return signature
+}</span>
+
+// ============ Token验证 ============
+
+// ValidateToken 验证Token并返回Claims（匹配interfaces.go中的定义）
+func (s *JWTServiceImpl) ValidateToken(ctx context.Context, token string) (*TokenClaims, error) <span class="cov6" title="8">{
+        // 1. 检查Token格式
+        if token == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("token为空")
+        }</span>
+
+        // 移除Bearer前缀
+        <span class="cov6" title="8">token = strings.TrimPrefix(token, "Bearer ")
+        token = strings.TrimSpace(token)
+
+        // 2. 解析Token
+        parts := strings.Split(token, ".")
+        if len(parts) != 3 </span><span class="cov0" title="0">{
+                return nil, errors.New("token格式错误")
+        }</span>
+
+        <span class="cov6" title="8">headerBase64 := parts[0]
+        payloadBase64 := parts[1]
+        signatureBase64 := parts[2]
+
+        // 3. 验证签名
+        message := headerBase64 + "." + payloadBase64
+        expectedSignature := s.createSignature(message)
+        if signatureBase64 != expectedSignature </span><span class="cov1" title="1">{
+                return nil, errors.New("token签名验证失败")
+        }</span>
+
+        // 4. 解析Claims
+        <span class="cov6" title="7">payloadJSON, err := base64.RawURLEncoding.DecodeString(payloadBase64)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解码payload失败: %w", err)
+        }</span>
+
+        <span class="cov6" title="7">var claims TokenClaims
+        if err := json.Unmarshal(payloadJSON, &amp;claims); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解析claims失败: %w", err)
+        }</span>
+
+        // 5. 验证过期时间
+        <span class="cov6" title="7">if time.Now().Unix() &gt; claims.Exp </span><span class="cov1" title="1">{
+                return nil, errors.New("token已过期")
+        }</span>
+
+        // 7. 检查Token是否在黑名单中
+        <span class="cov5" title="6">if s.redisClient != nil </span><span class="cov5" title="6">{
+                revoked, err := s.IsTokenRevoked(ctx, token)
+                if err == nil &amp;&amp; revoked </span><span class="cov1" title="1">{
+                        return nil, errors.New("token已被吊销")
+                }</span>
+        }
+
+        <span class="cov5" title="5">return &amp;claims, nil</span>
+}
+
+// ============ Token刷新 ============
+
+// RefreshToken 使用刷新Token获取新的Token（匹配interfaces.go中的定义）
+func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) (string, error) <span class="cov2" title="2">{
+        // 1. 验证刷新Token
+        claims, err := s.ValidateToken(ctx, refreshToken)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("刷新Token验证失败: %w", err)
+        }</span>
+
+        // 2. 生成新的访问Token
+        <span class="cov2" title="2">newToken, err := s.GenerateToken(ctx, claims.UserID, claims.Roles)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("生成新Token失败: %w", err)
+        }</span>
+
+        // 3. 可选：将旧的刷新Token加入黑名单
+        <span class="cov2" title="2">if s.redisClient != nil </span><span class="cov2" title="2">{
+                remainingTime := time.Until(time.Unix(claims.Exp, 0))
+                if remainingTime &gt; 0 </span><span class="cov2" title="2">{
+                        _ = s.RevokeToken(ctx, refreshToken)
+                }</span>
+        }
+
+        <span class="cov2" title="2">return newToken, nil</span>
+}
+
+// ============ Token吊销（黑名单） ============
+
+// RevokeToken 吊销Token（加入黑名单）- 匹配interfaces.go中的定义
+func (s *JWTServiceImpl) RevokeToken(ctx context.Context, token string) error <span class="cov4" title="4">{
+        if s.redisClient == nil </span><span class="cov0" title="0">{
+                return errors.New("Redis客户端未配置，无法吊销Token")
+        }</span>
+
+        // 移除Bearer前缀
+        <span class="cov4" title="4">token = strings.TrimPrefix(token, "Bearer ")
+        token = strings.TrimSpace(token)
+
+        // 解析Token获取过期时间
+        claims, err := s.ParseTokenClaims(token)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("解析Token失败: %w", err)
+        }</span>
+
+        // 计算剩余时间
+        <span class="cov4" title="4">remainingTime := time.Until(time.Unix(claims.Exp, 0))
+        if remainingTime &lt;= 0 </span><span class="cov0" title="0">{
+                return nil // Token已过期，无需加入黑名单
+        }</span>
+
+        // 存入Redis，设置过期时间为Token剩余时间
+        <span class="cov4" title="4">key := s.getBlacklistKey(token)
+        if err := s.redisClient.Set(ctx, key, "revoked", remainingTime); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("存储黑名单记录失败: %w", err)
+        }</span>
+
+        <span class="cov4" title="4">return nil</span>
+}
+
+// IsTokenRevoked 检查Token是否已被吊销
+func (s *JWTServiceImpl) IsTokenRevoked(ctx context.Context, token string) (bool, error) <span class="cov7" title="9">{
+        if s.redisClient == nil </span><span class="cov0" title="0">{
+                return false, nil // 没有Redis，认为未吊销
+        }</span>
+
+        // 移除Bearer前缀
+        <span class="cov7" title="9">token = strings.TrimPrefix(token, "Bearer ")
+        token = strings.TrimSpace(token)
+
+        key := s.getBlacklistKey(token)
+        exists, err := s.redisClient.Exists(ctx, key)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, fmt.Errorf("检查黑名单失败: %w", err)
+        }</span>
+
+        <span class="cov7" title="9">return exists &gt; 0, nil</span>
+}
+
+// getBlacklistKey 获取黑名单Redis key
+func (s *JWTServiceImpl) getBlacklistKey(token string) string <span class="cov8" title="13">{
+        // 使用Token的哈希值作为key（避免key过长）
+        h := sha256.New()
+        h.Write([]byte(token))
+        tokenHash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+        return fmt.Sprintf("token:blacklist:%s", tokenHash[:32]) // 取前32位
+}</span>
+
+// ============ 辅助方法 ============
+
+// ParseTokenClaims 解析Token的Claims（不验证签名）- 内部方法
+func (s *JWTServiceImpl) ParseTokenClaims(token string) (*TokenClaims, error) <span class="cov5" title="5">{
+        // 移除Bearer前缀
+        token = strings.TrimPrefix(token, "Bearer ")
+        token = strings.TrimSpace(token)
+
+        parts := strings.Split(token, ".")
+        if len(parts) != 3 </span><span class="cov0" title="0">{
+                return nil, errors.New("token格式错误")
+        }</span>
+
+        <span class="cov5" title="5">payloadBase64 := parts[1]
+        payloadJSON, err := base64.RawURLEncoding.DecodeString(payloadBase64)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解码payload失败: %w", err)
+        }</span>
+
+        <span class="cov5" title="5">var claims TokenClaims
+        if err := json.Unmarshal(payloadJSON, &amp;claims); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解析claims失败: %w", err)
+        }</span>
+
+        <span class="cov5" title="5">return &amp;claims, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package auth
+
+import (
+        "context"
+        "errors"
+        "sync"
+        "time"
+)
+
+// 定义错误
+var (
+        ErrRedisNil = errors.New("key does not exist")
+)
+
+// InMemoryTokenBlacklist 内存Token黑名单(Redis不可用时使用)
+//
+// 这是一个降级方案，当Redis不可用时，使用内存存储被吊销的Token。
+// 注意：
+//   - 仅适用于单实例部署
+//   - 服务器重启后黑名单会丢失
+//   - 不支持分布式部署
+type InMemoryTokenBlacklist struct {
+        mu         sync.RWMutex
+        blacklist  map[string]time.Time // token -&gt; 过期时间
+        cleanTimer *time.Ticker
+        closeChan  chan struct{}
+}
+
+// NewInMemoryTokenBlacklist 创建内存Token黑名单
+func NewInMemoryTokenBlacklist() *InMemoryTokenBlacklist <span class="cov0" title="0">{
+        bl := &amp;InMemoryTokenBlacklist{
+                blacklist: make(map[string]time.Time),
+                closeChan: make(chan struct{}),
+        }
+
+        // 启动定期清理过期token的goroutine
+        bl.cleanTimer = time.NewTicker(5 * time.Minute)
+        go bl.cleanupExpiredTokens()
+
+        return bl
+}</span>
+
+// Set 添加token到黑名单
+func (bl *InMemoryTokenBlacklist) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error <span class="cov0" title="0">{
+        bl.mu.Lock()
+        defer bl.mu.Unlock()
+
+        bl.blacklist[key] = time.Now().Add(expiration)
+        return nil
+}</span>
+
+// Get 检查token是否在黑名单中
+func (bl *InMemoryTokenBlacklist) Get(ctx context.Context, key string) (string, error) <span class="cov0" title="0">{
+        bl.mu.RLock()
+        defer bl.mu.RUnlock()
+
+        expireTime, exists := bl.blacklist[key]
+        if !exists </span><span class="cov0" title="0">{
+                return "", ErrRedisNil
+        }</span>
+
+        // 检查是否已过期
+        <span class="cov0" title="0">if time.Now().After(expireTime) </span><span class="cov0" title="0">{
+                // 过期了，删除并返回不存在
+                delete(bl.blacklist, key)
+                return "", ErrRedisNil
+        }</span>
+
+        <span class="cov0" title="0">return "revoked", nil</span>
+}
+
+// Exists 检查key是否存在
+func (bl *InMemoryTokenBlacklist) Exists(ctx context.Context, keys ...string) (int64, error) <span class="cov0" title="0">{
+        bl.mu.RLock()
+        defer bl.mu.RUnlock()
+
+        count := int64(0)
+        now := time.Now()
+
+        for _, key := range keys </span><span class="cov0" title="0">{
+                if expireTime, exists := bl.blacklist[key]; exists </span><span class="cov0" title="0">{
+                        // 检查是否过期
+                        if now.Before(expireTime) </span><span class="cov0" title="0">{
+                                count++
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return count, nil</span>
+}
+
+// Del 从黑名单删除key（支持多个key）
+func (bl *InMemoryTokenBlacklist) Del(ctx context.Context, keys ...string) error <span class="cov0" title="0">{
+        bl.mu.Lock()
+        defer bl.mu.Unlock()
+
+        for _, key := range keys </span><span class="cov0" title="0">{
+                delete(bl.blacklist, key)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Delete 从黑名单删除单个key（CacheClient接口兼容）
+func (bl *InMemoryTokenBlacklist) Delete(ctx context.Context, key string) error <span class="cov0" title="0">{
+        return bl.Del(ctx, key)
+}</span>
+
+// cleanupExpiredTokens 定期清理过期的token
+func (bl *InMemoryTokenBlacklist) cleanupExpiredTokens() <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-bl.cleanTimer.C:<span class="cov0" title="0">
+                        bl.mu.Lock()
+                        now := time.Now()
+                        for key, expireTime := range bl.blacklist </span><span class="cov0" title="0">{
+                                if now.After(expireTime) </span><span class="cov0" title="0">{
+                                        delete(bl.blacklist, key)
+                                }</span>
+                        }
+                        <span class="cov0" title="0">bl.mu.Unlock()</span>
+
+                case &lt;-bl.closeChan:<span class="cov0" title="0">
+                        return</span>
+                }
+        }
+}
+
+// Close 关闭清理器
+func (bl *InMemoryTokenBlacklist) Close() error <span class="cov0" title="0">{
+        bl.cleanTimer.Stop()
+        close(bl.closeChan)
+        return nil
+}</span>
+
+// Ping 健康检查（内存模式始终返回正常）
+func (bl *InMemoryTokenBlacklist) Ping(ctx context.Context) error <span class="cov0" title="0">{
+        return nil
+}</span>
+
+// Stats 获取黑名单统计信息
+func (bl *InMemoryTokenBlacklist) Stats() map[string]interface{} <span class="cov0" title="0">{
+        bl.mu.RLock()
+        defer bl.mu.RUnlock()
+
+        total := len(bl.blacklist)
+        expired := 0
+        now := time.Now()
+
+        for _, expireTime := range bl.blacklist </span><span class="cov0" title="0">{
+                if now.After(expireTime) </span><span class="cov0" title="0">{
+                        expired++
+                }</span>
+        }
+
+        <span class="cov0" title="0">return map[string]interface{}{
+                "total":       total,
+                "active":      total - expired,
+                "expired":     expired,
+                "storage":     "memory",
+                "cleanup_interval": "5m",
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package auth
+
+import (
+        "context"
+        "crypto/rand"
+        "encoding/base64"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "net/url"
+        "strings"
+        "time"
+
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        "golang.org/x/oauth2"
+        "golang.org/x/oauth2/google"
+        "go.uber.org/zap"
+
+        authModel "Qingyu_backend/models/auth"
+        "Qingyu_backend/repository/interfaces/auth"
+)
+
+// OAuthService OAuth服务
+type OAuthService struct {
+        logger     *zap.Logger
+        repo       auth.OAuthRepository
+        config     map[authModel.OAuthProvider]*oauth2.Config
+        stateStore map[string]*authModel.OAuthSession // 内存状态存储（生产环境应该用Redis）
+}
+
+// NewOAuthService 创建OAuth服务
+func NewOAuthService(logger *zap.Logger, repo auth.OAuthRepository, configs map[string]*authModel.OAuthConfig) (*OAuthService, error) <span class="cov7" title="16">{
+        service := &amp;OAuthService{
+                logger:     logger,
+                repo:       repo,
+                config:     make(map[authModel.OAuthProvider]*oauth2.Config),
+                stateStore: make(map[string]*authModel.OAuthSession),
+        }
+
+        // 初始化各平台的OAuth配置
+        for provider, cfg := range configs </span><span class="cov10" title="48">{
+                if !cfg.Enabled </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov10" title="48">switch provider </span>{
+                case "google":<span class="cov7" title="16">
+                        service.config[authModel.OAuthProviderGoogle] = &amp;oauth2.Config{
+                                ClientID:     cfg.ClientID,
+                                ClientSecret: cfg.ClientSecret,
+                                RedirectURL:  cfg.RedirectURI,
+                                Scopes:       strings.Split(cfg.Scopes, " "),
+                                Endpoint:     google.Endpoint,
+                        }</span>
+
+                case "github":<span class="cov7" title="16">
+                        service.config[authModel.OAuthProviderGitHub] = &amp;oauth2.Config{
+                                ClientID:     cfg.ClientID,
+                                ClientSecret: cfg.ClientSecret,
+                                RedirectURL:  cfg.RedirectURI,
+                                Scopes:       strings.Split(cfg.Scopes, " "),
+                                Endpoint: oauth2.Endpoint{
+                                        AuthURL:  "https://github.com/login/oauth/authorize",
+                                        TokenURL: "https://github.com/login/oauth/access_token",
+                                },
+                        }</span>
+
+                case "qq":<span class="cov7" title="16">
+                        // QQ OAuth2.0配置（自定义端点）
+                        service.config[authModel.OAuthProviderQQ] = &amp;oauth2.Config{
+                                ClientID:     cfg.ClientID,
+                                ClientSecret: cfg.ClientSecret,
+                                RedirectURL:  cfg.RedirectURI,
+                                Scopes:       strings.Split(cfg.Scopes, " "),
+                                Endpoint: oauth2.Endpoint{
+                                        AuthURL:  cfg.AuthURL,
+                                        TokenURL: cfg.TokenURL,
+                                },
+                        }</span>
+                }
+        }
+
+        <span class="cov7" title="16">logger.Info("OAuth service initialized",
+                zap.Int("providers", len(service.config)),
+        )
+
+        return service, nil</span>
+}
+
+// GetAuthURL 获取OAuth授权URL
+func (s *OAuthService) GetAuthURL(ctx context.Context, provider authModel.OAuthProvider, redirectURI, state string, linkMode bool, userID ...string) (string, error) <span class="cov6" title="10">{
+        config, exists := s.config[provider]
+        if !exists </span><span class="cov1" title="1">{
+                return "", fmt.Errorf("unsupported OAuth provider: %s", provider)
+        }</span>
+
+        // 创建OAuth会话
+        <span class="cov6" title="9">oauthState := s.generateState()
+        session := &amp;authModel.OAuthSession{
+                ID:          generateSessionID(),
+                State:       oauthState,
+                Provider:    provider,
+                RedirectURI: redirectURI,
+                ExpiresAt:   time.Now().Add(10 * time.Minute), // 10分钟有效期
+                CreatedAt:   time.Now(),
+        }
+
+        if linkMode &amp;&amp; len(userID) &gt; 0 </span><span class="cov1" title="1">{
+                session.LinkMode = true
+                session.UserID = userID[0]
+        }</span>
+
+        // 保存会话
+        <span class="cov6" title="9">s.stateStore[session.ID] = session
+        s.logger.Debug("OAuth session created",
+                zap.String("session_id", session.ID),
+                zap.String("provider", string(provider)),
+                zap.Bool("link_mode", session.LinkMode),
+        )
+
+        // 生成授权URL
+        authURL := config.AuthCodeURL(oauthState)
+
+        return authURL, nil</span>
+}
+
+// ExchangeCode 交换授权码获取Token
+func (s *OAuthService) ExchangeCode(ctx context.Context, provider authModel.OAuthProvider, code, state string) (*oauth2.Token, *authModel.OAuthSession, error) <span class="cov2" title="2">{
+        config, exists := s.config[provider]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("unsupported OAuth provider: %s", provider)
+        }</span>
+
+        // 查找并验证会话
+        <span class="cov2" title="2">var session *authModel.OAuthSession
+        for _, s := range s.stateStore </span><span class="cov1" title="1">{
+                if s.State == state </span><span class="cov1" title="1">{
+                        session = s
+                        break</span>
+                }
+        }
+
+        <span class="cov2" title="2">if session == nil </span><span class="cov1" title="1">{
+                return nil, nil, fmt.Errorf("invalid OAuth state: %s", state)
+        }</span>
+
+        <span class="cov1" title="1">if time.Now().After(session.ExpiresAt) </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("OAuth session expired")
+        }</span>
+
+        // 交换授权码
+        <span class="cov1" title="1">token, err := config.Exchange(ctx, code)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, nil, fmt.Errorf("failed to exchange code: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return token, session, nil</span>
+}
+
+// GetUserInfo 获取用户信息
+func (s *OAuthService) GetUserInfo(ctx context.Context, provider authModel.OAuthProvider, token *oauth2.Token) (*authModel.UserIdentity, error) <span class="cov0" title="0">{
+        switch provider </span>{
+        case authModel.OAuthProviderGoogle:<span class="cov0" title="0">
+                return s.getGoogleUserInfo(ctx, token)</span>
+        case authModel.OAuthProviderGitHub:<span class="cov0" title="0">
+                return s.getGitHubUserInfo(ctx, token)</span>
+        case authModel.OAuthProviderQQ:<span class="cov0" title="0">
+                return s.getQQUserInfo(ctx, token)</span>
+        default:<span class="cov0" title="0">
+                return nil, fmt.Errorf("unsupported provider: %s", provider)</span>
+        }
+}
+
+// getGoogleUserInfo 获取Google用户信息
+func (s *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Token) (*authModel.UserIdentity, error) <span class="cov0" title="0">{
+        client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+
+        resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get user info: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+        }</span>
+
+        <span class="cov0" title="0">body, err := io.ReadAll(resp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read response: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">var googleResp struct {
+                ID            string `json:"id"`
+                Email         string `json:"email"`
+                VerifiedEmail bool   `json:"verified_email"`
+                Name          string `json:"name"`
+                GivenName     string `json:"given_name"`
+                FamilyName    string `json:"family_name"`
+                Picture       string `json:"picture"`
+                Locale        string `json:"locale"`
+        }
+
+        if err := json.Unmarshal(body, &amp;googleResp); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse response: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;authModel.UserIdentity{
+                Provider:     authModel.OAuthProviderGoogle,
+                ProviderID:   googleResp.ID,
+                Email:        googleResp.Email,
+                EmailVerified: googleResp.VerifiedEmail,
+                Name:         googleResp.Name,
+                Avatar:       googleResp.Picture,
+                Username:     strings.Split(googleResp.Email, "@")[0], // 使用邮箱前缀作为用户名
+                Locale:       googleResp.Locale,
+        }, nil</span>
+}
+
+// getGitHubUserInfo 获取GitHub用户信息
+func (s *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Token) (*authModel.UserIdentity, error) <span class="cov0" title="0">{
+        client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+
+        // 获取用户信息
+        resp, err := client.Get("https://api.github.com/user")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get user info: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+        }</span>
+
+        <span class="cov0" title="0">body, err := io.ReadAll(resp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read response: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">var githubResp struct {
+                ID        int64  `json:"id"`
+                Login     string `json:"login"`
+                Name      string `json:"name"`
+                Email     string `json:"email"`
+                AvatarURL string `json:"avatar_url"`
+                Bio       string `json:"bio"`
+                Location  string `json:"location"`
+                Blog      string `json:"blog"`
+        }
+
+        if err := json.Unmarshal(body, &amp;githubResp); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse response: %w", err)
+        }</span>
+
+        // 获取用户邮箱（可能为空）
+        <span class="cov0" title="0">var email string
+        var emailVerified bool
+
+        // 获取用户邮箱（需要额外权限）
+        emailResp, err := client.Get("https://api.github.com/user/emails")
+        if err == nil &amp;&amp; emailResp.StatusCode == http.StatusOK </span><span class="cov0" title="0">{
+                defer emailResp.Body.Close()
+                emailBody, _ := io.ReadAll(emailResp.Body)
+
+                var emails []struct {
+                        Email   string `json:"email"`
+                        Primary bool   `json:"primary"`
+                        Verified bool `json:"verified"`
+                }
+                json.Unmarshal(emailBody, &amp;emails)
+
+                for _, e := range emails </span><span class="cov0" title="0">{
+                        if e.Primary </span><span class="cov0" title="0">{
+                                email = e.Email
+                                emailVerified = e.Verified
+                                break</span>
+                        }
+                }
+        }
+
+        <span class="cov0" title="0">return &amp;authModel.UserIdentity{
+                Provider:       authModel.OAuthProviderGitHub,
+                ProviderID:     fmt.Sprintf("%d", githubResp.ID),
+                Email:          email,
+                EmailVerified:  emailVerified,
+                Name:           githubResp.Name,
+                Username:       githubResp.Login,
+                Avatar:         githubResp.AvatarURL,
+        }, nil</span>
+}
+
+// getQQUserInfo 获取QQ用户信息
+func (s *OAuthService) getQQUserInfo(ctx context.Context, token *oauth2.Token) (*authModel.UserIdentity, error) <span class="cov0" title="0">{
+        // QQ OAuth2.0需要使用OpenID
+        // 这里简化处理，实际需要调用QQ的OpenID接口
+        client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+
+        // 获取OpenID
+        resp, err := client.Get("https://graph.qq.com/oauth2.0/me?access_token=" + url.QueryEscape(token.AccessToken) + "&amp;fmt=json")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get QQ OpenID: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+        }</span>
+
+        <span class="cov0" title="0">body, err := io.ReadAll(resp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read response: %w", err)
+        }</span>
+
+        // QQ返回的是JSONP格式，需要解析
+        // 示例: callback({"client_id":"...","openid":"..."})
+        <span class="cov0" title="0">var qqOpenIDResp struct {
+                ClientID string `json:"client_id"`
+                OpenID   string `json:"openid"`
+        }
+
+        // 移除JSONP包装
+        strBody := string(body)
+        start := strings.Index(strBody, "{")
+        end := strings.LastIndex(strBody, "}")
+        if start == -1 || end == -1 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid OpenID response format")
+        }</span>
+        <span class="cov0" title="0">jsonStr := strBody[start : end+1]
+
+        if err := json.Unmarshal([]byte(jsonStr), &amp;qqOpenIDResp); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse OpenID response: %w", err)
+        }</span>
+
+        // 获取用户信息
+        <span class="cov0" title="0">userInfoResp, err := client.Get("https://graph.qq.com/user/get_user_info?access_token=" +
+                url.QueryEscape(token.AccessToken) + "&amp;oauth_consumer_key=" + s.config[authModel.OAuthProviderQQ].ClientID +
+                "&amp;openid=" + qqOpenIDResp.OpenID + "&amp;format=json")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get QQ user info: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer userInfoResp.Body.Close()
+
+        if userInfoResp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("unexpected status code: %d", userInfoResp.StatusCode)
+        }</span>
+
+        <span class="cov0" title="0">userInfoBody, _ := io.ReadAll(userInfoResp.Body)
+
+        var qqUserInfoResp struct {
+                Ret        int    `json:"ret"`
+                Msg        string `json:"msg"`
+                Nickname   string `json:"nickname"`
+                Gender     string `json:"gender"`
+                FigureURLQQ string `json:"figureurl_qq_1"` // 中等尺寸头像
+        }
+
+        if err := json.Unmarshal(userInfoBody, &amp;qqUserInfoResp); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse user info response: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if qqUserInfoResp.Ret != 0 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("QQ API error: %s", qqUserInfoResp.Msg)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;authModel.UserIdentity{
+                Provider:       authModel.OAuthProviderQQ,
+                ProviderID:     qqOpenIDResp.OpenID,
+                Name:           qqUserInfoResp.Nickname,
+                Avatar:         qqUserInfoResp.FigureURLQQ,
+                Username:       fmt.Sprintf("qq_%s", qqOpenIDResp.OpenID[:8]),
+                EmailVerified:  false, // QQ不提供邮箱验证信息
+        }, nil</span>
+}
+
+// CleanupSession 清理过期的OAuth会话
+func (s *OAuthService) CleanupSession(ctx context.Context) <span class="cov1" title="1">{
+        now := time.Now()
+        for id, session := range s.stateStore </span><span class="cov1" title="1">{
+                if now.After(session.ExpiresAt) </span><span class="cov1" title="1">{
+                        delete(s.stateStore, id)
+                }</span>
+        }
+}
+
+// 辅助函数
+
+func (s *OAuthService) generateState() string <span class="cov6" title="9">{
+        b := make([]byte, 16)
+        rand.Read(b)
+        return base64.URLEncoding.EncodeToString(b)
+}</span>
+
+func generateSessionID() string <span class="cov6" title="9">{
+        return fmt.Sprintf("oauth_%d", time.Now().UnixNano())
+}</span>
+
+// getTokenExtraString 从token的Extra中安全地获取字符串值
+func getTokenExtraString(token *oauth2.Token, key string) string <span class="cov6" title="11">{
+        val := token.Extra(key)
+        if val == nil </span><span class="cov6" title="11">{
+                return ""
+        }</span>
+        <span class="cov0" title="0">if str, ok := val.(string); ok </span><span class="cov0" title="0">{
+                return str
+        }</span>
+        <span class="cov0" title="0">return ""</span>
+}
+
+// ==================== OAuth账号管理 ====================
+
+// LinkAccount 绑定OAuth账号到用户
+func (s *OAuthService) LinkAccount(ctx context.Context, userID string, provider authModel.OAuthProvider, token *oauth2.Token, identity *authModel.UserIdentity) (*authModel.OAuthAccount, error) <span class="cov6" title="13">{
+        // 检查是否已经绑定过该账号
+        existing, err := s.repo.FindByProviderAndProviderID(ctx, provider, identity.ProviderID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to check existing account: %w", err)
+        }</span>
+
+        <span class="cov6" title="13">if existing != nil </span><span class="cov2" title="2">{
+                if existing.UserID == userID </span><span class="cov1" title="1">{
+                        // 已经绑定到当前用户
+                        return existing, nil
+                }</span>
+                <span class="cov1" title="1">return nil, fmt.Errorf("this %s account is already linked to another user", provider)</span>
+        }
+
+        // 检查该用户是否已有主账号
+        <span class="cov6" title="11">hasPrimary, _ := s.repo.GetPrimaryAccount(ctx, userID)
+
+        // 创建OAuth账号记录
+        account := &amp;authModel.OAuthAccount{
+                UserID:          userID,
+                Provider:        provider,
+                ProviderUserID:  identity.ProviderID,
+                Email:           identity.Email,
+                Username:        identity.Username,
+                Avatar:          identity.Avatar,
+                AccessToken:     token.AccessToken,
+                RefreshToken:    token.RefreshToken,
+                TokenExpiresAt:  time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
+                Scope:           getTokenExtraString(token, "scope"),
+                IsPrimary:       hasPrimary == nil, // 如果没有主账号，则设为主账号
+                LastLoginAt:     time.Now(),
+                Metadata:        make(map[string]interface{}),
+        }
+
+        if err := s.repo.Create(ctx, account); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create OAuth account: %w", err)
+        }</span>
+
+        <span class="cov6" title="11">s.logger.Info("OAuth account linked",
+                zap.String("user_id", userID),
+                zap.String("provider", string(provider)),
+                zap.String("provider_user_id", identity.ProviderID),
+        )
+
+        return account, nil</span>
+}
+
+// UnlinkAccount 解绑OAuth账号
+func (s *OAuthService) UnlinkAccount(ctx context.Context, userID, accountID string) error <span class="cov2" title="2">{
+        account, err := s.repo.FindByID(ctx, accountID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to find OAuth account: %w", err)
+        }</span>
+
+        <span class="cov2" title="2">if account == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("OAuth account not found")
+        }</span>
+
+        <span class="cov2" title="2">if account.UserID != userID </span><span class="cov0" title="0">{
+                return fmt.Errorf("OAuth account does not belong to user")
+        }</span>
+
+        // 检查是否是主账号且用户只有一个账�?
+        <span class="cov2" title="2">count, _ := s.repo.CountByUserID(ctx, userID)
+        if account.IsPrimary &amp;&amp; count &lt;= 1 </span><span class="cov1" title="1">{
+                return fmt.Errorf("cannot unlink primary account when it's the only account")
+        }</span>
+
+        <span class="cov1" title="1">if err := s.repo.Delete(ctx, accountID); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete OAuth account: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">s.logger.Info("OAuth account unlinked",
+                zap.String("user_id", userID),
+                zap.String("account_id", accountID),
+        )
+
+        return nil</span>
+}
+
+// GetLinkedAccounts 获取用户绑定的所有OAuth账号
+func (s *OAuthService) GetLinkedAccounts(ctx context.Context, userID string) ([]*authModel.OAuthAccount, error) <span class="cov2" title="2">{
+        accounts, err := s.repo.FindByUserID(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get linked accounts: %w", err)
+        }</span>
+
+        <span class="cov2" title="2">return accounts, nil</span>
+}
+
+// SetPrimaryAccount 设置主账�?
+func (s *OAuthService) SetPrimaryAccount(ctx context.Context, userID, accountID string) error <span class="cov1" title="1">{
+        if err := s.repo.SetPrimaryAccount(ctx, userID, accountID); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to set primary account: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">s.logger.Info("Primary account set",
+                zap.String("user_id", userID),
+                zap.String("account_id", accountID),
+        )
+
+        return nil</span>
+}
+
+// RefreshToken 刷新OAuth令牌
+func (s *OAuthService) RefreshToken(ctx context.Context, accountID string) (*oauth2.Token, error) <span class="cov0" title="0">{
+        account, err := s.repo.FindByID(ctx, accountID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to find OAuth account: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if account == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("OAuth account not found")
+        }</span>
+
+        <span class="cov0" title="0">config, exists := s.config[account.Provider]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("OAuth provider not configured: %s", account.Provider)
+        }</span>
+
+        // 使用refresh_token获取新的token
+        <span class="cov0" title="0">tokenSource := config.TokenSource(ctx, &amp;oauth2.Token{
+                AccessToken:  account.AccessToken,
+                RefreshToken: account.RefreshToken,
+                Expiry:       account.TokenExpiresAt,
+        })
+
+        newToken, err := tokenSource.Token()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to refresh token: %w", err)
+        }</span>
+
+        // 更新数据库中的token
+        <span class="cov0" title="0">var expiresAt primitive.DateTime
+        if !newToken.Expiry.IsZero() </span><span class="cov0" title="0">{
+                expiresAt = primitive.NewDateTimeFromTime(newToken.Expiry)
+        }</span>
+
+        <span class="cov0" title="0">if err := s.repo.UpdateTokens(ctx, accountID, newToken.AccessToken, newToken.RefreshToken, expiresAt); err != nil </span><span class="cov0" title="0">{
+                s.logger.Warn("Failed to update refreshed token", zap.Error(err))
+        }</span>
+
+        <span class="cov0" title="0">s.logger.Info("OAuth token refreshed",
+                zap.String("account_id", accountID),
+                zap.String("provider", string(account.Provider)),
+        )
+
+        return newToken, nil</span>
+}
+
+// CleanupExpiredSessions 清理过期的OAuth会话
+func (s *OAuthService) CleanupExpiredSessions(ctx context.Context) error <span class="cov1" title="1">{
+        // 清理内存中的会话
+        now := time.Now()
+        for id, session := range s.stateStore </span><span class="cov1" title="1">{
+                if now.After(session.ExpiresAt) </span><span class="cov1" title="1">{
+                        delete(s.stateStore, id)
+                }</span>
+        }
+
+        // 清理数据库中的会�?
+        <span class="cov1" title="1">count, err := s.repo.CleanupExpiredSessions(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Warn("Failed to cleanup expired sessions from database", zap.Error(err))
+        }</span> else<span class="cov1" title="1"> {
+                s.logger.Debug("Cleaned up expired sessions", zap.Int64("count", count))
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package auth
+
+import (
+        "fmt"
+        "regexp"
+        "unicode"
+)
+
+// PasswordValidator 密码强度验证器
+// MVP实现：基础规则验证
+type PasswordValidator struct {
+        minLength    int
+        maxLength    int
+        requireNum   bool
+        requireAlpha bool
+}
+
+// NewPasswordValidator 创建密码验证器
+// MVP: 使用默认规则
+func NewPasswordValidator() *PasswordValidator <span class="cov10" title="20">{
+        return &amp;PasswordValidator{
+                minLength:    8,  // 最短8位
+                maxLength:    32, // 最长32位
+                requireNum:   true,
+                requireAlpha: true,
+        }
+}</span>
+
+// ValidatePassword 验证密码强度（MVP实现）
+// 规则：
+//   - 长度: 8-32位
+//   - 至少包含一个数字
+//   - 至少包含一个字母
+func (v *PasswordValidator) ValidatePassword(password string) error <span class="cov6" title="7">{
+        // 1. 检查长度
+        if len(password) &lt; v.minLength </span><span class="cov3" title="2">{
+                return fmt.Errorf("密码长度不能少于%d位", v.minLength)
+        }</span>
+
+        <span class="cov5" title="5">if len(password) &gt; v.maxLength </span><span class="cov0" title="0">{
+                return fmt.Errorf("密码长度不能超过%d位", v.maxLength)
+        }</span>
+
+        // 2. 检查是否包含数字
+        <span class="cov5" title="5">if v.requireNum </span><span class="cov5" title="5">{
+                hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
+                if !hasNumber </span><span class="cov0" title="0">{
+                        return fmt.Errorf("密码必须包含至少一个数字")
+                }</span>
+        }
+
+        // 3. 检查是否包含字母
+        <span class="cov5" title="5">if v.requireAlpha </span><span class="cov5" title="5">{
+                hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
+                if !hasLetter </span><span class="cov0" title="0">{
+                        return fmt.Errorf("密码必须包含至少一个字母")
+                }</span>
+        }
+
+        <span class="cov5" title="5">return nil</span>
+}
+
+// --- Phase 2增强功能占位符 ---
+
+// TODO: Phase 2增强功能
+// - [ ] 检查是否包含特殊字符（!@#$%^&amp;*等）
+// - [ ] 检查是否包含大小写字母组合
+// - [ ] 检查常见弱密码黑名单（123456, password等）
+// - [ ] 检查与用户名相似度（不能太相似）
+// - [ ] 密码历史记录（不能与最近5次密码相同）
+// - [ ] 密码复杂度评分（弱/中/强）
+// - [ ] 密码有效期检查
+// - [ ] 支持自定义规则配置
+
+// ValidatePasswordStrength 密码强度评分（未来实现）
+// 返回：weak, medium, strong
+func (v *PasswordValidator) ValidatePasswordStrength(password string) string <span class="cov0" title="0">{
+        score := 0
+
+        // 基础长度分
+        if len(password) &gt;= 8 </span><span class="cov0" title="0">{
+                score += 1
+        }</span>
+        <span class="cov0" title="0">if len(password) &gt;= 12 </span><span class="cov0" title="0">{
+                score += 1
+        }</span>
+
+        // 字符类型分
+        <span class="cov0" title="0">hasNumber := false
+        hasLower := false
+        hasUpper := false
+        hasSpecial := false
+
+        for _, char := range password </span><span class="cov0" title="0">{
+                if unicode.IsDigit(char) </span><span class="cov0" title="0">{
+                        hasNumber = true
+                }</span> else<span class="cov0" title="0"> if unicode.IsLower(char) </span><span class="cov0" title="0">{
+                        hasLower = true
+                }</span> else<span class="cov0" title="0"> if unicode.IsUpper(char) </span><span class="cov0" title="0">{
+                        hasUpper = true
+                }</span> else<span class="cov0" title="0"> if unicode.IsPunct(char) || unicode.IsSymbol(char) </span><span class="cov0" title="0">{
+                        hasSpecial = true
+                }</span>
+        }
+
+        <span class="cov0" title="0">if hasNumber </span><span class="cov0" title="0">{
+                score += 1
+        }</span>
+        <span class="cov0" title="0">if hasLower &amp;&amp; hasUpper </span><span class="cov0" title="0">{
+                score += 2
+        }</span> else<span class="cov0" title="0"> if hasLower || hasUpper </span><span class="cov0" title="0">{
+                score += 1
+        }</span>
+        <span class="cov0" title="0">if hasSpecial </span><span class="cov0" title="0">{
+                score += 2
+        }</span>
+
+        // 评级
+        <span class="cov0" title="0">if score &lt;= 2 </span><span class="cov0" title="0">{
+                return "weak"
+        }</span> else<span class="cov0" title="0"> if score &lt;= 5 </span><span class="cov0" title="0">{
+                return "medium"
+        }</span> else<span class="cov0" title="0"> {
+                return "strong"
+        }</span>
+}
+
+// CheckWeakPassword 检查是否为常见弱密码（未来实现）
+func (v *PasswordValidator) CheckWeakPassword(password string) bool <span class="cov0" title="0">{
+        // 常见弱密码列表
+        weakPasswords := []string{
+                "123456", "password", "123456789", "12345678", "12345",
+                "1234567", "password1", "123123", "1234567890", "1234",
+                "qwerty", "abc123", "111111", "admin", "root",
+        }
+
+        for _, weak := range weakPasswords </span><span class="cov0" title="0">{
+                if password == weak </span><span class="cov0" title="0">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+// GetPasswordRequirements 获取密码要求说明（用于前端提示）
+func (v *PasswordValidator) GetPasswordRequirements() string <span class="cov0" title="0">{
+        return fmt.Sprintf(
+                "密码要求：长度%d-%d位，至少包含一个字母和一个数字",
+                v.minLength,
+                v.maxLength,
+        )
+}</span>
+
+// --- 配置方法 ---
+
+// SetMinLength 设置最小长度
+func (v *PasswordValidator) SetMinLength(length int) *PasswordValidator <span class="cov0" title="0">{
+        v.minLength = length
+        return v
+}</span>
+
+// SetMaxLength 设置最大长度
+func (v *PasswordValidator) SetMaxLength(length int) *PasswordValidator <span class="cov0" title="0">{
+        v.maxLength = length
+        return v
+}</span>
+
+// SetRequireNumber 设置是否要求数字
+func (v *PasswordValidator) SetRequireNumber(require bool) *PasswordValidator <span class="cov0" title="0">{
+        v.requireNum = require
+        return v
+}</span>
+
+// SetRequireAlpha 设置是否要求字母
+func (v *PasswordValidator) SetRequireAlpha(require bool) *PasswordValidator <span class="cov0" title="0">{
+        v.requireAlpha = require
+        return v
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package auth
+
+import (
+        "context"
+        "fmt"
+        "strings"
+        "time"
+
+        sharedRepo "Qingyu_backend/repository/interfaces/shared"
+)
+
+// PermissionServiceImpl 权限服务实现
+type PermissionServiceImpl struct {
+        authRepo    sharedRepo.AuthRepository
+        cacheClient CacheClient // 缓存客户端（Redis）
+        cacheTTL    time.Duration
+}
+
+// CacheClient 缓存客户端接口
+type CacheClient interface {
+        Get(ctx context.Context, key string) (string, error)
+        Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+        Delete(ctx context.Context, key string) error
+}
+
+// NewPermissionService 创建权限服务
+func NewPermissionService(authRepo sharedRepo.AuthRepository, cacheClient CacheClient) PermissionService <span class="cov9" title="28">{
+        return &amp;PermissionServiceImpl{
+                authRepo:    authRepo,
+                cacheClient: cacheClient,
+                cacheTTL:    5 * time.Minute, // 权限缓存5分钟
+        }
+}</span>
+
+// ============ 权限检查 ============
+
+// CheckPermission 检查用户是否有指定权限
+func (s *PermissionServiceImpl) CheckPermission(ctx context.Context, userID, permission string) (bool, error) <span class="cov8" title="14">{
+        // 1. 获取用户权限
+        permissions, err := s.GetUserPermissions(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, fmt.Errorf("获取用户权限失败: %w", err)
+        }</span>
+
+        // 2. 检查是否有通配符权限 "*"
+        <span class="cov8" title="14">for _, perm := range permissions </span><span class="cov8" title="18">{
+                if perm == "*" </span><span class="cov5" title="5">{
+                        return true, nil
+                }</span>
+        }
+
+        // 3. 检查是否有精确匹配
+        <span class="cov6" title="9">for _, perm := range permissions </span><span class="cov7" title="11">{
+                if perm == permission </span><span class="cov2" title="2">{
+                        return true, nil
+                }</span>
+        }
+
+        // 4. 检查通配符匹配（例如：book.* 匹配 book.read）
+        <span class="cov6" title="7">for _, perm := range permissions </span><span class="cov6" title="9">{
+                if strings.HasSuffix(perm, ".*") </span><span class="cov5" title="5">{
+                        prefix := strings.TrimSuffix(perm, ".*")
+                        if strings.HasPrefix(permission, prefix+".") </span><span class="cov3" title="3">{
+                                return true, nil
+                        }</span>
+                }
+        }
+
+        <span class="cov4" title="4">return false, nil</span>
+}
+
+// GetUserPermissions 获取用户权限
+func (s *PermissionServiceImpl) GetUserPermissions(ctx context.Context, userID string) ([]string, error) <span class="cov8" title="19">{
+        // 1. 尝试从缓存获取
+        if s.cacheClient != nil </span><span class="cov8" title="19">{
+                cacheKey := s.getPermissionCacheKey(userID)
+                cached, err := s.cacheClient.Get(ctx, cacheKey)
+                if err == nil &amp;&amp; cached != "" </span><span class="cov7" title="11">{
+                        // 解析缓存的权限列表（用逗号分隔）
+                        if cached == "[]" </span><span class="cov0" title="0">{
+                                return []string{}, nil
+                        }</span>
+                        <span class="cov7" title="11">return strings.Split(cached, ","), nil</span>
+                }
+        }
+
+        // 2. 从数据库获取
+        <span class="cov6" title="8">permissions, err := s.authRepo.GetUserPermissions(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("获取用户权限失败: %w", err)
+        }</span>
+
+        // 3. 存入缓存
+        <span class="cov6" title="8">if s.cacheClient != nil </span><span class="cov6" title="8">{
+                cacheKey := s.getPermissionCacheKey(userID)
+                cacheValue := "[]"
+                if len(permissions) &gt; 0 </span><span class="cov6" title="8">{
+                        cacheValue = strings.Join(permissions, ",")
+                }</span>
+                <span class="cov6" title="8">_ = s.cacheClient.Set(ctx, cacheKey, cacheValue, s.cacheTTL)</span>
+        }
+
+        <span class="cov6" title="8">return permissions, nil</span>
+}
+
+// GetRolePermissions 获取角色权限
+func (s *PermissionServiceImpl) GetRolePermissions(ctx context.Context, roleID string) ([]string, error) <span class="cov1" title="1">{
+        permissions, err := s.authRepo.GetRolePermissions(ctx, roleID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("获取角色权限失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return permissions, nil</span>
+}
+
+// HasRole 检查用户是否有指定角色
+func (s *PermissionServiceImpl) HasRole(ctx context.Context, userID, role string) (bool, error) <span class="cov4" title="4">{
+        // 1. 获取用户角色
+        roles, err := s.authRepo.GetUserRoles(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, fmt.Errorf("获取用户角色失败: %w", err)
+        }</span>
+
+        // 2. 检查角色
+        <span class="cov4" title="4">for _, r := range roles </span><span class="cov4" title="4">{
+                if r.Name == role </span><span class="cov2" title="2">{
+                        return true, nil
+                }</span>
+        }
+
+        <span class="cov2" title="2">return false, nil</span>
+}
+
+// ============ 缓存管理 ============
+
+// InvalidateUserPermissionsCache 清除用户权限缓存
+func (s *PermissionServiceImpl) InvalidateUserPermissionsCache(ctx context.Context, userID string) error <span class="cov2" title="2">{
+        if s.cacheClient == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov2" title="2">cacheKey := s.getPermissionCacheKey(userID)
+        return s.cacheClient.Delete(ctx, cacheKey)</span>
+}
+
+// getPermissionCacheKey 获取权限缓存Key
+func (s *PermissionServiceImpl) getPermissionCacheKey(userID string) string <span class="cov10" title="29">{
+        return fmt.Sprintf("user:permissions:%s", userID)
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package auth
+
+import (
+        "context"
+        "time"
+
+        "Qingyu_backend/pkg/cache"
+)
+
+// RedisAdapter 将 cache.RedisClient 适配为 auth 所需的接口
+type RedisAdapter struct {
+        client cache.RedisClient
+}
+
+// NewRedisAdapter 创建Redis适配器
+func NewRedisAdapter(client cache.RedisClient) *RedisAdapter <span class="cov0" title="0">{
+        return &amp;RedisAdapter{client: client}
+}</span>
+
+// ============ CacheClient 接口实现 ============
+
+// Get 获取缓存值
+func (a *RedisAdapter) Get(ctx context.Context, key string) (string, error) <span class="cov0" title="0">{
+        return a.client.Get(ctx, key)
+}</span>
+
+// Set 设置缓存值
+func (a *RedisAdapter) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error <span class="cov0" title="0">{
+        return a.client.Set(ctx, key, value, ttl)
+}</span>
+
+// Delete 删除缓存键
+func (a *RedisAdapter) Delete(ctx context.Context, key string) error <span class="cov0" title="0">{
+        return a.client.Delete(ctx, key)
+}</span>
+
+// ============ RedisClient 接口实现 ============
+
+// Exists 检查键是否存在
+func (a *RedisAdapter) Exists(ctx context.Context, keys ...string) (int64, error) <span class="cov0" title="0">{
+        return a.client.Exists(ctx, keys...)
+}</span>
+
+// GetTTL 获取键的过期时间
+func (a *RedisAdapter) GetTTL(ctx context.Context, key string) (time.Duration, error) <span class="cov0" title="0">{
+        return a.client.TTL(ctx, key)
+}</span>
+
+// SetWithExpire 设置键值对并指定过期时间
+func (a *RedisAdapter) SetWithExpire(ctx context.Context, key, value string, expire time.Duration) error <span class="cov0" title="0">{
+        return a.client.Set(ctx, key, value, expire)
+}</span>
+
+// SAdd 添加集合成员
+func (a *RedisAdapter) SAdd(ctx context.Context, key string, members ...string) error <span class="cov0" title="0">{
+        // 将[]string转换为[]interface{}
+        memberInterfaces := make([]interface{}, len(members))
+        for i, m := range members </span><span class="cov0" title="0">{
+                memberInterfaces[i] = m
+        }</span>
+        <span class="cov0" title="0">return a.client.SAdd(ctx, key, memberInterfaces...)</span>
+}
+
+// SMembers 获取集合所有成员
+func (a *RedisAdapter) SMembers(ctx context.Context, key string) ([]string, error) <span class="cov0" title="0">{
+        return a.client.SMembers(ctx, key)
+}</span>
+
+// SRem 删除集合成员
+func (a *RedisAdapter) SRem(ctx context.Context, key string, members ...string) error <span class="cov0" title="0">{
+        // 将[]string转换为[]interface{}
+        memberInterfaces := make([]interface{}, len(members))
+        for i, m := range members </span><span class="cov0" title="0">{
+                memberInterfaces[i] = m
+        }</span>
+        <span class="cov0" title="0">return a.client.SRem(ctx, key, memberInterfaces...)</span>
+}
+
+// Expire 设置键的过期时间
+func (a *RedisAdapter) Expire(ctx context.Context, key string, ttl time.Duration) error <span class="cov0" title="0">{
+        return a.client.Expire(ctx, key, ttl)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package auth
+
+import (
+        authModel "Qingyu_backend/models/auth"
+        "context"
+        "fmt"
+
+        sharedRepo "Qingyu_backend/repository/interfaces/shared"
+)
+
+// RoleServiceImpl 角色服务实现
+type RoleServiceImpl struct {
+        authRepo sharedRepo.AuthRepository
+}
+
+// NewRoleService 创建角色服务
+func NewRoleService(authRepo sharedRepo.AuthRepository) RoleService <span class="cov10" title="28">{
+        return &amp;RoleServiceImpl{
+                authRepo: authRepo,
+        }
+}</span>
+
+// ============ 角色CRUD ============
+
+// CreateRole 创建角色
+func (s *RoleServiceImpl) CreateRole(ctx context.Context, req *CreateRoleRequest) (*Role, error) <span class="cov7" title="10">{
+        // 1. 验证请求
+        if req.Name == "" </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("角色名称不能为空")
+        }</span>
+
+        // 2. 检查角色是否已存在
+        <span class="cov7" title="10">_, err := s.authRepo.GetRoleByName(ctx, req.Name)
+        if err == nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("角色已存在: %s", req.Name)
+        }</span>
+
+        // 3. 创建角色
+        <span class="cov6" title="9">role := &amp;authModel.Role{
+                Name:        req.Name,
+                Description: req.Description,
+                Permissions: req.Permissions,
+                IsSystem:    false, // 非系统角色
+        }
+
+        if err := s.authRepo.CreateRole(ctx, role); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("创建角色失败: %w", err)
+        }</span>
+
+        // 4. 转换为响应格式
+        <span class="cov6" title="9">return convertToRoleResponse(role), nil</span>
+}
+
+// GetRole 获取角色
+func (s *RoleServiceImpl) GetRole(ctx context.Context, roleID string) (*Role, error) <span class="cov4" title="4">{
+        role, err := s.authRepo.GetRole(ctx, roleID)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("获取角色失败: %w", err)
+        }</span>
+
+        <span class="cov3" title="3">return convertToRoleResponse(role), nil</span>
+}
+
+// UpdateRole 更新角色
+func (s *RoleServiceImpl) UpdateRole(ctx context.Context, roleID string, req *UpdateRoleRequest) error <span class="cov1" title="1">{
+        // 1. 检查角色是否存在
+        role, err := s.authRepo.GetRole(ctx, roleID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("角色不存在: %w", err)
+        }</span>
+
+        // 2. 检查是否是系统角色
+        <span class="cov1" title="1">if role.IsSystem </span><span class="cov0" title="0">{
+                return fmt.Errorf("不能修改系统角色: %s", role.Name)
+        }</span>
+
+        // 3. 构建更新数据
+        <span class="cov1" title="1">updates := make(map[string]interface{})
+        if req.Name != "" </span><span class="cov0" title="0">{
+                updates["name"] = req.Name
+        }</span>
+        <span class="cov1" title="1">if req.Description != "" </span><span class="cov1" title="1">{
+                updates["description"] = req.Description
+        }</span>
+        <span class="cov1" title="1">if req.Permissions != nil </span><span class="cov1" title="1">{
+                updates["permissions"] = req.Permissions
+        }</span>
+
+        <span class="cov1" title="1">if len(updates) == 0 </span><span class="cov0" title="0">{
+                return fmt.Errorf("没有要更新的内容")
+        }</span>
+
+        // 4. 更新角色
+        <span class="cov1" title="1">if err := s.authRepo.UpdateRole(ctx, roleID, updates); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("更新角色失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// DeleteRole 删除角色
+func (s *RoleServiceImpl) DeleteRole(ctx context.Context, roleID string) error <span class="cov2" title="2">{
+        // 删除角色（Repository会检查是否是系统角色）
+        if err := s.authRepo.DeleteRole(ctx, roleID); err != nil </span><span class="cov1" title="1">{
+                return fmt.Errorf("删除角色失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// ListRoles 列出所有角色
+func (s *RoleServiceImpl) ListRoles(ctx context.Context) ([]*Role, error) <span class="cov1" title="1">{
+        roles, err := s.authRepo.ListRoles(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("获取角色列表失败: %w", err)
+        }</span>
+
+        // 转换为响应格式
+        <span class="cov1" title="1">result := make([]*Role, len(roles))
+        for i, role := range roles </span><span class="cov3" title="3">{
+                result[i] = convertToRoleResponse(role)
+        }</span>
+
+        <span class="cov1" title="1">return result, nil</span>
+}
+
+// ============ 权限管理 ============
+
+// AssignPermissions 分配权限
+func (s *RoleServiceImpl) AssignPermissions(ctx context.Context, roleID string, permissions []string) error <span class="cov1" title="1">{
+        // 1. 获取角色
+        role, err := s.authRepo.GetRole(ctx, roleID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("角色不存在: %w", err)
+        }</span>
+
+        // 2. 检查是否是系统角色
+        <span class="cov1" title="1">if role.IsSystem </span><span class="cov0" title="0">{
+                return fmt.Errorf("不能修改系统角色权限: %s", role.Name)
+        }</span>
+
+        // 3. 合并权限（去重）
+        <span class="cov1" title="1">permMap := make(map[string]bool)
+        for _, p := range role.Permissions </span><span class="cov1" title="1">{
+                permMap[p] = true
+        }</span>
+        <span class="cov1" title="1">for _, p := range permissions </span><span class="cov2" title="2">{
+                permMap[p] = true
+        }</span>
+
+        // 4. 转换为数组
+        <span class="cov1" title="1">newPermissions := make([]string, 0, len(permMap))
+        for p := range permMap </span><span class="cov3" title="3">{
+                newPermissions = append(newPermissions, p)
+        }</span>
+
+        // 5. 更新角色
+        <span class="cov1" title="1">updates := map[string]interface{}{
+                "permissions": newPermissions,
+        }
+
+        if err := s.authRepo.UpdateRole(ctx, roleID, updates); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("分配权限失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// RemovePermissions 移除权限
+func (s *RoleServiceImpl) RemovePermissions(ctx context.Context, roleID string, permissions []string) error <span class="cov1" title="1">{
+        // 1. 获取角色
+        role, err := s.authRepo.GetRole(ctx, roleID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("角色不存在: %w", err)
+        }</span>
+
+        // 2. 检查是否是系统角色
+        <span class="cov1" title="1">if role.IsSystem </span><span class="cov0" title="0">{
+                return fmt.Errorf("不能修改系统角色权限: %s", role.Name)
+        }</span>
+
+        // 3. 移除指定权限
+        <span class="cov1" title="1">removeMap := make(map[string]bool)
+        for _, p := range permissions </span><span class="cov1" title="1">{
+                removeMap[p] = true
+        }</span>
+
+        <span class="cov1" title="1">newPermissions := make([]string, 0)
+        for _, p := range role.Permissions </span><span class="cov3" title="3">{
+                if !removeMap[p] </span><span class="cov2" title="2">{
+                        newPermissions = append(newPermissions, p)
+                }</span>
+        }
+
+        // 4. 更新角色
+        <span class="cov1" title="1">updates := map[string]interface{}{
+                "permissions": newPermissions,
+        }
+
+        if err := s.authRepo.UpdateRole(ctx, roleID, updates); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("移除权限失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// ============ 辅助函数 ============
+
+// convertToRoleResponse 转换为响应格式
+func convertToRoleResponse(role *authModel.Role) *Role <span class="cov8" title="15">{
+        return &amp;Role{
+                ID:          role.ID,
+                Name:        role.Name,
+                Description: role.Description,
+                Permissions: role.Permissions,
+                CreatedAt:   role.CreatedAt,
+                UpdatedAt:   role.UpdatedAt,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package auth
+
+import (
+        authModel "Qingyu_backend/models/auth"
+        "context"
+        "crypto/rand"
+        "encoding/hex"
+        "encoding/json"
+        "fmt"
+        "strconv"
+        "strings"
+        "time"
+
+        "go.uber.org/zap"
+)
+
+// SessionServiceImpl 会话服务实现
+type SessionServiceImpl struct {
+        cacheClient   CacheClient   // Redis客户端
+        sessionTTL    time.Duration // Session过期时间
+        cleanupTicker *time.Ticker  // 定时清理任务
+        cleanupStop   chan bool     // 停止清理信号
+        lockTTL       time.Duration // 分布式锁过期时间
+        isInitialized bool          // 是否已初始化
+}
+
+// NewSessionService 创建会话服务
+func NewSessionService(cacheClient CacheClient) SessionService <span class="cov6" title="15">{
+        service := &amp;SessionServiceImpl{
+                cacheClient:   cacheClient,
+                sessionTTL:    24 * time.Hour,   // 默认24小时
+                lockTTL:       10 * time.Second, // 锁过期时间10秒
+                cleanupStop:   make(chan bool, 1),
+                isInitialized: false,
+        }
+
+        // 启动定时清理任务（每1小时执行一次）
+        service.startCleanupTask()
+
+        return service
+}</span>
+
+// ============ 会话管理 ============
+
+// CreateSession 创建会话
+func (s *SessionServiceImpl) CreateSession(ctx context.Context, userID string) (*Session, error) <span class="cov7" title="30">{
+        // 1. 生成会话ID
+        sessionID, err := s.generateSessionID()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("生成会话ID失败: %w", err)
+        }</span>
+
+        // 2. 创建会话
+        <span class="cov7" title="30">now := time.Now()
+        session := &amp;Session{
+                ID:        sessionID,
+                UserID:    userID,
+                CreatedAt: now,
+                ExpiresAt: now.Add(s.sessionTTL),
+        }
+
+        // 3. 存储到Redis
+        key := s.getSessionKey(sessionID)
+        value := fmt.Sprintf("%s|%d|%d", userID, session.CreatedAt.Unix(), session.ExpiresAt.Unix())
+        if err := s.cacheClient.Set(ctx, key, value, s.sessionTTL); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("存储会话失败: %w", err)
+        }</span>
+
+        // 4. 将会话ID添加到用户会话列表（用于多端登录限制）
+        // MVP: 使用JSON存储会话ID列表（简化实现，避免扩展CacheClient接口）
+        <span class="cov7" title="30">if err := s.addSessionToUserList(ctx, userID, sessionID); err != nil </span><span class="cov0" title="0">{
+                // 非关键错误，记录但不中断
+                zap.L().Warn("添加会话到用户列表失败",
+                        zap.String("user_id", userID),
+                        zap.String("session_id", sessionID),
+                        zap.Error(err),
+                )
+        }</span>
+
+        <span class="cov7" title="30">return session, nil</span>
+}
+
+// GetSession 获取会话
+func (s *SessionServiceImpl) GetSession(ctx context.Context, sessionID string) (*Session, error) <span class="cov8" title="38">{
+        // 1. 从Redis获取
+        key := s.getSessionKey(sessionID)
+        value, err := s.cacheClient.Get(ctx, key)
+        if err != nil </span><span class="cov3" title="4">{
+                return nil, fmt.Errorf("会话不存在或已过期")
+        }</span>
+
+        // 2. 解析会话数据
+        // 修复: 使用strings.Split替代fmt.Sscanf，因为%s会读取到空格而不是止于|
+        <span class="cov8" title="34">parts := strings.Split(value, "|")
+        if len(parts) != 3 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("会话数据格式无效")
+        }</span>
+
+        <span class="cov8" title="34">userID := parts[0]
+        createdAt, err := strconv.ParseInt(parts[1], 10, 64)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解析创建时间失败: %w", err)
+        }</span>
+        <span class="cov8" title="34">expiresAt, err := strconv.ParseInt(parts[2], 10, 64)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解析过期时间失败: %w", err)
+        }</span>
+
+        // 3. 构建会话对象
+        <span class="cov8" title="34">session := &amp;Session{
+                ID:        sessionID,
+                UserID:    userID,
+                CreatedAt: time.Unix(createdAt, 0),
+                ExpiresAt: time.Unix(expiresAt, 0),
+        }
+
+        // 4. 检查是否过期
+        if time.Now().After(session.ExpiresAt) </span><span class="cov0" title="0">{
+                _ = s.DestroySession(ctx, sessionID)
+                return nil, fmt.Errorf("会话已过期")
+        }</span>
+
+        <span class="cov8" title="34">return session, nil</span>
+}
+
+// DestroySession 销毁会话
+func (s *SessionServiceImpl) DestroySession(ctx context.Context, sessionID string) error <span class="cov4" title="6">{
+        // 1. 获取会话以确定userID
+        session, err := s.GetSession(ctx, sessionID)
+        if err != nil </span>{<span class="cov0" title="0">
+                // 会话可能已过期，继续删除
+        }</span>
+
+        // 2. 删除会话
+        <span class="cov4" title="6">key := s.getSessionKey(sessionID)
+        if err := s.cacheClient.Delete(ctx, key); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("销毁会话失败: %w", err)
+        }</span>
+
+        // 3. 从用户会话列表中移除
+        <span class="cov4" title="6">if session != nil </span><span class="cov4" title="6">{
+                _ = s.removeSessionFromUserList(ctx, session.UserID, sessionID)
+        }</span>
+
+        <span class="cov4" title="6">return nil</span>
+}
+
+// RefreshSession 刷新会话
+func (s *SessionServiceImpl) RefreshSession(ctx context.Context, sessionID string) error <span class="cov1" title="1">{
+        // 1. 获取现有会话
+        session, err := s.GetSession(ctx, sessionID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("刷新会话失败: %w", err)
+        }</span>
+
+        // 2. 更新过期时间
+        <span class="cov1" title="1">session.ExpiresAt = time.Now().Add(s.sessionTTL)
+
+        // 3. 重新存储
+        key := s.getSessionKey(sessionID)
+        value := fmt.Sprintf("%s|%d|%d", session.UserID, session.CreatedAt.Unix(), session.ExpiresAt.Unix())
+        if err := s.cacheClient.Set(ctx, key, value, s.sessionTTL); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("刷新会话失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// ValidateSession 验证会话
+func (s *SessionServiceImpl) ValidateSession(ctx context.Context, sessionID string) (bool, error) <span class="cov0" title="0">{
+        _, err := s.GetSession(ctx, sessionID)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov0" title="0">return true, nil</span>
+}
+
+// GetUserSessions 获取用户的所有会话（MVP实现）
+// TODO(performance): 使用Redis Pipeline批量获取Session，减少网络往返
+// 当前实现: O(n)次Redis查询（1次列表 + n次详情）
+// 优化后: 2次Redis查询（1次列表 + 1次Pipeline批量获取）
+// 预期性能提升: 50-80%（当n&gt;5时）
+// 优先级: P1（Phase 3.5或Phase 4）
+func (s *SessionServiceImpl) GetUserSessions(ctx context.Context, userID string) ([]*Session, error) <span class="cov5" title="9">{
+        // 1. 从Redis获取用户的会话ID列表（JSON格式）
+        userSessionsKey := s.getUserSessionsKey(userID)
+        value, err := s.cacheClient.Get(ctx, userSessionsKey)
+        if err != nil </span><span class="cov1" title="1">{
+                // 列表不存在，返回空数组
+                return []*Session{}, nil
+        }</span>
+
+        // 2. 解析会话ID列表
+        <span class="cov5" title="8">var sessionIDs []string
+        if err := json.Unmarshal([]byte(value), &amp;sessionIDs); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("解析用户会话列表失败: %w", err)
+        }</span>
+
+        // 3. 逐个获取会话详情，过滤过期会话
+        <span class="cov5" title="8">sessions := make([]*Session, 0, len(sessionIDs))
+        validSessionIDs := make([]string, 0, len(sessionIDs))
+        for _, sessionID := range sessionIDs </span><span class="cov7" title="21">{
+                session, err := s.GetSession(ctx, sessionID)
+                if err != nil </span><span class="cov0" title="0">{
+                        // 会话已过期，跳过
+                        continue</span>
+                }
+                <span class="cov7" title="21">sessions = append(sessions, session)
+                validSessionIDs = append(validSessionIDs, sessionID)</span>
+        }
+
+        // 4. 更新会话列表（移除过期会话）
+        <span class="cov5" title="8">if len(validSessionIDs) != len(sessionIDs) </span><span class="cov0" title="0">{
+                _ = s.saveUserSessionList(ctx, userID, validSessionIDs)
+        }</span>
+
+        <span class="cov5" title="8">return sessions, nil</span>
+}
+
+// DestroyUserSessions 销毁用户的所有会话（MVP实现）
+func (s *SessionServiceImpl) DestroyUserSessions(ctx context.Context, userID string) error <span class="cov1" title="1">{
+        // 1. 获取用户的所有会话
+        sessions, err := s.GetUserSessions(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("获取用户会话失败: %w", err)
+        }</span>
+
+        // 2. 逐个销毁会话
+        <span class="cov1" title="1">for _, session := range sessions </span><span class="cov3" title="3">{
+                _ = s.DestroySession(ctx, session.ID)
+        }</span>
+
+        // 3. 删除用户会话列表
+        <span class="cov1" title="1">userSessionsKey := s.getUserSessionsKey(userID)
+        _ = s.cacheClient.Delete(ctx, userSessionsKey)
+
+        return nil</span>
+}
+
+// UpdateSession 更新会话（实现接口）
+func (s *SessionServiceImpl) UpdateSession(ctx context.Context, sessionID string, data map[string]interface{}) error <span class="cov1" title="1">{
+        // 1. 获取现有会话
+        session, err := s.GetSession(ctx, sessionID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("更新会话失败: %w", err)
+        }</span>
+
+        // 2. 更新数据（这里简化处理，实际可扩展存储更多数据）
+        <span class="cov1" title="1">key := s.getSessionKey(sessionID)
+        value := fmt.Sprintf("%s|%d|%d", session.UserID, session.CreatedAt.Unix(), session.ExpiresAt.Unix())
+
+        // 3. 重新存储
+        ttl := time.Until(session.ExpiresAt)
+        if ttl &lt;= 0 </span><span class="cov0" title="0">{
+                return fmt.Errorf("会话已过期")
+        }</span>
+
+        <span class="cov1" title="1">if err := s.cacheClient.Set(ctx, key, value, ttl); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("更新会话失败: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// ============ 辅助方法 ============
+
+// generateSessionID 生成会话ID
+func (s *SessionServiceImpl) generateSessionID() (string, error) <span class="cov7" title="30">{
+        bytes := make([]byte, 32)
+        if _, err := rand.Read(bytes); err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov7" title="30">return hex.EncodeToString(bytes), nil</span>
+}
+
+// getSessionKey 获取会话Redis Key
+func (s *SessionServiceImpl) getSessionKey(sessionID string) string <span class="cov9" title="76">{
+        return fmt.Sprintf("session:%s", sessionID)
+}</span>
+
+// getUserSessionsKey 获取用户会话列表Redis Key
+func (s *SessionServiceImpl) getUserSessionsKey(userID string) string <span class="cov10" title="82">{
+        return fmt.Sprintf("user_sessions:%s", userID)
+}</span>
+
+// CheckDeviceLimit 检查设备数量限制（MVP: 多端登录限制）
+// maxDevices: 最大允许设备数，默认5
+// 注意：此方法只检查不踢出，如需自动踢出请使用EnforceDeviceLimit
+func (s *SessionServiceImpl) CheckDeviceLimit(ctx context.Context, userID string, maxDevices int) error <span class="cov2" title="2">{
+        if maxDevices &lt;= 0 </span><span class="cov0" title="0">{
+                maxDevices = 5 // 默认最多5台设备
+        }</span>
+
+        // 获取当前用户的所有活跃会话
+        <span class="cov2" title="2">sessions, err := s.GetUserSessions(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                // 查询失败时采用宽松策略，允许登录
+                return nil
+        }</span>
+
+        <span class="cov2" title="2">if len(sessions) &gt;= maxDevices </span><span class="cov1" title="1">{
+                return fmt.Errorf("登录设备数量已达上限（%d台），请退出其他设备后重试", maxDevices)
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// EnforceDeviceLimit 强制执行设备数量限制（FIFO策略）
+// 如果设备数超限，自动踢出最老的设备，允许新设备登录
+// maxDevices: 最大允许设备数，默认5
+func (s *SessionServiceImpl) EnforceDeviceLimit(ctx context.Context, userID string, maxDevices int) error <span class="cov2" title="2">{
+        if maxDevices &lt;= 0 </span><span class="cov0" title="0">{
+                maxDevices = 5 // 默认最多5台设备
+        }</span>
+
+        // 1. 获取当前用户的所有活跃会话
+        <span class="cov2" title="2">sessions, err := s.GetUserSessions(ctx, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                // 查询失败时采用宽松策略，允许登录
+                zap.L().Warn("获取用户会话失败，跳过设备限制检查",
+                        zap.String("user_id", userID),
+                        zap.Error(err),
+                )
+                return nil
+        }</span>
+
+        // 2. 如果未超限，直接返回
+        <span class="cov2" title="2">if len(sessions) &lt; maxDevices </span><span class="cov0" title="0">{
+                zap.L().Debug("设备数量未超限",
+                        zap.String("user_id", userID),
+                        zap.Int("current", len(sessions)),
+                        zap.Int("max", maxDevices),
+                )
+                return nil
+        }</span>
+
+        // 3. 超限时，计算需要踢出的设备数量
+        <span class="cov2" title="2">numToKick := len(sessions) - maxDevices + 1 // +1 为新设备留位置
+
+        zap.L().Info("设备数量超限，准备踢出最老设备",
+                zap.String("user_id", userID),
+                zap.Int("current", len(sessions)),
+                zap.Int("max", maxDevices),
+                zap.Int("to_kick", numToKick),
+        )
+
+        // 4. 按创建时间排序（最老的在前）
+        // 注意：这里需要复制一份sessions，避免修改原切片
+        sortedSessions := make([]*Session, len(sessions))
+        copy(sortedSessions, sessions)
+
+        // 使用sort.Slice排序
+        for i := 0; i &lt; len(sortedSessions)-1; i++ </span><span class="cov3" title="3">{
+                for j := i + 1; j &lt; len(sortedSessions); j++ </span><span class="cov3" title="4">{
+                        if sortedSessions[i].CreatedAt.After(sortedSessions[j].CreatedAt) </span><span class="cov0" title="0">{
+                                sortedSessions[i], sortedSessions[j] = sortedSessions[j], sortedSessions[i]
+                        }</span>
+                }
+        }
+
+        // 5. 踢出最老的N个设备
+        <span class="cov2" title="2">kickedCount := 0
+        for i := 0; i &lt; numToKick &amp;&amp; i &lt; len(sortedSessions); i++ </span><span class="cov2" title="2">{
+                oldSession := sortedSessions[i]
+                if err := s.DestroySession(ctx, oldSession.ID); err != nil </span><span class="cov0" title="0">{
+                        zap.L().Warn("踢出旧设备失败",
+                                zap.String("user_id", userID),
+                                zap.String("session_id", oldSession.ID),
+                                zap.Time("created_at", oldSession.CreatedAt),
+                                zap.Error(err),
+                        )
+                        // 继续尝试踢出其他设备
+                        continue</span>
+                }
+
+                <span class="cov2" title="2">kickedCount++
+                zap.L().Info("成功踢出旧设备",
+                        zap.String("user_id", userID),
+                        zap.String("session_id", oldSession.ID),
+                        zap.Time("created_at", oldSession.CreatedAt),
+                )</span>
+        }
+
+        <span class="cov2" title="2">zap.L().Info("设备限制执行完成",
+                zap.String("user_id", userID),
+                zap.Int("kicked", kickedCount),
+                zap.Int("required", numToKick),
+        )
+
+        return nil</span>
+}
+
+// addSessionToUserList 将会话ID添加到用户会话列表（带并发控制）
+func (s *SessionServiceImpl) addSessionToUserList(ctx context.Context, userID, sessionID string) error <span class="cov7" title="30">{
+        // 使用分布式锁保证并发安全
+        return s.withUserSessionLock(ctx, userID, func() error </span><span class="cov7" title="30">{
+                userSessionsKey := s.getUserSessionsKey(userID)
+
+                // 获取现有列表
+                value, err := s.cacheClient.Get(ctx, userSessionsKey)
+                var sessionIDs []string
+                if err == nil </span><span class="cov6" title="16">{
+                        _ = json.Unmarshal([]byte(value), &amp;sessionIDs)
+                }</span>
+
+                // 添加新会话ID（去重）
+                <span class="cov7" title="30">found := false
+                for _, id := range sessionIDs </span><span class="cov7" title="23">{
+                        if id == sessionID </span><span class="cov0" title="0">{
+                                found = true
+                                break</span>
+                        }
+                }
+                <span class="cov7" title="30">if !found </span><span class="cov7" title="30">{
+                        sessionIDs = append(sessionIDs, sessionID)
+                }</span>
+
+                // 保存列表
+                <span class="cov7" title="30">return s.saveUserSessionList(ctx, userID, sessionIDs)</span>
+        })
+}
+
+// removeSessionFromUserList 从用户会话列表中移除会话ID（带并发控制）
+func (s *SessionServiceImpl) removeSessionFromUserList(ctx context.Context, userID, sessionID string) error <span class="cov4" title="6">{
+        // 使用分布式锁保证并发安全
+        return s.withUserSessionLock(ctx, userID, func() error </span><span class="cov4" title="6">{
+                userSessionsKey := s.getUserSessionsKey(userID)
+
+                // 获取现有列表
+                value, err := s.cacheClient.Get(ctx, userSessionsKey)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil // 列表不存在，无需操作
+                }</span>
+
+                <span class="cov4" title="6">var sessionIDs []string
+                if err := json.Unmarshal([]byte(value), &amp;sessionIDs); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // 移除会话ID
+                <span class="cov4" title="6">newSessionIDs := make([]string, 0, len(sessionIDs))
+                for _, id := range sessionIDs </span><span class="cov6" title="12">{
+                        if id != sessionID </span><span class="cov4" title="6">{
+                                newSessionIDs = append(newSessionIDs, id)
+                        }</span>
+                }
+
+                // 保存列表
+                <span class="cov4" title="6">return s.saveUserSessionList(ctx, userID, newSessionIDs)</span>
+        })
+}
+
+// saveUserSessionList 保存用户会话列表
+func (s *SessionServiceImpl) saveUserSessionList(ctx context.Context, userID string, sessionIDs []string) error <span class="cov8" title="36">{
+        userSessionsKey := s.getUserSessionsKey(userID)
+
+        if len(sessionIDs) == 0 </span><span class="cov2" title="2">{
+                // 列表为空，删除key
+                return s.cacheClient.Delete(ctx, userSessionsKey)
+        }</span>
+
+        // 序列化为JSON
+        <span class="cov8" title="34">data, err := json.Marshal(sessionIDs)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // 保存到Redis（过期时间比单个会话略长）
+        <span class="cov8" title="34">return s.cacheClient.Set(ctx, userSessionsKey, string(data), s.sessionTTL+24*time.Hour)</span>
+}
+
+// UpdateSessionModel 更新Session模型（与AuthService集成）
+func (s *SessionServiceImpl) UpdateSessionModel(session *Session) *authModel.Session <span class="cov0" title="0">{
+        return &amp;authModel.Session{
+                ID:        session.ID,
+                UserID:    session.UserID,
+                Data:      make(map[string]interface{}),
+                CreatedAt: session.CreatedAt,
+                ExpiresAt: session.ExpiresAt,
+        }
+}</span>
+
+// ============ 定时清理任务 ============
+
+// startCleanupTask 启动定时清理任务
+func (s *SessionServiceImpl) startCleanupTask() <span class="cov6" title="15">{
+        s.cleanupTicker = time.NewTicker(1 * time.Hour) // 每1小时执行一次
+
+        go func() </span><span class="cov6" title="15">{
+                defer func() </span><span class="cov0" title="0">{
+                        if r := recover(); r != nil </span><span class="cov0" title="0">{
+                                zap.L().Error("清理任务panic", zap.Any("panic", r))
+                        }</span>
+                }()
+
+                <span class="cov6" title="15">for </span><span class="cov6" title="15">{
+                        select </span>{
+                        case &lt;-s.cleanupTicker.C:<span class="cov0" title="0">
+                                // 执行清理
+                                ctx := context.Background()
+                                if err := s.CleanupExpiredSessions(ctx); err != nil </span><span class="cov0" title="0">{
+                                        zap.L().Error("清理过期Session失败", zap.Error(err))
+                                }</span> else<span class="cov0" title="0"> {
+                                        zap.L().Info("成功执行Session清理任务")
+                                }</span>
+                        case &lt;-s.cleanupStop:<span class="cov0" title="0">
+                                s.cleanupTicker.Stop()
+                                zap.L().Info("Session清理任务已停止")
+                                return</span>
+                        }
+                }
+        }()
+
+        <span class="cov6" title="15">zap.L().Info("Session定时清理任务已启动", zap.Duration("interval", 1*time.Hour))</span>
+}
+
+// StopCleanupTask 停止清理任务（优雅关闭）
+func (s *SessionServiceImpl) StopCleanupTask() <span class="cov0" title="0">{
+        if s.cleanupTicker != nil </span><span class="cov0" title="0">{
+                select </span>{
+                case s.cleanupStop &lt;- true:<span class="cov0" title="0"></span>
+                default:<span class="cov0" title="0"></span>
+                }
+        }
+}
+
+// CleanupExpiredSessions 清理过期会话（定时任务调用）
+func (s *SessionServiceImpl) CleanupExpiredSessions(ctx context.Context) error <span class="cov0" title="0">{
+        // 注意：这是一个简化实现
+        // 生产环境可能需要扫描所有user_sessions:* key
+        // 当前实现依赖Redis的自动过期机制 + 在GetUserSessions时过滤
+
+        zap.L().Info("开始清理过期Session")
+
+        // TODO(optimization): 实现完整的扫描清理逻辑
+        // 1. 使用SCAN命令遍历所有user_sessions:*
+        // 2. 对每个用户会话列表，移除过期的Session ID
+        // 3. 记录清理统计
+
+        // 当前版本：记录日志，实际清理在GetUserSessions中进行
+        zap.L().Info("Session清理任务完成（依赖GetUserSessions自动过滤）")
+
+        return nil
+}</span>
+
+// ============ 分布式锁 ============
+
+// acquireUserSessionLock 获取用户会话列表锁（基于Redis SETNX）
+func (s *SessionServiceImpl) acquireUserSessionLock(ctx context.Context, userID string) (bool, error) <span class="cov8" title="36">{
+        lockKey := s.getUserSessionLockKey(userID)
+        lockValue := fmt.Sprintf("lock:%d", time.Now().Unix())
+
+        // 使用SetNX实现分布式锁
+        // 注意：这需要CacheClient支持SetNX，当前简化实现
+        // 生产环境建议使用Redlock或etcd
+
+        err := s.cacheClient.Set(ctx, lockKey, lockValue, s.lockTTL)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, err
+        }</span>
+
+        <span class="cov8" title="36">return true, nil</span>
+}
+
+// releaseUserSessionLock 释放用户会话列表锁
+func (s *SessionServiceImpl) releaseUserSessionLock(ctx context.Context, userID string) error <span class="cov8" title="36">{
+        lockKey := s.getUserSessionLockKey(userID)
+        return s.cacheClient.Delete(ctx, lockKey)
+}</span>
+
+// getUserSessionLockKey 获取用户会话列表锁的Key
+func (s *SessionServiceImpl) getUserSessionLockKey(userID string) string <span class="cov9" title="72">{
+        return fmt.Sprintf("user_sessions_lock:%s", userID)
+}</span>
+
+// withUserSessionLock 使用分布式锁执行操作
+func (s *SessionServiceImpl) withUserSessionLock(ctx context.Context, userID string, fn func() error) error <span class="cov8" title="36">{
+        // 尝试获取锁（带重试）
+        maxRetries := 3
+        retryDelay := 100 * time.Millisecond
+
+        var acquired bool
+        var err error
+
+        for i := 0; i &lt; maxRetries; i++ </span><span class="cov8" title="36">{
+                acquired, err = s.acquireUserSessionLock(ctx, userID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("获取锁失败: %w", err)
+                }</span>
+                <span class="cov8" title="36">if acquired </span><span class="cov8" title="36">{
+                        break</span>
+                }
+                // 未获取到锁，等待后重试
+                <span class="cov0" title="0">time.Sleep(retryDelay)
+                retryDelay *= 2</span> // 指数退避
+        }
+
+        <span class="cov8" title="36">if !acquired </span><span class="cov0" title="0">{
+                return fmt.Errorf("无法获取用户会话锁，请稍后重试")
+        }</span>
+
+        // 确保释放锁
+        <span class="cov8" title="36">defer func() </span><span class="cov8" title="36">{
+                if err := s.releaseUserSessionLock(ctx, userID); err != nil </span><span class="cov0" title="0">{
+                        zap.L().Warn("释放用户会话锁失败",
+                                zap.String("user_id", userID),
+                                zap.Error(err),
+                        )
+                }</span>
+        }()
+
+        // 执行操作
+        <span class="cov8" title="36">return fn()</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
