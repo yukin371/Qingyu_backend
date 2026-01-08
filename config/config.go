@@ -8,6 +8,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+
+	authModel "Qingyu_backend/models/auth"
 )
 
 // Config 存储应用配置
@@ -21,6 +23,7 @@ type Config struct {
 	AIQuota  *AIQuotaConfig     `mapstructure:"ai_quota"`
 	Email    *EmailConfig       `mapstructure:"email"`
 	Payment  *PaymentConfig     `mapstructure:"payment"`
+	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
 }
 
 // ServerConfig 服务器配置

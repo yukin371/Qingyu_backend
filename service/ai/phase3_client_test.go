@@ -105,9 +105,9 @@ func TestPhase3Client_ExecuteCreativeWorkflow(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, response)
 
-	t.Logf("\n" + strings.Repeat("=", 60))
+	t.Logf("\n%s", strings.Repeat("=", 60))
 	t.Logf("✅ 完整工作流执行成功")
-	t.Logf(strings.Repeat("=", 60))
+	t.Logf("%s", strings.Repeat("=", 60))
 	t.Logf("执行ID: %s", response.ExecutionId)
 	t.Logf("审核通过: %v", response.ReviewPassed)
 	t.Logf("反思次数: %d", response.ReflectionCount)
