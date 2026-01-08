@@ -1,6 +1,6 @@
 # 后端生产环境 Dockerfile - 多阶段构建
 # 构建阶段
-FROM golang:1.25-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 

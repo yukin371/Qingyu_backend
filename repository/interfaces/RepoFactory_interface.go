@@ -4,6 +4,7 @@ import (
 	"context"
 
 	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
+	authInterface "Qingyu_backend/repository/interfaces/auth"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	FinanceInterfaces "Qingyu_backend/repository/interfaces/finance"
@@ -65,6 +66,7 @@ type RepositoryFactory interface {
 
 	// 共享服务相关Repository
 	CreateAuthRepository() SharedInterfaces.AuthRepository
+	CreateOAuthRepository() authInterface.OAuthRepository
 	CreateWalletRepository() SharedInterfaces.WalletRepository
 	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
 	CreateStorageRepository() SharedInterfaces.StorageRepository

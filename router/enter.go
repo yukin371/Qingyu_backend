@@ -62,6 +62,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// ============ 注册共享服务路由（渐进式注册） ============
 	// 尝试从服务容器获取共享服务
 	authSvc, authErr := serviceContainer.GetAuthService()
+	oauthSvc, oauthErr := serviceContainer.GetOAuthService()
 	walletSvc, walletErr := serviceContainer.GetWalletService()
 
 	// 获取存储相关服务
@@ -80,8 +81,12 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 1. 注册认证服务路由
 	if authErr == nil && authSvc != nil {
-		sharedRouter.RegisterAuthRoutes(sharedGroup, authSvc)
+		// OAuthService是可选的，如果没有配置，传入nil
+		sharedRouter.RegisterAuthRoutes(sharedGroup, authSvc, oauthSvc, logger)
 		logger.Info("✓ 认证服务路由已注册: /api/v1/shared/auth/*")
+		if oauthErr != nil {
+			logger.Warn("⚠ OAuthService未配置，OAuth登录功能将不可用", zap.Error(oauthErr))
+		}
 		registeredCount++
 	} else {
 		logger.Warn("⚠ AuthService未配置，跳过认证路由注册", zap.Error(authErr))

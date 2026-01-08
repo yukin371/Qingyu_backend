@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/config"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
@@ -24,6 +25,7 @@ import (
 
 	// 导入各个子包的具体实现
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
+	mongoAuth "Qingyu_backend/repository/mongodb/auth"
 	mongoAudit "Qingyu_backend/repository/mongodb/audit"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoFinance "Qingyu_backend/repository/mongodb/finance"
@@ -271,6 +273,11 @@ func (f *MongoRepositoryFactory) CreateHotRecommendationRepository() recoRepo.Ho
 // CreateAuthRepository 创建认证Repository
 func (f *MongoRepositoryFactory) CreateAuthRepository() sharedRepo.AuthRepository {
 	return mongoShared.NewAuthRepository(f.database)
+}
+
+// CreateOAuthRepository 创建OAuth Repository
+func (f *MongoRepositoryFactory) CreateOAuthRepository() authRepo.OAuthRepository {
+	return mongoAuth.NewMongoOAuthRepository(f.database)
 }
 
 // CreateWalletRepository 创建钱包Repository
