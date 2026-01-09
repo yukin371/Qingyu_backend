@@ -1,8 +1,12 @@
 # API设计规范
 
-**版本**: v2.0
-**更新**: 2026-01-08
+**版本**: v3.0
+**更新**: 2026-01-09
 **状态**: ✅ 正式实施
+
+**变更内容**：
+- 新增第十一章：接口化设计规范
+- 新增第十二章：API层测试规范
 
 ---
 
@@ -216,15 +220,148 @@ POST /api/v1/auth/refresh
 
 ### 4.2 权限控制
 
-**基于角色的访问控制（RBAC）**：
-- 普通用户
-- VIP用户
-- 作者
-- 管理员
+#### 4.2.1 角色系统（RBAC）
 
-**资源级权限**：
+**角色定义**（支持多角色）：
+- `reader` - 读者（所有用户默认角色）
+- `author` - 作者（可发布作品的认证作者）
+- `admin` - 管理员（系统管理权限）
+
+**角色权限矩阵**：
+| 功能 | reader | author | admin |
+|------|--------|--------|-------|
+| 阅读作品 | ✅ | ✅ | ✅ |
+| 发表评论 | ✅ | ✅ | ✅ |
+| 点赞/收藏 | ✅ | ✅ | ✅ |
+| 关注作者 | ✅ | ✅ | ✅ |
+| 创建书单 | ✅ | ✅ | ✅ |
+| 发布作品 | ❌ | ✅ | ✅ |
+| 管理作品 | ❌ | 仅自己 | ✅ |
+| 查看收入 | ❌ | 仅自己 | ✅ |
+| 用户管理 | ❌ | ❌ | ✅ |
+| 内容审核 | ❌ | ❌ | ✅ |
+
+**多角色示例**：
+```json
+// 普通读者
+{
+  "roles": ["reader"]
+}
+
+// 认证作者（同时拥有读者权限）
+{
+  "roles": ["reader", "author"]
+}
+
+// 管理员（拥有所有权限）
+{
+  "roles": ["reader", "author", "admin"]
+}
+```
+
+#### 4.2.2 VIP会员等级
+
+**VIP等级**（独立于角色，决定内容访问范围）：
+- Level 0 - 非VIP（默认）
+- Level 1 - 基础VIP
+- Level 2 - VIP Plus
+- Level 3 - VIP Pro
+- Level 4 - VIP Ultra
+- Level 5 - 超级VIP
+
+**VIP权益示例**：
+- 提前阅读：VIP Level 3可提前7天阅读新章节
+- 专属作品：VIP Level 4可访问专属VIP作品区
+- 阅读折扣：VIP Level 2+享受8折购书优惠
+
+**重要**：VIP是会员等级（access level），不是功能角色（functional role）
+
+#### 4.2.3 资源级权限
+
+**所有权原则**：
 - 用户只能操作自己的资源
 - 作者只能编辑自己的作品
+- 管理员可操作所有资源
+
+**权限检查流程**：
+```
+1. 认证检查（JWT验证）
+2. 角色检查（是否拥有该角色）
+3. 资源所有权检查（Service层验证）
+4. VIP等级检查（内容访问限制）
+```
+
+#### 4.2.4 公共端点
+
+**无需认证的端点**：
+```
+GET  /api/v1/books              # 获取书籍列表
+GET  /api/v1/books/{id}         # 获取书籍详情
+GET  /api/v1/recommendations    # 获取推荐
+GET  /api/v1/categories         # 获取分类
+```
+
+**需要认证的端点**：
+```
+POST /api/v1/comments           # 发表评论
+POST /api/v1/likes              # 点赞
+POST /api/v1/collections        # 收藏
+```
+
+### 4.3 认证流程
+
+#### 4.3.1 未认证用户访问流程
+
+```
+公共端点请求
+  ↓
+无需JWT Token
+  ↓
+返回公共数据（带访问限制）
+```
+
+**示例**：
+- 浏览书籍列表（无个性化推荐）
+- 查看书籍详情（部分章节预览）
+- 阅读推荐内容（热门/最新）
+
+#### 4.3.2 已认证用户访问流程
+
+```
+请求携带JWT Token
+  ↓
+JWT中间件验证
+  ↓
+解析用户信息（userId, roles, vipLevel）
+  ↓
+角色中间件检查（如需要）
+  ↓
+权限中间件检查（如需要）
+  ↓
+Service层资源所有权验证
+  ↓
+返回完整数据
+```
+
+#### 4.3.3 权限检查示例
+
+**示例1：发布作品**（需要author角色）
+```go
+// Middleware: RequireRole("author")
+// Service: 验证userId是否拥有author角色
+```
+
+**示例2：更新作品**（需要author角色 + 资源所有权）
+```go
+// Middleware: RequireRole("author")
+// Service: 验证作品.AuthorID == userId
+```
+
+**示例3：阅读VIP章节**（需要VIP等级）
+```go
+// Middleware: RequireVIPLevel(3)
+// Service: 验证用户VIP等级 >= 章节要求等级
+```
 
 ---
 
@@ -411,8 +548,310 @@ func (api *BookAPI) CreateBook(c *gin.Context) {
 - 版本兼容性
 - 详细的文档
 
+**权限控制最佳实践**：
+
+✅ **推荐**：
+- 使用中间件统一处理角色验证
+- 资源所有权检查在Service层进行
+- VIP等级检查与业务逻辑分离
+- 权限拒绝时返回明确的错误信息
+- 记录权限检查失败的审计日志
+
+❌ **避免**：
+- 在API层硬编码用户ID
+- 绕过中间件直接检查角色
+- 返回模糊的权限错误（如"权限不足"而不说明原因）
+- 在客户端进行权限验证（永远不可信）
+
+**多角色系统设计原则**：
+```go
+// ✅ 正确：使用中间件检查角色
+router.POST("/books", middleware.RequireRole("author"), api.CreateBook)
+
+// ✅ 正确：Service层验证资源所有权
+func (s *BookService) UpdateBook(ctx context.Context, userID, bookID string) error {
+    book, err := s.repo.GetByID(ctx, bookID)
+    if err != nil {
+        return err
+    }
+    if book.AuthorID != userID && !user.HasRole("admin") {
+        return ErrNoPermission
+    }
+    // 更新逻辑...
+}
+
+// ❌ 错误：在API层硬编码权限检查
+func (api *BookAPI) UpdateBook(c *gin.Context) {
+    userID := c.GetString("user_id")
+    // 直接检查数据库，绕过中间件
+}
+```
+
+---
+
+## 十一、接口化设计规范
+
+### 11.1 依赖倒置原则在API层的应用
+
+**核心原则**：
+- ✅ API层依赖Service接口，而非具体实现
+- ✅ 通过构造函数注入依赖
+- ✅ 使用接口实现解耦和可测试性
+
+**代码对比**：
+```go
+// ❌ 错误：依赖具体实现
+type BookstoreAPI struct {
+    service *bookstore.BookstoreService
+}
+
+// ✅ 正确：依赖接口
+type BookstoreAPI struct {
+    service interfaces.BookstoreService
+}
+```
+
+### 11.2 服务接口定义规范
+
+**接口定义位置**：
+```
+service/interfaces/
+├── comment_service_interface.go
+├── like_service_interface.go
+├── bookstore_service_interface.go
+├── reader_service_interface.go
+└── ...
+```
+
+**命名规范**：
+- 接口名：`{模块名}Service`
+- 文件名：`{模块名}_service_interface.go`
+
+**接口定义模板**：
+```go
+package interfaces
+
+import (
+    "context"
+    "Qingyu_backend/models/{module}"
+)
+
+type {Module}Service interface {
+    // CRUD操作
+    GetByID(ctx context.Context, id string) (*models.{Entity}, error)
+    List(ctx context.Context, page, size int) ([]*models.{Entity}, int64, error)
+
+    // 业务操作
+    {BusinessAction}(ctx context.Context, ...) error
+}
+```
+
+### 11.3 API层结构设计模式
+
+**标准API结构**：
+```go
+type {Module}API struct {
+    {service} interfaces.{Module}Service
+}
+
+func New{Module}API(
+    {service} interfaces.{Module}Service,
+) *{Module}API {
+    return &{Module}API{
+        {service}: {service},
+    }
+}
+```
+
+### 11.4 可测试性设计规范
+
+**测试覆盖率要求**：
+- API层整体：≥ 80%
+- 核心业务逻辑：100%
+- 错误处理：≥ 70%
+
+**Mock对象创建**：
+- 使用 `testify/mock`
+- 实现所有接口方法
+- 遵循 Given-When-Then 模式
+
+---
+
+## 十二、API层测试规范
+
+### 12.1 测试策略
+
+**测试分布**：
+- 单元测试：60% - 使用Mock对象测试单个方法
+- 集成测试：30% - 测试多个组件协作
+- E2E测试：10% - 端到端业务流程测试
+
+### 12.2 测试文件结构
+
+**文件组织**：
+```
+api/v1/social/
+├── comment_api.go
+└── comment_api_test.go
+```
+
+**测试命名规范**：
+```go
+// 测试文件命名：{module}_api_test.go
+// 测试函数命名：Test{API名}_{方法名}_{场景}
+
+func TestCommentAPI_CreateComment_Success(t *testing.T)
+func TestCommentAPI_CreateComment_MissingBookID(t *testing.T)
+func TestCommentAPI_CreateComment_Unauthorized(t *testing.T)
+```
+
+### 12.3 测试模式：Given-When-Then
+
+**标准测试结构**：
+```go
+func TestCommentAPI_CreateComment_Success(t *testing.T) {
+    // Given - 准备测试数据
+    mockService := new(MockCommentService)
+    userID := primitive.NewObjectID().Hex()
+    router := setupTestRouter(mockService, userID)
+
+    reqBody := map[string]interface{}{
+        "book_id": "book123",
+        "content": "这是一本非常好的书！",
+        "rating":  5,
+    }
+
+    expectedComment := &community.Comment{}
+    expectedComment.ID = primitive.NewObjectID().Hex()
+    expectedComment.AuthorID = userID
+    expectedComment.Content = "这是一本非常好的书！"
+    expectedComment.Rating = 5
+
+    mockService.On("PublishComment", mock.Anything, userID, "book123",
+        "这是一本非常好的书！", 5).Return(expectedComment, nil)
+
+    jsonBody, _ := json.Marshal(reqBody)
+    req, _ := http.NewRequest("POST", "/api/v1/reader/comments",
+        bytes.NewBuffer(jsonBody))
+    req.Header.Set("Content-Type", "application/json")
+
+    // When - 执行操作
+    w := httptest.NewRecorder()
+    router.ServeHTTP(w, req)
+
+    // Then - 验证结果
+    assert.Equal(t, http.StatusCreated, w.Code)
+
+    var response map[string]interface{}
+    err := json.Unmarshal(w.Body.Bytes(), &response)
+    assert.NoError(t, err)
+    assert.Equal(t, float64(http.StatusCreated), response["code"])
+    assert.NotNil(t, response["data"])
+
+    mockService.AssertExpectations(t)
+}
+```
+
+### 12.4 Mock对象创建
+
+**Mock服务实现**：
+```go
+type MockCommentService struct {
+    mock.Mock
+}
+
+func (m *MockCommentService) PublishComment(
+    ctx context.Context,
+    userID, bookID, chapterID, content string,
+    rating int,
+) (*community.Comment, error) {
+    args := m.Called(ctx, userID, bookID, chapterID, content, rating)
+    if args.Get(0) == nil {
+        return nil, args.Error(1)
+    }
+    return args.Get(0).(*community.Comment), args.Error(1)
+}
+
+func (m *MockCommentService) GetCommentList(
+    ctx context.Context,
+    bookID string,
+    sortBy string,
+    page, size int,
+) ([]*community.Comment, int64, error) {
+    args := m.Called(ctx, bookID, sortBy, page, size)
+    if args.Get(0) == nil {
+        return nil, args.Get(1).(int64), args.Error(2)
+    }
+    return args.Get(0).([]*community.Comment), args.Get(1).(int64), args.Error(2)
+}
+```
+
+### 12.5 测试辅助函数
+
+**设置测试路由**：
+```go
+func setupTestRouter(commentService interfaces.CommentService, userID string) *gin.Engine {
+    gin.SetMode(gin.TestMode)
+    r := gin.New()
+
+    // 添加middleware来设置userId（用于需要认证的端点）
+    r.Use(func(c *gin.Context) {
+        if userID != "" {
+            c.Set("user_id", userID)
+        }
+        c.Next()
+    })
+
+    api := socialAPI.NewCommentAPI(commentService)
+
+    v1 := r.Group("/api/v1/reader")
+    {
+        v1.POST("/comments", api.CreateComment)
+        v1.GET("/comments", api.GetCommentList)
+        v1.GET("/comments/:id", api.GetCommentDetail)
+        v1.PUT("/comments/:id", api.UpdateComment)
+        v1.DELETE("/comments/:id", api.DeleteComment)
+    }
+
+    return r
+}
+```
+
+### 12.6 测试覆盖场景
+
+**必须测试的场景**：
+1. ✅ 正常流程（Success）
+2. ✅ 参数验证失败（Missing Required Fields）
+3. ✅ 权限验证（Unauthorized）
+4. ✅ 资源不存在（Not Found）
+5. ✅ 业务规则冲突（Conflict）
+6. ✅ 服务错误（Service Error）
+
+**示例测试用例**：
+```go
+// 1. 正常流程
+func TestCommentAPI_CreateComment_Success(t *testing.T)
+
+// 2. 参数验证
+func TestCommentAPI_CreateComment_MissingBookID(t *testing.T)
+func TestCommentAPI_CreateComment_ContentTooShort(t *testing.T)
+
+// 3. 权限验证
+func TestCommentAPI_CreateComment_Unauthorized(t *testing.T)
+
+// 4. 资源不存在
+func TestCommentAPI_GetCommentDetail_NotFound(t *testing.T)
+
+// 5. 权限检查
+func TestCommentAPI_DeleteComment_NoPermission(t *testing.T)
+
+// 6. 批量操作
+func TestCommentAPI_BatchDeleteComments_Success(t *testing.T)
+```
+
 ---
 
 **相关文档**：
 - [架构设计规范](../architecture/架构设计规范.md)
 - [路由层设计规范](../architecture/路由层设计规范.md)
+- [测试架构规范](../testing/测试架构规范.md)

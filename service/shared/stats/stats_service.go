@@ -115,12 +115,17 @@ func (s *PlatformStatsServiceImpl) GetUserStats(ctx context.Context, userID stri
 	)
 
 	// 4. 构建统计结果
-	// VIPLevel字段在User模型中不存在，暂时使用Role
-	memberLevel := "普通用户"
-	if user.Role == "author" {
-		memberLevel = "作者"
-	} else if user.Role == "admin" {
+	// 确定用户角色和VIP等级
+	memberLevel := "普通读者"
+	if user.IsAdmin() {
 		memberLevel = "管理员"
+	} else if user.IsAuthor() {
+		memberLevel = "作者"
+	}
+
+	// 添加VIP等级信息到MemberLevel
+	if user.IsVIP() {
+		memberLevel += fmt.Sprintf(" (VIP Level %d)", user.GetVIPLevel())
 	}
 
 	stats := &UserStats{
