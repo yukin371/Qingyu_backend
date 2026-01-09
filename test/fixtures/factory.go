@@ -30,8 +30,9 @@ func (f *UserFactory) Create(opts ...func(*users.User)) *users.User {
 		Username:  fmt.Sprintf("user%d", f.counter),
 		Email:     fmt.Sprintf("user%d@test.com", f.counter),
 		Password:  "hashed_password_" + fmt.Sprint(f.counter),
-		Role:      "user",
-		Status:    "active",
+		Roles:     []string{"reader"}, // 默认为读者角色
+		VIPLevel:  0,
+		Status:    users.UserStatusActive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -56,7 +57,7 @@ func (f *UserFactory) CreateBatch(count int) []*users.User {
 // CreateAdmin 创建管理员用户
 func (f *UserFactory) CreateAdmin() *users.User {
 	return f.Create(func(u *users.User) {
-		u.Role = "admin"
+		u.Roles = []string{"reader", "author", "admin"}
 		u.Username = fmt.Sprintf("admin%d", f.counter)
 	})
 }
@@ -64,7 +65,7 @@ func (f *UserFactory) CreateAdmin() *users.User {
 // CreateAuthor 创建作者用户
 func (f *UserFactory) CreateAuthor() *users.User {
 	return f.Create(func(u *users.User) {
-		u.Role = "author"
+		u.Roles = []string{"reader", "author"}
 		u.Username = fmt.Sprintf("author%d", f.counter)
 	})
 }

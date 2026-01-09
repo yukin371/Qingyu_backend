@@ -21,7 +21,8 @@ type TestUser struct {
 	Username    string
 	Email       string
 	Password    string
-	Role        string
+	Roles       []string // 多角色支持
+	VIPLevel    int      // VIP等级
 	Description string
 }
 
@@ -32,7 +33,8 @@ var testUsers = []TestUser{
 		Username:    "admin",
 		Email:       "admin@qingyu.com",
 		Password:    "Admin@123456",
-		Role:        "admin",
+		Roles:       []string{"reader", "author", "admin"},
+		VIPLevel:    5, // 最高VIP等级
 		Description: "系统管理员",
 	},
 
@@ -41,14 +43,16 @@ var testUsers = []TestUser{
 		Username:    "vip_user01",
 		Email:       "vip01@qingyu.com",
 		Password:    "Vip@123456",
-		Role:        "vip",
+		Roles:       []string{"reader"},
+		VIPLevel:    3,
 		Description: "VIP测试用户1",
 	},
 	{
 		Username:    "vip_user02",
 		Email:       "vip02@qingyu.com",
 		Password:    "Vip@123456",
-		Role:        "vip",
+		Roles:       []string{"reader"},
+		VIPLevel:    2,
 		Description: "VIP测试用户2",
 	},
 
@@ -57,35 +61,40 @@ var testUsers = []TestUser{
 		Username:    "test_user01",
 		Email:       "test01@qingyu.com",
 		Password:    "Test@123456",
-		Role:        "user",
+		Roles:       []string{"reader"},
+		VIPLevel:    0,
 		Description: "普通测试用户1",
 	},
 	{
 		Username:    "test_user02",
 		Email:       "test02@qingyu.com",
 		Password:    "Test@123456",
-		Role:        "user",
+		Roles:       []string{"reader"},
+		VIPLevel:    0,
 		Description: "普通测试用户2",
 	},
 	{
 		Username:    "test_user03",
 		Email:       "test03@qingyu.com",
 		Password:    "Test@123456",
-		Role:        "user",
+		Roles:       []string{"reader"},
+		VIPLevel:    0,
 		Description: "普通测试用户3",
 	},
 	{
 		Username:    "test_user04",
 		Email:       "test04@qingyu.com",
 		Password:    "Test@123456",
-		Role:        "user",
+		Roles:       []string{"reader"},
+		VIPLevel:    0,
 		Description: "普通测试用户4",
 	},
 	{
 		Username:    "test_user05",
 		Email:       "test05@qingyu.com",
 		Password:    "Test@123456",
-		Role:        "user",
+		Roles:       []string{"reader"},
+		VIPLevel:    0,
 		Description: "普通测试用户5",
 	},
 }
@@ -157,8 +166,9 @@ func main() {
 			Username:  testUser.Username,
 			Email:     testUser.Email,
 			Password:  string(hashedPassword),
-			Role:      testUser.Role,
-			Status:    "active",
+			Roles:     testUser.Roles,
+			VIPLevel:  testUser.VIPLevel,
+			Status:    users.UserStatusActive,
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
@@ -192,10 +202,11 @@ func main() {
 
 	fmt.Println("【管理员账号】")
 	for _, user := range testUsers {
-		if user.Role == "admin" {
+		if containsRole(user.Roles, "admin") {
 			fmt.Printf("  用户名: %s\n", user.Username)
 			fmt.Printf("  邮箱: %s\n", user.Email)
 			fmt.Printf("  密码: %s\n", user.Password)
+			fmt.Printf("  VIP等级: %d\n", user.VIPLevel)
 			fmt.Printf("  说明: %s\n", user.Description)
 			fmt.Println()
 		}
@@ -203,15 +214,16 @@ func main() {
 
 	fmt.Println("【VIP用户】")
 	for _, user := range testUsers {
-		if user.Role == "vip" {
-			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s\n", user.Username, user.Email, user.Password)
+		if user.VIPLevel > 0 {
+			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s | VIP等级: %d\n",
+				user.Username, user.Email, user.Password, user.VIPLevel)
 		}
 	}
 	fmt.Println()
 
 	fmt.Println("【普通用户】")
 	for _, user := range testUsers {
-		if user.Role == "user" {
+		if user.VIPLevel == 0 && !containsRole(user.Roles, "admin") {
 			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s\n", user.Username, user.Email, user.Password)
 		}
 	}
@@ -223,6 +235,16 @@ func main() {
 	fmt.Println("2. 管理员和VIP用户享有高级权限")
 	fmt.Println("3. 账号信息已保存在数据库中")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+}
+
+// 辅助函数：检查角色数组是否包含指定角色
+func containsRole(roles []string, role string) bool {
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
 }
 
 // connectDB 连接数据库

@@ -124,8 +124,8 @@ func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID stri
 		return ErrUserNotFound
 	}
 
-	// 不能修改超级管理员的状态
-	if user.Role == "super_admin" {
+	// 不能修改管理员的状态
+	if user.HasRole("admin") {
 		return ErrCannotModifySuperAdmin
 	}
 
@@ -150,8 +150,8 @@ func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role 
 		return ErrUserNotFound
 	}
 
-	// 不能修改超级管理员的角色
-	if user.Role == "super_admin" {
+	// 不能修改管理员的角色
+	if user.HasRole("admin") {
 		return ErrCannotModifySuperAdmin
 	}
 
@@ -171,8 +171,8 @@ func (s *UserAdminServiceImpl) DeleteUser(ctx context.Context, userID string) er
 		return ErrUserNotFound
 	}
 
-	// 不能删除超级管理员
-	if user.Role == "super_admin" {
+	// 不能删除管理员
+	if user.HasRole("admin") {
 		return ErrCannotModifySuperAdmin
 	}
 
@@ -188,10 +188,10 @@ func (s *UserAdminServiceImpl) BatchUpdateStatus(ctx context.Context, userIDs []
 			continue // 跳过无效ID
 		}
 
-		// 检查是否是超级管理员
+		// 检查是否是管理员
 		user, err := s.userRepo.GetByID(ctx, id)
-		if err == nil && user.Role == "super_admin" {
-			continue // 跳过超级管理员
+		if err == nil && user.HasRole("admin") {
+			continue // 跳过管理员
 		}
 
 		ids = append(ids, id)
