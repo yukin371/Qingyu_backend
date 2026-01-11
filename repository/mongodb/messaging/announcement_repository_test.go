@@ -168,7 +168,7 @@ func TestAnnouncementRepository_List(t *testing.T) {
 	}
 
 	// 测试列表查询
-	filter := &messagingModel.AnnouncementFilter{}
+	filter := &infrastructure.BaseFilter{}
 
 	announcements, err := repo.List(ctx, filter)
 	require.NoError(t, err)
@@ -260,7 +260,7 @@ func TestAnnouncementRepository_Count(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	filter := &messagingModel.AnnouncementFilter{}
+	filter := &infrastructure.BaseFilter{}
 
 	count, err := repo.Count(ctx, filter)
 	require.NoError(t, err)

@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -56,10 +58,17 @@ type PrometheusMetrics struct {
 var (
 	// DefaultMetrics 全局Prometheus指标实例
 	DefaultMetrics *PrometheusMetrics
+	metricsOnce    sync.Once
 )
 
-// InitPrometheusMetrics 初始化Prometheus指标
+// InitPrometheusMetrics 初始化Prometheus指标（幂等，多次调用只注册一次）
 func InitPrometheusMetrics() *PrometheusMetrics {
+	// 如果已经初始化，直接返回
+	if DefaultMetrics != nil {
+		return DefaultMetrics
+	}
+
+	metricsOnce.Do(func() {
 	metrics := &PrometheusMetrics{
 		// ============ HTTP指标 ============
 		HTTPRequestsTotal: promauto.NewCounterVec(
@@ -292,7 +301,9 @@ func InitPrometheusMetrics() *PrometheusMetrics {
 	}
 
 	DefaultMetrics = metrics
-	return metrics
+	})
+
+	return DefaultMetrics
 }
 
 // GetDefaultMetrics 获取默认Prometheus指标实例
