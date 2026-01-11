@@ -127,8 +127,10 @@ func TestJWTService_GenerateToken_TableDriven(t *testing.T) {
 func TestJWTService_ValidateToken_TableDriven(t *testing.T) {
 	cache := NewMockRedisClient()
 	cfg := &config.JWTConfigEnhanced{
-		Secret:      "test-secret-key-12345678",
-		Expiration:  1 * time.Hour,
+		SecretKey:       "test-secret-key-12345678",
+		Issuer:          "qingyu-test",
+		Expiration:      1 * time.Hour,
+		RefreshDuration: 24 * time.Hour,
 	}
 	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
@@ -231,8 +233,10 @@ func TestJWTService_TokenExpiration(t *testing.T) {
 			// Arrange
 			cache := NewMockRedisClient()
 			cfg := &config.JWTConfigEnhanced{
-				Secret:      "test-secret-key-12345678",
-				Expiration:  tt.expiration,
+				SecretKey:       "test-secret-key-12345678",
+				Issuer:          "qingyu-test",
+				Expiration:      tt.expiration,
+				RefreshDuration: 24 * time.Hour,
 			}
 			service := NewJWTService(cfg, cache)
 			ctx := context.Background()
@@ -327,8 +331,10 @@ func TestJWTService_RefreshToken_TableDriven(t *testing.T) {
 func TestJWTService_RevokeToken_TableDriven(t *testing.T) {
 	cache := NewMockRedisClient()
 	cfg := &config.JWTConfigEnhanced{
-		Secret:      "test-secret-key-12345678",
-		Expiration:  1 * time.Hour,
+		SecretKey:       "test-secret-key-12345678",
+		Issuer:          "qingyu-test",
+		Expiration:      1 * time.Hour,
+		RefreshDuration: 24 * time.Hour,
 	}
 	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
@@ -385,8 +391,10 @@ func TestJWTService_RevokeToken_TableDriven(t *testing.T) {
 func BenchmarkJWTService_GenerateToken(b *testing.B) {
 	cache := NewMockRedisClient()
 	cfg := &config.JWTConfigEnhanced{
-		Secret:      "test-secret-key-12345678",
-		Expiration:  1 * time.Hour,
+		SecretKey:       "test-secret-key-12345678",
+		Issuer:          "qingyu-test",
+		Expiration:      1 * time.Hour,
+		RefreshDuration: 24 * time.Hour,
 	}
 	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
@@ -401,8 +409,10 @@ func BenchmarkJWTService_GenerateToken(b *testing.B) {
 func BenchmarkJWTService_ValidateToken(b *testing.B) {
 	cache := NewMockRedisClient()
 	cfg := &config.JWTConfigEnhanced{
-		Secret:      "test-secret-key-12345678",
-		Expiration:  1 * time.Hour,
+		SecretKey:       "test-secret-key-12345678",
+		Issuer:          "qingyu-test",
+		Expiration:      1 * time.Hour,
+		RefreshDuration: 24 * time.Hour,
 	}
 	service := NewJWTService(cfg, cache)
 	ctx := context.Background()

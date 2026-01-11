@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/repository/interfaces/infrastructure"
@@ -37,8 +38,8 @@ func (m *MockBookRepositoryForService) GetByID(ctx context.Context, id primitive
 	return args.Get(0).(*bookstoreModel.Book), args.Error(1)
 }
 
-func (m *MockBookRepositoryForService) Update(ctx context.Context, book *bookstoreModel.Book) error {
-	args := m.Called(ctx, book)
+func (m *MockBookRepositoryForService) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -251,8 +252,8 @@ func (m *MockCategoryRepositoryForService) GetByID(ctx context.Context, id primi
 	return args.Get(0).(*bookstoreModel.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepositoryForService) Update(ctx context.Context, category *bookstoreModel.Category) error {
-	args := m.Called(ctx, category)
+func (m *MockCategoryRepositoryForService) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -459,7 +460,7 @@ func (m *MockBannerRepositoryForService) GetByTargetType(ctx context.Context, ta
 	return args.Get(0).([]*bookstoreModel.Banner), args.Error(1)
 }
 
-func (m *MockBannerRepositoryForService) GetByTimeRange(ctx context.Context, startTime, endTime *interface{}, limit, offset int) ([]*bookstoreModel.Banner, error) {
+func (m *MockBannerRepositoryForService) GetByTimeRange(ctx context.Context, startTime, endTime *time.Time, limit, offset int) ([]*bookstoreModel.Banner, error) {
 	args := m.Called(ctx, startTime, endTime, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -599,7 +600,7 @@ func (m *MockRankingRepositoryForService) DeleteByType(ctx context.Context, rank
 	return args.Error(0)
 }
 
-func (m *MockRankingRepositoryForService) DeleteExpiredRankings(ctx context.Context, beforeDate interface{}) error {
+func (m *MockRankingRepositoryForService) DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error {
 	args := m.Called(ctx, beforeDate)
 	return args.Error(0)
 }

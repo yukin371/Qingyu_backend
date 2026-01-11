@@ -162,8 +162,8 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	eventBus := base.NewSimpleEventBus()
 
 	// 创建Service
-	commentService := reading.NewCommentService(commentRepo, sensitiveRepo, eventBus)
-	likeService := reading.NewLikeService(likeRepo, commentRepo, eventBus)
+	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	// Test Data
 	userA := "user_alice"
@@ -236,8 +236,8 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Log("Step 7: 验证软删除")
 	deletedComment, err := commentRepo.GetByID(ctx, commentID)
 	require.NoError(t, err)
-	assert.Equal(t, "deleted", deletedComment.Status)
-	t.Logf("✓ 评论状态: %s", deletedComment.Status)
+	assert.Equal(t, "deleted", deletedComment.State)
+	t.Logf("✓ 评论状态: %s", deletedComment.State)
 
 	t.Log("======================================")
 	t.Log("✅ 集成测试通过：评论+点赞完整流程")
@@ -267,7 +267,7 @@ func TestIntegration_LikeIdempotency(t *testing.T) {
 	likeRepo := mongoReading.NewMongoLikeRepository(testDB)
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	eventBus := base.NewSimpleEventBus()
-	likeService := reading.NewLikeService(likeRepo, commentRepo, eventBus)
+	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	userID := "user_test"
 	bookID := "book_test_456"
@@ -338,7 +338,7 @@ func TestIntegration_SensitiveWordFilter(t *testing.T) {
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
-	commentService := reading.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
 
 	// Step 1: 添加敏感词（如果需要）
 	t.Log("Step 1: 准备敏感词库")
@@ -356,8 +356,8 @@ func TestIntegration_SensitiveWordFilter(t *testing.T) {
 		5,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, "approved", goodComment.Status)
-	t.Logf("✓ 正常评论状态: %s", goodComment.Status)
+	assert.Equal(t, "approved", goodComment.State)
+	t.Logf("✓ 正常评论状态: %s", goodComment.State)
 
 	// Step 3: 验证评论可以被查询
 	t.Log("Step 3: 验证评论可查询")
@@ -395,8 +395,8 @@ func TestIntegration_ConcurrentLikes(t *testing.T) {
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
 
-	commentService := reading.NewCommentService(commentRepo, sensitiveRepo, eventBus)
-	likeService := reading.NewLikeService(likeRepo, commentRepo, eventBus)
+	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	// Step 1: 创建一条评论
 	t.Log("Step 1: 创建测试评论")
@@ -482,7 +482,7 @@ func TestIntegration_CommentListAndSorting(t *testing.T) {
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
-	commentService := reading.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
 
 	bookID := "book_list_test"
 
