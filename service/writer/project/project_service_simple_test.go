@@ -165,8 +165,9 @@ func (m *MockEventBus) Unsubscribe(eventType string, handlerName string) error {
 
 // createTestProject 辅助函数：创建测试项目
 func createTestProject(id, authorID, title string, status writer.ProjectStatus) *writer.Project {
+	objectID, _ := primitive.ObjectIDFromHex(id)
 	return &writer.Project{
-		IdentifiedEntity: writerBase.IdentifiedEntity{ID: id},
+		IdentifiedEntity: writerBase.IdentifiedEntity{ID: objectID},
 		OwnedEntity:      writerBase.OwnedEntity{AuthorID: authorID},
 		TitledEntity:     writerBase.TitledEntity{Title: title},
 		Status:           status,
