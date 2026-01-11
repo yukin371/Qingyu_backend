@@ -318,7 +318,7 @@ func TestuserserviceWithhelpers(t *testing.T) {
 	// 测试获取用户2
 	result2, err := service.GetUser(ctx, user2.ID)
 	testutil.AssertNoErrorWithMessage(t, err, "获取用户2失败")
-	assert.Equal(t, "admin", result2.Role)
+	assert.Contains(t, result2.Roles, "admin")
 
 	mockRepo.AssertExpectations(t)
 }
