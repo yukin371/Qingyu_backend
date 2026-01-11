@@ -83,7 +83,7 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/books/{book_id}/chapters [get]
 func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
