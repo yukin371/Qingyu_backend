@@ -4,15 +4,8 @@
 run:
   timeout: 10m
   tests: true
-  skip-dirs:
-    - vendor
-    - test/fixtures
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*_gen\\.go$"
 
 output:
-  format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
 
@@ -22,7 +15,6 @@ linters-settings:
     check-blank: true
 
   govet:
-    check-shadowing: true
     enable-all: true
 
   gocyclo:
@@ -43,7 +35,6 @@ linters-settings:
     tab-width: 4
 
   unused:
-    check-exported: false
 
   unparam:
     check-exported: false
