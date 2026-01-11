@@ -8,6 +8,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"Qingyu_backend/service/base"
 )
 
 // Tracing 事件追踪器
@@ -84,13 +86,13 @@ func (t *Tracing) RecordRetryAttempt(ctx context.Context, eventType, handler str
 
 // TraceableEventBus 可追踪的事件总线包装器
 type TraceableEventBus struct {
-	eventBus EventBus
+	eventBus base.EventBus
 	tracing  *Tracing
 	metrics  *Metrics
 }
 
 // NewTraceableEventBus 创建可追踪的事件总线
-func NewTraceableEventBus(eventBus EventBus, tracing *Tracing, metrics *Metrics) EventBus {
+func NewTraceableEventBus(eventBus base.EventBus, tracing *Tracing, metrics *Metrics) base.EventBus {
 	return &TraceableEventBus{
 		eventBus: eventBus,
 		tracing:  tracing,
@@ -99,7 +101,7 @@ func NewTraceableEventBus(eventBus EventBus, tracing *Tracing, metrics *Metrics)
 }
 
 // Subscribe 订阅事件
-func (b *TraceableEventBus) Subscribe(eventType string, handler EventHandler) error {
+func (b *TraceableEventBus) Subscribe(eventType string, handler base.EventHandler) error {
 	return b.eventBus.Subscribe(eventType, handler)
 }
 
@@ -109,7 +111,7 @@ func (b *TraceableEventBus) Unsubscribe(eventType string, handlerName string) er
 }
 
 // Publish 同步发布事件（带追踪）
-func (b *TraceableEventBus) Publish(ctx context.Context, event Event) error {
+func (b *TraceableEventBus) Publish(ctx context.Context, event base.Event) error {
 	// 开始发布追踪
 	ctx, span := b.tracing.RecordEventPublish(ctx, event.GetEventType(), event.GetSource())
 	defer span.End()
@@ -136,7 +138,7 @@ func (b *TraceableEventBus) Publish(ctx context.Context, event Event) error {
 }
 
 // PublishAsync 异步发布事件（带追踪）
-func (b *TraceableEventBus) PublishAsync(ctx context.Context, event Event) error {
+func (b *TraceableEventBus) PublishAsync(ctx context.Context, event base.Event) error {
 	// 异步发布也需要追踪，但不等待完成
 	ctx, span := b.tracing.RecordEventPublish(ctx, event.GetEventType(), event.GetSource())
 
@@ -168,13 +170,13 @@ func (b *TraceableEventBus) PublishAsync(ctx context.Context, event Event) error
 
 // TraceableEventHandler 可追踪的事件处理器包装器
 type TraceableEventHandler struct {
-	handler EventHandler
+	handler base.EventHandler
 	tracing  *Tracing
 	metrics  *Metrics
 }
 
 // NewTraceableEventHandler 创建可追踪的事件处理器
-func NewTraceableEventHandler(handler EventHandler, tracing *Tracing, metrics *Metrics) EventHandler {
+func NewTraceableEventHandler(handler base.EventHandler, tracing *Tracing, metrics *Metrics) base.EventHandler {
 	return &TraceableEventHandler{
 		handler: handler,
 		tracing:  tracing,
@@ -183,7 +185,7 @@ func NewTraceableEventHandler(handler EventHandler, tracing *Tracing, metrics *M
 }
 
 // Handle 处理事件（带追踪）
-func (h *TraceableEventHandler) Handle(ctx context.Context, event Event) error {
+func (h *TraceableEventHandler) Handle(ctx context.Context, event base.Event) error {
 	// 开始处理追踪
 	ctx, span := h.tracing.RecordEventHandle(ctx, event.GetEventType(), h.GetHandlerName())
 	defer span.End()

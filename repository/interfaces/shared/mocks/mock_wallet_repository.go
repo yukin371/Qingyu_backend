@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	walletModel "Qingyu_backend/models/wallet"
+	financeModel "Qingyu_backend/models/finance"
 	"context"
 
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
@@ -15,18 +15,18 @@ type MockWalletRepository struct {
 }
 
 // CreateWallet 创建钱包
-func (m *MockWalletRepository) CreateWallet(ctx context.Context, wallet *walletModel.Wallet) error {
+func (m *MockWalletRepository) CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error {
 	args := m.Called(ctx, wallet)
 	return args.Error(0)
 }
 
 // GetWallet 获取钱包
-func (m *MockWalletRepository) GetWallet(ctx context.Context, userID string) (*walletModel.Wallet, error) {
+func (m *MockWalletRepository) GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*walletModel.Wallet), args.Error(1)
+	return args.Get(0).(*financeModel.Wallet), args.Error(1)
 }
 
 // UpdateWallet 更新钱包
@@ -42,27 +42,27 @@ func (m *MockWalletRepository) UpdateBalance(ctx context.Context, userID string,
 }
 
 // CreateTransaction 创建交易记录
-func (m *MockWalletRepository) CreateTransaction(ctx context.Context, transaction *walletModel.Transaction) error {
+func (m *MockWalletRepository) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
 	args := m.Called(ctx, transaction)
 	return args.Error(0)
 }
 
 // GetTransaction 获取交易记录
-func (m *MockWalletRepository) GetTransaction(ctx context.Context, transactionID string) (*walletModel.Transaction, error) {
+func (m *MockWalletRepository) GetTransaction(ctx context.Context, transactionID string) (*financeModel.Transaction, error) {
 	args := m.Called(ctx, transactionID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*walletModel.Transaction), args.Error(1)
+	return args.Get(0).(*financeModel.Transaction), args.Error(1)
 }
 
 // ListTransactions 列出交易记录
-func (m *MockWalletRepository) ListTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) ([]*walletModel.Transaction, error) {
+func (m *MockWalletRepository) ListTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) ([]*financeModel.Transaction, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*walletModel.Transaction), args.Error(1)
+	return args.Get(0).([]*financeModel.Transaction), args.Error(1)
 }
 
 // CountTransactions 统计交易数量
@@ -72,18 +72,18 @@ func (m *MockWalletRepository) CountTransactions(ctx context.Context, filter *sh
 }
 
 // CreateWithdrawRequest 创建提现申请
-func (m *MockWalletRepository) CreateWithdrawRequest(ctx context.Context, request *walletModel.WithdrawRequest) error {
+func (m *MockWalletRepository) CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error {
 	args := m.Called(ctx, request)
 	return args.Error(0)
 }
 
 // GetWithdrawRequest 获取提现申请
-func (m *MockWalletRepository) GetWithdrawRequest(ctx context.Context, withdrawID string) (*walletModel.WithdrawRequest, error) {
+func (m *MockWalletRepository) GetWithdrawRequest(ctx context.Context, withdrawID string) (*financeModel.WithdrawRequest, error) {
 	args := m.Called(ctx, withdrawID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*walletModel.WithdrawRequest), args.Error(1)
+	return args.Get(0).(*financeModel.WithdrawRequest), args.Error(1)
 }
 
 // UpdateWithdrawRequest 更新提现申请
@@ -93,12 +93,12 @@ func (m *MockWalletRepository) UpdateWithdrawRequest(ctx context.Context, withdr
 }
 
 // ListWithdrawRequests 列出提现申请
-func (m *MockWalletRepository) ListWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) ([]*walletModel.WithdrawRequest, error) {
+func (m *MockWalletRepository) ListWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*walletModel.WithdrawRequest), args.Error(1)
+	return args.Get(0).([]*financeModel.WithdrawRequest), args.Error(1)
 }
 
 // CountWithdrawRequests 统计提现申请数量

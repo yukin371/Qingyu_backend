@@ -3,16 +3,17 @@ package events
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/service/base"
@@ -150,39 +151,24 @@ func (m *ObservabilityManager) initTracing() error {
 		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	// 创建导出器
-	var exporter sdktrace.SpanExporter
-	switch m.config.TracingExporter {
-	case "jaeger":
-		// Jaeger导出器
-		if m.config.JaegerAgentHost != "" {
-			// 使用Jaeger Agent
-			agentAddr := fmt.Sprintf("%s:%d", m.config.JaegerAgentHost, m.config.JaegerAgentPort)
-			exporter, err = jaeger.New(jaeger.WithAgentEndpoint(jaeger.WithAgentHost(agentAddr)))
-		} else if m.config.JaegerEndpoint != "" {
-			// 使用Jaeger Collector
-			exporter, err = jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(m.config.JaegerEndpoint)))
-		} else {
-			// 默认使用localhost
-			exporter, err = jaeger.New(jaeger.WithAgentEndpoint())
-		}
-		if err != nil {
-			return fmt.Errorf("failed to create jaeger exporter: %w", err)
-		}
-	default:
-		// stdout导出器（开发环境）
-		exporter, err = stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			return fmt.Errorf("failed to create stdout exporter: %w", err)
-		}
+	// 创建导出器（目前只支持stdout导出器，用于开发环境）
+	// 如需使用Jaeger或OTLP，需要添加相应的依赖包
+	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+	if err != nil {
+		return fmt.Errorf("failed to create stdout exporter: %w", err)
 	}
+
+	// 创建批量处理器
+	batchProcessor := sdktrace.NewBatchSpanProcessor(exporter,
+		sdktrace.WithBatchTimeout(5*time.Second),
+		sdktrace.WithMaxExportBatchSize(100),
+	)
 
 	// 创建追踪提供者
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(sdktrace.DefaultBatchTimeout),
 		sdktrace.WithResource(res),
 		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(m.config.TracingSampleRate)),
-		sdktrace.WithSyncer(sdktrace.NewSimpleSpanProcessor(exporter)),
+		sdktrace.WithSpanProcessor(batchProcessor),
 	)
 
 	// 注册全局追踪提供者
@@ -239,7 +225,7 @@ func (m *ObservabilityManager) WrapEventHandler(handler base.EventHandler) base.
 }
 
 // GetPrometheusHandler 获取Prometheus HTTP处理器
-func (m *ObservabilityManager) GetPrometheusHandler() promhttp.Handler {
+func (m *ObservabilityManager) GetPrometheusHandler() http.Handler {
 	if !m.config.PrometheusEnabled {
 		return nil
 	}

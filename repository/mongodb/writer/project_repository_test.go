@@ -1,4 +1,4 @@
-package writing_test
+package writer_test
 
 import (
 	"Qingyu_backend/models/writer"
@@ -44,7 +44,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
-	assert.NotEmpty(t, project.ID)
+	assert.False(t, project.ID.IsZero())
 	assert.NotZero(t, project.CreatedAt)
 	assert.NotZero(t, project.UpdatedAt)
 	assert.Equal(t, writer.StatusDraft, project.Status)
@@ -89,7 +89,7 @@ func TestProjectRepository_Create_MissingFields(t *testing.T) {
 				p.AuthorID = "author123"
 				return p
 			}(),
-			errMsg: "项目标题不能为空",
+			errMsg: "标题不能为空",
 		},
 	}
 
@@ -113,7 +113,7 @@ func TestProjectRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// 获取项目
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	require.NotNil(t, retrieved)
 	assert.Equal(t, project.ID, retrieved.ID)
@@ -131,15 +131,16 @@ func TestProjectRepository_GetByID_NotFound(t *testing.T) {
 	assert.Nil(t, retrieved)
 }
 
-// 6. 测试获取无效ID（字符串ID无需验证，直接查询）
+// 6. 测试获取无效ID
 func TestProjectRepository_GetByID_InvalidID(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	// 使用不存在的ID，应该返回nil而不是错误
+	// 使用无效的ID格式，应该返回错误
 	retrieved, err := repo.GetByID(ctx, "non-existent-id")
-	require.NoError(t, err)
+	assert.Error(t, err)
 	assert.Nil(t, retrieved)
+	assert.Contains(t, err.Error(), "无效的ID格式")
 }
 
 // 7. 测试更新项目
@@ -159,11 +160,11 @@ func TestProjectRepository_Update(t *testing.T) {
 		"status":  writer.StatusSerializing,
 	}
 
-	err = repo.Update(ctx, project.ID, updates)
+	err = repo.Update(ctx, project.ID.Hex(), updates)
 	require.NoError(t, err)
 
 	// 验证更新
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Title", retrieved.Title)
 	assert.Equal(t, "Updated Summary", retrieved.Summary)
@@ -192,11 +193,11 @@ func TestProjectRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// 删除项目
-	err = repo.Delete(ctx, project.ID)
+	err = repo.Delete(ctx, project.ID.Hex())
 	require.NoError(t, err)
 
 	// 验证已删除
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, retrieved)
 }
@@ -265,11 +266,11 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 
 	// 所有者更新
 	updates := map[string]interface{}{"title": "Owner Updated"}
-	err = repo.UpdateByOwner(ctx, project.ID, authorID, updates)
+	err = repo.UpdateByOwner(ctx, project.ID.Hex(), authorID, updates)
 	require.NoError(t, err)
 
 	// 验证更新
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "Owner Updated", retrieved.Title)
 }
@@ -285,7 +286,7 @@ func TestProjectRepository_UpdateByOwner_NotOwner(t *testing.T) {
 
 	// 非所有者尝试更新
 	updates := map[string]interface{}{"title": "Hacked"}
-	err = repo.UpdateByOwner(ctx, project.ID, "hacker", updates)
+	err = repo.UpdateByOwner(ctx, project.ID.Hex(), "hacker", updates)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "项目不存在或无权限")
 }
@@ -301,12 +302,12 @@ func TestProjectRepository_IsOwner(t *testing.T) {
 	require.NoError(t, err)
 
 	// 验证所有者
-	isOwner, err := repo.IsOwner(ctx, project.ID, authorID)
+	isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), authorID)
 	require.NoError(t, err)
 	assert.True(t, isOwner)
 
 	// 验证非所有者
-	isOwner, err = repo.IsOwner(ctx, project.ID, "other_user")
+	isOwner, err = repo.IsOwner(ctx, project.ID.Hex(), "other_user")
 	require.NoError(t, err)
 	assert.False(t, isOwner)
 }
@@ -322,11 +323,11 @@ func TestProjectRepository_SoftDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	// 软删除
-	err = repo.SoftDelete(ctx, project.ID, authorID)
+	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID)
 	require.NoError(t, err)
 
 	// 普通查询应找不到
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, retrieved)
 }
@@ -341,11 +342,11 @@ func TestProjectRepository_HardDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	// 硬删除
-	err = repo.HardDelete(ctx, project.ID)
+	err = repo.HardDelete(ctx, project.ID.Hex())
 	require.NoError(t, err)
 
 	// 验证完全不存在
-	exists, err := repo.Exists(ctx, project.ID)
+	exists, err := repo.Exists(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.False(t, exists)
 }
@@ -361,15 +362,15 @@ func TestProjectRepository_Restore(t *testing.T) {
 	require.NoError(t, err)
 
 	// 软删除
-	err = repo.SoftDelete(ctx, project.ID, authorID)
+	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID)
 	require.NoError(t, err)
 
 	// 恢复
-	err = repo.Restore(ctx, project.ID, authorID)
+	err = repo.Restore(ctx, project.ID.Hex(), authorID)
 	require.NoError(t, err)
 
 	// 验证可以查询到
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, retrieved)
 	assert.Equal(t, project.Title, retrieved.Title)
@@ -483,7 +484,7 @@ func TestProjectRepository_Exists(t *testing.T) {
 	require.NoError(t, err)
 
 	// 检查存在
-	exists, err := repo.Exists(ctx, project.ID)
+	exists, err := repo.Exists(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.True(t, exists)
 
@@ -560,10 +561,10 @@ func TestProjectRepository_CreateWithTransaction(t *testing.T) {
 	})
 
 	require.NoError(t, err)
-	assert.NotEmpty(t, project.ID)
+	assert.False(t, project.ID.IsZero())
 
 	// 验证项目已创建
-	retrieved, err := repo.GetByID(ctx, project.ID)
+	retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, retrieved)
 }
@@ -585,8 +586,8 @@ func TestProjectRepository_CreateWithTransaction_Rollback(t *testing.T) {
 	assert.Error(t, err)
 
 	// 验证项目未创建（事务已回滚）
-	if project.ID != "" {
-		retrieved, err := repo.GetByID(ctx, project.ID)
+	if !project.ID.IsZero() {
+		retrieved, err := repo.GetByID(ctx, project.ID.Hex())
 		require.NoError(t, err)
 		assert.Nil(t, retrieved)
 	}
@@ -644,7 +645,7 @@ func TestProjectRepository_CountByOwner_AfterSoftDelete(t *testing.T) {
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 		if i == 1 {
-			projectID = project.ID
+			projectID = project.ID.Hex()
 		}
 	}
 
@@ -672,7 +673,7 @@ func TestProjectRepository_List_ExcludesDeleted(t *testing.T) {
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 		if i == 1 {
-			projectID = project.ID
+			projectID = project.ID.Hex()
 		}
 	}
 
@@ -687,6 +688,6 @@ func TestProjectRepository_List_ExcludesDeleted(t *testing.T) {
 
 	// 确保已删除的项目不在列表中
 	for _, p := range projects {
-		assert.NotEqual(t, projectID, p.ID)
+		assert.NotEqual(t, projectID, p.ID.Hex())
 	}
 }

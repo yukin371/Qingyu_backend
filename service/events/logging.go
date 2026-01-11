@@ -202,7 +202,7 @@ func GetOutputWriter(paths ...string) zapcore.WriteSyncer {
 		return zapcore.AddSync(os.Stdout)
 	}
 
-	return zapcore.MultiWriteSyncer(writers...)
+	return zapcore.NewMultiWriteSyncer(writers...)
 }
 
 // StructuredEventLogger 结构化事件日志记录器
@@ -296,8 +296,3 @@ func (l *EventLogger) Sync() error {
 	return l.logger.Sync()
 }
 
-// 需要添加导入
-import (
-	"os"
-	"go.uber.org/zap/zapcore"
-)

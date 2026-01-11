@@ -36,8 +36,8 @@ func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Docume
 	}
 
 	// 生成ID
-	if doc.IdentifiedEntity.ID == "" {
-		doc.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
+	if doc.IdentifiedEntity.ID.IsZero() {
+		doc.IdentifiedEntity.ID = primitive.NewObjectID()
 	}
 
 	// 设置时间戳和默认值

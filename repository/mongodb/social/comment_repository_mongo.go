@@ -84,8 +84,8 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Com
 	comment.UpdatedAt = time.Now()
 
 	// 初始化统计字段（使用mixin字段）
-	if comment.ThreadSize == 0 {
-		comment.ThreadSize = 0
+	if comment.ReplyCount == 0 {
+		comment.ReplyCount = 0
 	}
 
 	// 默认状态为正常

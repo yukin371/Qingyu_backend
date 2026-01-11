@@ -32,8 +32,8 @@ func NewLocationRepository(db *mongo.Database) writerRepo.LocationRepository {
 
 // Create 创建地点
 func (r *LocationRepositoryMongo) Create(ctx context.Context, location *writer.Location) error {
-	if location.ID == "" {
-		location.ID = primitive.NewObjectID().Hex()
+	if location.ID.IsZero() {
+		location.ID = primitive.NewObjectID()
 	}
 
 	now := time.Now()
@@ -137,8 +137,8 @@ func (r *LocationRepositoryMongo) Delete(ctx context.Context, locationID string)
 
 // CreateRelation 创建地点关系
 func (r *LocationRepositoryMongo) CreateRelation(ctx context.Context, relation *writer.LocationRelation) error {
-	if relation.ID == "" {
-		relation.ID = primitive.NewObjectID().Hex()
+	if relation.ID.IsZero() {
+		relation.ID = primitive.NewObjectID()
 	}
 
 	now := time.Now()

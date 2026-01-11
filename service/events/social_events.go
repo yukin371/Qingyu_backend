@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 

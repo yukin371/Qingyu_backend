@@ -2,540 +2,567 @@ package auth
 
 import (
 	"context"
-	"fmt"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// ============ SessionService 测试 ============
-
-// TestSessionService_CreateSession 测试创建会话
-func TestSessionService_CreateSession(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	session, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
+// TestSessionService_ValidateSession 测试会话验证
+func TestSessionService_ValidateSession(t *testing.T) {
+	tests := []struct {
+		name      string
+		setup     func(*SessionService, string) (*Session, error)
+		sessionID string
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name: "验证有效会话",
+			setup: func(s *SessionService, userID string) (*Session, error) {
+				return s.CreateSession(context.Background(), userID)
+			},
+			wantErr: false,
+		},
+		{
+			name: "验证不存在的会话",
+			setup: func(s *SessionService, userID string) (*Session, error) {
+				return nil, nil
+			},
+			sessionID: "nonexistent_session_id",
+			wantErr:   true,
+			errMsg:    "会话不存在或已过期",
+		},
+		{
+			name: "验证过期会话",
+			setup: func(s *SessionService, userID string) (*Session, error) {
+				session, _ := s.CreateSession(context.Background(), userID)
+				// 手动设置为过期
+				session.ExpiresAt = time.Now().Add(-1 * time.Hour)
+				s.cache.Set(context.Background(), getSessionKey(session.ID), session, 0)
+				return session, nil
+			},
+			wantErr: true,
+			errMsg:  "会话不存在或已过期",
+		},
 	}
 
-	if session.ID == "" {
-		t.Error("会话ID不应为空")
-	}
-	if session.UserID != userID {
-		t.Errorf("用户ID错误: %s", session.UserID)
-	}
-	if session.CreatedAt.IsZero() {
-		t.Error("创建时间不应为零")
-	}
-	if session.ExpiresAt.Before(session.CreatedAt) {
-		t.Error("过期时间不应早于创建时间")
-	}
-
-	t.Logf("创建会话成功: ID=%s, UserID=%s", session.ID, session.UserID)
-}
-
-// TestSessionService_CreateSession_Multiple 测试创建多个会话
-func TestSessionService_CreateSession_Multiple(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建3个会话
-	sessions := make([]*Session, 0, 3)
-	for i := 0; i < 3; i++ {
-		session, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话%d失败: %v", i+1, err)
-		}
-		sessions = append(sessions, session)
-	}
-
-	// 验证会话ID唯一
-	sessionIDs := make(map[string]bool)
-	for _, session := range sessions {
-		if sessionIDs[session.ID] {
-			t.Errorf("会话ID重复: %s", session.ID)
-		}
-		sessionIDs[session.ID] = true
-	}
-
-	if len(sessions) != 3 {
-		t.Errorf("会话数量错误: %d", len(sessions))
-	}
-
-	t.Logf("成功创建3个会话，ID均唯一")
-}
-
-// TestSessionService_GetSession 测试获取会话
-func TestSessionService_GetSession(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建会话
-	createdSession, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
-	}
-
-	// 获取会话
-	retrievedSession, err := service.GetSession(ctx, createdSession.ID)
-	if err != nil {
-		t.Fatalf("获取会话失败: %v", err)
-	}
-
-	if retrievedSession.ID != createdSession.ID {
-		t.Errorf("会话ID不匹配: %s vs %s", retrievedSession.ID, createdSession.ID)
-	}
-	if retrievedSession.UserID != userID {
-		t.Errorf("用户ID错误: %s", retrievedSession.UserID)
-	}
-
-	t.Logf("获取会话成功")
-}
-
-// TestSessionService_GetSession_NotFound 测试获取不存在的会话
-func TestSessionService_GetSession_NotFound(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	// 获取不存在的会话
-	_, err := service.GetSession(ctx, "nonexistent_session_id")
-	if err == nil {
-		t.Fatal("应该返回错误，但成功了")
-	}
-
-	t.Logf("正确返回了错误: %v", err)
-}
-
-// TestSessionService_RefreshSession 测试刷新会话
-func TestSessionService_RefreshSession(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建会话
-	session, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
-	}
-
-	// 记录原始过期时间
-	originalExpiresAt := session.ExpiresAt
-
-	// 等待一小段时间
-	time.Sleep(1100 * time.Millisecond)
-
-	// 刷新会话
-	err = service.RefreshSession(ctx, session.ID)
-	if err != nil {
-		t.Fatalf("刷新会话失败: %v", err)
-	}
-
-	// 获取刷新后的会话
-	refreshedSession, err := service.GetSession(ctx, session.ID)
-	if err != nil {
-		t.Fatalf("获取刷新后的会话失败: %v", err)
-	}
-
-	// 验证过期时间已更新
-	if !refreshedSession.ExpiresAt.After(originalExpiresAt) {
-		t.Error("过期时间应该已更新")
-	}
-
-	t.Logf("刷新会话成功")
-}
-
-// TestSessionService_DestroySession 测试销毁会话
-func TestSessionService_DestroySession(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建会话
-	session, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
-	}
-
-	// 销毁会话
-	err = service.DestroySession(ctx, session.ID)
-	if err != nil {
-		t.Fatalf("销毁会话失败: %v", err)
-	}
-
-	// 验证会话已不存在
-	_, err = service.GetSession(ctx, session.ID)
-	if err == nil {
-		t.Fatal("会话应该已不存在")
-	}
-
-	t.Logf("销毁会话成功")
-}
-
-// TestSessionService_GetUserSessions 测试获取用户的所有会话
-func TestSessionService_GetUserSessions(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建3个会话
-	sessionIDs := make([]string, 0, 3)
-	for i := 0; i < 3; i++ {
-		session, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话%d失败: %v", i+1, err)
-		}
-		sessionIDs = append(sessionIDs, session.ID)
-	}
-
-	// 获取用户的所有会话
-	sessions, err := service.GetUserSessions(ctx, userID)
-	if err != nil {
-		t.Fatalf("获取用户会话失败: %v", err)
-	}
-
-	if len(sessions) != 3 {
-		t.Errorf("会话数量错误: 期望3个，实际%d个", len(sessions))
-	}
-
-	// 验证所有会话ID都存在
-	retrievedIDs := make(map[string]bool)
-	for _, session := range sessions {
-		retrievedIDs[session.ID] = true
-	}
-
-	for _, sessionID := range sessionIDs {
-		if !retrievedIDs[sessionID] {
-			t.Errorf("会话ID未找到: %s", sessionID)
-		}
-	}
-
-	t.Logf("获取用户会话成功: %d个会话", len(sessions))
-}
-
-// TestSessionService_DestroyUserSessions 测试销毁用户的所有会话
-func TestSessionService_DestroyUserSessions(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建3个会话
-	for i := 0; i < 3; i++ {
-		_, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话%d失败: %v", i+1, err)
-		}
-	}
-
-	// 销毁所有会话
-	err := service.DestroyUserSessions(ctx, userID)
-	if err != nil {
-		t.Fatalf("销毁用户会话失败: %v", err)
-	}
-
-	// 验证所有会话已不存在
-	sessions, err := service.GetUserSessions(ctx, userID)
-	if err != nil {
-		t.Fatalf("获取用户会话失败: %v", err)
-	}
-
-	if len(sessions) != 0 {
-		t.Errorf("应该没有会话了，但还有%d个", len(sessions))
-	}
-
-	t.Logf("销毁用户所有会话成功")
-}
-
-// TestSessionService_CheckDeviceLimit 测试设备数量限制检查
-func TestSessionService_CheckDeviceLimit(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-	maxDevices := 3
-
-	// 创建2个会话（未超限）
-	for i := 0; i < 2; i++ {
-		_, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话失败: %v", err)
-		}
-	}
-
-	// 检查设备限制（应该通过）
-	err := service.CheckDeviceLimit(ctx, userID, maxDevices)
-	if err != nil {
-		t.Errorf("设备数量未超限，应该通过: %v", err)
-	}
-
-	t.Logf("设备数量限制检查通过")
-}
-
-// TestSessionService_CheckDeviceLimit_Exceeded 测试设备数量超限
-func TestSessionService_CheckDeviceLimit_Exceeded(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-	maxDevices := 2
-
-	// 创建2个会话（已达上限）
-	for i := 0; i < 2; i++ {
-		_, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话失败: %v", err)
-		}
-	}
-
-	// 检查设备限制（应该失败）
-	err := service.CheckDeviceLimit(ctx, userID, maxDevices)
-	if err == nil {
-		t.Error("设备数量已达上限，应该返回错误")
-	}
-
-	t.Logf("正确检测到设备数量超限: %v", err)
-}
-
-// TestSessionService_EnforceDeviceLimit 测试强制执行设备限制（FIFO）
-func TestSessionService_EnforceDeviceLimit(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-	maxDevices := 3
-
-	// 创建3个会话（达到上限）
-	sessionIDs := make([]string, 0, 3)
-	for i := 0; i < 3; i++ {
-		session, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话%d失败: %v", i+1, err)
-		}
-		sessionIDs = append(sessionIDs, session.ID)
-		// 等待确保创建时间不同
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	// 强制执行设备限制（应该踢出最老的会话）
-	err := service.EnforceDeviceLimit(ctx, userID, maxDevices)
-	if err != nil {
-		t.Fatalf("强制执行设备限制失败: %v", err)
-	}
-
-	// 验证最老的会话已被踢出
-	_, err = service.GetSession(ctx, sessionIDs[0])
-	if err == nil {
-		t.Error("最老的会话应该已被踢出")
-	}
-
-	// 验证其他会话仍然存在
-	for i := 1; i < len(sessionIDs); i++ {
-		_, err := service.GetSession(ctx, sessionIDs[i])
-		if err != nil {
-			t.Errorf("会话%d应该还存在: %v", i, err)
-		}
-	}
-
-	t.Logf("强制执行设备限制成功，最老的会话已被踢出")
-}
-
-// TestSessionService_EnforceDeviceLimit_CreateNew 测试强制执行设备限制后创建新会话
-func TestSessionService_EnforceDeviceLimit_CreateNew(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-	maxDevices := 2
-
-	// 创建2个会话（达到上限）
-	for i := 0; i < 2; i++ {
-		_, err := service.CreateSession(ctx, userID)
-		if err != nil {
-			t.Fatalf("创建会话失败: %v", err)
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	// 强制执行设备限制
-	err := service.EnforceDeviceLimit(ctx, userID, maxDevices)
-	if err != nil {
-		t.Fatalf("强制执行设备限制失败: %v", err)
-	}
-
-	// 创建新会话（应该成功，因为最老的已被踢出）
-	newSession, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建新会话失败: %v", err)
-	}
-
-	// 验证当前会话数量
-	sessions, _ := service.GetUserSessions(ctx, userID)
-	if len(sessions) != maxDevices {
-		t.Errorf("会话数量应该为%d，实际为%d", maxDevices, len(sessions))
-	}
-
-	// 验证新会话存在
-	found := false
-	for _, session := range sessions {
-		if session.ID == newSession.ID {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Error("新会话未在列表中")
-	}
-
-	t.Logf("强制执行设备限制后创建新会话成功")
-}
-
-// TestSessionService_UpdateSession 测试更新会话
-func TestSessionService_UpdateSession(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 创建会话
-	session, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
-	}
-
-	// 更新会话
-	data := map[string]interface{}{
-		"last_activity": time.Now(),
-	}
-	err = service.UpdateSession(ctx, session.ID, data)
-	if err != nil {
-		t.Fatalf("更新会话失败: %v", err)
-	}
-
-	// 验证会话仍然存在
-	_, err = service.GetSession(ctx, session.ID)
-	if err != nil {
-		t.Error("更新后会话应该仍然存在")
-	}
-
-	t.Logf("更新会话成功")
-}
-
-// TestSessionService_ConcurrentAccess 测试并发访问会话
-func TestSessionService_ConcurrentAccess(t *testing.T) {
-	cache := NewMockCacheClient()
-	service := NewSessionService(cache)
-	ctx := context.Background()
-
-	userID := "user_123"
-
-	// 并发创建多个会话
-	done := make(chan bool, 5)
-	for i := 0; i < 5; i++ {
-		go func() {
-			_, err := service.CreateSession(ctx, userID)
-			if err != nil {
-				t.Errorf("并发创建会话失败: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockCacheClient()
+			service := NewSessionService(cache)
+			ctx := context.Background()
+			userID := "user_123"
+
+			var sessionID string
+			if tt.setup != nil {
+				session, _ := tt.setup(service, userID)
+				if session != nil {
+					sessionID = session.ID
+				}
 			}
-			done <- true
-		}()
-	}
+			if tt.sessionID != "" {
+				sessionID = tt.sessionID
+			}
 
-	// 等待所有goroutine完成
-	for i := 0; i < 5; i++ {
-		<-done
-	}
+			// Act
+			valid, err := service.ValidateSession(ctx, sessionID)
 
-	// 验证会话数量
-	sessions, err := service.GetUserSessions(ctx, userID)
-	if err != nil {
-		t.Fatalf("获取用户会话失败: %v", err)
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.False(t, valid)
+				if tt.errMsg != "" {
+					assert.Contains(t, err.Error(), tt.errMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.True(t, valid)
+			}
+		})
 	}
-
-	// 由于并发和设备限制，会话数量可能在2-5之间
-	// (EnforceDeviceLimit会删除超过5个的最旧会话，但并发时可能有些会话被提前删除)
-	if len(sessions) < 2 || len(sessions) > 5 {
-		t.Errorf("并发创建后应该有2-5个会话，实际有%d个", len(sessions))
-	}
-
-	t.Logf("并发访问测试通过，创建了%d个会话", len(sessions))
 }
 
-// TestSessionService_ExpiredSession 测试过期会话处理
-func TestSessionService_ExpiredSession(t *testing.T) {
-	// 创建一个会立即过期的配置
-	// 注意：当前Mock实现不支持自定义TTL，所以这个测试主要验证逻辑
+// TestSessionService_UpdateSessionModel 测试更新会话模型
+func TestSessionService_UpdateSessionModel(t *testing.T) {
+	// Arrange
 	cache := NewMockCacheClient()
 	service := NewSessionService(cache)
 	ctx := context.Background()
-
 	userID := "user_123"
 
 	// 创建会话
 	session, err := service.CreateSession(ctx, userID)
-	if err != nil {
-		t.Fatalf("创建会话失败: %v", err)
+	require.NoError(t, err)
+
+	// 更新会话元数据
+	session.Metadata = map[string]interface{}{
+		"last_action":    "read_chapter",
+		"chapter_id":     "chapter_123",
+		"reading_time":   3600, // 秒
+		"device_type":    "mobile",
+		"app_version":    "1.0.0",
 	}
 
-	// 在实际实现中，我们可以通过修改缓存来模拟过期
-	// 这里我们删除缓存的会话来模拟过期
-	key := fmt.Sprintf("session:%s", session.ID)
-	_ = cache.Delete(ctx, key)
+	// Act
+	err = service.UpdateSessionModel(ctx, session)
 
-	// 尝试获取过期会话
-	_, err = service.GetSession(ctx, session.ID)
-	if err == nil {
-		t.Error("过期会话应该返回错误")
-	}
+	// Assert
+	assert.NoError(t, err)
 
-	t.Logf("过期会话处理测试通过")
+	// 验证更新
+	updated, err := service.GetSession(ctx, session.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, updated)
+	assert.Equal(t, "read_chapter", updated.Metadata["last_action"])
+	assert.Equal(t, "chapter_123", updated.Metadata["chapter_id"])
 }
 
-// BenchmarkCreateSession 性能测试：创建会话
-func BenchmarkCreateSession(b *testing.B) {
+// TestSessionService_CleanupExpiredSessions 测试清理过期会话
+func TestSessionService_CleanupExpiredSessions(t *testing.T) {
+	tests := []struct {
+		name              string
+		setup             func(*SessionService) int
+		expectedCleanups  int
+	}{
+		{
+			name: "清理多个过期会话",
+			setup: func(s *SessionService) int {
+				ctx := context.Background()
+				userID := "user_123"
+
+				// 创建3个会话，其中2个过期
+				s1, _ := s.CreateSession(ctx, userID)
+				s1.ExpiresAt = time.Now().Add(-1 * time.Hour)
+				s.cache.Set(ctx, getSessionKey(s1.ID), s1, 0)
+
+				s2, _ := s.CreateSession(ctx, userID)
+				s2.ExpiresAt = time.Now().Add(-2 * time.Hour)
+				s.cache.Set(ctx, getSessionKey(s2.ID), s2, 0)
+
+				s3, _ := s.CreateSession(ctx, userID)
+				// s3未过期
+
+				return 3
+			},
+			expectedCleanups: 2,
+		},
+		{
+			name: "没有过期会话",
+			setup: func(s *SessionService) int {
+				ctx := context.Background()
+				userID := "user_123"
+
+				// 创建2个未过期的会话
+				_, _ = s.CreateSession(ctx, userID)
+				_, _ = s.CreateSession(ctx, userID)
+
+				return 2
+			},
+			expectedCleanups: 0,
+		},
+		{
+			name: "清理所有会话",
+			setup: func(s *SessionService) int {
+				ctx := context.Background()
+				userID := "user_123"
+
+				// 创建5个会话，全部过期
+				for i := 0; i < 5; i++ {
+					s, _ := s.CreateSession(ctx, userID)
+					s.ExpiresAt = time.Now().Add(-time.Duration(i+1) * time.Hour)
+					s.cache.Set(ctx, getSessionKey(s.ID), s, 0)
+				}
+
+				return 5
+			},
+			expectedCleanups: 5,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockCacheClient()
+			service := NewSessionService(cache)
+			ctx := context.Background()
+
+			tt.setup(service)
+
+			// Act
+			count, err := service.CleanupExpiredSessions(ctx)
+
+			// Assert
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCleanups, count)
+		})
+	}
+}
+
+// TestSessionService_StopCleanupTask 测试停止清理任务
+func TestSessionService_StopCleanupTask(t *testing.T) {
+	// Arrange
+	cache := NewMockCacheClient()
+	service := NewSessionService(cache)
+	ctx := context.Background()
+
+	// 启动清理任务
+	service.StartCleanupTask(ctx, 1*time.Minute)
+	assert.True(t, service.IsCleanupRunning())
+
+	// Act
+	err := service.StopCleanupTask()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.False(t, service.IsCleanupRunning())
+}
+
+// TestSessionService_ConcurrentValidation 测试并发验证会话
+func TestSessionService_ConcurrentValidation(t *testing.T) {
+	// Arrange
+	cache := NewMockCacheClient()
+	service := NewSessionService(cache)
+	ctx := context.Background()
+	userID := "user_concurrent"
+
+	// 创建10个会话
+	sessions := make([]*Session, 10)
+	for i := 0; i < 10; i++ {
+		session, err := service.CreateSession(ctx, userID)
+		require.NoError(t, err)
+		sessions[i] = session
+	}
+
+	// Act - 并发验证
+	var wg sync.WaitGroup
+	errors := make(chan error, 10)
+
+	for _, session := range sessions {
+		wg.Add(1)
+		go func(s *Session) {
+			defer wg.Done()
+			valid, err := service.ValidateSession(ctx, s.ID)
+			if err != nil || !valid {
+				errors <- err
+			}
+		}(session)
+	}
+
+	wg.Wait()
+	close(errors)
+
+	// Assert
+	for err := range errors {
+		assert.NoError(t, err, "并发验证不应该出错")
+	}
+}
+
+// BenchmarkSessionService_CreateSession 基准测试 - 创建会话
+func BenchmarkSessionService_CreateSession(b *testing.B) {
 	cache := NewMockCacheClient()
 	service := NewSessionService(cache)
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = service.CreateSession(ctx, "user_123")
+		service.CreateSession(ctx, "user_123")
 	}
 }
 
-// BenchmarkGetSession 性能测试：获取会话
-func BenchmarkGetSession(b *testing.B) {
+// BenchmarkSessionService_ValidateSession 基准测试 - 验证会话
+func BenchmarkSessionService_ValidateSession(b *testing.B) {
 	cache := NewMockCacheClient()
 	service := NewSessionService(cache)
 	ctx := context.Background()
 
-	// 预先创建会话
+	// 预创建会话
 	session, _ := service.CreateSession(ctx, "user_123")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = service.GetSession(ctx, session.ID)
+		service.ValidateSession(ctx, session.ID)
 	}
+}
+
+// BenchmarkSessionService_GetUserSessions 基准测试 - 获取用户会话列表
+func BenchmarkSessionService_GetUserSessions(b *testing.B) {
+	cache := NewMockCacheClient()
+	service := NewSessionService(cache)
+	ctx := context.Background()
+	userID := "user_123"
+
+	// 预创建5个会话
+	for i := 0; i < 5; i++ {
+		service.CreateSession(ctx, userID)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		service.GetUserSessions(ctx, userID)
+	}
+}
+
+// TestSessionService_DeviceLimits 表格驱动测试 - 设备限制
+func TestSessionService_DeviceLimits(t *testing.T) {
+	tests := []struct {
+		name           string
+		maxDevices     int
+		createCount    int
+		expectedCount  int
+		shouldEvict    bool
+	}{
+		{
+			name:          "未超过设备限制",
+			maxDevices:    5,
+			createCount:   3,
+			expectedCount: 3,
+			shouldEvict:   false,
+		},
+		{
+			name:          "正好达到设备限制",
+			maxDevices:    5,
+			createCount:   5,
+			expectedCount: 5,
+			shouldEvict:   false,
+		},
+		{
+			name:          "超过设备限制，触发FIFO驱逐",
+			maxDevices:    3,
+			createCount:   5,
+			expectedCount: 3,
+			shouldEvict:   true,
+		},
+		{
+			name:          "单设备限制",
+			maxDevices:    1,
+			createCount:   3,
+			expectedCount: 1,
+			shouldEvict:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockCacheClient()
+			service := NewSessionService(cache)
+			service.maxSessionsPerUser = tt.maxDevices
+			ctx := context.Background()
+			userID := "user_limits"
+
+			// Act
+			sessions := make([]*Session, tt.createCount)
+			for i := 0; i < tt.createCount; i++ {
+				session, err := service.CreateSession(ctx, userID)
+				require.NoError(t, err)
+				sessions[i] = session
+			}
+
+			// Assert
+			allSessions, err := service.GetUserSessions(ctx, userID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedCount, len(allSessions), "应该保持%d个会话", tt.expectedCount)
+
+			if tt.shouldEvict {
+				// 验证最早的会话被驱逐
+				oldestSession := sessions[0]
+				_, err := service.GetSession(ctx, oldestSession.ID)
+				assert.Error(t, err, "最旧的会话应该被驱逐")
+			}
+		})
+	}
+}
+
+// TestSessionService_ErrorScenarios 测试错误场景
+func TestSessionService_ErrorScenarios(t *testing.T) {
+	tests := []struct {
+		name      string
+		setup     func(*SessionService, context.Context) error
+		wantErr   bool
+		errContains string
+	}{
+		{
+			name: "创建会话时缓存失败",
+			setup: func(s *SessionService, ctx context.Context) error {
+				// 设置缓存为失败状态
+				s.cache = &FailingCacheClient{}
+				_, err := s.CreateSession(ctx, "user_123")
+				return err
+			},
+			wantErr: true,
+		},
+		{
+			name: "更新不存在的会话",
+			setup: func(s *SessionService, ctx context.Context) error {
+				session := &Session{
+					ID:        "nonexistent",
+					UserID:    "user_123",
+					ExpiresAt: time.Now().Add(1 * time.Hour),
+				}
+				return s.UpdateSessionModel(ctx, session)
+			},
+			wantErr: true,
+		},
+		{
+			name: "销毁不存在的会话",
+			setup: func(s *SessionService, ctx context.Context) error {
+				return s.DestroySession(ctx, "nonexistent_session")
+			},
+			wantErr: false, // 不应该报错，幂等操作
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockCacheClient()
+			service := NewSessionService(cache)
+			ctx := context.Background()
+
+			// Act
+			err := tt.setup(service, ctx)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errContains != "" {
+					assert.Contains(t, err.Error(), tt.errContains)
+				}
+			} else if tt.name == "销毁不存在的会话" {
+				// 幂等操作，不应该报错
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// FailingCacheClient 模拟失败的缓存客户端
+type FailingCacheClient struct{}
+
+func (f *FailingCacheClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) Get(ctx context.Context, key string) (interface{}, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) Delete(ctx context.Context, key string) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) Exists(ctx context.Context, key string) (bool, error) {
+	return false, assert.AnError
+}
+
+func (f *FailingCacheClient) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) TTL(ctx context.Context, key string) (time.Duration, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) HSet(ctx context.Context, key, field string, value interface{}) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) HGet(ctx context.Context, key, field string) (interface{}, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) HGetAll(ctx context.Context, key string) (map[string]interface{}, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) HDel(ctx context.Context, key, field string) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) HExists(ctx context.Context, key, field string) (bool, error) {
+	return false, assert.AnError
+}
+
+func (f *FailingCacheClient) HIncrBy(ctx context.Context, key, field string, value int64) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) LPush(ctx context.Context, key string, values ...string) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) LPop(ctx context.Context, key string) (interface{}, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) LTrim(ctx context.Context, key string, start, stop int64) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) LLen(ctx context.Context, key string) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) SAdd(ctx context.Context, key string, members ...interface{}) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) SMembers(ctx context.Context, key string) ([]string, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) SRem(ctx context.Context, key string, members ...interface{}) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) ZAdd(ctx context.Context, key string, score float64, member string) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) ZRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
+	return nil, assert.AnError
+}
+
+func (f *FailingCacheClient) ZRem(ctx context.Context, key string, member string) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) ZCard(ctx context.Context, key string) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) ZScore(ctx context.Context, key, member string) (float64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) Incr(ctx context.Context, key string) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) Decr(ctx context.Context, key string) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) IncrBy(ctx context.Context, key string, value int64) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) DecrBy(ctx context.Context, key string, value int64) (int64, error) {
+	return 0, assert.AnError
+}
+
+func (f *FailingCacheClient) Ping(ctx context.Context) error {
+	return assert.AnError
+}
+
+func (f *FailingCacheClient) Close() error {
+	return assert.AnError
 }

@@ -5,7 +5,7 @@ import (
 	recommendationModel "Qingyu_backend/models/recommendation"
 	storageModel "Qingyu_backend/models/storage"
 	adminModel "Qingyu_backend/models/users"
-	walletModel "Qingyu_backend/models/wallet"
+	financeModel "Qingyu_backend/models/finance"
 	"context"
 	"time"
 )
@@ -41,22 +41,22 @@ type AuthRepository interface {
 // WalletRepository 钱包相关Repository
 type WalletRepository interface {
 	// 钱包管理
-	CreateWallet(ctx context.Context, wallet *walletModel.Wallet) error
-	GetWallet(ctx context.Context, userID string) (*walletModel.Wallet, error)
+	CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error
+	GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error)
 	UpdateWallet(ctx context.Context, userID string, updates map[string]interface{}) error
 	UpdateBalance(ctx context.Context, userID string, amount float64) error
 
 	// 交易记录
-	CreateTransaction(ctx context.Context, transaction *walletModel.Transaction) error
-	GetTransaction(ctx context.Context, transactionID string) (*walletModel.Transaction, error)
-	ListTransactions(ctx context.Context, filter *TransactionFilter) ([]*walletModel.Transaction, error)
+	CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error
+	GetTransaction(ctx context.Context, transactionID string) (*financeModel.Transaction, error)
+	ListTransactions(ctx context.Context, filter *TransactionFilter) ([]*financeModel.Transaction, error)
 	CountTransactions(ctx context.Context, filter *TransactionFilter) (int64, error)
 
 	// 提现申请
-	CreateWithdrawRequest(ctx context.Context, request *walletModel.WithdrawRequest) error
-	GetWithdrawRequest(ctx context.Context, withdrawID string) (*walletModel.WithdrawRequest, error)
+	CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error
+	GetWithdrawRequest(ctx context.Context, withdrawID string) (*financeModel.WithdrawRequest, error)
 	UpdateWithdrawRequest(ctx context.Context, withdrawID string, updates map[string]interface{}) error
-	ListWithdrawRequests(ctx context.Context, filter *WithdrawFilter) ([]*walletModel.WithdrawRequest, error)
+	ListWithdrawRequests(ctx context.Context, filter *WithdrawFilter) ([]*financeModel.WithdrawRequest, error)
 	CountWithdrawRequests(ctx context.Context, filter *WithdrawFilter) (int64, error)
 
 	// Health 健康检查

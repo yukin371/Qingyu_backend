@@ -112,7 +112,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.created",
 			EventData: map[string]interface{}{
-				"document_id": doc.ID,
+				"document_id": doc.ID.Hex(),
 				"project_id":  doc.ProjectID,
 				"title":       doc.Title,
 			},
@@ -122,7 +122,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	}
 
 	return &CreateDocumentResponse{
-		DocumentID: doc.ID,
+		DocumentID: doc.ID.Hex(),
 		Title:      doc.Title,
 		Type:       string(doc.Type),
 		CreatedAt:  doc.CreatedAt,
@@ -335,12 +335,12 @@ func (s *DocumentService) buildDocumentTree(documents []*writer.Document) []*Doc
 			Document: doc,
 			Children: []*DocumentTreeNode{},
 		}
-		nodeMap[doc.ID] = node
+		nodeMap[doc.ID.Hex()] = node
 	}
 
 	// 第二遍遍历：建立父子关系
 	for _, doc := range documents {
-		node := nodeMap[doc.ID]
+		node := nodeMap[doc.ID.Hex()]
 		if doc.ParentID == "" {
 			rootNodes = append(rootNodes, node)
 		} else {

@@ -269,7 +269,7 @@ func (s *LocationService) DeleteRelation(
 
 	found := false
 	for _, rel := range relations {
-		if rel.ID == relationID {
+		if rel.ID.Hex() == relationID {
 			found = true
 			break
 		}
@@ -288,14 +288,14 @@ func buildLocationTree(locations []*writer.Location) []*serviceInterfaces.Locati
 	var roots []*serviceInterfaces.LocationNode
 
 	for _, loc := range locations {
-		nodeMap[loc.ID] = &serviceInterfaces.LocationNode{
+		nodeMap[loc.ID.Hex()] = &serviceInterfaces.LocationNode{
 			Location: loc,
 			Children: []*serviceInterfaces.LocationNode{},
 		}
 	}
 
 	for _, loc := range locations {
-		node := nodeMap[loc.ID]
+		node := nodeMap[loc.ID.Hex()]
 		if loc.ParentID == "" {
 			roots = append(roots, node)
 		} else {

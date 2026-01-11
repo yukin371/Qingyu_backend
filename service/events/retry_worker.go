@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -143,7 +142,7 @@ func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
 		item.ID, item.Attempt+1, item.MaxRetries)
 
 	// 重建事件
-	event := &BaseEvent{
+	event := &base.BaseEvent{
 		EventType: item.EventType,
 		EventData: item.EventData,
 		Timestamp: item.EventTimestamp,

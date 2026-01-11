@@ -78,7 +78,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 
 	// 6. 返回响应
 	return &CreateProjectResponse{
-		ProjectID: project.ID,
+		ProjectID: project.ID.Hex(),
 		Title:     project.Title,
 		Status:    string(project.Status),
 		CreatedAt: project.CreatedAt,

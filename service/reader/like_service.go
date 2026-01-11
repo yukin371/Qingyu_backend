@@ -1,7 +1,7 @@
 package reader
 
 import (
-	"Qingyu_backend/models/community"
+	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
 	"time"
@@ -80,9 +80,9 @@ func (s *LikeService) LikeBook(ctx context.Context, userID, bookID string) error
 	}
 
 	// 创建点赞记录
-	like := &community.Like{
+	like := &social.Like{
 		UserID:     userID,
-		TargetType: community.LikeTargetTypeBook,
+		TargetType: social.LikeTargetTypeBook,
 		TargetID:   bookID,
 		CreatedAt:  time.Now(),
 	}
@@ -97,7 +97,7 @@ func (s *LikeService) LikeBook(ctx context.Context, userID, bookID string) error
 	}
 
 	// 发布点赞事件
-	s.publishLikeEvent(ctx, "like.book.added", userID, community.LikeTargetTypeBook, bookID)
+	s.publishLikeEvent(ctx, "like.book.added", userID, social.LikeTargetTypeBook, bookID)
 
 	return nil
 }
@@ -112,7 +112,7 @@ func (s *LikeService) UnlikeBook(ctx context.Context, userID, bookID string) err
 	}
 
 	// 取消点赞
-	if err := s.likeRepo.RemoveLike(ctx, userID, community.LikeTargetTypeBook, bookID); err != nil {
+	if err := s.likeRepo.RemoveLike(ctx, userID, social.LikeTargetTypeBook, bookID); err != nil {
 		if err.Error() == "点赞记录不存在" {
 			// 幂等性：未点赞不报错
 			return nil
@@ -121,7 +121,7 @@ func (s *LikeService) UnlikeBook(ctx context.Context, userID, bookID string) err
 	}
 
 	// 发布取消点赞事件
-	s.publishLikeEvent(ctx, "like.book.removed", userID, community.LikeTargetTypeBook, bookID)
+	s.publishLikeEvent(ctx, "like.book.removed", userID, social.LikeTargetTypeBook, bookID)
 
 	return nil
 }
@@ -132,7 +132,7 @@ func (s *LikeService) GetBookLikeCount(ctx context.Context, bookID string) (int6
 		return 0, fmt.Errorf("书籍ID不能为空")
 	}
 
-	count, err := s.likeRepo.GetLikeCount(ctx, community.LikeTargetTypeBook, bookID)
+	count, err := s.likeRepo.GetLikeCount(ctx, social.LikeTargetTypeBook, bookID)
 	if err != nil {
 		return 0, fmt.Errorf("获取书籍点赞数失败: %w", err)
 	}
@@ -146,7 +146,7 @@ func (s *LikeService) IsBookLiked(ctx context.Context, userID, bookID string) (b
 		return false, fmt.Errorf("用户ID和书籍ID不能为空")
 	}
 
-	liked, err := s.likeRepo.IsLiked(ctx, userID, community.LikeTargetTypeBook, bookID)
+	liked, err := s.likeRepo.IsLiked(ctx, userID, social.LikeTargetTypeBook, bookID)
 	if err != nil {
 		return false, fmt.Errorf("检查点赞状态失败: %w", err)
 	}
@@ -168,9 +168,9 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 	}
 
 	// 创建点赞记录
-	like := &community.Like{
+	like := &social.Like{
 		UserID:     userID,
-		TargetType: community.LikeTargetTypeComment,
+		TargetType: social.LikeTargetTypeComment,
 		TargetID:   commentID,
 		CreatedAt:  time.Now(),
 	}
@@ -191,7 +191,7 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 	}
 
 	// 发布点赞事件
-	s.publishLikeEvent(ctx, "like.comment.added", userID, community.LikeTargetTypeComment, commentID)
+	s.publishLikeEvent(ctx, "like.comment.added", userID, social.LikeTargetTypeComment, commentID)
 
 	return nil
 }
@@ -206,7 +206,7 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 	}
 
 	// 取消点赞
-	if err := s.likeRepo.RemoveLike(ctx, userID, community.LikeTargetTypeComment, commentID); err != nil {
+	if err := s.likeRepo.RemoveLike(ctx, userID, social.LikeTargetTypeComment, commentID); err != nil {
 		if err.Error() == "点赞记录不存在" {
 			return nil
 		}
@@ -221,7 +221,7 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 	}
 
 	// 发布取消点赞事件
-	s.publishLikeEvent(ctx, "like.comment.removed", userID, community.LikeTargetTypeComment, commentID)
+	s.publishLikeEvent(ctx, "like.comment.removed", userID, social.LikeTargetTypeComment, commentID)
 
 	return nil
 }
@@ -231,7 +231,7 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 // =========================
 
 // GetUserLikedBooks 获取用户点赞的书籍列表
-func (s *LikeService) GetUserLikedBooks(ctx context.Context, userID string, page, size int) ([]*community.Like, int64, error) {
+func (s *LikeService) GetUserLikedBooks(ctx context.Context, userID string, page, size int) ([]*social.Like, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -244,7 +244,7 @@ func (s *LikeService) GetUserLikedBooks(ctx context.Context, userID string, page
 		size = 20
 	}
 
-	likes, total, err := s.likeRepo.GetUserLikes(ctx, userID, community.LikeTargetTypeBook, page, size)
+	likes, total, err := s.likeRepo.GetUserLikes(ctx, userID, social.LikeTargetTypeBook, page, size)
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取用户点赞书籍列表失败: %w", err)
 	}
@@ -253,7 +253,7 @@ func (s *LikeService) GetUserLikedBooks(ctx context.Context, userID string, page
 }
 
 // GetUserLikedComments 获取用户点赞的评论列表
-func (s *LikeService) GetUserLikedComments(ctx context.Context, userID string, page, size int) ([]*community.Like, int64, error) {
+func (s *LikeService) GetUserLikedComments(ctx context.Context, userID string, page, size int) ([]*social.Like, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -265,7 +265,7 @@ func (s *LikeService) GetUserLikedComments(ctx context.Context, userID string, p
 		size = 20
 	}
 
-	likes, total, err := s.likeRepo.GetUserLikes(ctx, userID, community.LikeTargetTypeComment, page, size)
+	likes, total, err := s.likeRepo.GetUserLikes(ctx, userID, social.LikeTargetTypeComment, page, size)
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取用户点赞评论列表失败: %w", err)
 	}
@@ -283,7 +283,7 @@ func (s *LikeService) GetBooksLikeCount(ctx context.Context, bookIDs []string) (
 		return make(map[string]int64), nil
 	}
 
-	counts, err := s.likeRepo.GetLikesCountBatch(ctx, community.LikeTargetTypeBook, bookIDs)
+	counts, err := s.likeRepo.GetLikesCountBatch(ctx, social.LikeTargetTypeBook, bookIDs)
 	if err != nil {
 		return nil, fmt.Errorf("批量获取书籍点赞数失败: %w", err)
 	}
@@ -297,7 +297,7 @@ func (s *LikeService) GetUserLikeStatus(ctx context.Context, userID string, book
 		return make(map[string]bool), nil
 	}
 
-	status, err := s.likeRepo.GetUserLikeStatusBatch(ctx, userID, community.LikeTargetTypeBook, bookIDs)
+	status, err := s.likeRepo.GetUserLikeStatusBatch(ctx, userID, social.LikeTargetTypeBook, bookIDs)
 	if err != nil {
 		return nil, fmt.Errorf("批量检查点赞状态失败: %w", err)
 	}

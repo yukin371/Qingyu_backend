@@ -1,7 +1,7 @@
 package reader
 
 import (
-	"Qingyu_backend/models/community"
+	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
 	"time"
@@ -63,7 +63,7 @@ func NewMongoLikeRepository(db *mongo.Database) *MongoLikeRepository {
 }
 
 // AddLike 添加点赞
-func (r *MongoLikeRepository) AddLike(ctx context.Context, like *community.Like) error {
+func (r *MongoLikeRepository) AddLike(ctx context.Context, like *social.Like) error {
 	if like.ID.IsZero() {
 		like.ID = primitive.NewObjectID()
 	}
@@ -139,13 +139,13 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 }
 
 // GetByID 根据ID获取点赞记录
-func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*community.Like, error) {
+func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*social.Like, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid like ID: %w", err)
 	}
 
-	var like community.Like
+	var like social.Like
 	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&like)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -158,7 +158,7 @@ func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*communit
 }
 
 // GetUserLikes 获取用户点赞列表
-func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*community.Like, int64, error) {
+func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*social.Like, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -189,7 +189,7 @@ func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetTy
 	}
 	defer cursor.Close(ctx)
 
-	var likes []*community.Like
+	var likes []*social.Like
 	if err := cursor.All(ctx, &likes); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode user likes: %w", err)
 	}
@@ -289,7 +289,7 @@ func (r *MongoLikeRepository) GetUserLikeStatusBatch(ctx context.Context, userID
 
 	// 标记已点赞的
 	for cursor.Next(ctx) {
-		var like community.Like
+		var like social.Like
 		if err := cursor.Decode(&like); err != nil {
 			continue
 		}

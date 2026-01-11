@@ -156,7 +156,7 @@ func (s *ContextService) generateChapterSummary(ctx context.Context, doc *writer
 	}
 
 	// 通过 DocumentContentRepository 获取内容
-	docContent, err := s.documentContentRepo.GetByDocumentID(ctx, doc.ID)
+	docContent, err := s.documentContentRepo.GetByDocumentID(ctx, doc.ID.Hex())
 	if err != nil || docContent == nil {
 		// 降级方案：从 KeyPoints 生成摘要
 		if len(doc.KeyPoints) > 0 {

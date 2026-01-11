@@ -1,7 +1,7 @@
 package reader
 
 import (
-	"Qingyu_backend/models/community"
+	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
 	"strings"
@@ -73,7 +73,7 @@ func (s *CommentService) GetVersion() string {
 // =========================
 
 // PublishComment 发表评论
-func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, chapterID, content string, rating int) (*community.Comment, error) {
+func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, chapterID, content string, rating int) (*social.Comment, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -89,13 +89,13 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 	}
 
 	// 创建评论对象
-	comment := &community.Comment{
-		TargetType: community.CommentTargetTypeBook,
+	comment := &social.Comment{
+		TargetType: social.CommentTargetTypeBook,
 		TargetID:   bookID,
 		AuthorID:   userID,
 		Content:    strings.TrimSpace(content),
 		Rating:     rating,
-		State:      community.CommentStateNormal,
+		State:      social.CommentStateNormal,
 	}
 
 	// 兼容旧字段（可选）
@@ -126,7 +126,7 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 }
 
 // ReplyComment 回复评论
-func (s *CommentService) ReplyComment(ctx context.Context, userID, parentCommentID, content string) (*community.Comment, error) {
+func (s *CommentService) ReplyComment(ctx context.Context, userID, parentCommentID, content string) (*social.Comment, error) {
 	// 参数验证
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
@@ -145,7 +145,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 检查父评论是否已删除
-	if parentComment.State == community.CommentStateDeleted {
+	if parentComment.State == social.CommentStateDeleted {
 		return nil, fmt.Errorf("无法回复已删除的评论")
 	}
 
@@ -157,13 +157,13 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 	replyToUserID := parentComment.AuthorID
 
-	comment := &community.Comment{
+	comment := &social.Comment{
 		TargetType:        parentComment.TargetType,
 		TargetID:          parentComment.TargetID,
 		AuthorID:          userID,
 		Content:           strings.TrimSpace(content),
 		Rating:            0, // 回复不包含评分
-		State:             community.CommentStateNormal,
+		State:             social.CommentStateNormal,
 	}
 	// 设置嵌入字段的字段
 	comment.ParentID = &parentID
@@ -187,7 +187,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	}
 
 	// 增加父评论的回复数
-	if comment.State == community.CommentStateNormal {
+	if comment.State == social.CommentStateNormal {
 		if err := s.commentRepo.IncrementReplyCount(ctx, parentCommentID); err != nil {
 			// 非致命错误，只记录日志
 			fmt.Printf("Warning: Failed to increment reply count: %v\n", err)
@@ -201,7 +201,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 }
 
 // GetCommentList 获取评论列表
-func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sortBy string, page, size int) ([]*community.Comment, int64, error) {
+func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sortBy string, page, size int) ([]*social.Comment, int64, error) {
 	if bookID == "" {
 		return nil, 0, fmt.Errorf("书籍ID不能为空")
 	}
@@ -215,8 +215,8 @@ func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sort
 	}
 
 	// 验证排序方式
-	if sortBy != community.CommentSortByLatest && sortBy != community.CommentSortByHot {
-		sortBy = community.CommentSortByLatest
+	if sortBy != social.CommentSortByLatest && sortBy != social.CommentSortByHot {
+		sortBy = social.CommentSortByLatest
 	}
 
 	// 获取评论列表
@@ -229,7 +229,7 @@ func (s *CommentService) GetCommentList(ctx context.Context, bookID string, sort
 }
 
 // GetCommentDetail 获取评论详情
-func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string) (*community.Comment, error) {
+func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string) (*social.Comment, error) {
 	if commentID == "" {
 		return nil, fmt.Errorf("评论ID不能为空")
 	}
@@ -360,25 +360,25 @@ func (s *CommentService) UnlikeComment(ctx context.Context, userID, commentID st
 // =========================
 
 // AutoReviewComment 自动审核评论
-func (s *CommentService) AutoReviewComment(ctx context.Context, comment *community.Comment) (community.CommentState, string, error) {
+func (s *CommentService) AutoReviewComment(ctx context.Context, comment *social.Comment) (social.CommentState, string, error) {
 	// 如果敏感词库未配置，默认通过
 	if s.sensitiveWordRepo == nil {
-		return community.CommentStateNormal, "", nil
+		return social.CommentStateNormal, "", nil
 	}
 
 	// 检查敏感词
 	hasSensitive, sensitiveWords, err := s.checkSensitiveWords(ctx, comment.Content)
 	if err != nil {
-		return community.CommentStateNormal, "", fmt.Errorf("敏感词检测失败: %w", err)
+		return social.CommentStateNormal, "", fmt.Errorf("敏感词检测失败: %w", err)
 	}
 
 	if hasSensitive {
 		reason := fmt.Sprintf("评论包含敏感词: %s", strings.Join(sensitiveWords, ", "))
-		return community.CommentStateRejected, reason, nil
+		return social.CommentStateRejected, reason, nil
 	}
 
 	// 通过审核
-	return community.CommentStateNormal, "", nil
+	return social.CommentStateNormal, "", nil
 }
 
 // =========================
@@ -412,7 +412,7 @@ func (s *CommentService) GetBookCommentStats(ctx context.Context, bookID string)
 }
 
 // GetUserComments 获取用户评论列表
-func (s *CommentService) GetUserComments(ctx context.Context, userID string, page, size int) ([]*community.Comment, int64, error) {
+func (s *CommentService) GetUserComments(ctx context.Context, userID string, page, size int) ([]*social.Comment, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -463,7 +463,7 @@ func (s *CommentService) checkSensitiveWords(ctx context.Context, content string
 }
 
 // getRootID 获取根评论ID
-func (s *CommentService) getRootID(comment *community.Comment) *string {
+func (s *CommentService) getRootID(comment *social.Comment) *string {
 	if comment.RootID != nil {
 		return comment.RootID
 	}
@@ -474,7 +474,7 @@ func (s *CommentService) getRootID(comment *community.Comment) *string {
 }
 
 // publishCommentEvent 发布评论事件
-func (s *CommentService) publishCommentEvent(ctx context.Context, eventType string, comment *community.Comment) {
+func (s *CommentService) publishCommentEvent(ctx context.Context, eventType string, comment *social.Comment) {
 	if s.eventBus == nil {
 		return
 	}
@@ -500,7 +500,7 @@ func (s *CommentService) publishCommentEvent(ctx context.Context, eventType stri
 // =========================
 
 // GetCommentThread 获取评论线程（树状结构）
-func (s *CommentService) GetCommentThread(ctx context.Context, commentID string) (*community.CommentThread, error) {
+func (s *CommentService) GetCommentThread(ctx context.Context, commentID string) (*social.CommentThread, error) {
 	if commentID == "" {
 		return nil, fmt.Errorf("评论ID不能为空")
 	}
@@ -518,9 +518,9 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 	}
 
 	// 构建回复线程（简化版，只支持一级回复）
-	replyThreads := make([]*community.CommentThread, len(replies))
+	replyThreads := make([]*social.CommentThread, len(replies))
 	for i, reply := range replies {
-		replyThreads[i] = &community.CommentThread{
+		replyThreads[i] = &social.CommentThread{
 			Comment: reply,
 			Replies: nil, // 简化版不递归获取嵌套回复
 			Total:   0,
@@ -528,7 +528,7 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 		}
 	}
 
-	thread := &community.CommentThread{
+	thread := &social.CommentThread{
 		Comment: comment,
 		Replies: replyThreads,
 		Total:   total,
@@ -539,7 +539,7 @@ func (s *CommentService) GetCommentThread(ctx context.Context, commentID string)
 }
 
 // GetTopComments 获取热门评论（按点赞数排序）
-func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limit int) ([]*community.Comment, error) {
+func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limit int) ([]*social.Comment, error) {
 	if bookID == "" {
 		return nil, fmt.Errorf("书籍ID不能为空")
 	}
@@ -549,7 +549,7 @@ func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limi
 	}
 
 	// 使用热度排序获取评论列表
-	comments, _, err := s.GetCommentList(ctx, bookID, community.CommentSortByHot, 1, limit)
+	comments, _, err := s.GetCommentList(ctx, bookID, social.CommentSortByHot, 1, limit)
 	if err != nil {
 		return nil, fmt.Errorf("获取热门评论失败: %w", err)
 	}
@@ -558,7 +558,7 @@ func (s *CommentService) GetTopComments(ctx context.Context, bookID string, limi
 }
 
 // GetCommentReplies 获取评论的所有回复
-func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*community.Comment, int64, error) {
+func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string, page, size int) ([]*social.Comment, int64, error) {
 	if commentID == "" {
 		return nil, 0, fmt.Errorf("评论ID不能为空")
 	}
@@ -583,7 +583,7 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, commentID string
 	end := start + size
 
 	if start >= len(allReplies) {
-		return []*community.Comment{}, total, nil
+		return []*social.Comment{}, total, nil
 	}
 
 	if end > len(allReplies) {

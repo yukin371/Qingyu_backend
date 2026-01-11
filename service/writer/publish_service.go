@@ -186,7 +186,7 @@ func (s *PublishService) executeProjectPublish(
 ) {
 	// 调用书城API发布
 	bookstoreReq := &BookstorePublishProjectRequest{
-		ProjectID:     project.ID,
+		ProjectID:     project.ID.Hex(),
 		ProjectTitle:  project.Title,
 		AuthorID:      project.AuthorID,
 		CategoryID:    req.CategoryID,
@@ -418,7 +418,7 @@ func (s *PublishService) executeDocumentPublish(
 	// 调用书城API
 	bookstoreReq := &BookstorePublishChapterRequest{
 		ProjectID:     document.ProjectID,
-		DocumentID:    document.ID,
+		DocumentID:    document.ID.Hex(),
 		ChapterTitle:  req.ChapterTitle,
 		ChapterNumber: req.ChapterNumber,
 		IsFree:        req.IsFree,

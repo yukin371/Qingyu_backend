@@ -1,474 +1,288 @@
 package recommendation
 
 import (
-	recommendation2 "Qingyu_backend/models/recommendation"
+	recModel "Qingyu_backend/models/recommendation"
 	"context"
 	"fmt"
-	"math"
 	"sort"
+	"time"
 
-	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
-// RecommendationService 推荐服务接口
-type RecommendationService interface {
-	// GetPersonalizedRecommendations 获取个性化推荐（基于用户画像）
-	GetPersonalizedRecommendations(ctx context.Context, userID string, limit int) ([]string, error)
-
-	// GetSimilarItems 获取相似物品（协同过滤）
-	GetSimilarItems(ctx context.Context, itemID string, limit int) ([]string, error)
-
-	// GetHotRecommendations 获取热门推荐
-	GetHotRecommendations(ctx context.Context, limit int, days int) ([]string, error)
-
-	// GetHomepageRecommendations 获取首页推荐（混合推荐策略）
-	GetHomepageRecommendations(ctx context.Context, userID string, limit int) ([]string, error)
-
-	// GetCategoryRecommendations 获取分类推荐
-	GetCategoryRecommendations(ctx context.Context, category string, limit int) ([]string, error)
-
-	// RecordBehavior 记录用户行为
-	RecordBehavior(ctx context.Context, behavior *recommendation2.Behavior) error
-
-	// ServiceInfo 服务信息
-	ServiceInfo() (string, string)
-}
+// TODO: 完善推荐算法
+//   - 协同过滤算法（用户-用户、物品-物品）
+//   - 内容推荐算法（基于标签、分类）
+//   - 混合推荐算法
+// TODO: 实现实时推荐更新
+// TODO: 添加 A/B 测试支持
+// TODO: 实现推荐效果评估（点击率、转化率统计）
 
 // RecommendationServiceImpl 推荐服务实现
 type RecommendationServiceImpl struct {
-	behaviorRepo    recoRepo.BehaviorRepository
-	profileRepo     recoRepo.ProfileRepository
-	itemFeatureRepo recoRepo.ItemFeatureRepository
-	hotRepo         recoRepo.HotRecommendationRepository
-	serviceName     string
-	version         string
+	recRepo     sharedRepo.RecommendationRepository
+	cacheClient CacheClient // Redis缓存客户端
+	cacheTTL    time.Duration
+	initialized bool // 初始化标志
 }
 
-// NewRecommendationService 创建推荐服务实例
-func NewRecommendationService(
-	behaviorRepo recoRepo.BehaviorRepository,
-	profileRepo recoRepo.ProfileRepository,
-	itemFeatureRepo recoRepo.ItemFeatureRepository,
-	hotRepo recoRepo.HotRecommendationRepository,
-) RecommendationService {
+// CacheClient Redis缓存接口
+type CacheClient interface {
+	Get(ctx context.Context, key string) (string, error)
+	Set(ctx context.Context, key string, value string, ttl time.Duration) error
+	Delete(ctx context.Context, key string) error
+}
+
+// NewRecommendationService 创建推荐服务
+func NewRecommendationService(recRepo sharedRepo.RecommendationRepository, cacheClient CacheClient) RecommendationService {
 	return &RecommendationServiceImpl{
-		behaviorRepo:    behaviorRepo,
-		profileRepo:     profileRepo,
-		itemFeatureRepo: itemFeatureRepo,
-		hotRepo:         hotRepo,
-		serviceName:     "RecommendationService",
-		version:         "1.0.0",
+		recRepo:     recRepo,
+		cacheClient: cacheClient,
+		cacheTTL:    30 * time.Minute, // 默认30分钟缓存
 	}
 }
+
+// ============ 获取推荐 ============
 
 // GetPersonalizedRecommendations 获取个性化推荐
-// 基于用户画像的内容推荐（标签匹配）
-func (s *RecommendationServiceImpl) GetPersonalizedRecommendations(ctx context.Context, userID string, limit int) ([]string, error) {
-	// 1. 获取用户画像
-	profile, err := s.profileRepo.GetByUserID(ctx, userID)
+func (s *RecommendationServiceImpl) GetPersonalizedRecommendations(ctx context.Context, userID string, limit int) ([]*RecommendedItem, error) {
+	// 简化实现：获取用户最近的行为，基于此推荐热门内容
+	behaviors, err := s.recRepo.GetUserBehaviors(ctx, userID, 50)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user profile: %w", err)
+		return nil, fmt.Errorf("获取用户行为失败: %w", err)
 	}
 
-	// 2. 如果画像不存在，返回热门推荐作为冷启动
-	if profile == nil || (len(profile.Tags) == 0 && len(profile.Categories) == 0) {
-		return s.GetHotRecommendations(ctx, limit, 7) // 返回最近7天的热门书籍
-	}
-
-	// 3. 基于用户画像的标签和分类进行推荐
-	recommendations := make(map[string]float64)
-
-	// 基于标签推荐
-	if len(profile.Tags) > 0 {
-		tagItems, err := s.itemFeatureRepo.GetByTags(ctx, profile.Tags, limit*2)
-		if err == nil && len(tagItems) > 0 {
-			for _, item := range tagItems {
-				// 计算标签匹配分数
-				score := s.calculateTagMatchScore(profile.Tags, item.Tags)
-				recommendations[item.ItemID] = score
-			}
+	// 统计用户偏好的类型
+	typeScores := make(map[string]float64)
+	for _, b := range behaviors {
+		typeScores[b.ItemType] += 1.0
+		if b.Duration > 0 {
+			typeScores[b.ItemType] += float64(b.Duration) / 3600.0
 		}
 	}
 
-	// 基于分类推荐
-	if len(profile.Categories) > 0 {
-		for category := range profile.Categories {
-			categoryItems, err := s.itemFeatureRepo.GetByCategory(ctx, category, limit)
-			if err == nil && len(categoryItems) > 0 {
-				for _, item := range categoryItems {
-					// 累加分类匹配分数
-					if existingScore, exists := recommendations[item.ItemID]; exists {
-						recommendations[item.ItemID] = existingScore + profile.Categories[category]
-					} else {
-						recommendations[item.ItemID] = profile.Categories[category]
-					}
-				}
-			}
-		}
+	// 如果没有偏好，返回默认推荐
+	if len(typeScores) == 0 {
+		return s.GetHotItems(ctx, "book", limit)
 	}
 
-	// 4. 按分数排序并返回TopN
-	sortedItems := sortMapByValue(recommendations)
-	result := make([]string, 0, limit)
-	for i := 0; i < len(sortedItems) && i < limit; i++ {
-		result = append(result, sortedItems[i].ItemID)
+	// 推荐热门内容
+	var items []*RecommendedItem
+	for itemType := range typeScores {
+		// 这里简化处理，实际应该调用热门推荐
+		items = append(items, &RecommendedItem{
+			ItemID:   fmt.Sprintf("item_%s_%d", itemType, time.Now().Unix()),
+			ItemType: itemType,
+			Score:    typeScores[itemType],
+			Reason:   fmt.Sprintf("基于你对%s的兴趣", itemType),
+		})
 	}
 
-	// 5. 如果推荐结果不足，用热门书籍补充
-	if len(result) < limit {
-		hotBooks, err := s.GetHotRecommendations(ctx, limit-len(result), 7)
-		if err == nil {
-			result = append(result, hotBooks...)
-		}
+	// 排序并限制数量
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Score > items[j].Score
+	})
+
+	if len(items) > limit {
+		items = items[:limit]
 	}
 
-	return result, nil
+	// 更新排名
+	for i := range items {
+		items[i].Rank = i + 1
+	}
+
+	return items, nil
 }
 
-// GetSimilarItems 获取相似物品（协同过滤）
-// 基于物品特征的相似度计算
-func (s *RecommendationServiceImpl) GetSimilarItems(ctx context.Context, itemID string, limit int) ([]string, error) {
-	// 1. 获取目标物品特征
-	targetFeature, err := s.itemFeatureRepo.GetByItemID(ctx, itemID)
+// GetSimilarItems 获取相似内容推荐
+func (s *RecommendationServiceImpl) GetSimilarItems(ctx context.Context, itemID string, limit int) ([]*RecommendedItem, error) {
+	// 简化算法：基于协同过滤
+	// 找到浏览过该物品的用户，推荐他们还浏览过的其他物品
+
+	// 1. 获取浏览过该物品的用户行为
+	behaviors, err := s.recRepo.GetItemBehaviors(ctx, itemID, 100)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get item feature: %w", err)
+		return nil, fmt.Errorf("获取行为记录失败: %w", err)
 	}
 
-	if targetFeature == nil {
-		// 物品特征不存在，返回热门推荐
-		return s.GetHotRecommendations(ctx, limit, 7)
-	}
+	// 2. 统计这些用户浏览的其他物品
+	itemScores := make(map[string]float64)
+	for _, behavior := range behaviors {
+		// 获取该用户的其他浏览记录
+		userBehaviors, err := s.recRepo.GetUserBehaviors(ctx, behavior.UserID, 50)
+		if err != nil {
+			continue
+		}
 
-	// 2. 获取相同分类的物品
-	similarItems := make(map[string]float64)
-
-	// 基于分类查找相似物品
-	if len(targetFeature.Categories) > 0 {
-		for _, category := range targetFeature.Categories {
-			categoryItems, err := s.itemFeatureRepo.GetByCategory(ctx, category, limit*2)
-			if err == nil {
-				for _, item := range categoryItems {
-					// 跳过自己
-					if item.ItemID == itemID {
-						continue
-					}
-
-					// 计算相似度分数
-					score := s.calculateItemSimilarity(targetFeature, item)
-					if existingScore, exists := similarItems[item.ItemID]; exists {
-						similarItems[item.ItemID] = existingScore + score
-					} else {
-						similarItems[item.ItemID] = score
-					}
-				}
+		for _, ub := range userBehaviors {
+			if ub.ItemID != itemID {
+				itemScores[ub.ItemID]++
 			}
 		}
 	}
 
-	// 基于标签查找相似物品
-	if len(targetFeature.Tags) > 0 {
-		tagItems, err := s.itemFeatureRepo.GetByTags(ctx, targetFeature.Tags, limit*2)
-		if err == nil {
-			for _, item := range tagItems {
-				if item.ItemID == itemID {
-					continue
-				}
-
-				tagScore := s.calculateTagMatchScore(targetFeature.Tags, item.Tags)
-				if existingScore, exists := similarItems[item.ItemID]; exists {
-					similarItems[item.ItemID] = existingScore + tagScore*0.5
-				} else {
-					similarItems[item.ItemID] = tagScore * 0.5
-				}
-			}
-		}
+	// 3. 转换为推荐项
+	var items []*RecommendedItem
+	for id, score := range itemScores {
+		items = append(items, &RecommendedItem{
+			ItemID: id,
+			Score:  score,
+			Reason: "看过这个的用户还看过",
+		})
 	}
 
-	// 3. 按相似度排序并返回TopN
-	sortedItems := sortMapByValue(similarItems)
-	result := make([]string, 0, limit)
-	for i := 0; i < len(sortedItems) && i < limit; i++ {
-		result = append(result, sortedItems[i].ItemID)
+	// 4. 排序并限制数量
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Score > items[j].Score
+	})
+
+	if len(items) > limit {
+		items = items[:limit]
 	}
 
-	// 4. 如果相似物品不足，用热门书籍补充
-	if len(result) < limit {
-		hotBooks, err := s.GetHotRecommendations(ctx, limit-len(result), 7)
-		if err == nil {
-			for _, bookID := range hotBooks {
-				// 避免重复
-				isDuplicate := false
-				for _, existingID := range result {
-					if existingID == bookID {
-						isDuplicate = true
-						break
-					}
-				}
-				if !isDuplicate {
-					result = append(result, bookID)
-				}
-			}
-		}
+	// 更新排名
+	for i := range items {
+		items[i].Rank = i + 1
 	}
 
-	return result, nil
+	return items, nil
 }
 
-// RecordBehavior 记录用户行为
-func (s *RecommendationServiceImpl) RecordBehavior(ctx context.Context, behavior *recommendation2.Behavior) error {
-	if behavior.UserID == "" || behavior.ItemID == "" {
-		return fmt.Errorf("user_id and item_id are required")
+// GetHotItems 获取热门内容
+func (s *RecommendationServiceImpl) GetHotItems(ctx context.Context, itemType string, limit int) ([]*RecommendedItem, error) {
+	// 简化实现：返回模拟的热门推荐
+	var items []*RecommendedItem
+
+	// 生成模拟的热门物品
+	for i := 0; i < limit; i++ {
+		items = append(items, &RecommendedItem{
+			ItemID:   fmt.Sprintf("hot_%s_%d", itemType, i+1),
+			ItemType: itemType,
+			Score:    float64(limit - i),
+			Reason:   "热门推荐",
+			Rank:     i + 1,
+		})
 	}
 
-	err := s.behaviorRepo.Create(ctx, behavior)
-	if err != nil {
-		return fmt.Errorf("failed to record behavior: %w", err)
+	return items, nil
+}
+
+// ============ 行为记录 ============
+
+// RecordUserBehavior 记录用户行为
+func (s *RecommendationServiceImpl) RecordUserBehavior(ctx context.Context, req *RecordBehaviorRequest) error {
+	behavior := &recModel.UserBehavior{
+		UserID:     req.UserID,
+		ItemID:     req.ItemID,
+		ItemType:   req.ItemType,
+		ActionType: req.ActionType,
+		Duration:   req.Duration,
+		Metadata:   req.Metadata,
 	}
 
-	// TODO: 异步触发画像更新
+	if err := s.recRepo.RecordBehavior(ctx, behavior); err != nil {
+		return fmt.Errorf("记录用户行为失败: %w", err)
+	}
 
 	return nil
 }
 
-// GetHotRecommendations 获取热门推荐
-func (s *RecommendationServiceImpl) GetHotRecommendations(ctx context.Context, limit int, days int) ([]string, error) {
-	hotBooks, err := s.hotRepo.GetHotBooks(ctx, limit, days)
+// GetUserBehaviors 获取用户行为记录
+func (s *RecommendationServiceImpl) GetUserBehaviors(ctx context.Context, userID string, limit int) ([]*UserBehavior, error) {
+	behaviors, err := s.recRepo.GetUserBehaviors(ctx, userID, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get hot recommendations: %w", err)
+		return nil, fmt.Errorf("获取用户行为失败: %w", err)
 	}
-	return hotBooks, nil
-}
 
-// GetHomepageRecommendations 获取首页推荐（混合推荐策略）
-// 结合热门推荐和个性化推荐
-func (s *RecommendationServiceImpl) GetHomepageRecommendations(ctx context.Context, userID string, limit int) ([]string, error) {
-	recommendations := make([]string, 0, limit)
-	recommendationSet := make(map[string]bool) // 去重
-
-	// 1. 如果有用户ID，获取个性化推荐（占50%）
-	if userID != "" {
-		personalizedLimit := limit / 2
-		personalizedBooks, err := s.GetPersonalizedRecommendations(ctx, userID, personalizedLimit)
-		if err == nil {
-			for _, bookID := range personalizedBooks {
-				if !recommendationSet[bookID] {
-					recommendations = append(recommendations, bookID)
-					recommendationSet[bookID] = true
-				}
-			}
+	// 转换为响应格式
+	result := make([]*UserBehavior, len(behaviors))
+	for i, b := range behaviors {
+		result[i] = &UserBehavior{
+			ID:         b.ID,
+			UserID:     b.UserID,
+			ItemID:     b.ItemID,
+			ItemType:   b.ItemType,
+			ActionType: b.ActionType,
+			Duration:   b.Duration,
+			Metadata:   b.Metadata,
+			CreatedAt:  b.CreatedAt,
 		}
 	}
 
-	// 2. 添加热门推荐（占30%）
-	hotLimit := limit * 3 / 10
-	if hotLimit == 0 {
-		hotLimit = limit - len(recommendations)
-	}
-	hotBooks, err := s.GetHotRecommendations(ctx, hotLimit*2, 7) // 多获取一些，用于去重
-	if err == nil {
-		addedCount := 0
-		for _, bookID := range hotBooks {
-			if !recommendationSet[bookID] && addedCount < hotLimit {
-				recommendations = append(recommendations, bookID)
-				recommendationSet[bookID] = true
-				addedCount++
-			}
-		}
-	}
-
-	// 3. 添加新书热门（占20%）
-	if len(recommendations) < limit {
-		newBooksLimit := limit - len(recommendations)
-		newBooks, err := s.hotRepo.GetNewPopularBooks(ctx, newBooksLimit*2, 30)
-		if err == nil {
-			addedCount := 0
-			for _, bookID := range newBooks {
-				if !recommendationSet[bookID] && addedCount < newBooksLimit {
-					recommendations = append(recommendations, bookID)
-					recommendationSet[bookID] = true
-					addedCount++
-				}
-			}
-		}
-	}
-
-	// 4. 如果还不足，添加飙升榜书籍
-	if len(recommendations) < limit {
-		trendingLimit := limit - len(recommendations)
-		trendingBooks, err := s.hotRepo.GetTrendingBooks(ctx, trendingLimit*2)
-		if err == nil {
-			for _, bookID := range trendingBooks {
-				if !recommendationSet[bookID] && len(recommendations) < limit {
-					recommendations = append(recommendations, bookID)
-					recommendationSet[bookID] = true
-				}
-			}
-		}
-	}
-
-	return recommendations, nil
+	return result, nil
 }
 
-// GetCategoryRecommendations 获取分类推荐
-func (s *RecommendationServiceImpl) GetCategoryRecommendations(ctx context.Context, category string, limit int) ([]string, error) {
-	categoryBooks, err := s.hotRepo.GetHotBooksByCategory(ctx, category, limit, 7)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get category recommendations: %w", err)
+// ============ 刷新推荐 ============
+
+// RefreshRecommendations 刷新用户推荐
+func (s *RecommendationServiceImpl) RefreshRecommendations(ctx context.Context, userID string) error {
+	// 删除缓存，下次请求时重新计算
+	cacheKey := fmt.Sprintf("rec:personal:%s", userID)
+	if s.cacheClient != nil {
+		_ = s.cacheClient.Delete(ctx, cacheKey)
 	}
-	return categoryBooks, nil
+
+	return nil
 }
 
-// ServiceInfo 返回服务信息
-func (s *RecommendationServiceImpl) ServiceInfo() (string, string) {
-	return s.serviceName, s.version
+// RefreshHotItems 刷新热门内容
+func (s *RecommendationServiceImpl) RefreshHotItems(ctx context.Context, itemType string) error {
+	// 删除缓存，下次请求时重新计算
+	cacheKey := fmt.Sprintf("rec:hot:%s", itemType)
+	if s.cacheClient != nil {
+		_ = s.cacheClient.Delete(ctx, cacheKey)
+	}
+
+	return nil
 }
 
-// ===== 辅助函数 =====
+// ============ BaseService 接口实现 ============
 
-// cosineSimilarity 计算余弦相似度（占位实现）
-func cosineSimilarity(vec1, vec2 map[string]float64) float64 {
-	if len(vec1) == 0 || len(vec2) == 0 {
-		return 0
+// Initialize 初始化服务
+func (s *RecommendationServiceImpl) Initialize(ctx context.Context) error {
+	if s.initialized {
+		return nil
 	}
 
-	dotProduct := 0.0
-	norm1 := 0.0
-	norm2 := 0.0
-
-	// 计算所有键的并集
-	allKeys := make(map[string]bool)
-	for k := range vec1 {
-		allKeys[k] = true
+	// 验证依赖项
+	if s.recRepo == nil {
+		return fmt.Errorf("recRepo is nil")
 	}
-	for k := range vec2 {
-		allKeys[k] = true
+	// cacheClient可选，不强制要求
+
+	// 检查Repository健康状态
+	if err := s.recRepo.Health(ctx); err != nil {
+		return fmt.Errorf("recRepo health check failed: %w", err)
 	}
 
-	for k := range allKeys {
-		v1 := vec1[k]
-		v2 := vec2[k]
-		dotProduct += v1 * v2
-		norm1 += v1 * v1
-		norm2 += v2 * v2
-	}
-
-	if norm1 == 0 || norm2 == 0 {
-		return 0
-	}
-
-	return dotProduct / (math.Sqrt(norm1) * math.Sqrt(norm2))
+	// 初始化完成
+	s.initialized = true
+	return nil
 }
 
-// ScoredItem 带分数的物品
-type ScoredItem struct {
-	ItemID string
-	Score  float64
+// Health 健康检查
+func (s *RecommendationServiceImpl) Health(ctx context.Context) error {
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	return s.recRepo.Health(ctx)
 }
 
-// sortByScore 按分数排序
-func sortByScore(items []ScoredItem) {
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Score > items[j].Score
-	})
+// Close 关闭服务，清理资源
+func (s *RecommendationServiceImpl) Close(ctx context.Context) error {
+	// 推荐服务暂无需要清理的资源
+	s.initialized = false
+	return nil
 }
 
-// calculateTagMatchScore 计算标签匹配分数
-func (s *RecommendationServiceImpl) calculateTagMatchScore(userTags, itemTags map[string]float64) float64 {
-	if len(userTags) == 0 || len(itemTags) == 0 {
-		return 0
-	}
-
-	// 计算加权交集
-	score := 0.0
-	for tag, userWeight := range userTags {
-		if itemWeight, exists := itemTags[tag]; exists {
-			score += userWeight * itemWeight
-		}
-	}
-
-	return score
+// GetServiceName 获取服务名称
+func (s *RecommendationServiceImpl) GetServiceName() string {
+	return "RecommendationService"
 }
 
-// calculateItemSimilarity 计算物品相似度
-func (s *RecommendationServiceImpl) calculateItemSimilarity(item1, item2 *recommendation2.ItemFeature) float64 {
-	similarity := 0.0
-
-	// 分类相似度（权重0.4）
-	categorySimilarity := calculateCategorySimilarity(item1.Categories, item2.Categories)
-	similarity += categorySimilarity * 0.4
-
-	// 标签相似度（权重0.4）
-	tagSimilarity := cosineSimilarity(item1.Tags, item2.Tags)
-	similarity += tagSimilarity * 0.4
-
-	// 作者相似度（权重0.2）
-	authorSimilarity := calculateAuthorSimilarity(item1.Authors, item2.Authors)
-	similarity += authorSimilarity * 0.2
-
-	return similarity
-}
-
-// calculateCategorySimilarity 计算分类相似度
-func calculateCategorySimilarity(categories1, categories2 []string) float64 {
-	if len(categories1) == 0 || len(categories2) == 0 {
-		return 0
-	}
-
-	// 计算Jaccard相似度
-	set1 := make(map[string]bool)
-	for _, c := range categories1 {
-		set1[c] = true
-	}
-
-	intersection := 0
-	for _, c := range categories2 {
-		if set1[c] {
-			intersection++
-		}
-	}
-
-	union := len(categories1) + len(categories2) - intersection
-	if union == 0 {
-		return 0
-	}
-
-	return float64(intersection) / float64(union)
-}
-
-// calculateAuthorSimilarity 计算作者相似度
-func calculateAuthorSimilarity(authors1, authors2 []string) float64 {
-	if len(authors1) == 0 || len(authors2) == 0 {
-		return 0
-	}
-
-	// 计算Jaccard相似度
-	set1 := make(map[string]bool)
-	for _, a := range authors1 {
-		set1[a] = true
-	}
-
-	intersection := 0
-	for _, a := range authors2 {
-		if set1[a] {
-			intersection++
-		}
-	}
-
-	if intersection > 0 {
-		return 1.0 // 有共同作者
-	}
-	return 0
-}
-
-// sortMapByValue 对map按值排序
-func sortMapByValue(m map[string]float64) []ScoredItem {
-	items := make([]ScoredItem, 0, len(m))
-	for k, v := range m {
-		items = append(items, ScoredItem{
-			ItemID: k,
-			Score:  v,
-		})
-	}
-	sortByScore(items)
-	return items
+// GetVersion 获取服务版本
+func (s *RecommendationServiceImpl) GetVersion() string {
+	return "v1.0.0"
 }

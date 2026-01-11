@@ -2,8 +2,6 @@ package social
 
 import (
 	"time"
-
-	"Qingyu_backend/models/community/base"
 )
 
 // RelationStatus 关系状态
@@ -16,8 +14,8 @@ const (
 
 // UserRelation 用户关系模型
 type UserRelation struct {
-	base.IdentifiedEntity `bson:",inline"`
-	base.Timestamps       `bson:",inline"`
+	IdentifiedEntity `bson:",inline"`
+	Timestamps       `bson:",inline"`
 
 	// 关注关系
 	FollowerID string `bson:"follower_id" json:"followerId" validate:"required"` // 关注者ID
