@@ -103,7 +103,7 @@ func (f *ProjectFactory) Create(authorID string, opts ...func(*writer.Project)) 
 		},
 	}
 	// 设置嵌入字段
-	project.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
+	project.IdentifiedEntity.ID = primitive.NewObjectID()
 	project.OwnedEntity.AuthorID = authorID
 	project.TitledEntity.Title = fmt.Sprintf("测试项目 %d", f.counter)
 	project.Timestamps.CreatedAt = now
@@ -158,7 +158,7 @@ func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document
 		WordCount: 1000 + f.counter*100,
 	}
 	// 设置嵌入字段
-	doc.IdentifiedEntity.ID = primitive.NewObjectID().Hex()
+	doc.IdentifiedEntity.ID = primitive.NewObjectID()
 	doc.ProjectScopedEntity.ProjectID = projectID
 	doc.TitledEntity.Title = fmt.Sprintf("第%d章", f.counter)
 	doc.Timestamps.CreatedAt = now

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	usersModel "Qingyu_backend/models/users"
 	"Qingyu_backend/models/writer"
@@ -195,8 +196,8 @@ type MockProjectRepository struct {
 func (m *MockProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	args := m.Called(ctx, project)
 	if args.Error(0) == nil {
-		if project.ID == "" {
-			project.ID = "mock_project_id"
+		if project.ID.IsZero() {
+			project.ID = primitive.NewObjectID()
 		}
 		project.CreatedAt = time.Now()
 		project.UpdatedAt = time.Now()

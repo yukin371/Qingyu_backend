@@ -236,14 +236,14 @@ func TestuserrepositoryWithdatapreparation(t *testing.T) {
 		admin := testUsers[0]
 		found, err := repo.GetByID(ctx, admin.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, "admin", found.Role)
+		assert.Contains(t, found.Roles, "admin")
 	})
 
 	t.Run("验证作者用户存在", func(t *testing.T) {
 		author := testUsers[1]
 		found, err := repo.GetByID(ctx, author.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, "author", found.Role)
+		assert.Contains(t, found.Roles, "author")
 	})
 }
 

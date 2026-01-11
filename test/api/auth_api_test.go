@@ -49,6 +49,14 @@ func (m *MockAuthService) RefreshToken(ctx context.Context, token string) (strin
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockAuthService) OAuthLogin(ctx context.Context, req *auth.OAuthLoginRequest) (*auth.LoginResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*auth.LoginResponse), args.Error(1)
+}
+
 func (m *MockAuthService) ValidateToken(ctx context.Context, token string) (*auth.TokenClaims, error) {
 	args := m.Called(ctx, token)
 	if args.Get(0) == nil {

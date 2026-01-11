@@ -53,8 +53,8 @@ func CreateTestUser(opts ...UserOption) *users.User {
 		Username:  "testuser",
 		Email:     "test@example.com",
 		Password:  "hashed_password_123",
-		Role:      "user",
-		Status:    "active",
+		Roles:     []string{"user"},
+		Status:    users.UserStatusActive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -84,7 +84,7 @@ func WithEmail(email string) UserOption {
 // WithRole 设置角色
 func WithRole(role string) UserOption {
 	return func(u *users.User) {
-		u.Role = role
+		u.Roles = []string{role}
 	}
 }
 
@@ -112,7 +112,7 @@ func AssertUserEqual(t *testing.T, expected, actual *users.User) {
 	assert.Equal(t, expected.ID, actual.ID)
 	assert.Equal(t, expected.Username, actual.Username)
 	assert.Equal(t, expected.Email, actual.Email)
-	assert.Equal(t, expected.Role, actual.Role)
+	assert.Equal(t, expected.Roles, actual.Roles)
 	assert.Equal(t, expected.Status, actual.Status)
 }
 

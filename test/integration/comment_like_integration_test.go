@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"Qingyu_backend/models/community"
 	"context"
 	"fmt"
 	"testing"
@@ -13,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/audit"
+	"Qingyu_backend/models/social"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/service/base"
@@ -202,7 +202,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Logf("✓ 评论点赞数: %d", updatedComment.LikeCount)
 
 	// 验证点赞记录存在
-	isLiked, err := likeRepo.IsLiked(ctx, userB, community.LikeTargetTypeComment, commentID)
+	isLiked, err := likeRepo.IsLiked(ctx, userB, social.LikeTargetTypeComment, commentID)
 	require.NoError(t, err)
 	assert.True(t, isLiked)
 	t.Logf("✓ 点赞记录已保存")
@@ -221,7 +221,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Logf("✓ 评论点赞数: %d", finalComment.LikeCount)
 
 	// 验证点赞记录已删除
-	isLikedAfter, err := likeRepo.IsLiked(ctx, userB, community.LikeTargetTypeComment, commentID)
+	isLikedAfter, err := likeRepo.IsLiked(ctx, userB, social.LikeTargetTypeComment, commentID)
 	require.NoError(t, err)
 	assert.False(t, isLikedAfter)
 	t.Logf("✓ 点赞记录已删除")
