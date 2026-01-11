@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +47,7 @@ func (m *MockBookRepositoryForService) Delete(ctx context.Context, id primitive.
 	return args.Error(0)
 }
 
-func (m *MockBookRepositoryForService) List(ctx context.Context, filter interface{}) ([]*bookstoreModel.Book, error) {
+func (m *MockBookRepositoryForService) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstoreModel.Book, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -54,7 +55,7 @@ func (m *MockBookRepositoryForService) List(ctx context.Context, filter interfac
 	return args.Get(0).([]*bookstoreModel.Book), args.Error(1)
 }
 
-func (m *MockBookRepositoryForService) Count(ctx context.Context, filter interface{}) (int64, error) {
+func (m *MockBookRepositoryForService) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -260,7 +261,7 @@ func (m *MockCategoryRepositoryForService) Delete(ctx context.Context, id primit
 	return args.Error(0)
 }
 
-func (m *MockCategoryRepositoryForService) List(ctx context.Context, filter interface{}) ([]*bookstoreModel.Category, error) {
+func (m *MockCategoryRepositoryForService) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstoreModel.Category, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -268,7 +269,7 @@ func (m *MockCategoryRepositoryForService) List(ctx context.Context, filter inte
 	return args.Get(0).([]*bookstoreModel.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepositoryForService) Count(ctx context.Context, filter interface{}) (int64, error) {
+func (m *MockCategoryRepositoryForService) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -409,7 +410,7 @@ func (m *MockBannerRepositoryForService) Delete(ctx context.Context, id primitiv
 	return args.Error(0)
 }
 
-func (m *MockBannerRepositoryForService) List(ctx context.Context, filter interface{}) ([]*bookstoreModel.Banner, error) {
+func (m *MockBannerRepositoryForService) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstoreModel.Banner, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -417,7 +418,7 @@ func (m *MockBannerRepositoryForService) List(ctx context.Context, filter interf
 	return args.Get(0).([]*bookstoreModel.Banner), args.Error(1)
 }
 
-func (m *MockBannerRepositoryForService) Count(ctx context.Context, filter interface{}) (int64, error) {
+func (m *MockBannerRepositoryForService) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -502,7 +503,7 @@ func (m *MockRankingRepositoryForService) Delete(ctx context.Context, id primiti
 	return args.Error(0)
 }
 
-func (m *MockRankingRepositoryForService) List(ctx context.Context, filter interface{}) ([]*bookstoreModel.RankingItem, error) {
+func (m *MockRankingRepositoryForService) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstoreModel.RankingItem, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -510,7 +511,7 @@ func (m *MockRankingRepositoryForService) List(ctx context.Context, filter inter
 	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
 }
 
-func (m *MockRankingRepositoryForService) Count(ctx context.Context, filter interface{}) (int64, error) {
+func (m *MockRankingRepositoryForService) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
