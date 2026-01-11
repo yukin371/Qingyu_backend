@@ -101,7 +101,6 @@ linters:
     - govet          # 检查常见错误
     - ineffassign    # 检查无效赋值
     - staticcheck    # 静态分析检查
-    - typecheck      # 类型检查
     - unused         # 检查未使用的常量、变量、函数等
     - gocyclo        # 检查函数复杂度
     - gofmt          # 检查代码格式
