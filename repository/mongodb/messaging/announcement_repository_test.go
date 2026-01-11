@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	messagingModel "Qingyu_backend/models/messaging"
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	"Qingyu_backend/repository/mongodb/messaging"
 	"Qingyu_backend/test/testutil"
 )
@@ -20,12 +21,12 @@ func setupAnnouncementTest(t *testing.T) (interface {
 	GetByID(ctx context.Context, id primitive.ObjectID) (*messagingModel.Announcement, error)
 	Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, filter interface{}) ([]*messagingModel.Announcement, error)
+	List(ctx context.Context, filter infrastructure.Filter) ([]*messagingModel.Announcement, error)
 	GetActive(ctx context.Context, targetUsers string, limit, offset int) ([]*messagingModel.Announcement, error)
 	GetByType(ctx context.Context, announcementType string, limit, offset int) ([]*messagingModel.Announcement, error)
 	GetEffective(ctx context.Context, targetUsers string, limit int) ([]*messagingModel.Announcement, error)
 	IncrementViewCount(ctx context.Context, announcementID primitive.ObjectID) error
-	Count(ctx context.Context, filter interface{}) (int64, error)
+	Count(ctx context.Context, filter infrastructure.Filter) (int64, error)
 	Exists(ctx context.Context, id primitive.ObjectID) (bool, error)
 	BatchUpdateStatus(ctx context.Context, announcementIDs []primitive.ObjectID, isActive bool) error
 	BatchDelete(ctx context.Context, announcementIDs []primitive.ObjectID) error
