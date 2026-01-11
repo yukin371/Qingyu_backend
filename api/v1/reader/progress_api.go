@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
 )
 
 const (
@@ -19,11 +19,11 @@ const (
 
 // ProgressAPI 阅读进度API
 type ProgressAPI struct {
-	readerService *reader.ReaderService
+	readerService interfaces.ReaderService
 }
 
 // NewProgressAPI 创建阅读进度API实例
-func NewProgressAPI(readerService *reader.ReaderService) *ProgressAPI {
+func NewProgressAPI(readerService interfaces.ReaderService) *ProgressAPI {
 	return &ProgressAPI{
 		readerService: readerService,
 	}

@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // CommentAPI 评论API处理器
 type CommentAPI struct {
-	commentService *social.CommentService
+	commentService interfaces.CommentService
 }
 
 // NewCommentAPI 创建评论API实例
-func NewCommentAPI(commentService *social.CommentService) *CommentAPI {
+func NewCommentAPI(commentService interfaces.CommentService) *CommentAPI {
 	return &CommentAPI{
 		commentService: commentService,
 	}

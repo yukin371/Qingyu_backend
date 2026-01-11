@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // ReviewAPI 书评API处理器
 type ReviewAPI struct {
-	reviewService *social.ReviewService
+	reviewService interfaces.ReviewService
 }
 
 // NewReviewAPI 创建书评API实例
-func NewReviewAPI(reviewService *social.ReviewService) *ReviewAPI {
+func NewReviewAPI(reviewService interfaces.ReviewService) *ReviewAPI {
 	return &ReviewAPI{
 		reviewService: reviewService,
 	}

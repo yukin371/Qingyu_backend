@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // MessageAPI 私信API处理器
 type MessageAPI struct {
-	messageService *social.MessageService
+	messageService interfaces.MessageService
 }
 
 // NewMessageAPI 创建私信API实例
-func NewMessageAPI(messageService *social.MessageService) *MessageAPI {
+func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 	return &MessageAPI{
 		messageService: messageService,
 	}

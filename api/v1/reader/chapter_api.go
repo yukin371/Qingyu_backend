@@ -7,16 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
+	readerservice "Qingyu_backend/service/reader"
 )
 
 // ChapterAPI 阅读器章节API
 type ChapterAPI struct {
-	chapterService reader.ChapterService
+	chapterService interfaces.ReaderChapterService
 }
 
 // NewChapterAPI 创建章节API实例
-func NewChapterAPI(chapterService reader.ChapterService) *ChapterAPI {
+func NewChapterAPI(chapterService interfaces.ReaderChapterService) *ChapterAPI {
 	return &ChapterAPI{
 		chapterService: chapterService,
 	}
@@ -55,15 +56,15 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 
 	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
-		if err == reader.ErrChapterNotFound {
+		if err == readerservice.ErrChapterNotFound {
 			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
 			return
 		}
-		if err == reader.ErrChapterNotPublished {
+		if err == readerservice.ErrChapterNotPublished {
 			shared.Error(c, http.StatusForbidden, "章节未发布", err.Error())
 			return
 		}
-		if err == reader.ErrAccessDenied && content != nil {
+		if err == readerservice.ErrAccessDenied && content != nil {
 			// 返回带访问拒绝信息的响应
 			shared.Success(c, http.StatusForbidden, "无权访问", content)
 			return
@@ -107,11 +108,11 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 
 	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, bookID, chapterNum)
 	if err != nil {
-		if err == reader.ErrChapterNotFound {
+		if err == readerservice.ErrChapterNotFound {
 			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
 			return
 		}
-		if err == reader.ErrAccessDenied && content != nil {
+		if err == readerservice.ErrAccessDenied && content != nil {
 			shared.Success(c, http.StatusForbidden, "无权访问", content)
 			return
 		}
@@ -284,7 +285,7 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 
 	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, chapterID)
 	if err != nil {
-		if err == reader.ErrChapterNotFound {
+		if err == readerservice.ErrChapterNotFound {
 			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
 			return
 		}

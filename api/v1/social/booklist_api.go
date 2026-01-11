@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // BookListAPI 书单API处理器
 type BookListAPI struct {
-	bookListService *social.BookListService
+	bookListService interfaces.BookListService
 }
 
 // NewBookListAPI 创建书单API实例
-func NewBookListAPI(bookListService *social.BookListService) *BookListAPI {
+func NewBookListAPI(bookListService interfaces.BookListService) *BookListAPI {
 	return &BookListAPI{
 		bookListService: bookListService,
 	}

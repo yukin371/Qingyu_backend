@@ -3,8 +3,8 @@ package usermanagement
 import (
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/usermanagement/handler"
-	managementApi "Qingyu_backend/api/v1/usermanagement"
+	"Qingyu_backend/api/v1/user/handler"
+	managementApi "Qingyu_backend/api/v1/user"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/service/shared/stats"

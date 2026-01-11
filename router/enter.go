@@ -7,7 +7,6 @@ import (
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
-	booklistRouter "Qingyu_backend/router/booklist"
 	readingstatsRouter "Qingyu_backend/router/reading-stats"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
@@ -27,11 +26,9 @@ import (
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
 	bookstore "Qingyu_backend/service/bookstore"
-	socialService "Qingyu_backend/service/social"
 
 	socialApi "Qingyu_backend/api/v1/social"
 	messagesApi "Qingyu_backend/api/v1/messages"
-	booklistApi "Qingyu_backend/api/v1/booklist"
 financeApi "Qingyu_backend/api/v1/finance"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
@@ -92,16 +89,7 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Warn("⚠ AuthService未配置，跳过认证路由注册", zap.Error(authErr))
 	}
 
-	// 2. 注册钱包服务路由
-	if walletErr == nil && walletSvc != nil {
-		sharedRouter.RegisterWalletRoutes(sharedGroup, walletSvc)
-		logger.Info("✓ 钱包服务路由已注册: /api/v1/shared/wallet/*")
-		registeredCount++
-	} else {
-		logger.Warn("⚠ WalletService未配置，跳过钱包路由注册", zap.Error(walletErr))
-	}
-
-	// 3. 注册存储服务路由
+	// 2. 注册存储服务路由
 	if storageErr == nil && storageServiceImpl != nil && multipartErr == nil && multipartService != nil && imageErr == nil && imageProcessor != nil {
 		sharedRouter.RegisterStorageRoutes(sharedGroup, storageServiceImpl, multipartService, imageProcessor)
 		logger.Info("✓ 存储服务路由已注册: /api/v1/shared/storage/*")
@@ -370,29 +358,6 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
 	}
 
-	// ============ 注册书单路由 ============
-	repositoryFactory := serviceContainer.GetRepositoryFactory()
-	if repositoryFactory != nil {
-		// 创建书单 Repository 和 Service
-		bookListRepo := repositoryFactory.CreateBookListRepository()
-
-		// 获取事件总线
-		eventBus := serviceContainer.GetEventBus()
-
-		// 创建书单服务
-		bookListService := socialService.NewBookListService(bookListRepo, eventBus)
-
-		// 创建书单 API
-		booklistAPI := booklistApi.NewBookListAPI(bookListService)
-
-		// 注册书单路由
-		booklistRouter.RegisterBooklistRoutes(v1, booklistAPI)
-
-		logger.Info("✓ 书单路由已注册到: /api/v1/booklists/")
-	} else {
-		logger.Warn("RepositoryFactory 不可用，书单路由未注册")
-	}
-
 	// ============ 注册Announcements路由 ============
 	announcementSvc, announcementErr := serviceContainer.GetAnnouncementService()
 	if announcementErr != nil {
@@ -552,7 +517,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 获取统计服务（用于用户统计功能）
 	var statsSvc statsService.PlatformStatsService
-	repositoryFactory = serviceContainer.GetRepositoryFactory()
+	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
 		userRepo := repositoryFactory.CreateUserRepository()

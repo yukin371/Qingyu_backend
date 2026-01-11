@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/shared/wallet"
+	"Qingyu_backend/service/finance/wallet"
 )
 
 // WalletAPI 钱包服务API处理器
@@ -22,11 +22,11 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 	}
 }
 
-// GetBalance 查询余额
+// GetBalance 查询用户钱包余额
 //
-//	@Summary		查询余额
-//	@Description	查询用户钱包余额
-//	@Tags			财务-钱包
+//	@Summary		查询钱包余额
+//	@Description	查询当前登录用户的钱包余额
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
@@ -37,7 +37,7 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 func (api *WalletAPI) GetBalance(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -50,9 +50,9 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
-		Message: "查询余额成功",
+		Message: "查询成功",
 		Data:    balance,
 	})
 }
@@ -60,8 +60,8 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 // GetWallet 获取钱包信息
 //
 //	@Summary		获取钱包信息
-//	@Description	获取用户完整钱包信息
-//	@Tags			财务-钱包
+//	@Description	获取当前登录用户的钱包完整信息
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
@@ -72,7 +72,7 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 func (api *WalletAPI) GetWallet(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -85,7 +85,7 @@ func (api *WalletAPI) GetWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
 		Message: "获取钱包信息成功",
 		Data:    walletInfo,
@@ -102,7 +102,7 @@ type RechargeRequest struct {
 //
 //	@Summary		钱包充值
 //	@Description	用户钱包充值
-//	@Tags			财务-钱包
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
@@ -115,7 +115,7 @@ type RechargeRequest struct {
 func (api *WalletAPI) Recharge(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -133,7 +133,7 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
 		Message: "充值成功",
 		Data:    transaction,
@@ -149,8 +149,8 @@ type ConsumeRequest struct {
 // Consume 消费
 //
 //	@Summary		钱包消费
-//	@Description	用户钱包消费
-//	@Tags			财务-钱包
+//	@Description	使用钱包余额消费
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
@@ -158,12 +158,12 @@ type ConsumeRequest struct {
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500		{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/consume [post]
 func (api *WalletAPI) Consume(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -181,7 +181,7 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
 		Message: "消费成功",
 		Data:    transaction,
@@ -199,7 +199,7 @@ type TransferRequest struct {
 //
 //	@Summary		用户转账
 //	@Description	向其他用户转账
-//	@Tags			财务-钱包
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
@@ -207,12 +207,12 @@ type TransferRequest struct {
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500		{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/transfer [post]
 func (api *WalletAPI) Transfer(c *gin.Context) {
 	fromUserID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -230,32 +230,32 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
 		Message: "转账成功",
 		Data:    transaction,
 	})
 }
 
-// GetTransactions 查询交易记录
+// GetTransactions 获取交易记录
 //
-//	@Summary		查询交易记录
-//	@Description	查询用户交易记录列表
-//	@Tags			财务-钱包
+//	@Summary		获取交易记录
+//	@Description	查询用户的交易记录列表
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			page		query		int		false	"页码"	default(1)
+//	@Param			page		query		int		false	"页码"		default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			type		query		string	false	"交易类型"
-//	@Success 200 {object} APIResponse
+//	@Success 200			{object}	APIResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/transactions [get]
 func (api *WalletAPI) GetTransactions(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -267,6 +267,7 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 	transactionType := c.Query("type")
 
+	// 构建请求
 	req := &wallet.ListTransactionsRequest{
 		TransactionType: transactionType,
 		Page:            page,
@@ -275,64 +276,64 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 
 	transactions, err := api.walletService.ListTransactions(c.Request.Context(), userID.(string), req)
 	if err != nil {
-		shared.InternalError(c, "查询交易记录失败", err)
+		shared.InternalError(c, "获取交易记录失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.PaginatedResponseHelper(
-		transactions,
-		int64(len(transactions)),
-		page,
-		pageSize,
-		"查询交易记录成功",
-	))
+	c.JSON(http.StatusOK, shared.APIResponse{
+		Code:    200,
+		Message: "获取成功",
+		Data:    transactions,
+	})
 }
 
-// WalletWithdrawRequest 钱包提现请求
-type WalletWithdrawRequest struct {
-	Amount  float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
-	Account string  `json:"account" binding:"required" validate:"withdraw_account"`
+// WithdrawAPIRequest 提现请求
+type WithdrawAPIRequest struct {
+	Amount   float64 `json:"amount" binding:"required" validate:"positive_amount,amount_range"`
+	Method   string  `json:"method" binding:"required,oneof=alipay wechat bank"`
+	Account  string  `json:"account" binding:"required"`
+	Password string  `json:"password" binding:"required"`
 }
 
 // RequestWithdraw 申请提现
 //
 //	@Summary		申请提现
 //	@Description	用户申请提现
-//	@Tags			财务-钱包
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			request	body		WalletWithdrawRequest	true	"提现信息"
+//	@Param			request	body		WithdrawRequest	true	"提现信息"
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500		{object}	APIResponse
+//	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/withdraw [post]
 func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
 		return
 	}
 
-	var req WalletWithdrawRequest
+	var req WithdrawAPIRequest
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
-	withdrawReq, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), req.Amount, req.Account)
+	withdrawal, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), req.Amount, req.Account)
 	if err != nil {
 		shared.InternalError(c, "申请提现失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    200,
-		Message: "申请提现成功",
-		Data:    withdrawReq,
+		Message: "提现申请已提交，等待审核",
+		Data:    withdrawal,
 	})
 }
 
@@ -340,21 +341,21 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 //
 //	@Summary		查询提现申请
 //	@Description	查询用户提现申请列表
-//	@Tags			财务-钱包
+//	@Tags			钱包
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
-//	@Param			page_size	query		int		false	"每页数量"	default(20)
+//	@Param			page_size	query		int		false	"每页数量"default(20)
 //	@Param			status		query		string	false	"状态"
-//	@Success 200 {object} APIResponse
+//	@Success 200			{object}	APIResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/withdrawals [get]
 func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
+		c.JSON(http.StatusUnauthorized, shared.APIResponse{
 			Code:    401,
 			Message: "未认证",
 		})
@@ -366,6 +367,7 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 	status := c.Query("status")
 
+	// 构建请求
 	req := &wallet.ListWithdrawRequestsRequest{
 		UserID:   userID.(string),
 		Status:   status,
@@ -375,7 +377,7 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 
 	requests, err := api.walletService.ListWithdrawRequests(c.Request.Context(), req)
 	if err != nil {
-		shared.InternalError(c, "查询提现申请失败", err)
+		shared.InternalError(c, "获取提现申请失败", err)
 		return
 	}
 

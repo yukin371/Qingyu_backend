@@ -3,7 +3,7 @@ package readingstats
 import (
 	"github.com/gin-gonic/gin"
 
-	readingstatsAPI "Qingyu_backend/api/v1/reading-stats"
+	statsAPI "Qingyu_backend/api/v1/stats"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/middleware"
 )
@@ -18,10 +18,10 @@ func RegisterReadingStatsRoutes(
 	}
 
 	// 创建API处理器
-	readingStatsAPI := readingstatsAPI.NewReadingStatsAPI(statsService)
+	readingStatsAPI := statsAPI.NewReadingStatsAPI(statsService)
 
 	// 应用中间件
-	statsGroup := r.Group("/reading-stats")
+	statsGroup := r.Group("/stats")
 	statsGroup.Use(middleware.ResponseFormatterMiddleware())
 	statsGroup.Use(middleware.ResponseTimingMiddleware())
 	statsGroup.Use(middleware.CORSMiddleware())
