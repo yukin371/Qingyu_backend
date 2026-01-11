@@ -9,16 +9,17 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
+	readerservice "Qingyu_backend/service/reader"
 )
 
 // BookmarkAPI 书签API
 type BookmarkAPI struct {
-	bookmarkService reader.BookmarkService
+	bookmarkService interfaces.BookmarkService
 }
 
 // NewBookmarkAPI 创建书签API实例
-func NewBookmarkAPI(bookmarkService reader.BookmarkService) *BookmarkAPI {
+func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 	return &BookmarkAPI{
 		bookmarkService: bookmarkService,
 	}
@@ -61,7 +62,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 
 	// 创建书签
 	if err := api.bookmarkService.CreateBookmark(c.Request.Context(), bookmark); err != nil {
-		if err == reader.ErrBookmarkAlreadyExists {
+		if err == readerservice.ErrBookmarkAlreadyExists {
 			shared.Error(c, http.StatusConflict, "书签已存在", err.Error())
 			return
 		}
@@ -154,7 +155,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 
 	bookmark, err := api.bookmarkService.GetBookmark(c.Request.Context(), bookmarkID)
 	if err != nil {
-		if err == reader.ErrBookmarkNotFound {
+		if err == readerservice.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
@@ -197,7 +198,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	}
 
 	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), bookmarkID, bookmark); err != nil {
-		if err == reader.ErrBookmarkNotFound {
+		if err == readerservice.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
@@ -224,7 +225,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
 
 	if err := api.bookmarkService.DeleteBookmark(c.Request.Context(), bookmarkID); err != nil {
-		if err == reader.ErrBookmarkNotFound {
+		if err == readerservice.ErrBookmarkNotFound {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}

@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // FollowAPI 关注API处理器
 type FollowAPI struct {
-	followService *social.FollowService
+	followService interfaces.FollowService
 }
 
 // NewFollowAPI 创建关注API实例
-func NewFollowAPI(followService *social.FollowService) *FollowAPI {
+func NewFollowAPI(followService interfaces.FollowService) *FollowAPI {
 	return &FollowAPI{
 		followService: followService,
 	}

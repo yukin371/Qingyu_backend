@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
 )
 
 // SettingAPI 设置API
 type SettingAPI struct {
-	readerService *reader.ReaderService
+	readerService interfaces.ReaderService
 }
 
 // NewSettingAPI 创建设置API实例
-func NewSettingAPI(readerService *reader.ReaderService) *SettingAPI {
+func NewSettingAPI(readerService interfaces.ReaderService) *SettingAPI {
 	return &SettingAPI{
 		readerService: readerService,
 	}

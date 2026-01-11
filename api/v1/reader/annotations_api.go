@@ -8,16 +8,16 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
 )
 
 // AnnotationsAPI 标注API
 type AnnotationsAPI struct {
-	readerService *reader.ReaderService
+	readerService interfaces.ReaderService
 }
 
 // NewAnnotationsAPI 创建标注API实例
-func NewAnnotationsAPI(readerService *reader.ReaderService) *AnnotationsAPI {
+func NewAnnotationsAPI(readerService interfaces.ReaderService) *AnnotationsAPI {
 	return &AnnotationsAPI{
 		readerService: readerService,
 	}

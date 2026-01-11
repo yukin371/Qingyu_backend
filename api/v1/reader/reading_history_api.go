@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
 )
 
 // ReadingHistoryAPI 阅读历史API处理器
 type ReadingHistoryAPI struct {
-	historyService *reader.ReadingHistoryService
+	historyService interfaces.ReadingHistoryService
 }
 
 // NewReadingHistoryAPI 创建API处理器
-func NewReadingHistoryAPI(historyService *reader.ReadingHistoryService) *ReadingHistoryAPI {
+func NewReadingHistoryAPI(historyService interfaces.ReadingHistoryService) *ReadingHistoryAPI {
 	return &ReadingHistoryAPI{
 		historyService: historyService,
 	}
@@ -90,7 +90,7 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	bookID := c.Query("book_id")
 
 	var histories interface{}
-	var pagination *reader.PaginationInfo
+	var pagination interface{}
 	var err error
 
 	// 根据是否有book_id参数决定调用哪个方法
@@ -257,8 +257,8 @@ type RecordReadingResponse struct {
 
 // HistoryListResponse 历史列表响应
 type HistoryListResponse struct {
-	Histories  interface{}             `json:"histories"`
-	Pagination *reader.PaginationInfo `json:"pagination"`
+	Histories  interface{} `json:"histories"`
+	Pagination interface{} `json:"pagination"`
 }
 
 // ReadingStatsResponse 阅读统计响应

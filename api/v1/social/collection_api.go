@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // CollectionAPI 收藏API处理器
 type CollectionAPI struct {
-	collectionService *social.CollectionService
+	collectionService interfaces.CollectionService
 }
 
 // NewCollectionAPI 创建收藏API实例
-func NewCollectionAPI(collectionService *social.CollectionService) *CollectionAPI {
+func NewCollectionAPI(collectionService interfaces.CollectionService) *CollectionAPI {
 	return &CollectionAPI{
 		collectionService: collectionService,
 	}

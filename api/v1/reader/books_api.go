@@ -5,18 +5,18 @@ import (
 	"net/http"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/reader"
+	"Qingyu_backend/service/interfaces"
 
 	"github.com/gin-gonic/gin"
 )
 
 // BooksAPI 书架API
 type BooksAPI struct {
-	readerService *reader.ReaderService
+	readerService interfaces.ReaderService
 }
 
 // NewBooksAPI 创建书架API实例
-func NewBooksAPI(readerService *reader.ReaderService) *BooksAPI {
+func NewBooksAPI(readerService interfaces.ReaderService) *BooksAPI {
 	return &BooksAPI{
 		readerService: readerService,
 	}

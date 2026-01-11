@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/social"
+	"Qingyu_backend/service/interfaces"
 )
 
 // LikeAPI 点赞API处理器
 type LikeAPI struct {
-	likeService *social.LikeService
+	likeService interfaces.LikeService
 }
 
 // NewLikeAPI 创建点赞API实例
-func NewLikeAPI(likeService *social.LikeService) *LikeAPI {
+func NewLikeAPI(likeService interfaces.LikeService) *LikeAPI {
 	return &LikeAPI{
 		likeService: likeService,
 	}

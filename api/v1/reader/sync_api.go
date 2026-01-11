@@ -8,17 +8,18 @@ import (
 	gorilla_websocket "github.com/gorilla/websocket"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/pkg/sync"
+	progressSync "Qingyu_backend/pkg/sync"
+	"Qingyu_backend/service/interfaces"
 	ws "Qingyu_backend/pkg/websocket"
 )
 
 // SyncAPI 阅读进度同步API
 type SyncAPI struct {
-	syncService *sync.ProgressSyncService
+	syncService interfaces.ProgressSyncService
 }
 
 // NewSyncAPI 创建同步API实例
-func NewSyncAPI(syncService *sync.ProgressSyncService) *SyncAPI {
+func NewSyncAPI(syncService interfaces.ProgressSyncService) *SyncAPI {
 	return &SyncAPI{
 		syncService: syncService,
 	}
@@ -152,7 +153,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	userIDStr := userID.(string)
 
 	// 转换进度
-	progresses := make([]sync.OfflineProgress, len(req.Progresses))
+	progresses := make([]progressSync.OfflineProgress, len(req.Progresses))
 	for i, p := range req.Progresses {
 		// 解析时间戳
 		timestamp, err := time.Parse(time.RFC3339, p.Timestamp)
@@ -161,7 +162,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 			return
 		}
 
-		progresses[i] = sync.OfflineProgress{
+		progresses[i] = progressSync.OfflineProgress{
 			UserID:    userIDStr,
 			BookID:    p.BookID,
 			ChapterID: p.ChapterID,
