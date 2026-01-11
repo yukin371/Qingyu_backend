@@ -109,10 +109,11 @@ func TestCompleteReadingFlow(t *testing.T) {
 		// 获取第一章
 		chapter := testChapters[0]
 
-		// 验证章节内容
-		assert.NotEmpty(t, chapter.Content, "章节内容不应为空")
+		// 验证章节信息（Content 字段已移至 ChapterContent）
+		assert.NotEmpty(t, chapter.Title, "章节标题不应为空")
 		assert.Equal(t, "第一章", chapter.Title, "章节标题应该匹配")
 		assert.True(t, chapter.IsFree, "第一章应该是免费章节")
+		assert.Greater(t, chapter.WordCount, 0, "章节字数应该大于0")
 
 		// 记录阅读进度（模拟）
 		progress := bson.M{
