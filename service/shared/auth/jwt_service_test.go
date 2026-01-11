@@ -91,8 +91,10 @@ func TestJWTService_GenerateToken_TableDriven(t *testing.T) {
 			// Arrange
 			cache := NewMockRedisClient()
 			cfg := &config.JWTConfigEnhanced{
-				Secret:      "test-secret-key-12345678",
-				Expiration:  1 * time.Hour,
+				SecretKey:       "test-secret-key-12345678",
+				Issuer:          "qingyu-test",
+				Expiration:      1 * time.Hour,
+				RefreshDuration: 24 * time.Hour,
 			}
 			service := NewJWTService(cfg, cache)
 			ctx := context.Background()
@@ -290,8 +292,10 @@ func TestJWTService_RefreshToken_TableDriven(t *testing.T) {
 			// Arrange
 			cache := NewMockRedisClient()
 			cfg := &config.JWTConfigEnhanced{
-				Secret:      "test-secret-key-12345678",
-				Expiration:  1 * time.Hour,
+				SecretKey:       "test-secret-key-12345678",
+				Issuer:          "qingyu-test",
+				Expiration:      1 * time.Hour,
+				RefreshDuration: 24 * time.Hour,
 			}
 			service := NewJWTService(cfg, cache)
 			ctx := context.Background()
