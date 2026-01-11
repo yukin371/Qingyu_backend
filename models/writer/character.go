@@ -6,10 +6,10 @@ import (
 
 // Character 角色卡片
 type Character struct {
-	base.IdentifiedEntity    // ID
-	base.Timestamps          // 时间戳
-	base.ProjectScopedEntity // ProjectID
-	base.NamedEntity         // Name
+	base.IdentifiedEntity    `bson:",inline"` // ID
+	base.Timestamps          `bson:",inline"` // 时间戳
+	base.ProjectScopedEntity `bson:",inline"` // ProjectID
+	base.NamedEntity         `bson:",inline"` // Name
 
 	// 基本信息（保持BSON字段名不变，确保数据库兼容）
 	Alias         []string `bson:"alias,omitempty" json:"alias,omitempty" validate:"max=10"`
@@ -60,9 +60,9 @@ const (
 // CharacterRelation 角色关系（边表）
 // 允许有方向，也可约定对称关系由 Service 保持双向两条边
 type CharacterRelation struct {
-	base.IdentifiedEntity
-	base.Timestamps
-	base.ProjectScopedEntity
+	base.IdentifiedEntity    `bson:",inline"`
+	base.Timestamps          `bson:",inline"`
+	base.ProjectScopedEntity `bson:",inline"`
 
 	FromID   string       `bson:"from_id" json:"fromId" validate:"required"`
 	ToID     string       `bson:"to_id" json:"toId" validate:"required"`

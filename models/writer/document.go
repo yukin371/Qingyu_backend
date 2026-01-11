@@ -8,10 +8,10 @@ import (
 // Document 文档模型（用于文档内容）
 // 文档类型现在是动态的，由项目的writing_type决定
 type Document struct {
-	base.IdentifiedEntity    // ID
-	base.Timestamps          // CreatedAt, UpdatedAt, DeletedAt
-	base.ProjectScopedEntity // ProjectID
-	base.TitledEntity        // Title
+	base.IdentifiedEntity    `bson:",inline"` // ID
+	base.Timestamps          `bson:",inline"` // CreatedAt, UpdatedAt, DeletedAt
+	base.ProjectScopedEntity `bson:",inline"` // ProjectID
+	base.TitledEntity        `bson:",inline"` // Title
 
 	// 层级结构（保持BSON字段名不变，确保数据库兼容）
 	ParentID string `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空表示根文档

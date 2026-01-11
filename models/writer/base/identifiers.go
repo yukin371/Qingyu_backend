@@ -4,23 +4,23 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // IdentifiedEntity ID实体混入
 type IdentifiedEntity struct {
-	ID string `bson:"_id,omitempty" json:"id"`
+	ID primitive.ObjectID `bson:"_id" json:"id"`
 }
 
 // GenerateID 生成新ID
 func (i *IdentifiedEntity) GenerateID() {
-	if i.ID == "" {
-		i.ID = primitive.NewObjectID().Hex()
+	if i.ID.IsZero() {
+		i.ID = primitive.NewObjectID()
 	}
 }
 
 // GetID 获取ID
-func (i *IdentifiedEntity) GetID() string {
+func (i *IdentifiedEntity) GetID() primitive.ObjectID {
 	return i.ID
 }
 
 // SetID 设置ID
-func (i *IdentifiedEntity) SetID(id string) {
+func (i *IdentifiedEntity) SetID(id primitive.ObjectID) {
 	i.ID = id
 }
 

@@ -5,7 +5,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/models/common"
+	"Qingyu_backend/models/shared"
 )
 
 // Conversation 会话
@@ -14,7 +14,7 @@ type Conversation struct {
 	Participants []string           `bson:"participants" json:"participants"` // 参与者ID列表
 	LastMessage  *Message           `bson:"last_message,omitempty" json:"last_message"`
 	UnreadCount  map[string]int     `bson:"unread_count" json:"unread_count"` // 每个参与者的未读数
-	common.BaseEntity                                                        // 嵌入时间戳字段
+	shared.BaseEntity                                                        // 嵌入时间戳字段
 }
 
 // Message 消息
@@ -25,10 +25,10 @@ type Message struct {
 	ReceiverID     string             `bson:"receiver_id" json:"receiver_id"`
 	Content        string             `bson:"content" json:"content"`
 	MessageType    string             `bson:"message_type" json:"message_type"` // text, image, system
-	common.ReadStatus                                                        // 嵌入已读状态
+	shared.ReadStatus                                                        // 嵌入已读状态
 	IsDeleted      bool               `bson:"is_deleted" json:"is_deleted"`
 	DeletedAt      *time.Time         `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
-	common.BaseEntity                                                        // 嵌入时间戳字段
+	shared.BaseEntity                                                        // 嵌入时间戳字段
 }
 
 // Mention @提醒
@@ -39,8 +39,8 @@ type Mention struct {
 	ContentType string             `bson:"content_type" json:"content_type"` // 提及类型: comment, review, message
 	ContentID   string             `bson:"content_id" json:"content_id"`     // 关联内容ID
 	Content     string             `bson:"content" json:"content"`           // 提及内容摘要
-	common.ReadStatus                                                        // 嵌入已读状态
-	common.BaseEntity                                                        // 嵌入时间戳字段
+	shared.ReadStatus                                                        // 嵌入已读状态
+	shared.BaseEntity                                                        // 嵌入时间戳字段
 }
 
 // ConversationInfo 会话信息

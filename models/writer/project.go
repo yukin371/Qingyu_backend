@@ -9,10 +9,10 @@ import (
 
 // Project 项目模型
 type Project struct {
-	base.IdentifiedEntity // ID
-	base.OwnedEntity      // AuthorID
-	base.TitledEntity     // Title
-	base.Timestamps       // CreatedAt, UpdatedAt, DeletedAt
+	base.IdentifiedEntity `bson:",inline"` // ID
+	base.OwnedEntity      `bson:",inline"` // AuthorID
+	base.TitledEntity     `bson:",inline"` // Title
+	base.Timestamps       `bson:",inline"` // CreatedAt, UpdatedAt, DeletedAt
 
 	// 写作类型（保持BSON字段名不变，确保数据库兼容）
 	WritingType string `bson:"writing_type" json:"writingType" validate:"required"` // novel, article, script

@@ -1,4 +1,4 @@
-package common
+package shared
 
 import "time"
 
@@ -7,6 +7,7 @@ import "time"
 type BaseEntity struct {
 	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updated_at"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
 }
 
 // Touch 更新 UpdatedAt 时间戳
@@ -23,6 +24,33 @@ func (b *BaseEntity) TouchForCreate() {
 	if b.UpdatedAt.IsZero() {
 		b.UpdatedAt = now
 	}
+}
+
+// SoftDelete 软删除
+func (b *BaseEntity) SoftDelete() {
+	now := time.Now()
+	b.DeletedAt = &now
+	b.Touch()
+}
+
+// IsDeleted 判断是否已删除
+func (b *BaseEntity) IsDeleted() bool {
+	return b.DeletedAt != nil
+}
+
+// IdentifiedEntity 包含ID字段的基础实体
+type IdentifiedEntity struct {
+	ID string `bson:"_id,omitempty" json:"id"`
+}
+
+// GetID 获取ID
+func (i *IdentifiedEntity) GetID() string {
+	return i.ID
+}
+
+// SetID 设置ID
+func (i *IdentifiedEntity) SetID(id string) {
+	i.ID = id
 }
 
 // ReadStatus 已读状态混入

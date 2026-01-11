@@ -6,10 +6,10 @@ import (
 
 // Location 地点/场景
 type Location struct {
-	base.IdentifiedEntity    // ID
-	base.Timestamps          // 时间戳
-	base.ProjectScopedEntity // ProjectID
-	base.NamedEntity         // Name
+	base.IdentifiedEntity    `bson:",inline"` // ID
+	base.Timestamps          `bson:",inline"` // 时间戳
+	base.ProjectScopedEntity `bson:",inline"` // ProjectID
+	base.NamedEntity         `bson:",inline"` // Name
 
 	// 详细信息（保持BSON字段名不变，确保数据库兼容）
 	Description string `bson:"description,omitempty" json:"description,omitempty" validate:"max=1000"`
@@ -43,9 +43,9 @@ func (l *Location) Validate() error {
 
 // LocationRelation 地点关系（如：相邻、包含等）
 type LocationRelation struct {
-	base.IdentifiedEntity
-	base.Timestamps
-	base.ProjectScopedEntity
+	base.IdentifiedEntity    `bson:",inline"`
+	base.Timestamps          `bson:",inline"`
+	base.ProjectScopedEntity `bson:",inline"`
 
 	FromID   string                 `bson:"from_id" json:"fromId" validate:"required"`
 	ToID     string                 `bson:"to_id" json:"toId" validate:"required"`
