@@ -5,14 +5,16 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ============ 测试辅助函数 ============
 
 // createTestDocument 创建测试文档
-func createTestDocument(id, projectID, title string) *writer.Document {
+func createTestDocument(projectID, title string) *writer.Document {
 	return &writer.Document{
-		IdentifiedEntity:     base.IdentifiedEntity{ID: id},
+		IdentifiedEntity:     base.IdentifiedEntity{ID: primitive.NewObjectID()},
 		ProjectScopedEntity:  base.ProjectScopedEntity{ProjectID: projectID},
 		TitledEntity:         base.TitledEntity{Title: title},
 		Timestamps:           base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
@@ -26,9 +28,9 @@ func createTestDocument(id, projectID, title string) *writer.Document {
 }
 
 // createTestProject 创建测试项目
-func createTestProject(id, authorID, title string) *writer.Project {
+func createTestProject(authorID, title string) *writer.Project {
 	return &writer.Project{
-		IdentifiedEntity: base.IdentifiedEntity{ID: id},
+		IdentifiedEntity: base.IdentifiedEntity{ID: primitive.NewObjectID()},
 		OwnedEntity:      base.OwnedEntity{AuthorID: authorID},
 		TitledEntity:     base.TitledEntity{Title: title},
 		Timestamps:       base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},

@@ -1,20 +1,20 @@
 package reader
 
 import (
-	"Qingyu_backend/models/community"
+	"Qingyu_backend/models/social"
 	"context"
 )
 
 // LikeRepository 点赞仓储接口
 type LikeRepository interface {
 	// 基础操作
-	AddLike(ctx context.Context, like *community.Like) error
+	AddLike(ctx context.Context, like *social.Like) error
 	RemoveLike(ctx context.Context, userID, targetType, targetID string) error
 	IsLiked(ctx context.Context, userID, targetType, targetID string) (bool, error)
-	GetByID(ctx context.Context, id string) (*community.Like, error)
+	GetByID(ctx context.Context, id string) (*social.Like, error)
 
 	// 查询操作
-	GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*community.Like, int64, error)
+	GetUserLikes(ctx context.Context, userID, targetType string, page, size int) ([]*social.Like, int64, error)
 	GetLikeCount(ctx context.Context, targetType, targetID string) (int64, error)
 
 	// 批量操作

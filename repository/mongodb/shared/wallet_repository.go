@@ -1,7 +1,7 @@
 package shared
 
 import (
-	walletModel "Qingyu_backend/models/wallet"
+	financeModel "Qingyu_backend/models/finance"
 	"context"
 	"fmt"
 	"time"
@@ -35,7 +35,7 @@ func NewWalletRepository(db *mongo.Database) sharedInterfaces.WalletRepository {
 // ============ 钱包管理 ============
 
 // CreateWallet 创建钱包
-func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *walletModel.Wallet) error {
+func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error {
 	now := time.Now()
 	wallet.CreatedAt = now
 	wallet.UpdatedAt = now
@@ -54,8 +54,8 @@ func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *walletM
 
 // GetWallet 获取钱包（根据用户ID）
 // 注意：这是接口定义的方法，使用userID作为参数
-func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*walletModel.Wallet, error) {
-	var wallet walletModel.Wallet
+func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error) {
+	var wallet financeModel.Wallet
 	err := r.walletCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&wallet)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -69,13 +69,13 @@ func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*w
 
 // GetWalletByID 根据钱包ID获取钱包（内部使用）
 // 这是一个额外的辅助方法，用于通过钱包ObjectID查询
-func (r *WalletRepositoryImpl) GetWalletByID(ctx context.Context, walletID string) (*walletModel.Wallet, error) {
+func (r *WalletRepositoryImpl) GetWalletByID(ctx context.Context, walletID string) (*financeModel.Wallet, error) {
 	objectID, err := primitive.ObjectIDFromHex(walletID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的钱包ID: %w", err)
 	}
 
-	var wallet walletModel.Wallet
+	var wallet financeModel.Wallet
 	err = r.walletCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&wallet)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -142,7 +142,7 @@ func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, walletID strin
 // ============ 交易管理 ============
 
 // CreateTransaction 创建交易记录
-func (r *WalletRepositoryImpl) CreateTransaction(ctx context.Context, transaction *walletModel.Transaction) error {
+func (r *WalletRepositoryImpl) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
 	now := time.Now()
 	transaction.CreatedAt = now
 
@@ -159,13 +159,13 @@ func (r *WalletRepositoryImpl) CreateTransaction(ctx context.Context, transactio
 }
 
 // GetTransaction 获取交易记录
-func (r *WalletRepositoryImpl) GetTransaction(ctx context.Context, transactionID string) (*walletModel.Transaction, error) {
+func (r *WalletRepositoryImpl) GetTransaction(ctx context.Context, transactionID string) (*financeModel.Transaction, error) {
 	objectID, err := primitive.ObjectIDFromHex(transactionID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的交易ID: %w", err)
 	}
 
-	var transaction walletModel.Transaction
+	var transaction financeModel.Transaction
 	err = r.transactionCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&transaction)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -178,7 +178,7 @@ func (r *WalletRepositoryImpl) GetTransaction(ctx context.Context, transactionID
 }
 
 // ListTransactions 列出交易记录
-func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) ([]*walletModel.Transaction, error) {
+func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) ([]*financeModel.Transaction, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {
@@ -215,7 +215,7 @@ func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sha
 	}
 	defer cursor.Close(ctx)
 
-	var transactions []*walletModel.Transaction
+	var transactions []*financeModel.Transaction
 	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, fmt.Errorf("解析交易列表失败: %w", err)
 	}
@@ -258,7 +258,7 @@ func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *sh
 // ============ 提现管理 ============
 
 // CreateWithdrawRequest 创建提现请求
-func (r *WalletRepositoryImpl) CreateWithdrawRequest(ctx context.Context, request *walletModel.WithdrawRequest) error {
+func (r *WalletRepositoryImpl) CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error {
 	now := time.Now()
 	request.CreatedAt = now
 	request.UpdatedAt = now
@@ -276,13 +276,13 @@ func (r *WalletRepositoryImpl) CreateWithdrawRequest(ctx context.Context, reques
 }
 
 // GetWithdrawRequest 获取提现请求
-func (r *WalletRepositoryImpl) GetWithdrawRequest(ctx context.Context, requestID string) (*walletModel.WithdrawRequest, error) {
+func (r *WalletRepositoryImpl) GetWithdrawRequest(ctx context.Context, requestID string) (*financeModel.WithdrawRequest, error) {
 	objectID, err := primitive.ObjectIDFromHex(requestID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的请求ID: %w", err)
 	}
 
-	var request walletModel.WithdrawRequest
+	var request financeModel.WithdrawRequest
 	err = r.withdrawRequestCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&request)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -320,7 +320,7 @@ func (r *WalletRepositoryImpl) UpdateWithdrawRequest(ctx context.Context, reques
 }
 
 // ListWithdrawRequests 列出提现请求
-func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter *sharedInterfaces.WithdrawFilter) ([]*walletModel.WithdrawRequest, error) {
+func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter *sharedInterfaces.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {
@@ -354,7 +354,7 @@ func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter 
 	}
 	defer cursor.Close(ctx)
 
-	var requests []*walletModel.WithdrawRequest
+	var requests []*financeModel.WithdrawRequest
 	if err = cursor.All(ctx, &requests); err != nil {
 		return nil, fmt.Errorf("解析提现列表失败: %w", err)
 	}

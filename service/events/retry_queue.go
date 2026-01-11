@@ -15,7 +15,7 @@ import (
 // RetryQueue 重试队列接口
 type RetryQueue interface {
 	// Add 添加失败事件到重试队列
-	Add(ctx context.Context, event Event, handlerName string, err error, attempt int) error
+	Add(ctx context.Context, event base.Event, handlerName string, err error, attempt int) error
 
 	// Get 获取需要重试的事件
 	Get(ctx context.Context, limit int64) ([]*RetryItem, error)

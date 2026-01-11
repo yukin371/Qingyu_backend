@@ -107,7 +107,7 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	}
 
 	// 查询DocumentContent获取版本号和内容
-	docContent, err := s.getDocumentContent(ctx, f.ID)
+	docContent, err := s.getDocumentContent(ctx, f.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("获取文档内容失败: %w", err)
 	}
@@ -207,7 +207,7 @@ func (s *VersionService) RollbackToVersion(projectID, nodeID string, targetVersi
 	}
 
 	// 获取当前DocumentContent版本
-	docContent, err := s.getDocumentContent(ctx, f.ID)
+	docContent, err := s.getDocumentContent(ctx, f.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("获取文档内容失败: %w", err)
 	}
@@ -274,7 +274,7 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*writ
 	}
 
 	// 获取当前DocumentContent版本
-	docContent, err := s.getDocumentContent(ctx, f.ID)
+	docContent, err := s.getDocumentContent(ctx, f.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("获取文档内容失败: %w", err)
 	}

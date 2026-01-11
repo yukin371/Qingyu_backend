@@ -32,7 +32,7 @@ func (s *DocumentService) Create(doc *model.Document) (*model.Document, error) {
 	if doc == nil {
 		return nil, errors.New("文档不能为空")
 	}
-	doc.ID = primitive.NewObjectID().Hex()
+	doc.ID = primitive.NewObjectID()
 	doc.TouchForCreate()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

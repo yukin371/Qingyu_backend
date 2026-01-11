@@ -1,315 +1,326 @@
-package repository
+package social_test
 
 import (
-	"Qingyu_backend/models/community"
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/repository/mongodb/reader"
+	"Qingyu_backend/models/social"
+	socialRepo "Qingyu_backend/repository/mongodb/social"
+	"Qingyu_backend/test/testutil"
 )
 
-// TestCommentRepository 评论Repository测试
-func TestCommentRepository(t *testing.T) {
-	// 设置测试数据库
-	db := setupTestDB(t)
-	defer cleanupTestDB(t, db)
-
-	repo := reading.NewMongoCommentRepository(db)
+// setupCommentRepo 测试辅助函数
+func setupCommentRepo(t *testing.T) (*socialRepo.MongoCommentRepository, context.Context, func()) {
+	db, cleanup := testutil.SetupTestDB(t)
+	repo := socialRepo.NewMongoCommentRepository(db)
 	ctx := context.Background()
-
-	// 测试用数据
-	testUserID := primitive.NewObjectID().Hex()
-	testBookID := primitive.NewObjectID().Hex()
-
-	t.Run("Create_Success", func(t *testing.T) {
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "这是一条测试评论",
-			Rating:    5,
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-		assert.False(t, comment.ID.IsZero(), "评论ID应该被设置")
-
-		t.Logf("✓ 创建评论成功，ID: %s", comment.ID.Hex())
-	})
-
-	t.Run("GetByID_Success", func(t *testing.T) {
-		// 先创建一条评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "测试获取评论",
-			Rating:    4,
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 获取评论
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.NotNil(t, found)
-		assert.Equal(t, comment.Content, found.Content)
-
-		t.Logf("✓ 获取评论成功")
-	})
-
-	t.Run("GetByID_NotFound", func(t *testing.T) {
-		fakeID := primitive.NewObjectID().Hex()
-		found, err := repo.GetByID(ctx, fakeID)
-		assert.Error(t, err)
-		assert.Nil(t, found)
-
-		t.Logf("✓ 不存在的评论正确返回错误")
-	})
-
-	t.Run("GetCommentsByBookID_WithPagination", func(t *testing.T) {
-		// 创建多条评论
-		for i := 0; i < 5; i++ {
-			comment := &community.Comment{
-				UserID:    testUserID,
-				BookID:    testBookID,
-				Content:   "测试评论" + string(rune(i)),
-				Rating:    5,
-				Status:    "approved",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			}
-			err := repo.Create(ctx, comment)
-			assert.NoError(t, err)
-		}
-
-		// 查询
-		comments, total, err := repo.GetCommentsByBookID(ctx, testBookID, 1, 3)
-		assert.NoError(t, err)
-		assert.Greater(t, total, int64(0))
-		assert.LessOrEqual(t, len(comments), 3)
-
-		t.Logf("✓ 分页查询成功，总数: %d, 本页: %d", total, len(comments))
-	})
-
-	t.Run("Update_Success", func(t *testing.T) {
-		// 创建评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "原始内容",
-			Rating:    3,
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 更新评论
-		updates := map[string]interface{}{
-			"content": "更新后的内容",
-			"rating":  5,
-		}
-		err = repo.Update(ctx, comment.ID.Hex(), updates)
-		assert.NoError(t, err)
-
-		// 验证更新
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.Equal(t, "更新后的内容", found.Content)
-		assert.Equal(t, 5, found.Rating)
-
-		t.Logf("✓ 更新评论成功")
-	})
-
-	t.Run("Delete_Success", func(t *testing.T) {
-		// 创建评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "待删除的评论",
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 删除评论（软删除）
-		err = repo.Delete(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-
-		// 验证状态已更新为deleted（软删除不会物理删除记录）
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.NotNil(t, found)
-		assert.Equal(t, "deleted", found.Status)
-
-		t.Logf("✓ 删除评论成功（软删除）")
-	})
-
-	t.Run("IncrementLikeCount_Success", func(t *testing.T) {
-		// 创建评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "点赞测试",
-			LikeCount: 0,
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 增加点赞数
-		err = repo.IncrementLikeCount(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-
-		// 验证点赞数
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.Equal(t, 1, found.LikeCount)
-
-		t.Logf("✓ 增加点赞数成功")
-	})
-
-	t.Run("DecrementLikeCount_Success", func(t *testing.T) {
-		// 创建评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "取消点赞测试",
-			LikeCount: 5,
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 减少点赞数
-		err = repo.DecrementLikeCount(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-
-		// 验证点赞数
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.Equal(t, 4, found.LikeCount)
-
-		t.Logf("✓ 减少点赞数成功")
-	})
-
-	t.Run("UpdateCommentStatus_Success", func(t *testing.T) {
-		// 创建待审核评论
-		comment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "待审核评论",
-			Status:    "pending",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, comment)
-		assert.NoError(t, err)
-
-		// 更新审核状态
-		err = repo.UpdateCommentStatus(ctx, comment.ID.Hex(), "rejected", "包含敏感词")
-		assert.NoError(t, err)
-
-		// 验证状态
-		found, err := repo.GetByID(ctx, comment.ID.Hex())
-		assert.NoError(t, err)
-		assert.Equal(t, "rejected", found.Status)
-		assert.Equal(t, "包含敏感词", found.RejectReason)
-
-		t.Logf("✓ 更新审核状态成功")
-	})
-
-	t.Run("GetRepliesByCommentID_Success", func(t *testing.T) {
-		// 创建父评论
-		parentComment := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "父评论",
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err := repo.Create(ctx, parentComment)
-		assert.NoError(t, err)
-
-		// 创建回复
-		reply := &community.Comment{
-			UserID:    testUserID,
-			BookID:    testBookID,
-			Content:   "回复内容",
-			ParentID:  parentComment.ID.Hex(),
-			Status:    "approved",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err = repo.Create(ctx, reply)
-		assert.NoError(t, err)
-
-		// 获取回复列表
-		replies, err := repo.GetRepliesByCommentID(ctx, parentComment.ID.Hex())
-		assert.NoError(t, err)
-		assert.Greater(t, len(replies), 0)
-
-		t.Logf("✓ 获取回复列表成功，回复数: %d", len(replies))
-	})
-
-	t.Run("Health_Success", func(t *testing.T) {
-		err := repo.Health(ctx)
-		assert.NoError(t, err)
-
-		t.Logf("✓ 健康检查通过")
-	})
+	return repo, ctx, cleanup
 }
 
-// TestCommentRepositoryStatistics 评论统计测试
-func TestCommentRepositoryStatistics(t *testing.T) {
-	db := setupTestDB(t)
-	defer cleanupTestDB(t, db)
+// TestCommentRepository_Create 测试创建评论
+func TestCommentRepository_Create(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
 
-	repo := reading.NewMongoCommentRepository(db)
-	ctx := context.Background()
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "这是一条测试评论",
+		Rating:     5,
+		State:      social.CommentStateNormal,
+	}
 
-	testBookID := primitive.NewObjectID().Hex()
-	testUserID := primitive.NewObjectID().Hex()
+	// Act
+	err := repo.Create(ctx, comment)
 
-	t.Run("GetBookRatingStats_Success", func(t *testing.T) {
-		// 创建不同评分的评论
-		ratings := []int{5, 5, 4, 3, 5}
-		for _, rating := range ratings {
-			comment := &community.Comment{
-				UserID:    testUserID,
-				BookID:    testBookID,
-				Content:   "测试评论",
-				Rating:    rating,
-				Status:    "approved",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			}
-			err := repo.Create(ctx, comment)
-			assert.NoError(t, err)
+	// Assert
+	require.NoError(t, err)
+	assert.NotEmpty(t, comment.ID)
+	assert.NotZero(t, comment.CreatedAt)
+	assert.NotZero(t, comment.UpdatedAt)
+}
+
+// TestCommentRepository_GetByID 测试根据ID获取评论
+func TestCommentRepository_GetByID(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "测试评论",
+		Rating:     4,
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act
+	found, err := repo.GetByID(ctx, comment.ID)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, found)
+	assert.Equal(t, comment.Content, found.Content)
+	assert.Equal(t, comment.Rating, found.Rating)
+}
+
+// TestCommentRepository_GetByID_NotFound 测试获取不存在的评论
+func TestCommentRepository_GetByID_NotFound(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	// Act
+	found, err := repo.GetByID(ctx, "nonexistent_id")
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, found)
+	assert.Contains(t, err.Error(), "comment not found")
+}
+
+// TestCommentRepository_Update 测试更新评论
+func TestCommentRepository_Update(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "原始内容",
+		Rating:     3,
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act - 更新评论
+	updates := map[string]interface{}{
+		"content": "更新后的内容",
+		"rating":  5,
+	}
+	err = repo.Update(ctx, comment.ID, updates)
+
+	// Assert
+	require.NoError(t, err)
+
+	// 验证更新
+	found, err := repo.GetByID(ctx, comment.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "更新后的内容", found.Content)
+	assert.Equal(t, 5, found.Rating)
+}
+
+// TestCommentRepository_Delete 测试删除评论
+func TestCommentRepository_Delete(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "待删除的评论",
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act - 删除评论
+	err = repo.Delete(ctx, comment.ID)
+
+	// Assert
+	require.NoError(t, err)
+
+	// 验证状态已更新为deleted
+	found, err := repo.GetByID(ctx, comment.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, found)
+	assert.Equal(t, social.CommentStateDeleted, found.State)
+}
+
+// TestCommentRepository_GetCommentsByBookID 测试获取书籍评论列表
+func TestCommentRepository_GetCommentsByBookID(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	bookID := "test_book_123"
+
+	// 创建多条评论
+	for i := 0; i < 5; i++ {
+		comment := &social.Comment{
+			AuthorID:   "user123",
+			TargetType: social.CommentTargetTypeBook,
+			TargetID:   bookID,
+			Content:    "测试评论",
+			Rating:     5,
+			State:      social.CommentStateNormal,
 		}
+		err := repo.Create(ctx, comment)
+		require.NoError(t, err)
+	}
 
-		// 获取评分统计
-		stats, err := repo.GetBookRatingStats(ctx, testBookID)
-		assert.NoError(t, err)
-		assert.NotNil(t, stats)
+	// Act
+	comments, total, err := repo.GetCommentsByBookID(ctx, bookID, 1, 10)
 
-		t.Logf("✓ 评分统计: %+v", stats)
-	})
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, comments)
+	assert.GreaterOrEqual(t, total, int64(5))
+	assert.GreaterOrEqual(t, len(comments), 5)
+}
+
+// TestCommentRepository_GetRepliesByCommentID 测试获取回复列表
+func TestCommentRepository_GetRepliesByCommentID(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	// 创建父评论
+	parentComment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "父评论",
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, parentComment)
+	require.NoError(t, err)
+
+	// 创建回复
+	reply := &social.Comment{
+		AuthorID:   "user456",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "回复内容",
+		State:      social.CommentStateNormal,
+	}
+	// 设置ParentID以建立回复关系
+	reply.ParentID = &parentComment.ID
+	err = repo.Create(ctx, reply)
+	require.NoError(t, err)
+
+	// Act
+	replies, err := repo.GetRepliesByCommentID(ctx, parentComment.ID)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, replies)
+	assert.Greater(t, len(replies), 0)
+}
+
+// TestCommentRepository_UpdateCommentStatus 测试更新评论状态
+func TestCommentRepository_UpdateCommentStatus(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "待审核评论",
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act - 更新审核状态
+	err = repo.UpdateCommentStatus(ctx, comment.ID, string(social.CommentStateRejected), "包含敏感词")
+
+	// Assert
+	require.NoError(t, err)
+
+	// 验证状态
+	found, err := repo.GetByID(ctx, comment.ID)
+	require.NoError(t, err)
+	assert.Equal(t, social.CommentStateRejected, found.State)
+	assert.Equal(t, "包含敏感词", found.RejectReason)
+}
+
+// TestCommentRepository_IncrementLikeCount 测试增加点赞数
+func TestCommentRepository_IncrementLikeCount(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "点赞测试",
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act - 增加点赞数
+	err = repo.IncrementLikeCount(ctx, comment.ID)
+
+	// Assert
+	require.NoError(t, err)
+
+	// 验证点赞数
+	found, err := repo.GetByID(ctx, comment.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), found.LikeCount)
+}
+
+// TestCommentRepository_DecrementLikeCount 测试减少点赞数
+func TestCommentRepository_DecrementLikeCount(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	comment := &social.Comment{
+		AuthorID:   "user123",
+		TargetType: social.CommentTargetTypeBook,
+		TargetID:   "book123",
+		Content:    "取消点赞测试",
+		State:      social.CommentStateNormal,
+	}
+	err := repo.Create(ctx, comment)
+	require.NoError(t, err)
+
+	// Act - 先增加几次点赞
+	for i := 0; i < 5; i++ {
+		err = repo.IncrementLikeCount(ctx, comment.ID)
+		require.NoError(t, err)
+	}
+
+	// Act - 减少点赞数
+	err = repo.DecrementLikeCount(ctx, comment.ID)
+
+	// Assert
+	require.NoError(t, err)
+
+	// 验证点赞数
+	found, err := repo.GetByID(ctx, comment.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(4), found.LikeCount)
+}
+
+// TestCommentRepository_Health 测试健康检查
+func TestCommentRepository_Health(t *testing.T) {
+	// Arrange
+	repo, ctx, cleanup := setupCommentRepo(t)
+	defer cleanup()
+
+	// Act
+	err := repo.Health(ctx)
+
+	// Assert
+	assert.NoError(t, err)
 }

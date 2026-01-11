@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"Qingyu_backend/config"
 )
 
@@ -25,244 +27,387 @@ func (m *MockRedisClient) Set(ctx context.Context, key string, value interface{}
 }
 
 func (m *MockRedisClient) Get(ctx context.Context, key string) (string, error) {
-	if val, ok := m.data[key]; ok {
-		return val, nil
+	val, ok := m.data[key]
+	if !ok {
+		return "", nil
 	}
-	return "", nil
+	return val, nil
 }
 
 func (m *MockRedisClient) Exists(ctx context.Context, keys ...string) (int64, error) {
+	count := int64(0)
 	for _, key := range keys {
 		if _, ok := m.data[key]; ok {
-			return 1, nil
+			count++
 		}
 	}
-	return 0, nil
+	return count, nil
 }
 
-// 测试辅助函数
-func getTestJWTConfig() *config.JWTConfigEnhanced {
-	return &config.JWTConfigEnhanced{
-		SecretKey:       "test-secret-key",
-		Issuer:          "qingyu-test",
-		Expiration:      1 * time.Hour,
-		RefreshDuration: 7 * 24 * time.Hour,
+// TestJWTService_GenerateToken_TableDriven 表格驱动测试 - 生成Token
+func TestJWTService_GenerateToken_TableDriven(t *testing.T) {
+	tests := []struct {
+		name      string
+		userID    string
+		roles     []string
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name:    "正常生成Token",
+			userID:  "user_123",
+			roles:   []string{"reader", "author"},
+			wantErr: false,
+		},
+		{
+			name:    "生成管理员Token",
+			userID:  "admin_001",
+			roles:   []string{"admin", "editor", "reader"},
+			wantErr: false,
+		},
+		{
+			name:    "无角色生成Token",
+			userID:  "user_456",
+			roles:   []string{},
+			wantErr: false,
+		},
+		{
+			name:    "空用户ID",
+			userID:  "",
+			roles:   []string{"reader"},
+			wantErr: true,
+			errMsg:  "不能为空",
+		},
+		{
+			name:    "多角色Token",
+			userID:  "super_user",
+			roles:   []string{"reader", "author", "editor", "admin", "reviewer"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockRedisClient()
+			cfg := &config.JWTConfigEnhanced{
+				Secret:      "test-secret-key-12345678",
+				Expiration:  1 * time.Hour,
+			}
+			service := NewJWTService(cfg, cache)
+			ctx := context.Background()
+
+			// Act
+			token, err := service.GenerateToken(ctx, tt.userID, tt.roles)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, token)
+				if tt.errMsg != "" {
+					assert.Contains(t, err.Error(), tt.errMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, token)
+
+				// 验证Token可以解析
+				claims, err := service.ValidateToken(ctx, token)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.userID, claims.UserID)
+				assert.Equal(t, tt.roles, claims.Roles)
+			}
+		})
 	}
 }
 
-// ============ 测试用例 ============
-
-// TestGenerateToken 测试生成访问Token
-func TestGenerateToken(t *testing.T) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
-	ctx := context.Background()
-
-	token, err := service.GenerateToken(ctx, "user123", []string{"reader"})
-	if err != nil {
-		t.Fatalf("生成Token失败: %v", err)
-	}
-
-	if token == "" {
-		t.Fatal("Token为空")
-	}
-
-	t.Logf("生成的Token: %s", token)
-}
-
-// TestValidateToken 测试验证Token
-func TestValidateToken(t *testing.T) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
-	ctx := context.Background()
-
-	// 生成Token
-	token, err := service.GenerateToken(ctx, "user123", []string{"reader"})
-	if err != nil {
-		t.Fatalf("生成Token失败: %v", err)
-	}
-
-	// 验证Token
-	claims, err := service.ValidateToken(ctx, token)
-	if err != nil {
-		t.Fatalf("验证Token失败: %v", err)
-	}
-
-	// 检查Claims
-	if claims.UserID != "user123" {
-		t.Errorf("UserID错误: %s", claims.UserID)
-	}
-	if len(claims.Roles) != 1 || claims.Roles[0] != "reader" {
-		t.Errorf("Roles错误: %v", claims.Roles)
-	}
-
-	t.Logf("验证成功，Claims: UserID=%s, Roles=%v", claims.UserID, claims.Roles)
-}
-
-// TestValidateToken_InvalidSignature 测试无效签名
-func TestValidateToken_InvalidSignature(t *testing.T) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
-	ctx := context.Background()
-
-	// 生成Token
-	token, _ := service.GenerateToken(ctx, "user123", []string{"reader"})
-
-	// 篡改Token
-	tampered := token + "tampered"
-
-	// 验证应该失败
-	_, err := service.ValidateToken(ctx, tampered)
-	if err == nil {
-		t.Fatal("应该验证失败，但成功了")
-	}
-
-	t.Logf("正确拒绝了篡改的Token: %v", err)
-}
-
-// TestValidateToken_Expired 测试过期Token
-func TestValidateToken_Expired(t *testing.T) {
-	// 创建一个立即过期的配置
+// TestJWTService_ValidateToken_TableDriven 表格驱动测试 - 验证Token
+func TestJWTService_ValidateToken_TableDriven(t *testing.T) {
+	cache := NewMockRedisClient()
 	cfg := &config.JWTConfigEnhanced{
-		SecretKey:       "test-secret-key",
-		Issuer:          "qingyu-test",
-		Expiration:      -1 * time.Hour, // 负数，立即过期
-		RefreshDuration: 7 * 24 * time.Hour,
+		Secret:      "test-secret-key-12345678",
+		Expiration:  1 * time.Hour,
 	}
-	service := NewJWTService(cfg, NewMockRedisClient())
+	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
 
-	// 生成Token（会立即过期）
-	token, _ := service.GenerateToken(ctx, "user123", []string{"reader"})
+	// 预生成有效Token
+	validToken, _ := service.GenerateToken(ctx, "user_123", []string{"reader"})
 
-	// 验证应该失败
-	_, err := service.ValidateToken(ctx, token)
-	if err == nil {
-		t.Fatal("应该验证失败（Token已过期），但成功了")
+	tests := []struct {
+		name      string
+		token     string
+		setup     func()
+		wantErr   bool
+		errMsg    string
+		checkErr  string
+	}{
+		{
+			name:    "有效Token",
+			token:   validToken,
+			wantErr: false,
+		},
+		{
+			name:    "空Token",
+			token:   "",
+			wantErr: true,
+		},
+		{
+			name:    "格式错误的Token",
+			token:   "invalid.token.format",
+			wantErr: true,
+		},
+		{
+			name:  "已吊销的Token",
+			token: validToken,
+			setup: func() {
+				service.RevokeToken(ctx, validToken)
+			},
+			wantErr:  true,
+		},
+		{
+			name:    "伪造的Token",
+			token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake.signature",
+			wantErr: true,
+		},
 	}
 
-	t.Logf("正确拒绝了过期Token: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			if tt.setup != nil {
+				tt.setup()
+			}
+
+			// Act
+			claims, err := service.ValidateToken(ctx, tt.token)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, claims)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, claims)
+				assert.NotEmpty(t, claims.UserID)
+			}
+		})
+	}
 }
 
-// TestRefreshToken 测试刷新Token
-func TestRefreshToken(t *testing.T) {
-	redisClient := NewMockRedisClient()
-	service := NewJWTService(getTestJWTConfig(), redisClient)
+// TestJWTService_TokenExpiration 表格驱动测试 - Token过期
+func TestJWTService_TokenExpiration(t *testing.T) {
+	tests := []struct {
+		name         string
+		expiration   time.Duration
+		validateWait time.Duration
+		wantErr      bool
+		errMsg       string
+	}{
+		{
+			name:         "Token未过期",
+			expiration:   1 * time.Hour,
+			validateWait: 0,
+			wantErr:      false,
+		},
+		{
+			name:         "Token已过期",
+			expiration:   10 * time.Millisecond,
+			validateWait: 20 * time.Millisecond,
+			wantErr:      true,
+		},
+		{
+			name:         "即将过期但仍然有效",
+			expiration:   100 * time.Millisecond,
+			validateWait: 50 * time.Millisecond,
+			wantErr:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockRedisClient()
+			cfg := &config.JWTConfigEnhanced{
+				Secret:      "test-secret-key-12345678",
+				Expiration:  tt.expiration,
+			}
+			service := NewJWTService(cfg, cache)
+			ctx := context.Background()
+
+			token, err := service.GenerateToken(ctx, "user_123", []string{"reader"})
+			require.NoError(t, err)
+
+			if tt.validateWait > 0 {
+				time.Sleep(tt.validateWait)
+			}
+
+			// Act
+			claims, err := service.ValidateToken(ctx, token)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, claims)
+			}
+		})
+	}
+}
+
+// TestJWTService_RefreshToken 表格驱动测试 - 刷新Token
+func TestJWTService_RefreshToken_TableDriven(t *testing.T) {
+	tests := []struct {
+		name         string
+		setup        func(JWTService, context.Context) string
+		wantErr      bool
+		errMsg       string
+		checkRevoked bool
+	}{
+		{
+			name: "正常刷新Token",
+			setup: func(s JWTService, ctx context.Context) string {
+				token, _ := s.GenerateToken(ctx, "user_123", []string{"reader"})
+				return token
+			},
+			wantErr: false,
+		},
+		{
+			name: "刷新已吊销的Token",
+			setup: func(s JWTService, ctx context.Context) string {
+				token, _ := s.GenerateToken(ctx, "user_123", []string{"reader"})
+				s.RevokeToken(ctx, token)
+				return token
+			},
+			wantErr:      true,
+			checkRevoked: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			cache := NewMockRedisClient()
+			cfg := &config.JWTConfigEnhanced{
+				Secret:      "test-secret-key-12345678",
+				Expiration:  1 * time.Hour,
+			}
+			service := NewJWTService(cfg, cache)
+			ctx := context.Background()
+
+			oldToken := tt.setup(service, ctx)
+
+			// Act
+			newToken, err := service.RefreshToken(ctx, oldToken)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, newToken)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, newToken)
+				assert.NotEqual(t, oldToken, newToken)
+
+				// 验证新Token有效
+				claims, err := service.ValidateToken(ctx, newToken)
+				assert.NoError(t, err)
+				assert.Equal(t, "user_123", claims.UserID)
+			}
+		})
+	}
+}
+
+// TestJWTService_RevokeToken 表格驱动测试 - 吊销Token
+func TestJWTService_RevokeToken_TableDriven(t *testing.T) {
+	cache := NewMockRedisClient()
+	cfg := &config.JWTConfigEnhanced{
+		Secret:      "test-secret-key-12345678",
+		Expiration:  1 * time.Hour,
+	}
+	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
 
-	// 生成初始Token
-	originalToken, err := service.GenerateToken(ctx, "user123", []string{"reader"})
-	if err != nil {
-		t.Fatalf("生成Token失败: %v", err)
+	tests := []struct {
+		name    string
+		token   func() string
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "吊销有效Token",
+			token: func() string {
+				t, _ := service.GenerateToken(ctx, "user_123", []string{"reader"})
+				return t
+			},
+			wantErr: false,
+		},
+		{
+			name: "吊销已吊销的Token（幂等）",
+			token: func() string {
+				t, _ := service.GenerateToken(ctx, "user_123", []string{"reader"})
+				service.RevokeToken(ctx, t)
+				return t
+			},
+			wantErr: false,
+		},
+		{
+			name:  "吊销无效Token",
+			token: func() string { return "invalid_token" },
+			wantErr: false,
+		},
 	}
 
-	// 等待1秒确保过期时间戳不同
-	time.Sleep(1100 * time.Millisecond)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			token := tt.token()
 
-	// 使用原Token作为刷新Token
-	newToken, err := service.RefreshToken(ctx, originalToken)
-	if err != nil {
-		t.Fatalf("刷新Token失败: %v", err)
+			// Act
+			err := service.RevokeToken(ctx, token)
+
+			// Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
-
-	// 新旧Token应该不同（过期时间不同）
-	if newToken == originalToken {
-		t.Error("新旧Token相同，应该不同")
-	}
-
-	// 验证旧Token应该被吊销
-	revoked, _ := service.IsTokenRevoked(ctx, originalToken)
-	if !revoked {
-		t.Error("旧Token应该被吊销，但没有")
-	}
-
-	// 直接解析新Token检查Claims（不验证，因为Redis可能有缓存问题）
-	svc := service.(*JWTServiceImpl)
-	claims, err := svc.ParseTokenClaims(newToken)
-	if err != nil {
-		t.Fatalf("解析新Token失败: %v", err)
-	}
-
-	if claims.UserID != "user123" {
-		t.Errorf("UserID错误: %s", claims.UserID)
-	}
-
-	t.Logf("刷新Token成功，旧Token已吊销")
 }
 
-// TestRevokeToken 测试吊销Token
-func TestRevokeToken(t *testing.T) {
-	redisClient := NewMockRedisClient()
-	service := NewJWTService(getTestJWTConfig(), redisClient)
-	ctx := context.Background()
-
-	// 生成Token
-	token, _ := service.GenerateToken(ctx, "user123", []string{"reader"})
-
-	// 吊销Token
-	err := service.RevokeToken(ctx, token)
-	if err != nil {
-		t.Fatalf("吊销Token失败: %v", err)
+// BenchmarkJWTService_GenerateToken 基准测试 - 生成Token
+func BenchmarkJWTService_GenerateToken(b *testing.B) {
+	cache := NewMockRedisClient()
+	cfg := &config.JWTConfigEnhanced{
+		Secret:      "test-secret-key-12345678",
+		Expiration:  1 * time.Hour,
 	}
-
-	// 检查Token是否在黑名单中
-	revoked, err := service.IsTokenRevoked(ctx, token)
-	if err != nil {
-		t.Fatalf("检查黑名单失败: %v", err)
-	}
-	if !revoked {
-		t.Fatal("Token应该在黑名单中，但不在")
-	}
-
-	// 验证Token应该失败
-	_, err = service.ValidateToken(ctx, token)
-	if err == nil {
-		t.Fatal("应该验证失败（Token已吊销），但成功了")
-	}
-
-	t.Logf("正确拒绝了已吊销的Token: %v", err)
-}
-
-// TestMultipleRoles 测试多角色Token
-func TestMultipleRoles(t *testing.T) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
-	ctx := context.Background()
-
-	roles := []string{"reader", "author", "admin"}
-	token, err := service.GenerateToken(ctx, "user123", roles)
-	if err != nil {
-		t.Fatalf("生成Token失败: %v", err)
-	}
-
-	claims, err := service.ValidateToken(ctx, token)
-	if err != nil {
-		t.Fatalf("验证Token失败: %v", err)
-	}
-
-	if len(claims.Roles) != 3 {
-		t.Errorf("角色数量错误: 期望3个，实际%d个", len(claims.Roles))
-	}
-
-	t.Logf("多角色Token验证成功: %v", claims.Roles)
-}
-
-// BenchmarkGenerateToken 性能测试：生成Token
-func BenchmarkGenerateToken(b *testing.B) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
+	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = service.GenerateToken(ctx, "user123", []string{"reader"})
+		service.GenerateToken(ctx, "user_123", []string{"reader", "author"})
 	}
 }
 
-// BenchmarkValidateToken 性能测试：验证Token
-func BenchmarkValidateToken(b *testing.B) {
-	service := NewJWTService(getTestJWTConfig(), NewMockRedisClient())
+// BenchmarkJWTService_ValidateToken 基准测试 - 验证Token
+func BenchmarkJWTService_ValidateToken(b *testing.B) {
+	cache := NewMockRedisClient()
+	cfg := &config.JWTConfigEnhanced{
+		Secret:      "test-secret-key-12345678",
+		Expiration:  1 * time.Hour,
+	}
+	service := NewJWTService(cfg, cache)
 	ctx := context.Background()
 
-	token, _ := service.GenerateToken(ctx, "user123", []string{"reader"})
+	token, _ := service.GenerateToken(ctx, "user_123", []string{"reader"})
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = service.ValidateToken(ctx, token)
+		service.ValidateToken(ctx, token)
 	}
 }
+

@@ -2,16 +2,14 @@ package social
 
 import (
 	"time"
-
-	"Qingyu_backend/models/community/base"
 )
 
 // Comment 评论模型
 type Comment struct {
-	base.IdentifiedEntity     `bson:",inline"`
-	base.Timestamps           `bson:",inline"`
-	base.ThreadedConversation `bson:",inline"`
-	base.Likable              `bson:",inline"`
+	IdentifiedEntity     `bson:",inline"`
+	Timestamps           `bson:",inline"`
+	ThreadedConversation `bson:",inline"`
+	Likable              `bson:",inline"`
 
 	// 作者信息
 	AuthorID string `bson:"author_id" json:"authorId" validate:"required"` // 评论者ID

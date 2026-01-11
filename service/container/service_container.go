@@ -39,7 +39,7 @@ import (
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
-	"Qingyu_backend/service/shared/wallet"
+	financeWalletService "Qingyu_backend/service/finance/wallet"
 
 	// Infrastructure
 	"Qingyu_backend/config"
@@ -97,7 +97,7 @@ type ServiceContainer struct {
 	// Shared services
 	authService           auth.AuthService
 	oauthService          *auth.OAuthService
-	walletService         wallet.WalletService
+	walletService         financeWalletService.WalletService
 	recommendationService recommendation.RecommendationService
 	messagingService      sharedMessaging.MessagingService
 	storageService        storage.StorageService
@@ -314,7 +314,7 @@ func (c *ServiceContainer) GetOAuthService() (*auth.OAuthService, error) {
 }
 
 // GetWalletService 获取钱包服务
-func (c *ServiceContainer) GetWalletService() (wallet.WalletService, error) {
+func (c *ServiceContainer) GetWalletService() (financeWalletService.WalletService, error) {
 	if c.walletService == nil {
 		return nil, fmt.Errorf("WalletService未初始化")
 	}
@@ -739,7 +739,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
 	walletRepo := c.repositoryFactory.CreateWalletRepository()
-	walletSvc := wallet.NewUnifiedWalletService(walletRepo)
+	walletSvc := financeWalletService.NewUnifiedWalletService(walletRepo)
 	c.walletService = walletSvc // 保存为接口类型
 
 	// 类型断言为 BaseService，以便注册到服务映射
@@ -994,7 +994,7 @@ func (c *ServiceContainer) SetOAuthService(service *auth.OAuthService) {
 }
 
 // SetWalletService 设置钱包服务
-func (c *ServiceContainer) SetWalletService(service wallet.WalletService) {
+func (c *ServiceContainer) SetWalletService(service financeWalletService.WalletService) {
 	c.walletService = service
 }
 

@@ -130,7 +130,7 @@ func (s *ExportService) processDocumentExport(
 	s.exportTaskRepo.Update(ctx, task)
 
 	// 获取文档内容
-	content, err := s.documentContentRepo.FindByID(ctx, document.ID)
+	content, err := s.documentContentRepo.FindByID(ctx, document.ID.Hex())
 	if err != nil {
 		s.failTask(ctx, task, "获取文档内容失败: "+err.Error())
 		return
@@ -386,7 +386,7 @@ func (s *ExportService) processProjectExport(
 
 	// 获取所有文档
 	if req.IncludeDocuments {
-		documents, err := s.documentRepo.FindByProjectID(ctx, project.ID)
+		documents, err := s.documentRepo.FindByProjectID(ctx, project.ID.Hex())
 		if err != nil {
 			s.failTask(ctx, task, "获取项目文档失败: "+err.Error())
 			return

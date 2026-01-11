@@ -263,7 +263,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
-		Role:     "user",                      // 默认角色
+		Roles:    []string{"user"},           // 默认角色
 		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 
@@ -278,7 +278,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 	}
 
 	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID, user.Role)
+	token, err := s.generateToken(user.ID, "user")
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -373,7 +373,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID, user.Role)
+	token, err := s.generateToken(user.ID, "user")
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}

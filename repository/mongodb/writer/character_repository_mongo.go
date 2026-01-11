@@ -32,8 +32,8 @@ func NewCharacterRepository(db *mongo.Database) writerRepo.CharacterRepository {
 
 // Create 创建角色
 func (r *CharacterRepositoryMongo) Create(ctx context.Context, character *writer.Character) error {
-	if character.ID == "" {
-		character.ID = primitive.NewObjectID().Hex()
+	if character.ID.IsZero() {
+		character.ID = primitive.NewObjectID()
 	}
 
 	now := time.Now()
@@ -119,8 +119,8 @@ func (r *CharacterRepositoryMongo) Delete(ctx context.Context, characterID strin
 
 // CreateRelation 创建角色关系
 func (r *CharacterRepositoryMongo) CreateRelation(ctx context.Context, relation *writer.CharacterRelation) error {
-	if relation.ID == "" {
-		relation.ID = primitive.NewObjectID().Hex()
+	if relation.ID.IsZero() {
+		relation.ID = primitive.NewObjectID()
 	}
 
 	now := time.Now()

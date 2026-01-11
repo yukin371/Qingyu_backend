@@ -180,7 +180,7 @@ func (q *MongoDeadLetterQueue) Reprocess(ctx context.Context, id string) error {
 
 	// 这里需要重新发布事件到事件总线
 	// 由于需要在上下文中获取事件总线的引用，这里暂时只记录日志
-	fmt.Printf("[DeadLetterQueue] 重新处理事件: %s, 类型: %s\n", id, item.EventType)
+	fmt.Printf("[DeadLetterQueue] 重新处理事件: ID=%s, 类型=%s, 来源=%s\n", id, event.EventType, event.Source)
 
 	// 标记为已处理
 	now := time.Now()
