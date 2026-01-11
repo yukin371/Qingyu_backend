@@ -369,7 +369,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Password:  string(hashedPassword),
 			Nickname:  betaUser.Nickname,
 			Avatar:    betaUser.Avatar,
-			Role:      betaUser.Role,
+			Roles:     []string{betaUser.Role},
 			Status:    "active",
 			CreatedAt: now,
 			UpdatedAt: now,

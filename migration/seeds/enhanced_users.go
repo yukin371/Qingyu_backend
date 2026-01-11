@@ -276,7 +276,7 @@ func SeedEnhancedUsers(ctx context.Context, db *mongo.Database) error {
 			Email:     testUser.Email,
 			Phone:     testUser.Phone,
 			Password:  string(hashedPassword),
-			Role:      testUser.Role,
+			Roles:     []string{testUser.Role},
 			Status:    users.UserStatus(testUser.Status),
 			Avatar:    testUser.Avatar,
 			Bio:       testUser.Bio,
