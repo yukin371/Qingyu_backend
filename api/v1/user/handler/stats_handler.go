@@ -33,7 +33,7 @@ func NewStatsHandler(statsService stats.PlatformStatsService) *StatsHandler {
 //	@Success		200	{object}	sharedPkg.APIResponse{data=stats.UserStats}
 //	@Failure		401	{object}	sharedPkg.ErrorResponse
 //	@Failure		500	{object}	sharedPkg.ErrorResponse
-//	@Router			/api/v1/user-management/stats/my [get]
+//	@Router			/api/v1/user/stats/my [get]
 func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
@@ -64,7 +64,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 //	@Success		200	{object}	sharedPkg.APIResponse{data=stats.ContentStats}
 //	@Failure		401	{object}	sharedPkg.ErrorResponse
 //	@Failure		500	{object}	sharedPkg.ErrorResponse
-//	@Router			/api/v1/user-management/stats/my/content [get]
+//	@Router			/api/v1/user/stats/my/content [get]
 func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
@@ -96,7 +96,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 //	@Success		200	{object}	sharedPkg.APIResponse{data=stats.ActivityStats}
 //	@Failure		401	{object}	sharedPkg.ErrorResponse
 //	@Failure		500	{object}	sharedPkg.ErrorResponse
-//	@Router			/api/v1/user-management/stats/my/activity [get]
+//	@Router			/api/v1/user/stats/my/activity [get]
 func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
@@ -137,7 +137,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 //	@Success		200			{object}	sharedPkg.APIResponse{data=stats.RevenueStats}
 //	@Failure		401			{object}	sharedPkg.ErrorResponse
 //	@Failure		500			{object}	sharedPkg.ErrorResponse
-//	@Router			/api/v1/user-management/stats/my/revenue [get]
+//	@Router			/api/v1/user/stats/my/revenue [get]
 func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")

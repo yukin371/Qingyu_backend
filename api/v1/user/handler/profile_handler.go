@@ -35,7 +35,7 @@ func NewProfileHandler(userService userServiceInterface.UserService) *ProfileHan
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		404		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/profile [get]
+//	@Router			/api/v1/user/profile [get]
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID（由JWT中间件设置）
 	userID, exists := c.Get("user_id")
@@ -103,7 +103,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/profile [put]
+//	@Router			/api/v1/user/profile [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -172,7 +172,7 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/password [put]
+//	@Router			/api/v1/user/password [put]
 func (h *ProfileHandler) ChangePassword(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")

@@ -42,7 +42,7 @@ func (h *PublicUserHandler) SetBookstoreService(bookstoreSvc interface{}) {
 //	@Success		200		{object}	shared.APIResponse{data=dto.UserProfileResponse}
 //	@Failure		404		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/users/{id} [get]
+//	@Router			/api/v1/user/users/{id} [get]
 func (h *PublicUserHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
@@ -99,7 +99,7 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 //	@Success		200		{object}	shared.APIResponse{data=dto.PublicUserProfileResponse}
 //	@Failure		404		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/users/{id}/profile [get]
+//	@Router			/api/v1/user/users/{id}/profile [get]
 func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
@@ -159,7 +159,7 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 //	@Success		200		{object}	shared.APIResponse{data=dto.GetUserBooksResponse}
 //	@Failure		404		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/users/{id}/books [get]
+//	@Router			/api/v1/user/users/{id}/books [get]
 func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {

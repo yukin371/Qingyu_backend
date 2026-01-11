@@ -11,7 +11,7 @@ import (
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
 	notificationsRouter "Qingyu_backend/router/notifications"
-	usermanagementRouter "Qingyu_backend/router/usermanagement"
+	userRouter "Qingyu_backend/router/user"
 	readerRouter "Qingyu_backend/router/reader"
 	recommendationRouter "Qingyu_backend/router/recommendation"
 	sharedRouter "Qingyu_backend/router/shared"
@@ -530,20 +530,18 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 	}
 
-	// 注册新的 user-management 路由
-	usermanagementRouter.RegisterUsermanagementRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
+	// 注册新的 user 路由
+	userRouter.RegisterUserRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
 
-	logger.Info("✓ 新用户管理路由已注册到: /api/v1/user-management/")
-	logger.Info("  - /api/v1/user-management/auth/register (用户注册)")
-	logger.Info("  - /api/v1/user-management/auth/login (用户登录)")
-	logger.Info("  - /api/v1/user-management/users/:id (获取用户信息-公开)")
-	logger.Info("  - /api/v1/user-management/users/:id/profile (用户详细资料-公开)")
-	logger.Info("  - /api/v1/user-management/users/:id/books (用户作品列表-公开)")
-	logger.Info("  - /api/v1/user-management/profile (当前用户信息-需认证)")
-	logger.Info("  - /api/v1/user-management/password (修改密码-需认证)")
-	logger.Info("  - /api/v1/user-management/stats/my/* (用户统计-需认证)")
-	logger.Info("  - /api/v1/user-management/users/* (用户管理-需管理员)")
-	logger.Info("  ⚠️  旧路由继续保留以保持向后兼容")
+	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
+	logger.Info("  - /api/v1/user/auth/register (用户注册)")
+	logger.Info("  - /api/v1/user/auth/login (用户登录)")
+	logger.Info("  - /api/v1/user/users/:id (获取用户信息-公开)")
+	logger.Info("  - /api/v1/user/users/:id/profile (用户详细资料-公开)")
+	logger.Info("  - /api/v1/user/users/:id/books (用户作品列表-公开)")
+	logger.Info("  - /api/v1/user/profile (当前用户信息-需认证)")
+	logger.Info("  - /api/v1/user/password (修改密码-需认证)")
+	logger.Info("  - /api/v1/user/stats/my/* (用户统计-需认证)")
 
 	// ============ 注册系统监控路由 ============
 	systemRouter.InitSystemRoutes(v1)
