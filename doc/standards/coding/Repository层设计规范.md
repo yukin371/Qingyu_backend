@@ -475,6 +475,8 @@ func TestMongoBookRepository_Create(t *testing.T) {
 }
 ```
 
+更详细请参考[repository层测试规范](../testing/01_测试层级规范/repository_层测试规范.md)
+
 ---
 
 ## 十、最佳实践

@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/core"
-	"Qingyu_backend/global"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,12 +46,12 @@ var testUsers = []TestUser{
 		Description: "测试管理员",
 	},
 
-	// VIP用户（3个）
+	// VIP用户（5个）
 	{
 		Username:    "vip_user01",
 		Email:       "vip01@qingyu.com",
 		Password:    "Vip@123456",
-		Role:        "vip",
+		Role:        "reader",
 		IsPremium:   true,
 		Description: "VIP测试用户1",
 	},
@@ -60,7 +59,7 @@ var testUsers = []TestUser{
 		Username:    "vip_user02",
 		Email:       "vip02@qingyu.com",
 		Password:    "Vip@123456",
-		Role:        "vip",
+		Role:        "reader",
 		IsPremium:   true,
 		Description: "VIP测试用户2",
 	},
@@ -68,187 +67,153 @@ var testUsers = []TestUser{
 		Username:    "vip_user03",
 		Email:       "vip03@qingyu.com",
 		Password:    "Vip@123456",
-		Role:        "vip",
+		Role:        "reader",
 		IsPremium:   true,
 		Description: "VIP测试用户3",
 	},
+	{
+		Username:    "vip_user04",
+		Email:       "vip04@qingyu.com",
+		Password:    "Vip@123456",
+		Role:        "reader",
+		IsPremium:   true,
+		Description: "VIP测试用户4",
+	},
+	{
+		Username:    "vip_user05",
+		Email:       "vip05@qingyu.com",
+		Password:    "Vip@123456",
+		Role:        "reader",
+		IsPremium:   true,
+		Description: "VIP测试用户5",
+	},
 
-	// 普通用户（5个）
+	// 普通用户（8个）
 	{
-		Username:    "test_user01",
-		Email:       "test01@qingyu.com",
-		Password:    "Test@123456",
-		Role:        "user",
+		Username:    "user01",
+		Email:       "user01@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
 		IsPremium:   false,
-		Description: "普通测试用户1",
+		Description: "普通用户1",
 	},
 	{
-		Username:    "test_user02",
-		Email:       "test02@qingyu.com",
-		Password:    "Test@123456",
-		Role:        "user",
+		Username:    "user02",
+		Email:       "user02@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
 		IsPremium:   false,
-		Description: "普通测试用户2",
+		Description: "普通用户2",
 	},
 	{
-		Username:    "test_user03",
-		Email:       "test03@qingyu.com",
-		Password:    "Test@123456",
-		Role:        "user",
+		Username:    "user03",
+		Email:       "user03@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
 		IsPremium:   false,
-		Description: "普通测试用户3",
+		Description: "普通用户3",
 	},
 	{
-		Username:    "test_user04",
-		Email:       "test04@qingyu.com",
-		Password:    "Test@123456",
-		Role:        "user",
+		Username:    "user04",
+		Email:       "user04@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
 		IsPremium:   false,
-		Description: "普通测试用户4",
+		Description: "普通用户4",
 	},
 	{
-		Username:    "test_user05",
-		Email:       "test05@qingyu.com",
-		Password:    "Test@123456",
-		Role:        "user",
+		Username:    "user05",
+		Email:       "user05@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
 		IsPremium:   false,
-		Description: "普通测试用户5",
+		Description: "普通用户5",
+	},
+	{
+		Username:    "user06",
+		Email:       "user06@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
+		IsPremium:   false,
+		Description: "普通用户6",
+	},
+	{
+		Username:    "user07",
+		Email:       "user07@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
+		IsPremium:   false,
+		Description: "普通用户7",
+	},
+	{
+		Username:    "user08",
+		Email:       "user08@qingyu.com",
+		Password:    "User@123456",
+		Role:        "reader",
+		IsPremium:   false,
+		Description: "普通用户8",
 	},
 }
 
-func main() {
-	fmt.Println("====================================")
-	fmt.Println("创建MVP内测账号")
-	fmt.Println("====================================")
-	fmt.Println()
-
-	// 加载配置
-	_, err := config.LoadConfig(".")
-	if err != nil {
-		log.Fatalf("加载配置失败: %v", err)
-	}
-
-	// 初始化数据库
-	if err := core.InitDB(); err != nil {
-		log.Fatalf("初始化数据库失败: %v", err)
-	}
-
+// CreateTestUsers 创建内测账号
+func CreateTestUsers() error {
 	ctx := context.Background()
 
-	// 检查数据库连接
-	if global.DB == nil {
-		log.Fatal("数据库未初始化")
+	// 初始化MongoDB连接
+	cfg, err := config.LoadConfig("")
+	if err != nil {
+		return fmt.Errorf("加载配置失败: %w", err)
 	}
 
-	// 获取用户集合
-	userCollection := global.DB.Collection("users")
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Database.Primary.MongoDB.URI))
+	if err != nil {
+		return fmt.Errorf("连接MongoDB失败: %w", err)
+	}
+	defer client.Disconnect(ctx)
 
-	fmt.Println("开始创建测试账号...")
-	fmt.Println()
+	db := client.Database(cfg.Database.Primary.MongoDB.Database)
+	collection := db.Collection("users")
 
-	successCount := 0
-	skipCount := 0
+	// 清空现有测试用户
+	_, err = collection.DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("清空用户失败: %w", err)
+	}
 
-	for i, testUser := range testUsers {
-		fmt.Printf("[%d/%d] 创建账号: %s (%s)...", i+1, len(testUsers), testUser.Username, testUser.Description)
+	log.Println("开始创建内测账号...")
 
-		// 检查用户是否已存在
-		var existingUser users.User
-		err := userCollection.FindOne(ctx, bson.M{
-			"$or": []bson.M{
-				{"username": testUser.Username},
-				{"email": testUser.Email},
-			},
-		}).Decode(&existingUser)
-
-		if err == nil {
-			fmt.Println(" [已存在，跳过]")
-			skipCount++
-			continue
-		} else if err != mongo.ErrNoDocuments {
-			fmt.Printf(" [错误: %v]\n", err)
-			continue
-		}
-
-		// 密码加密
+	// 创建测试用户
+	for _, testUser := range testUsers {
+		// 加密密码
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(testUser.Password), bcrypt.DefaultCost)
 		if err != nil {
-			fmt.Printf(" [密码加密失败: %v]\n", err)
+			log.Printf("  ✗ 用户 %s 密码加密失败: %v", testUser.Username, err)
 			continue
 		}
 
-		// 创建用户（User模型没有IsPremium字段，使用Role区分）
-		now := time.Now()
+		// 创建用户对象
 		user := users.User{
 			ID:        primitive.NewObjectID().Hex(),
 			Username:  testUser.Username,
 			Email:     testUser.Email,
+			Phone:     "",
 			Password:  string(hashedPassword),
-			Role:      testUser.Role,
-			Status:    "active",
-			CreatedAt: now,
-			UpdatedAt: now,
+			Roles:     []string{testUser.Role},
+			Status:    users.UserStatusActive,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 
-		_, err = userCollection.InsertOne(ctx, user)
+		// 插入数据库
+		_, err = collection.InsertOne(ctx, user)
 		if err != nil {
-			fmt.Printf(" [创建失败: %v]\n", err)
+			log.Printf("  ✗ 创建用户 %s 失败: %v", testUser.Username, err)
 			continue
 		}
 
-		fmt.Println(" [成功]")
-		successCount++
+		log.Printf("  ✓ 创建用户: %s (%s)", testUser.Username, testUser.Description)
 	}
 
-	fmt.Println()
-	fmt.Println("====================================")
-	fmt.Println("账号创建完成")
-	fmt.Println("====================================")
-	fmt.Printf("成功创建: %d 个\n", successCount)
-	fmt.Printf("已存在跳过: %d 个\n", skipCount)
-	fmt.Printf("总计: %d 个\n", len(testUsers))
-	fmt.Println()
-
-	// 打印账号信息
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("内测账号列表")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println()
-
-	fmt.Println("【管理员账号】")
-	for _, user := range testUsers {
-		if user.Role == "admin" {
-			fmt.Printf("  用户名: %s\n", user.Username)
-			fmt.Printf("  邮箱: %s\n", user.Email)
-			fmt.Printf("  密码: %s\n", user.Password)
-			fmt.Printf("  说明: %s\n", user.Description)
-			fmt.Println()
-		}
-	}
-
-	fmt.Println("【VIP用户】")
-	for _, user := range testUsers {
-		if user.Role == "vip" {
-			fmt.Printf("  用户名: %s\n", user.Username)
-			fmt.Printf("  邮箱: %s\n", user.Email)
-			fmt.Printf("  密码: %s\n", user.Password)
-			fmt.Printf("  说明: %s\n", user.Description)
-			fmt.Println()
-		}
-	}
-
-	fmt.Println("【普通用户】")
-	for _, user := range testUsers {
-		if user.Role == "user" {
-			fmt.Printf("  用户名: %s | 密码: %s\n", user.Username, user.Password)
-		}
-	}
-
-	fmt.Println()
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("提示：")
-	fmt.Println("1. 所有账号均已激活可直接登录")
-	fmt.Println("2. 管理员和VIP用户享有premium权限")
-	fmt.Println("3. 建议定期更换测试密码")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	log.Printf("成功创建 %d 个内测账号", len(testUsers))
+	return nil
 }

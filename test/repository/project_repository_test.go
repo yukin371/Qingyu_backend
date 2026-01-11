@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/models/document"
+	"Qingyu_backend/models/writer"
 	"Qingyu_backend/repository/mongodb/writing"
 	"Qingyu_backend/test/testutil"
 )
@@ -25,7 +25,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 2. 测试正常创建
 	t.Run("正常创建项目", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "测试项目",
 			Summary:  "这是一个测试项目",
@@ -36,15 +36,15 @@ func TestProjectRepository_Create(t *testing.T) {
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 		assert.NotEmpty(t, project.ID)
-		assert.Equal(t, document.StatusDraft, project.Status)
-		assert.Equal(t, document.VisibilityPrivate, project.Visibility)
+		assert.Equal(t, writer.StatusDraft, project.Status)
+		assert.Equal(t, writer.VisibilityPrivate, project.Visibility)
 		assert.NotZero(t, project.CreatedAt)
 		assert.NotZero(t, project.UpdatedAt)
 	})
 
 	// 3. 测试统计初始化
 	t.Run("统计信息初始化", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "测试项目2",
 		}
@@ -59,7 +59,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 4. 测试设置初始化
 	t.Run("设置信息初始化", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "测试项目3",
 		}
@@ -79,7 +79,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 6. 测试必填字段验证
 	t.Run("缺少标题应该失败", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "",
 		}
@@ -99,7 +99,7 @@ func TestProjectRepository_GetByID(t *testing.T) {
 	ctx := context.Background()
 
 	// 1. 创建测试数据
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID: "user123",
 		Title:    "测试项目",
 		Summary:  "测试简介",
@@ -150,7 +150,7 @@ func TestProjectRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试数据
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID: "user123",
 		Title:    "原标题",
 		Summary:  "原简介",
@@ -199,7 +199,7 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 
 	// 创建多个项目
 	for i := 0; i < 5; i++ {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: authorID,
 			Title:    fmt.Sprintf("项目%d", i+1),
 		}
@@ -211,7 +211,7 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	}
 
 	// 创建其他作者的项目
-	otherProject := &document.Project{
+	otherProject := &writer.Project{
 		AuthorID: "other_user",
 		Title:    "其他项目",
 	}
@@ -258,15 +258,15 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 	authorID := "user123"
 
 	// 创建不同状态的项目
-	statuses := []document.ProjectStatus{
-		document.StatusDraft,
-		document.StatusDraft,
-		document.StatusSerializing,
-		document.StatusCompleted,
+	statuses := []writer.ProjectStatus{
+		writer.StatusDraft,
+		writer.StatusDraft,
+		writer.StatusSerializing,
+		writer.StatusCompleted,
 	}
 
 	for i, status := range statuses {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: authorID,
 			Title:    fmt.Sprintf("项目%d", i+1),
 			Status:   status,
@@ -277,18 +277,18 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 
 	// 测试查询草稿状态的项目
 	t.Run("查询草稿状态项目", func(t *testing.T) {
-		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(document.StatusDraft), 10, 0)
+		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusDraft), 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(projects))
 
 		for _, p := range projects {
-			assert.Equal(t, document.StatusDraft, p.Status)
+			assert.Equal(t, writer.StatusDraft, p.Status)
 		}
 	})
 
 	// 测试查询连载中的项目
 	t.Run("查询连载中项目", func(t *testing.T) {
-		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(document.StatusSerializing), 10, 0)
+		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusSerializing), 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(projects))
 	})
@@ -303,7 +303,7 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID: "user123",
 		Title:    "原标题",
 	}
@@ -346,7 +346,7 @@ func TestProjectRepository_SoftDelete(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID: "user123",
 		Title:    "测试项目",
 	}
@@ -386,7 +386,7 @@ func TestProjectRepository_IsOwner(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := &document.Project{
+	project := &writer.Project{
 		AuthorID: "user123",
 		Title:    "测试项目",
 	}
@@ -420,7 +420,7 @@ func TestProjectRepository_Count(t *testing.T) {
 
 	// 创建多个项目
 	for i := 0; i < 3; i++ {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: authorID,
 			Title:    fmt.Sprintf("项目%d", i+1),
 		}
@@ -429,7 +429,7 @@ func TestProjectRepository_Count(t *testing.T) {
 	}
 
 	// 创建一个软删除的项目
-	deletedProject := &document.Project{
+	deletedProject := &writer.Project{
 		AuthorID: authorID,
 		Title:    "已删除项目",
 	}
@@ -447,7 +447,7 @@ func TestProjectRepository_Count(t *testing.T) {
 
 	// 测试按状态统计
 	t.Run("统计草稿状态项目", func(t *testing.T) {
-		count, err := repo.CountByStatus(ctx, string(document.StatusDraft))
+		count, err := repo.CountByStatus(ctx, string(writer.StatusDraft))
 		require.NoError(t, err)
 		assert.Equal(t, int64(3), count)
 	})
@@ -463,7 +463,7 @@ func TestProjectRepository_Transaction(t *testing.T) {
 
 	// 测试成功的事务
 	t.Run("事务成功创建", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "事务测试项目",
 		}
@@ -484,7 +484,7 @@ func TestProjectRepository_Transaction(t *testing.T) {
 
 	// 测试失败的事务（应该回滚）
 	t.Run("事务失败回滚", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 			Title:    "事务回滚项目",
 		}
@@ -521,7 +521,7 @@ func TestProjectRepository_Health(t *testing.T) {
 func TestProject_BusinessMethods(t *testing.T) {
 	// 测试IsOwner
 	t.Run("IsOwner方法", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 		}
 
@@ -532,18 +532,18 @@ func TestProject_BusinessMethods(t *testing.T) {
 	// 测试CanEdit
 	t.Run("CanEdit方法", func(t *testing.T) {
 		now := time.Now()
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
-			Collaborators: []document.Collaborator{
+			Collaborators: []writer.Collaborator{
 				{
 					UserID:     "editor1",
-					Role:       document.RoleEditor,
+					Role:       writer.RoleEditor,
 					InvitedAt:  now,
 					AcceptedAt: &now,
 				},
 				{
 					UserID:     "viewer1",
-					Role:       document.RoleViewer,
+					Role:       writer.RoleViewer,
 					InvitedAt:  now,
 					AcceptedAt: &now,
 				},
@@ -566,13 +566,13 @@ func TestProject_BusinessMethods(t *testing.T) {
 	// 测试CanView
 	t.Run("CanView方法", func(t *testing.T) {
 		now := time.Now()
-		privateProject := &document.Project{
+		privateProject := &writer.Project{
 			AuthorID:   "user123",
-			Visibility: document.VisibilityPrivate,
-			Collaborators: []document.Collaborator{
+			Visibility: writer.VisibilityPrivate,
+			Collaborators: []writer.Collaborator{
 				{
 					UserID:     "viewer1",
-					Role:       document.RoleViewer,
+					Role:       writer.RoleViewer,
 					InvitedAt:  now,
 					AcceptedAt: &now,
 				},
@@ -589,22 +589,22 @@ func TestProject_BusinessMethods(t *testing.T) {
 		assert.False(t, privateProject.CanView("stranger"))
 
 		// 公开项目任何人都可以查看
-		publicProject := &document.Project{
+		publicProject := &writer.Project{
 			AuthorID:   "user123",
-			Visibility: document.VisibilityPublic,
+			Visibility: writer.VisibilityPublic,
 		}
 		assert.True(t, publicProject.CanView("stranger"))
 	})
 
 	// 测试UpdateStatistics
 	t.Run("UpdateStatistics方法", func(t *testing.T) {
-		project := &document.Project{
+		project := &writer.Project{
 			AuthorID: "user123",
 		}
 
 		oldTime := project.UpdatedAt
 
-		stats := document.ProjectStats{
+		stats := writer.ProjectStats{
 			TotalWords:   10000,
 			ChapterCount: 10,
 		}
@@ -619,41 +619,41 @@ func TestProject_BusinessMethods(t *testing.T) {
 	// 测试Validate
 	t.Run("Validate方法", func(t *testing.T) {
 		// 正常的项目
-		validProject := &document.Project{
+		validProject := &writer.Project{
 			AuthorID:   "user123",
 			Title:      "测试项目",
-			Status:     document.StatusDraft,
-			Visibility: document.VisibilityPrivate,
+			Status:     writer.StatusDraft,
+			Visibility: writer.VisibilityPrivate,
 		}
 		assert.NoError(t, validProject.Validate())
 
 		// 缺少作者ID
-		noAuthor := &document.Project{
+		noAuthor := &writer.Project{
 			Title: "测试项目",
 		}
 		assert.Error(t, noAuthor.Validate())
 
 		// 缺少标题
-		noTitle := &document.Project{
+		noTitle := &writer.Project{
 			AuthorID: "user123",
 		}
 		assert.Error(t, noTitle.Validate())
 
 		// 标题过长
-		longTitle := &document.Project{
+		longTitle := &writer.Project{
 			AuthorID:   "user123",
 			Title:      string(make([]byte, 101)),
-			Status:     document.StatusDraft,
-			Visibility: document.VisibilityPrivate,
+			Status:     writer.StatusDraft,
+			Visibility: writer.VisibilityPrivate,
 		}
 		assert.Error(t, longTitle.Validate())
 
 		// 无效状态
-		invalidStatus := &document.Project{
+		invalidStatus := &writer.Project{
 			AuthorID:   "user123",
 			Title:      "测试项目",
 			Status:     "invalid_status",
-			Visibility: document.VisibilityPrivate,
+			Visibility: writer.VisibilityPrivate,
 		}
 		assert.Error(t, invalidStatus.Validate())
 	})
