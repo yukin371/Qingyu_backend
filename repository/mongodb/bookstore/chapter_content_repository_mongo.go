@@ -173,7 +173,7 @@ func (r *MongoChapterContentRepository) BatchDelete(ctx context.Context, ids []p
 
 // GetLatestVersion 获取最新版本号
 func (r *MongoChapterContentRepository) GetLatestVersion(ctx context.Context, chapterID primitive.ObjectID) (int, error) {
-	options := options.Find().SetSort(bson.D{{"version", -1}}).SetLimit(1)
+	options := options.Find().SetSort(bson.D{{Key: "version", Value: -1}}).SetLimit(1)
 	cursor, err := r.collection.Find(ctx, bson.M{"chapter_id": chapterID}, options)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get latest version: %w", err)
