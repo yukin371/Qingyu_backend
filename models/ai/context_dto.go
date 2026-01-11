@@ -55,7 +55,7 @@ type TimelineEvent struct {
 // TODO
 func NewCharacterInfoFromEntity(c *writer.Character) *CharacterInfo {
 	return &CharacterInfo{
-		ID:      c.ID,
+		ID:      c.ID.Hex(),
 		Name:    c.Name,
 		Summary: c.ShortDescription, // 取摘要，节省 Token
 	}

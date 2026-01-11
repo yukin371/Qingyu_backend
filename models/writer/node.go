@@ -10,10 +10,10 @@ import (
 // Node 节点模型（通用树形结构节点）
 // 用于大纲、时间线、地点分类等树形结构
 type Node struct {
-	base.IdentifiedEntity    // ID
-	base.Timestamps          // CreatedAt, UpdatedAt, DeletedAt
-	base.ProjectScopedEntity // ProjectID
-	base.NamedEntity         // Name
+	base.IdentifiedEntity    `bson:",inline"` // ID
+	base.Timestamps          `bson:",inline"` // CreatedAt, UpdatedAt, DeletedAt
+	base.ProjectScopedEntity `bson:",inline"` // ProjectID
+	base.NamedEntity         `bson:",inline"` // Name
 
 	// 树形结构属性（保持BSON字段名不变，确保数据库兼容）
 	ParentID     string                 `bson:"parent_id,omitempty" json:"parentId,omitempty"`         // 父节点ID

@@ -8,10 +8,10 @@ import (
 // 这是专门用于写作规划的大纲节点，包含情节、紧张度等写作相关属性
 // 与通用的Node不同，OutlineNode专注于写作内容的规划
 type OutlineNode struct {
-	base.IdentifiedEntity    // ID
-	base.Timestamps          // CreatedAt, UpdatedAt
-	base.ProjectScopedEntity // ProjectID
-	base.TitledEntity        // Title
+	base.IdentifiedEntity    `bson:",inline"` // ID
+	base.Timestamps          `bson:",inline"` // CreatedAt, UpdatedAt
+	base.ProjectScopedEntity `bson:",inline"` // ProjectID
+	base.TitledEntity        `bson:",inline"` // Title
 
 	// 层级结构（保持BSON字段名不变，确保数据库兼容）
 	ParentID string `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父级大纲节点ID（如：卷/幕）

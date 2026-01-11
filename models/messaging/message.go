@@ -3,7 +3,7 @@ package messaging
 import (
 	"time"
 
-	"Qingyu_backend/models/common"
+	"Qingyu_backend/models/shared"
 )
 
 // Message 消息模型
@@ -16,7 +16,7 @@ type Message struct {
 	Retry       int                    `json:"retry" bson:"retry"`                           // 重试次数
 	MaxRetry    int                    `json:"max_retry" bson:"max_retry"`                   // 最大重试次数
 	Error       string                 `json:"error,omitempty" bson:"error,omitempty"`       // 错误信息
-	common.BaseEntity                                                        // 嵌入时间戳字段
+	shared.BaseEntity                                                        // 嵌入时间戳字段
 	ProcessedAt *time.Time             `json:"processed_at,omitempty" bson:"processed_at,omitempty"`
 }
 
@@ -30,7 +30,7 @@ type MessageTemplate struct {
 	Variables []string               `json:"variables" bson:"variables"`                 // 可用变量
 	IsActive  bool                   `json:"is_active" bson:"is_active"`                 // 是否启用
 	Metadata  map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"`
-	common.BaseEntity
+	shared.BaseEntity
 }
 
 // Notification 通知记录
@@ -41,7 +41,7 @@ type Notification struct {
 	Title     string                 `json:"title" bson:"title"`
 	Content   string                 `json:"content" bson:"content"`
 	Status    string                 `json:"status" bson:"status"` // sent, pending, failed
-	common.ReadStatus                                                        // 嵌入已读状态
+	shared.ReadStatus                                                        // 嵌入已读状态
 	Metadata  map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	CreatedAt time.Time              `json:"created_at" bson:"created_at"`
 	SentAt    *time.Time             `json:"sent_at,omitempty" bson:"sent_at,omitempty"`
