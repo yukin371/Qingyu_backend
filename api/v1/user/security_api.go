@@ -1,4 +1,4 @@
-package usermanagement
+package user
 
 import (
 	"net/http"
@@ -35,7 +35,7 @@ func NewSecurityAPI(userService user2.UserService) *SecurityAPI {
 //	@Failure		400		{object}	sharedApi.APIResponse
 //	@Failure		404		{object}	sharedApi.APIResponse
 //	@Failure		500		{object}	sharedApi.APIResponse
-//	@Router			/api/v1/user-management/email/send-code [post]
+//	@Router			/api/v1/user/email/send-code [post]
 func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 	var req user2.SendEmailVerificationRequest
 	if !sharedApi.ValidateRequest(c, &req) {
@@ -70,7 +70,7 @@ func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 //	@Failure		400		{object}	sharedApi.APIResponse
 //	@Failure		404		{object}	sharedApi.APIResponse
 //	@Failure		500		{object}	sharedApi.APIResponse
-//	@Router			/api/v1/user-management/email/verify [post]
+//	@Router			/api/v1/user/email/verify [post]
 func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 	var req user2.VerifyEmailRequest
 	if !sharedApi.ValidateRequest(c, &req) {
@@ -106,7 +106,7 @@ func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 //	@Success 200 {object} sharedApi.APIResponse
 //	@Failure		400		{object}	sharedApi.APIResponse
 //	@Failure		500		{object}	sharedApi.APIResponse
-//	@Router			/api/v1/user-management/password/reset-request [post]
+//	@Router			/api/v1/user/password/reset-request [post]
 func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 	var req user2.RequestPasswordResetRequest
 	if !sharedApi.ValidateRequest(c, &req) {
@@ -141,7 +141,7 @@ func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 //	@Failure		400		{object}	sharedApi.APIResponse
 //	@Failure		404		{object}	sharedApi.APIResponse
 //	@Failure		500		{object}	sharedApi.APIResponse
-//	@Router			/api/v1/user-management/password/reset [post]
+//	@Router			/api/v1/user/password/reset [post]
 func (api *SecurityAPI) ConfirmPasswordReset(c *gin.Context) {
 	var req user2.ConfirmPasswordResetRequest
 	if !sharedApi.ValidateRequest(c, &req) {

@@ -35,7 +35,7 @@ func NewAuthHandler(userService userServiceInterface.UserService) *AuthHandler {
 //	@Success		200		{object}	shared.APIResponse{data=dto.RegisterResponse}
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/auth/register [post]
+//	@Router			/api/v1/user/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if !shared.ValidateRequest(c, &req) {
@@ -96,7 +96,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
-//	@Router			/api/v1/user-management/auth/login [post]
+//	@Router			/api/v1/user/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if !shared.ValidateRequest(c, &req) {
