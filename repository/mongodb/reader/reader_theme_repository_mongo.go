@@ -242,7 +242,7 @@ func (r *ReaderThemeRepositoryMongo) GetPublicThemes(ctx context.Context, page, 
 	opts := options.Find().
 		SetSkip(skip).
 		SetLimit(int64(pageSize)).
-		SetSort(bson.D{{"use_count", -1}, {"created_at", -1}}) // 按使用次数和创建时间排序
+		SetSort(bson.D{{Key: "use_count", Value: -1}, {Key: "created_at", Value: -1}}) // 按使用次数和创建时间排序
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {

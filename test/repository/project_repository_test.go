@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/models/writer"
-	"Qingyu_backend/repository/mongodb/writing"
+	writing "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
 )
 

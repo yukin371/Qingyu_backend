@@ -36,9 +36,6 @@ linters-settings:
 
   unused:
 
-  unparam:
-    check-exported: false
-
   nakedret:
     max-func-lines: 30
 
