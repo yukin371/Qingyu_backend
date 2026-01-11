@@ -24,7 +24,6 @@ require (
 	github.com/swaggo/swag v1.16.6
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/otel v1.39.0
-	go.opentelemetry.io/otel/exporters/jaeger v1.17.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
 	go.opentelemetry.io/otel/trace v1.39.0
