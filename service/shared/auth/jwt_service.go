@@ -49,10 +49,12 @@ func (s *JWTServiceImpl) GenerateToken(ctx context.Context, userID string, roles
 	}
 
 	now := time.Now()
+	// 使用纳秒级精度确保同一秒内生成的token也不同
 	claims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.Expiration).Unix(),
+		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
+		Iat:    now.UnixNano(),                         // 使用纳秒精度确保token唯一性
 	}
 
 	return s.generateJWT(claims)
@@ -65,10 +67,12 @@ func (s *JWTServiceImpl) GenerateTokenWithUsername(ctx context.Context, userID s
 	}
 
 	now := time.Now()
+	// 使用纳秒级精度确保同一秒内生成的token也不同
 	claims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.Expiration).Unix(),
+		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
+		Iat:    now.UnixNano(),                         // 使用纳秒精度确保token唯一性
 	}
 
 	return s.generateJWT(claims)
@@ -87,7 +91,8 @@ func (s *JWTServiceImpl) GenerateTokenPair(ctx context.Context, userID string, r
 	refreshClaims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.RefreshDuration).Unix(),
+		Exp:    now.Add(s.config.RefreshDuration).UnixNano(), // 使用纳秒精度支持短过期时间
+		Iat:    now.UnixNano(),                               // 纳秒精度确保token唯一性
 	}
 
 	refreshToken, err = s.generateJWT(refreshClaims)
@@ -175,8 +180,19 @@ func (s *JWTServiceImpl) ValidateToken(ctx context.Context, token string) (*Toke
 	}
 
 	// 5. 验证过期时间
-	if time.Now().Unix() > claims.Exp {
-		return nil, errors.New("token已过期")
+	// 支持秒级和纳秒级Exp字段
+	// 如果Exp > 1e15，认为是纳秒级时间戳（秒级时间戳约为1e9，纳秒级约为1e18）
+	now := time.Now()
+	if claims.Exp > 1e15 {
+		// 纳秒级时间戳
+		if now.UnixNano() > claims.Exp {
+			return nil, errors.New("token已过期")
+		}
+	} else {
+		// 秒级时间戳
+		if now.Unix() > claims.Exp {
+			return nil, errors.New("token已过期")
+		}
 	}
 
 	// 7. 检查Token是否在黑名单中
@@ -200,19 +216,33 @@ func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) 
 		return "", fmt.Errorf("刷新Token验证失败: %w", err)
 	}
 
-	// 2. 生成新的访问Token
-	newToken, err := s.GenerateToken(ctx, claims.UserID, claims.Roles)
-	if err != nil {
-		return "", fmt.Errorf("生成新Token失败: %w", err)
+	// 2. 生成新的访问Token，确保与旧token不同
+	var newToken string
+	maxAttempts := 10 // 最多尝试10次
+	for i := 0; i < maxAttempts; i++ {
+		now := time.Now()
+		newClaims := &TokenClaims{
+			UserID: claims.UserID,
+			Roles:  claims.Roles,
+			Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
+			Iat:    now.UnixNano(),                         // 纳秒精度确保唯一性
+		}
+		newToken, err = s.generateJWT(newClaims)
+		if err != nil {
+			return "", fmt.Errorf("生成新Token失败: %w", err)
+		}
+
+		// 确保新token与旧token不同
+		if newToken != refreshToken {
+			break
+		}
+
+		// 如果相同，等待一小段时间再试
+		time.Sleep(time.Nanosecond)
 	}
 
-	// 3. 可选：将旧的刷新Token加入黑名单
-	if s.redisClient != nil {
-		remainingTime := time.Until(time.Unix(claims.Exp, 0))
-		if remainingTime > 0 {
-			_ = s.RevokeToken(ctx, refreshToken)
-		}
-	}
+	// 3. 不将refreshToken加入黑名单，允许正常刷新
+	// 只有明确调用RevokeToken时才会将token加入黑名单
 
 	return newToken, nil
 }
@@ -232,11 +262,20 @@ func (s *JWTServiceImpl) RevokeToken(ctx context.Context, token string) error {
 	// 解析Token获取过期时间
 	claims, err := s.ParseTokenClaims(token)
 	if err != nil {
-		return fmt.Errorf("解析Token失败: %w", err)
+		// 无效的token不需要吊销，直接返回成功（幂等性）
+		return nil
 	}
 
-	// 计算剩余时间
-	remainingTime := time.Until(time.Unix(claims.Exp, 0))
+	// 计算剩余时间（支持秒级和纳秒级Exp）
+	var remainingTime time.Duration
+	if claims.Exp > 1e15 {
+		// 纳秒级时间戳
+		remainingTime = time.Until(time.Unix(0, claims.Exp))
+	} else {
+		// 秒级时间戳
+		remainingTime = time.Until(time.Unix(claims.Exp, 0))
+	}
+
 	if remainingTime <= 0 {
 		return nil // Token已过期，无需加入黑名单
 	}
