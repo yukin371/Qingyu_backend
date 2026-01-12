@@ -1,12 +1,11 @@
-package shared
+package messaging
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"
+	messagingInterface "Qingyu_backend/repository/interfaces/messaging"
 	"context"
 	"fmt"
 	"time"
-
-	"Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,17 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// MongoMessageRepository MongoDB消息Repository实现
-type MongoMessageRepository struct {
+// MessageRepositoryImpl MongoDB消息Repository实现
+type MessageRepositoryImpl struct {
 	db                      *mongo.Database
 	messagesCollection      *mongo.Collection
 	notificationsCollection *mongo.Collection
 	templatesCollection     *mongo.Collection
 }
 
-// NewMongoMessageRepository 创建MongoDB Message Repository
-func NewMongoMessageRepository(db *mongo.Database) shared.MessageRepository {
-	return &MongoMessageRepository{
+// NewMessageRepository 创建MongoDB Message Repository
+func NewMessageRepository(db *mongo.Database) messagingInterface.MessageRepository {
+	return &MessageRepositoryImpl{
 		db:                      db,
 		messagesCollection:      db.Collection("messages"),
 		notificationsCollection: db.Collection("notifications"),
@@ -35,7 +34,7 @@ func NewMongoMessageRepository(db *mongo.Database) shared.MessageRepository {
 // ============ 消息队列管理 ============
 
 // CreateMessage 创建消息
-func (r *MongoMessageRepository) CreateMessage(ctx context.Context, message *messagingModel.Message) error {
+func (r *MessageRepositoryImpl) CreateMessage(ctx context.Context, message *messagingModel.Message) error {
 	if message == nil {
 		return fmt.Errorf("message cannot be nil")
 	}
@@ -56,7 +55,7 @@ func (r *MongoMessageRepository) CreateMessage(ctx context.Context, message *mes
 }
 
 // GetMessage 获取消息
-func (r *MongoMessageRepository) GetMessage(ctx context.Context, messageID string) (*messagingModel.Message, error) {
+func (r *MessageRepositoryImpl) GetMessage(ctx context.Context, messageID string) (*messagingModel.Message, error) {
 	var message messagingModel.Message
 	err := r.messagesCollection.FindOne(ctx, bson.M{"_id": messageID}).Decode(&message)
 
@@ -71,7 +70,7 @@ func (r *MongoMessageRepository) GetMessage(ctx context.Context, messageID strin
 }
 
 // UpdateMessage 更新消息
-func (r *MongoMessageRepository) UpdateMessage(ctx context.Context, messageID string, updates map[string]interface{}) error {
+func (r *MessageRepositoryImpl) UpdateMessage(ctx context.Context, messageID string, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 
 	result, err := r.messagesCollection.UpdateOne(
@@ -92,7 +91,7 @@ func (r *MongoMessageRepository) UpdateMessage(ctx context.Context, messageID st
 }
 
 // DeleteMessage 删除消息
-func (r *MongoMessageRepository) DeleteMessage(ctx context.Context, messageID string) error {
+func (r *MessageRepositoryImpl) DeleteMessage(ctx context.Context, messageID string) error {
 	result, err := r.messagesCollection.DeleteOne(ctx, bson.M{"_id": messageID})
 
 	if err != nil {
@@ -107,7 +106,7 @@ func (r *MongoMessageRepository) DeleteMessage(ctx context.Context, messageID st
 }
 
 // ListMessages 获取消息列表
-func (r *MongoMessageRepository) ListMessages(ctx context.Context, filter *shared.MessageFilter) ([]*messagingModel.Message, error) {
+func (r *MessageRepositoryImpl) ListMessages(ctx context.Context, filter *messagingInterface.MessageFilter) ([]*messagingModel.Message, error) {
 	query := bson.M{}
 
 	if filter != nil {
@@ -152,7 +151,7 @@ func (r *MongoMessageRepository) ListMessages(ctx context.Context, filter *share
 }
 
 // CountMessages 统计消息数量
-func (r *MongoMessageRepository) CountMessages(ctx context.Context, filter *shared.MessageFilter) (int64, error) {
+func (r *MessageRepositoryImpl) CountMessages(ctx context.Context, filter *messagingInterface.MessageFilter) (int64, error) {
 	query := bson.M{}
 
 	if filter != nil {
@@ -185,7 +184,7 @@ func (r *MongoMessageRepository) CountMessages(ctx context.Context, filter *shar
 // ============ 通知记录管理 ============
 
 // CreateNotification 创建通知
-func (r *MongoMessageRepository) CreateNotification(ctx context.Context, notification *messagingModel.Notification) error {
+func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notification *messagingModel.Notification) error {
 	if notification == nil {
 		return fmt.Errorf("notification cannot be nil")
 	}
@@ -206,7 +205,7 @@ func (r *MongoMessageRepository) CreateNotification(ctx context.Context, notific
 }
 
 // GetNotification 获取通知
-func (r *MongoMessageRepository) GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error) {
+func (r *MessageRepositoryImpl) GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error) {
 	var notification messagingModel.Notification
 	err := r.notificationsCollection.FindOne(ctx, bson.M{"_id": notificationID}).Decode(&notification)
 
@@ -221,7 +220,7 @@ func (r *MongoMessageRepository) GetNotification(ctx context.Context, notificati
 }
 
 // UpdateNotification 更新通知
-func (r *MongoMessageRepository) UpdateNotification(ctx context.Context, notificationID string, updates map[string]interface{}) error {
+func (r *MessageRepositoryImpl) UpdateNotification(ctx context.Context, notificationID string, updates map[string]interface{}) error {
 	result, err := r.notificationsCollection.UpdateOne(
 		ctx,
 		bson.M{"_id": notificationID},
@@ -240,7 +239,7 @@ func (r *MongoMessageRepository) UpdateNotification(ctx context.Context, notific
 }
 
 // DeleteNotification 删除通知
-func (r *MongoMessageRepository) DeleteNotification(ctx context.Context, notificationID string) error {
+func (r *MessageRepositoryImpl) DeleteNotification(ctx context.Context, notificationID string) error {
 	result, err := r.notificationsCollection.DeleteOne(ctx, bson.M{"_id": notificationID})
 
 	if err != nil {
@@ -255,7 +254,7 @@ func (r *MongoMessageRepository) DeleteNotification(ctx context.Context, notific
 }
 
 // ListNotifications 获取通知列表
-func (r *MongoMessageRepository) ListNotifications(ctx context.Context, filter *shared.NotificationFilter) ([]*messagingModel.Notification, int64, error) {
+func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) ([]*messagingModel.Notification, int64, error) {
 	query := bson.M{}
 
 	if filter != nil {
@@ -320,7 +319,7 @@ func (r *MongoMessageRepository) ListNotifications(ctx context.Context, filter *
 }
 
 // CountNotifications 统计通知数量
-func (r *MongoMessageRepository) CountNotifications(ctx context.Context, filter *shared.NotificationFilter) (int64, error) {
+func (r *MessageRepositoryImpl) CountNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) (int64, error) {
 	query := bson.M{}
 
 	if filter != nil {
@@ -349,7 +348,7 @@ func (r *MongoMessageRepository) CountNotifications(ctx context.Context, filter 
 // ============ 通知已读状态管理 ============
 
 // MarkAsRead 标记为已读
-func (r *MongoMessageRepository) MarkAsRead(ctx context.Context, notificationID string) error {
+func (r *MessageRepositoryImpl) MarkAsRead(ctx context.Context, notificationID string) error {
 	now := time.Now()
 	updates := bson.M{
 		"is_read": true,
@@ -374,7 +373,7 @@ func (r *MongoMessageRepository) MarkAsRead(ctx context.Context, notificationID 
 }
 
 // MarkMultipleAsRead 批量标记为已读
-func (r *MongoMessageRepository) MarkMultipleAsRead(ctx context.Context, userID string, notificationIDs []string) error {
+func (r *MessageRepositoryImpl) MarkMultipleAsRead(ctx context.Context, userID string, notificationIDs []string) error {
 	now := time.Now()
 	updates := bson.M{
 		"is_read": true,
@@ -400,7 +399,7 @@ func (r *MongoMessageRepository) MarkMultipleAsRead(ctx context.Context, userID 
 }
 
 // GetUnreadCount 获取未读数量
-func (r *MongoMessageRepository) GetUnreadCount(ctx context.Context, userID string) (int64, error) {
+func (r *MessageRepositoryImpl) GetUnreadCount(ctx context.Context, userID string) (int64, error) {
 	query := bson.M{
 		"user_id": userID,
 		"is_read": false,
@@ -417,7 +416,7 @@ func (r *MongoMessageRepository) GetUnreadCount(ctx context.Context, userID stri
 // ============ 批量操作 ============
 
 // BatchDeleteNotifications 批量删除通知
-func (r *MongoMessageRepository) BatchDeleteNotifications(ctx context.Context, userID string, notificationIDs []string) error {
+func (r *MessageRepositoryImpl) BatchDeleteNotifications(ctx context.Context, userID string, notificationIDs []string) error {
 	query := bson.M{
 		"user_id": userID,
 		"_id":     bson.M{"$in": notificationIDs},
@@ -432,7 +431,7 @@ func (r *MongoMessageRepository) BatchDeleteNotifications(ctx context.Context, u
 }
 
 // ClearAllNotifications 清空所有通知
-func (r *MongoMessageRepository) ClearAllNotifications(ctx context.Context, userID string) error {
+func (r *MessageRepositoryImpl) ClearAllNotifications(ctx context.Context, userID string) error {
 	query := bson.M{"user_id": userID}
 
 	_, err := r.notificationsCollection.DeleteMany(ctx, query)
@@ -446,7 +445,7 @@ func (r *MongoMessageRepository) ClearAllNotifications(ctx context.Context, user
 // ============ 消息模板管理 ============
 
 // CreateTemplate 创建消息模板
-func (r *MongoMessageRepository) CreateTemplate(ctx context.Context, template *messagingModel.MessageTemplate) error {
+func (r *MessageRepositoryImpl) CreateTemplate(ctx context.Context, template *messagingModel.MessageTemplate) error {
 	if template == nil {
 		return fmt.Errorf("template cannot be nil")
 	}
@@ -468,7 +467,7 @@ func (r *MongoMessageRepository) CreateTemplate(ctx context.Context, template *m
 }
 
 // GetTemplate 获取模板
-func (r *MongoMessageRepository) GetTemplate(ctx context.Context, templateID string) (*messagingModel.MessageTemplate, error) {
+func (r *MessageRepositoryImpl) GetTemplate(ctx context.Context, templateID string) (*messagingModel.MessageTemplate, error) {
 	var template messagingModel.MessageTemplate
 	err := r.templatesCollection.FindOne(ctx, bson.M{"_id": templateID}).Decode(&template)
 
@@ -483,7 +482,7 @@ func (r *MongoMessageRepository) GetTemplate(ctx context.Context, templateID str
 }
 
 // GetTemplateByName 根据名称获取模板
-func (r *MongoMessageRepository) GetTemplateByName(ctx context.Context, name string) (*messagingModel.MessageTemplate, error) {
+func (r *MessageRepositoryImpl) GetTemplateByName(ctx context.Context, name string) (*messagingModel.MessageTemplate, error) {
 	var template messagingModel.MessageTemplate
 	err := r.templatesCollection.FindOne(ctx, bson.M{"name": name}).Decode(&template)
 
@@ -498,7 +497,7 @@ func (r *MongoMessageRepository) GetTemplateByName(ctx context.Context, name str
 }
 
 // UpdateTemplate 更新模板
-func (r *MongoMessageRepository) UpdateTemplate(ctx context.Context, templateID string, updates map[string]interface{}) error {
+func (r *MessageRepositoryImpl) UpdateTemplate(ctx context.Context, templateID string, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 
 	result, err := r.templatesCollection.UpdateOne(
@@ -519,7 +518,7 @@ func (r *MongoMessageRepository) UpdateTemplate(ctx context.Context, templateID 
 }
 
 // DeleteTemplate 删除模板
-func (r *MongoMessageRepository) DeleteTemplate(ctx context.Context, templateID string) error {
+func (r *MessageRepositoryImpl) DeleteTemplate(ctx context.Context, templateID string) error {
 	result, err := r.templatesCollection.DeleteOne(ctx, bson.M{"_id": templateID})
 
 	if err != nil {
@@ -534,7 +533,7 @@ func (r *MongoMessageRepository) DeleteTemplate(ctx context.Context, templateID 
 }
 
 // ListTemplates 获取模板列表
-func (r *MongoMessageRepository) ListTemplates(ctx context.Context, templateType string, isActive *bool) ([]*messagingModel.MessageTemplate, error) {
+func (r *MessageRepositoryImpl) ListTemplates(ctx context.Context, templateType string, isActive *bool) ([]*messagingModel.MessageTemplate, error) {
 	query := bson.M{}
 
 	if templateType != "" {
@@ -561,7 +560,7 @@ func (r *MongoMessageRepository) ListTemplates(ctx context.Context, templateType
 // ============ 健康检查 ============
 
 // Health 健康检查
-func (r *MongoMessageRepository) Health(ctx context.Context) error {
+func (r *MessageRepositoryImpl) Health(ctx context.Context) error {
 	if err := r.db.Client().Ping(ctx, nil); err != nil {
 		return fmt.Errorf("database connection failed: %w", err)
 	}

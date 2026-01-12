@@ -1,4 +1,4 @@
-package shared
+package messaging
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"
