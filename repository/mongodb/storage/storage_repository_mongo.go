@@ -2,7 +2,7 @@ package storage
 
 import (
 	storageModel "Qingyu_backend/models/storage"
-	"Qingyu_backend/repository/interfaces/shared"
+	storageInterface "Qingyu_backend/repository/interfaces/storage"
 	"context"
 	"fmt"
 	"time"
@@ -22,7 +22,7 @@ type MongoStorageRepository struct {
 }
 
 // NewMongoStorageRepository 创建MongoDB Storage Repository
-func NewMongoStorageRepository(db *mongo.Database) shared.StorageRepository {
+func NewMongoStorageRepository(db *mongo.Database) storageInterface.StorageRepository {
 	return &MongoStorageRepository{
 		db:                db,
 		filesCollection:   db.Collection("files"),
@@ -122,7 +122,7 @@ func (r *MongoStorageRepository) DeleteFile(ctx context.Context, fileID string) 
 }
 
 // ListFiles 列表查询文件
-func (r *MongoStorageRepository) ListFiles(ctx context.Context, filter *shared.FileFilter) ([]*storageModel.FileInfo, int64, error) {
+func (r *MongoStorageRepository) ListFiles(ctx context.Context, filter *storageInterface.FileFilter) ([]*storageModel.FileInfo, int64, error) {
 	query := r.buildFileQuery(filter)
 
 	// 计算总数
@@ -167,13 +167,13 @@ func (r *MongoStorageRepository) ListFiles(ctx context.Context, filter *shared.F
 }
 
 // CountFiles 统计文件数量
-func (r *MongoStorageRepository) CountFiles(ctx context.Context, filter *shared.FileFilter) (int64, error) {
+func (r *MongoStorageRepository) CountFiles(ctx context.Context, filter *storageInterface.FileFilter) (int64, error) {
 	query := r.buildFileQuery(filter)
 	return r.filesCollection.CountDocuments(ctx, query)
 }
 
 // buildFileQuery 构建文件查询条件
-func (r *MongoStorageRepository) buildFileQuery(filter *shared.FileFilter) bson.M {
+func (r *MongoStorageRepository) buildFileQuery(filter *storageInterface.FileFilter) bson.M {
 	query := bson.M{}
 
 	if filter == nil {
