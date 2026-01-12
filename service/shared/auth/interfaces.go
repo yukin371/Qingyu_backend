@@ -161,6 +161,7 @@ type TokenClaims struct {
 	UserID string   `json:"user_id"`
 	Roles  []string `json:"roles"`
 	Exp    int64    `json:"exp"`
+	Iat    int64    `json:"iat"` // 签发时间（Issued At），确保token唯一性
 }
 
 // Role 角色
