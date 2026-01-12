@@ -401,8 +401,8 @@ func (m *MockBannerRepositoryForService) GetByID(ctx context.Context, id primiti
 	return args.Get(0).(*bookstoreModel.Banner), args.Error(1)
 }
 
-func (m *MockBannerRepositoryForService) Update(ctx context.Context, banner *bookstoreModel.Banner) error {
-	args := m.Called(ctx, banner)
+func (m *MockBannerRepositoryForService) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -494,8 +494,8 @@ func (m *MockRankingRepositoryForService) GetByID(ctx context.Context, id primit
 	return args.Get(0).(*bookstoreModel.RankingItem), args.Error(1)
 }
 
-func (m *MockRankingRepositoryForService) Update(ctx context.Context, item *bookstoreModel.RankingItem) error {
-	args := m.Called(ctx, item)
+func (m *MockRankingRepositoryForService) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 

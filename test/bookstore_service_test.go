@@ -521,6 +521,11 @@ func (m *MockRankingRepository) CalculateNewbieRanking(ctx context.Context, peri
 	return args.Get(0).([]*bookstore2.RankingItem), args.Error(1)
 }
 
+func (m *MockRankingRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	args := m.Called(ctx, fn)
+	return args.Error(0)
+}
+
 // 测试用例
 
 func TestBookstoreService_GetBookByID(t *testing.T) {
