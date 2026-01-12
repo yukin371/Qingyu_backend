@@ -59,7 +59,7 @@ type CommentOptions struct {
 }
 
 // CreateUser 创建测试用户
-func (f *TestDataFactory) CreateUser(opts UserOptions) *users.User {
+func (f *TestDataFactory) CreateUser(ctx context.Context, opts UserOptions) *users.User {
 	userID := primitive.NewObjectID()
 	testPassword := "Test1234"
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.DefaultCost)
@@ -95,19 +95,22 @@ func (f *TestDataFactory) CreateUser(opts UserOptions) *users.User {
 
 	// 清理可能存在的同名用户
 	userRepository := userRepo.NewMongoUserRepository(global.DB)
-	existingUser, _ := userRepository.GetByUsername(context.Background(), user.Username)
-	if existingUser != nil && existingUser.ID != user.ID {
-		_ = userRepository.Delete(context.Background(), existingUser.ID)
+	existingUser, err := userRepository.GetByUsername(ctx, user.Username)
+	if err == nil && existingUser != nil && existingUser.ID != user.ID {
+		err = userRepository.Delete(ctx, existingUser.ID)
+		if err != nil {
+			f.t.Logf("警告: 删除重名用户 %s 失败: %v", existingUser.Username, err)
+		}
 	}
 
-	err = userRepository.Create(context.Background(), user)
+	err = userRepository.Create(ctx, user)
 	require.NoError(f.t, err, "创建用户失败")
 
 	return user
 }
 
 // CreateUsers 批量创建用户
-func (f *TestDataFactory) CreateUsers(count int, baseOptions UserOptions) []*users.User {
+func (f *TestDataFactory) CreateUsers(ctx context.Context, count int, baseOptions UserOptions) []*users.User {
 	createdUsers := make([]*users.User, count)
 	for i := 0; i < count; i++ {
 		opts := baseOptions
@@ -117,13 +120,13 @@ func (f *TestDataFactory) CreateUsers(count int, baseOptions UserOptions) []*use
 		if baseOptions.Email == "" {
 			opts.Email = fmt.Sprintf("e2e_batch_%d@example.com", i+rand.Intn(10000))
 		}
-		createdUsers[i] = f.CreateUser(opts)
+		createdUsers[i] = f.CreateUser(ctx, opts)
 	}
 	return createdUsers
 }
 
 // CreateBook 创建测试书籍
-func (f *TestDataFactory) CreateBook(opts BookOptions) *bookstore.Book {
+func (f *TestDataFactory) CreateBook(ctx context.Context, opts BookOptions) *bookstore.Book {
 	bookID := primitive.NewObjectID()
 	authorObjID, err := primitive.ObjectIDFromHex(opts.AuthorID)
 	require.NoError(f.t, err, "作者ID格式错误")
@@ -160,14 +163,14 @@ func (f *TestDataFactory) CreateBook(opts BookOptions) *bookstore.Book {
 	}
 
 	bookRepository := bookRepo.NewMongoBookRepository(global.DB.Client(), global.DB.Name())
-	err = bookRepository.Create(context.Background(), book)
+	err = bookRepository.Create(ctx, book)
 	require.NoError(f.t, err, "创建书籍失败")
 
 	return book
 }
 
 // CreateChapter 创建测试章节
-func (f *TestDataFactory) CreateChapter(bookID string, chapterNum int, isFree bool) *bookstore.Chapter {
+func (f *TestDataFactory) CreateChapter(ctx context.Context, bookID string, chapterNum int, isFree bool) *bookstore.Chapter {
 	chapterID := primitive.NewObjectID()
 	bookObjID, err := primitive.ObjectIDFromHex(bookID)
 	require.NoError(f.t, err, "书籍ID格式错误")
@@ -186,7 +189,7 @@ func (f *TestDataFactory) CreateChapter(bookID string, chapterNum int, isFree bo
 	chapter.BeforeCreate()
 
 	chapterRepo := bookRepo.NewMongoChapterRepository(global.DB.Client(), global.DB.Name())
-	err = chapterRepo.Create(context.Background(), chapter)
+	err = chapterRepo.Create(ctx, chapter)
 	require.NoError(f.t, err, "创建章节失败")
 
 	// 创建章节内容
@@ -203,14 +206,14 @@ func (f *TestDataFactory) CreateChapter(bookID string, chapterNum int, isFree bo
 	}
 	chapterContent.BeforeCreate()
 
-	err = chapterContentRepo.Create(context.Background(), chapterContent)
+	err = chapterContentRepo.Create(ctx, chapterContent)
 	require.NoError(f.t, err, "创建章节内容失败")
 
 	return chapter
 }
 
 // CreateComment 创建测试评论
-func (f *TestDataFactory) CreateComment(opts CommentOptions) *social.Comment {
+func (f *TestDataFactory) CreateComment(ctx context.Context, opts CommentOptions) *social.Comment {
 	commentID := primitive.NewObjectID()
 
 	// 默认值处理
@@ -236,14 +239,14 @@ func (f *TestDataFactory) CreateComment(opts CommentOptions) *social.Comment {
 	}
 
 	commentRepo := socialRepo.NewMongoCommentRepository(global.DB)
-	err := commentRepo.Create(context.Background(), comment)
+	err := commentRepo.Create(ctx, comment)
 	require.NoError(f.t, err, "创建评论失败")
 
 	return comment
 }
 
 // CreateCollection 创建测试收藏
-func (f *TestDataFactory) CreateCollection(userID, bookID string) *social.Collection {
+func (f *TestDataFactory) CreateCollection(ctx context.Context, userID, bookID string) *social.Collection {
 	collectionID := primitive.NewObjectID()
 
 	collection := &social.Collection{
@@ -255,7 +258,7 @@ func (f *TestDataFactory) CreateCollection(userID, bookID string) *social.Collec
 	}
 
 	collectionRepo := socialRepo.NewMongoCollectionRepository(global.DB)
-	err := collectionRepo.Create(context.Background(), collection)
+	err := collectionRepo.Create(ctx, collection)
 	require.NoError(f.t, err, "创建收藏失败")
 
 	return collection
@@ -278,7 +281,11 @@ func (f *TestDataFactory) Cleanup(prefix string) {
 				{"title": map[string]interface{}{"$regex": "^" + prefix}},
 			},
 		}
-		result, _ := global.DB.Collection(collName).DeleteMany(ctx, filter)
+		result, err := global.DB.Collection(collName).DeleteMany(ctx, filter)
+		if err != nil {
+			f.t.Logf("警告: 清理集合 %s 失败: %v", collName, err)
+			continue
+		}
 		if result.DeletedCount > 0 {
 			f.t.Logf("清理 %s: %d 条记录", collName, result.DeletedCount)
 		}
