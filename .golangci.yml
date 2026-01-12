@@ -79,3 +79,8 @@ issues:
     - "Error return value of .*\\.Send.* is not checked"
     - "Error return value of .*\\.AbortTransaction.* is not checked"
     - "Error return value of `.*go.*` .* is not checked"
+    # 排除业务逻辑中可忽略的返回值
+    - "Error return value of .*\\.WithRequestID.* is not checked"
+    - "Error return value of .*\\.UpdatePoolMetrics.* is not checked"
+    - "Error return value of .*\\.SetBookDetail.* is not checked"
+    - "Error return value of .*\\.Invalidate.*Cache.* is not checked"
