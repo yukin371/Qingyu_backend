@@ -4,6 +4,7 @@
 run:
   timeout: 10m
   tests: true
+  go: '1.24'
 
 linters:
   disable-all: true
@@ -14,6 +15,34 @@ linters:
     - ineffassign    # 检查无效赋值
     - staticcheck    # 静态分析检查
     - unused         # 检查未使用的常量、变量、函数等
+    - gofmt          # 代码格式检查
+    - goimports      # import 排序和分组
+
+linters-settings:
+  errcheck:
+    # 排除常见的 defer Close() 模式（这些在 defer 中忽略错误是安全的）
+    exclude-functions:
+      - (io.Closer).Close
+      - (*github.com/gorilla/websocket.Conn).Close
+      - (*github.com/gorilla/websocket.Conn).SetReadDeadline
+      - (*github.com/gorilla/websocket.Conn).SetWriteDeadline
+      - (*github.com/gorilla/websocket.Conn).WriteMessage
+      - (net.Conn).Close
+      - (*mongo.Cursor).Close
+      - (*mongo.Client).Disconnect
+      - (http.Response.Body).Close
+    # 禁用空白赋值检查，如 "x = _"
+    check-blank: false
+    # 禁用类型断言检查
+    check-type-assertions: false
+
+  govet:
+    enable-all: true
+    disable:
+      - shadow  # shadow 变量检查过于严格
+
+  staticcheck:
+    checks: ["all"]
 
 issues:
   exclude-use-default: false
