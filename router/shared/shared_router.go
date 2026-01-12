@@ -10,7 +10,7 @@ import (
 	"Qingyu_backend/service/shared/auth"
 	searchService "Qingyu_backend/service/shared/search"
 	"Qingyu_backend/service/shared/storage"
-	"Qingyu_backend/service/shared/wallet"
+	"Qingyu_backend/service/finance/wallet"
 )
 
 // RegisterRoutes 注册共享服务路由（向后兼容）

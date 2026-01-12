@@ -11,7 +11,6 @@ import (
 	userService "Qingyu_backend/service/interfaces/user"
 	messagingService "Qingyu_backend/service/messaging"
 	sharedService "Qingyu_backend/service/shared"
-	adminService "Qingyu_backend/service/shared/admin"
 )
 
 // RegisterAdminRoutes 注册管理员路由
@@ -20,7 +19,7 @@ func RegisterAdminRoutes(
 	userSvc userService.UserService,
 	quotaSvc *aiService.QuotaService,
 	auditSvc auditService.ContentAuditService,
-	adminSvc adminService.AdminService,
+	adminSvc adminservice.AdminService,
 	configSvc *sharedService.ConfigService,
 	announcementSvc messagingService.AnnouncementService,
 	userAdminSvc adminservice.UserAdminService,

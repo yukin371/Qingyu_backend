@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/shared/wallet"
+	"Qingyu_backend/service/finance/wallet"
 )
 
 // WalletAPI 钱包服务API处理器

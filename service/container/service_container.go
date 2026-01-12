@@ -34,19 +34,21 @@ import (
 
 	// Shared services
 	financeWalletService "Qingyu_backend/service/finance/wallet"
-	"Qingyu_backend/service/shared/admin"
+	"Qingyu_backend/service/admin"
 	"Qingyu_backend/service/shared/auth"
 	sharedMessaging "Qingyu_backend/service/shared/messaging"
 	"Qingyu_backend/service/shared/metrics"
-	"Qingyu_backend/service/shared/recommendation"
+	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/service/shared/storage"
+
+	adminInterface "Qingyu_backend/repository/interfaces/admin"
+	adminModel "Qingyu_backend/models/users"
 
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
-	mongoShared "Qingyu_backend/repository/mongodb/shared"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -878,9 +880,13 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
 
 	// 5.5 AdminService
-	// 创建 AdminLog 和 AdminAudit Repository
-	adminLogRepo := mongoShared.NewAdminLogRepository(c.mongoDB)
-	adminAuditRepo := mongoShared.NewAdminAuditRepository(c.mongoDB)
+	// 使用 RepositoryFactory 获取 Admin Repository
+	adminAuditRepoImpl := c.repositoryFactory.CreateAuditRepository()
+	adminLogRepoImpl := c.repositoryFactory.CreateAdminLogRepository()
+
+	// 创建适配器
+	adminAuditRepo := &adminAuditRepositoryAdapter{repo: adminAuditRepoImpl}
+	adminLogRepo := &adminLogRepositoryAdapter{repo: adminLogRepoImpl}
 
 	// 创建 AdminService 需要的简化 UserRepository 适配器
 	adminUserRepo := &adminUserRepositoryAdapter{userRepo: c.repositoryFactory.CreateUserRepository()}
@@ -1118,6 +1124,149 @@ func (a *adminUserRepositoryAdapter) UnbanUser(ctx context.Context, userID strin
 		"updated_at": time.Now(),
 	}
 	return a.userRepo.Update(ctx, userID, updates)
+}
+
+// ============ Admin Repository Adapters ============
+// 将新的 admin repository 接口适配为 shared/admin 服务需要的接口
+
+// adminAuditRepositoryAdapter 适配器
+type adminAuditRepositoryAdapter struct {
+	repo adminInterface.AuditRepository
+}
+
+var _ admin.AuditRepository = (*adminAuditRepositoryAdapter)(nil)
+
+// Create 创建审核记录
+func (a *adminAuditRepositoryAdapter) Create(ctx context.Context, record *admin.AuditRecord) error {
+	adminRecord := &adminModel.AuditRecord{
+		ID:          record.ID,
+		ContentID:   record.ContentID,
+		ContentType: record.ContentType,
+		Status:      record.Status,
+		ReviewerID:  record.ReviewerID,
+		CreatedAt:   record.CreatedAt,
+		UpdatedAt:   record.UpdatedAt,
+	}
+	return a.repo.CreateAuditRecord(ctx, adminRecord)
+}
+
+// Get 获取审核记录
+func (a *adminAuditRepositoryAdapter) Get(ctx context.Context, recordID string) (*admin.AuditRecord, error) {
+	adminRecord, err := a.repo.GetAuditRecord(ctx, recordID, "")
+	if err != nil {
+		return nil, err
+	}
+	return &admin.AuditRecord{
+		ID:          adminRecord.ID,
+		ContentID:   adminRecord.ContentID,
+		ContentType: adminRecord.ContentType,
+		Status:      adminRecord.Status,
+		ReviewerID:  adminRecord.ReviewerID,
+		Reason:      "", // 从 adminModel 中没有这个字段
+		ReviewedAt:  time.Time{}, // 从 adminModel 中没有这个字段
+		CreatedAt:   adminRecord.CreatedAt,
+		UpdatedAt:   adminRecord.UpdatedAt,
+	}, nil
+}
+
+// Update 更新审核记录
+func (a *adminAuditRepositoryAdapter) Update(ctx context.Context, recordID string, updates map[string]interface{}) error {
+	return a.repo.UpdateAuditRecord(ctx, recordID, updates)
+}
+
+// ListByStatus 按状态列出审核记录
+func (a *adminAuditRepositoryAdapter) ListByStatus(ctx context.Context, contentType, status string) ([]*admin.AuditRecord, error) {
+	filter := &adminInterface.AuditFilter{
+		ContentType: contentType,
+		Status:      status,
+	}
+	records, err := a.repo.ListAuditRecords(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*admin.AuditRecord, len(records))
+	for i, r := range records {
+		result[i] = &admin.AuditRecord{
+			ID:          r.ID,
+			ContentID:   r.ContentID,
+			ContentType: r.ContentType,
+			Status:      r.Status,
+			ReviewerID:  r.ReviewerID,
+			CreatedAt:   r.CreatedAt,
+			UpdatedAt:   r.UpdatedAt,
+		}
+	}
+	return result, nil
+}
+
+// ListByContent 按内容列出审核记录
+func (a *adminAuditRepositoryAdapter) ListByContent(ctx context.Context, contentID string) ([]*admin.AuditRecord, error) {
+	record, err := a.repo.GetAuditRecord(ctx, contentID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return []*admin.AuditRecord{{
+		ID:          record.ID,
+		ContentID:   record.ContentID,
+		ContentType: record.ContentType,
+		Status:      record.Status,
+		ReviewerID:  record.ReviewerID,
+		CreatedAt:   record.CreatedAt,
+		UpdatedAt:   record.UpdatedAt,
+	}}, nil
+}
+
+// adminLogRepositoryAdapter 适配器
+type adminLogRepositoryAdapter struct {
+	repo adminInterface.AdminLogRepository
+}
+
+var _ admin.LogRepository = (*adminLogRepositoryAdapter)(nil)
+
+// Create 创建日志
+func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.AdminLog) error {
+	adminLog := &adminModel.AdminLog{
+		ID:        log.ID,
+		AdminID:   log.AdminID,
+		Operation: log.Operation,
+		Target:    log.Target,    // shared/admin 只有一个 Target 字段
+		Details:   log.Details,
+		CreatedAt: log.CreatedAt,
+	}
+	return a.repo.CreateAdminLog(ctx, adminLog)
+}
+
+// List 列出日志
+func (a *adminLogRepositoryAdapter) List(ctx context.Context, filter *admin.LogFilter) ([]*admin.AdminLog, error) {
+	adminFilter := &adminInterface.AdminLogFilter{
+		AdminID:   filter.AdminID,
+		Operation: filter.Operation,
+		StartDate: filter.StartDate,
+		EndDate:   filter.EndDate,
+		Limit:     int64(filter.PageSize),   // 将 PageSize 转换为 Limit
+		Offset:    int64((filter.Page - 1) * filter.PageSize), // 将 Page 转换为 Offset
+	}
+
+	logs, err := a.repo.ListAdminLogs(ctx, adminFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*admin.AdminLog, len(logs))
+	for i, l := range logs {
+		result[i] = &admin.AdminLog{
+			ID:        l.ID,
+			AdminID:   l.AdminID,
+			Operation: l.Operation,
+			Target:    l.Target, // adminModel 只有一个 Target 字段
+			Details:   l.Details,
+			IP:        l.IP, // adminModel 使用 IP 字段
+			CreatedAt: l.CreatedAt,
+		}
+	}
+	return result, nil
 }
 
 // IsInitialized 检查是否已初始化
