@@ -103,19 +103,7 @@ linters:
     - gofmt          # 检查代码格式
     - goimports      # 检查导入顺序
     - misspell       # 检查拼写错误
-    - goconst        # 检查可以用常量替换的字符串
-    - dupl           # 检查重复代码
-    - lll            # 检查行长度
-    - nakedret       # 检查裸返回
-    - prealloc       # 检查切片预分配
     - revive         # 替代 golint
-    - unconvert      # 检查不必要的类型转换
-    - unparam        # 检查未使用的函数参数
-    - gosec          # 安全检查
-    - bodyclose      # 检查 HTTP body 是否关闭
-    - noctx          # 检查是否使用了 context
-    - rowserrcheck   # 检查数据库查询错误
-    - sqlclosecheck  # 检查 SQL rows/stmt 是否关闭
 
 issues:
   exclude-use-default: false

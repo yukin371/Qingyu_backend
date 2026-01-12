@@ -1014,6 +1014,7 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, books)
+				assert.GreaterOrEqual(t, total, int64(0))
 			}
 			mockBookRepo.AssertExpectations(t)
 		})
