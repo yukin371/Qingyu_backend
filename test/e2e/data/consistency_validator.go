@@ -7,8 +7,10 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/global"
+	"Qingyu_backend/pkg/logger"
 )
 
 // ConsistencyIssue 一致性问题
@@ -88,7 +90,17 @@ func (v *ConsistencyValidator) ValidateBookData(ctx context.Context, bookID stri
 	// 2. 验证章节数量与book.chapter_count一致
 	chapters := v.getChaptersByBook(ctx, bookObjID)
 	actualCount := len(chapters)
-	expectedCount := int(book["chapter_count"].(int32))
+	chapterCount, ok := book["chapter_count"].(int32)
+	if !ok {
+		issues = append(issues, ConsistencyIssue{
+			Type:        "invalid_chapter_count_type",
+			Description: fmt.Sprintf("书籍chapter_count字段类型错误: %s", bookID),
+			Severity:    "error",
+			Details:     map[string]interface{}{"book_id": bookID, "actual_type": fmt.Sprintf("%T", book["chapter_count"])},
+		})
+		return issues
+	}
+	expectedCount := int(chapterCount)
 
 	if actualCount != expectedCount {
 		issues = append(issues, ConsistencyIssue{
@@ -105,11 +117,32 @@ func (v *ConsistencyValidator) ValidateBookData(ctx context.Context, bookID stri
 
 	// 3. 验证所有章节都有内容
 	for _, chapter := range chapters {
-		chapterID := chapter["_id"].(primitive.ObjectID)
+		chapterID, ok := chapter["_id"].(primitive.ObjectID)
+		if !ok {
+			issues = append(issues, ConsistencyIssue{
+				Type:        "invalid_chapter_id_type",
+				Description: "章节_id字段类型错误",
+				Severity:    "error",
+				Details:     map[string]interface{}{"book_id": bookID, "chapter": chapter},
+			})
+			continue
+		}
+
 		hasContent := v.hasChapterContent(ctx, chapterID)
 		if !hasContent {
-			chapterNum := chapter["chapter_num"].(int32)
-			chapterTitle := chapter["title"].(string)
+			chapterNum, okNum := chapter["chapter_num"].(int32)
+			chapterTitle, okTitle := chapter["title"].(string)
+
+			if !okNum || !okTitle {
+				issues = append(issues, ConsistencyIssue{
+					Type:        "invalid_chapter_fields",
+					Description: fmt.Sprintf("章节字段类型错误: %s", chapterID.Hex()),
+					Severity:    "error",
+					Details:     map[string]interface{}{"book_id": bookID, "chapter_id": chapterID.Hex(), "chapter": chapter},
+				})
+				continue
+			}
+
 			issues = append(issues, ConsistencyIssue{
 				Type:        "missing_chapter_content",
 				Description: fmt.Sprintf("章节缺少内容: %s (第%d章)", chapterID.Hex(), chapterNum),
@@ -202,6 +235,9 @@ func (v *ConsistencyValidator) hasChapterContent(ctx context.Context, chapterID 
 func (v *ConsistencyValidator) validateReadingProgress(ctx context.Context, userID string, issues *[]ConsistencyIssue) {
 	cursor, err := global.DB.Collection("reading_progress").Find(ctx, bson.M{"user_id": userID})
 	if err != nil {
+		logger.Debug("Failed to query reading_progress",
+			zap.String("user_id", userID),
+			zap.String("error", err.Error()))
 		return
 	}
 	defer cursor.Close(ctx)
@@ -210,7 +246,21 @@ func (v *ConsistencyValidator) validateReadingProgress(ctx context.Context, user
 	cursor.All(ctx, &progressList)
 
 	for _, progress := range progressList {
-		bookID, _ := progress["book_id"].(string)
+		bookID, ok := progress["book_id"].(string)
+		if !ok {
+			// book_id可能是ObjectID类型
+			if bookObjID, ok := progress["book_id"].(primitive.ObjectID); ok {
+				bookID = bookObjID.Hex()
+			} else {
+				*issues = append(*issues, ConsistencyIssue{
+					Type:        "invalid_reading_progress_book_id_type",
+					Description: "阅读进度book_id字段类型错误",
+					Severity:    "warning",
+					Details:     map[string]interface{}{"progress": progress},
+				})
+				continue
+			}
+		}
 
 		// 检查书籍是否存在
 		bookObjID, err := primitive.ObjectIDFromHex(bookID)
@@ -240,6 +290,9 @@ func (v *ConsistencyValidator) validateReadingProgress(ctx context.Context, user
 func (v *ConsistencyValidator) validateComments(ctx context.Context, userID string, issues *[]ConsistencyIssue) {
 	cursor, err := global.DB.Collection("comments").Find(ctx, bson.M{"author_id": userID})
 	if err != nil {
+		logger.Debug("Failed to query comments",
+			zap.String("user_id", userID),
+			zap.String("error", err.Error()))
 		return
 	}
 	defer cursor.Close(ctx)
@@ -248,8 +301,18 @@ func (v *ConsistencyValidator) validateComments(ctx context.Context, userID stri
 	cursor.All(ctx, &comments)
 
 	for _, comment := range comments {
-		targetID, _ := comment["target_id"].(string)
-		targetType, _ := comment["target_type"].(string)
+		targetID, okID := comment["target_id"].(string)
+		targetType, okType := comment["target_type"].(string)
+
+		if !okID || !okType {
+			*issues = append(*issues, ConsistencyIssue{
+				Type:        "invalid_comment_fields",
+				Description: "评论target_id或target_type字段类型错误",
+				Severity:    "warning",
+				Details:     map[string]interface{}{"comment": comment},
+			})
+			continue
+		}
 
 		// 根据目标类型检查目标是否存在
 		var exists bool
@@ -270,8 +333,14 @@ func (v *ConsistencyValidator) validateComments(ctx context.Context, userID stri
 				exists = count > 0
 			}
 		} else {
-			// 其他类型暂不验证
-			exists = true
+			// 未知类型的评论，记录警告
+			*issues = append(*issues, ConsistencyIssue{
+				Type:        "unknown_comment_target_type",
+				Description: fmt.Sprintf("评论引用了未知的目标类型: %s (类型: %s)", targetID, targetType),
+				Severity:    "warning",
+				Details:     map[string]interface{}{"comment": comment},
+			})
+			continue
 		}
 
 		if !exists {
@@ -289,6 +358,9 @@ func (v *ConsistencyValidator) validateComments(ctx context.Context, userID stri
 func (v *ConsistencyValidator) validateCollections(ctx context.Context, userID string, issues *[]ConsistencyIssue) {
 	cursor, err := global.DB.Collection("collections").Find(ctx, bson.M{"user_id": userID})
 	if err != nil {
+		logger.Debug("Failed to query collections",
+			zap.String("user_id", userID),
+			zap.String("error", err.Error()))
 		return
 	}
 	defer cursor.Close(ctx)
@@ -297,7 +369,21 @@ func (v *ConsistencyValidator) validateCollections(ctx context.Context, userID s
 	cursor.All(ctx, &collections)
 
 	for _, collection := range collections {
-		bookID, _ := collection["book_id"].(string)
+		bookID, ok := collection["book_id"].(string)
+		if !ok {
+			// book_id可能是ObjectID类型
+			if bookObjID, ok := collection["book_id"].(primitive.ObjectID); ok {
+				bookID = bookObjID.Hex()
+			} else {
+				*issues = append(*issues, ConsistencyIssue{
+					Type:        "invalid_collection_book_id_type",
+					Description: "收藏book_id字段类型错误",
+					Severity:    "warning",
+					Details:     map[string]interface{}{"collection": collection},
+				})
+				continue
+			}
+		}
 
 		// 检查书籍是否存在
 		bookObjID, err := primitive.ObjectIDFromHex(bookID)
@@ -332,6 +418,9 @@ func (v *ConsistencyValidator) validatePurchases(ctx context.Context, userID str
 
 	cursor, err := global.DB.Collection("chapter_purchases").Find(ctx, bson.M{"user_id": userObjID})
 	if err != nil {
+		logger.Debug("Failed to query chapter_purchases",
+			zap.String("user_id", userID),
+			zap.String("error", err.Error()))
 		return
 	}
 	defer cursor.Close(ctx)
