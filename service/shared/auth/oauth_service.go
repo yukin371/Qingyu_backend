@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"go.uber.org/zap"
 
 	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/repository/interfaces/auth"
@@ -207,14 +207,14 @@ func (s *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Toke
 	}
 
 	return &authModel.UserIdentity{
-		Provider:     authModel.OAuthProviderGoogle,
-		ProviderID:   googleResp.ID,
-		Email:        googleResp.Email,
+		Provider:      authModel.OAuthProviderGoogle,
+		ProviderID:    googleResp.ID,
+		Email:         googleResp.Email,
 		EmailVerified: googleResp.VerifiedEmail,
-		Name:         googleResp.Name,
-		Avatar:       googleResp.Picture,
-		Username:     strings.Split(googleResp.Email, "@")[0], // 使用邮箱前缀作为用户名
-		Locale:       googleResp.Locale,
+		Name:          googleResp.Name,
+		Avatar:        googleResp.Picture,
+		Username:      strings.Split(googleResp.Email, "@")[0], // 使用邮箱前缀作为用户名
+		Locale:        googleResp.Locale,
 	}, nil
 }
 
@@ -264,9 +264,9 @@ func (s *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Toke
 		emailBody, _ := io.ReadAll(emailResp.Body)
 
 		var emails []struct {
-			Email   string `json:"email"`
-			Primary bool   `json:"primary"`
-			Verified bool `json:"verified"`
+			Email    string `json:"email"`
+			Primary  bool   `json:"primary"`
+			Verified bool   `json:"verified"`
 		}
 		json.Unmarshal(emailBody, &emails)
 
@@ -280,13 +280,13 @@ func (s *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Toke
 	}
 
 	return &authModel.UserIdentity{
-		Provider:       authModel.OAuthProviderGitHub,
-		ProviderID:     fmt.Sprintf("%d", githubResp.ID),
-		Email:          email,
-		EmailVerified:  emailVerified,
-		Name:           githubResp.Name,
-		Username:       githubResp.Login,
-		Avatar:         githubResp.AvatarURL,
+		Provider:      authModel.OAuthProviderGitHub,
+		ProviderID:    fmt.Sprintf("%d", githubResp.ID),
+		Email:         email,
+		EmailVerified: emailVerified,
+		Name:          githubResp.Name,
+		Username:      githubResp.Login,
+		Avatar:        githubResp.AvatarURL,
 	}, nil
 }
 
@@ -348,10 +348,10 @@ func (s *OAuthService) getQQUserInfo(ctx context.Context, token *oauth2.Token) (
 	userInfoBody, _ := io.ReadAll(userInfoResp.Body)
 
 	var qqUserInfoResp struct {
-		Ret        int    `json:"ret"`
-		Msg        string `json:"msg"`
-		Nickname   string `json:"nickname"`
-		Gender     string `json:"gender"`
+		Ret         int    `json:"ret"`
+		Msg         string `json:"msg"`
+		Nickname    string `json:"nickname"`
+		Gender      string `json:"gender"`
 		FigureURLQQ string `json:"figureurl_qq_1"` // 中等尺寸头像
 	}
 
@@ -364,12 +364,12 @@ func (s *OAuthService) getQQUserInfo(ctx context.Context, token *oauth2.Token) (
 	}
 
 	return &authModel.UserIdentity{
-		Provider:       authModel.OAuthProviderQQ,
-		ProviderID:     qqOpenIDResp.OpenID,
-		Name:           qqUserInfoResp.Nickname,
-		Avatar:         qqUserInfoResp.FigureURLQQ,
-		Username:       fmt.Sprintf("qq_%s", qqOpenIDResp.OpenID[:8]),
-		EmailVerified:  false, // QQ不提供邮箱验证信息
+		Provider:      authModel.OAuthProviderQQ,
+		ProviderID:    qqOpenIDResp.OpenID,
+		Name:          qqUserInfoResp.Nickname,
+		Avatar:        qqUserInfoResp.FigureURLQQ,
+		Username:      fmt.Sprintf("qq_%s", qqOpenIDResp.OpenID[:8]),
+		EmailVerified: false, // QQ不提供邮箱验证信息
 	}, nil
 }
 
@@ -430,19 +430,19 @@ func (s *OAuthService) LinkAccount(ctx context.Context, userID string, provider 
 
 	// 创建OAuth账号记录
 	account := &authModel.OAuthAccount{
-		UserID:          userID,
-		Provider:        provider,
-		ProviderUserID:  identity.ProviderID,
-		Email:           identity.Email,
-		Username:        identity.Username,
-		Avatar:          identity.Avatar,
-		AccessToken:     token.AccessToken,
-		RefreshToken:    token.RefreshToken,
-		TokenExpiresAt:  time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
-		Scope:           getTokenExtraString(token, "scope"),
-		IsPrimary:       hasPrimary == nil, // 如果没有主账号，则设为主账号
-		LastLoginAt:     time.Now(),
-		Metadata:        make(map[string]interface{}),
+		UserID:         userID,
+		Provider:       provider,
+		ProviderUserID: identity.ProviderID,
+		Email:          identity.Email,
+		Username:       identity.Username,
+		Avatar:         identity.Avatar,
+		AccessToken:    token.AccessToken,
+		RefreshToken:   token.RefreshToken,
+		TokenExpiresAt: time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
+		Scope:          getTokenExtraString(token, "scope"),
+		IsPrimary:      hasPrimary == nil, // 如果没有主账号，则设为主账号
+		LastLoginAt:    time.Now(),
+		Metadata:       make(map[string]interface{}),
 	}
 
 	if err := s.repo.Create(ctx, account); err != nil {

@@ -40,8 +40,8 @@ func (s *BookListService) Health(ctx context.Context) error {
 	return nil
 }
 func (s *BookListService) Close(ctx context.Context) error { return nil }
-func (s *BookListService) GetServiceName() string { return s.serviceName }
-func (s *BookListService) GetVersion() string { return s.version }
+func (s *BookListService) GetServiceName() string          { return s.serviceName }
+func (s *BookListService) GetVersion() string              { return s.version }
 
 // CreateBookList 创建书单
 func (s *BookListService) CreateBookList(ctx context.Context, userID, userName, userAvatar, title, description, cover, category string, tags []string, isPublic bool) (*social.BookList, error) {

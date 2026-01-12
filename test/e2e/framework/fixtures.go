@@ -96,13 +96,13 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 	// 使用完整的 ID 确保用户名唯一
 	uniqueSuffix := userID.Hex()
 	user := &users.User{
-		ID:        userID.Hex(), // User.ID 是 string 类型
-		Username:  "e2e_test_user_" + uniqueSuffix,
-		Email:     "e2e_test_" + uniqueSuffix + "@example.com",
-		Password:  string(hashedPassword),
-		VIPLevel:  0,
-		Status:    users.UserStatusActive,
-		Roles:     []string{"reader"},
+		ID:       userID.Hex(), // User.ID 是 string 类型
+		Username: "e2e_test_user_" + uniqueSuffix,
+		Email:    "e2e_test_" + uniqueSuffix + "@example.com",
+		Password: string(hashedPassword),
+		VIPLevel: 0,
+		Status:   users.UserStatusActive,
+		Roles:    []string{"reader"},
 	}
 
 	// 应用选项（注意：WithUsername 会覆盖上面的用户名）
@@ -213,13 +213,13 @@ func (f *Fixtures) CreateAdminUser(opts ...UserOption) *users.User {
 	require.NoError(f.env.T, err, "密码哈希失败")
 
 	user := &users.User{
-		ID:        userID.Hex(), // User.ID 是 string 类型
-		Username:  "e2e_test_admin_" + userID.Hex()[:8],
-		Email:     "e2e_test_admin_" + userID.Hex()[:8] + "@example.com",
-		Password:  string(hashedPassword),
-		VIPLevel:  0,
-		Status:    users.UserStatusActive,
-		Roles:     []string{"admin"},
+		ID:       userID.Hex(), // User.ID 是 string 类型
+		Username: "e2e_test_admin_" + userID.Hex()[:8],
+		Email:    "e2e_test_admin_" + userID.Hex()[:8] + "@example.com",
+		Password: string(hashedPassword),
+		VIPLevel: 0,
+		Status:   users.UserStatusActive,
+		Roles:    []string{"admin"},
 	}
 
 	// 应用选项

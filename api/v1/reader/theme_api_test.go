@@ -166,8 +166,8 @@ func TestThemeAPI_CreateCustomTheme_Unauthorized(t *testing.T) {
 	}
 
 	reqBody := readerModels.CreateCustomThemeRequest{
-		Name:     "custom-theme",
-		Colors:   colors,
+		Name:   "custom-theme",
+		Colors: colors,
 	}
 
 	// When

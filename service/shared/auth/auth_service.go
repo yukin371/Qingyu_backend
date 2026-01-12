@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	usersModel "Qingyu_backend/models/users"
 	authModel "Qingyu_backend/models/auth"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	usersModel "Qingyu_backend/models/users"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.uber.org/zap"
 )
@@ -22,7 +22,7 @@ type AuthServiceImpl struct {
 	roleService       RoleService
 	permissionService PermissionService
 	authRepo          sharedRepo.AuthRepository
-	oauthRepo         authRepo.OAuthRepository // OAuth仓储
+	oauthRepo         authRepo.OAuthRepository         // OAuth仓储
 	userService       userServiceInterface.UserService // 依赖User服务
 	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
 	passwordValidator *PasswordValidator               // MVP: 密码强度验证

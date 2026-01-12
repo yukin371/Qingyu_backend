@@ -158,12 +158,12 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	replyToUserID := parentComment.AuthorID
 
 	comment := &social.Comment{
-		TargetType:        parentComment.TargetType,
-		TargetID:          parentComment.TargetID,
-		AuthorID:          userID,
-		Content:           strings.TrimSpace(content),
-		Rating:            0, // 回复不包含评分
-		State:             social.CommentStateNormal,
+		TargetType: parentComment.TargetType,
+		TargetID:   parentComment.TargetID,
+		AuthorID:   userID,
+		Content:    strings.TrimSpace(content),
+		Rating:     0, // 回复不包含评分
+		State:      social.CommentStateNormal,
 	}
 	// 设置嵌入字段的字段
 	comment.ParentID = &parentID

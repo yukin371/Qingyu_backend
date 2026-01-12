@@ -16,14 +16,14 @@ import (
 
 // NotificationRepositoryImpl 通知仓储实现
 type NotificationRepositoryImpl struct {
-	db                 *mongo.Database
+	db                     *mongo.Database
 	notificationCollection *mongo.Collection
 }
 
 // NewNotificationRepository 创建通知仓储实例
 func NewNotificationRepository(db *mongo.Database) repo.NotificationRepository {
 	return &NotificationRepositoryImpl{
-		db:                 db,
+		db:                     db,
 		notificationCollection: db.Collection("notifications"),
 	}
 }
@@ -38,17 +38,17 @@ func (r *NotificationRepositoryImpl) Create(ctx context.Context, notif *notifica
 	}
 
 	doc := bson.M{
-		"_id":         objectID,
-		"user_id":     notif.UserID,
-		"type":        notif.Type,
-		"priority":    notif.Priority,
-		"title":       notif.Title,
-		"content":     notif.Content,
-		"data":        notif.Data,
-		"read":        notif.Read,
-		"read_at":     notif.ReadAt,
-		"created_at":  notif.CreatedAt,
-		"expires_at":  notif.ExpiresAt,
+		"_id":        objectID,
+		"user_id":    notif.UserID,
+		"type":       notif.Type,
+		"priority":   notif.Priority,
+		"title":      notif.Title,
+		"content":    notif.Content,
+		"data":       notif.Data,
+		"read":       notif.Read,
+		"read_at":    notif.ReadAt,
+		"created_at": notif.CreatedAt,
+		"expires_at": notif.ExpiresAt,
 	}
 
 	_, err = r.notificationCollection.InsertOne(ctx, doc)
@@ -196,8 +196,8 @@ func (r *NotificationRepositoryImpl) BatchMarkAsRead(ctx context.Context, ids []
 
 	now := time.Now()
 	updates := bson.M{
-		"read":     true,
-		"read_at":  now,
+		"read":    true,
+		"read_at": now,
 	}
 
 	_, err := r.notificationCollection.UpdateMany(ctx, bson.M{"_id": bson.M{"$in": objectIDs}}, bson.M{"$set": updates})
@@ -212,8 +212,8 @@ func (r *NotificationRepositoryImpl) BatchMarkAsRead(ctx context.Context, ids []
 func (r *NotificationRepositoryImpl) MarkAllAsReadForUser(ctx context.Context, userID string) error {
 	now := time.Now()
 	updates := bson.M{
-		"read":     true,
-		"read_at":  now,
+		"read":    true,
+		"read_at": now,
 	}
 
 	_, err := r.notificationCollection.UpdateMany(ctx, bson.M{"user_id": userID, "read": false}, bson.M{"$set": updates})
@@ -330,7 +330,7 @@ func (r *NotificationRepositoryImpl) GetStats(ctx context.Context, userID string
 	for cursor2.Next(ctx) {
 		var result struct {
 			ID    notification.NotificationPriority `bson:"_id"`
-			Count int64                              `bson:"count"`
+			Count int64                             `bson:"count"`
 		}
 		if err := cursor2.Decode(&result); err != nil {
 			continue

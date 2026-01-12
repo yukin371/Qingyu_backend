@@ -47,14 +47,14 @@ const (
 
 // AnnouncementFilter 公告查询过滤器
 type AnnouncementFilter struct {
-	IsActive    *bool            `json:"isActive,omitempty"`
-	Type        *AnnouncementType `json:"type,omitempty"`
-	TargetRole  *string          `json:"targetRole,omitempty"`
-	IsPinned    *bool            `json:"isPinned,omitempty"`
-	SortBy      string           `json:"sortBy,omitempty"`    // priority, created_at, view_count
-	SortOrder   string           `json:"sortOrder,omitempty"` // asc, desc
-	Limit       int              `json:"limit,omitempty"`
-	Offset      int              `json:"offset,omitempty"`
+	IsActive   *bool             `json:"isActive,omitempty"`
+	Type       *AnnouncementType `json:"type,omitempty"`
+	TargetRole *string           `json:"targetRole,omitempty"`
+	IsPinned   *bool             `json:"isPinned,omitempty"`
+	SortBy     string            `json:"sortBy,omitempty"`    // priority, created_at, view_count
+	SortOrder  string            `json:"sortOrder,omitempty"` // asc, desc
+	Limit      int               `json:"limit,omitempty"`
+	Offset     int               `json:"offset,omitempty"`
 }
 
 // GetConditions 获取查询条件

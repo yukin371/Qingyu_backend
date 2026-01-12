@@ -259,19 +259,19 @@ func createTestPlan(name, planType string, duration int, price float64, enabled 
 // createTestMembership 创建测试用会员
 func createTestMembership(userID string, planID primitive.ObjectID, level string, startTime, endTime time.Time) *financeModel.UserMembership {
 	return &financeModel.UserMembership{
-		ID:         primitive.NewObjectID(),
-		UserID:     userID,
-		PlanID:     planID,
-		PlanName:   "测试套餐",
-		PlanType:   financeModel.MembershipTypeMonthly,
-		Level:      level,
-		StartTime:  startTime,
-		EndTime:    endTime,
-		AutoRenew:  false,
-		Status:     financeModel.MembershipStatusActive,
+		ID:          primitive.NewObjectID(),
+		UserID:      userID,
+		PlanID:      planID,
+		PlanName:    "测试套餐",
+		PlanType:    financeModel.MembershipTypeMonthly,
+		Level:       level,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		AutoRenew:   false,
+		Status:      financeModel.MembershipStatusActive,
 		ActivatedAt: time.Now(),
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 }
 

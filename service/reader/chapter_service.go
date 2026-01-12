@@ -40,26 +40,26 @@ type ChapterService interface {
 
 // ChapterServiceImpl 章节服务实现
 type ChapterServiceImpl struct {
-	chapterService    bookstore.ChapterService
-	readerService     *ReaderService
-	vipService        VIPPermissionService
+	chapterService bookstore.ChapterService
+	readerService  *ReaderService
+	vipService     VIPPermissionService
 }
 
 // ChapterContentResponse 章节内容响应
 type ChapterContentResponse struct {
-	ChapterID     string    `json:"chapterId"`
-	BookID        string    `json:"bookId"`
-	Title         string    `json:"title"`
-	ChapterNum    int       `json:"chapterNum"`
-	Content       string    `json:"content"`
-	WordCount     int       `json:"wordCount"`
-	HasNext       bool      `json:"hasNext"`
-	HasPrevious   bool      `json:"hasPrevious"`
-	Progress      float64   `json:"progress"`
-	ReadingTime   int64     `json:"readingTime"`
-	LastReadAt    time.Time `json:"lastReadAt"`
-	CanAccess     bool      `json:"canAccess"`
-	AccessReason  string    `json:"accessReason,omitempty"`
+	ChapterID    string    `json:"chapterId"`
+	BookID       string    `json:"bookId"`
+	Title        string    `json:"title"`
+	ChapterNum   int       `json:"chapterNum"`
+	Content      string    `json:"content"`
+	WordCount    int       `json:"wordCount"`
+	HasNext      bool      `json:"hasNext"`
+	HasPrevious  bool      `json:"hasPrevious"`
+	Progress     float64   `json:"progress"`
+	ReadingTime  int64     `json:"readingTime"`
+	LastReadAt   time.Time `json:"lastReadAt"`
+	CanAccess    bool      `json:"canAccess"`
+	AccessReason string    `json:"accessReason,omitempty"`
 }
 
 // ChapterInfo 章节信息（不含内容）

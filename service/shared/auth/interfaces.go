@@ -127,11 +127,11 @@ type LoginRequest struct {
 // OAuthLoginRequest OAuth登录请求
 type OAuthLoginRequest struct {
 	Provider   authModel.OAuthProvider `json:"provider" binding:"required"`
-	ProviderID string               `json:"provider_id" binding:"required"`
-	Email      string               `json:"email"`
-	Name       string               `json:"name"`
-	Avatar     string               `json:"avatar"`
-	Username   string               `json:"username"`
+	ProviderID string                  `json:"provider_id" binding:"required"`
+	Email      string                  `json:"email"`
+	Name       string                  `json:"name"`
+	Avatar     string                  `json:"avatar"`
+	Username   string                  `json:"username"`
 }
 
 // LoginResponse 登录响应

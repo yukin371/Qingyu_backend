@@ -34,13 +34,13 @@ const (
 
 // FinanceEventData 财务事件数据
 type FinanceEventData struct {
-	UserID    string                 `json:"user_id"`
-	Amount    float64                `json:"amount"`
-	Currency  string                 `json:"currency"`
-	Status    string                 `json:"status"`
-	Action    string                 `json:"action"`
-	Time      time.Time              `json:"time"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	UserID   string                 `json:"user_id"`
+	Amount   float64                `json:"amount"`
+	Currency string                 `json:"currency"`
+	Status   string                 `json:"status"`
+	Action   string                 `json:"action"`
+	Time     time.Time              `json:"time"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ============ 充值事件 ============
@@ -52,7 +52,7 @@ type DepositEventData struct {
 	Amount        float64                `json:"amount"`
 	Currency      string                 `json:"currency"`
 	PaymentMethod string                 `json:"payment_method"`
-	Status        string                 `json:"status"`        // pending/completed/failed
+	Status        string                 `json:"status"` // pending/completed/failed
 	Action        string                 `json:"action"`
 	Time          time.Time              `json:"time"`
 	CompletedTime time.Time              `json:"completed_time,omitempty"`
@@ -121,20 +121,20 @@ func NewDepositFailedEvent(depositID, userID string, amount float64, reason stri
 
 // WithdrawalEventData 提现事件数据
 type WithdrawalEventData struct {
-	WithdrawalID  string                 `json:"withdrawal_id"`
-	UserID        string                 `json:"user_id"`
-	Amount        float64                `json:"amount"`
-	Currency      string                 `json:"currency"`
-	BankAccount   string                 `json:"bank_account"`
-	BankName      string                 `json:"bank_name"`
-	AccountName   string                 `json:"account_name"`
-	Status        string                 `json:"status"`        // pending/approved/rejected/completed
-	Action        string                 `json:"action"`
-	Time          time.Time              `json:"time"`
-	ProcessedTime time.Time              `json:"processed_time,omitempty"`
-	ProcessedBy   string                 `json:"processed_by,omitempty"`
-	RejectionReason string               `json:"rejection_reason,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	WithdrawalID    string                 `json:"withdrawal_id"`
+	UserID          string                 `json:"user_id"`
+	Amount          float64                `json:"amount"`
+	Currency        string                 `json:"currency"`
+	BankAccount     string                 `json:"bank_account"`
+	BankName        string                 `json:"bank_name"`
+	AccountName     string                 `json:"account_name"`
+	Status          string                 `json:"status"` // pending/approved/rejected/completed
+	Action          string                 `json:"action"`
+	Time            time.Time              `json:"time"`
+	ProcessedTime   time.Time              `json:"processed_time,omitempty"`
+	ProcessedBy     string                 `json:"processed_by,omitempty"`
+	RejectionReason string                 `json:"rejection_reason,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewWithdrawalCreatedEvent 创建提现请求事件
@@ -222,20 +222,20 @@ func NewWithdrawalCompletedEvent(withdrawalID, userID string, amount float64) ba
 
 // SettlementEventData 结算事件数据
 type SettlementEventData struct {
-	SettlementID   string                 `json:"settlement_id"`
-	UserID         string                 `json:"user_id"`         // 作者ID
-	Period         string                 `json:"period"`          // 结算周期，如 2024-01
-	TotalRevenue   float64                `json:"total_revenue"`   // 总收入
-	Commission     float64                `json:"commission"`      // 平台佣金
-	NetRevenue     float64                `json:"net_revenue"`     // 净收入
-	Tax            float64                `json:"tax"`             // 税费
-	FinalAmount    float64                `json:"final_amount"`    // 最终结算金额
-	Currency       string                 `json:"currency"`
-	Status         string                 `json:"status"`          // generated/paid
-	Action         string                 `json:"action"`
-	Time           time.Time              `json:"time"`
-	PaidTime       time.Time              `json:"paid_time,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	SettlementID string                 `json:"settlement_id"`
+	UserID       string                 `json:"user_id"`       // 作者ID
+	Period       string                 `json:"period"`        // 结算周期，如 2024-01
+	TotalRevenue float64                `json:"total_revenue"` // 总收入
+	Commission   float64                `json:"commission"`    // 平台佣金
+	NetRevenue   float64                `json:"net_revenue"`   // 净收入
+	Tax          float64                `json:"tax"`           // 税费
+	FinalAmount  float64                `json:"final_amount"`  // 最终结算金额
+	Currency     string                 `json:"currency"`
+	Status       string                 `json:"status"` // generated/paid
+	Action       string                 `json:"action"`
+	Time         time.Time              `json:"time"`
+	PaidTime     time.Time              `json:"paid_time,omitempty"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewSettlementGeneratedEvent 创建结算单生成事件
@@ -284,19 +284,19 @@ func NewSettlementPaidEvent(settlementID, userID string, amount float64) base.Ev
 
 // RevenueEventData 收入事件数据
 type RevenueEventData struct {
-	RevenueID      string                 `json:"revenue_id"`
-	UserID         string                 `json:"user_id"`         // 作者ID
-	Source         string                 `json:"source"`          // 收入来源: book_purchase/chapter_purchase/reward
-	SourceID       string                 `json:"source_id"`       // 来源ID: bookID/chapterID/rewardID
-	Amount         float64                `json:"amount"`
-	Currency       string                 `json:"currency"`
-	RoyaltyRate    float64                `json:"royalty_rate"`    // 版税率
-	NetAmount      float64                `json:"net_amount"`      // 净收入
-	Status         string                 `json:"status"`          // earned/settled
-	Action         string                 `json:"action"`
-	Time           time.Time              `json:"time"`
-	SettledTime    time.Time              `json:"settled_time,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	RevenueID   string                 `json:"revenue_id"`
+	UserID      string                 `json:"user_id"`   // 作者ID
+	Source      string                 `json:"source"`    // 收入来源: book_purchase/chapter_purchase/reward
+	SourceID    string                 `json:"source_id"` // 来源ID: bookID/chapterID/rewardID
+	Amount      float64                `json:"amount"`
+	Currency    string                 `json:"currency"`
+	RoyaltyRate float64                `json:"royalty_rate"` // 版税率
+	NetAmount   float64                `json:"net_amount"`   // 净收入
+	Status      string                 `json:"status"`       // earned/settled
+	Action      string                 `json:"action"`
+	Time        time.Time              `json:"time"`
+	SettledTime time.Time              `json:"settled_time,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewRevenueEarnedEvent 创建收入事件

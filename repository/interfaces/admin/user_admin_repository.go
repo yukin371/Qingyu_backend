@@ -68,11 +68,11 @@ type UserAdminRepository interface {
 
 // UserFilter 用户筛选条件
 type UserFilter struct {
-	Keyword    string               // 用户名/邮箱模糊搜索
-	Status     users.UserStatus     // 状态筛选
-	Role       string               // 角色筛选
-	DateFrom   *time.Time           // 注册时间起
-	DateTo     *time.Time           // 注册时间止
-	LastActive *time.Time           // 最后活跃时间
-	IsVIP      *bool                // 是否VIP
+	Keyword    string           // 用户名/邮箱模糊搜索
+	Status     users.UserStatus // 状态筛选
+	Role       string           // 角色筛选
+	DateFrom   *time.Time       // 注册时间起
+	DateTo     *time.Time       // 注册时间止
+	LastActive *time.Time       // 最后活跃时间
+	IsVIP      *bool            // 是否VIP
 }

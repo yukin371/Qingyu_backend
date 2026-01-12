@@ -47,4 +47,3 @@ type CacheService interface {
 	FlushDB(ctx context.Context) error
 	Close() error
 }
-

@@ -33,12 +33,12 @@ func TestCollectionRepository_Create(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:    "user_create_" + primitive.NewObjectID().Hex(),
-		BookID:    "book_create_" + primitive.NewObjectID().Hex(),
-		FolderID:  "",
-		Tags:      []string{"玄幻", "推荐"},
-		Note:      "这是一本好书",
-		IsPublic:  false,
+		UserID:   "user_create_" + primitive.NewObjectID().Hex(),
+		BookID:   "book_create_" + primitive.NewObjectID().Hex(),
+		FolderID: "",
+		Tags:     []string{"玄幻", "推荐"},
+		Note:     "这是一本好书",
+		IsPublic: false,
 	}
 
 	// Act
@@ -328,9 +328,9 @@ func TestCollectionRepository_Update(t *testing.T) {
 
 	// Act - 更新收藏
 	updates := map[string]interface{}{
-		"note":     "更新后的笔记",
+		"note":      "更新后的笔记",
 		"is_public": true,
-		"tags":     []string{"更新", "标签"},
+		"tags":      []string{"更新", "标签"},
 	}
 	err = repo.Update(ctx, collection.ID.Hex(), updates)
 

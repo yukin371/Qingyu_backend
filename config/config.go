@@ -14,15 +14,15 @@ import (
 
 // Config 存储应用配置
 type Config struct {
-	Database *DatabaseConfig    `mapstructure:"database"`
-	Redis    *RedisConfig       `mapstructure:"redis"`
-	Server   *ServerConfig      `mapstructure:"server"`
-	JWT      *JWTConfig         `mapstructure:"jwt"`
-	AI       *AIConfig          `mapstructure:"ai"`
-	External *ExternalAPIConfig `mapstructure:"external"`
-	AIQuota  *AIQuotaConfig     `mapstructure:"ai_quota"`
-	Email    *EmailConfig       `mapstructure:"email"`
-	Payment  *PaymentConfig     `mapstructure:"payment"`
+	Database *DatabaseConfig                   `mapstructure:"database"`
+	Redis    *RedisConfig                      `mapstructure:"redis"`
+	Server   *ServerConfig                     `mapstructure:"server"`
+	JWT      *JWTConfig                        `mapstructure:"jwt"`
+	AI       *AIConfig                         `mapstructure:"ai"`
+	External *ExternalAPIConfig                `mapstructure:"external"`
+	AIQuota  *AIQuotaConfig                    `mapstructure:"ai_quota"`
+	Email    *EmailConfig                      `mapstructure:"email"`
+	Payment  *PaymentConfig                    `mapstructure:"payment"`
 	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
 }
 

@@ -220,28 +220,28 @@ func TestOldPathsRemoved(t *testing.T) {
 func TestCommunicationsSeparationOfConcerns(t *testing.T) {
 	t.Run("Three distinct communication patterns", func(t *testing.T) {
 		patterns := []struct {
-			name     string
-			pattern  string
-			access   string
-			example  string
+			name    string
+			pattern string
+			access  string
+			example string
 		}{
 			{
-				name:     "Announcements",
-				pattern:  "One-to-Many",
-				access:   "Public (no auth)",
-				example:  "System-wide announcements, maintenance notices",
+				name:    "Announcements",
+				pattern: "One-to-Many",
+				access:  "Public (no auth)",
+				example: "System-wide announcements, maintenance notices",
 			},
 			{
-				name:     "Notifications",
-				pattern:  "Event-driven",
-				access:   "Private (requires auth)",
-				example:  "Likes, comments, follows, system events",
+				name:    "Notifications",
+				pattern: "Event-driven",
+				access:  "Private (requires auth)",
+				example: "Likes, comments, follows, system events",
 			},
 			{
-				name:     "Messages",
-				pattern:  "Peer-to-Peer",
-				access:   "Private (requires auth)",
-				example:  "User-to-user private messaging",
+				name:    "Messages",
+				pattern: "Peer-to-Peer",
+				access:  "Private (requires auth)",
+				example: "User-to-user private messaging",
 			},
 		}
 

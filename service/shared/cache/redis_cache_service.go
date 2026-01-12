@@ -329,4 +329,3 @@ func (s *RedisCacheService) FlushDB(ctx context.Context) error {
 func (s *RedisCacheService) Close() error {
 	return s.client.Close()
 }
-

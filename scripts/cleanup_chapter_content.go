@@ -14,19 +14,19 @@ import (
 
 // Config 清理配置
 type Config struct {
-	MongoURI string
-	Database string
-	DryRun   bool // 是否为试运行
+	MongoURI  string
+	Database  string
+	DryRun    bool // 是否为试运行
 	BatchSize int  // 批量处理大小
 }
 
 func main() {
 	// 配置
 	config := Config{
-		MongoURI:   "mongodb://localhost:27017",
-		Database:   "qingyu",
-		DryRun:     false, // 实际清理模式
-		BatchSize:  1000,
+		MongoURI:  "mongodb://localhost:27017",
+		Database:  "qingyu",
+		DryRun:    false, // 实际清理模式
+		BatchSize: 1000,
 	}
 
 	fmt.Println("========================================")

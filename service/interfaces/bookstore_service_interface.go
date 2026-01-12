@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"context"
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"context"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合

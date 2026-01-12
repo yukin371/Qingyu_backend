@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	adminservice "Qingyu_backend/service/admin"
-	"Qingyu_backend/models/users"
 )
 
 // UserAdminAPI 用户管理API
@@ -493,7 +493,7 @@ type UpdateUserRoleRequest struct {
 // BatchUpdateStatusRequest 批量更新状态请求
 type BatchUpdateStatusRequest struct {
 	UserIds []string `json:"userIds" binding:"required"`
-	Status  string    `json:"status" binding:"required"`
+	Status  string   `json:"status" binding:"required"`
 }
 
 // BatchDeleteUsersRequest 批量删除用户请求

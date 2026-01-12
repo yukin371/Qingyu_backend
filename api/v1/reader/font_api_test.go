@@ -256,7 +256,7 @@ func TestFontAPI_SetFontPreference_Success(t *testing.T) {
 
 	reqBody := readerModels.FontPreference{
 		FontName: "system-serif",
-		FontSize:  18,
+		FontSize: 18,
 	}
 
 	// When
@@ -277,7 +277,7 @@ func TestFontAPI_SetFontPreference_FontNotFound(t *testing.T) {
 
 	reqBody := readerModels.FontPreference{
 		FontName: "NonExistentFont",
-		FontSize:  18,
+		FontSize: 18,
 	}
 
 	// When

@@ -15,14 +15,14 @@ import (
 
 // NotificationTemplateRepositoryImpl 通知模板仓储实现
 type NotificationTemplateRepositoryImpl struct {
-	db                *mongo.Database
+	db                 *mongo.Database
 	templateCollection *mongo.Collection
 }
 
 // NewNotificationTemplateRepository 创建通知模板仓储实例
 func NewNotificationTemplateRepository(db *mongo.Database) repo.NotificationTemplateRepository {
 	return &NotificationTemplateRepositoryImpl{
-		db:                db,
+		db:                 db,
 		templateCollection: db.Collection("notification_templates"),
 	}
 }

@@ -396,9 +396,9 @@ func (s *CacheStrategy) WarmUpCache(ctx context.Context, loader func() (map[stri
 
 // CacheStats 缓存统计
 type CacheStats struct {
-	Hits   int64 `json:"hits"`
-	Misses int64 `json:"misses"`
-	Sets   int64 `json:"sets"`
+	Hits    int64 `json:"hits"`
+	Misses  int64 `json:"misses"`
+	Sets    int64 `json:"sets"`
 	Deletes int64 `json:"deletes"`
 }
 

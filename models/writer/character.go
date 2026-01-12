@@ -12,16 +12,16 @@ type Character struct {
 	base.NamedEntity         `bson:",inline"` // Name
 
 	// 基本信息（保持BSON字段名不变，确保数据库兼容）
-	Alias         []string `bson:"alias,omitempty" json:"alias,omitempty" validate:"max=10"`
-	Summary       string   `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=500"`
-	Traits        []string `bson:"traits,omitempty" json:"traits,omitempty" validate:"max=20"`
-	Background    string   `bson:"background,omitempty" json:"background,omitempty" validate:"max=2000"`
-	AvatarURL     string   `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty" validate:"omitempty,url"`
+	Alias      []string `bson:"alias,omitempty" json:"alias,omitempty" validate:"max=10"`
+	Summary    string   `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=500"`
+	Traits     []string `bson:"traits,omitempty" json:"traits,omitempty" validate:"max=20"`
+	Background string   `bson:"background,omitempty" json:"background,omitempty" validate:"max=2000"`
+	AvatarURL  string   `bson:"avatar_url,omitempty" json:"avatarUrl,omitempty" validate:"omitempty,url"`
 
 	// AI相关字段
 	PersonalityPrompt string `bson:"personality_prompt,omitempty" json:"personalityPrompt,omitempty" validate:"max=1000"` // 角色性格提示
-	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty" validate:"max=500"`         // 角色语音模式
-	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty" validate:"max=200"`           // 角色当前状态
+	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty" validate:"max=500"`          // 角色语音模式
+	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty" validate:"max=200"`            // 角色当前状态
 	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty" validate:"max=200"`    // 角色摘要
 }
 

@@ -7,14 +7,14 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/logger"
-	pkgmiddleware "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/pkg/metrics"
+	pkgmiddleware "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/router"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 // InitServer 初始化服务器
@@ -56,9 +56,9 @@ func InitServer() (*gin.Engine, error) {
 
 	// LoggerMiddleware - 结构化日志记录
 	r.Use(pkgmiddleware.LoggerMiddleware(
-		"/health",        // 跳过健康检查
-		"/metrics",       // 跳过Prometheus指标
-		"/swagger",       // 跳过Swagger文档
+		"/health",  // 跳过健康检查
+		"/metrics", // 跳过Prometheus指标
+		"/swagger", // 跳过Swagger文档
 	))
 
 	// PrometheusMiddleware - 监控指标收集
@@ -82,14 +82,14 @@ func InitServer() (*gin.Engine, error) {
 
 	// 3. 注册健康检查和监控端点
 	healthAPI := system.NewHealthAPI()
-	r.GET("/health", healthAPI.SystemHealth)              // 系统整体健康检查
-	r.GET("/health/live", func(c *gin.Context) {          // K8s存活检查
+	r.GET("/health", healthAPI.SystemHealth)     // 系统整体健康检查
+	r.GET("/health/live", func(c *gin.Context) { // K8s存活检查
 		c.JSON(200, gin.H{"status": "alive"})
 	})
-	r.GET("/health/ready", func(c *gin.Context) {         // K8s就绪检查
+	r.GET("/health/ready", func(c *gin.Context) { // K8s就绪检查
 		c.JSON(200, gin.H{"status": "ready"})
 	})
-	r.GET("/metrics", metrics.GinMetricsHandler())        // Prometheus指标端点（Gin处理器）
+	r.GET("/metrics", metrics.GinMetricsHandler()) // Prometheus指标端点（Gin处理器）
 
 	// 注册业务路由
 	router.RegisterRoutes(r)

@@ -58,13 +58,13 @@ type StoredEvent struct {
 
 // EventFilter 事件过滤器
 type EventFilter struct {
-	EventType   string     `bson:"event_type,omitempty"`
-	Source      string     `bson:"source,omitempty"`
-	StartTime   *time.Time `bson:"start_time,omitempty"`
-	EndTime     *time.Time `bson:"end_time,omitempty"`
-	Processed   *bool      `bson:"processed,omitempty"`
-	Limit       int64      `bson:"limit,omitempty"`
-	Offset      int64      `bson:"offset,omitempty"`
+	EventType string     `bson:"event_type,omitempty"`
+	Source    string     `bson:"source,omitempty"`
+	StartTime *time.Time `bson:"start_time,omitempty"`
+	EndTime   *time.Time `bson:"end_time,omitempty"`
+	Processed *bool      `bson:"processed,omitempty"`
+	Limit     int64      `bson:"limit,omitempty"`
+	Offset    int64      `bson:"offset,omitempty"`
 }
 
 // EventStoreConfig 事件存储配置
@@ -115,12 +115,12 @@ type EventReplayer interface {
 // EventSnapshot 事件快照
 // 用于定期保存聚合根的状态
 type EventSnapshot struct {
-	ID           string      `bson:"_id" json:"id"`
-	AggregateID  string      `bson:"aggregate_id" json:"aggregate_id"`
-	AggregateType string     `bson:"aggregate_type" json:"aggregate_type"`
-	Version      int64       `bson:"version" json:"version"`
-	State        interface{} `bson:"state" json:"state"`
-	CreatedAt    time.Time   `bson:"created_at" json:"created_at"`
+	ID            string      `bson:"_id" json:"id"`
+	AggregateID   string      `bson:"aggregate_id" json:"aggregate_id"`
+	AggregateType string      `bson:"aggregate_type" json:"aggregate_type"`
+	Version       int64       `bson:"version" json:"version"`
+	State         interface{} `bson:"state" json:"state"`
+	CreatedAt     time.Time   `bson:"created_at" json:"created_at"`
 }
 
 // EventSnapshotStore 事件快照存储接口

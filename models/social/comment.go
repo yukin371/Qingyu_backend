@@ -19,52 +19,52 @@ type Comment struct {
 	TargetID   string            `bson:"target_id" json:"targetId" validate:"required"`     // 目标ID
 
 	// 旧字段兼容（向后兼容）
-	BookID    string `bson:"book_id,omitempty" json:"book_id,omitempty"`             // 书籍ID（兼容旧版本）
-	ChapterID string `bson:"chapter_id,omitempty" json:"chapter_id,omitempty"`       // 章节ID（兼容旧版本）
+	BookID    string `bson:"book_id,omitempty" json:"book_id,omitempty"`       // 书籍ID（兼容旧版本）
+	ChapterID string `bson:"chapter_id,omitempty" json:"chapter_id,omitempty"` // 章节ID（兼容旧版本）
 
 	// 评论内容
 	Content     string      `bson:"content" json:"content" validate:"required,min=1,max=5000"` // 评论内容
-	RichContent interface{} `bson:"rich_content,omitempty" json:"richContent,omitempty"`     // 富文本内容（JSON）
-	Rating      int         `bson:"rating" json:"rating" validate:"min=0,max=5"`              // 评分（0-5星，0表示无评分）
+	RichContent interface{} `bson:"rich_content,omitempty" json:"richContent,omitempty"`       // 富文本内容（JSON）
+	Rating      int         `bson:"rating" json:"rating" validate:"min=0,max=5"`               // 评分（0-5星，0表示无评分）
 
 	// 状态
-	State       CommentState `bson:"state" json:"state" validate:"required,oneof=normal hidden deleted rejected"` // 评论状态
-	RejectReason string      `bson:"reject_reason,omitempty" json:"rejectReason,omitempty"`                       // 拒绝原因
+	State        CommentState `bson:"state" json:"state" validate:"required,oneof=normal hidden deleted rejected"` // 评论状态
+	RejectReason string       `bson:"reject_reason,omitempty" json:"rejectReason,omitempty"`                       // 拒绝原因
 
 	// 作者快照
 	AuthorSnapshot *CommentAuthorSnapshot `bson:"author_snapshot,omitempty" json:"authorSnapshot,omitempty"`
 
 	// 回复目标
-	ReplyToUserID      *string                `bson:"reply_to_user_id,omitempty" json:"replyToUserId,omitempty"`       // 被回复的用户ID
+	ReplyToUserID       *string                `bson:"reply_to_user_id,omitempty" json:"replyToUserId,omitempty"`             // 被回复的用户ID
 	ReplyToUserSnapshot *CommentAuthorSnapshot `bson:"reply_to_user_snapshot,omitempty" json:"replyToUserSnapshot,omitempty"` // 被回复用户快照
-	ReplyToCommentID   *string                `bson:"reply_to_comment_id,omitempty" json:"replyToCommentId,omitempty"` // 被回复的评论ID
-	ReplyToContent     *string                `bson:"reply_to_content,omitempty" json:"replyToContent,omitempty"`     // 被回复的内容摘要
+	ReplyToCommentID    *string                `bson:"reply_to_comment_id,omitempty" json:"replyToCommentId,omitempty"`       // 被回复的评论ID
+	ReplyToContent      *string                `bson:"reply_to_content,omitempty" json:"replyToContent,omitempty"`            // 被回复的内容摘要
 
 	// 管理信息
-	IsPinned      bool       `bson:"is_pinned" json:"isPinned"`                      // 是否置顶
+	IsPinned      bool       `bson:"is_pinned" json:"isPinned"`                     // 是否置顶
 	PinnedAt      *time.Time `bson:"pinned_at,omitempty" json:"pinnedAt,omitempty"` // 置顶时间
-	IsAuthorReply bool       `bson:"is_author_reply" json:"isAuthorReply"`           // 是否是作者回复
-	IsFeatured    bool       `bson:"is_featured" json:"isFeatured"`                  // 是否精选评论
+	IsAuthorReply bool       `bson:"is_author_reply" json:"isAuthorReply"`          // 是否是作者回复
+	IsFeatured    bool       `bson:"is_featured" json:"isFeatured"`                 // 是否精选评论
 }
 
 // CommentTargetType 评论目标类型
 type CommentTargetType string
 
 const (
-	CommentTargetTypeBook        CommentTargetType = "book"        // 书籍评论
-	CommentTargetTypeChapter     CommentTargetType = "chapter"     // 章节评论
-	CommentTargetTypeArticle     CommentTargetType = "article"     // 文章评论
+	CommentTargetTypeBook         CommentTargetType = "book"         // 书籍评论
+	CommentTargetTypeChapter      CommentTargetType = "chapter"      // 章节评论
+	CommentTargetTypeArticle      CommentTargetType = "article"      // 文章评论
 	CommentTargetTypeAnnouncement CommentTargetType = "announcement" // 公告评论
-	CommentTargetTypeProject     CommentTargetType = "project"     // 项目评论
+	CommentTargetTypeProject      CommentTargetType = "project"      // 项目评论
 )
 
 // CommentState 评论状态
 type CommentState string
 
 const (
-	CommentStateNormal  CommentState = "normal"  // 正常
-	CommentStateHidden  CommentState = "hidden"  // 已隐藏
-	CommentStateDeleted CommentState = "deleted" // 已删除
+	CommentStateNormal   CommentState = "normal"   // 正常
+	CommentStateHidden   CommentState = "hidden"   // 已隐藏
+	CommentStateDeleted  CommentState = "deleted"  // 已删除
 	CommentStateRejected CommentState = "rejected" // 已拒绝（审核未通过）
 )
 
@@ -92,15 +92,15 @@ type CommentAuthorSnapshot struct {
 type CommentFilter struct {
 	TargetType    *CommentTargetType `json:"targetType,omitempty"`
 	TargetID      *string            `json:"targetId,omitempty"`
-	BookID        *string            `json:"bookId,omitempty"`         // 兼容旧版本
-	ChapterID     *string            `json:"chapterId,omitempty"`      // 兼容旧版本
+	BookID        *string            `json:"bookId,omitempty"`    // 兼容旧版本
+	ChapterID     *string            `json:"chapterId,omitempty"` // 兼容旧版本
 	AuthorID      *string            `json:"authorId,omitempty"`
 	State         *CommentState      `json:"state,omitempty"`
-	ParentID      *string            `json:"parentId,omitempty"`       // 只查询顶级评论或指定评论的回复
+	ParentID      *string            `json:"parentId,omitempty"` // 只查询顶级评论或指定评论的回复
 	IsPinned      *bool              `json:"isPinned,omitempty"`
 	IsFeatured    *bool              `json:"isFeatured,omitempty"`
 	IsAuthorReply *bool              `json:"isAuthorReply,omitempty"`
-	HasRating     *bool              `json:"hasRating,omitempty"`      // 是否有评分
+	HasRating     *bool              `json:"hasRating,omitempty"` // 是否有评分
 	StartTime     *time.Time         `json:"startTime,omitempty"`
 	EndTime       *time.Time         `json:"endTime,omitempty"`
 	SortBy        string             `json:"sortBy,omitempty"`

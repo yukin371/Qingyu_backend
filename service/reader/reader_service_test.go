@@ -1,8 +1,8 @@
 package reader
 
 import (
-	"Qingyu_backend/models/reader"
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	baseInterface "Qingyu_backend/service/interfaces/base"
 	"context"
@@ -1195,9 +1195,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		annotation  *reader.Annotation
-		wantErrSub  string
+		name       string
+		annotation *reader.Annotation
+		wantErrSub string
 	}{
 		{
 			name: "空用户ID",

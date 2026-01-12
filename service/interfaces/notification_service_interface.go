@@ -75,8 +75,8 @@ type NotificationService interface {
 // CreateNotificationRequest 创建通知请求
 type CreateNotificationRequest struct {
 	UserID    string                                 `json:"userId" validate:"required"`
-	Type      notificationModel.NotificationType      `json:"type" validate:"required"`
-	Priority  notificationModel.NotificationPriority  `json:"priority"`
+	Type      notificationModel.NotificationType     `json:"type" validate:"required"`
+	Priority  notificationModel.NotificationPriority `json:"priority"`
 	Title     string                                 `json:"title" validate:"required,min=1,max=200"`
 	Content   string                                 `json:"content" validate:"required,min=1,max=5000"`
 	Data      map[string]interface{}                 `json:"data"`
@@ -99,24 +99,24 @@ type GetNotificationsRequest struct {
 // GetNotificationsResponse 获取通知列表响应
 type GetNotificationsResponse struct {
 	Notifications []*notificationModel.Notification `json:"notifications"`
-	Total         int64                            `json:"total"`
-	UnreadCount   int64                            `json:"unreadCount"`
+	Total         int64                             `json:"total"`
+	UnreadCount   int64                             `json:"unreadCount"`
 }
 
 // UpdateNotificationPreferenceRequest 更新通知偏好设置请求
 type UpdateNotificationPreferenceRequest struct {
-	EnableSystem      *bool                                       `json:"enableSystem"`
-	EnableSocial      *bool                                       `json:"enableSocial"`
-	EnableContent     *bool                                       `json:"enableContent"`
-	EnableReward      *bool                                       `json:"enableReward"`
-	EnableMessage     *bool                                       `json:"enableMessage"`
-	EnableUpdate      *bool                                       `json:"enableUpdate"`
-	EnableMembership  *bool                                       `json:"enableMembership"`
-	EmailNotification *notificationModel.EmailNotificationSettings   `json:"emailNotification"`
-	SMSNotification   *notificationModel.SMSNotificationSettings     `json:"smsNotification"`
-	PushNotification  *bool                                      `json:"pushNotification"`
-	QuietHoursStart   *string                                    `json:"quietHoursStart" validate:"omitempty"`
-	QuietHoursEnd     *string                                    `json:"quietHoursEnd" validate:"omitempty"`
+	EnableSystem      *bool                                        `json:"enableSystem"`
+	EnableSocial      *bool                                        `json:"enableSocial"`
+	EnableContent     *bool                                        `json:"enableContent"`
+	EnableReward      *bool                                        `json:"enableReward"`
+	EnableMessage     *bool                                        `json:"enableMessage"`
+	EnableUpdate      *bool                                        `json:"enableUpdate"`
+	EnableMembership  *bool                                        `json:"enableMembership"`
+	EmailNotification *notificationModel.EmailNotificationSettings `json:"emailNotification"`
+	SMSNotification   *notificationModel.SMSNotificationSettings   `json:"smsNotification"`
+	PushNotification  *bool                                        `json:"pushNotification"`
+	QuietHoursStart   *string                                      `json:"quietHoursStart" validate:"omitempty"`
+	QuietHoursEnd     *string                                      `json:"quietHoursEnd" validate:"omitempty"`
 }
 
 // RegisterPushDeviceRequest 注册推送设备请求

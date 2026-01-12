@@ -18,12 +18,12 @@ type OutlineNode struct {
 	Order    int    `bson:"order" json:"order" validate:"min=0"`           // 同级排序
 
 	// 写作规划属性
-	Summary   string `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=1000"` // 本节摘要
-	Type      string `bson:"type,omitempty" json:"type,omitempty" validate:"max=50"`         // 结构类型（如：英雄之旅阶段、起承转合）
-	Tension   int    `bson:"tension" json:"tension" validate:"min=0,max=10"`                 // 紧张度/情绪值，用于生成情绪曲线
+	Summary string `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=1000"` // 本节摘要
+	Type    string `bson:"type,omitempty" json:"type,omitempty" validate:"max=50"`         // 结构类型（如：英雄之旅阶段、起承转合）
+	Tension int    `bson:"tension" json:"tension" validate:"min=0,max=10"`                 // 紧张度/情绪值，用于生成情绪曲线
 
 	// 关联实体（保持BSON字段名不变，确保数据库兼容）
-	ChapterID  string   `bson:"chapter_id,omitempty" json:"chapterId,omitempty"`  // 对应实际写的章节ID
+	ChapterID  string   `bson:"chapter_id,omitempty" json:"chapterId,omitempty"`                    // 对应实际写的章节ID
 	Characters []string `bson:"characters,omitempty" json:"characters,omitempty" validate:"max=20"` // 本节登场人物ID列表
 	Items      []string `bson:"items,omitempty" json:"items,omitempty" validate:"max=20"`           // 涉及道具ID列表
 }

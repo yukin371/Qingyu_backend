@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	authModel "Qingyu_backend/models/auth"
-	base "Qingyu_backend/repository/interfaces/infrastructure"
 	usersModel "Qingyu_backend/models/users"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	user2 "Qingyu_backend/service/interfaces/user"
 
@@ -917,9 +917,9 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 	user.SetPassword(oldPassword)
 
 	req := &user2.UpdatePasswordRequest{
-		ID:           userID,
-		OldPassword:  oldPassword,
-		NewPassword:  newPassword,
+		ID:          userID,
+		OldPassword: oldPassword,
+		NewPassword: newPassword,
 	}
 
 	mockUserRepo.On("GetByID", ctx, userID).Return(user, nil)
@@ -952,9 +952,9 @@ func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 	user.SetPassword("correctpassword")
 
 	req := &user2.UpdatePasswordRequest{
-		ID:           userID,
-		OldPassword:  "wrongpassword",
-		NewPassword:  "newpassword123",
+		ID:          userID,
+		OldPassword: "wrongpassword",
+		NewPassword: "newpassword123",
 	}
 
 	mockUserRepo.On("GetByID", ctx, userID).Return(user, nil)
@@ -979,9 +979,9 @@ func TestUserService_UpdatePassword_UserNotFound(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 
 	req := &user2.UpdatePasswordRequest{
-		ID:           userID,
-		OldPassword:  "oldpassword",
-		NewPassword:  "newpassword123",
+		ID:          userID,
+		OldPassword: "oldpassword",
+		NewPassword: "newpassword123",
 	}
 
 	mockUserRepo.On("GetByID", ctx, userID).Return(nil, repoInterfaces.NewUserRepositoryError(repoInterfaces.ErrorTypeNotFound, "user not found", nil))

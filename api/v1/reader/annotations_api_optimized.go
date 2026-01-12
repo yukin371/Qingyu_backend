@@ -338,7 +338,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 
 // SyncAnnotationsRequest 同步注记请求
 type SyncAnnotationsRequest struct {
-	BookID           string                    `json:"bookId" binding:"required"`
-	LastSyncTime     int64                     `json:"lastSyncTime"` // Unix时间戳
+	BookID           string                     `json:"bookId" binding:"required"`
+	LastSyncTime     int64                      `json:"lastSyncTime"` // Unix时间戳
 	LocalAnnotations []*readerModels.Annotation `json:"localAnnotations"`
 }

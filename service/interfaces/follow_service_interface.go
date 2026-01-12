@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"context"
 	socialModel "Qingyu_backend/models/social"
+	"context"
 )
 
 // FollowService 关注服务接口

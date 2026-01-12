@@ -27,29 +27,29 @@ type Metrics struct {
 	httpResponseSize    *prometheus.HistogramVec
 
 	// 数据库连接池指标
-	dbPoolConnections      *prometheus.GaugeVec
-	dbPoolIdleConnections  *prometheus.GaugeVec
-	dbPoolWaitDuration     *prometheus.HistogramVec
-	dbQueryDuration        *prometheus.HistogramVec
-	dbQueryTotal           *prometheus.CounterVec
-	dbQueryErrors          *prometheus.CounterVec
+	dbPoolConnections     *prometheus.GaugeVec
+	dbPoolIdleConnections *prometheus.GaugeVec
+	dbPoolWaitDuration    *prometheus.HistogramVec
+	dbQueryDuration       *prometheus.HistogramVec
+	dbQueryTotal          *prometheus.CounterVec
+	dbQueryErrors         *prometheus.CounterVec
 
 	// 缓存指标
-	cacheHits      *prometheus.CounterVec
-	cacheMisses    *prometheus.CounterVec
-	cacheDuration  *prometheus.HistogramVec
+	cacheHits     *prometheus.CounterVec
+	cacheMisses   *prometheus.CounterVec
+	cacheDuration *prometheus.HistogramVec
 
 	// 业务指标
-	userRegistrations    *prometheus.CounterVec
-	userLogins           *prometheus.CounterVec
-	bookPublish          *prometheus.CounterVec
-	bookUpdate           *prometheus.CounterVec
-	chapterPublish       *prometheus.CounterVec
-	contentRead          *prometheus.CounterVec
-	commentCreate        *prometheus.CounterVec
-	paymentSuccess       *prometheus.CounterVec
-	paymentFailed        *prometheus.CounterVec
-	vipSubscriptions     *prometheus.CounterVec
+	userRegistrations *prometheus.CounterVec
+	userLogins        *prometheus.CounterVec
+	bookPublish       *prometheus.CounterVec
+	bookUpdate        *prometheus.CounterVec
+	chapterPublish    *prometheus.CounterVec
+	contentRead       *prometheus.CounterVec
+	commentCreate     *prometheus.CounterVec
+	paymentSuccess    *prometheus.CounterVec
+	paymentFailed     *prometheus.CounterVec
+	vipSubscriptions  *prometheus.CounterVec
 
 	// 系统资源指标
 	systemMemoryUsage *prometheus.GaugeVec

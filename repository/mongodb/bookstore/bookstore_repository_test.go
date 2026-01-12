@@ -265,10 +265,10 @@ func TestMongoBookRepository_IncrementViewCount(t *testing.T) {
 
 	// 创建测试书籍
 	book := &bookstore.Book{
-		Title:      "热门书籍",
-		Author:     "测试作者",
-		Status:     bookstore.BookStatusPublished,
-		ViewCount:  100,
+		Title:     "热门书籍",
+		Author:    "测试作者",
+		Status:    bookstore.BookStatusPublished,
+		ViewCount: 100,
 	}
 	repo.Create(ctx, book)
 

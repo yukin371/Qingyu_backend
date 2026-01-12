@@ -22,56 +22,56 @@ import (
 // ObservabilityConfig 可观测性配置
 type ObservabilityConfig struct {
 	// Prometheus配置
-	PrometheusEnabled bool    // 是否启用Prometheus
-	PrometheusPort    int     // Prometheus端口
-	PrometheusPath    string  // Prometheus路径
+	PrometheusEnabled bool   // 是否启用Prometheus
+	PrometheusPort    int    // Prometheus端口
+	PrometheusPath    string // Prometheus路径
 
 	// 追踪配置
-	TracingEnabled     bool    // 是否启用追踪
-	TracingExporter    string  // 追踪导出器: jaeger/stdout
-	TracingSampleRate  float64 // 追踪采样率
+	TracingEnabled    bool    // 是否启用追踪
+	TracingExporter   string  // 追踪导出器: jaeger/stdout
+	TracingSampleRate float64 // 追踪采样率
 	JaegerEndpoint    string  // Jaeger endpoint
-	JaegerAgentHost    string  // Jaeger agent host
-	JaegerAgentPort    int     // Jaeger agent port
+	JaegerAgentHost   string  // Jaeger agent host
+	JaegerAgentPort   int     // Jaeger agent port
 
 	// 日志配置
-	LogLevel            string   // 日志级别
-	LogEncoding         string   // 日志编码: json/console
-	LogOutputPaths      []string // 日志输出路径
-	EnableStackTrace    bool     // 是否启用堆栈跟踪
+	LogLevel         string   // 日志级别
+	LogEncoding      string   // 日志编码: json/console
+	LogOutputPaths   []string // 日志输出路径
+	EnableStackTrace bool     // 是否启用堆栈跟踪
 
 	// 服务信息
-	ServiceName  string
+	ServiceName    string
 	ServiceVersion string
-	Environment   string
+	Environment    string
 }
 
 // DefaultObservabilityConfig 默认可观测性配置
 func DefaultObservabilityConfig() *ObservabilityConfig {
 	return &ObservabilityConfig{
-		PrometheusEnabled:  true,
-		PrometheusPort:     9090,
-		PrometheusPath:     "/metrics",
-		TracingEnabled:     true,
-		TracingExporter:    "stdout", // 默认使用stdout，生产环境使用jaeger
-		TracingSampleRate:  1.0,      // 100%采样
-		LogLevel:           "info",
-		LogEncoding:        "json",
-		LogOutputPaths:     []string{"stdout"},
-		EnableStackTrace:   false,
-		ServiceName:        "qingyu-backend",
-		ServiceVersion:     "1.0.0",
-		Environment:        "development",
+		PrometheusEnabled: true,
+		PrometheusPort:    9090,
+		PrometheusPath:    "/metrics",
+		TracingEnabled:    true,
+		TracingExporter:   "stdout", // 默认使用stdout，生产环境使用jaeger
+		TracingSampleRate: 1.0,      // 100%采样
+		LogLevel:          "info",
+		LogEncoding:       "json",
+		LogOutputPaths:    []string{"stdout"},
+		EnableStackTrace:  false,
+		ServiceName:       "qingyu-backend",
+		ServiceVersion:    "1.0.0",
+		Environment:       "development",
 	}
 }
 
 // ObservabilityManager 可观测性管理器
 type ObservabilityManager struct {
-	config       *ObservabilityConfig
-	metrics      *Metrics
-	tracing      *Tracing
-	logger       *zap.Logger
-	eventLogger  *EventLogger
+	config        *ObservabilityConfig
+	metrics       *Metrics
+	tracing       *Tracing
+	logger        *zap.Logger
+	eventLogger   *EventLogger
 	shutdownFuncs []func() error
 }
 
@@ -115,7 +115,7 @@ func (m *ObservabilityManager) initLogging() error {
 		Encoding:         m.config.LogEncoding,
 		EnableStackTrace: m.config.EnableStackTrace,
 		EnableCaller:     true,
-		OutputPaths:       m.config.LogOutputPaths,
+		OutputPaths:      m.config.LogOutputPaths,
 	}
 
 	eventLogger, err := NewEventLogger(logConfig)
@@ -263,12 +263,12 @@ func (m *ObservabilityManager) GetMetricsSummary(ctx context.Context) (*MetricsS
 	// 简化版本，实际使用时应该从Prometheus查询
 
 	summary := &MetricsSummary{
-		EventsPublishedTotal:    m.getCounterTotal(m.metrics.EventsPublished),
-		EventsHandledTotal:      m.getCounterTotal(m.metrics.EventsHandled),
-		RetryQueueSize:          m.getGaugeValue(m.metrics.RetryQueueSize),
-		DeadLetterQueueSize:     m.getGaugeValue(m.metrics.DeadLetterQueueSize),
-		ActiveHandlers:          m.getActiveHandlerCount(),
-		CollectedAt:              time.Now(),
+		EventsPublishedTotal: m.getCounterTotal(m.metrics.EventsPublished),
+		EventsHandledTotal:   m.getCounterTotal(m.metrics.EventsHandled),
+		RetryQueueSize:       m.getGaugeValue(m.metrics.RetryQueueSize),
+		DeadLetterQueueSize:  m.getGaugeValue(m.metrics.DeadLetterQueueSize),
+		ActiveHandlers:       m.getActiveHandlerCount(),
+		CollectedAt:          time.Now(),
 	}
 
 	return summary, nil
@@ -276,12 +276,12 @@ func (m *ObservabilityManager) GetMetricsSummary(ctx context.Context) (*MetricsS
 
 // MetricsSummary 指标摘要
 type MetricsSummary struct {
-	EventsPublishedTotal   map[string]int64
-	EventsHandledTotal     map[string]int64
-	RetryQueueSize         float64
-	DeadLetterQueueSize    float64
-	ActiveHandlers         int
-	CollectedAt            time.Time
+	EventsPublishedTotal map[string]int64
+	EventsHandledTotal   map[string]int64
+	RetryQueueSize       float64
+	DeadLetterQueueSize  float64
+	ActiveHandlers       int
+	CollectedAt          time.Time
 }
 
 // 辅助方法
@@ -304,10 +304,10 @@ func (m *ObservabilityManager) getActiveHandlerCount() int {
 // MonitorService 监控服务
 // 提供监控数据查询和仪表板功能
 type MonitorService struct {
-	manager          *ObservabilityManager
-	retryQueue       RetryQueue
-	deadLetterQueue  DeadLetterQueue
-	eventStore       EventStore
+	manager         *ObservabilityManager
+	retryQueue      RetryQueue
+	deadLetterQueue DeadLetterQueue
+	eventStore      EventStore
 }
 
 // NewMonitorService 创建监控服务
@@ -357,7 +357,7 @@ func (s *MonitorService) GetDashboardData(ctx context.Context) (*DashboardData, 
 
 // DashboardData 仪表板数据
 type DashboardData struct {
-	CollectedAt          time.Time `json:"collected_at"`
+	CollectedAt         time.Time `json:"collected_at"`
 	RetryQueueSize      int64     `json:"retry_queue_size"`
 	DeadLetterQueueSize int64     `json:"dead_letter_queue_size"`
 	EventsLastHour      int64     `json:"events_last_hour"`

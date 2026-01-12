@@ -12,9 +12,9 @@ import (
 
 // OAuthAPI OAuth认证API处理器
 type OAuthAPI struct {
-	oauthService    auth.OAuthServiceInterface
-	authService    auth.AuthService
-	logger          *zap.Logger
+	oauthService auth.OAuthServiceInterface
+	authService  auth.AuthService
+	logger       *zap.Logger
 }
 
 // NewOAuthAPI 创建OAuth API实例

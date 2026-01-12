@@ -48,19 +48,19 @@ type EventBus interface {
 
 // BookstorePublishProjectRequest 书城发布项目请求
 type BookstorePublishProjectRequest struct {
-	ProjectID      string
-	ProjectTitle   string
-	AuthorID       string
-	CategoryID     string
-	Tags           []string
-	Description    string
-	CoverImage     string
-	PublishType    string
-	Price          float64
-	FreeChapters   int
-	AuthorNote     string
-	EnableComment  bool
-	EnableShare    bool
+	ProjectID     string
+	ProjectTitle  string
+	AuthorID      string
+	CategoryID    string
+	Tags          []string
+	Description   string
+	CoverImage    string
+	PublishType   string
+	Price         float64
+	FreeChapters  int
+	AuthorNote    string
+	EnableComment bool
+	EnableShare   bool
 }
 
 // BookstorePublishChapterRequest 书城发布章节请求
@@ -227,8 +227,8 @@ func (s *PublishService) executeProjectPublish(
 	// 发布事件
 	if s.eventBus != nil {
 		event := map[string]interface{}{
-			"eventType": "project.published",
-			"projectId": project.ID,
+			"eventType":   "project.published",
+			"projectId":   project.ID,
 			"bookstoreId": req.BookstoreID,
 			"publishedAt": time.Now(),
 		}
@@ -273,8 +273,8 @@ func (s *PublishService) UnpublishProject(ctx context.Context, projectID, userID
 	// 发布事件
 	if s.eventBus != nil {
 		event := map[string]interface{}{
-			"eventType": "project.unpublished",
-			"projectId": projectID,
+			"eventType":     "project.unpublished",
+			"projectId":     projectID,
 			"unpublishedAt": now,
 		}
 		_ = s.eventBus.PublishAsync(ctx, event)
@@ -295,9 +295,9 @@ func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projec
 	record, _ := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
 
 	status := &serviceInterfaces.PublicationStatus{
-		ProjectID:   projectID,
+		ProjectID:    projectID,
 		ProjectTitle: project.Title,
-		IsPublished: record != nil && record.Status == serviceInterfaces.PublicationStatusPublished,
+		IsPublished:  record != nil && record.Status == serviceInterfaces.PublicationStatusPublished,
 	}
 
 	if record != nil {

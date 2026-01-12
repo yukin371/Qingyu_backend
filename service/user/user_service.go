@@ -263,7 +263,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
-		Roles:    []string{"user"},           // 默认角色
+		Roles:    []string{"user"},            // 默认角色
 		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 

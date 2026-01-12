@@ -14,8 +14,8 @@ import (
 // WritingAssistantApi 写作辅助API
 // 提供内容总结、校对、敏感词检测等AI辅助功能
 type WritingAssistantApi struct {
-	summarizeService     *aiService.SummarizeService
-	proofreadService     *aiService.ProofreadService
+	summarizeService      *aiService.SummarizeService
+	proofreadService      *aiService.ProofreadService
 	sensitiveWordsService *aiService.SensitiveWordsService
 }
 

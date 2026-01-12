@@ -17,10 +17,10 @@ type Node struct {
 
 	// 树形结构属性（保持BSON字段名不变，确保数据库兼容）
 	ParentID     string                 `bson:"parent_id,omitempty" json:"parentId,omitempty"`         // 父节点ID
-	Type         string                 `bson:"type" json:"type" validate:"required"`                   // outline | timeline | location
-	RelativePath string                 `bson:"relative_path,omitempty" json:"relativePath,omitempty"`  // 相对路径
-	Order        int                    `bson:"order" json:"order" validate:"min=0"`                    // 同级排序
-	Level        int                    `bson:"level" json:"level" validate:"min=0,max=10"`             // 层级深度
+	Type         string                 `bson:"type" json:"type" validate:"required"`                  // outline | timeline | location
+	RelativePath string                 `bson:"relative_path,omitempty" json:"relativePath,omitempty"` // 相对路径
+	Order        int                    `bson:"order" json:"order" validate:"min=0"`                   // 同级排序
+	Level        int                    `bson:"level" json:"level" validate:"min=0,max=10"`            // 层级深度
 	Description  string                 `bson:"description,omitempty" json:"description,omitempty" validate:"max=500"`
 	Metadata     map[string]interface{} `bson:"metadata,omitempty" json:"metadata,omitempty"`
 }

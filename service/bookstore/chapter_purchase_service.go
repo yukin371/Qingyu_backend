@@ -263,15 +263,15 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 
 		// 创建购买记录
 		purchase = &bookstore.ChapterPurchase{
-			UserID:        userID,
-			ChapterID:     chapterID,
-			BookID:        chapter.BookID,
-			Price:         chapter.Price,
-			PurchaseTime:  time.Now(),
-			ChapterTitle:  chapter.Title,
-			ChapterNum:    chapter.ChapterNum,
-			BookTitle:     book.Title,
-			BookCover:     book.Cover,
+			UserID:       userID,
+			ChapterID:    chapterID,
+			BookID:       chapter.BookID,
+			Price:        chapter.Price,
+			PurchaseTime: time.Now(),
+			ChapterTitle: chapter.Title,
+			ChapterNum:   chapter.ChapterNum,
+			BookTitle:    book.Title,
+			BookCover:    book.Cover,
 		}
 		purchase.BeforeCreate()
 
@@ -385,15 +385,15 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		// 为每个章节创建单独的购买记录
 		for _, chapter := range chapters {
 			purchase := &bookstore.ChapterPurchase{
-				UserID:        userID,
-				ChapterID:     chapter.ID,
-				BookID:        chapter.BookID,
-				Price:         chapter.Price,
-				PurchaseTime:  time.Now(),
-				ChapterTitle:  chapter.Title,
-				ChapterNum:    chapter.ChapterNum,
-				BookTitle:     book.Title,
-				BookCover:     book.Cover,
+				UserID:       userID,
+				ChapterID:    chapter.ID,
+				BookID:       chapter.BookID,
+				Price:        chapter.Price,
+				PurchaseTime: time.Now(),
+				ChapterTitle: chapter.Title,
+				ChapterNum:   chapter.ChapterNum,
+				BookTitle:    book.Title,
+				BookCover:    book.Cover,
 			}
 			purchase.BeforeCreate()
 
@@ -494,15 +494,15 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 		// 为每个付费章节创建购买记录
 		for _, chapter := range chapters {
 			chapterPurchase := &bookstore.ChapterPurchase{
-				UserID:        userID,
-				ChapterID:     chapter.ID,
-				BookID:        bookID,
-				Price:         0, // 全书购买后，章节单价为0
-				PurchaseTime:  time.Now(),
-				ChapterTitle:  chapter.Title,
-				ChapterNum:    chapter.ChapterNum,
-				BookTitle:     book.Title,
-				BookCover:     book.Cover,
+				UserID:       userID,
+				ChapterID:    chapter.ID,
+				BookID:       bookID,
+				Price:        0, // 全书购买后，章节单价为0
+				PurchaseTime: time.Now(),
+				ChapterTitle: chapter.Title,
+				ChapterNum:   chapter.ChapterNum,
+				BookTitle:    book.Title,
+				BookCover:    book.Cover,
 			}
 			chapterPurchase.BeforeCreate()
 
@@ -637,15 +637,15 @@ func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, use
 	}
 
 	accessInfo := &bookstore.ChapterAccessInfo{
-		ChapterID:    chapter.ID,
-		Title:        chapter.Title,
-		ChapterNum:   chapter.ChapterNum,
-		WordCount:    chapter.WordCount,
-		IsFree:       chapter.IsFree,
-		Price:        chapter.Price,
-		IsPurchased:  false,
-		IsVIP:        false,
-		CanAccess:    false,
+		ChapterID:   chapter.ID,
+		Title:       chapter.Title,
+		ChapterNum:  chapter.ChapterNum,
+		WordCount:   chapter.WordCount,
+		IsFree:      chapter.IsFree,
+		Price:       chapter.Price,
+		IsPurchased: false,
+		IsVIP:       false,
+		CanAccess:   false,
 	}
 
 	// 检查是否为免费章节

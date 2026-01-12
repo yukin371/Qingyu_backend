@@ -107,10 +107,10 @@ func (s *SensitiveWordsService) GetSensitiveWordsDetail(ctx context.Context, che
 	// TODO: 从存储层获取检测结果
 	// 这里返回模拟数据
 	return &dto.SensitiveWordsDetail{
-		CheckID:    checkID,
-		Content:    "示例内容",
-		IsSafe:     true,
-		Matches:    []dto.SensitiveWordMatch{},
+		CheckID:     checkID,
+		Content:     "示例内容",
+		IsSafe:      true,
+		Matches:     []dto.SensitiveWordMatch{},
 		CustomWords: []string{},
 		Summary: dto.CheckSummary{
 			ByCategory:      map[string]int{},

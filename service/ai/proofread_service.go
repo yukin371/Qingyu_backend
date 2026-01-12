@@ -167,10 +167,10 @@ func (s *ProofreadService) parseProofreadResult(aiResult, originalContent string
 			}
 
 			issues = append(issues, dto.Issue{
-				ID:           uuid.New().String(),
-				Type:         issue.Type,
-				Severity:     issue.Severity,
-				Message:      issue.Message,
+				ID:       uuid.New().String(),
+				Type:     issue.Type,
+				Severity: issue.Severity,
+				Message:  issue.Message,
 				Position: dto.TextPosition{
 					Line:   issue.Line,
 					Column: issue.Column,

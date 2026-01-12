@@ -13,38 +13,38 @@ import (
 
 // Comment 评论
 type Comment struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	TargetID   string             `bson:"target_id"`   // 书籍ID或章节ID
-	TargetType string             `bson:"target_type"` // book, chapter
-	UserID     string             `bson:"user_id"`
-	Content    string             `bson:"content"`
-	Rating     int                `bson:"rating"`      // 1-5星评分
-	LikeCount  int                `bson:"like_count"`
-	ReplyCount int                `bson:"reply_count"`
+	ID         primitive.ObjectID  `bson:"_id,omitempty"`
+	TargetID   string              `bson:"target_id"`   // 书籍ID或章节ID
+	TargetType string              `bson:"target_type"` // book, chapter
+	UserID     string              `bson:"user_id"`
+	Content    string              `bson:"content"`
+	Rating     int                 `bson:"rating"` // 1-5星评分
+	LikeCount  int                 `bson:"like_count"`
+	ReplyCount int                 `bson:"reply_count"`
 	ParentID   *primitive.ObjectID `bson:"parent_id,omitempty"` // 父评论ID（回复时）
-	Status     string             `bson:"status"`               // normal, hidden, deleted
-	CreatedAt  time.Time          `bson:"created_at"`
-	UpdatedAt  time.Time          `bson:"updated_at"`
+	Status     string              `bson:"status"`              // normal, hidden, deleted
+	CreatedAt  time.Time           `bson:"created_at"`
+	UpdatedAt  time.Time           `bson:"updated_at"`
 }
 
 // Like 点赞
 type Like struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    string             `bson:"user_id"`
-	TargetID  string             `bson:"target_id"`
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	UserID     string             `bson:"user_id"`
+	TargetID   string             `bson:"target_id"`
 	TargetType string             `bson:"target_type"` // book, chapter, comment
-	CreatedAt time.Time          `bson:"created_at"`
+	CreatedAt  time.Time          `bson:"created_at"`
 }
 
 // Collection 收藏
 type Collection struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	UserID      string             `bson:"user_id"`
-	BookID      string             `bson:"book_id"`
-	FolderName  string             `bson:"folder_name"`
-	Note        string             `bson:"note"`
-	IsPublic    bool               `bson:"is_public"`
-	CreatedAt   time.Time          `bson:"created_at"`
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	UserID     string             `bson:"user_id"`
+	BookID     string             `bson:"book_id"`
+	FolderName string             `bson:"folder_name"`
+	Note       string             `bson:"note"`
+	IsPublic   bool               `bson:"is_public"`
+	CreatedAt  time.Time          `bson:"created_at"`
 }
 
 // Follow 关注

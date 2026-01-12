@@ -173,7 +173,7 @@ func TestStorageRepository_UpdateFile(t *testing.T) {
 	// Act
 	updates := map[string]interface{}{
 		"is_public": true,
-		"filename": "updated_test.jpg",
+		"filename":  "updated_test.jpg",
 	}
 	err = repo.UpdateFile(ctx, file.ID, updates)
 
@@ -574,4 +574,3 @@ func TestStorageRepository_Health(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 }
-

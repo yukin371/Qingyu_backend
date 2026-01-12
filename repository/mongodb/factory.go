@@ -9,9 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/config"
-	authRepo "Qingyu_backend/repository/interfaces/auth"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	financeRepo "Qingyu_backend/repository/interfaces/finance"
 	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
@@ -25,8 +25,8 @@ import (
 
 	// 导入各个子包的具体实现
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
-	mongoAuth "Qingyu_backend/repository/mongodb/auth"
 	mongoAudit "Qingyu_backend/repository/mongodb/audit"
+	mongoAuth "Qingyu_backend/repository/mongodb/auth"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
 	mongoFinance "Qingyu_backend/repository/mongodb/finance"
 	mongoMessaging "Qingyu_backend/repository/mongodb/messaging"

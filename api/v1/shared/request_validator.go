@@ -78,7 +78,7 @@ func HandleValidationError(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, ValidationErrorResponse{
 		Code:    400,
 		Message: "请求参数验证失败",
-		Errors:  map[string]string{
+		Errors: map[string]string{
 			"validation": err.Error(),
 		},
 	})

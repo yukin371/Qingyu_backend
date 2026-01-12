@@ -190,11 +190,11 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	}
 
 	bookmark := &readerModels.Bookmark{
-		Note:      req.Note,
-		Color:     req.Color,
-		Quote:     req.Quote,
-		IsPublic:  req.IsPublic,
-		Tags:      req.Tags,
+		Note:     req.Note,
+		Color:    req.Color,
+		Quote:    req.Quote,
+		IsPublic: req.IsPublic,
+		Tags:     req.Tags,
 	}
 
 	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), bookmarkID, bookmark); err != nil {

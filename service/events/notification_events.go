@@ -20,19 +20,19 @@ const (
 
 // NotificationEventData 通知事件数据
 type NotificationEventData struct {
-	NotificationID   string                 `json:"notification_id"`
-	UserID           string                 `json:"user_id"`
-	Type             string                 `json:"type"`             // system/comment/follow/reward/purchase
-	Title            string                 `json:"title"`
-	Content          string                 `json:"content"`
-	Action           string                 `json:"action"`
-	TargetType       string                 `json:"target_type,omitempty"`
-	TargetID         string                 `json:"target_id,omitempty"`
-	Priority         string                 `json:"priority,omitempty"` // low/normal/high/urgent
-	Channels         []string               `json:"channels,omitempty"` // in_app/email/sms/push
-	Time             time.Time              `json:"time"`
-	ReadTime         time.Time              `json:"read_time,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	NotificationID string                 `json:"notification_id"`
+	UserID         string                 `json:"user_id"`
+	Type           string                 `json:"type"` // system/comment/follow/reward/purchase
+	Title          string                 `json:"title"`
+	Content        string                 `json:"content"`
+	Action         string                 `json:"action"`
+	TargetType     string                 `json:"target_type,omitempty"`
+	TargetID       string                 `json:"target_id,omitempty"`
+	Priority       string                 `json:"priority,omitempty"` // low/normal/high/urgent
+	Channels       []string               `json:"channels,omitempty"` // in_app/email/sms/push
+	Time           time.Time              `json:"time"`
+	ReadTime       time.Time              `json:"read_time,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ============ 通知事件工厂函数 ============

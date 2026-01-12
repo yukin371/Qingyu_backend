@@ -511,11 +511,11 @@ func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 
 // CreateCommentRequest 创建批注请求
 type CreateCommentRequest struct {
-	Content   string             `json:"content" binding:"required"`
-	Type      string             `json:"type"`
-	ChapterID string             `json:"chapterId"`
+	Content   string                       `json:"content" binding:"required"`
+	Type      string                       `json:"type"`
+	ChapterID string                       `json:"chapterId"`
 	Position  writermodels.CommentPosition `json:"position" binding:"required"`
-	ParentID  *string            `json:"parentId"`
+	ParentID  *string                      `json:"parentId"`
 	Metadata  writermodels.CommentMetadata `json:"metadata"`
 }
 
@@ -566,9 +566,9 @@ func (r *CreateCommentRequest) ToComment(documentID, userID, userName string) (*
 
 // UpdateCommentRequest 更新批注请求
 type UpdateCommentRequest struct {
-	Content  string                  `json:"content"`
-	Type     string                  `json:"type"`
-	Metadata writermodels.CommentMetadata  `json:"metadata"`
+	Content  string                       `json:"content"`
+	Type     string                       `json:"type"`
+	Metadata writermodels.CommentMetadata `json:"metadata"`
 }
 
 // ReplyCommentRequest 回复批注请求

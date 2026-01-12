@@ -18,29 +18,29 @@ import (
 
 // NovelData JSON数据结构
 type NovelData struct {
-	Metadata Metadata         `json:"metadata"`
-	Novels   []Novel          `json:"novels"`
+	Metadata Metadata `json:"metadata"`
+	Novels   []Novel  `json:"novels"`
 }
 
 type Metadata struct {
-	Source          string    `json:"source"`
-	TotalNovels     int       `json:"total_novels"`
-	TotalChapters   int       `json:"total_chapters"`
-	GeneratedAt     time.Time `json:"generated_at"`
-	ChapterSize     int       `json:"chapter_size"`
+	Source        string    `json:"source"`
+	TotalNovels   int       `json:"total_novels"`
+	TotalChapters int       `json:"total_chapters"`
+	GeneratedAt   time.Time `json:"generated_at"`
+	ChapterSize   int       `json:"chapter_size"`
 }
 
 type Novel struct {
-	Title         string    `json:"title"`
-	Author        string    `json:"author"`
-	Introduction  string    `json:"introduction"`
-	Category      string    `json:"category"`
-	WordCount     int       `json:"word_count"`
-	ChapterCount  int       `json:"chapter_count"`
-	Rating        float64   `json:"rating"`
-	Status        string    `json:"status"`
-	IsFree        bool      `json:"is_free"`
-	Chapters      []Chapter `json:"chapters"`
+	Title        string    `json:"title"`
+	Author       string    `json:"author"`
+	Introduction string    `json:"introduction"`
+	Category     string    `json:"category"`
+	WordCount    int       `json:"word_count"`
+	ChapterCount int       `json:"chapter_count"`
+	Rating       float64   `json:"rating"`
+	Status       string    `json:"status"`
+	IsFree       bool      `json:"is_free"`
+	Chapters     []Chapter `json:"chapters"`
 }
 
 type Chapter struct {
@@ -79,16 +79,16 @@ type Book struct {
 
 // ChapterContent 章节内容模型
 type ChapterContent struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	BookID         primitive.ObjectID `bson:"book_id"`
-	ChapterNum     int                `bson:"chapter_num"`
-	Title          string             `bson:"title"`
-	Content        string             `bson:"content"`
-	WordCount      int                `bson:"word_count"`
-	IsFree         bool               `bson:"is_free"`
-	Price          float64            `bson:"price"`
-	PublishedAt    time.Time          `bson:"published_at"`
-	CreatedAt      time.Time          `bson:"created_at"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	BookID      primitive.ObjectID `bson:"book_id"`
+	ChapterNum  int                `bson:"chapter_num"`
+	Title       string             `bson:"title"`
+	Content     string             `bson:"content"`
+	WordCount   int                `bson:"word_count"`
+	IsFree      bool               `bson:"is_free"`
+	Price       float64            `bson:"price"`
+	PublishedAt time.Time          `bson:"published_at"`
+	CreatedAt   time.Time          `bson:"created_at"`
 }
 
 func main() {

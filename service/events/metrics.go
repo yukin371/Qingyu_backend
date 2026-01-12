@@ -10,29 +10,29 @@ import (
 // Metrics 事件驱动系统指标
 type Metrics struct {
 	// 发布指标
-	EventsPublished *prometheus.CounterVec
+	EventsPublished         *prometheus.CounterVec
 	EventsPublishedDuration *prometheus.HistogramVec
 
 	// 处理指标
-	EventsHandled *prometheus.CounterVec
+	EventsHandled          *prometheus.CounterVec
 	EventsHandlingDuration *prometheus.HistogramVec
-	EventsHandlingErrors *prometheus.CounterVec
+	EventsHandlingErrors   *prometheus.CounterVec
 
 	// 重试指标
 	EventsRetryQueued *prometheus.CounterVec
-	RetryQueueSize prometheus.Gauge
-	EventsRetried *prometheus.CounterVec
+	RetryQueueSize    prometheus.Gauge
+	EventsRetried     *prometheus.CounterVec
 	EventsRetryFailed *prometheus.CounterVec
 
 	// 死信队列指标
-	EventsDeadLettered *prometheus.CounterVec
+	EventsDeadLettered  *prometheus.CounterVec
 	DeadLetterQueueSize prometheus.Gauge
-	EventsReprocessed *prometheus.CounterVec
+	EventsReprocessed   *prometheus.CounterVec
 
 	// 持久化指标
-	EventsStored *prometheus.CounterVec
+	EventsStored         *prometheus.CounterVec
 	EventStorageDuration *prometheus.HistogramVec
-	EventStorageErrors *prometheus.CounterVec
+	EventStorageErrors   *prometheus.CounterVec
 
 	// 处理器指标
 	HandlerActiveCount *prometheus.GaugeVec

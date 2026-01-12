@@ -10,14 +10,14 @@ import (
 
 // HealthCheckResponse 健康检查响应
 type HealthCheckResponse struct {
-	Status    string            `json:"status"`     // overall status: healthy, degraded, unhealthy
-	Timestamp string            `json:"timestamp"`  // ISO 8601 timestamp
-	Services  map[string]string `json:"services"`   // individual service status
+	Status    string            `json:"status"`    // overall status: healthy, degraded, unhealthy
+	Timestamp string            `json:"timestamp"` // ISO 8601 timestamp
+	Services  map[string]string `json:"services"`  // individual service status
 }
 
 // ServiceStatus 服务状态详情
 type ServiceStatus struct {
-	Status  string `json:"status"`  // up, down, degraded
+	Status  string `json:"status"`            // up, down, degraded
 	Message string `json:"message,omitempty"` // error message if down
 }
 
@@ -50,7 +50,9 @@ func RegisterHealthCheckRoutes(r *gin.RouterGroup, redisClient interface{}, mong
 		// 检查MongoDB
 		if mongoClient != nil {
 			// 尝试调用Ping方法
-			if pinger, ok := mongoClient.(interface{ Ping(interface{}, ...interface{}) error }); ok {
+			if pinger, ok := mongoClient.(interface {
+				Ping(interface{}, ...interface{}) error
+			}); ok {
 				if err := pinger.Ping(c.Request.Context(), nil); err != nil {
 					response.Services["mongodb"] = "down"
 					zap.L().Warn("MongoDB health check failed", zap.Error(err))
@@ -92,7 +94,7 @@ func RegisterHealthCheckRoutes(r *gin.RouterGroup, redisClient interface{}, mong
 	// 简单的存活检查（不依赖任何服务）
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+			"message":   "pong",
 			"timestamp": time.Now().Format(time.RFC3339),
 		})
 	})
@@ -101,7 +103,9 @@ func RegisterHealthCheckRoutes(r *gin.RouterGroup, redisClient interface{}, mong
 	r.GET("/ready", func(c *gin.Context) {
 		// MongoDB必须可用才能认为就绪
 		if mongoClient != nil {
-			if pinger, ok := mongoClient.(interface{ Ping(interface{}, ...interface{}) error }); ok {
+			if pinger, ok := mongoClient.(interface {
+				Ping(interface{}, ...interface{}) error
+			}); ok {
 				if err := pinger.Ping(c.Request.Context(), nil); err != nil {
 					c.JSON(http.StatusServiceUnavailable, gin.H{
 						"status": "not ready",
@@ -119,7 +123,7 @@ func RegisterHealthCheckRoutes(r *gin.RouterGroup, redisClient interface{}, mong
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"status": "ready",
+			"status":    "ready",
 			"timestamp": time.Now().Format(time.RFC3339),
 		})
 	})

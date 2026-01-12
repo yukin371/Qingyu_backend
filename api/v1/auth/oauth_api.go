@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/api/v1/shared"
+	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/service/shared/auth"
 )
 
 // OAuthAPI OAuth认证API处理器
 type OAuthAPI struct {
-	oauthService    auth.OAuthServiceInterface
-	authService    auth.AuthService
-	logger          *zap.Logger
+	oauthService auth.OAuthServiceInterface
+	authService  auth.AuthService
+	logger       *zap.Logger
 }
 
 // NewOAuthAPI 创建OAuth API实例

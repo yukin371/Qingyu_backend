@@ -315,8 +315,7 @@ func isPermissionError(err error) bool {
 
 // contains 检查字符串是否包含子串（不区分大小写）
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (
-		strings.HasPrefix(strings.ToLower(s), strings.ToLower(substr)) ||
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (strings.HasPrefix(strings.ToLower(s), strings.ToLower(substr)) ||
 		strings.HasSuffix(strings.ToLower(s), strings.ToLower(substr)) ||
 		strings.Contains(strings.ToLower(s), strings.ToLower(substr))))
 }

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	UserCollection        = "users"
+	UserCollection         = "users"
 	UserActivityCollection = "user_activities"
 )
 
@@ -172,7 +172,7 @@ func (r *MongoUserAdminRepository) GetStatistics(ctx context.Context, userID pri
 	registerDays := int(time.Since(user.CreatedAt).Hours() / 24)
 
 	stats := &users.UserStatistics{
-		UserID:      user.ID,
+		UserID:       user.ID,
 		LastActiveAt: user.LastLoginAt,
 		RegisterDays: registerDays,
 	}
@@ -195,8 +195,8 @@ func (r *MongoUserAdminRepository) ResetPassword(ctx context.Context, userID pri
 	filter := bson.M{"_id": userID}
 	update := bson.M{
 		"$set": bson.M{
-			"password":    user.Password,
-			"updated_at":  time.Now(),
+			"password":   user.Password,
+			"updated_at": time.Now(),
 		},
 	}
 

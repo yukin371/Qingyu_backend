@@ -7,8 +7,8 @@ import (
 
 	"Qingyu_backend/models/writer"
 	writerBase "Qingyu_backend/models/writer/base"
-	serviceBase "Qingyu_backend/service/base"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	serviceBase "Qingyu_backend/service/base"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

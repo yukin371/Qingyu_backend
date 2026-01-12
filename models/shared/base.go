@@ -5,8 +5,8 @@ import "time"
 // BaseEntity 通用实体基类
 // 提供所有实体共有的基础字段，减少重复代码
 type BaseEntity struct {
-	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
-	UpdatedAt time.Time `json:"updatedAt" bson:"updated_at"`
+	CreatedAt time.Time  `json:"createdAt" bson:"created_at"`
+	UpdatedAt time.Time  `json:"updatedAt" bson:"updated_at"`
 	DeletedAt *time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
 }
 

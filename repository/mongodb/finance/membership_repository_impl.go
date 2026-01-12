@@ -16,12 +16,12 @@ import (
 
 // MembershipRepositoryImpl 会员Repository实现
 type MembershipRepositoryImpl struct {
-	db                      *mongo.Database
-	planCollection          *mongo.Collection
-	membershipCollection    *mongo.Collection
-	cardCollection          *mongo.Collection
-	benefitCollection       *mongo.Collection
-	usageCollection         *mongo.Collection
+	db                   *mongo.Database
+	planCollection       *mongo.Collection
+	membershipCollection *mongo.Collection
+	cardCollection       *mongo.Collection
+	benefitCollection    *mongo.Collection
+	usageCollection      *mongo.Collection
 }
 
 // NewMembershipRepository 创建会员Repository

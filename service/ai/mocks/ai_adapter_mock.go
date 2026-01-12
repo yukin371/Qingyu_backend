@@ -10,18 +10,18 @@ import (
 // MockAIAdapter 模拟AI适配器，用于单元测试
 type MockAIAdapter struct {
 	// 配置字段
-	Name              string
-	SupportedModels   []string
-	ShouldFail        bool
-	FailureError      error
-	ShouldTimeout     bool
-	ResponseDelay     time.Duration
-	TextResponse      *adapter.TextGenerationResponse
-	ChatResponse      *adapter.ChatCompletionResponse
-	ImageResponse     *adapter.ImageGenerationResponse
-	HealthCheckError  error
-	CallCount         int
-	LastRequest       interface{}
+	Name             string
+	SupportedModels  []string
+	ShouldFail       bool
+	FailureError     error
+	ShouldTimeout    bool
+	ResponseDelay    time.Duration
+	TextResponse     *adapter.TextGenerationResponse
+	ChatResponse     *adapter.ChatCompletionResponse
+	ImageResponse    *adapter.ImageGenerationResponse
+	HealthCheckError error
+	CallCount        int
+	LastRequest      interface{}
 }
 
 // NewMockAIAdapter 创建新的模拟适配器

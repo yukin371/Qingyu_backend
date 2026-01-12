@@ -14,16 +14,16 @@ import (
 // createTestDocument 创建测试文档
 func createTestDocument(projectID, title string) *writer.Document {
 	return &writer.Document{
-		IdentifiedEntity:     base.IdentifiedEntity{ID: primitive.NewObjectID()},
-		ProjectScopedEntity:  base.ProjectScopedEntity{ProjectID: projectID},
-		TitledEntity:         base.TitledEntity{Title: title},
-		Timestamps:           base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		Type:                 "chapter",
-		Level:                0,
-		Order:                1,
-		Status:               writer.DocumentStatusCompleted,
-		WordCount:            1000,
-		Tags:                 []string{"test", "sample"},
+		IdentifiedEntity:    base.IdentifiedEntity{ID: primitive.NewObjectID()},
+		ProjectScopedEntity: base.ProjectScopedEntity{ProjectID: projectID},
+		TitledEntity:        base.TitledEntity{Title: title},
+		Timestamps:          base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		Type:                "chapter",
+		Level:               0,
+		Order:               1,
+		Status:              writer.DocumentStatusCompleted,
+		WordCount:           1000,
+		Tags:                []string{"test", "sample"},
 	}
 }
 

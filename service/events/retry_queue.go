@@ -41,31 +41,31 @@ type RetryQueue interface {
 
 // RetryItem 重试项
 type RetryItem struct {
-	ID          string                 `bson:"_id" json:"id"`
-	EventType   string                 `bson:"event_type" json:"event_type"`
-	EventData   interface{}            `bson:"event_data" json:"event_data"`
-	EventSource string                 `bson:"event_source" json:"event_source"`
-	EventTimestamp time.Time           `bson:"event_timestamp" json:"event_timestamp"`
-	HandlerName string                 `bson:"handler_name" json:"handler_name"`
-	Error       string                 `bson:"error" json:"error"`
-	Attempt     int                    `bson:"attempt" json:"attempt"`
-	MaxRetries  int                    `bson:"max_retries" json:"max_retries"`
-	NextRetry   time.Time              `bson:"next_retry" json:"next_retry"`
-	CreatedAt   time.Time              `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time              `bson:"updated_at" json:"updated_at"`
+	ID             string      `bson:"_id" json:"id"`
+	EventType      string      `bson:"event_type" json:"event_type"`
+	EventData      interface{} `bson:"event_data" json:"event_data"`
+	EventSource    string      `bson:"event_source" json:"event_source"`
+	EventTimestamp time.Time   `bson:"event_timestamp" json:"event_timestamp"`
+	HandlerName    string      `bson:"handler_name" json:"handler_name"`
+	Error          string      `bson:"error" json:"error"`
+	Attempt        int         `bson:"attempt" json:"attempt"`
+	MaxRetries     int         `bson:"max_retries" json:"max_retries"`
+	NextRetry      time.Time   `bson:"next_retry" json:"next_retry"`
+	CreatedAt      time.Time   `bson:"created_at" json:"created_at"`
+	UpdatedAt      time.Time   `bson:"updated_at" json:"updated_at"`
 }
 
 // MongoRetryQueue MongoDB 重试队列实现
 type MongoRetryQueue struct {
-	collection        *mongo.Collection
-	deadLetterQueue   DeadLetterQueue  // 死信队列引用
+	collection      *mongo.Collection
+	deadLetterQueue DeadLetterQueue // 死信队列引用
 }
 
 // NewMongoRetryQueue 创建 MongoDB 重试队列
 func NewMongoRetryQueue(db *mongo.Database, dlq DeadLetterQueue) RetryQueue {
 	queue := &MongoRetryQueue{
-		collection:        db.Collection("retry_queue"),
-		deadLetterQueue:   dlq,
+		collection:      db.Collection("retry_queue"),
+		deadLetterQueue: dlq,
 	}
 
 	// 创建索引
@@ -114,7 +114,7 @@ func (q *MongoRetryQueue) Add(ctx context.Context, event base.Event, handlerName
 		HandlerName:    handlerName,
 		Error:          err.Error(),
 		Attempt:        attempt,
-		MaxRetries:     3, // 默认最大重试3次
+		MaxRetries:     3,                                                      // 默认最大重试3次
 		NextRetry:      time.Now().Add(time.Second * time.Duration(attempt+1)), // 简单的延迟策略
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),

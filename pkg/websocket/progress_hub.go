@@ -11,13 +11,13 @@ import (
 
 // ProgressMessage 阅读进度消息
 type ProgressMessage struct {
-	Type      string    `json:"type"`       // sync, ack, conflict
+	Type      string    `json:"type"` // sync, ack, conflict
 	UserID    string    `json:"userId"`
 	BookID    string    `json:"bookId"`
 	ChapterID string    `json:"chapterId"`
-	Progress  float64   `json:"progress"`   // 0-1
+	Progress  float64   `json:"progress"` // 0-1
 	Timestamp time.Time `json:"timestamp"`
-	DeviceID  string    `json:"deviceId"`   // 设备标识
+	DeviceID  string    `json:"deviceId"` // 设备标识
 }
 
 // Client WebSocket客户端

@@ -9,9 +9,9 @@ import (
 // TestGetEffectiveRoles 测试角色继承逻辑
 func TestGetEffectiveRoles(t *testing.T) {
 	tests := []struct {
-		name           string
-		roles          []string
-		expectedRoles  []string
+		name          string
+		roles         []string
+		expectedRoles []string
 	}{
 		{
 			name:          "普通读者",
@@ -127,10 +127,10 @@ func TestHasRole(t *testing.T) {
 // TestHasAnyRole 测试HasAnyRole方法
 func TestHasAnyRole(t *testing.T) {
 	tests := []struct {
-		name          string
-		roles         []string
-		checkRoles    []string
-		expected      bool
+		name       string
+		roles      []string
+		checkRoles []string
+		expected   bool
 	}{
 		{
 			name:       "普通读者检查reader或author",
@@ -167,10 +167,10 @@ func TestHasAnyRole(t *testing.T) {
 // TestHasAllRoles 测试HasAllRoles方法
 func TestHasAllRoles(t *testing.T) {
 	tests := []struct {
-		name          string
-		roles         []string
-		checkRoles    []string
-		expected      bool
+		name       string
+		roles      []string
+		checkRoles []string
+		expected   bool
 	}{
 		{
 			name:       "普通读者检查reader",

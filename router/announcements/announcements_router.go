@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	announcementsAPI "Qingyu_backend/api/v1/announcements"
-	messagingService "Qingyu_backend/service/messaging"
 	"Qingyu_backend/middleware"
+	messagingService "Qingyu_backend/service/messaging"
 )
 
 // RegisterAnnouncementRoutes 注册公告模块路由

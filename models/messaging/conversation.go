@@ -13,23 +13,23 @@ type Conversation struct {
 
 	// 对话参与者
 	ParticipantIDs []string `bson:"participant_ids" json:"participantIds" validate:"required,min=2"` // 参与者ID列表
-	CreatedBy      string   `bson:"created_by" json:"createdBy" validate:"required"`               // 创建者ID
+	CreatedBy      string   `bson:"created_by" json:"createdBy" validate:"required"`                 // 创建者ID
 
 	// 对话信息
-	LastMessageID   *string    `bson:"last_message_id,omitempty" json:"lastMessageId,omitempty"`     // 最后一条消息ID
-	LastMessageAt   *time.Time `bson:"last_message_at,omitempty" json:"lastMessageAt,omitempty"`     // 最后消息时间
-	LastMessagePreview string   `bson:"last_message_preview,omitempty" json:"lastMessagePreview,omitempty"` // 最后消息预览
-	LastMessageBy   *string    `bson:"last_message_by,omitempty" json:"lastMessageBy,omitempty"`     // 最后消息发送者
+	LastMessageID      *string    `bson:"last_message_id,omitempty" json:"lastMessageId,omitempty"`           // 最后一条消息ID
+	LastMessageAt      *time.Time `bson:"last_message_at,omitempty" json:"lastMessageAt,omitempty"`           // 最后消息时间
+	LastMessagePreview string     `bson:"last_message_preview,omitempty" json:"lastMessagePreview,omitempty"` // 最后消息预览
+	LastMessageBy      *string    `bson:"last_message_by,omitempty" json:"lastMessageBy,omitempty"`           // 最后消息发送者
 
 	// 对话状态
-	IsActive       bool              `bson:"is_active" json:"isActive"`                                   // 是否活跃
-	IsArchived     bool              `bson:"is_archived" json:"isArchived"`                               // 是否已归档
-	ArchivedBy     map[string]bool   `bson:"archived_by,omitempty" json:"archivedBy,omitempty"`           // 归档状态（按用户）
-	MutedBy        map[string]bool   `bson:"muted_by,omitempty" json:"mutedBy,omitempty"`                 // 免打扰状态（按用户）
+	IsActive   bool            `bson:"is_active" json:"isActive"`                         // 是否活跃
+	IsArchived bool            `bson:"is_archived" json:"isArchived"`                     // 是否已归档
+	ArchivedBy map[string]bool `bson:"archived_by,omitempty" json:"archivedBy,omitempty"` // 归档状态（按用户）
+	MutedBy    map[string]bool `bson:"muted_by,omitempty" json:"mutedBy,omitempty"`       // 免打扰状态（按用户）
 
 	// 对话类型
-	Type        ConversationType `bson:"type" json:"type" validate:"required,oneof=direct group"` // 对话类型
-	GroupInfo   *ConversationGroupInfo `bson:"group_info,omitempty" json:"groupInfo,omitempty"`   // 群组信息（仅type=group时）
+	Type      ConversationType       `bson:"type" json:"type" validate:"required,oneof=direct group"` // 对话类型
+	GroupInfo *ConversationGroupInfo `bson:"group_info,omitempty" json:"groupInfo,omitempty"`         // 群组信息（仅type=group时）
 
 	// 参与者快照（防止改名后历史消息显示问题）
 	ParticipantSnapshots map[string]*ConversationParticipantSnapshot `bson:"participant_snapshots,omitempty" json:"participantSnapshots,omitempty"`
@@ -45,12 +45,12 @@ const (
 
 // ConversationGroupInfo 群组信息
 type ConversationGroupInfo struct {
-	Name        string   `bson:"name" json:"name" validate:"required,min=1,max=50"`        // 群组名称
-	Description string   `bson:"description,omitempty" json:"description,omitempty"`      // 群组描述
-	Avatar      string   `bson:"avatar,omitempty" json:"avatar,omitempty"`                 // 群组头像
-	OwnerID     string   `bson:"owner_id" json:"ownerId" validate:"required"`              // 群主ID
-	AdminIDs    []string `bson:"admin_ids,omitempty" json:"adminIds,omitempty"`           // 管理员ID列表
-	MaxMembers  int      `bson:"max_members" json:"maxMembers"`                           // 最大成员数
+	Name        string   `bson:"name" json:"name" validate:"required,min=1,max=50"`  // 群组名称
+	Description string   `bson:"description,omitempty" json:"description,omitempty"` // 群组描述
+	Avatar      string   `bson:"avatar,omitempty" json:"avatar,omitempty"`           // 群组头像
+	OwnerID     string   `bson:"owner_id" json:"ownerId" validate:"required"`        // 群主ID
+	AdminIDs    []string `bson:"admin_ids,omitempty" json:"adminIds,omitempty"`      // 管理员ID列表
+	MaxMembers  int      `bson:"max_members" json:"maxMembers"`                      // 最大成员数
 }
 
 // ConversationParticipantSnapshot 对话参与者快照
@@ -62,17 +62,17 @@ type ConversationParticipantSnapshot struct {
 
 // DirectMessage 私信消息
 type DirectMessage struct {
-	base.IdentifiedEntity       `bson:",inline"`
-	base.Timestamps             `bson:",inline"`
-	base.CommunicationBase      `bson:",inline"`
-	base.ThreadedConversation   `bson:",inline"`
+	base.IdentifiedEntity     `bson:",inline"`
+	base.Timestamps           `bson:",inline"`
+	base.CommunicationBase    `bson:",inline"`
+	base.ThreadedConversation `bson:",inline"`
 
-	ConversationID string         `bson:"conversation_id" json:"conversationId" validate:"required"` // 所属对话ID
-	Type           MessageType    `bson:"type" json:"type" validate:"required,oneof=text image file system notice"` // 消息类型
-	Content        string         `bson:"content" json:"content" validate:"required,min=1,max=5000"`                 // 消息内容
-	Status         MessageStatus  `bson:"status" json:"status" validate:"required,oneof=normal recalled deleted"`   // 消息状态
-	Extra          map[string]interface{} `bson:"extra,omitempty" json:"extra,omitempty"`                           // 额外数据
-	SenderSnapshot *MessageSenderSnapshot `bson:"sender_snapshot,omitempty" json:"senderSnapshot,omitempty"`         // 发送者快照
+	ConversationID string                 `bson:"conversation_id" json:"conversationId" validate:"required"`                // 所属对话ID
+	Type           MessageType            `bson:"type" json:"type" validate:"required,oneof=text image file system notice"` // 消息类型
+	Content        string                 `bson:"content" json:"content" validate:"required,min=1,max=5000"`                // 消息内容
+	Status         MessageStatus          `bson:"status" json:"status" validate:"required,oneof=normal recalled deleted"`   // 消息状态
+	Extra          map[string]interface{} `bson:"extra,omitempty" json:"extra,omitempty"`                                   // 额外数据
+	SenderSnapshot *MessageSenderSnapshot `bson:"sender_snapshot,omitempty" json:"senderSnapshot,omitempty"`                // 发送者快照
 }
 
 // MessageType 消息类型
@@ -104,16 +104,16 @@ type MessageSenderSnapshot struct {
 
 // ConversationFilter 对话查询过滤器
 type ConversationFilter struct {
-	UserID       *string          `json:"userId,omitempty"`
-	Type         *ConversationType `json:"type,omitempty"`
-	IsActive     *bool            `json:"isActive,omitempty"`
-	IsArchived   *bool            `json:"isArchived,omitempty"`
-	StartDate    *time.Time       `json:"startDate,omitempty"`
-	EndDate      *time.Time       `json:"endDate,omitempty"`
-	SortBy       string           `json:"sortBy,omitempty"`
-	SortOrder    string           `json:"sortOrder,omitempty"`
-	Limit        int              `json:"limit,omitempty"`
-	Offset       int              `json:"offset,omitempty"`
+	UserID     *string           `json:"userId,omitempty"`
+	Type       *ConversationType `json:"type,omitempty"`
+	IsActive   *bool             `json:"isActive,omitempty"`
+	IsArchived *bool             `json:"isArchived,omitempty"`
+	StartDate  *time.Time        `json:"startDate,omitempty"`
+	EndDate    *time.Time        `json:"endDate,omitempty"`
+	SortBy     string            `json:"sortBy,omitempty"`
+	SortOrder  string            `json:"sortOrder,omitempty"`
+	Limit      int               `json:"limit,omitempty"`
+	Offset     int               `json:"offset,omitempty"`
 }
 
 // GetConditions 获取查询条件
@@ -350,18 +350,18 @@ func (c *Conversation) UpdateLastMessage(messageID string, content string, sende
 
 // DirectMessageFilter 消息查询过滤器
 type DirectMessageFilter struct {
-	ConversationID *string         `json:"conversationId,omitempty"`
-	SenderID       *string         `json:"senderId,omitempty"`
-	ReceiverID     *string         `json:"receiverId,omitempty"`
-	Type           *MessageType    `json:"type,omitempty"`
-	Status         *MessageStatus  `json:"status,omitempty"`
-	IsRead         *bool           `json:"isRead,omitempty"`
-	StartTime      *time.Time      `json:"startTime,omitempty"`
-	EndTime        *time.Time      `json:"endTime,omitempty"`
-	SortBy         string          `json:"sortBy,omitempty"`
-	SortOrder      string          `json:"sortOrder,omitempty"`
-	Limit          int             `json:"limit,omitempty"`
-	Offset         int             `json:"offset,omitempty"`
+	ConversationID *string        `json:"conversationId,omitempty"`
+	SenderID       *string        `json:"senderId,omitempty"`
+	ReceiverID     *string        `json:"receiverId,omitempty"`
+	Type           *MessageType   `json:"type,omitempty"`
+	Status         *MessageStatus `json:"status,omitempty"`
+	IsRead         *bool          `json:"isRead,omitempty"`
+	StartTime      *time.Time     `json:"startTime,omitempty"`
+	EndTime        *time.Time     `json:"endTime,omitempty"`
+	SortBy         string         `json:"sortBy,omitempty"`
+	SortOrder      string         `json:"sortOrder,omitempty"`
+	Limit          int            `json:"limit,omitempty"`
+	Offset         int            `json:"offset,omitempty"`
 }
 
 // GetConditions 获取查询条件

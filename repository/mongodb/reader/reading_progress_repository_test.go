@@ -143,8 +143,8 @@ func TestReadingProgressRepository_Update(t *testing.T) {
 
 	// Act - 更新进度
 	updates := map[string]interface{}{
-		"chapter_id": "chapter2",
-		"progress":   0.8,
+		"chapter_id":   "chapter2",
+		"progress":     0.8,
 		"last_read_at": time.Now(),
 	}
 	err = repo.Update(ctx, testProgress.ID, updates)
@@ -322,12 +322,12 @@ func TestReadingProgressRepository_GetRecentReadingByUser(t *testing.T) {
 	userID := "user_recent_test_" + primitive.NewObjectID().Hex()
 	for i := 0; i < 5; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:          primitive.NewObjectID().Hex(),
-			UserID:      userID,
-			BookID:      primitive.NewObjectID().Hex(),
-			ChapterID:   "chapter1",
-			Progress:    float64(i) * 0.2,
-			LastReadAt:  time.Now(),
+			ID:         primitive.NewObjectID().Hex(),
+			UserID:     userID,
+			BookID:     primitive.NewObjectID().Hex(),
+			ChapterID:  "chapter1",
+			Progress:   float64(i) * 0.2,
+			LastReadAt: time.Now(),
 		}
 		err := repo.Create(ctx, progress)
 		require.NoError(t, err)
@@ -355,12 +355,12 @@ func TestReadingProgressRepository_CountReadingBooks(t *testing.T) {
 	userID := "user_count_test_" + primitive.NewObjectID().Hex()
 	for i := 0; i < 5; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:          primitive.NewObjectID().Hex(),
-			UserID:      userID,
-			BookID:      primitive.NewObjectID().Hex(),
-			ChapterID:   "chapter1",
-			Progress:    0.5,
-			LastReadAt:  time.Now(),
+			ID:         primitive.NewObjectID().Hex(),
+			UserID:     userID,
+			BookID:     primitive.NewObjectID().Hex(),
+			ChapterID:  "chapter1",
+			Progress:   0.5,
+			LastReadAt: time.Now(),
 		}
 		err := repo.Create(ctx, progress)
 		require.NoError(t, err)
@@ -403,12 +403,12 @@ func TestReadingProgressRepository_DeleteByBook(t *testing.T) {
 	bookID := fmt.Sprintf("book_delete_test_%d", time.Now().UnixNano())
 	for i := 0; i < 3; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:          primitive.NewObjectID().Hex(),
-			UserID:      "user123",
-			BookID:      bookID,
-			ChapterID:   fmt.Sprintf("chapter%d", i+1),
-			Progress:    float64(i+1) * 0.3,
-			LastReadAt:  time.Now(),
+			ID:         primitive.NewObjectID().Hex(),
+			UserID:     "user123",
+			BookID:     bookID,
+			ChapterID:  fmt.Sprintf("chapter%d", i+1),
+			Progress:   float64(i+1) * 0.3,
+			LastReadAt: time.Now(),
 		}
 		err := repo.Create(ctx, progress)
 		require.NoError(t, err)

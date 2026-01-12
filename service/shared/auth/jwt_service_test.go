@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"Qingyu_backend/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"Qingyu_backend/config"
 )
 
 // MockRedisClient Mock Redis客户端
@@ -47,11 +47,11 @@ func (m *MockRedisClient) Exists(ctx context.Context, keys ...string) (int64, er
 // TestJWTService_GenerateToken_TableDriven 表格驱动测试 - 生成Token
 func TestJWTService_GenerateToken_TableDriven(t *testing.T) {
 	tests := []struct {
-		name      string
-		userID    string
-		roles     []string
-		wantErr   bool
-		errMsg    string
+		name    string
+		userID  string
+		roles   []string
+		wantErr bool
+		errMsg  string
 	}{
 		{
 			name:    "正常生成Token",
@@ -139,12 +139,12 @@ func TestJWTService_ValidateToken_TableDriven(t *testing.T) {
 	validToken, _ := service.GenerateToken(ctx, "user_123", []string{"reader"})
 
 	tests := []struct {
-		name      string
-		token     string
-		setup     func()
-		wantErr   bool
-		errMsg    string
-		checkErr  string
+		name     string
+		token    string
+		setup    func()
+		wantErr  bool
+		errMsg   string
+		checkErr string
 	}{
 		{
 			name:    "有效Token",
@@ -167,7 +167,7 @@ func TestJWTService_ValidateToken_TableDriven(t *testing.T) {
 			setup: func() {
 				service.RevokeToken(ctx, validToken)
 			},
-			wantErr:  true,
+			wantErr: true,
 		},
 		{
 			name:    "伪造的Token",
@@ -363,8 +363,8 @@ func TestJWTService_RevokeToken_TableDriven(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:  "吊销无效Token",
-			token: func() string { return "invalid_token" },
+			name:    "吊销无效Token",
+			token:   func() string { return "invalid_token" },
 			wantErr: false,
 		},
 	}
@@ -424,4 +424,3 @@ func BenchmarkJWTService_ValidateToken(b *testing.B) {
 		service.ValidateToken(ctx, token)
 	}
 }
-

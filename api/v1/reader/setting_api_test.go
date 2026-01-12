@@ -270,7 +270,7 @@ func TestSettingAPI_GetReadingSettings_Success(t *testing.T) {
 	router := setupSettingTestRouter(mockService, userID)
 
 	expectedSettings := &readerModels.ReadingSettings{
-		UserID:    userID,
+		UserID:     userID,
 		FontSize:   18,
 		FontFamily: "Arial",
 		LineHeight: 1.6,

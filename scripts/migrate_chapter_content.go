@@ -175,11 +175,11 @@ func migrate(ctx context.Context, config Config) error {
 
 			// 更新 Chapter 文档（添加内容引用信息）
 			chapterUpdates := bson.M{
-				"content_url":      fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapter.ID.Hex()),
-				"content_size":     int64(len([]rune(chapter.Content))),
-				"content_hash":     content.Hash,
-				"content_version":  1,
-				"updated_at":       now,
+				"content_url":     fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapter.ID.Hex()),
+				"content_size":    int64(len([]rune(chapter.Content))),
+				"content_hash":    content.Hash,
+				"content_version": 1,
+				"updated_at":      now,
 			}
 
 			if !config.DryRun {

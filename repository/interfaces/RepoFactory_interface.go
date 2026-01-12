@@ -4,8 +4,8 @@ import (
 	"context"
 
 	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
-	authInterface "Qingyu_backend/repository/interfaces/auth"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
+	authInterface "Qingyu_backend/repository/interfaces/auth"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
 	FinanceInterfaces "Qingyu_backend/repository/interfaces/finance"
 	messagingInterfaces "Qingyu_backend/repository/interfaces/messaging"

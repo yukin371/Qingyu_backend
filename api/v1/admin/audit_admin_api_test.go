@@ -636,11 +636,11 @@ func TestAuditAdminAPI_GetAuditStatistics_Success(t *testing.T) {
 	router := setupAuditAdminTestRouter(mockService)
 
 	expectedStats := map[string]interface{}{
-		"totalAudits":      int64(1000),
-		"pendingAudits":    int64(50),
-		"approvedAudits":   int64(800),
-		"rejectedAudits":   int64(150),
-		"highRiskAudits":   int64(20),
+		"totalAudits":        int64(1000),
+		"pendingAudits":      int64(50),
+		"approvedAudits":     int64(800),
+		"rejectedAudits":     int64(150),
+		"highRiskAudits":     int64(20),
 		"averageProcessTime": float64(120.5),
 	}
 

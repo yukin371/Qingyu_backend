@@ -591,11 +591,11 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 
 	// 准备更新数据
 	updates := map[string]interface{}{
-		"content_url":      chapter.ContentURL,
-		"content_size":     chapter.ContentSize,
-		"content_hash":     chapter.ContentHash,
-		"content_version":  chapter.ContentVersion,
-		"updated_at":       chapter.UpdatedAt,
+		"content_url":     chapter.ContentURL,
+		"content_size":    chapter.ContentSize,
+		"content_hash":    chapter.ContentHash,
+		"content_version": chapter.ContentVersion,
+		"updated_at":      chapter.UpdatedAt,
 	}
 
 	if err := s.chapterRepo.Update(ctx, chapter.ID, updates); err != nil {

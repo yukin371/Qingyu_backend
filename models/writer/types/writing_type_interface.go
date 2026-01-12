@@ -2,16 +2,16 @@ package types
 
 // DocumentTypeDefinition 文档类型定义
 type DocumentTypeDefinition struct {
-	Code            string            `json:"code"`                      // 类型代码
-	Name            string            `json:"name"`                      // 类型名称
-	Description     string            `json:"description"`               // 描述
-	Level           int               `json:"level"`                     // 层级
-	CanHaveChildren bool              `json:"canHaveChildren"`           // 是否可以有子节点
-	Icon            string            `json:"icon,omitempty"`            // 图标
-	Color           string            `json:"color,omitempty"`           // 颜色
-	RequiredFields  []string          `json:"requiredFields,omitempty"`  // 必填字段
-	OptionalFields  []string          `json:"optionalFields,omitempty"`  // 可选字段
-	CustomFields    map[string]string `json:"customFields,omitempty"`    // 自定义字段
+	Code            string            `json:"code"`                     // 类型代码
+	Name            string            `json:"name"`                     // 类型名称
+	Description     string            `json:"description"`              // 描述
+	Level           int               `json:"level"`                    // 层级
+	CanHaveChildren bool              `json:"canHaveChildren"`          // 是否可以有子节点
+	Icon            string            `json:"icon,omitempty"`           // 图标
+	Color           string            `json:"color,omitempty"`          // 颜色
+	RequiredFields  []string          `json:"requiredFields,omitempty"` // 必填字段
+	OptionalFields  []string          `json:"optionalFields,omitempty"` // 可选字段
+	CustomFields    map[string]string `json:"customFields,omitempty"`   // 自定义字段
 }
 
 // WritingType 写作类型接口

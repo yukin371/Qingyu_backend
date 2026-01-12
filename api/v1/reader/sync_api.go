@@ -9,8 +9,8 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	progressSync "Qingyu_backend/pkg/sync"
-	"Qingyu_backend/service/interfaces"
 	ws "Qingyu_backend/pkg/websocket"
+	"Qingyu_backend/service/interfaces"
 )
 
 // SyncAPI 阅读进度同步API

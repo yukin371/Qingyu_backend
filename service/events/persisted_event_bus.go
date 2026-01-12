@@ -14,12 +14,12 @@ import (
 // 在发布事件的同时持久化到存储
 type PersistedEventBus struct {
 	mu         sync.RWMutex
-	eventBus   base.EventBus      // 内存事件总线
-	store      EventStore          // 事件存储
-	asyncStore bool                // 是否异步存储
-	stopCh     chan struct{}       // 停止通道
-	wg         sync.WaitGroup      // 等待组
-	eventCh    chan *base.Event    // 事件通道（用于异步存储）
+	eventBus   base.EventBus    // 内存事件总线
+	store      EventStore       // 事件存储
+	asyncStore bool             // 是否异步存储
+	stopCh     chan struct{}    // 停止通道
+	wg         sync.WaitGroup   // 等待组
+	eventCh    chan *base.Event // 事件通道（用于异步存储）
 }
 
 // NewPersistedEventBus 创建持久化事件总线

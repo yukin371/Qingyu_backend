@@ -2,10 +2,10 @@ package shared
 
 import (
 	authModel "Qingyu_backend/models/auth"
+	financeModel "Qingyu_backend/models/finance"
 	recommendationModel "Qingyu_backend/models/recommendation"
 	storageModel "Qingyu_backend/models/storage"
 	adminModel "Qingyu_backend/models/users"
-	financeModel "Qingyu_backend/models/finance"
 	"context"
 	"time"
 )
