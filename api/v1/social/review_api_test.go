@@ -114,18 +114,18 @@ func TestReviewAPI_CreateReview_Success(t *testing.T) {
 	router := setupReviewTestRouter(mockService, userID)
 
 	expectedReview := &social.Review{
-		ID:         primitive.NewObjectID(),
-		BookID:     bookID,
-		UserID:     userID,
-		UserName:   "testuser",
-		Title:      "非常好的一本书",
-		Content:    "这本书非常精彩，值得推荐",
-		Rating:     5,
-		IsSpoiler:  false,
-		IsPublic:   true,
-		LikeCount:  0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        primitive.NewObjectID(),
+		BookID:    bookID,
+		UserID:    userID,
+		UserName:  "testuser",
+		Title:     "非常好的一本书",
+		Content:   "这本书非常精彩，值得推荐",
+		Rating:    5,
+		IsSpoiler: false,
+		IsPublic:  true,
+		LikeCount: 0,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	mockService.On("CreateReview", mock.Anything, bookID, userID, "testuser", "",

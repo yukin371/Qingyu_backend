@@ -8,18 +8,18 @@ import (
 
 // Bookmark 书签
 type Bookmark struct {
-	ID          primitive.ObjectID `bson:"_id" json:"id"`
-	UserID      primitive.ObjectID `bson:"user_id" json:"userId"`
-	BookID      primitive.ObjectID `bson:"book_id" json:"bookId"`
-	ChapterID   primitive.ObjectID `bson:"chapter_id" json:"chapterId"`
-	Position    int               `bson:"position" json:"position"`      // 字符位置
-	Note        string            `bson:"note" json:"note"`               // 书签笔记
-	Color       string            `bson:"color" json:"color"`             // 书签颜色（默认yellow）
-	Quote       string            `bson:"quote,omitempty" json:"quote,omitempty"` // 引用的文本
-	IsPublic    bool              `bson:"is_public" json:"isPublic"`      // 是否公开
-	Tags        []string          `bson:"tags,omitempty" json:"tags,omitempty"` // 标签
-	CreatedAt   time.Time         `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time         `bson:"updated_at" json:"updatedAt"`
+	ID        primitive.ObjectID `bson:"_id" json:"id"`
+	UserID    primitive.ObjectID `bson:"user_id" json:"userId"`
+	BookID    primitive.ObjectID `bson:"book_id" json:"bookId"`
+	ChapterID primitive.ObjectID `bson:"chapter_id" json:"chapterId"`
+	Position  int                `bson:"position" json:"position"`               // 字符位置
+	Note      string             `bson:"note" json:"note"`                       // 书签笔记
+	Color     string             `bson:"color" json:"color"`                     // 书签颜色（默认yellow）
+	Quote     string             `bson:"quote,omitempty" json:"quote,omitempty"` // 引用的文本
+	IsPublic  bool               `bson:"is_public" json:"isPublic"`              // 是否公开
+	Tags      []string           `bson:"tags,omitempty" json:"tags,omitempty"`   // 标签
+	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // BookmarkExport 书签导出格式

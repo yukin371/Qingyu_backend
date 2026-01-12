@@ -164,8 +164,8 @@ func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 
 // WithdrawRequest 提现申请请求
 type WithdrawRequest struct {
-	Amount      float64                    `json:"amount" binding:"required,gt=0"`
-	Method      string                     `json:"method" binding:"required,oneof=alipay wechat bank"`
+	Amount      float64                      `json:"amount" binding:"required,gt=0"`
+	Method      string                       `json:"method" binding:"required,oneof=alipay wechat bank"`
 	AccountInfo financeModel.WithdrawAccount `json:"account_info" binding:"required"`
 }
 
@@ -421,10 +421,10 @@ func (api *AuthorRevenueAPI) GetTaxInfo(c *gin.Context) {
 
 // UpdateTaxInfoRequest 更新税务信息请求
 type UpdateTaxInfoRequest struct {
-	IDType  string `json:"id_type" binding:"required,oneof=id_card passport other"`
+	IDType   string `json:"id_type" binding:"required,oneof=id_card passport other"`
 	IDNumber string `json:"id_number" binding:"required"`
-	Name    string `json:"name" binding:"required"`
-	TaxType string `json:"tax_type" binding:"required,oneof=individual company"`
+	Name     string `json:"name" binding:"required"`
+	TaxType  string `json:"tax_type" binding:"required,oneof=individual company"`
 }
 
 // UpdateTaxInfo 更新税务信息
@@ -458,11 +458,11 @@ func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
 	}
 
 	taxInfo := &financeModel.TaxInfo{
-		IDType:  req.IDType,
+		IDType:   req.IDType,
 		IDNumber: req.IDNumber,
-		Name:    req.Name,
-		TaxType: req.TaxType,
-		TaxRate: 0.00, // 根据实际情况设置税率
+		Name:     req.Name,
+		TaxType:  req.TaxType,
+		TaxRate:  0.00, // 根据实际情况设置税率
 	}
 
 	err := api.revenueService.UpdateTaxInfo(c.Request.Context(), userID.(string), taxInfo)

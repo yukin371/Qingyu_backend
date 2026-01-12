@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	statsAPI "Qingyu_backend/api/v1/stats"
-	readingStatsService "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/middleware"
+	readingStatsService "Qingyu_backend/service/reader/stats"
 )
 
 // RegisterReadingStatsRoutes 注册阅读统计路由

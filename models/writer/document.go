@@ -40,9 +40,9 @@ type Document struct {
 
 // DocumentStatus 文档状态常量（保持向后兼容）
 const (
-	DocumentStatusPlanned    = "planned"    // 计划中
-	DocumentStatusWriting    = "writing"    // 写作中
-	DocumentStatusCompleted  = "completed"  // 已完成
+	DocumentStatusPlanned   = "planned"   // 计划中
+	DocumentStatusWriting   = "writing"   // 写作中
+	DocumentStatusCompleted = "completed" // 已完成
 )
 
 // 历史文档类型常量（保持向后兼容，但已废弃，建议使用WritingType系统）

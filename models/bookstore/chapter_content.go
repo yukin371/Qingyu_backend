@@ -12,12 +12,12 @@ type ChapterContent struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	ChapterID primitive.ObjectID `bson:"chapter_id" json:"chapterId" binding:"required"`
 	Content   string             `bson:"content" json:"content" binding:"required"`
-	Format    string             `bson:"format" json:"format"`                     // markdown, html, txt
-	Version   int                `bson:"version" json:"version"`                   // 版本号
+	Format    string             `bson:"format" json:"format"`   // markdown, html, txt
+	Version   int                `bson:"version" json:"version"` // 版本号
 
 	// 元数据
-	WordCount int       `bson:"word_count" json:"wordCount"` // 字数统计
-	Hash      string    `bson:"hash,omitempty" json:"hash,omitempty"` // 内容哈希（用于校验和去重）
+	WordCount int    `bson:"word_count" json:"wordCount"`          // 字数统计
+	Hash      string `bson:"hash,omitempty" json:"hash,omitempty"` // 内容哈希（用于校验和去重）
 
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`

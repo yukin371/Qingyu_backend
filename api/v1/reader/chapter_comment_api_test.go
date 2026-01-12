@@ -399,12 +399,12 @@ func TestChapterCommentAPI_CreateParagraphComment_Success(t *testing.T) {
 	charEnd := 50
 
 	reqBody := readerModels.CreateChapterCommentRequest{
-		ChapterID:     chapterID,
-		BookID:        bookID,
-		Content:       "这段写得很好",
+		ChapterID:      chapterID,
+		BookID:         bookID,
+		Content:        "这段写得很好",
 		ParagraphIndex: &paragraphIndex,
-		CharStart:     &charStart,
-		CharEnd:       &charEnd,
+		CharStart:      &charStart,
+		CharEnd:        &charEnd,
 	}
 
 	// When
@@ -426,9 +426,9 @@ func TestChapterCommentAPI_CreateParagraphComment_MissingParagraphIndex(t *testi
 	bookID := primitive.NewObjectID().Hex()
 
 	reqBody := readerModels.CreateChapterCommentRequest{
-		ChapterID: chapterID,
-		BookID:    bookID,
-		Content:   "段落评论",
+		ChapterID:      chapterID,
+		BookID:         bookID,
+		Content:        "段落评论",
 		ParagraphIndex: nil, // Missing
 	}
 

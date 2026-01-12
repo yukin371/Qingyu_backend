@@ -16,25 +16,25 @@ import (
 
 // AuthorRevenueRepositoryImpl 作者收入Repository实现
 type AuthorRevenueRepositoryImpl struct {
-	db                  *mongo.Database
-	earningCollection   *mongo.Collection
+	db                   *mongo.Database
+	earningCollection    *mongo.Collection
 	withdrawalCollection *mongo.Collection
 	settlementCollection *mongo.Collection
-	detailCollection    *mongo.Collection
+	detailCollection     *mongo.Collection
 	statisticsCollection *mongo.Collection
-	taxInfoCollection   *mongo.Collection
+	taxInfoCollection    *mongo.Collection
 }
 
 // NewAuthorRevenueRepository 创建作者收入Repository
 func NewAuthorRevenueRepository(db *mongo.Database) financeInterfaces.AuthorRevenueRepository {
 	return &AuthorRevenueRepositoryImpl{
-		db:                  db,
-		earningCollection:   db.Collection("author_earnings"),
+		db:                   db,
+		earningCollection:    db.Collection("author_earnings"),
 		withdrawalCollection: db.Collection("withdrawal_requests"),
 		settlementCollection: db.Collection("settlements"),
-		detailCollection:    db.Collection("revenue_details"),
+		detailCollection:     db.Collection("revenue_details"),
 		statisticsCollection: db.Collection("revenue_statistics"),
-		taxInfoCollection:   db.Collection("tax_info"),
+		taxInfoCollection:    db.Collection("tax_info"),
 	}
 }
 

@@ -120,17 +120,17 @@ func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, pl
 
 	// 5. 创建会员记录
 	membership := &financeModel.UserMembership{
-		UserID:       userID,
-		PlanID:       plan.ID,
-		PlanName:     plan.Name,
-		PlanType:     plan.Type,
-		Level:        s.getLevelFromType(plan.Type),
-		StartTime:    startTime,
-		EndTime:      endTime,
-		AutoRenew:    false,
-		Status:       financeModel.MembershipStatusActive,
-		PaymentID:    primitive.NewObjectID(), // TODO: 创建支付记录
-		ActivatedAt:  now,
+		UserID:      userID,
+		PlanID:      plan.ID,
+		PlanName:    plan.Name,
+		PlanType:    plan.Type,
+		Level:       s.getLevelFromType(plan.Type),
+		StartTime:   startTime,
+		EndTime:     endTime,
+		AutoRenew:   false,
+		Status:      financeModel.MembershipStatusActive,
+		PaymentID:   primitive.NewObjectID(), // TODO: 创建支付记录
+		ActivatedAt: now,
 	}
 
 	err = s.membershipRepo.CreateMembership(ctx, membership)

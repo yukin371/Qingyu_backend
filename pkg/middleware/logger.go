@@ -5,8 +5,8 @@ import (
 
 	"Qingyu_backend/pkg/logger"
 
-	"github.com/google/uuid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/social"
 )
@@ -133,7 +133,7 @@ func (r *MongoBookListRepository) GetPublicBookLists(ctx context.Context, page, 
 func (r *MongoBookListRepository) GetBookListsByCategory(ctx context.Context, category string, page, size int) ([]*social.BookList, int64, error) {
 	filter := bson.M{
 		"is_public": true,
-		"category": category,
+		"category":  category,
 	}
 
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -164,7 +164,7 @@ func (r *MongoBookListRepository) GetBookListsByCategory(ctx context.Context, ca
 func (r *MongoBookListRepository) GetBookListsByTag(ctx context.Context, tag string, page, size int) ([]*social.BookList, int64, error) {
 	filter := bson.M{
 		"is_public": true,
-		"tags":     tag,
+		"tags":      tag,
 	}
 
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -573,20 +573,20 @@ func (r *MongoBookListRepository) ForkBookList(ctx context.Context, originalID, 
 
 	// 创建新书单
 	forked := &social.BookList{
-		UserID:        userID,
-		Title:         original.Title,
-		Description:   original.Description,
-		Cover:         original.Cover,
-		Category:      original.Category,
-		Tags:          original.Tags,
-		IsPublic:      original.IsPublic,
-		Books:         original.Books,
-		LikeCount:     0,
-		ForkCount:     0,
-		ViewCount:     0,
-		OriginalID:    &original.ID,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		UserID:      userID,
+		Title:       original.Title,
+		Description: original.Description,
+		Cover:       original.Cover,
+		Category:    original.Category,
+		Tags:        original.Tags,
+		IsPublic:    original.IsPublic,
+		Books:       original.Books,
+		LikeCount:   0,
+		ForkCount:   0,
+		ViewCount:   0,
+		OriginalID:  &original.ID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	err = r.CreateBookList(ctx, forked)

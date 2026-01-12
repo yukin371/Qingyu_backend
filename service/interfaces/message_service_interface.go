@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"context"
 	socialModel "Qingyu_backend/models/social"
+	"context"
 )
 
 // MessageService 私信服务接口

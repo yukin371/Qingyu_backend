@@ -214,16 +214,16 @@ func TestFollowAPI_GetFollowers_Success(t *testing.T) {
 
 	expectedFollowers := []*social.FollowInfo{
 		{
-			FollowerID:  "user1",
+			FollowerID:   "user1",
 			FollowerName: "粉丝1",
-			IsMutual:    false,
-			CreatedAt:   time.Now(),
+			IsMutual:     false,
+			CreatedAt:    time.Now(),
 		},
 		{
-			FollowerID:  "user2",
+			FollowerID:   "user2",
 			FollowerName: "粉丝2",
-			IsMutual:    true,
-			CreatedAt:   time.Now(),
+			IsMutual:     true,
+			CreatedAt:    time.Now(),
 		},
 	}
 
@@ -260,13 +260,13 @@ func TestFollowAPI_GetFollowing_Success(t *testing.T) {
 
 	expectedFollowing := []*social.FollowingInfo{
 		{
-			FollowingID:  "user1",
+			FollowingID:   "user1",
 			FollowingName: "关注用户1",
 			IsMutual:      true,
 			CreatedAt:     time.Now(),
 		},
 		{
-			FollowingID:  "user2",
+			FollowingID:   "user2",
 			FollowingName: "关注用户2",
 			IsMutual:      false,
 			CreatedAt:     time.Now(),
@@ -461,20 +461,20 @@ func TestFollowAPI_GetFollowingAuthors_Success(t *testing.T) {
 
 	expectedAuthors := []*social.AuthorFollow{
 		{
-			ID:           primitive.NewObjectID(),
-			UserID:       userID,
-			AuthorID:     "author1",
-			AuthorName:   "作者1",
+			ID:            primitive.NewObjectID(),
+			UserID:        userID,
+			AuthorID:      "author1",
+			AuthorName:    "作者1",
 			NotifyNewBook: true,
-			CreatedAt:    time.Now(),
+			CreatedAt:     time.Now(),
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			UserID:       userID,
-			AuthorID:     "author2",
-			AuthorName:   "作者2",
+			ID:            primitive.NewObjectID(),
+			UserID:        userID,
+			AuthorID:      "author2",
+			AuthorName:    "作者2",
 			NotifyNewBook: false,
-			CreatedAt:    time.Now(),
+			CreatedAt:     time.Now(),
 		},
 	}
 

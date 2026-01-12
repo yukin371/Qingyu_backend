@@ -234,18 +234,18 @@ func TestMessageAPI_SendMessage_Success(t *testing.T) {
 	router := setupMessageTestRouter(mockService, userID)
 
 	expectedMessage := &social.Message{
-		ID:             primitive.NewObjectID(),
-		SenderID:       userID,
-		ReceiverID:     receiverID,
-		Content:        "你好，这是测试消息",
-		MessageType:    "text",
+		ID:          primitive.NewObjectID(),
+		SenderID:    userID,
+		ReceiverID:  receiverID,
+		Content:     "你好，这是测试消息",
+		MessageType: "text",
 	}
 
 	mockService.On("SendMessage", mock.Anything, userID, receiverID, "你好，这是测试消息", "text").
 		Return(expectedMessage, nil)
 
 	reqBody := map[string]interface{}{
-		"receiver_id":   receiverID,
+		"receiver_id":  receiverID,
 		"content":      "你好，这是测试消息",
 		"message_type": "text",
 	}
@@ -303,7 +303,7 @@ func TestMessageAPI_SendMessage_InvalidMessageType(t *testing.T) {
 	router := setupMessageTestRouter(mockService, userID)
 
 	reqBody := map[string]interface{}{
-		"receiver_id":   receiverID,
+		"receiver_id":  receiverID,
 		"content":      "你好",
 		"message_type": "invalid",
 	}
@@ -407,7 +407,7 @@ func TestMessageAPI_CreateMention_Success(t *testing.T) {
 		Return(nil)
 
 	reqBody := map[string]interface{}{
-		"user_id":       targetUserID,
+		"user_id":      targetUserID,
 		"content_type": "comment",
 		"content_id":   "comment123",
 		"content":      "测试内容",

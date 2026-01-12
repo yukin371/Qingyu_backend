@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"Qingyu_backend/models/notification"
-	repo "Qingyu_backend/repository/interfaces/notification"
 	"Qingyu_backend/pkg/errors"
+	repo "Qingyu_backend/repository/interfaces/notification"
 )
 
 // NotificationService 通知服务接口
@@ -59,10 +59,10 @@ type NotificationService interface {
 
 // notificationServiceImpl 通知服务实现
 type notificationServiceImpl struct {
-	notificationRepo     repo.NotificationRepository
-	preferenceRepo       repo.NotificationPreferenceRepository
-	pushDeviceRepo       repo.PushDeviceRepository
-	templateRepo         repo.NotificationTemplateRepository
+	notificationRepo repo.NotificationRepository
+	preferenceRepo   repo.NotificationPreferenceRepository
+	pushDeviceRepo   repo.PushDeviceRepository
+	templateRepo     repo.NotificationTemplateRepository
 }
 
 // NewNotificationService 创建通知服务实例
@@ -82,26 +82,26 @@ func NewNotificationService(
 
 // CreateNotificationRequest 创建通知请求
 type CreateNotificationRequest struct {
-	UserID    string                              `json:"userId" validate:"required"`
-	Type      notification.NotificationType       `json:"type" validate:"required"`
-	Priority  notification.NotificationPriority   `json:"priority"`
-	Title     string                              `json:"title" validate:"required,min=1,max=200"`
-	Content   string                              `json:"content" validate:"required,min=1,max=5000"`
-	Data      map[string]interface{}              `json:"data"`
-	ExpiresIn *int                                `json:"expiresIn"` // 过期时间（秒）
+	UserID    string                            `json:"userId" validate:"required"`
+	Type      notification.NotificationType     `json:"type" validate:"required"`
+	Priority  notification.NotificationPriority `json:"priority"`
+	Title     string                            `json:"title" validate:"required,min=1,max=200"`
+	Content   string                            `json:"content" validate:"required,min=1,max=5000"`
+	Data      map[string]interface{}            `json:"data"`
+	ExpiresIn *int                              `json:"expiresIn"` // 过期时间（秒）
 }
 
 // GetNotificationsRequest 获取通知列表请求
 type GetNotificationsRequest struct {
-	UserID   string                              `json:"userId" validate:"required"`
-	Type     *notification.NotificationType      `json:"type"`
-	Read     *bool                               `json:"read"`
-	Priority *notification.NotificationPriority  `json:"priority"`
-	Keyword  *string                             `json:"keyword"`
-	Limit    int                                 `json:"limit" validate:"min=1,max=100"`
-	Offset   int                                 `json:"offset" validate:"min=0"`
-	SortBy   string                              `json:"sortBy" validate:"omitempty,oneof=created_at priority read_at"`
-	SortDesc bool                                `json:"sortDesc"`
+	UserID   string                             `json:"userId" validate:"required"`
+	Type     *notification.NotificationType     `json:"type"`
+	Read     *bool                              `json:"read"`
+	Priority *notification.NotificationPriority `json:"priority"`
+	Keyword  *string                            `json:"keyword"`
+	Limit    int                                `json:"limit" validate:"min=1,max=100"`
+	Offset   int                                `json:"offset" validate:"min=0"`
+	SortBy   string                             `json:"sortBy" validate:"omitempty,oneof=created_at priority read_at"`
+	SortDesc bool                               `json:"sortDesc"`
 }
 
 // GetNotificationsResponse 获取通知列表响应
@@ -113,18 +113,18 @@ type GetNotificationsResponse struct {
 
 // UpdateNotificationPreferenceRequest 更新通知偏好设置请求
 type UpdateNotificationPreferenceRequest struct {
-	EnableSystem     *bool                                       `json:"enableSystem"`
-	EnableSocial     *bool                                       `json:"enableSocial"`
-	EnableContent    *bool                                       `json:"enableContent"`
-	EnableReward     *bool                                       `json:"enableReward"`
-	EnableMessage    *bool                                       `json:"enableMessage"`
-	EnableUpdate     *bool                                       `json:"enableUpdate"`
-	EnableMembership *bool                                       `json:"enableMembership"`
-	EmailNotification *notification.EmailNotificationSettings   `json:"emailNotification"`
-	SMSNotification   *notification.SMSNotificationSettings     `json:"smsNotification"`
-	PushNotification  *bool                                      `json:"pushNotification"`
-	QuietHoursStart   *string                                   `json:"quietHoursStart" validate:"omitempty"`
-	QuietHoursEnd     *string                                   `json:"quietHoursEnd" validate:"omitempty"`
+	EnableSystem      *bool                                   `json:"enableSystem"`
+	EnableSocial      *bool                                   `json:"enableSocial"`
+	EnableContent     *bool                                   `json:"enableContent"`
+	EnableReward      *bool                                   `json:"enableReward"`
+	EnableMessage     *bool                                   `json:"enableMessage"`
+	EnableUpdate      *bool                                   `json:"enableUpdate"`
+	EnableMembership  *bool                                   `json:"enableMembership"`
+	EmailNotification *notification.EmailNotificationSettings `json:"emailNotification"`
+	SMSNotification   *notification.SMSNotificationSettings   `json:"smsNotification"`
+	PushNotification  *bool                                   `json:"pushNotification"`
+	QuietHoursStart   *string                                 `json:"quietHoursStart" validate:"omitempty"`
+	QuietHoursEnd     *string                                 `json:"quietHoursEnd" validate:"omitempty"`
 }
 
 // RegisterPushDeviceRequest 注册推送设备请求
@@ -280,8 +280,8 @@ func (s *notificationServiceImpl) MarkAsRead(ctx context.Context, id string, use
 	// 标记为已读
 	now := time.Now()
 	updates := map[string]interface{}{
-		"read":     true,
-		"read_at":  now,
+		"read":    true,
+		"read_at": now,
 	}
 
 	if err := s.notificationRepo.Update(ctx, id, updates); err != nil {

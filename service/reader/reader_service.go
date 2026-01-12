@@ -7,23 +7,23 @@ import (
 	"time"
 
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
-	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/base"
+	bookstoreService "Qingyu_backend/service/bookstore"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ReaderService 阅读器服务
 type ReaderService struct {
-	progressRepo    readerRepo.ReadingProgressRepository
-	annotationRepo  readerRepo.AnnotationRepository
-	settingsRepo    readerRepo.ReadingSettingsRepository
-	chapterService  bookstoreService.ChapterService // ← 依赖 Bookstore 的 ChapterService
-	eventBus        base.EventBus
-	cacheService    ReaderCacheService
-	vipService      VIPPermissionService
-	serviceName     string
-	version         string
+	progressRepo   readerRepo.ReadingProgressRepository
+	annotationRepo readerRepo.AnnotationRepository
+	settingsRepo   readerRepo.ReadingSettingsRepository
+	chapterService bookstoreService.ChapterService // ← 依赖 Bookstore 的 ChapterService
+	eventBus       base.EventBus
+	cacheService   ReaderCacheService
+	vipService     VIPPermissionService
+	serviceName    string
+	version        string
 }
 
 // NewReaderService 创建阅读器服务实例

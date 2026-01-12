@@ -1,9 +1,9 @@
 package interfaces
 
 import (
+	readerModel "Qingyu_backend/models/reader"
 	"context"
 	"time"
-	readerModel "Qingyu_backend/models/reader"
 )
 
 // ReaderService 阅读器服务接口

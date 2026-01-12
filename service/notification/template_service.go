@@ -9,8 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/notification"
-	repo "Qingyu_backend/repository/interfaces/notification"
 	"Qingyu_backend/pkg/errors"
+	repo "Qingyu_backend/repository/interfaces/notification"
 )
 
 // TemplateService 通知模板服务接口
@@ -44,13 +44,13 @@ func NewTemplateService(templateRepo repo.NotificationTemplateRepository) Templa
 // CreateTemplateRequest 创建模板请求
 type CreateTemplateRequest struct {
 	Type      notification.NotificationType `json:"type" validate:"required"`
-	Action    string                         `json:"action" validate:"required,min=1,max=100"`
-	Title     string                         `json:"title" validate:"required,min=1,max=200"`
-	Content   string                         `json:"content" validate:"required,min=1,max=5000"`
-	Variables []string                       `json:"variables"`
-	Data      map[string]interface{}         `json:"data"`
-	Language  string                         `json:"language" validate:"required"`
-	IsActive  bool                           `json:"isActive"`
+	Action    string                        `json:"action" validate:"required,min=1,max=100"`
+	Title     string                        `json:"title" validate:"required,min=1,max=200"`
+	Content   string                        `json:"content" validate:"required,min=1,max=5000"`
+	Variables []string                      `json:"variables"`
+	Data      map[string]interface{}        `json:"data"`
+	Language  string                        `json:"language" validate:"required"`
+	IsActive  bool                          `json:"isActive"`
 }
 
 // ListTemplatesRequest 获取模板列表请求
@@ -71,11 +71,11 @@ type ListTemplatesResponse struct {
 
 // UpdateTemplateRequest 更新模板请求
 type UpdateTemplateRequest struct {
-	Title     *string                `json:"title" validate:"omitempty,min=1,max=200"`
-	Content   *string                `json:"content" validate:"omitempty,min=1,max=5000"`
-	Variables *[]string              `json:"variables"`
+	Title     *string                 `json:"title" validate:"omitempty,min=1,max=200"`
+	Content   *string                 `json:"content" validate:"omitempty,min=1,max=5000"`
+	Variables *[]string               `json:"variables"`
 	Data      *map[string]interface{} `json:"data"`
-	IsActive  *bool                  `json:"isActive"`
+	IsActive  *bool                   `json:"isActive"`
 }
 
 // CreateTemplate 创建模板

@@ -14,14 +14,14 @@ import (
 
 // NotificationPreferenceRepositoryImpl 通知偏好设置仓储实现
 type NotificationPreferenceRepositoryImpl struct {
-	db                  *mongo.Database
+	db                   *mongo.Database
 	preferenceCollection *mongo.Collection
 }
 
 // NewNotificationPreferenceRepository 创建通知偏好设置仓储实例
 func NewNotificationPreferenceRepository(db *mongo.Database) repo.NotificationPreferenceRepository {
 	return &NotificationPreferenceRepositoryImpl{
-		db:                  db,
+		db:                   db,
 		preferenceCollection: db.Collection("notification_preferences"),
 	}
 }
@@ -36,22 +36,22 @@ func (r *NotificationPreferenceRepositoryImpl) Create(ctx context.Context, prefe
 	}
 
 	doc := bson.M{
-		"_id":                   objectID,
-		"user_id":               preference.UserID,
-		"enable_system":         preference.EnableSystem,
-		"enable_social":         preference.EnableSocial,
-		"enable_content":        preference.EnableContent,
-		"enable_reward":         preference.EnableReward,
-		"enable_message":        preference.EnableMessage,
-		"enable_update":         preference.EnableUpdate,
-		"enable_membership":     preference.EnableMembership,
-		"email_notification":    preference.EmailNotification,
-		"sms_notification":      preference.SMSNotification,
-		"push_notification":     preference.PushNotification,
-		"quiet_hours_start":     preference.QuietHoursStart,
-		"quiet_hours_end":       preference.QuietHoursEnd,
-		"created_at":            preference.CreatedAt,
-		"updated_at":            preference.UpdatedAt,
+		"_id":                objectID,
+		"user_id":            preference.UserID,
+		"enable_system":      preference.EnableSystem,
+		"enable_social":      preference.EnableSocial,
+		"enable_content":     preference.EnableContent,
+		"enable_reward":      preference.EnableReward,
+		"enable_message":     preference.EnableMessage,
+		"enable_update":      preference.EnableUpdate,
+		"enable_membership":  preference.EnableMembership,
+		"email_notification": preference.EmailNotification,
+		"sms_notification":   preference.SMSNotification,
+		"push_notification":  preference.PushNotification,
+		"quiet_hours_start":  preference.QuietHoursStart,
+		"quiet_hours_end":    preference.QuietHoursEnd,
+		"created_at":         preference.CreatedAt,
+		"updated_at":         preference.UpdatedAt,
 	}
 
 	_, err = r.preferenceCollection.InsertOne(ctx, doc)

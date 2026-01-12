@@ -3,8 +3,8 @@ package users
 import (
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"Qingyu_backend/models/auth"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserStatus 用户状态枚举
@@ -20,15 +20,15 @@ const (
 // User 表示系统中的用户数据模型
 // 仅包含与数据本身紧密相关的字段与方法
 type User struct {
-	ID       string     `bson:"_id,omitempty" json:"id"`
-	Username string     `bson:"username" json:"username" validate:"required,min=3,max=50"`
-	Email    string     `bson:"email,omitempty" json:"email" validate:"omitempty,email"`
-	Phone    string     `bson:"phone,omitempty" json:"phone" validate:"omitempty,e164"`
-	Password string     `bson:"password" json:"-" validate:"required,min=6"`
+	ID       string `bson:"_id,omitempty" json:"id"`
+	Username string `bson:"username" json:"username" validate:"required,min=3,max=50"`
+	Email    string `bson:"email,omitempty" json:"email" validate:"omitempty,email"`
+	Phone    string `bson:"phone,omitempty" json:"phone" validate:"omitempty,e164"`
+	Password string `bson:"password" json:"-" validate:"required,min=6"`
 
 	// 角色和权限
 	Roles    []string `bson:"roles" json:"roles" validate:"required,dive,oneof=reader author admin"` // 多角色支持
-	VIPLevel int      `bson:"vip_level" json:"vipLevel" validate:"min=0,max=5"`                       // VIP等级 (0-5)
+	VIPLevel int      `bson:"vip_level" json:"vipLevel" validate:"min=0,max=5"`                      // VIP等级 (0-5)
 
 	Status   UserStatus `bson:"status" json:"status" validate:"required,oneof=active inactive banned deleted"`
 	Avatar   string     `bson:"avatar,omitempty" json:"avatar,omitempty"` // 头像URL

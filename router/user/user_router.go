@@ -3,10 +3,10 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/user/handler"
 	managementApi "Qingyu_backend/api/v1/user"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	"Qingyu_backend/api/v1/user/handler"
 	"Qingyu_backend/middleware"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"Qingyu_backend/service/shared/stats"
 )
 

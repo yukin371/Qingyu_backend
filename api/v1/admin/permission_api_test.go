@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	sharedService "Qingyu_backend/service/shared"
 	authModel "Qingyu_backend/models/auth"
+	sharedService "Qingyu_backend/service/shared"
 )
 
 // MockPermissionService 模拟PermissionService

@@ -26,7 +26,7 @@ const (
 	EventSubscriptionCancelled = "subscription.cancelled"
 
 	// 打赏事件
-	EventRewardCreated = "reward.created"
+	EventRewardCreated  = "reward.created"
 	EventRewardReceived = "reward.received"
 
 	// VIP事件
@@ -52,10 +52,10 @@ type BookstoreEventData struct {
 // PurchaseEventData 购买事件数据
 type PurchaseEventData struct {
 	BookstoreEventData
-	OrderID      string  `json:"order_id"`
-	PaymentMethod string `json:"payment_method"`
-	Discount     float64 `json:"discount,omitempty"`
-	FinalAmount  float64 `json:"final_amount"`
+	OrderID       string  `json:"order_id"`
+	PaymentMethod string  `json:"payment_method"`
+	Discount      float64 `json:"discount,omitempty"`
+	FinalAmount   float64 `json:"final_amount"`
 }
 
 // NewBookPurchasedEvent 创建书籍购买事件
@@ -166,7 +166,7 @@ func NewRefundApprovedEvent(userID, orderID, refundID string, amount float64) ba
 type SubscriptionEventData struct {
 	UserID         string                 `json:"user_id"`
 	SubscriptionID string                 `json:"subscription_id"`
-	PlanType       string                 `json:"plan_type"`       // monthly/yearly
+	PlanType       string                 `json:"plan_type"` // monthly/yearly
 	Amount         float64                `json:"amount"`
 	Currency       string                 `json:"currency"`
 	Action         string                 `json:"action"`
@@ -234,17 +234,17 @@ func NewSubscriptionExpiredEvent(userID, subscriptionID string) base.Event {
 
 // RewardEventData 打赏事件数据
 type RewardEventData struct {
-	RewardID    string                 `json:"reward_id"`
-	SponsorID   string                 `json:"sponsor_id"`   // 打赏者ID
-	AuthorID    string                 `json:"author_id"`    // 作者ID
-	BookID      string                 `json:"book_id"`
-	ChapterID   string                 `json:"chapter_id,omitempty"`
-	Amount      float64                `json:"amount"`
-	Currency    string                 `json:"currency"`
-	Message     string                 `json:"message,omitempty"`
-	Action      string                 `json:"action"`
-	Time        time.Time              `json:"time"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	RewardID  string                 `json:"reward_id"`
+	SponsorID string                 `json:"sponsor_id"` // 打赏者ID
+	AuthorID  string                 `json:"author_id"`  // 作者ID
+	BookID    string                 `json:"book_id"`
+	ChapterID string                 `json:"chapter_id,omitempty"`
+	Amount    float64                `json:"amount"`
+	Currency  string                 `json:"currency"`
+	Message   string                 `json:"message,omitempty"`
+	Action    string                 `json:"action"`
+	Time      time.Time              `json:"time"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewRewardCreatedEvent 创建打赏事件
@@ -272,16 +272,16 @@ func NewRewardCreatedEvent(rewardID, sponsorID, authorID, bookID, chapterID, mes
 
 // VIPEventData VIP事件数据
 type VIPEventData struct {
-	UserID       string                 `json:"user_id"`
-	VIPLevel     string                 `json:"vip_level"`     // basic/silver/gold/platinum
-	Duration     int                    `json:"duration"`      // 天数
-	Amount       float64                `json:"amount,omitempty"`
-	Currency     string                 `json:"currency,omitempty"`
-	Action       string                 `json:"action"`
-	Time         time.Time              `json:"time"`
-	StartTime    time.Time              `json:"start_time,omitempty"`
-	EndTime      time.Time              `json:"end_time,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	UserID    string                 `json:"user_id"`
+	VIPLevel  string                 `json:"vip_level"` // basic/silver/gold/platinum
+	Duration  int                    `json:"duration"`  // 天数
+	Amount    float64                `json:"amount,omitempty"`
+	Currency  string                 `json:"currency,omitempty"`
+	Action    string                 `json:"action"`
+	Time      time.Time              `json:"time"`
+	StartTime time.Time              `json:"start_time,omitempty"`
+	EndTime   time.Time              `json:"end_time,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewVIPPurchasedEvent 创建VIP购买事件

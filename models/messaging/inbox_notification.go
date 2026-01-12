@@ -10,14 +10,14 @@ import (
 type InboxNotificationType string
 
 const (
-	InboxNotificationTypeComment      InboxNotificationType = "comment"       // 评论通知
-	InboxNotificationTypeLike         InboxNotificationType = "like"          // 点赞通知
-	InboxNotificationTypeFollow       InboxNotificationType = "follow"        // 关注通知
-	InboxNotificationTypeMention      InboxNotificationType = "mention"       // @提醒
-	InboxNotificationTypeSystem       InboxNotificationType = "system"        // 系统通知
-	InboxNotificationTypeAnnouncement InboxNotificationType = "announcement"  // 公告通知
-	InboxNotificationTypeUpdate       InboxNotificationType = "update"        // 内容更新通知
-	InboxNotificationTypeInvite       InboxNotificationType = "invite"        // 邀请通知
+	InboxNotificationTypeComment      InboxNotificationType = "comment"      // 评论通知
+	InboxNotificationTypeLike         InboxNotificationType = "like"         // 点赞通知
+	InboxNotificationTypeFollow       InboxNotificationType = "follow"       // 关注通知
+	InboxNotificationTypeMention      InboxNotificationType = "mention"      // @提醒
+	InboxNotificationTypeSystem       InboxNotificationType = "system"       // 系统通知
+	InboxNotificationTypeAnnouncement InboxNotificationType = "announcement" // 公告通知
+	InboxNotificationTypeUpdate       InboxNotificationType = "update"       // 内容更新通知
+	InboxNotificationTypeInvite       InboxNotificationType = "invite"       // 邀请通知
 )
 
 // InboxNotificationPriority 通知优先级
@@ -32,19 +32,19 @@ const (
 
 // InboxNotification 站内通知模型
 type InboxNotification struct {
-	base.IdentifiedEntity      `bson:",inline"`
-	base.Timestamps            `bson:",inline"`
-	base.CommunicationBase     `bson:",inline"`
-	base.Expirable             `bson:",inline"`
-	base.TargetEntity          `bson:",inline"`
-	base.Pinned                `bson:",inline"`
+	base.IdentifiedEntity  `bson:",inline"`
+	base.Timestamps        `bson:",inline"`
+	base.CommunicationBase `bson:",inline"`
+	base.Expirable         `bson:",inline"`
+	base.TargetEntity      `bson:",inline"`
+	base.Pinned            `bson:",inline"`
 
-	Type        InboxNotificationType    `bson:"type" json:"type" validate:"required"` // 通知类型
-	Priority    InboxNotificationPriority `bson:"priority" json:"priority" validate:"required,oneof=low normal high urgent"` // 优先级
-	Title       string              `bson:"title" json:"title" validate:"required,min=1,max=200"`  // 通知标题
-	Content     string              `bson:"content" json:"content" validate:"required,min=1,max=1000"` // 通知内容
-	ActionURL   string              `bson:"action_url,omitempty" json:"actionUrl,omitempty"`  // 操作链接
-	ActionText  string              `bson:"action_text,omitempty" json:"actionText,omitempty"` // 操作按钮文字
+	Type       InboxNotificationType     `bson:"type" json:"type" validate:"required"`                                      // 通知类型
+	Priority   InboxNotificationPriority `bson:"priority" json:"priority" validate:"required,oneof=low normal high urgent"` // 优先级
+	Title      string                    `bson:"title" json:"title" validate:"required,min=1,max=200"`                      // 通知标题
+	Content    string                    `bson:"content" json:"content" validate:"required,min=1,max=1000"`                 // 通知内容
+	ActionURL  string                    `bson:"action_url,omitempty" json:"actionUrl,omitempty"`                           // 操作链接
+	ActionText string                    `bson:"action_text,omitempty" json:"actionText,omitempty"`                         // 操作按钮文字
 
 	// 发送者快照
 	ActorSnapshot *NotificationActorSnapshot `bson:"actor_snapshot,omitempty" json:"actorSnapshot,omitempty"`
@@ -218,9 +218,9 @@ func (n *InboxNotification) SetAutoExpiration() {
 	case InboxNotificationPriorityHigh:
 		duration = 14 * 24 * time.Hour // 14天
 	case InboxNotificationPriorityNormal:
-		duration = 7 * 24 * time.Hour  // 7天
+		duration = 7 * 24 * time.Hour // 7天
 	case InboxNotificationPriorityLow:
-		duration = 3 * 24 * time.Hour  // 3天
+		duration = 3 * 24 * time.Hour // 3天
 	default:
 		duration = 7 * 24 * time.Hour
 	}

@@ -12,8 +12,8 @@ import (
 
 // FollowService 关注服务
 type FollowService struct {
-	followRepo socialRepo.FollowRepository
-	eventBus   base.EventBus
+	followRepo  socialRepo.FollowRepository
+	eventBus    base.EventBus
 	serviceName string
 	version     string
 }
@@ -24,8 +24,8 @@ func NewFollowService(
 	eventBus base.EventBus,
 ) *FollowService {
 	return &FollowService{
-		followRepo: followRepo,
-		eventBus:   eventBus,
+		followRepo:  followRepo,
+		eventBus:    eventBus,
 		serviceName: "FollowService",
 		version:     "1.0.0",
 	}
@@ -360,9 +360,9 @@ func (s *FollowService) publishFollowEvent(ctx context.Context, eventType string
 	event := &base.BaseEvent{
 		EventType: eventType,
 		EventData: map[string]interface{}{
-			"follower_id":  followerID,
-			"target_id":    targetID,
-			"follow_type":  followType,
+			"follower_id": followerID,
+			"target_id":   targetID,
+			"follow_type": followType,
 		},
 		Timestamp: time.Now(),
 		Source:    s.serviceName,

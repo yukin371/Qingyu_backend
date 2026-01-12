@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"context"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	"context"
 )
 
 // RepositoryAdapter 将 StorageRepository 适配到 FileRepository 接口
@@ -44,7 +44,7 @@ func (a *RepositoryAdapter) List(ctx context.Context, userID, category string, p
 		Page:     page,
 		PageSize: pageSize,
 	}
-	
+
 	files, _, err := a.repo.ListFiles(ctx, filter)
 	return files, err
 }
@@ -63,4 +63,3 @@ func (a *RepositoryAdapter) RevokeAccess(ctx context.Context, fileID, userID str
 func (a *RepositoryAdapter) CheckAccess(ctx context.Context, fileID, userID string) (bool, error) {
 	return a.repo.CheckAccess(ctx, fileID, userID)
 }
-

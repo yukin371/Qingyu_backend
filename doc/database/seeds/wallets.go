@@ -15,24 +15,24 @@ import (
 type Transaction struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	UserID      string             `bson:"user_id"`
-	Type        string             `bson:"type"`        // recharge, consume, transfer, withdraw, income
+	Type        string             `bson:"type"` // recharge, consume, transfer, withdraw, income
 	Amount      float64            `bson:"amount"`
-	Balance     float64            `bson:"balance"`      // 交易后余额
+	Balance     float64            `bson:"balance"` // 交易后余额
 	Description string             `bson:"description"`
-	Status      string             `bson:"status"`       // completed, pending, failed, cancelled
+	Status      string             `bson:"status"` // completed, pending, failed, cancelled
 	CreatedAt   time.Time          `bson:"created_at"`
 }
 
 // WalletData 钱包数据
 type WalletData struct {
-	UserID      string         `bson:"user_id"`
-	Balance     float64        `bson:"balance"`
-	Frozen      bool           `bson:"frozen"`
-	FrozenAmount float64       `bson:"frozen_amount"`
-	TotalRecharge float64      `bson:"total_recharge"`
-	TotalConsume float64       `bson:"total_consume"`
-	CreatedAt   time.Time      `bson:"created_at"`
-	UpdatedAt   time.Time      `bson:"updated_at"`
+	UserID        string    `bson:"user_id"`
+	Balance       float64   `bson:"balance"`
+	Frozen        bool      `bson:"frozen"`
+	FrozenAmount  float64   `bson:"frozen_amount"`
+	TotalRecharge float64   `bson:"total_recharge"`
+	TotalConsume  float64   `bson:"total_consume"`
+	CreatedAt     time.Time `bson:"created_at"`
+	UpdatedAt     time.Time `bson:"updated_at"`
 }
 
 // SeedWallets 钱包种子数据

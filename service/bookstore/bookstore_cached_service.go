@@ -12,7 +12,7 @@ import (
 
 // BookstoreCachedService 带缓存的书城服务
 type BookstoreCachedService struct {
-	service    BookstoreService
+	service       BookstoreService
 	cacheStrategy *cache.CacheStrategy
 }
 

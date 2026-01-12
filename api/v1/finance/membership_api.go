@@ -50,8 +50,8 @@ func (api *MembershipAPI) GetPlans(c *gin.Context) {
 
 // SubscribeRequest 订阅请求
 type SubscribeRequest struct {
-	PlanID         string `json:"plan_id" binding:"required"`
-	PaymentMethod  string `json:"payment_method" binding:"required,oneof=alipay wechat bank wallet"`
+	PlanID        string `json:"plan_id" binding:"required"`
+	PaymentMethod string `json:"payment_method" binding:"required,oneof=alipay wechat bank wallet"`
 }
 
 // Subscribe 订阅会员

@@ -1,4 +1,4 @@
-﻿package bookstore
+package bookstore
 
 import (
 	"net/http"
@@ -165,9 +165,9 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 		Code:    200,
 		Message: "获取成功",
 		Data: map[string]interface{}{
-			"book_id":   bookID.Hex(),
-			"count":     len(chapters),
-			"chapters":  chapters,
+			"book_id":  bookID.Hex(),
+			"count":    len(chapters),
+			"chapters": chapters,
 		},
 	})
 }
@@ -207,9 +207,9 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 		Code:    200,
 		Message: "获取成功",
 		Data: map[string]interface{}{
-			"book_id":   bookID.Hex(),
-			"count":     len(chapters),
-			"chapters":  chapters,
+			"book_id":  bookID.Hex(),
+			"count":    len(chapters),
+			"chapters": chapters,
 		},
 	})
 }

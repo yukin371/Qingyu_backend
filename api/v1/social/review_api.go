@@ -23,12 +23,12 @@ func NewReviewAPI(reviewService interfaces.ReviewService) *ReviewAPI {
 
 // CreateReviewRequest 创建书评请求
 type CreateReviewRequest struct {
-	BookID     string `json:"book_id" binding:"required"`
-	Title      string `json:"title" binding:"required,max=100"`
-	Content    string `json:"content" binding:"required,max=5000"`
-	Rating     int    `json:"rating" binding:"required,min=1,max=5"`
-	IsSpoiler  bool   `json:"is_spoiler"`
-	IsPublic   bool   `json:"is_public"`
+	BookID    string `json:"book_id" binding:"required"`
+	Title     string `json:"title" binding:"required,max=100"`
+	Content   string `json:"content" binding:"required,max=5000"`
+	Rating    int    `json:"rating" binding:"required,min=1,max=5"`
+	IsSpoiler bool   `json:"is_spoiler"`
+	IsPublic  bool   `json:"is_public"`
 }
 
 // CreateReview 创建书评

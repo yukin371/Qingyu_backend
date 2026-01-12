@@ -15,8 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	progressSync "Qingyu_backend/pkg/sync"
-	"Qingyu_backend/service/interfaces"
 	ws "Qingyu_backend/pkg/websocket"
+	"Qingyu_backend/service/interfaces"
 )
 
 // MockProgressSyncService 模拟ProgressSyncService
@@ -43,7 +43,7 @@ func (m *MockProgressSyncService) GetSyncStatus(userID string) *progressSync.Syn
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return &progressSync.SyncStatus{
-			UserID:          userID,
+			UserID:           userID,
 			ConnectedDevices: []string{},
 			DeviceCount:      0,
 			IsSyncing:        false,
@@ -304,7 +304,7 @@ func TestSyncAPI_GetSyncStatus_Success(t *testing.T) {
 	router := setupSyncTestRouter(mockService, userID)
 
 	expectedStatus := &progressSync.SyncStatus{
-		UserID:          userID,
+		UserID:           userID,
 		ConnectedDevices: []string{"device-1", "device-2"},
 		DeviceCount:      2,
 		IsSyncing:        true,

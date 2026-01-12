@@ -14,9 +14,9 @@ import (
 
 // Tracing 事件追踪器
 type Tracing struct {
-	tracer             trace.Tracer
-	enabled            bool
-	serviceName        string
+	tracer      trace.Tracer
+	enabled     bool
+	serviceName string
 }
 
 // NewTracing 创建事件追踪器
@@ -171,16 +171,16 @@ func (b *TraceableEventBus) PublishAsync(ctx context.Context, event base.Event) 
 // TraceableEventHandler 可追踪的事件处理器包装器
 type TraceableEventHandler struct {
 	handler base.EventHandler
-	tracing  *Tracing
-	metrics  *Metrics
+	tracing *Tracing
+	metrics *Metrics
 }
 
 // NewTraceableEventHandler 创建可追踪的事件处理器
 func NewTraceableEventHandler(handler base.EventHandler, tracing *Tracing, metrics *Metrics) base.EventHandler {
 	return &TraceableEventHandler{
 		handler: handler,
-		tracing:  tracing,
-		metrics:  metrics,
+		tracing: tracing,
+		metrics: metrics,
 	}
 }
 

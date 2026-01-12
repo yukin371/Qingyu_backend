@@ -12,22 +12,22 @@ import (
 
 // DocumentLock 文档锁
 type DocumentLock struct {
-	DocumentID  string    `json:"documentId"`
-	UserID      string    `json:"userId"`
-	UserName    string    `json:"userName"`
-	LockedAt    time.Time `json:"lockedAt"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	AutoExtend  bool      `json:"autoExtend"`
-	DeviceID    string    `json:"deviceId"`
+	DocumentID string    `json:"documentId"`
+	UserID     string    `json:"userId"`
+	UserName   string    `json:"userName"`
+	LockedAt   time.Time `json:"lockedAt"`
+	ExpiresAt  time.Time `json:"expiresAt"`
+	AutoExtend bool      `json:"autoExtend"`
+	DeviceID   string    `json:"deviceId"`
 }
 
 // LockStatus 锁状态
 type LockStatus struct {
-	IsLocked   bool           `json:"isLocked"`
-	Lock       *DocumentLock  `json:"lock,omitempty"`
-	CanEdit    bool           `json:"canEdit"`
-	LockOwner  string         `json:"lockOwner,omitempty"`
-	WaitQueue  []string       `json:"waitQueue,omitempty"` // 等待队列中的用户ID
+	IsLocked  bool          `json:"isLocked"`
+	Lock      *DocumentLock `json:"lock,omitempty"`
+	CanEdit   bool          `json:"canEdit"`
+	LockOwner string        `json:"lockOwner,omitempty"`
+	WaitQueue []string      `json:"waitQueue,omitempty"` // 等待队列中的用户ID
 }
 
 // DocumentLockService 文档锁定服务接口
@@ -200,9 +200,9 @@ func (s *RedisDocumentLockService) GetLockStatus(ctx context.Context, documentID
 	key := s.getLockKey(documentID)
 
 	status := &LockStatus{
-		IsLocked:   false,
-		CanEdit:    true,
-		WaitQueue:  []string{},
+		IsLocked:  false,
+		CanEdit:   true,
+		WaitQueue: []string{},
 	}
 
 	// 从Redis获取锁信息

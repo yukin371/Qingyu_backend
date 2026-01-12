@@ -47,11 +47,11 @@ type LocationRelation struct {
 	base.Timestamps          `bson:",inline"`
 	base.ProjectScopedEntity `bson:",inline"`
 
-	FromID   string                 `bson:"from_id" json:"fromId" validate:"required"`
-	ToID     string                 `bson:"to_id" json:"toId" validate:"required"`
-	Type     LocationRelationType   `bson:"type" json:"type" validate:"required"`
-	Distance string                 `bson:"distance,omitempty" json:"distance,omitempty" validate:"max=100"` // 距离描述
-	Notes    string                 `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
+	FromID   string               `bson:"from_id" json:"fromId" validate:"required"`
+	ToID     string               `bson:"to_id" json:"toId" validate:"required"`
+	Type     LocationRelationType `bson:"type" json:"type" validate:"required"`
+	Distance string               `bson:"distance,omitempty" json:"distance,omitempty" validate:"max=100"` // 距离描述
+	Notes    string               `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
 }
 
 // TouchForCreate 创建时设置默认值

@@ -322,11 +322,11 @@ func (s *UserAdminServiceImpl) GetActiveUsers(ctx context.Context, days int, lim
 // isValidRole 验证角色是否有效
 func isValidRole(role string) bool {
 	validRoles := map[string]bool{
-		"user":         true,
-		"author":       true,
-		"admin":        true,
-		"super_admin":  true,
-		"vip":          true,
+		"user":        true,
+		"author":      true,
+		"admin":       true,
+		"super_admin": true,
+		"vip":         true,
 	}
 	return validRoles[role]
 }

@@ -132,7 +132,7 @@ func InitBookstoreRouter(
 
 			// ✅ Chapter Catalog API（章节目录和试读）- 公开接口
 			if chapterCatalogApiHandler != nil {
-				public.GET("/books/:id/chapters", chapterCatalogApiHandler.GetChapterCatalog)           // 获取章节目录
+				public.GET("/books/:id/chapters", chapterCatalogApiHandler.GetChapterCatalog)          // 获取章节目录
 				public.GET("/books/:id/chapters/:chapterId", chapterCatalogApiHandler.GetChapterInfo)  // 获取单个章节信息
 				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters)     // 获取试读章节
 				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)         // 获取VIP章节列表
@@ -148,25 +148,23 @@ func InitBookstoreRouter(
 		}
 	}
 
+	// 需要认证的接口
+	authenticated := bookstoreGroup.Group("")
+	authenticated.Use(middleware.JWTAuth())
+	{
+		// ✅ 书籍点击记录（认证接口 - 关联到用户）
+		authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
 
-		// 需要认证的接口
-		authenticated := bookstoreGroup.Group("")
-		authenticated.Use(middleware.JWTAuth())
-		{
-			// ✅ 书籍点击记录（认证接口 - 关联到用户）
-			authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
-
-			// ✅ 评分API（当RatingAPI可用时）
-			if ratingApiHandler != nil {
-				authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)
-				authenticated.POST("/books/:id/rating", ratingApiHandler.CreateRating)
-				authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
-				authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
-				authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
-			}
+		// ✅ 评分API（当RatingAPI可用时）
+		if ratingApiHandler != nil {
+			authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)
+			authenticated.POST("/books/:id/rating", ratingApiHandler.CreateRating)
+			authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
+			authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
+			authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
 		}
 	}
-
+}
 
 // InitReaderPurchaseRouter 初始化读者购买路由（用于章节购买相关接口）
 // 这些接口放在 /api/v1/reader 路径下，因为它们与读者的个人购买记录相关
@@ -187,10 +185,10 @@ func InitReaderPurchaseRouter(
 
 		// ✅ 购买相关接口（需要认证）
 		readerGroup.POST("/chapters/:chapterId/purchase", chapterCatalogApiHandler.PurchaseChapter) // 购买单个章节
-		readerGroup.POST("/books/:id/buy-all", chapterCatalogApiHandler.PurchaseBook)              // 购买全书
+		readerGroup.POST("/books/:id/buy-all", chapterCatalogApiHandler.PurchaseBook)               // 购买全书
 
 		// ✅ 购买记录查询（需要认证）
-		readerGroup.GET("/purchases", chapterCatalogApiHandler.GetPurchases)           // 获取所有购买记录
-		readerGroup.GET("/purchases/:id", chapterCatalogApiHandler.GetBookPurchases)  // 获取某本书的购买记录
+		readerGroup.GET("/purchases", chapterCatalogApiHandler.GetPurchases)         // 获取所有购买记录
+		readerGroup.GET("/purchases/:id", chapterCatalogApiHandler.GetBookPurchases) // 获取某本书的购买记录
 	}
 }

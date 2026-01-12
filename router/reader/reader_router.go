@@ -4,10 +4,10 @@ import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	socialApi "Qingyu_backend/api/v1/social"
 	"Qingyu_backend/middleware"
+	syncService "Qingyu_backend/pkg/sync"
 	"Qingyu_backend/service/bookstore"
 	readerservice "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
-	syncService "Qingyu_backend/pkg/sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -187,13 +187,13 @@ func InitReaderRouter(
 			bookmarks := readerGroup.Group("/bookmarks")
 			{
 				// 基础CRUD
-				bookmarks.GET("", bookmarkApiHandler.GetBookmarks)                // 获取书签列表
-				bookmarks.GET("/:id", bookmarkApiHandler.GetBookmark)            // 获取书签详情
-				bookmarks.PUT("/:id", bookmarkApiHandler.UpdateBookmark)         // 更新书签
-				bookmarks.DELETE("/:id", bookmarkApiHandler.DeleteBookmark)      // 删除书签
+				bookmarks.GET("", bookmarkApiHandler.GetBookmarks)          // 获取书签列表
+				bookmarks.GET("/:id", bookmarkApiHandler.GetBookmark)       // 获取书签详情
+				bookmarks.PUT("/:id", bookmarkApiHandler.UpdateBookmark)    // 更新书签
+				bookmarks.DELETE("/:id", bookmarkApiHandler.DeleteBookmark) // 删除书签
 
 				// 按书籍获取
-				readerGroup.GET("/books/:bookId/bookmarks", bookmarkApiHandler.GetBookmarks) // 获取某本书的书签
+				readerGroup.GET("/books/:bookId/bookmarks", bookmarkApiHandler.GetBookmarks)    // 获取某本书的书签
 				readerGroup.POST("/books/:bookId/bookmarks", bookmarkApiHandler.CreateBookmark) // 创建书签
 
 				// 搜索和统计
@@ -216,22 +216,22 @@ func InitReaderRouter(
 		// 主题管理
 		themes := readerGroup.Group("/themes")
 		{
-			themes.GET("", themeApiHandler.GetThemes)                    // 获取主题列表
-			themes.GET("/:name", themeApiHandler.GetThemeByName)         // 获取单个主题
-			themes.POST("", themeApiHandler.CreateCustomTheme)           // 创建自定义主题
-			themes.PUT("/:id", themeApiHandler.UpdateTheme)              // 更新主题
-			themes.DELETE("/:id", themeApiHandler.DeleteTheme)           // 删除主题
+			themes.GET("", themeApiHandler.GetThemes)                     // 获取主题列表
+			themes.GET("/:name", themeApiHandler.GetThemeByName)          // 获取单个主题
+			themes.POST("", themeApiHandler.CreateCustomTheme)            // 创建自定义主题
+			themes.PUT("/:id", themeApiHandler.UpdateTheme)               // 更新主题
+			themes.DELETE("/:id", themeApiHandler.DeleteTheme)            // 删除主题
 			themes.POST("/:name/activate", themeApiHandler.ActivateTheme) // 激活主题
 		}
 
 		// 字体管理
 		fonts := readerGroup.Group("/fonts")
 		{
-			fonts.GET("", fontApiHandler.GetFonts)              // 获取字体列表
-			fonts.GET("/:name", fontApiHandler.GetFontByName)   // 获取单个字体
-			fonts.POST("", fontApiHandler.CreateCustomFont)     // 创建自定义字体
-			fonts.PUT("/:id", fontApiHandler.UpdateFont)        // 更新字体
-			fonts.DELETE("/:id", fontApiHandler.DeleteFont)     // 删除字体
+			fonts.GET("", fontApiHandler.GetFonts)            // 获取字体列表
+			fonts.GET("/:name", fontApiHandler.GetFontByName) // 获取单个字体
+			fonts.POST("", fontApiHandler.CreateCustomFont)   // 创建自定义字体
+			fonts.PUT("/:id", fontApiHandler.UpdateFont)      // 更新字体
+			fonts.DELETE("/:id", fontApiHandler.DeleteFont)   // 删除字体
 		}
 
 		// 字体偏好设置
@@ -241,21 +241,21 @@ func InitReaderRouter(
 		chapters := readerGroup.Group("/chapters")
 		{
 			// 章节级评论
-			chapters.GET("/:chapterId/comments", chapterCommentApiHandler.GetChapterComments)           // 获取章节评论列表
-			chapters.POST("/:chapterId/comments", chapterCommentApiHandler.CreateChapterComment)       // 发表章节评论
+			chapters.GET("/:chapterId/comments", chapterCommentApiHandler.GetChapterComments)    // 获取章节评论列表
+			chapters.POST("/:chapterId/comments", chapterCommentApiHandler.CreateChapterComment) // 发表章节评论
 
 			// 段落级评论
-			chapters.GET("/:chapterId/paragraph-comments", chapterCommentApiHandler.GetChapterParagraphComments) // 获取章节段落评论概览
-			chapters.POST("/:chapterId/paragraph-comments", chapterCommentApiHandler.CreateParagraphComment)     // 发表段落评论
+			chapters.GET("/:chapterId/paragraph-comments", chapterCommentApiHandler.GetChapterParagraphComments)           // 获取章节段落评论概览
+			chapters.POST("/:chapterId/paragraph-comments", chapterCommentApiHandler.CreateParagraphComment)               // 发表段落评论
 			chapters.GET("/:chapterId/paragraphs/:paragraphIndex/comments", chapterCommentApiHandler.GetParagraphComments) // 获取特定段落评论
 		}
 
 		// 章节评论管理（单条评论操作）
 		chapterComments := readerGroup.Group("/chapter-comments")
 		{
-			chapterComments.GET("/:commentId", chapterCommentApiHandler.GetChapterComment)        // 获取评论详情
-			chapterComments.PUT("/:commentId", chapterCommentApiHandler.UpdateChapterComment)     // 更新评论
-			chapterComments.DELETE("/:commentId", chapterCommentApiHandler.DeleteChapterComment)  // 删除评论
+			chapterComments.GET("/:commentId", chapterCommentApiHandler.GetChapterComment)            // 获取评论详情
+			chapterComments.PUT("/:commentId", chapterCommentApiHandler.UpdateChapterComment)         // 更新评论
+			chapterComments.DELETE("/:commentId", chapterCommentApiHandler.DeleteChapterComment)      // 删除评论
 			chapterComments.POST("/:commentId/like", chapterCommentApiHandler.LikeChapterComment)     // 点赞评论
 			chapterComments.DELETE("/:commentId/like", chapterCommentApiHandler.UnlikeChapterComment) // 取消点赞
 		}

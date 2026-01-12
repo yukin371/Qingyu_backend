@@ -50,15 +50,15 @@ func createTestAnnouncement(title, content string) *messagingModel.Announcement 
 	later := now.Add(24 * time.Hour)
 
 	ann := &messagingModel.Announcement{
-		Content:     content,
-		Type:        messagingModel.AnnouncementTypeInfo,
-		Priority:    1,
-		IsActive:    true,
-		TargetRole:  "all",
-		ViewCount:   0,
-		CreatedBy:   "admin_" + primitive.NewObjectID().Hex(),
-		StartTime:   &now,
-		EndTime:     &later,
+		Content:    content,
+		Type:       messagingModel.AnnouncementTypeInfo,
+		Priority:   1,
+		IsActive:   true,
+		TargetRole: "all",
+		ViewCount:  0,
+		CreatedBy:  "admin_" + primitive.NewObjectID().Hex(),
+		StartTime:  &now,
+		EndTime:    &later,
 	}
 
 	// 设置嵌入的字段

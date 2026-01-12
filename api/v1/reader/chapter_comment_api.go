@@ -173,19 +173,19 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	// 创建评论
 	comment := &readerModels.ChapterComment{
-		ID:          primitive.NewObjectID().Hex(),
-		ChapterID:   req.ChapterID,
-		BookID:      req.BookID,
-		UserID:      userID.(string),
-		Content:     req.Content,
-		Rating:      req.Rating,
-		ParentID:    req.ParentID,
-		ReplyCount:  0,
-		LikeCount:   0,
-		IsVisible:   true,
-		IsDeleted:   false,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:         primitive.NewObjectID().Hex(),
+		ChapterID:  req.ChapterID,
+		BookID:     req.BookID,
+		UserID:     userID.(string),
+		Content:    req.Content,
+		Rating:     req.Rating,
+		ParentID:   req.ParentID,
+		ReplyCount: 0,
+		LikeCount:  0,
+		IsVisible:  true,
+		IsDeleted:  false,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	// 段落级评论
@@ -444,21 +444,21 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	// 创建段落评论
 	comment := &readerModels.ChapterComment{
-		ID:            primitive.NewObjectID().Hex(),
-		ChapterID:     chapterID,
-		BookID:        req.BookID,
-		UserID:        userID.(string),
-		Content:       req.Content,
-		Rating:        0, // 段落评论通常不包含评分
+		ID:             primitive.NewObjectID().Hex(),
+		ChapterID:      chapterID,
+		BookID:         req.BookID,
+		UserID:         userID.(string),
+		Content:        req.Content,
+		Rating:         0, // 段落评论通常不包含评分
 		ParagraphIndex: req.ParagraphIndex,
-		CharStart:     req.CharStart,
-		CharEnd:       req.CharEnd,
-		ReplyCount:    0,
-		LikeCount:     0,
-		IsVisible:     true,
-		IsDeleted:     false,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		CharStart:      req.CharStart,
+		CharEnd:        req.CharEnd,
+		ReplyCount:     0,
+		LikeCount:      0,
+		IsVisible:      true,
+		IsDeleted:      false,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	// 实际应用中应该保存到数据库

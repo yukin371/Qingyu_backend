@@ -16,8 +16,8 @@ import (
 
 	readerModels "Qingyu_backend/models/reader"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
-	readerservice "Qingyu_backend/service/reader"
 	"Qingyu_backend/service/interfaces"
+	readerservice "Qingyu_backend/service/reader"
 )
 
 // MockReadingHistoryService 模拟ReadingHistoryService

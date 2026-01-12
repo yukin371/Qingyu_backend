@@ -127,7 +127,7 @@ func (s *ProgressSyncService) MergeOfflineProgresses(ctx context.Context, userID
 func (s *ProgressSyncService) GetSyncStatus(userID string) *SyncStatus {
 	connectedDevices := s.hub.GetConnectedDevices(userID)
 	return &SyncStatus{
-		UserID:          userID,
+		UserID:           userID,
 		ConnectedDevices: connectedDevices,
 		DeviceCount:      len(connectedDevices),
 		IsSyncing:        len(connectedDevices) > 1,
@@ -146,8 +146,8 @@ type OfflineProgress struct {
 
 // SyncStatus 同步状态
 type SyncStatus struct {
-	UserID          string   `json:"userId"`
+	UserID           string   `json:"userId"`
 	ConnectedDevices []string `json:"connectedDevices"`
-	DeviceCount     int      `json:"deviceCount"`
-	IsSyncing       bool     `json:"isSyncing"`
+	DeviceCount      int      `json:"deviceCount"`
+	IsSyncing        bool     `json:"isSyncing"`
 }

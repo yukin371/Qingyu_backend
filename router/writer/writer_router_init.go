@@ -4,13 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/pkg/lock"
+	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
-	documentService "Qingyu_backend/service/writer/document"
-	projectService "Qingyu_backend/service/writer/project"
+	"Qingyu_backend/service/interfaces"
 	searchService "Qingyu_backend/service/shared/search"
 	writerservice "Qingyu_backend/service/writer"
-	writerrepo "Qingyu_backend/repository/mongodb/writer"
-	"Qingyu_backend/service/interfaces"
+	documentService "Qingyu_backend/service/writer/document"
+	projectService "Qingyu_backend/service/writer/project"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer

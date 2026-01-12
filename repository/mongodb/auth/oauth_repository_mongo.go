@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	OAuthAccountCollection  = "oauth_accounts"
-	OAuthSessionCollection  = "oauth_sessions"
+	OAuthAccountCollection = "oauth_accounts"
+	OAuthSessionCollection = "oauth_sessions"
 )
 
 // MongoOAuthRepository MongoDB OAuth仓储实现
@@ -35,7 +35,7 @@ func NewMongoOAuthRepository(db *mongo.Database) authrepo.OAuthRepository {
 func (r *MongoOAuthRepository) FindByProviderAndProviderID(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 	var account authModel.OAuthAccount
 	filter := bson.M{
-		"provider":        provider,
+		"provider":         provider,
 		"provider_user_id": providerUserID,
 	}
 
@@ -153,10 +153,10 @@ func (r *MongoOAuthRepository) UpdateTokens(ctx context.Context, id string, acce
 	filter := bson.M{"_id": id}
 	update := bson.M{
 		"$set": bson.M{
-			"access_token":      accessToken,
-			"refresh_token":     refreshToken,
-			"token_expires_at":  expiresAt,
-			"updated_at":        time.Now(),
+			"access_token":     accessToken,
+			"refresh_token":    refreshToken,
+			"token_expires_at": expiresAt,
+			"updated_at":       time.Now(),
 		},
 	}
 

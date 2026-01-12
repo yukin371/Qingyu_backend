@@ -857,4 +857,3 @@ func TestBookstoreAPI_SearchBooks_OnlyTags_NoKeyword(t *testing.T) {
 	// Then - Should return 400 Bad Request (tags alone are not sufficient)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
-

@@ -224,7 +224,7 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 	// 查询精选书籍，包含所有已发布状态（published, ongoing, completed）
 	cursor, err := r.collection.Find(ctx, bson.M{
 		"is_featured": true,
-		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
+		"status":      bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
 	if err != nil {
 		return nil, err
@@ -441,8 +441,8 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 	if filter != nil {
 		// 多字段排序：先按创建时间倒序，时间相同时按标题拼音排序
 		sortFields := bson.D{
-			{Key: "created_at", Value: -1},  // 创建时间倒序
-			{Key: "title", Value: 1},         // 标题拼音升序
+			{Key: "created_at", Value: -1}, // 创建时间倒序
+			{Key: "title", Value: 1},       // 标题拼音升序
 		}
 
 		// 如果指定了排序字段，使用指定的排序

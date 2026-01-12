@@ -109,8 +109,8 @@ func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 	// 这里调用排名服务（需要实现）
 	// 暂时返回模拟数据
 	ranking := gin.H{
-		"period": period,
-		"rank":   0,
+		"period":  period,
+		"rank":    0,
 		"total":   0,
 		"message": "排名功能待实现",
 	}
@@ -182,12 +182,12 @@ func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 	// 这里调用阅读历史服务
 	// 暂时返回模拟数据
 	history := gin.H{
-		"days":            days,
-		"booksRead":       0,
-		"chaptersRead":    0,
-		"totalWords":      0,
-		"totalTime":       0,
-		"message":         "功能待实现",
+		"days":         days,
+		"booksRead":    0,
+		"chaptersRead": 0,
+		"totalWords":   0,
+		"totalTime":    0,
+		"message":      "功能待实现",
 	}
 
 	shared.Success(c, http.StatusOK, "获取阅读历史成功", history)
@@ -220,10 +220,10 @@ func (api *ReadingStatsAPI) GetRecommendations(c *gin.Context) {
 	// 这里调用推荐服务
 	// 暂时返回模拟数据
 	recommendations := gin.H{
-		"type":     recommendType,
-		"limit":    limit,
-		"books":    []interface{}{},
-		"message":  "推荐功能待实现",
+		"type":    recommendType,
+		"limit":   limit,
+		"books":   []interface{}{},
+		"message": "推荐功能待实现",
 	}
 
 	shared.Success(c, http.StatusOK, "获取推荐成功", recommendations)

@@ -154,10 +154,10 @@ func (bl *InMemoryTokenBlacklist) Stats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total":       total,
-		"active":      total - expired,
-		"expired":     expired,
-		"storage":     "memory",
+		"total":            total,
+		"active":           total - expired,
+		"expired":          expired,
+		"storage":          "memory",
 		"cleanup_interval": "5m",
 	}
 }

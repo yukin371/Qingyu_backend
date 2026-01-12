@@ -15,11 +15,11 @@ import (
 
 // ExportService 导出服务实现
 type ExportService struct {
-	documentRepo    DocumentRepository
+	documentRepo        DocumentRepository
 	documentContentRepo DocumentContentRepository
-	projectRepo     ProjectRepository
-	exportTaskRepo  ExportTaskRepository // 需要创建
-	fileStorage     FileStorage          // 文件存储接口
+	projectRepo         ProjectRepository
+	exportTaskRepo      ExportTaskRepository // 需要创建
+	fileStorage         FileStorage          // 文件存储接口
 }
 
 // DocumentRepository 文档仓储接口

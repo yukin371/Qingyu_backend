@@ -244,9 +244,9 @@ type SendEmailVerificationRequest struct {
 
 // SendEmailVerificationResponse 发送邮箱验证响应
 type SendEmailVerificationResponse struct {
-	Success      bool   `json:"success"`
-	Message      string `json:"message,omitempty"`
-	ExpiresIn    int    `json:"expires_in"` // 验证码有效期（秒）
+	Success   bool   `json:"success"`
+	Message   string `json:"message,omitempty"`
+	ExpiresIn int    `json:"expires_in"` // 验证码有效期（秒）
 }
 
 // VerifyEmailRequest 验证邮箱请求

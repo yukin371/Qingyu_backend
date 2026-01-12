@@ -4,34 +4,34 @@ import "time"
 
 // ChapterComment 章节评论（扩展自通用评论）
 type ChapterComment struct {
-	ID          string    `bson:"_id,omitempty" json:"id"`
-	ChapterID   string    `bson:"chapter_id" json:"chapterId"`       // 章节ID
-	BookID      string    `bson:"book_id" json:"bookId"`             // 书籍ID
-	UserID      string    `bson:"user_id" json:"userId"`             // 用户ID
-	Content     string    `bson:"content" json:"content"`            // 评论内容
-	Rating      int       `bson:"rating" json:"rating"`              // 评分（1-5，0表示无评分）
+	ID        string `bson:"_id,omitempty" json:"id"`
+	ChapterID string `bson:"chapter_id" json:"chapterId"` // 章节ID
+	BookID    string `bson:"book_id" json:"bookId"`       // 书籍ID
+	UserID    string `bson:"user_id" json:"userId"`       // 用户ID
+	Content   string `bson:"content" json:"content"`      // 评论内容
+	Rating    int    `bson:"rating" json:"rating"`        // 评分（1-5，0表示无评分）
 
 	// 段落级评论
-	ParagraphIndex *int     `bson:"paragraph_index,omitempty" json:"paragraphIndex,omitempty"` // 段落索引（从0开始）
-	ParagraphText   *string  `bson:"paragraph_text,omitempty" json:"paragraphText,omitempty"`   // 段落文本摘要
-	CharStart       *int     `bson:"char_start,omitempty" json:"charStart,omitempty"`           // 字符起始位置
-	CharEnd         *int     `bson:"char_end,omitempty" json:"charEnd,omitempty"`                 // 字符结束位置
+	ParagraphIndex *int    `bson:"paragraph_index,omitempty" json:"paragraphIndex,omitempty"` // 段落索引（从0开始）
+	ParagraphText  *string `bson:"paragraph_text,omitempty" json:"paragraphText,omitempty"`   // 段落文本摘要
+	CharStart      *int    `bson:"char_start,omitempty" json:"charStart,omitempty"`           // 字符起始位置
+	CharEnd        *int    `bson:"char_end,omitempty" json:"charEnd,omitempty"`               // 字符结束位置
 
 	// 回复
-	ParentID   *string    `bson:"parent_id,omitempty" json:"parentId,omitempty"`       // 父评论ID
-	RootID     *string    `bson:"root_id,omitempty" json:"rootId,omitempty"`           // 根评论ID（用于 threaded）
-	ReplyCount int        `bson:"reply_count" json:"replyCount"`                       // 回复数量
+	ParentID   *string `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父评论ID
+	RootID     *string `bson:"root_id,omitempty" json:"rootId,omitempty"`     // 根评论ID（用于 threaded）
+	ReplyCount int     `bson:"reply_count" json:"replyCount"`                 // 回复数量
 
 	// 点赞
-	LikeCount  int        `bson:"like_count" json:"likeCount"`                         // 点赞数
+	LikeCount int `bson:"like_count" json:"likeCount"` // 点赞数
 
 	// 状态
-	IsVisible  bool       `bson:"is_visible" json:"isVisible"`                         // 是否可见（可由管理员隐藏）
-	IsDeleted  bool       `bson:"is_deleted" json:"isDeleted"`                         // 是否已删除
+	IsVisible bool `bson:"is_visible" json:"isVisible"` // 是否可见（可由管理员隐藏）
+	IsDeleted bool `bson:"is_deleted" json:"isDeleted"` // 是否已删除
 
 	// 时间
-	CreatedAt  time.Time  `bson:"created_at" json:"createdAt"`
-	UpdatedAt  time.Time  `bson:"updated_at" json:"updatedAt"`
+	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 
 	// 用户快照（避免联表查询）
 	UserSnapshot *CommentUserSnapshot `bson:"user_snapshot,omitempty" json:"userSnapshot,omitempty"`
@@ -61,17 +61,17 @@ func (c *ChapterComment) CanEdit() bool {
 
 // ChapterCommentFilter 章节评论过滤器
 type ChapterCommentFilter struct {
-	BookID        *string    `json:"bookId,omitempty"`
-	ChapterID     *string    `json:"chapterId,omitempty"`
-	UserID        *string    `json:"userId,omitempty"`
-	ParentID      *string    `json:"parentId,omitempty"`       // 空字符串表示查询顶级评论
-	ParagraphIndex *int      `json:"paragraphIndex,omitempty"` // 查询特定段落的评论
-	MinRating     *int       `json:"minRating,omitempty"`      // 最低评分
-	HasRating     *bool      `json:"hasRating,omitempty"`      // 是否有评分
-	SortBy        string     `json:"sortBy,omitempty"`         // 排序字段：created_at/like_count/rating
-	SortOrder     string     `json:"sortOrder,omitempty"`      // 排序方向：asc/desc
-	Page          int        `json:"page,omitempty"`
-	PageSize      int        `json:"pageSize,omitempty"`
+	BookID         *string `json:"bookId,omitempty"`
+	ChapterID      *string `json:"chapterId,omitempty"`
+	UserID         *string `json:"userId,omitempty"`
+	ParentID       *string `json:"parentId,omitempty"`       // 空字符串表示查询顶级评论
+	ParagraphIndex *int    `json:"paragraphIndex,omitempty"` // 查询特定段落的评论
+	MinRating      *int    `json:"minRating,omitempty"`      // 最低评分
+	HasRating      *bool   `json:"hasRating,omitempty"`      // 是否有评分
+	SortBy         string  `json:"sortBy,omitempty"`         // 排序字段：created_at/like_count/rating
+	SortOrder      string  `json:"sortOrder,omitempty"`      // 排序方向：asc/desc
+	Page           int     `json:"page,omitempty"`
+	PageSize       int     `json:"pageSize,omitempty"`
 }
 
 // CreateChapterCommentRequest 创建章节评论请求

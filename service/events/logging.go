@@ -21,11 +21,11 @@ type EventLogger struct {
 
 // LoggingConfig 日志配置
 type LoggingConfig struct {
-	Level            string  // 日志级别: debug/info/warn/error
-	Encoding         string  // 编码格式: json/console
-	EnableStackTrace bool    // 是否启用堆栈跟踪
-	EnableCaller     bool    // 是否显示调用位置
-	OutputPaths       []string // 输出路径
+	Level            string   // 日志级别: debug/info/warn/error
+	Encoding         string   // 编码格式: json/console
+	EnableStackTrace bool     // 是否启用堆栈跟踪
+	EnableCaller     bool     // 是否显示调用位置
+	OutputPaths      []string // 输出路径
 }
 
 // DefaultLoggingConfig 默认日志配置
@@ -35,7 +35,7 @@ func DefaultLoggingConfig() *LoggingConfig {
 		Encoding:         "json",
 		EnableStackTrace: false,
 		EnableCaller:     true,
-		OutputPaths:       []string{"stdout"},
+		OutputPaths:      []string{"stdout"},
 	}
 }
 
@@ -295,4 +295,3 @@ func (l *EventLogger) Flush() {
 func (l *EventLogger) Sync() error {
 	return l.logger.Sync()
 }
-

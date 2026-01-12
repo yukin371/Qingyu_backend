@@ -100,20 +100,20 @@ func (c *DbMetricsCollector) StartPoolMonitoring(ctx context.Context, client *mo
 // DbStats 数据库统计信息
 type DbStats struct {
 	// 连接池信息
-	PoolConnections    int
+	PoolConnections     int
 	PoolIdleConnections int
-	PoolWaitCount      int64
-	PoolWaitDuration   time.Duration
+	PoolWaitCount       int64
+	PoolWaitDuration    time.Duration
 
 	// 查询统计
-	QueryTotal      int64
-	QueryErrors     int64
-	QueryDuration   time.Duration
+	QueryTotal       int64
+	QueryErrors      int64
+	QueryDuration    time.Duration
 	AvgQueryDuration time.Duration
 
 	// 数据库信息
-	DatabaseName   string
-	DatabaseSize   int64
+	DatabaseName    string
+	DatabaseSize    int64
 	CollectionCount int
 }
 

@@ -6,11 +6,11 @@ import (
 	"Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/lock"
-	"Qingyu_backend/service/writer/document"
-	projectService "Qingyu_backend/service/writer/project"
+	"Qingyu_backend/service/interfaces"
 	searchService "Qingyu_backend/service/shared/search"
 	writerservice "Qingyu_backend/service/writer"
-	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/service/writer/document"
+	projectService "Qingyu_backend/service/writer/project"
 )
 
 // InitWriterRouter 初始化写作端路由
@@ -224,4 +224,3 @@ func InitCommentRouter(r *gin.RouterGroup, commentApi *writer.CommentAPI) {
 		commentGroup.POST("/batch-delete", commentApi.BatchDeleteComments)
 	}
 }
-

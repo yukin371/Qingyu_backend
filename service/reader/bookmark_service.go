@@ -62,9 +62,9 @@ type BookmarkServiceImpl struct {
 // BookmarkListResponse 书签列表响应
 type BookmarkListResponse struct {
 	Bookmarks []*readermodels.Bookmark `json:"bookmarks"`
-	Total     int64                  `json:"total"`
-	Page      int                    `json:"page"`
-	Size      int                    `json:"size"`
+	Total     int64                    `json:"total"`
+	Page      int                      `json:"page"`
+	Size      int                      `json:"size"`
 }
 
 // NewBookmarkService 创建书签服务

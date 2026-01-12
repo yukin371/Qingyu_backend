@@ -7,8 +7,8 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	apperrors "Qingyu_backend/pkg/errors"
+	"github.com/gin-gonic/gin"
 )
 
 // ErrorRecoveryConfig 错误恢复配置

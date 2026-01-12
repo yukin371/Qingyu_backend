@@ -117,7 +117,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 实际应用中应该保存到数据库
 	// 这里暂时返回成功
 	shared.Success(c, http.StatusCreated, "创建成功", gin.H{
-		"theme": theme,
+		"theme":   theme,
 		"message": "自定义主题创建成功",
 	})
 }

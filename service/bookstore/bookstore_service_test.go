@@ -989,10 +989,10 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "空关键词",
-			keyword:   "",
-			setupMock: func(m *MockBookRepositoryForService) {},
-			wantErr:   true,
+			name:        "空关键词",
+			keyword:     "",
+			setupMock:   func(m *MockBookRepositoryForService) {},
+			wantErr:     true,
 			errContains: "keyword is required",
 		},
 	}
@@ -1092,10 +1092,10 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "无效的书籍ID",
-			bookID:    "invalid-id",
-			setupMock:  func(m *MockBookRepositoryForService) {},
-			wantErr:    true,
+			name:        "无效的书籍ID",
+			bookID:      "invalid-id",
+			setupMock:   func(m *MockBookRepositoryForService) {},
+			wantErr:     true,
 			errContains: "invalid book ID",
 		},
 	}
@@ -1157,13 +1157,13 @@ func TestBookstoreService_GetCategoryTree(t *testing.T) {
 func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	tests := []struct {
 		name        string
-		categoryID   string
-		setupMock    func(*MockCategoryRepositoryForService)
-		wantErr      bool
-		errContains  string
+		categoryID  string
+		setupMock   func(*MockCategoryRepositoryForService)
+		wantErr     bool
+		errContains string
 	}{
 		{
-			name:     "成功获取分类",
+			name:       "成功获取分类",
 			categoryID: primitive.NewObjectID().Hex(),
 			setupMock: func(m *MockCategoryRepositoryForService) {
 				categoryID := primitive.NewObjectID()
@@ -1177,7 +1177,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "分类未激活",
+			name:       "分类未激活",
 			categoryID: primitive.NewObjectID().Hex(),
 			setupMock: func(m *MockCategoryRepositoryForService) {
 				categoryID := primitive.NewObjectID()
@@ -1289,10 +1289,10 @@ func TestBookstoreService_IncrementBannerClick(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "无效的Banner ID",
-			bannerID:  "invalid-id",
-			setupMock: func(m *MockBannerRepositoryForService) {},
-			wantErr:    true,
+			name:        "无效的Banner ID",
+			bannerID:    "invalid-id",
+			setupMock:   func(m *MockBannerRepositoryForService) {},
+			wantErr:     true,
 			errContains: "invalid banner ID",
 		},
 	}
@@ -1489,7 +1489,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 
 	// Mock Featured Books
 	mockBookRepo.On("GetFeatured", ctx, 10, 0).Return(books, nil)
-	mockBookRepo.On("CountByFilter", ctx, mock.Anything).Return(int64(1), nil).Twice()
+	mockBookRepo.On("CountByFilter", ctx, mock.Anything).Return(int64(1), nil)
 
 	// Mock Categories
 	categories := []*bookstoreModel.Category{

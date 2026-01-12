@@ -322,10 +322,10 @@ func TestNotificationService_CreateNotification_Success(t *testing.T) {
 	ctx := context.Background()
 
 	req := &CreateNotificationRequest{
-		UserID:  "user123",
-		Type:    notifModel.NotificationTypeSystem,
-		Title:   "测试通知",
-		Content: "这是一条测试通知",
+		UserID:   "user123",
+		Type:     notifModel.NotificationTypeSystem,
+		Title:    "测试通知",
+		Content:  "这是一条测试通知",
 		Priority: notifModel.NotificationPriorityNormal,
 	}
 

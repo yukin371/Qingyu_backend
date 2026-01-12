@@ -30,8 +30,8 @@ type RateLimiterConfig struct {
 // DefaultRateLimiterConfig 默认限流配置
 func DefaultRateLimiterConfig() *RateLimiterConfig {
 	return &RateLimiterConfig{
-		Rate:    10,           // 每秒10个请求
-		Burst:   100,          // 桶容量100
+		Rate:    10,  // 每秒10个请求
+		Burst:   100, // 桶容量100
 		KeyFunc: DefaultKeyFunc,
 	}
 }

@@ -16,11 +16,11 @@ import (
 	aiService "Qingyu_backend/service/ai"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	financeService "Qingyu_backend/service/finance"
-	projectService "Qingyu_backend/service/writer/project"
 	readingService "Qingyu_backend/service/reader"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	socialService "Qingyu_backend/service/social"
 	userService "Qingyu_backend/service/user"
+	projectService "Qingyu_backend/service/writer/project"
 
 	// Audit service
 	auditSvc "Qingyu_backend/service/audit"
@@ -29,17 +29,17 @@ import (
 	messagingSvc "Qingyu_backend/service/messaging"
 
 	// Notification service
-	notificationService "Qingyu_backend/service/notification"
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
+	notificationService "Qingyu_backend/service/notification"
 
 	// Shared services
+	financeWalletService "Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/shared/admin"
 	"Qingyu_backend/service/shared/auth"
 	sharedMessaging "Qingyu_backend/service/shared/messaging"
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/recommendation"
 	"Qingyu_backend/service/shared/storage"
-	financeWalletService "Qingyu_backend/service/finance/wallet"
 
 	// Infrastructure
 	"Qingyu_backend/config"
@@ -107,8 +107,8 @@ type ServiceContainer struct {
 	templateService       notificationService.TemplateService
 
 	// 财务服务
-	membershipService     financeService.MembershipService
-	authorRevenueService  financeService.AuthorRevenueService
+	membershipService    financeService.MembershipService
+	authorRevenueService financeService.AuthorRevenueService
 
 	// 审核服务
 	auditService *auditSvc.ContentAuditService
@@ -606,7 +606,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
-	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()    // ← 创建章节仓储
+	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()      // ← 创建章节仓储
 	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
 	c.bookstoreService = bookstoreService.NewBookstoreService(

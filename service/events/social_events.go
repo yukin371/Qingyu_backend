@@ -80,10 +80,10 @@ func NewLikeRemovedEvent(userID, targetType, targetID string) base.Event {
 // CommentEventData 评论事件数据（扩展的社交事件数据）
 type CommentEventData struct {
 	SocialEventData
-	CommentID   string `json:"comment_id"`
-	Content     string `json:"content"`
-	ParentID    string `json:"parent_id,omitempty"`    // 父评论ID（用于回复）
-	ReplyToID   string `json:"reply_to_id,omitempty"`  // 回复的评论ID
+	CommentID     string `json:"comment_id"`
+	Content       string `json:"content"`
+	ParentID      string `json:"parent_id,omitempty"`        // 父评论ID（用于回复）
+	ReplyToID     string `json:"reply_to_id,omitempty"`      // 回复的评论ID
 	ReplyToUserID string `json:"reply_to_user_id,omitempty"` // 回复的用户ID
 }
 
@@ -187,11 +187,11 @@ func NewCollectionRemovedEvent(userID, targetType, targetID string) base.Event {
 
 // FollowEventData 关注事件数据
 type FollowEventData struct {
-	FollowerID  string    `json:"follower_id"`  // 关注者ID
-	FolloweeID  string    `json:"followee_id"`  // 被关注者ID
-	Action      string    `json:"action"`
-	Time        time.Time `json:"time"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	FollowerID string                 `json:"follower_id"` // 关注者ID
+	FolloweeID string                 `json:"followee_id"` // 被关注者ID
+	Action     string                 `json:"action"`
+	Time       time.Time              `json:"time"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewFollowAddedEvent 创建关注事件

@@ -37,11 +37,11 @@ type BackupConfig struct {
 
 // BackupManager 备份管理器
 type BackupManager struct {
-	config     *BackupConfig
-	dbClient   *mongo.Client
-	database   string
-	cron       *cron.Cron
-	logger     BackupLogger
+	config   *BackupConfig
+	dbClient *mongo.Client
+	database string
+	cron     *cron.Cron
+	logger   BackupLogger
 }
 
 // BackupLogger 备份日志接口
@@ -287,7 +287,7 @@ func (m *BackupManager) processDocument(doc bson.M) map[string]interface{} {
 		case primitive.Binary:
 			result[key] = map[string]interface{}{
 				"$binary": map[string]interface{}{
-					"base64": v.Data,
+					"base64":  v.Data,
 					"subtype": v.Subtype,
 				},
 			}
@@ -576,7 +576,7 @@ func (m *BackupManager) restoreCompressedBackup(ctx context.Context, gzPath stri
 		endIdx += startIdx
 
 		currentFile = content[startIdx+8 : endIdx] // 跳过 ">>>FILE:"
-		content = content[endIdx+3:]              // 跳过 "<<<"
+		content = content[endIdx+3:]               // 跳过 "<<<"
 
 		// 查找下一个文件标记或结束
 		nextFileIdx := indexOf(content, ">>>FILE:")
@@ -702,12 +702,12 @@ func indexOf(s, substr string) int {
 
 // BackupStatus 备份状态
 type BackupStatus struct {
-	LastBackup    time.Time `json:"last_backup"`
-	NextBackup    time.Time `json:"next_backup"`
-	TotalBackups  int       `json:"total_backups"`
-	TotalSize     int64     `json:"total_size"`
-	Schedule      string    `json:"schedule"`
-	IsRunning     bool      `json:"is_running"`
+	LastBackup   time.Time `json:"last_backup"`
+	NextBackup   time.Time `json:"next_backup"`
+	TotalBackups int       `json:"total_backups"`
+	TotalSize    int64     `json:"total_size"`
+	Schedule     string    `json:"schedule"`
+	IsRunning    bool      `json:"is_running"`
 }
 
 // GetStatus 获取备份状态

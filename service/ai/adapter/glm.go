@@ -40,11 +40,11 @@ func (a *GLMAdapter) GetName() string {
 // GetSupportedModels 获取支持的模型列表
 func (a *GLMAdapter) GetSupportedModels() []string {
 	return []string{
-		"glm-4-flash",  // 闪现版，速度快，价格低
-		"glm-4-plus",   // 增强版
-		"glm-4-air",    // 轻量版
-		"glm-4",        // 基础版
-		"glm-3-turbo",  // Turbo版
+		"glm-4-flash", // 闪现版，速度快，价格低
+		"glm-4-plus",  // 增强版
+		"glm-4-air",   // 轻量版
+		"glm-4",       // 基础版
+		"glm-3-turbo", // Turbo版
 	}
 }
 
@@ -74,8 +74,8 @@ type GLMResponse struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index   int     `json:"index"`
-		Message Message `json:"message"`
+		Index   int      `json:"index"`
+		Message Message  `json:"message"`
 		Delta   *Message `json:"delta,omitempty"` // 用于流式响应
 	} `json:"choices"`
 	Usage struct {
@@ -151,8 +151,8 @@ func (a *GLMAdapter) ChatCompletion(ctx context.Context, req *ChatCompletionRequ
 
 	// 转换为标准响应
 	result := &ChatCompletionResponse{
-		ID:           glmResp.ID,
-		Message:      glmResp.Choices[0].Message,
+		ID:      glmResp.ID,
+		Message: glmResp.Choices[0].Message,
 		Usage: Usage{
 			PromptTokens:     glmResp.Usage.PromptTokens,
 			CompletionTokens: glmResp.Usage.CompletionTokens,

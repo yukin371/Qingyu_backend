@@ -4,30 +4,30 @@ import "time"
 
 // ReaderFont 阅读器字体配置
 type ReaderFont struct {
-	ID          string    `bson:"_id,omitempty" json:"id"`
-	Name        string    `bson:"name" json:"name"`                       // 字体名称（唯一标识）
-	DisplayName string    `bson:"display_name" json:"displayName"`         // 显示名称
-	FontFamily  string    `bson:"font_family" json:"fontFamily"`           // CSS font-family 值
-	Description string    `bson:"description" json:"description"`          // 字体描述
-	Category    string    `bson:"category" json:"category"`                // 字体分类：serif/sans-serif/monospace
+	ID          string `bson:"_id,omitempty" json:"id"`
+	Name        string `bson:"name" json:"name"`                // 字体名称（唯一标识）
+	DisplayName string `bson:"display_name" json:"displayName"` // 显示名称
+	FontFamily  string `bson:"font_family" json:"fontFamily"`   // CSS font-family 值
+	Description string `bson:"description" json:"description"`  // 字体描述
+	Category    string `bson:"category" json:"category"`        // 字体分类：serif/sans-serif/monospace
 
 	// 字体文件信息（如果支持自定义字体上传）
-	FontURL     string    `bson:"font_url,omitempty" json:"fontUrl"`       // 字体文件URL
-	FontFormat  string    `bson:"font_format,omitempty" json:"fontFormat"` // 字体格式：woff/woff2/ttf
+	FontURL    string `bson:"font_url,omitempty" json:"fontUrl"`       // 字体文件URL
+	FontFormat string `bson:"font_format,omitempty" json:"fontFormat"` // 字体格式：woff/woff2/ttf
 
 	// 字体预览
-	PreviewText string    `bson:"preview_text" json:"previewText"`         // 预览文本
-	PreviewURL  string    `bson:"preview_url,omitempty" json:"previewUrl"` // 预览图片URL
+	PreviewText string `bson:"preview_text" json:"previewText"`         // 预览文本
+	PreviewURL  string `bson:"preview_url,omitempty" json:"previewUrl"` // 预览图片URL
 
 	// 属性
-	IsBuiltIn   bool      `bson:"is_built_in" json:"isBuiltIn"`           // 是否内置字体
-	IsActive    bool      `bson:"is_active" json:"isActive"`               // 是否激活可用
-	SupportSize []int     `bson:"support_size" json:"supportSize"`         // 支持的字号列表
+	IsBuiltIn   bool  `bson:"is_built_in" json:"isBuiltIn"`    // 是否内置字体
+	IsActive    bool  `bson:"is_active" json:"isActive"`       // 是否激活可用
+	SupportSize []int `bson:"support_size" json:"supportSize"` // 支持的字号列表
 
 	// 统计
-	UseCount    int64     `bson:"use_count" json:"useCount"`               // 使用次数
-	CreatedAt   time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updatedAt"`
+	UseCount  int64     `bson:"use_count" json:"useCount"` // 使用次数
+	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
 
 // BuiltInFonts 内置字体列表
@@ -96,10 +96,10 @@ var BuiltInFonts = []*ReaderFont{
 
 // FontPreference 字体偏好设置
 type FontPreference struct {
-	UserID      string `bson:"user_id" json:"userId"`             // 用户ID
-	FontName    string `bson:"font_name" json:"fontName"`         // 字体名称
-	FontSize    int    `bson:"font_size" json:"fontSize"`         // 字号
-	LineHeight  float64 `bson:"line_height" json:"lineHeight"`    // 行高
+	UserID        string  `bson:"user_id" json:"userId"`               // 用户ID
+	FontName      string  `bson:"font_name" json:"fontName"`           // 字体名称
+	FontSize      int     `bson:"font_size" json:"fontSize"`           // 字号
+	LineHeight    float64 `bson:"line_height" json:"lineHeight"`       // 行高
 	LetterSpacing float64 `bson:"letter_spacing" json:"letterSpacing"` // 字间距
 }
 

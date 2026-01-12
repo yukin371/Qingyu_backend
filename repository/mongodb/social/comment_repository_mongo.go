@@ -164,10 +164,10 @@ func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
 // GetCommentsByBookID 获取书籍的评论列表
 func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*social.Comment, int64, error) {
 	filter := bson.M{
-		"target_id":  bookID,
+		"target_id":   bookID,
 		"target_type": social.CommentTargetTypeBook,
-		"state":      social.CommentStateNormal,
-		"parent_id":  nil, // 只获取顶级评论
+		"state":       social.CommentStateNormal,
+		"parent_id":   nil, // 只获取顶级评论
 	}
 
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
@@ -203,10 +203,10 @@ func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, comm
 // GetCommentsByChapterID 获取章节的评论列表
 func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*social.Comment, int64, error) {
 	filter := bson.M{
-		"target_id":  chapterID,
+		"target_id":   chapterID,
 		"target_type": social.CommentTargetTypeChapter,
-		"state":      social.CommentStateNormal,
-		"parent_id":  nil,
+		"state":       social.CommentStateNormal,
+		"parent_id":   nil,
 	}
 
 	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
@@ -215,10 +215,10 @@ func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, cha
 // GetCommentsByBookIDSorted 获取书籍的排序评论列表
 func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*social.Comment, int64, error) {
 	filter := bson.M{
-		"target_id":  bookID,
+		"target_id":   bookID,
 		"target_type": social.CommentTargetTypeBook,
-		"state":      social.CommentStateNormal,
-		"parent_id":  nil,
+		"state":       social.CommentStateNormal,
+		"parent_id":   nil,
 	}
 
 	var sort bson.D
@@ -237,8 +237,8 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 // UpdateCommentStatus 更新评论审核状态
 func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
 	updates := bson.M{
-		"state":       social.CommentState(status),
-		"updated_at":  time.Now(),
+		"state":      social.CommentState(status),
+		"updated_at": time.Now(),
 	}
 
 	if reason != "" {
@@ -344,10 +344,10 @@ func (r *MongoCommentRepository) DecrementReplyCount(ctx context.Context, id str
 func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID string) (map[string]interface{}, error) {
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"target_id":  bookID,
+			"target_id":   bookID,
 			"target_type": social.CommentTargetTypeBook,
-			"state":      social.CommentStateNormal,
-			"rating":     bson.M{"$gt": 0},
+			"state":       social.CommentStateNormal,
+			"rating":      bson.M{"$gt": 0},
 		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":         nil,
@@ -390,10 +390,10 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 // GetCommentCount 获取书籍评论总数
 func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID string) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{
-		"target_id":  bookID,
+		"target_id":   bookID,
 		"target_type": social.CommentTargetTypeBook,
-		"state":      social.CommentStateNormal,
-		"parent_id":  nil,
+		"state":       social.CommentStateNormal,
+		"parent_id":   nil,
 	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count comments: %w", err)
@@ -423,7 +423,7 @@ func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, boo
 	_, err := r.collection.UpdateMany(
 		ctx,
 		bson.M{
-			"target_id":  bookID,
+			"target_id":   bookID,
 			"target_type": social.CommentTargetTypeBook,
 		},
 		bson.M{

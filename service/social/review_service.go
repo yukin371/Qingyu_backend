@@ -12,8 +12,8 @@ import (
 
 // ReviewService 书评服务
 type ReviewService struct {
-	reviewRepo socialRepo.ReviewRepository
-	eventBus   base.EventBus
+	reviewRepo  socialRepo.ReviewRepository
+	eventBus    base.EventBus
 	serviceName string
 	version     string
 }
@@ -24,8 +24,8 @@ func NewReviewService(
 	eventBus base.EventBus,
 ) *ReviewService {
 	return &ReviewService{
-		reviewRepo: reviewRepo,
-		eventBus:   eventBus,
+		reviewRepo:  reviewRepo,
+		eventBus:    eventBus,
 		serviceName: "ReviewService",
 		version:     "1.0.0",
 	}
@@ -40,8 +40,8 @@ func (s *ReviewService) Health(ctx context.Context) error {
 	return nil
 }
 func (s *ReviewService) Close(ctx context.Context) error { return nil }
-func (s *ReviewService) GetServiceName() string { return s.serviceName }
-func (s *ReviewService) GetVersion() string { return s.version }
+func (s *ReviewService) GetServiceName() string          { return s.serviceName }
+func (s *ReviewService) GetVersion() string              { return s.version }
 
 // CreateReview 创建书评
 func (s *ReviewService) CreateReview(ctx context.Context, bookID, userID, userName, userAvatar, title, content string, rating int, isSpoiler, isPublic bool) (*social.Review, error) {
@@ -65,19 +65,19 @@ func (s *ReviewService) CreateReview(ctx context.Context, bookID, userID, userNa
 	}
 
 	review := &social.Review{
-		BookID:      bookID,
-		UserID:      userID,
-		UserName:    userName,
-		UserAvatar:  userAvatar,
-		Title:       title,
-		Content:     content,
-		Rating:      rating,
-		LikeCount:   0,
+		BookID:       bookID,
+		UserID:       userID,
+		UserName:     userName,
+		UserAvatar:   userAvatar,
+		Title:        title,
+		Content:      content,
+		Rating:       rating,
+		LikeCount:    0,
 		CommentCount: 0,
-		IsSpoiler:   isSpoiler,
-		IsPublic:    isPublic,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		IsSpoiler:    isSpoiler,
+		IsPublic:     isPublic,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	if err := s.reviewRepo.CreateReview(ctx, review); err != nil {

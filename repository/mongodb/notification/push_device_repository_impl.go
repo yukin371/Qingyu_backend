@@ -16,14 +16,14 @@ import (
 
 // PushDeviceRepositoryImpl 推送设备仓储实现
 type PushDeviceRepositoryImpl struct {
-	db              *mongo.Database
+	db               *mongo.Database
 	deviceCollection *mongo.Collection
 }
 
 // NewPushDeviceRepository 创建推送设备仓储实例
 func NewPushDeviceRepository(db *mongo.Database) repo.PushDeviceRepository {
 	return &PushDeviceRepositoryImpl{
-		db:              db,
+		db:               db,
 		deviceCollection: db.Collection("push_devices"),
 	}
 }
@@ -164,7 +164,7 @@ func (r *PushDeviceRepositoryImpl) GetByDeviceID(ctx context.Context, deviceID s
 // GetActiveByUserID 获取用户的活跃推送设备列表
 func (r *PushDeviceRepositoryImpl) GetActiveByUserID(ctx context.Context, userID string) ([]*notification.PushDevice, error) {
 	filter := bson.M{
-		"user_id":  userID,
+		"user_id":   userID,
 		"is_active": true,
 	}
 	opts := options.Find().SetSort(bson.M{"last_used_at": -1})

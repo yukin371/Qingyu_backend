@@ -29,9 +29,9 @@ const (
 	EventContentUnpublished = "content.unpublished"
 
 	// 安全事件
-	EventSecurityAlert     = "security.alert"
+	EventSecurityAlert      = "security.alert"
 	EventSuspiciousActivity = "security.suspicious_activity"
-	EventAccountLocked     = "security.account_locked"
+	EventAccountLocked      = "security.account_locked"
 
 	// 系统事件
 	EventSystemMaintenance = "system.maintenance"
@@ -53,10 +53,10 @@ type SystemEventData struct {
 // ConfigEventData 配置事件数据
 type ConfigEventData struct {
 	SystemEventData
-	ConfigKey   string                 `json:"config_key"`
-	OldValue    interface{}            `json:"old_value,omitempty"`
-	NewValue    interface{}            `json:"new_value,omitempty"`
-	Reason      string                 `json:"reason,omitempty"`
+	ConfigKey string      `json:"config_key"`
+	OldValue  interface{} `json:"old_value,omitempty"`
+	NewValue  interface{} `json:"new_value,omitempty"`
+	Reason    string      `json:"reason,omitempty"`
 }
 
 // NewConfigChangedEvent 创建配置变更事件
@@ -86,12 +86,12 @@ func NewConfigChangedEvent(operatorID, configKey string, oldValue, newValue inte
 // PermissionEventData 权限事件数据
 type PermissionEventData struct {
 	SystemEventData
-	UserID       string                 `json:"user_id"`
-	Permission   string                 `json:"permission"`
-	OldRole      string                 `json:"old_role,omitempty"`
-	NewRole      string                 `json:"new_role,omitempty"`
-	Granted      bool                   `json:"granted,omitempty"`
-	Reason       string                 `json:"reason,omitempty"`
+	UserID     string `json:"user_id"`
+	Permission string `json:"permission"`
+	OldRole    string `json:"old_role,omitempty"`
+	NewRole    string `json:"new_role,omitempty"`
+	Granted    bool   `json:"granted,omitempty"`
+	Reason     string `json:"reason,omitempty"`
 }
 
 // NewPermissionChangedEvent 创建权限变更事件
@@ -101,9 +101,9 @@ func NewPermissionChangedEvent(operatorID, userID, permission string, granted bo
 		EventData: PermissionEventData{
 			SystemEventData: SystemEventData{
 				OperatorID: operatorID,
-				TargetType:  "permission",
-				Action:      "changed",
-				Time:        time.Now(),
+				TargetType: "permission",
+				Action:     "changed",
+				Time:       time.Now(),
 			},
 			UserID:     userID,
 			Permission: permission,
@@ -122,15 +122,15 @@ func NewRoleChangedEvent(operatorID, userID, oldRole, newRole string, reason str
 		EventData: PermissionEventData{
 			SystemEventData: SystemEventData{
 				OperatorID: operatorID,
-				TargetType:  "role",
-				TargetID:    userID,
-				Action:      "changed",
-				Time:        time.Now(),
+				TargetType: "role",
+				TargetID:   userID,
+				Action:     "changed",
+				Time:       time.Now(),
 			},
-			UserID:   userID,
-			OldRole:  oldRole,
-			NewRole:  newRole,
-			Reason:   reason,
+			UserID:  userID,
+			OldRole: oldRole,
+			NewRole: newRole,
+			Reason:  reason,
 		},
 		Timestamp: time.Now(),
 		Source:    "System",
@@ -142,14 +142,14 @@ func NewRoleChangedEvent(operatorID, userID, oldRole, newRole string, reason str
 // ReviewEventData 审核事件数据
 type ReviewEventData struct {
 	SystemEventData
-	ReviewID     string                 `json:"review_id"`
-	ContentType  string                 `json:"content_type"`   // book/chapter/comment
-	ContentID    string                 `json:"content_id"`
-	SubmitterID  string                 `json:"submitter_id"`
-	ReviewerID   string                 `json:"reviewer_id,omitempty"`
-	Status       string                 `json:"status"`         // pending/approved/rejected
-	Reason       string                 `json:"reason,omitempty"`
-	ReviewedAt   time.Time              `json:"reviewed_at,omitempty"`
+	ReviewID    string    `json:"review_id"`
+	ContentType string    `json:"content_type"` // book/chapter/comment
+	ContentID   string    `json:"content_id"`
+	SubmitterID string    `json:"submitter_id"`
+	ReviewerID  string    `json:"reviewer_id,omitempty"`
+	Status      string    `json:"status"` // pending/approved/rejected
+	Reason      string    `json:"reason,omitempty"`
+	ReviewedAt  time.Time `json:"reviewed_at,omitempty"`
 }
 
 // NewReviewSubmittedEvent 创建审核提交事件
@@ -226,12 +226,12 @@ func NewReviewRejectedEvent(reviewID, contentType, contentID, reviewerID, reason
 // ContentEventData 内容事件数据
 type ContentEventData struct {
 	SystemEventData
-	ContentType  string                 `json:"content_type"`  // book/chapter/comment
-	ContentID    string                 `json:"content_id"`
-	AuthorID     string                 `json:"author_id,omitempty"`
-	Title        string                 `json:"title,omitempty"`
-	PublishTime  time.Time              `json:"publish_time,omitempty"`
-	Reason       string                 `json:"reason,omitempty"`
+	ContentType string    `json:"content_type"` // book/chapter/comment
+	ContentID   string    `json:"content_id"`
+	AuthorID    string    `json:"author_id,omitempty"`
+	Title       string    `json:"title,omitempty"`
+	PublishTime time.Time `json:"publish_time,omitempty"`
+	Reason      string    `json:"reason,omitempty"`
 }
 
 // NewContentPublishedEvent 创建内容发布事件
@@ -281,12 +281,12 @@ func NewContentUnpublishedEvent(contentType, contentID, reason string) base.Even
 // SecurityEventData 安全事件数据
 type SecurityEventData struct {
 	SystemEventData
-	IPAddress    string                 `json:"ip_address,omitempty"`
-	UserAgent    string                 `json:"user_agent,omitempty"`
-	EventType    string                 `json:"event_type"`
-	Severity     string                 `json:"severity"`      // low/medium/high/critical
-	Description  string                 `json:"description"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	IPAddress   string                 `json:"ip_address,omitempty"`
+	UserAgent   string                 `json:"user_agent,omitempty"`
+	EventType   string                 `json:"event_type"`
+	Severity    string                 `json:"severity"` // low/medium/high/critical
+	Description string                 `json:"description"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewSecurityAlertEvent 创建安全告警事件
@@ -356,11 +356,11 @@ func NewAccountLockedEvent(userID, reason string) base.Event {
 // MaintenanceEventData 系统维护事件数据
 type MaintenanceEventData struct {
 	SystemEventData
-	MaintenanceType string                 `json:"maintenance_type"` // scheduled/emergency
-	StartTime      time.Time              `json:"start_time"`
-	EndTime        time.Time              `json:"end_time"`
-	Description    string                 `json:"description"`
-	AffectedServices []string             `json:"affected_services,omitempty"`
+	MaintenanceType  string    `json:"maintenance_type"` // scheduled/emergency
+	StartTime        time.Time `json:"start_time"`
+	EndTime          time.Time `json:"end_time"`
+	Description      string    `json:"description"`
+	AffectedServices []string  `json:"affected_services,omitempty"`
 }
 
 // NewSystemMaintenanceEvent 创建系统维护事件
@@ -374,9 +374,9 @@ func NewSystemMaintenanceEvent(maintenanceType string, startTime, endTime time.T
 				Time:       time.Now(),
 			},
 			MaintenanceType:  maintenanceType,
-			StartTime:       startTime,
-			EndTime:         endTime,
-			Description:     description,
+			StartTime:        startTime,
+			EndTime:          endTime,
+			Description:      description,
 			AffectedServices: affectedServices,
 		},
 		Timestamp: time.Now(),

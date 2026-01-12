@@ -238,7 +238,7 @@ func (r *MongoCommentRepository) MarkAsResolved(ctx context.Context, id primitiv
 		"resolved":    true,
 		"resolved_by": resolvedBy,
 		"resolved_at": now,
-		"updated_at": now,
+		"updated_at":  now,
 	}}
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
@@ -371,7 +371,7 @@ func (r *MongoCommentRepository) Search(ctx context.Context, keyword string, doc
 	filter := bson.M{
 		"document_id": documentID,
 		"deleted_at":  nil,
-		"content": bson.M{"$regex": keyword, "$options": "i"},
+		"content":     bson.M{"$regex": keyword, "$options": "i"},
 	}
 
 	total, err := r.collection.CountDocuments(ctx, filter)

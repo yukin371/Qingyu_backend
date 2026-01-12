@@ -53,9 +53,9 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	project.CoverURL = req.CoverURL
 	project.Category = req.Category
 	project.Tags = req.Tags
-	project.Status = writer.StatusDraft       // 默认状态为草稿
+	project.Status = writer.StatusDraft           // 默认状态为草稿
 	project.Visibility = writer.VisibilityPrivate // 默认为私密
-	project.WritingType = "novel"             // 默认为小说类型
+	project.WritingType = "novel"                 // 默认为小说类型
 
 	// 4. 保存到数据库
 	if err := s.projectRepo.Create(ctx, project); err != nil {

@@ -21,15 +21,15 @@ type Logger struct {
 
 // Config 日志配置
 type Config struct {
-	Level       string `json:"level"`        // debug/info/warn/error/dpanic/panic/fatal
-	Format      string `json:"format"`       // json/console
-	Output      string `json:"output"`       // stdout/stderr/file
-	Filename    string `json:"filename"`     // 日志文件路径
-	MaxSize     int    `json:"maxSize"`      // 单个日志文件最大大小(MB)
-	MaxBackups  int    `json:"maxBackups"`   // 保留的旧日志文件最大数量
-	MaxAge      int    `json:"maxAge"`       // 保留旧日志文件的最大天数
-	Compress    bool   `json:"compress"`     // 是否压缩旧日志文件
-	Development bool   `json:"development"`  // 是否开发模式
+	Level       string `json:"level"`       // debug/info/warn/error/dpanic/panic/fatal
+	Format      string `json:"format"`      // json/console
+	Output      string `json:"output"`      // stdout/stderr/file
+	Filename    string `json:"filename"`    // 日志文件路径
+	MaxSize     int    `json:"maxSize"`     // 单个日志文件最大大小(MB)
+	MaxBackups  int    `json:"maxBackups"`  // 保留的旧日志文件最大数量
+	MaxAge      int    `json:"maxAge"`      // 保留旧日志文件的最大天数
+	Compress    bool   `json:"compress"`    // 是否压缩旧日志文件
+	Development bool   `json:"development"` // 是否开发模式
 }
 
 // DefaultConfig 默认配置

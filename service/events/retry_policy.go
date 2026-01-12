@@ -22,20 +22,20 @@ type RetryPolicy interface {
 
 // ExponentialBackoffPolicy 指数退避策略
 type ExponentialBackoffPolicy struct {
-	maxRetries   int           // 最大重试次数
-	InitialDelay time.Duration // 初始延迟
-	maxDelay     time.Duration // 最大延迟
-	Multiplier   float64       // 延迟倍数
+	maxRetries    int           // 最大重试次数
+	InitialDelay  time.Duration // 初始延迟
+	maxDelay      time.Duration // 最大延迟
+	Multiplier    float64       // 延迟倍数
 	Randomization float64       // 随机化因子（0-1）
 }
 
 // NewExponentialBackoffPolicy 创建指数退避策略
 func NewExponentialBackoffPolicy(maxRetries int, initialDelay, maxDelay time.Duration) *ExponentialBackoffPolicy {
 	return &ExponentialBackoffPolicy{
-		maxRetries:   maxRetries,
-		InitialDelay: initialDelay,
-		maxDelay:     maxDelay,
-		Multiplier:   2.0, // 默认每次翻倍
+		maxRetries:    maxRetries,
+		InitialDelay:  initialDelay,
+		maxDelay:      maxDelay,
+		Multiplier:    2.0, // 默认每次翻倍
 		Randomization: 0.1, // 默认10%随机化
 	}
 }

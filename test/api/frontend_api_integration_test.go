@@ -29,8 +29,8 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 				c.JSON(http.StatusOK, gin.H{
 					"code": 200,
 					"data": gin.H{
-						"token":         "test_token_123",
-						"refreshToken":  "test_refresh_token_456",
+						"token":        "test_token_123",
+						"refreshToken": "test_refresh_token_456",
 						"user": gin.H{
 							"id":       "user_123",
 							"username": "testuser",
@@ -48,8 +48,8 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 				c.JSON(http.StatusOK, gin.H{
 					"code": 200,
 					"data": gin.H{
-						"token":         "test_token_789",
-						"refreshToken":  "test_refresh_token_101",
+						"token":        "test_token_789",
+						"refreshToken": "test_refresh_token_101",
 						"user": gin.H{
 							"id":       "user_123",
 							"username": "testuser",
@@ -84,16 +84,16 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 
 			auth.GET("/permissions", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{
-					"code": 200,
-					"data": []string{"read:books", "write:books", "delete:books"},
+					"code":    200,
+					"data":    []string{"read:books", "write:books", "delete:books"},
 					"message": "获取权限成功",
 				})
 			})
 
 			auth.GET("/roles", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{
-					"code": 200,
-					"data": []string{"user", "vip"},
+					"code":    200,
+					"data":    []string{"user", "vip"},
 					"message": "获取角色成功",
 				})
 			})
@@ -425,7 +425,7 @@ func TestFrontendReaderAPIIntegration(t *testing.T) {
 					c.JSON(http.StatusOK, gin.H{
 						"code": 200,
 						"data": gin.H{
-							"isLiked":    true,
+							"isLiked":   true,
 							"likeCount": 100,
 						},
 						"message": "获取点赞信息成功",
@@ -451,8 +451,8 @@ func TestFrontendReaderAPIIntegration(t *testing.T) {
 					c.JSON(http.StatusOK, gin.H{
 						"code": 200,
 						"data": gin.H{
-							"totalLikes":  150,
-							"bookLikes":   100,
+							"totalLikes":   150,
+							"bookLikes":    100,
 							"commentLikes": 50,
 						},
 						"message": "获取点赞统计成功",
@@ -469,10 +469,10 @@ func TestFrontendReaderAPIIntegration(t *testing.T) {
 						"data": gin.H{
 							"comments": []gin.H{
 								{
-									"id":       "comment_123",
-									"content":  "测试评论",
-									"userId":   "user_123",
-									"likes":    10,
+									"id":        "comment_123",
+									"content":   "测试评论",
+									"userId":    "user_123",
+									"likes":     10,
 									"createdAt": "2024-01-01",
 								},
 							},
@@ -544,9 +544,9 @@ func TestFrontendReaderAPIIntegration(t *testing.T) {
 					c.JSON(http.StatusOK, gin.H{
 						"code": 200,
 						"data": gin.H{
-							"totalCollections": 50,
+							"totalCollections":  50,
 							"publicCollections": 10,
-							"folderCount":      5,
+							"folderCount":       5,
 						},
 						"message": "获取收藏统计成功",
 					})

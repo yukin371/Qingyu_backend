@@ -11,12 +11,12 @@ const (
 	Success ErrorCode = 0
 
 	// 客户端错误 1000-1999
-	InvalidParams   ErrorCode = 1001 // 无效参数
-	Unauthorized    ErrorCode = 1002 // 未授权
-	Forbidden       ErrorCode = 1003 // 禁止访问
-	NotFound        ErrorCode = 1004 // 资源不存在
-	AlreadyExists   ErrorCode = 1005 // 资源已存在
-	Conflict        ErrorCode = 1006 // 冲突
+	InvalidParams     ErrorCode = 1001 // 无效参数
+	Unauthorized      ErrorCode = 1002 // 未授权
+	Forbidden         ErrorCode = 1003 // 禁止访问
+	NotFound          ErrorCode = 1004 // 资源不存在
+	AlreadyExists     ErrorCode = 1005 // 资源已存在
+	Conflict          ErrorCode = 1006 // 冲突
 	RateLimitExceeded ErrorCode = 1007 // 超出频率限制
 
 	// 认证授权错误 1100-1199
@@ -36,32 +36,32 @@ const (
 
 	// 内容审核错误 1300-1399
 	ContentPendingReview ErrorCode = 1301 // 内容待审核
-	ContentRejected       ErrorCode = 1302 // 内容被拒绝
-	ContentViolation      ErrorCode = 1303 // 内容违规
+	ContentRejected      ErrorCode = 1302 // 内容被拒绝
+	ContentViolation     ErrorCode = 1303 // 内容违规
 
 	// 服务器错误 5000-5999
-	InternalError   ErrorCode = 5000 // 内部错误
-	DatabaseError   ErrorCode = 5001 // 数据库错误
-	RedisError      ErrorCode = 5002 // Redis错误
+	InternalError    ErrorCode = 5000 // 内部错误
+	DatabaseError    ErrorCode = 5001 // 数据库错误
+	RedisError       ErrorCode = 5002 // Redis错误
 	ExternalAPIError ErrorCode = 5003 // 外部API错误
 )
 
 // ErrorInfo 错误信息
 type ErrorInfo struct {
-	Code       ErrorCode `json:"code"`
-	Message    string    `json:"message"`
-	HTTPStatus int       `json:"-"`
+	Code       ErrorCode   `json:"code"`
+	Message    string      `json:"message"`
+	HTTPStatus int         `json:"-"`
 	Details    interface{} `json:"details,omitempty"`
 }
 
 // DefaultErrorMessages 默认错误消息
 var DefaultErrorMessages = map[ErrorCode]string{
-	InvalidParams:    "请求参数无效",
-	Unauthorized:     "未授权访问",
-	Forbidden:        "禁止访问",
-	NotFound:         "资源不存在",
-	AlreadyExists:    "资源已存在",
-	Conflict:         "请求冲突",
+	InvalidParams:     "请求参数无效",
+	Unauthorized:      "未授权访问",
+	Forbidden:         "禁止访问",
+	NotFound:          "资源不存在",
+	AlreadyExists:     "资源已存在",
+	Conflict:          "请求冲突",
 	RateLimitExceeded: "请求过于频繁",
 
 	InvalidCredentials: "用户名或密码错误",
@@ -81,20 +81,20 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	ContentRejected:      "内容审核未通过",
 	ContentViolation:     "内容违规",
 
-	InternalError:   "服务器内部错误",
-	DatabaseError:   "数据库错误",
-	RedisError:      "缓存服务错误",
+	InternalError:    "服务器内部错误",
+	DatabaseError:    "数据库错误",
+	RedisError:       "缓存服务错误",
 	ExternalAPIError: "外部服务错误",
 }
 
 // DefaultHTTPStatus 默认HTTP状态码
 var DefaultHTTPStatus = map[ErrorCode]int{
-	InvalidParams:    http.StatusBadRequest,
-	Unauthorized:     http.StatusUnauthorized,
-	Forbidden:        http.StatusForbidden,
-	NotFound:         http.StatusNotFound,
-	AlreadyExists:    http.StatusConflict,
-	Conflict:         http.StatusConflict,
+	InvalidParams:     http.StatusBadRequest,
+	Unauthorized:      http.StatusUnauthorized,
+	Forbidden:         http.StatusForbidden,
+	NotFound:          http.StatusNotFound,
+	AlreadyExists:     http.StatusConflict,
+	Conflict:          http.StatusConflict,
 	RateLimitExceeded: http.StatusTooManyRequests,
 
 	InvalidCredentials: http.StatusUnauthorized,
@@ -114,9 +114,9 @@ var DefaultHTTPStatus = map[ErrorCode]int{
 	ContentRejected:      http.StatusForbidden,
 	ContentViolation:     http.StatusForbidden,
 
-	InternalError:   http.StatusInternalServerError,
-	DatabaseError:   http.StatusInternalServerError,
-	RedisError:      http.StatusInternalServerError,
+	InternalError:    http.StatusInternalServerError,
+	DatabaseError:    http.StatusInternalServerError,
+	RedisError:       http.StatusInternalServerError,
 	ExternalAPIError: http.StatusBadGateway,
 }
 
