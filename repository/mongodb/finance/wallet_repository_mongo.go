@@ -1,12 +1,11 @@
-package shared
+package finance
 
 import (
 	financeModel "Qingyu_backend/models/finance"
+	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
 	"time"
-
-	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +22,7 @@ type WalletRepositoryImpl struct {
 }
 
 // NewWalletRepository 创建钱包Repository
-func NewWalletRepository(db *mongo.Database) sharedInterfaces.WalletRepository {
+func NewWalletRepository(db *mongo.Database) financeInterface.WalletRepository {
 	return &WalletRepositoryImpl{
 		db:                        db,
 		walletCollection:          db.Collection("wallets"),
@@ -113,16 +112,11 @@ func (r *WalletRepositoryImpl) UpdateWallet(ctx context.Context, walletID string
 }
 
 // UpdateBalance 更新余额（原子操作）
-func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, walletID string, amount float64) error {
-	objectID, err := primitive.ObjectIDFromHex(walletID)
-	if err != nil {
-		return fmt.Errorf("无效的钱包ID: %w", err)
-	}
-
-	// 使用$inc原子操作
+func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string, amount float64) error {
+	// 使用user_id查询钱包
 	result, err := r.walletCollection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"user_id": userID},
 		bson.M{
 			"$inc": bson.M{"balance": amount},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -133,7 +127,7 @@ func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, walletID strin
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("钱包不存在: %s", walletID)
+		return fmt.Errorf("钱包不存在: user %s", userID)
 	}
 
 	return nil
@@ -178,7 +172,7 @@ func (r *WalletRepositoryImpl) GetTransaction(ctx context.Context, transactionID
 }
 
 // ListTransactions 列出交易记录
-func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) ([]*financeModel.Transaction, error) {
+func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *financeInterface.TransactionFilter) ([]*financeModel.Transaction, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {
@@ -224,7 +218,7 @@ func (r *WalletRepositoryImpl) ListTransactions(ctx context.Context, filter *sha
 }
 
 // CountTransactions 统计交易数量
-func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *sharedInterfaces.TransactionFilter) (int64, error) {
+func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *financeInterface.TransactionFilter) (int64, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {
@@ -320,7 +314,7 @@ func (r *WalletRepositoryImpl) UpdateWithdrawRequest(ctx context.Context, reques
 }
 
 // ListWithdrawRequests 列出提现请求
-func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter *sharedInterfaces.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
+func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter *financeInterface.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {
@@ -363,7 +357,7 @@ func (r *WalletRepositoryImpl) ListWithdrawRequests(ctx context.Context, filter 
 }
 
 // CountWithdrawRequests 统计提现请求数量
-func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter *sharedInterfaces.WithdrawFilter) (int64, error) {
+func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter *financeInterface.WithdrawFilter) (int64, error) {
 	query := bson.M{}
 
 	if filter.UserID != "" {

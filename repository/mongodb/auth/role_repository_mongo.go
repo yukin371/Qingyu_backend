@@ -1,12 +1,11 @@
-package shared
+package auth
 
 import (
 	authModel "Qingyu_backend/models/auth"
+	authInterface "Qingyu_backend/repository/interfaces/auth"
 	"context"
 	"fmt"
 	"time"
-
-	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,15 +13,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// AuthRepositoryImpl 认证Repository实现
-type AuthRepositoryImpl struct {
+// RoleRepositoryImpl 角色Repository实现
+type RoleRepositoryImpl struct {
 	db             *mongo.Database
 	roleCollection *mongo.Collection
 }
 
-// NewAuthRepository 创建认证Repository
-func NewAuthRepository(db *mongo.Database) sharedInterfaces.AuthRepository {
-	return &AuthRepositoryImpl{
+// NewRoleRepository 创建角色Repository
+func NewRoleRepository(db *mongo.Database) authInterface.RoleRepository {
+	return &RoleRepositoryImpl{
 		db:             db,
 		roleCollection: db.Collection("roles"),
 	}
@@ -31,7 +30,7 @@ func NewAuthRepository(db *mongo.Database) sharedInterfaces.AuthRepository {
 // ============ 角色管理 ============
 
 // CreateRole 创建角色
-func (r *AuthRepositoryImpl) CreateRole(ctx context.Context, role *authModel.Role) error {
+func (r *RoleRepositoryImpl) CreateRole(ctx context.Context, role *authModel.Role) error {
 	now := time.Now()
 	role.CreatedAt = now
 	role.UpdatedAt = now
@@ -50,7 +49,7 @@ func (r *AuthRepositoryImpl) CreateRole(ctx context.Context, role *authModel.Rol
 }
 
 // GetRole 获取角色
-func (r *AuthRepositoryImpl) GetRole(ctx context.Context, roleID string) (*authModel.Role, error) {
+func (r *RoleRepositoryImpl) GetRole(ctx context.Context, roleID string) (*authModel.Role, error) {
 	objectID, err := primitive.ObjectIDFromHex(roleID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的角色ID: %w", err)
@@ -69,7 +68,7 @@ func (r *AuthRepositoryImpl) GetRole(ctx context.Context, roleID string) (*authM
 }
 
 // GetRoleByName 根据名称获取角色
-func (r *AuthRepositoryImpl) GetRoleByName(ctx context.Context, name string) (*authModel.Role, error) {
+func (r *RoleRepositoryImpl) GetRoleByName(ctx context.Context, name string) (*authModel.Role, error) {
 	var role authModel.Role
 	err := r.roleCollection.FindOne(ctx, bson.M{"name": name}).Decode(&role)
 	if err != nil {
@@ -83,7 +82,7 @@ func (r *AuthRepositoryImpl) GetRoleByName(ctx context.Context, name string) (*a
 }
 
 // UpdateRole 更新角色
-func (r *AuthRepositoryImpl) UpdateRole(ctx context.Context, roleID string, updates map[string]interface{}) error {
+func (r *RoleRepositoryImpl) UpdateRole(ctx context.Context, roleID string, updates map[string]interface{}) error {
 	objectID, err := primitive.ObjectIDFromHex(roleID)
 	if err != nil {
 		return fmt.Errorf("无效的角色ID: %w", err)
@@ -109,7 +108,7 @@ func (r *AuthRepositoryImpl) UpdateRole(ctx context.Context, roleID string, upda
 }
 
 // DeleteRole 删除角色
-func (r *AuthRepositoryImpl) DeleteRole(ctx context.Context, roleID string) error {
+func (r *RoleRepositoryImpl) DeleteRole(ctx context.Context, roleID string) error {
 	objectID, err := primitive.ObjectIDFromHex(roleID)
 	if err != nil {
 		return fmt.Errorf("无效的角色ID: %w", err)
@@ -142,7 +141,7 @@ func (r *AuthRepositoryImpl) DeleteRole(ctx context.Context, roleID string) erro
 }
 
 // ListRoles 列出所有角色
-func (r *AuthRepositoryImpl) ListRoles(ctx context.Context) ([]*authModel.Role, error) {
+func (r *RoleRepositoryImpl) ListRoles(ctx context.Context) ([]*authModel.Role, error) {
 	cursor, err := r.roleCollection.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{bson.E{Key: "created_at", Value: 1}}))
 	if err != nil {
 		return nil, fmt.Errorf("查询角色列表失败: %w", err)
@@ -160,7 +159,7 @@ func (r *AuthRepositoryImpl) ListRoles(ctx context.Context) ([]*authModel.Role, 
 // ============ 用户角色关联 ============
 
 // AssignUserRole 分配用户角色
-func (r *AuthRepositoryImpl) AssignUserRole(ctx context.Context, userID, roleID string) error {
+func (r *RoleRepositoryImpl) AssignUserRole(ctx context.Context, userID, roleID string) error {
 	// 验证角色是否存在
 	_, err := r.GetRole(ctx, roleID)
 	if err != nil {
@@ -193,7 +192,7 @@ func (r *AuthRepositoryImpl) AssignUserRole(ctx context.Context, userID, roleID 
 }
 
 // RemoveUserRole 移除用户角色
-func (r *AuthRepositoryImpl) RemoveUserRole(ctx context.Context, userID, roleID string) error {
+func (r *RoleRepositoryImpl) RemoveUserRole(ctx context.Context, userID, roleID string) error {
 	userCollection := r.db.Collection("users")
 
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
@@ -218,7 +217,7 @@ func (r *AuthRepositoryImpl) RemoveUserRole(ctx context.Context, userID, roleID 
 }
 
 // GetUserRoles 获取用户角色
-func (r *AuthRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([]*authModel.Role, error) {
+func (r *RoleRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([]*authModel.Role, error) {
 	userCollection := r.db.Collection("users")
 
 	// 查询用户 - 同时支持 role（字符串）和 roles（数组）字段
@@ -297,7 +296,7 @@ func (r *AuthRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([
 }
 
 // HasUserRole 检查用户是否有指定角色
-func (r *AuthRepositoryImpl) HasUserRole(ctx context.Context, userID, roleID string) (bool, error) {
+func (r *RoleRepositoryImpl) HasUserRole(ctx context.Context, userID, roleID string) (bool, error) {
 	userCollection := r.db.Collection("users")
 
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
@@ -322,7 +321,7 @@ func (r *AuthRepositoryImpl) HasUserRole(ctx context.Context, userID, roleID str
 // ============ 权限查询 ============
 
 // GetRolePermissions 获取角色权限
-func (r *AuthRepositoryImpl) GetRolePermissions(ctx context.Context, roleID string) ([]string, error) {
+func (r *RoleRepositoryImpl) GetRolePermissions(ctx context.Context, roleID string) ([]string, error) {
 	role, err := r.GetRole(ctx, roleID)
 	if err != nil {
 		return nil, err
@@ -332,7 +331,7 @@ func (r *AuthRepositoryImpl) GetRolePermissions(ctx context.Context, roleID stri
 }
 
 // GetUserPermissions 获取用户权限（所有角色的权限并集）
-func (r *AuthRepositoryImpl) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
+func (r *RoleRepositoryImpl) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
 	roles, err := r.GetUserRoles(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -358,6 +357,6 @@ func (r *AuthRepositoryImpl) GetUserPermissions(ctx context.Context, userID stri
 // ============ 健康检查 ============
 
 // Health 健康检查
-func (r *AuthRepositoryImpl) Health(ctx context.Context) error {
+func (r *RoleRepositoryImpl) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
 }

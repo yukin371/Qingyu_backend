@@ -1,12 +1,11 @@
-package shared
+package recommendation
 
 import (
 	recModel "Qingyu_backend/models/recommendation"
+	recoInterface "Qingyu_backend/repository/interfaces/recommendation"
 	"context"
 	"fmt"
 	"time"
-
-	sharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,7 +21,7 @@ type RecommendationRepositoryImpl struct {
 }
 
 // NewRecommendationRepository 创建推荐Repository
-func NewRecommendationRepository(db *mongo.Database) sharedInterfaces.RecommendationRepository {
+func NewRecommendationRepository(db *mongo.Database) recoInterface.RecommendationRepository {
 	return &RecommendationRepositoryImpl{
 		db:                 db,
 		behaviorCollection: db.Collection("user_behaviors"),
@@ -92,7 +91,7 @@ func (r *RecommendationRepositoryImpl) GetItemBehaviors(ctx context.Context, ite
 	return behaviors, nil
 }
 
-// GetItemStatistics 获取物品统计信息
+// GetItemStatistics 获取物品统计信息（额外方法）
 func (r *RecommendationRepositoryImpl) GetItemStatistics(ctx context.Context, itemID string) (map[string]int64, error) {
 	pipeline := mongo.Pipeline{
 		bson.D{bson.E{Key: "$match", Value: bson.D{bson.E{Key: "item_id", Value: itemID}}}},
@@ -123,7 +122,7 @@ func (r *RecommendationRepositoryImpl) GetItemStatistics(ctx context.Context, it
 	return stats, nil
 }
 
-// GetHotItems 获取热门物品
+// GetHotItems 获取热门物品（额外方法）
 func (r *RecommendationRepositoryImpl) GetHotItems(ctx context.Context, itemType string, limit int) ([]string, error) {
 	// 获取最近7天的热门物品
 	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
@@ -188,7 +187,7 @@ func (r *RecommendationRepositoryImpl) GetHotItems(ctx context.Context, itemType
 	return itemIDs, nil
 }
 
-// GetUserPreferences 获取用户偏好（基于行为分析）
+// GetUserPreferences 获取用户偏好（额外方法）
 func (r *RecommendationRepositoryImpl) GetUserPreferences(ctx context.Context, userID string) (map[string]float64, error) {
 	// 获取用户最近30天的行为
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
