@@ -1,197 +1,67 @@
 package shared
 
 import (
-	authModel "Qingyu_backend/models/auth"
-	financeModel "Qingyu_backend/models/finance"
-	recommendationModel "Qingyu_backend/models/recommendation"
-	storageModel "Qingyu_backend/models/storage"
-	adminModel "Qingyu_backend/models/users"
-	"context"
-	"time"
+	// 重新导出新模块的接口，保持向后兼容
+	"Qingyu_backend/repository/interfaces/admin"
+	"Qingyu_backend/repository/interfaces/auth"
+	"Qingyu_backend/repository/interfaces/finance"
+	"Qingyu_backend/repository/interfaces/messaging"
+	"Qingyu_backend/repository/interfaces/recommendation"
+	"Qingyu_backend/repository/interfaces/storage"
 )
 
-// ============ Auth Repository ============
+// ============ 向后兼容的类型别名 ============
+// 以下类型别名用于保持向后兼容性，新代码应直接使用对应模块的接口
 
-// AuthRepository 认证相关Repository
-type AuthRepository interface {
-	// 角色管理
-	CreateRole(ctx context.Context, role *authModel.Role) error
-	GetRole(ctx context.Context, roleID string) (*authModel.Role, error)
-	GetRoleByName(ctx context.Context, name string) (*authModel.Role, error)
-	UpdateRole(ctx context.Context, roleID string, updates map[string]interface{}) error
-	DeleteRole(ctx context.Context, roleID string) error
-	ListRoles(ctx context.Context) ([]*authModel.Role, error)
+// AuthRepository 认证相关Repository (别名，指向 auth.RoleRepository)
+// Deprecated: 使用 auth.RoleRepository 替代
+type AuthRepository = auth.RoleRepository
 
-	// 用户角色关联
-	AssignUserRole(ctx context.Context, userID, roleID string) error
-	RemoveUserRole(ctx context.Context, userID, roleID string) error
-	GetUserRoles(ctx context.Context, userID string) ([]*authModel.Role, error)
-	HasUserRole(ctx context.Context, userID, roleID string) (bool, error)
+// WalletRepository 钱包相关Repository (别名，指向 finance.WalletRepository)
+// Deprecated: 使用 finance.WalletRepository 替代
+type WalletRepository = finance.WalletRepository
 
-	// 权限查询
-	GetRolePermissions(ctx context.Context, roleID string) ([]string, error)
-	GetUserPermissions(ctx context.Context, userID string) ([]string, error)
+// TransactionFilter 交易过滤器 (别名，指向 finance.TransactionFilter)
+// Deprecated: 使用 finance.TransactionFilter 替代
+type TransactionFilter = finance.TransactionFilter
 
-	// Health 健康检查
-	Health(ctx context.Context) error
-}
+// WithdrawFilter 提现过滤器 (别名，指向 finance.WithdrawFilter)
+// Deprecated: 使用 finance.WithdrawFilter 替代
+type WithdrawFilter = finance.WithdrawFilter
 
-// ============ Wallet Repository ============
+// RecommendationRepository 推荐相关Repository (别名，指向 recommendation.RecommendationRepository)
+// Deprecated: 使用 recommendation.RecommendationRepository 替代
+type RecommendationRepository = recommendation.RecommendationRepository
 
-// WalletRepository 钱包相关Repository
-type WalletRepository interface {
-	// 钱包管理
-	CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error
-	GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error)
-	UpdateWallet(ctx context.Context, userID string, updates map[string]interface{}) error
-	UpdateBalance(ctx context.Context, userID string, amount float64) error
+// StorageRepository 文件存储相关Repository (别名，指向 storage.StorageRepository)
+// Deprecated: 使用 storage.StorageRepository 替代
+type StorageRepository = storage.StorageRepository
 
-	// 交易记录
-	CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error
-	GetTransaction(ctx context.Context, transactionID string) (*financeModel.Transaction, error)
-	ListTransactions(ctx context.Context, filter *TransactionFilter) ([]*financeModel.Transaction, error)
-	CountTransactions(ctx context.Context, filter *TransactionFilter) (int64, error)
+// FileFilter 文件过滤器 (别名，指向 storage.FileFilter)
+// Deprecated: 使用 storage.FileFilter 替代
+type FileFilter = storage.FileFilter
 
-	// 提现申请
-	CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error
-	GetWithdrawRequest(ctx context.Context, withdrawID string) (*financeModel.WithdrawRequest, error)
-	UpdateWithdrawRequest(ctx context.Context, withdrawID string, updates map[string]interface{}) error
-	ListWithdrawRequests(ctx context.Context, filter *WithdrawFilter) ([]*financeModel.WithdrawRequest, error)
-	CountWithdrawRequests(ctx context.Context, filter *WithdrawFilter) (int64, error)
+// AdminRepository 管理后台相关Repository (别名，指向 admin.AuditRepository)
+// Deprecated: 使用 admin.AuditRepository 和 admin.AdminLogRepository 替代
+type AdminRepository = admin.AuditRepository
 
-	// Health 健康检查
-	Health(ctx context.Context) error
-}
+// AuditFilter 审核记录过滤器 (别名，指向 admin.AuditFilter)
+// Deprecated: 使用 admin.AuditFilter 替代
+type AuditFilter = admin.AuditFilter
 
-// TransactionFilter 交易过滤器
-type TransactionFilter struct {
-	UserID    string
-	Type      string
-	Status    string
-	StartDate time.Time
-	EndDate   time.Time
-	Limit     int64
-	Offset    int64
-}
+// AdminLogFilter 管理员日志过滤器 (别名，指向 admin.AdminLogFilter)
+// Deprecated: 使用 admin.AdminLogFilter 替代
+type AdminLogFilter = admin.AdminLogFilter
 
-// WithdrawFilter 提现过滤器
-type WithdrawFilter struct {
-	UserID    string
-	Status    string
-	StartDate time.Time
-	EndDate   time.Time
-	Limit     int64
-	Offset    int64
-}
+// MessageRepository 消息相关Repository (别名，指向 messaging.MessageRepository)
+// Deprecated: 使用 messaging.MessageRepository 替代
+type MessageRepository = messaging.MessageRepository
 
-// ============ Recommendation Repository ============
+// MessageFilter 消息过滤器 (别名，指向 messaging.MessageFilter)
+// Deprecated: 使用 messaging.MessageFilter 替代
+type MessageFilter = messaging.MessageFilter
 
-// RecommendationRepository 推荐相关Repository
-type RecommendationRepository interface {
-	// 用户行为记录
-	RecordBehavior(ctx context.Context, behavior *recommendationModel.UserBehavior) error
-	GetUserBehaviors(ctx context.Context, userID string, limit int) ([]*recommendationModel.UserBehavior, error)
-	GetItemBehaviors(ctx context.Context, itemID string, limit int) ([]*recommendationModel.UserBehavior, error)
+// NotificationFilter 通知过滤器 (别名，指向 messaging.NotificationFilter)
+// Deprecated: 使用 messaging.NotificationFilter 替代
+type NotificationFilter = messaging.NotificationFilter
 
-	// 推荐结果存储（可选，可以完全用缓存）
-	// SaveRecommendations(ctx context.Context, userID string, items []*recommendationModel.RecommendedItem) error
-	// GetRecommendations(ctx context.Context, userID string) ([]*recommendationModel.RecommendedItem, error)
-
-	// Health 健康检查
-	Health(ctx context.Context) error
-}
-
-// ============ Storage Repository ============
-
-// StorageRepository 文件存储相关Repository
-type StorageRepository interface {
-	// 文件元数据管理
-	CreateFile(ctx context.Context, file *storageModel.FileInfo) error
-	GetFile(ctx context.Context, fileID string) (*storageModel.FileInfo, error)
-	GetFileByMD5(ctx context.Context, md5Hash string) (*storageModel.FileInfo, error)
-	UpdateFile(ctx context.Context, fileID string, updates map[string]interface{}) error
-	DeleteFile(ctx context.Context, fileID string) error
-	ListFiles(ctx context.Context, filter *FileFilter) ([]*storageModel.FileInfo, int64, error)
-	CountFiles(ctx context.Context, filter *FileFilter) (int64, error)
-
-	// 权限管理
-	GrantAccess(ctx context.Context, fileID, userID string) error
-	RevokeAccess(ctx context.Context, fileID, userID string) error
-	CheckAccess(ctx context.Context, fileID, userID string) (bool, error)
-
-	// 分片上传管理
-	CreateMultipartUpload(ctx context.Context, upload *storageModel.MultipartUpload) error
-	GetMultipartUpload(ctx context.Context, uploadID string) (*storageModel.MultipartUpload, error)
-	UpdateMultipartUpload(ctx context.Context, uploadID string, updates map[string]interface{}) error
-	CompleteMultipartUpload(ctx context.Context, uploadID string) error
-	AbortMultipartUpload(ctx context.Context, uploadID string) error
-	ListMultipartUploads(ctx context.Context, userID string, status string) ([]*storageModel.MultipartUpload, error)
-
-	// 统计功能
-	IncrementDownloadCount(ctx context.Context, fileID string) error
-
-	// Health 健康检查
-	Health(ctx context.Context) error
-}
-
-// FileFilter 文件过滤器
-type FileFilter struct {
-	UserID    string
-	Category  string
-	FileType  string
-	Status    string
-	IsPublic  *bool
-	Tags      []string
-	Keyword   string
-	StartDate *time.Time
-	EndDate   *time.Time
-	MinSize   *int64
-	MaxSize   *int64
-	Page      int
-	PageSize  int
-	SortBy    string
-	SortOrder string
-	Limit     int64
-	Offset    int64
-}
-
-// ============ Admin Repository ============
-
-// AdminRepository 管理后台相关Repository
-type AdminRepository interface {
-	// 审核记录
-	CreateAuditRecord(ctx context.Context, record *adminModel.AuditRecord) error
-	GetAuditRecord(ctx context.Context, contentID, contentType string) (*adminModel.AuditRecord, error)
-	UpdateAuditRecord(ctx context.Context, recordID string, updates map[string]interface{}) error
-	ListAuditRecords(ctx context.Context, filter *AuditFilter) ([]*adminModel.AuditRecord, error)
-
-	// 操作日志
-	CreateAdminLog(ctx context.Context, log *adminModel.AdminLog) error
-	GetAdminLog(ctx context.Context, logID string) (*adminModel.AdminLog, error)
-	ListAdminLogs(ctx context.Context, filter *AdminLogFilter) ([]*adminModel.AdminLog, error)
-	CountAdminLogs(ctx context.Context, filter *AdminLogFilter) (int64, error)
-
-	// Health 健康检查
-	Health(ctx context.Context) error
-}
-
-// AuditFilter 审核记录过滤器
-type AuditFilter struct {
-	ContentType string
-	Status      string
-	ReviewerID  string
-	StartDate   time.Time
-	EndDate     time.Time
-	Limit       int64
-	Offset      int64
-}
-
-// AdminLogFilter 管理员日志过滤器
-type AdminLogFilter struct {
-	AdminID   string
-	Operation string
-	StartDate time.Time
-	EndDate   time.Time
-	Limit     int64
-	Offset    int64
-}

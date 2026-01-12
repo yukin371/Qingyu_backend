@@ -4,6 +4,7 @@ import (
 	"context"
 
 	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
+	adminInterfaces "Qingyu_backend/repository/interfaces/admin"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
 	authInterface "Qingyu_backend/repository/interfaces/auth"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"
@@ -14,6 +15,7 @@ import (
 	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 	SocialInterfaces "Qingyu_backend/repository/interfaces/social"
 	StatsInterfaces "Qingyu_backend/repository/interfaces/stats"
+	storageInterfaces "Qingyu_backend/repository/interfaces/storage"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/repository/interfaces/writer"
 )
@@ -27,7 +29,9 @@ type ProjectInterface interface {
 type RepositoryFactory interface {
 	// 用户相关Repository
 	CreateUserRepository() UserInterface.UserRepository
-	CreateRoleRepository() UserInterface.RoleRepository
+
+	// 角色管理Repository (Auth模块)
+	CreateRoleRepository() authInterface.RoleRepository
 
 	// 写作相关Repository
 	CreateProjectRepository() writer.ProjectRepository
@@ -64,15 +68,34 @@ type RepositoryFactory interface {
 	CreateItemFeatureRepository() RecommendationInterfaces.ItemFeatureRepository
 	CreateHotRecommendationRepository() RecommendationInterfaces.HotRecommendationRepository
 
-	// 共享服务相关Repository
-	CreateAuthRepository() SharedInterfaces.AuthRepository
+	// Auth相关Repository
 	CreateOAuthRepository() authInterface.OAuthRepository
-	CreateWalletRepository() SharedInterfaces.WalletRepository
-	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
-	CreateStorageRepository() SharedInterfaces.StorageRepository
+	CreateRoleAuthRepository() authInterface.RoleRepository
+
+	// 财务相关Repository (包括Wallet)
+	CreateWalletRepository() FinanceInterfaces.WalletRepository
+	CreateMembershipRepository() FinanceInterfaces.MembershipRepository
+	CreateAuthorRevenueRepository() FinanceInterfaces.AuthorRevenueRepository
+
+	// Admin相关Repository
+	CreateAuditRepository() adminInterfaces.AuditRepository
+	CreateAdminLogRepository() adminInterfaces.AdminLogRepository
 
 	// Messaging相关Repository
 	CreateAnnouncementRepository() messagingInterfaces.AnnouncementRepository
+	CreateMessageRepository() messagingInterfaces.MessageRepository
+
+	// Storage相关Repository
+	CreateStorageRepository() storageInterfaces.StorageRepository
+
+	// ========== 向后兼容的方法 (使用 shared 接口) ==========
+	// Deprecated: 这些方法为了向后兼容而保留，新代码应使用上面的新接口
+
+	// Auth相关Repository (向后兼容)
+	CreateAuthRepository() SharedInterfaces.AuthRepository
+
+	// Recommendation相关Repository (向后兼容)
+	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
 
 	// Social相关Repository
 	CreateBookListRepository() SocialInterfaces.BookListRepository
@@ -84,10 +107,6 @@ type RepositoryFactory interface {
 
 	// 审核相关Repository
 	CreateSensitiveWordRepository() AuditInterfaces.SensitiveWordRepository
-
-	// 财务相关Repository
-	CreateMembershipRepository() FinanceInterfaces.MembershipRepository
-	CreateAuthorRevenueRepository() FinanceInterfaces.AuthorRevenueRepository
 
 	// Health 基础设施方法
 	Health(ctx context.Context) error
