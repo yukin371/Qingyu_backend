@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"Qingyu_backend/models/writer"
+	shared "Qingyu_backend/models/shared"
 	"context"
 	"testing"
 	"time"
@@ -224,17 +225,18 @@ func CreateTestDocument(projectID string, opts ...DocumentOption) *writer.Docume
 
 // CreateTestDocumentContent 创建测试文档内容
 func CreateTestDocumentContent(documentID string, content string) *writer.DocumentContent {
+	id := primitive.NewObjectID().Hex()
+	now := time.Now()
 	return &writer.DocumentContent{
-		ID:          primitive.NewObjectID().Hex(),
-		DocumentID:  documentID,
-		Content:     content,
-		ContentType: "markdown",
-		WordCount:   len([]rune(content)),
-		CharCount:   len(content),
-		Version:     1,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		LastSavedAt: time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
+		DocumentID:       documentID,
+		Content:          content,
+		ContentType:      "markdown",
+		WordCount:        len([]rune(content)),
+		CharCount:        len(content),
+		Version:          1,
+		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		Edited:           shared.Edited{LastSavedAt: now},
 	}
 }
 
