@@ -1,8 +1,8 @@
 package fixtures
 
 import (
-	"Qingyu_backend/models/writer"
 	shared "Qingyu_backend/models/shared"
+	"Qingyu_backend/models/writer"
 	"fmt"
 	"time"
 

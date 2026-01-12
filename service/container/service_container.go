@@ -33,16 +33,16 @@ import (
 	notificationService "Qingyu_backend/service/notification"
 
 	// Shared services
-	financeWalletService "Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/admin"
+	financeWalletService "Qingyu_backend/service/finance/wallet"
+	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/service/shared/auth"
 	sharedMessaging "Qingyu_backend/service/shared/messaging"
 	"Qingyu_backend/service/shared/metrics"
-	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/service/shared/storage"
 
-	adminInterface "Qingyu_backend/repository/interfaces/admin"
 	adminModel "Qingyu_backend/models/users"
+	adminInterface "Qingyu_backend/repository/interfaces/admin"
 
 	// Infrastructure
 	"Qingyu_backend/config"
@@ -1162,7 +1162,7 @@ func (a *adminAuditRepositoryAdapter) Get(ctx context.Context, recordID string) 
 		ContentType: adminRecord.ContentType,
 		Status:      adminRecord.Status,
 		ReviewerID:  adminRecord.ReviewerID,
-		Reason:      "", // 从 adminModel 中没有这个字段
+		Reason:      "",          // 从 adminModel 中没有这个字段
 		ReviewedAt:  time.Time{}, // 从 adminModel 中没有这个字段
 		CreatedAt:   adminRecord.CreatedAt,
 		UpdatedAt:   adminRecord.UpdatedAt,
@@ -1231,7 +1231,7 @@ func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.Admin
 		ID:        log.ID,
 		AdminID:   log.AdminID,
 		Operation: log.Operation,
-		Target:    log.Target,    // shared/admin 只有一个 Target 字段
+		Target:    log.Target, // shared/admin 只有一个 Target 字段
 		Details:   log.Details,
 		CreatedAt: log.CreatedAt,
 	}
@@ -1245,7 +1245,7 @@ func (a *adminLogRepositoryAdapter) List(ctx context.Context, filter *admin.LogF
 		Operation: filter.Operation,
 		StartDate: filter.StartDate,
 		EndDate:   filter.EndDate,
-		Limit:     int64(filter.PageSize),   // 将 PageSize 转换为 Limit
+		Limit:     int64(filter.PageSize),                     // 将 PageSize 转换为 Limit
 		Offset:    int64((filter.Page - 1) * filter.PageSize), // 将 Page 转换为 Offset
 	}
 

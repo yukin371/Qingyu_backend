@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"Qingyu_backend/service/admin"
+	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/shared/auth"
 	"Qingyu_backend/service/shared/storage"
-	"Qingyu_backend/service/finance/wallet"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

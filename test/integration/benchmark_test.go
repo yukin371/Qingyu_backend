@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/service/shared/auth"
 	"Qingyu_backend/service/finance/wallet"
+	"Qingyu_backend/service/shared/auth"
 
 	"github.com/stretchr/testify/mock"
 )

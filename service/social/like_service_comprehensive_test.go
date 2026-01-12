@@ -684,13 +684,13 @@ func TestLikeServiceTableDrivenComprehensive(t *testing.T) {
 	testUserID := primitive.NewObjectID().Hex()
 
 	tests := []struct {
-		name          string
-		setupMock     func()
-		action        func() error
-		wantErr       bool
-		errContains   string
-		checkEvent    bool
-		eventType     string
+		name        string
+		setupMock   func()
+		action      func() error
+		wantErr     bool
+		errContains string
+		checkEvent  bool
+		eventType   string
 	}{
 		{
 			name: "成功点赞书籍",

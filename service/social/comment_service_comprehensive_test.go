@@ -195,9 +195,9 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		localCommentID := primitive.NewObjectID().Hex()
 		parentComment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: localCommentID},
-			AuthorID:        primitive.NewObjectID().Hex(),
-			TargetID:        primitive.NewObjectID().Hex(),
-			State:           social.CommentStateNormal,
+			AuthorID:         primitive.NewObjectID().Hex(),
+			TargetID:         primitive.NewObjectID().Hex(),
+			State:            social.CommentStateNormal,
 			ThreadedConversation: social.ThreadedConversation{
 				ParentID: nil,
 				RootID:   nil,
@@ -238,9 +238,9 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		// 回复嵌套评论
 		nestedComment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()},
-			AuthorID:        primitive.NewObjectID().Hex(),
-			TargetID:        primitive.NewObjectID().Hex(),
-			State:           social.CommentStateNormal,
+			AuthorID:         primitive.NewObjectID().Hex(),
+			TargetID:         primitive.NewObjectID().Hex(),
+			State:            social.CommentStateNormal,
 			ThreadedConversation: social.ThreadedConversation{
 				ParentID: &testCommentID,
 				RootID:   &testRootID,
@@ -281,7 +281,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		// 回复已删除评论
 		deletedComment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()},
-			State:           social.CommentStateDeleted,
+			State:            social.CommentStateDeleted,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).Return(deletedComment, nil).Once()
 

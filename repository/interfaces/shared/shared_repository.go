@@ -64,4 +64,3 @@ type MessageFilter = messaging.MessageFilter
 // NotificationFilter 通知过滤器 (别名，指向 messaging.NotificationFilter)
 // Deprecated: 使用 messaging.NotificationFilter 替代
 type NotificationFilter = messaging.NotificationFilter
-

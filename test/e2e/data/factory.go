@@ -16,8 +16,8 @@ import (
 	"Qingyu_backend/models/social"
 	"Qingyu_backend/models/users"
 	bookRepo "Qingyu_backend/repository/mongodb/bookstore"
-	userRepo "Qingyu_backend/repository/mongodb/user"
 	socialRepo "Qingyu_backend/repository/mongodb/social"
+	userRepo "Qingyu_backend/repository/mongodb/user"
 )
 
 // TestDataFactory 测试数据工厂
@@ -82,13 +82,13 @@ func (f *TestDataFactory) CreateUser(opts UserOptions) *users.User {
 	}
 
 	user := &users.User{
-		ID:       userID.Hex(),
-		Username: username,
-		Email:    email,
-		Password: string(hashedPassword),
-		VIPLevel: opts.VIPLevel,
-		Status:   users.UserStatusActive,
-		Roles:    roles,
+		ID:        userID.Hex(),
+		Username:  username,
+		Email:     email,
+		Password:  string(hashedPassword),
+		VIPLevel:  opts.VIPLevel,
+		Status:    users.UserStatusActive,
+		Roles:     roles,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -179,7 +179,7 @@ func (f *TestDataFactory) CreateChapter(bookID string, chapterNum int, isFree bo
 		ChapterNum: chapterNum,
 		WordCount:  2000,
 		IsFree:     isFree,
-		Price:     0,
+		Price:      0,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}

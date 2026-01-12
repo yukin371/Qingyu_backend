@@ -54,7 +54,7 @@ func (s *JWTServiceImpl) GenerateToken(ctx context.Context, userID string, roles
 		UserID: userID,
 		Roles:  roles,
 		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-		Iat:    now.UnixNano(),                         // 使用纳秒精度确保token唯一性
+		Iat:    now.UnixNano(),                          // 使用纳秒精度确保token唯一性
 	}
 
 	return s.generateJWT(claims)
@@ -72,7 +72,7 @@ func (s *JWTServiceImpl) GenerateTokenWithUsername(ctx context.Context, userID s
 		UserID: userID,
 		Roles:  roles,
 		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-		Iat:    now.UnixNano(),                         // 使用纳秒精度确保token唯一性
+		Iat:    now.UnixNano(),                          // 使用纳秒精度确保token唯一性
 	}
 
 	return s.generateJWT(claims)
@@ -225,7 +225,7 @@ func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) 
 			UserID: claims.UserID,
 			Roles:  claims.Roles,
 			Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-			Iat:    now.UnixNano(),                         // 纳秒精度确保唯一性
+			Iat:    now.UnixNano(),                          // 纳秒精度确保唯一性
 		}
 		newToken, err = s.generateJWT(newClaims)
 		if err != nil {
