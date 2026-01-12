@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/config"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
+	adminRepo "Qingyu_backend/repository/interfaces/admin"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
@@ -20,11 +21,13 @@ import (
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
 	statsRepo "Qingyu_backend/repository/interfaces/stats"
+	storageRepo "Qingyu_backend/repository/interfaces/storage"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	// 导入各个子包的具体实现
 	mongoAI "Qingyu_backend/repository/mongodb/ai"
+	mongoAdmin "Qingyu_backend/repository/mongodb/admin"
 	mongoAudit "Qingyu_backend/repository/mongodb/audit"
 	mongoAuth "Qingyu_backend/repository/mongodb/auth"
 	mongoBookstore "Qingyu_backend/repository/mongodb/bookstore"
@@ -32,7 +35,6 @@ import (
 	mongoMessaging "Qingyu_backend/repository/mongodb/messaging"
 	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	mongoReco "Qingyu_backend/repository/mongodb/recommendation"
-	mongoShared "Qingyu_backend/repository/mongodb/shared"
 	mongoSocial "Qingyu_backend/repository/mongodb/social"
 	mongoStats "Qingyu_backend/repository/mongodb/stats"
 	mongoStorage "Qingyu_backend/repository/mongodb/storage"
@@ -110,9 +112,9 @@ func (f *MongoRepositoryFactory) CreateUserRepository() userRepo.UserRepository 
 	return mongoUser.NewMongoUserRepository(f.database)
 }
 
-// CreateRoleRepository 创建角色Repository
-func (f *MongoRepositoryFactory) CreateRoleRepository() userRepo.RoleRepository {
-	return mongoShared.NewRoleRepository(f.database)
+// CreateRoleRepository 创建角色Repository (使用新的 auth 模块)
+func (f *MongoRepositoryFactory) CreateRoleRepository() authRepo.RoleRepository {
+	return mongoAuth.NewRoleRepository(f.database)
 }
 
 // ========== Writing Module Repositories ==========
@@ -268,36 +270,79 @@ func (f *MongoRepositoryFactory) CreateHotRecommendationRepository() recoRepo.Ho
 	return mongoReco.NewMongoHotRecommendationRepository(f.database)
 }
 
-// ========== Shared Module Repositories ==========
-
-// CreateAuthRepository 创建认证Repository
-func (f *MongoRepositoryFactory) CreateAuthRepository() sharedRepo.AuthRepository {
-	return mongoShared.NewAuthRepository(f.database)
-}
+// ========== Auth Module Repositories ==========
 
 // CreateOAuthRepository 创建OAuth Repository
 func (f *MongoRepositoryFactory) CreateOAuthRepository() authRepo.OAuthRepository {
 	return mongoAuth.NewMongoOAuthRepository(f.database)
 }
 
-// CreateWalletRepository 创建钱包Repository
-func (f *MongoRepositoryFactory) CreateWalletRepository() sharedRepo.WalletRepository {
-	return mongoShared.NewWalletRepository(f.database)
+// CreateRoleAuthRepository 创建角色认证Repository (使用新的 auth 模块)
+func (f *MongoRepositoryFactory) CreateRoleAuthRepository() authRepo.RoleRepository {
+	return mongoAuth.NewRoleRepository(f.database)
 }
 
-// CreateRecommendationRepository 创建推荐Repository
-func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.RecommendationRepository {
-	return mongoShared.NewRecommendationRepository(f.database)
+// ========== Finance Module Repositories (包括Wallet) ==========
+
+// CreateWalletRepository 创建钱包Repository (使用新的 finance 模块)
+func (f *MongoRepositoryFactory) CreateWalletRepository() financeRepo.WalletRepository {
+	return mongoFinance.NewWalletRepository(f.database)
 }
 
-// CreateStorageRepository 创建存储Repository
-func (f *MongoRepositoryFactory) CreateStorageRepository() sharedRepo.StorageRepository {
-	return mongoStorage.NewMongoStorageRepository(f.database)
+// CreateMembershipRepository 创建会员Repository
+func (f *MongoRepositoryFactory) CreateMembershipRepository() financeRepo.MembershipRepository {
+	return mongoFinance.NewMembershipRepository(f.database)
 }
+
+// CreateAuthorRevenueRepository 创建作者收入Repository
+func (f *MongoRepositoryFactory) CreateAuthorRevenueRepository() financeRepo.AuthorRevenueRepository {
+	return mongoFinance.NewAuthorRevenueRepository(f.database)
+}
+
+// ========== Admin Module Repositories ==========
+
+// CreateAuditRepository 创建审核记录Repository (使用新的 admin 模块)
+func (f *MongoRepositoryFactory) CreateAuditRepository() adminRepo.AuditRepository {
+	return mongoAdmin.NewAuditRepository(f.database)
+}
+
+// CreateAdminLogRepository 创建管理员日志Repository (使用新的 admin 模块)
+func (f *MongoRepositoryFactory) CreateAdminLogRepository() adminRepo.AdminLogRepository {
+	return mongoAdmin.NewAdminLogRepository(f.database)
+}
+
+// ========== Messaging Module Repositories ==========
 
 // CreateAnnouncementRepository 创建公告Repository
 func (f *MongoRepositoryFactory) CreateAnnouncementRepository() messagingRepo.AnnouncementRepository {
 	return mongoMessaging.NewMongoAnnouncementRepository(f.client, f.database.Name())
+}
+
+// CreateMessageRepository 创建消息Repository (使用新的 messaging 模块)
+func (f *MongoRepositoryFactory) CreateMessageRepository() messagingRepo.MessageRepository {
+	return mongoMessaging.NewMessageRepository(f.database)
+}
+
+// ========== Storage Module Repositories ==========
+
+// CreateStorageRepository 创建存储Repository (使用新的 storage 模块)
+func (f *MongoRepositoryFactory) CreateStorageRepository() storageRepo.StorageRepository {
+	return mongoStorage.NewMongoStorageRepository(f.database)
+}
+
+// ========== 向后兼容的方法 ==========
+// Deprecated: 这些方法为了向后兼容而保留，新代码应使用上面的新接口
+
+// CreateAuthRepository 创建认证Repository (向后兼容，实际返回 RoleRepository)
+func (f *MongoRepositoryFactory) CreateAuthRepository() sharedRepo.AuthRepository {
+	// shared.AuthRepository 是 auth.RoleRepository 的别名
+	return mongoAuth.NewRoleRepository(f.database)
+}
+
+// CreateRecommendationRepository 创建推荐Repository (向后兼容)
+func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.RecommendationRepository {
+	// shared.RecommendationRepository 是 recommendation.RecommendationRepository 的别名
+	return mongoReco.NewRecommendationRepository(f.database)
 }
 
 // ========== Stats Module Repositories ==========
@@ -318,16 +363,6 @@ func (f *MongoRepositoryFactory) CreateBookStatsRepository() statsRepo.BookStats
 }
 
 // ========== AI Module Repositories ==========
-func (f *MongoRepositoryFactory) CreateAdminRepository() sharedRepo.AdminRepository {
-	return mongoShared.NewMongoAdminRepository(f.database)
-}
-
-// CreateMessageRepository 创建消息Repository
-func (f *MongoRepositoryFactory) CreateMessageRepository() sharedRepo.MessageRepository {
-	return mongoShared.NewMongoMessageRepository(f.database)
-}
-
-// ========== AI Module Repositories ==========
 
 // CreateQuotaRepository 创建配额Repository
 func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository {
@@ -339,18 +374,6 @@ func (f *MongoRepositoryFactory) CreateQuotaRepository() aiRepo.QuotaRepository 
 // CreateSensitiveWordRepository 创建敏感词Repository
 func (f *MongoRepositoryFactory) CreateSensitiveWordRepository() auditRepo.SensitiveWordRepository {
 	return mongoAudit.NewSensitiveWordRepository(f.database)
-}
-
-// ========== Finance Module Repositories ==========
-
-// CreateMembershipRepository 创建会员Repository
-func (f *MongoRepositoryFactory) CreateMembershipRepository() financeRepo.MembershipRepository {
-	return mongoFinance.NewMembershipRepository(f.database)
-}
-
-// CreateAuthorRevenueRepository 创建作者收入Repository
-func (f *MongoRepositoryFactory) CreateAuthorRevenueRepository() financeRepo.AuthorRevenueRepository {
-	return mongoFinance.NewAuthorRevenueRepository(f.database)
 }
 
 // ========== Factory Management Methods ==========
