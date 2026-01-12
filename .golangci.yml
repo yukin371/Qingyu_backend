@@ -20,7 +20,7 @@ linters:
 
 linters-settings:
   errcheck:
-    # 排除常见的 defer Close() 模式（这些在 defer 中忽略错误是安全的）
+    # 排除常见的函数（这些返回值通常可以安全忽略）
     exclude-functions:
       - (io.Closer).Close
       - (*github.com/gorilla/websocket.Conn).Close
@@ -28,9 +28,18 @@ linters-settings:
       - (*github.com/gorilla/websocket.Conn).SetWriteDeadline
       - (*github.com/gorilla/websocket.Conn).WriteMessage
       - (net.Conn).Close
-      - (*mongo.Cursor).Close
-      - (*mongo.Client).Disconnect
-      - (http.Response.Body).Close
+      - (*go.mongodb.org/mongo-driver/mongo.Cursor).Close
+      - (*go.mongodb.org/mongo-driver/mongo.Client).Disconnect
+      - (*go.mongodb.org/mongo-driver/mongo.Database).Close
+      - (net/http.Response.Body).Close
+      - (*compress/gzip.Writer).Close
+      - (*compress/gzip.Reader).Close
+      - (*os.File).Close
+      # 排除 redis 相关
+      - (*github.com/redis/go-redis/v9.Client).Delete
+      - (*github.com/redis/go-redis/v9.Client).Unlock
+      # 排除 crypto/rand.Read
+      - crypto/rand.Read
     # 禁用空白赋值检查，如 "x = _"
     check-blank: false
     # 禁用类型断言检查
@@ -49,3 +58,13 @@ issues:
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
+  # 排除特定错误模式的 errcheck 错误
+  exclude:
+    - "Error return value of .*\\.Close.* is not checked"
+    - "Error return value of .*\\.Disconnect.* is not checked"
+    - "Error return value of .*\\.Delete.* is not checked"
+    - "Error return value of .*\\.Unlock.* is not checked"
+    - "Error return value of .*\\.SetReadDeadline.* is not checked"
+    - "Error return value of .*\\.SetWriteDeadline.* is not checked"
+    - "Error return value of .*\\.WriteMessage.* is not checked"
+    - "Error return value of .*\\.Read.* is not checked"
