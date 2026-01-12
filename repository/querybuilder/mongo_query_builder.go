@@ -3,55 +3,74 @@ package querybuilder
 import (
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
+// conditionGroup 条件组，支持嵌套逻辑
+type conditionGroup struct {
+	logic      string              // "and", "or"
+	conditions []map[string]interface{}
+}
+
 // MongoQueryBuilder MongoDB查询构建器实现
 type MongoQueryBuilder struct {
-	conditions    []map[string]interface{}
+	groups        []conditionGroup     // 条件分组，支持嵌套逻辑
+	currentGroup  *conditionGroup      // 当前激活的条件组
 	sortFields    map[string]int
 	selectFields  []string
 	excludeFields []string
 	limitValue    int
 	skipValue     int
 	aggregations  []map[string]interface{}
-	currentLogic  string // "and", "or", "not"
 }
 
 // NewMongoQueryBuilder 创建MongoDB查询构建器
 func NewMongoQueryBuilder() infrastructure.QueryBuilder {
+	groups := []conditionGroup{{
+		logic:      "and",
+		conditions: make([]map[string]interface{}, 0),
+	}}
 	return &MongoQueryBuilder{
-		conditions:    make([]map[string]interface{}, 0),
+		groups:        groups,
+		currentGroup:  &groups[0],
 		sortFields:    make(map[string]int),
 		selectFields:  make([]string, 0),
 		excludeFields: make([]string, 0),
 		aggregations:  make([]map[string]interface{}, 0),
-		currentLogic:  "and",
 	}
 }
 
 // Where 添加条件
 func (qb *MongoQueryBuilder) Where(field string, operator string, value interface{}) infrastructure.QueryBuilder {
 	condition := qb.buildCondition(field, operator, value)
-	qb.conditions = append(qb.conditions, condition)
+	if condition != nil {
+		qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
+	}
 	return qb
 }
 
 // WhereIn 添加IN条件
 func (qb *MongoQueryBuilder) WhereIn(field string, values []interface{}) infrastructure.QueryBuilder {
+	if len(values) == 0 {
+		return qb
+	}
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$in": values},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
 // WhereNotIn 添加NOT IN条件
 func (qb *MongoQueryBuilder) WhereNotIn(field string, values []interface{}) infrastructure.QueryBuilder {
+	if len(values) == 0 {
+		return qb
+	}
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$nin": values},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
@@ -63,7 +82,7 @@ func (qb *MongoQueryBuilder) WhereBetween(field string, start, end interface{}) 
 			"$lte": end,
 		},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
@@ -72,7 +91,7 @@ func (qb *MongoQueryBuilder) WhereNull(field string) infrastructure.QueryBuilder
 	condition := map[string]interface{}{
 		field: nil,
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
@@ -81,24 +100,68 @@ func (qb *MongoQueryBuilder) WhereNotNull(field string) infrastructure.QueryBuil
 	condition := map[string]interface{}{
 		field: map[string]interface{}{"$ne": nil},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
 // WhereLike 添加LIKE条件（模糊匹配）
+// 支持的通配符：
+//   % - 匹配任意数量的字符
+//   _ - 匹配单个字符
+// 转义字符：使用 \ 可以转义通配符，例如 \% 匹配字面量 %
 func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) infrastructure.QueryBuilder {
-	// 转换SQL LIKE模式到MongoDB正则表达式
-	regexPattern := strings.ReplaceAll(pattern, "%", ".*")
-	regexPattern = strings.ReplaceAll(regexPattern, "_", ".")
-
+	regexPattern := qb.convertLikeToRegex(pattern)
 	condition := map[string]interface{}{
 		field: map[string]interface{}{
 			"$regex":   regexPattern,
 			"$options": "i", // 不区分大小写
 		},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
+}
+
+// convertLikeToRegex 将 SQL LIKE 模式转换为 MongoDB 正则表达式
+// 支持转义字符，例如:
+//   "abc%"     -> "^abc.*$"
+//   "abc_def"  -> "^abc.def.$"
+//   "abc\%def" -> "^abc%def$"
+func (qb *MongoQueryBuilder) convertLikeToRegex(pattern string) string {
+	var sb strings.Builder
+	sb.WriteByte('^')
+
+	escaped := false
+	for i, r := range pattern {
+		if escaped {
+			// 前一个字符是转义符，当前字符作为字面量
+			sb.WriteString(regexp.QuoteMeta(string(r)))
+			escaped = false
+			continue
+		}
+
+		switch r {
+		case '\\':
+			// 转义符
+			if i < len(pattern)-1 {
+				escaped = true
+			} else {
+				// 末尾的反斜杠，作为字面量
+				sb.WriteString(`\\`)
+			}
+		case '%':
+			// 匹配任意数量的字符
+			sb.WriteString(".*")
+		case '_':
+			// 匹配单个字符
+			sb.WriteString(".")
+		default:
+			// 其他字符进行转义，避免正则表达式特殊字符问题
+			sb.WriteString(regexp.QuoteMeta(string(r)))
+		}
+	}
+
+	sb.WriteByte('$')
+	return sb.String()
 }
 
 // WhereRegex 添加正则表达式条件
@@ -109,25 +172,47 @@ func (qb *MongoQueryBuilder) WhereRegex(field string, pattern string) infrastruc
 			"$options": "i",
 		},
 	}
-	qb.conditions = append(qb.conditions, condition)
+	qb.currentGroup.conditions = append(qb.currentGroup.conditions, condition)
 	return qb
 }
 
-// And 设置AND逻辑
+// And 开始一个新的 AND 逻辑组
+// 后续添加的条件将使用 AND 逻辑与之前的条件组合
 func (qb *MongoQueryBuilder) And() infrastructure.QueryBuilder {
-	qb.currentLogic = "and"
+	// 如果当前组已经有条件，创建一个新的 OR 组
+	if len(qb.currentGroup.conditions) > 0 {
+		newGroup := conditionGroup{
+			logic:      "and",
+			conditions: make([]map[string]interface{}, 0),
+		}
+		qb.groups = append(qb.groups, newGroup)
+		qb.currentGroup = &qb.groups[len(qb.groups)-1]
+	}
 	return qb
 }
 
-// Or 设置OR逻辑
+// Or 开始一个新的 OR 逻辑组
+// 后续添加的条件将使用 OR 逻辑与之前的条件组合
 func (qb *MongoQueryBuilder) Or() infrastructure.QueryBuilder {
-	qb.currentLogic = "or"
+	// 如果当前组已经有条件，创建一个新的 OR 组
+	if len(qb.currentGroup.conditions) > 0 {
+		newGroup := conditionGroup{
+			logic:      "or",
+			conditions: make([]map[string]interface{}, 0),
+		}
+		qb.groups = append(qb.groups, newGroup)
+		qb.currentGroup = &qb.groups[len(qb.groups)-1]
+	}
 	return qb
 }
 
-// Not 设置NOT逻辑
+// Not 对当前条件组应用 NOT 逻辑
+// 注意：这会影响当前组，而不是后续添加的条件
 func (qb *MongoQueryBuilder) Not() infrastructure.QueryBuilder {
-	qb.currentLogic = "not"
+	// 标记当前组为 NOT 逻辑
+	if len(qb.groups) > 0 {
+		qb.groups[len(qb.groups)-1].logic = "not"
+	}
 	return qb
 }
 
@@ -233,22 +318,58 @@ func (qb *MongoQueryBuilder) Min(field string) infrastructure.QueryBuilder {
 func (qb *MongoQueryBuilder) Build() (map[string]interface{}, error) {
 	query := make(map[string]interface{})
 
-	// 构建查询条件
-	if len(qb.conditions) > 0 {
-		if len(qb.conditions) == 1 {
-			for k, v := range qb.conditions[0] {
+	// 构建查询条件 - 使用条件分组
+	if len(qb.groups) > 0 {
+		// 收集所有有条件的组
+		activeGroups := make([]conditionGroup, 0, len(qb.groups))
+		totalConditions := 0
+		for _, g := range qb.groups {
+			if len(g.conditions) > 0 {
+				activeGroups = append(activeGroups, g)
+				totalConditions += len(g.conditions)
+			}
+		}
+
+		if totalConditions == 0 {
+			// 没有条件，返回空查询
+		} else if len(activeGroups) == 1 && totalConditions == 1 {
+			// 只有一个条件，直接添加到查询中
+			for k, v := range activeGroups[0].conditions[0] {
 				query[k] = v
 			}
+		} else if len(activeGroups) == 1 && activeGroups[0].logic == "and" {
+			// 只有一个 AND 组，使用 $and
+			query["$and"] = activeGroups[0].conditions
+		} else if len(activeGroups) == 1 && activeGroups[0].logic == "or" {
+			// 只有一个 OR 组，使用 $or
+			query["$or"] = activeGroups[0].conditions
+		} else if len(activeGroups) == 1 && activeGroups[0].logic == "not" {
+			// 只有一个 NOT 组，使用 $nor
+			query["$nor"] = activeGroups[0].conditions
 		} else {
-			switch qb.currentLogic {
-			case "and":
-				query["$and"] = qb.conditions
-			case "or":
-				query["$or"] = qb.conditions
-			case "not":
-				query["$nor"] = qb.conditions
-			default:
-				query["$and"] = qb.conditions
+			// 多个组，需要组合
+			// 策略：将每个组包装成子查询，然后使用 $and 组合
+			groupQueries := make([]map[string]interface{}, 0, len(activeGroups))
+			for _, g := range activeGroups {
+				if len(g.conditions) == 1 {
+					// 单个条件的组，直接添加
+					groupQueries = append(groupQueries, g.conditions[0])
+				} else if g.logic == "and" {
+					groupQueries = append(groupQueries, map[string]interface{}{"$and": g.conditions})
+				} else if g.logic == "or" {
+					groupQueries = append(groupQueries, map[string]interface{}{"$or": g.conditions})
+				} else if g.logic == "not" {
+					groupQueries = append(groupQueries, map[string]interface{}{"$nor": g.conditions})
+				}
+			}
+			if len(groupQueries) == 1 {
+				// 只有一个组查询，直接添加
+				for k, v := range groupQueries[0] {
+					query[k] = v
+				}
+			} else {
+				// 多个组查询，使用 $and 组合
+				query["$and"] = groupQueries
 			}
 		}
 	}
@@ -328,31 +449,45 @@ func (qb *MongoQueryBuilder) BuildFilter() (infrastructure.Filter, error) {
 
 // Reset 重置查询构建器
 func (qb *MongoQueryBuilder) Reset() infrastructure.QueryBuilder {
-	qb.conditions = make([]map[string]interface{}, 0)
+	qb.groups = []conditionGroup{{
+		logic:      "and",
+		conditions: make([]map[string]interface{}, 0),
+	}}
+	qb.currentGroup = &qb.groups[0]
 	qb.sortFields = make(map[string]int)
 	qb.selectFields = make([]string, 0)
 	qb.excludeFields = make([]string, 0)
 	qb.limitValue = 0
 	qb.skipValue = 0
 	qb.aggregations = make([]map[string]interface{}, 0)
-	qb.currentLogic = "and"
 	return qb
 }
 
 // Clone 克隆查询构建器
 func (qb *MongoQueryBuilder) Clone() infrastructure.QueryBuilder {
 	clone := &MongoQueryBuilder{
-		conditions:    make([]map[string]interface{}, len(qb.conditions)),
+		groups:        make([]conditionGroup, len(qb.groups)),
 		sortFields:    make(map[string]int),
 		selectFields:  make([]string, len(qb.selectFields)),
 		excludeFields: make([]string, len(qb.excludeFields)),
 		aggregations:  make([]map[string]interface{}, len(qb.aggregations)),
 		limitValue:    qb.limitValue,
 		skipValue:     qb.skipValue,
-		currentLogic:  qb.currentLogic,
 	}
 
-	copy(clone.conditions, qb.conditions)
+	// 深拷贝 groups
+	for i, g := range qb.groups {
+		clone.groups[i] = conditionGroup{
+			logic:      g.logic,
+			conditions: make([]map[string]interface{}, len(g.conditions)),
+		}
+		copy(clone.groups[i].conditions, g.conditions)
+	}
+	// 设置 currentGroup 指向第一个组
+	if len(clone.groups) > 0 {
+		clone.currentGroup = &clone.groups[0]
+	}
+
 	copy(clone.selectFields, qb.selectFields)
 	copy(clone.excludeFields, qb.excludeFields)
 	copy(clone.aggregations, qb.aggregations)
@@ -365,7 +500,12 @@ func (qb *MongoQueryBuilder) Clone() infrastructure.QueryBuilder {
 }
 
 // buildCondition 构建单个条件
+// 如果操作符无效，返回 nil
 func (qb *MongoQueryBuilder) buildCondition(field string, operator string, value interface{}) map[string]interface{} {
+	if field == "" {
+		return nil
+	}
+
 	condition := make(map[string]interface{})
 
 	switch strings.ToLower(operator) {
@@ -381,17 +521,28 @@ func (qb *MongoQueryBuilder) buildCondition(field string, operator string, value
 		condition[field] = map[string]interface{}{"$lt": value}
 	case "<=", "lte":
 		condition[field] = map[string]interface{}{"$lte": value}
+	case "in":
+		// 直接传递值，应该在 WhereIn 中处理
+		return nil
+	case "nin":
+		// 直接传递值，应该在 WhereNotIn 中处理
+		return nil
+	case "between":
+		// 直接传递值，应该在 WhereBetween 中处理
+		return nil
 	case "like":
-		pattern := fmt.Sprintf(".*%s.*", value)
-		condition[field] = map[string]interface{}{
-			"$regex":   pattern,
-			"$options": "i",
-		}
+		// WhereLike 中已经处理，这里不处理
+		return nil
+	case "regex":
+		// WhereRegex 中已经处理，这里不处理
+		return nil
 	case "exists":
 		condition[field] = map[string]interface{}{"$exists": value}
 	case "type":
 		condition[field] = map[string]interface{}{"$type": value}
 	default:
+		// 未知操作符，使用相等条件作为默认行为
+		// 这样可以确保查询不会因为操作符错误而失败
 		condition[field] = value
 	}
 

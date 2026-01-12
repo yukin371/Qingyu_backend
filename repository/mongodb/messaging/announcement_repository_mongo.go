@@ -52,7 +52,7 @@ func (r *MongoAnnouncementRepository) Create(ctx context.Context, announcement *
 // GetByID 根据ID获取公告
 func (r *MongoAnnouncementRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*messaging.Announcement, error) {
 	var announcement messaging.Announcement
-	err := r.collection.FindOne(ctx, bson.M{"_id": id.Hex()}).Decode(&announcement)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&announcement)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -68,7 +68,7 @@ func (r *MongoAnnouncementRepository) Update(ctx context.Context, id primitive.O
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id.Hex()},
+		bson.M{"_id": id},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -84,7 +84,7 @@ func (r *MongoAnnouncementRepository) Update(ctx context.Context, id primitive.O
 
 // Delete 删除公告
 func (r *MongoAnnouncementRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id.Hex()})
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (r *MongoAnnouncementRepository) List(ctx context.Context, filter infra.Fil
 
 // Exists 判断公告是否存在
 func (r *MongoAnnouncementRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id.Hex()})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, err
 	}
