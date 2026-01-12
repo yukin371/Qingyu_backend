@@ -182,11 +182,11 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.NotNil(t, comment)
-	require.NotEmpty(t, comment.ID.Hex())
+	require.NotEmpty(t, comment.ID)
 	assert.Equal(t, 0, comment.LikeCount)
-	t.Logf("✓ 评论已创建，ID: %s", comment.ID.Hex())
+	t.Logf("✓ 评论已创建，ID: %s", comment.ID)
 
-	commentID := comment.ID.Hex()
+	commentID := comment.ID
 
 	// Step 2: 用户B点赞该评论
 	t.Log("Step 2: 用户B点赞评论")
@@ -409,7 +409,7 @@ func TestIntegration_ConcurrentLikes(t *testing.T) {
 		5,
 	)
 	require.NoError(t, err)
-	commentID := comment.ID.Hex()
+	commentID := comment.ID
 	t.Logf("✓ 评论已创建: %s", commentID)
 
 	// Step 2: 多个用户并发点赞
