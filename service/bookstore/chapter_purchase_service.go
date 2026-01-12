@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
-	"Qingyu_backend/service/shared/wallet"
+	"Qingyu_backend/service/finance/wallet"
 )
 
 // ChapterPurchaseService 章节购买服务接口

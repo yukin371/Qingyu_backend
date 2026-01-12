@@ -7,18 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	adminService "Qingyu_backend/service/shared/admin"
+	"Qingyu_backend/service/admin"
 )
 
 // SystemAdminAPI 系统管理API处理器（管理员）
 type SystemAdminAPI struct {
-	adminService adminService.AdminService
+	admin admin.AdminService
 }
 
 // NewSystemAdminAPI 创建系统管理API实例
-func NewSystemAdminAPI(adminSvc adminService.AdminService) *SystemAdminAPI {
+func NewSystemAdminAPI(adminSvc admin.AdminService) *SystemAdminAPI {
 	return &SystemAdminAPI{
-		adminService: adminSvc,
+		admin: adminSvc,
 	}
 }
 
@@ -52,7 +52,7 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	}
 
 	// 调用Service层
-	err := api.adminService.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID.(string), req.Approved, req.Reason)
+	err := api.admin.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID.(string), req.Approved, req.Reason)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "审核提现失败", err.Error())
 		return
@@ -89,7 +89,7 @@ func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 	}
 
 	// 调用Service层
-	stats, err := api.adminService.GetUserStatistics(c.Request.Context(), userID)
+	stats, err := api.admin.GetUserStatistics(c.Request.Context(), userID)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取用户统计失败", err.Error())
 		return
@@ -123,7 +123,7 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 	operation := c.Query("operation")
 
 	// 构建请求
-	req := &adminService.GetLogsRequest{
+	req := &admin.GetLogsRequest{
 		AdminID:   adminID,
 		Operation: operation,
 		Page:      page,
@@ -131,7 +131,7 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 	}
 
 	// 调用Service层
-	logs, err := api.adminService.GetOperationLogs(c.Request.Context(), req)
+	logs, err := api.admin.GetOperationLogs(c.Request.Context(), req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取操作日志失败", err.Error())
 		return
@@ -157,7 +157,7 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 调用AdminService获取系统统计
-	stats, err := api.adminService.GetSystemStats(ctx)
+	stats, err := api.admin.GetSystemStats(ctx)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取系统统计失败", err.Error())
 		return
@@ -183,7 +183,7 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 调用AdminService获取系统配置
-	configs, err := api.adminService.GetSystemConfig(ctx)
+	configs, err := api.admin.GetSystemConfig(ctx)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取系统配置失败", err.Error())
 		return
@@ -217,7 +217,7 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 调用AdminService更新系统配置
-	err := api.adminService.UpdateSystemConfig(ctx, &req)
+	err := api.admin.UpdateSystemConfig(ctx, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "更新系统配置失败", err.Error())
 		return
@@ -264,7 +264,7 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 调用AdminService创建公告
-	announcement, err := api.adminService.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
+	announcement, err := api.admin.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "发布公告失败", err.Error())
 		return
@@ -295,7 +295,7 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 调用AdminService获取公告列表
-	announcements, total, err := api.adminService.GetAnnouncements(ctx, page, pageSize)
+	announcements, total, err := api.admin.GetAnnouncements(ctx, page, pageSize)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取公告列表失败", err.Error())
 		return
