@@ -3,6 +3,7 @@ package seeds
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -185,7 +186,9 @@ func seedComments(ctx context.Context, db *mongo.Database, users, books []string
 						CreatedAt:  comment.CreatedAt.Add(time.Duration(j+1) * time.Hour),
 						UpdatedAt:  now,
 					}
-					collection.InsertOne(ctx, reply)
+					if _, err := collection.InsertOne(ctx, reply); err != nil {
+						log.Printf("Warning: failed to insert reply: %v", err)
+					}
 				}
 			}
 		}

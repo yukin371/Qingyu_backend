@@ -577,7 +577,9 @@ func (s *ConfigService) RestoreConfigBackup(ctx context.Context) error {
 	// 恢复备份
 	if err := os.Rename(backupPath, s.configPath); err != nil {
 		// 恢复失败，还原当前配置
-		os.Rename(currentBackup, s.configPath)
+		if renameErr := os.Rename(currentBackup, s.configPath); renameErr != nil {
+			s.logger.Error("还原当前配置失败", zap.Error(renameErr))
+		}
 		return fmt.Errorf("恢复备份失败: %w", err)
 	}
 
