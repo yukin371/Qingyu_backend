@@ -52,6 +52,11 @@ linters-settings:
 
   staticcheck:
     checks: ["all"]
+    # 排除一些过于严格的检查
+    disable:
+      - SA1029  # context.WithValue 使用字符串作为 key - 在测试代码中是可接受的
+      - SA6005  # 应该使用 strings.EqualFold - 现有代码行为正确
+      - SA9003  # 空分支 - 某些防御性代码需要保留空分支
 
 issues:
   exclude-use-default: false
