@@ -2,7 +2,7 @@ package shared
 
 // Likable 支持点赞的实体混入
 type Likable struct {
-	LikeCount int `bson:"like_count" json:"likeCount"`
+	LikeCount int64 `bson:"like_count" json:"likeCount"`
 }
 
 // AddLike 增加点赞计数
@@ -21,7 +21,7 @@ func (l *Likable) RemoveLike() {
 type ThreadedConversation struct {
 	ParentID   *string `bson:"parent_id,omitempty" json:"parentId,omitempty"`
 	RootID     *string `bson:"root_id,omitempty" json:"rootId,omitempty"`
-	ReplyCount int     `bson:"reply_count" json:"replyCount"`
+	ReplyCount int64   `bson:"reply_count" json:"replyCount"`
 }
 
 // AddReply 增加回复计数
