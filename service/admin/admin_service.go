@@ -121,7 +121,7 @@ func (s *AdminServiceImpl) ReviewContent(ctx context.Context, req *ReviewContent
 	}
 
 	// 4. 记录操作日志
-	s.LogOperation(ctx, &LogOperationRequest{
+	_ = s.LogOperation(ctx, &LogOperationRequest{
 		AdminID:   req.ReviewerID,
 		Operation: adminModel.OperationReviewContent,
 		Target:    req.ContentID,
@@ -152,7 +152,7 @@ func (s *AdminServiceImpl) ManageUser(ctx context.Context, req *ManageUserReques
 		return s.UnbanUser(ctx, req.UserID)
 	case "delete":
 		// 删除用户操作（这里简化处理）
-		s.LogOperation(ctx, &LogOperationRequest{
+		_ = s.LogOperation(ctx, &LogOperationRequest{
 			AdminID:   req.AdminID,
 			Operation: adminModel.OperationDeleteUser,
 			Target:    req.UserID,
@@ -181,7 +181,7 @@ func (s *AdminServiceImpl) BanUser(ctx context.Context, userID, reason string, d
 	}
 
 	// 3. 记录日志
-	s.LogOperation(ctx, &LogOperationRequest{
+	_ = s.LogOperation(ctx, &LogOperationRequest{
 		AdminID:   "system", // 可以从context中获取
 		Operation: adminModel.OperationBanUser,
 		Target:    userID,
@@ -203,7 +203,7 @@ func (s *AdminServiceImpl) UnbanUser(ctx context.Context, userID string) error {
 	}
 
 	// 2. 记录日志
-	s.LogOperation(ctx, &LogOperationRequest{
+	_ = s.LogOperation(ctx, &LogOperationRequest{
 		AdminID:   "system",
 		Operation: adminModel.OperationUnbanUser,
 		Target:    userID,
@@ -231,7 +231,7 @@ func (s *AdminServiceImpl) ReviewWithdraw(ctx context.Context, withdrawID, admin
 		operation = adminModel.OperationRejectWithdraw
 	}
 
-	s.LogOperation(ctx, &LogOperationRequest{
+	_ = s.LogOperation(ctx, &LogOperationRequest{
 		AdminID:   adminID,
 		Operation: operation,
 		Target:    withdrawID,
@@ -319,7 +319,9 @@ func (s *AdminServiceImpl) ExportLogs(ctx context.Context, startDate, endDate ti
 
 	// 写入表头
 	headers := []string{"时间", "管理员ID", "操作", "目标", "IP", "详情"}
-	writer.Write(headers)
+	if err := writer.Write(headers); err != nil {
+		return nil, fmt.Errorf("error writing CSV headers: %w", err)
+	}
 
 	// 写入数据
 	for _, log := range logs {
@@ -332,7 +334,9 @@ func (s *AdminServiceImpl) ExportLogs(ctx context.Context, startDate, endDate ti
 			log.IP,
 			details,
 		}
-		writer.Write(record)
+		if err := writer.Write(record); err != nil {
+			return nil, fmt.Errorf("error writing CSV record: %w", err)
+		}
 	}
 
 	writer.Flush()

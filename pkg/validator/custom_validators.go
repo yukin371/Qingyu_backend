@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"log"
 	"regexp"
 	"strings"
 
@@ -9,24 +10,37 @@ import (
 
 // RegisterCustomValidators 注册所有自定义验证器
 func RegisterCustomValidators(v *validator.Validate) {
-	// 金额验证
-	v.RegisterValidation("amount", validateAmount)
-	v.RegisterValidation("positive_amount", validatePositiveAmount)
-	v.RegisterValidation("amount_range", validateAmountRange)
+	// 定义所有验证器注册项
+	validations := []struct {
+		tag string
+		fn  validator.Func
+	}{
+		// 金额验证
+		{"amount", validateAmount},
+		{"positive_amount", validatePositiveAmount},
+		{"amount_range", validateAmountRange},
 
-	// 文件验证
-	v.RegisterValidation("file_type", validateFileType)
-	v.RegisterValidation("file_size", validateFileSize)
+		// 文件验证
+		{"file_type", validateFileType},
+		{"file_size", validateFileSize},
 
-	// 字符串验证
-	v.RegisterValidation("username", validateUsername)
-	v.RegisterValidation("phone", validatePhone)
-	v.RegisterValidation("strong_password", validateStrongPassword)
+		// 字符串验证
+		{"username", validateUsername},
+		{"phone", validatePhone},
+		{"strong_password", validateStrongPassword},
 
-	// 业务验证
-	v.RegisterValidation("transaction_type", validateTransactionType)
-	v.RegisterValidation("withdraw_account", validateWithdrawAccount)
-	v.RegisterValidation("content_type", validateContentType)
+		// 业务验证
+		{"transaction_type", validateTransactionType},
+		{"withdraw_account", validateWithdrawAccount},
+		{"content_type", validateContentType},
+	}
+
+	// 注册所有验证器，检查错误
+	for _, validation := range validations {
+		if err := v.RegisterValidation(validation.tag, validation.fn); err != nil {
+			log.Printf("Warning: failed to register validation '%s': %v", validation.tag, err)
+		}
+	}
 }
 
 // validateAmount 验证金额格式（最多2位小数）
