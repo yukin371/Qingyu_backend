@@ -1,18 +1,28 @@
 package shared
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // BaseEntity 通用实体基类
 // 提供所有实体共有的基础字段，减少重复代码
 type BaseEntity struct {
 	CreatedAt time.Time  `json:"createdAt" bson:"created_at"`
 	UpdatedAt time.Time  `json:"updatedAt" bson:"updated_at"`
-	DeletedAt *time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
+	DeletedAt time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
 }
 
-// Touch 更新 UpdatedAt 时间戳
-func (b *BaseEntity) Touch() {
-	b.UpdatedAt = time.Now()
+// Touch 更新时间戳
+func (b *BaseEntity) Touch(t ...time.Time) {
+	if len(t) > 1 {
+		fmt.Errorf("Touch 方法只允许接受最多一个时间参数")
+	}
+	if len(t) > 0 {
+		b.UpdatedAt = t[0]
+	} else {
+		b.UpdatedAt = time.Now()
+	}
 }
 
 // TouchForCreate 创建时设置时间戳
@@ -29,13 +39,13 @@ func (b *BaseEntity) TouchForCreate() {
 // SoftDelete 软删除
 func (b *BaseEntity) SoftDelete() {
 	now := time.Now()
-	b.DeletedAt = &now
-	b.Touch()
+	b.DeletedAt = now
+	b.Touch(now)
 }
 
 // IsDeleted 判断是否已删除
 func (b *BaseEntity) IsDeleted() bool {
-	return b.DeletedAt != nil
+	return !b.DeletedAt.IsZero()
 }
 
 // IdentifiedEntity 包含ID字段的基础实体
@@ -80,4 +90,27 @@ func (r *ReadStatus) IsRecentlyRead(minutes int) bool {
 	}
 	duration := time.Since(*r.ReadAt)
 	return duration <= time.Duration(minutes)*time.Minute
+}
+
+// Edited 编辑追踪混入
+// 用于需要追踪最后编辑信息的实体（如文档内容、草稿等）
+type Edited struct {
+	LastSavedAt  time.Time  `json:"lastSavedAt" bson:"last_saved_at"`
+	LastEditedBy string     `json:"lastEditedBy" bson:"last_edited_by"`
+}
+
+// MarkEdited 标记为已编辑
+func (e *Edited) MarkEdited(editorID string) {
+	e.LastSavedAt = time.Now()
+	e.LastEditedBy = editorID
+}
+
+// GetLastSavedAt 获取最后保存时间
+func (e *Edited) GetLastSavedAt() time.Time {
+	return e.LastSavedAt
+}
+
+// GetLastEditedBy 获取最后编辑人
+func (e *Edited) GetLastEditedBy() string {
+	return e.LastEditedBy
 }
