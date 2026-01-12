@@ -3,8 +3,8 @@ package interfaces
 import (
 	"context"
 
-	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
 	adminInterfaces "Qingyu_backend/repository/interfaces/admin"
+	AIInterfaces "Qingyu_backend/repository/interfaces/ai"
 	AuditInterfaces "Qingyu_backend/repository/interfaces/audit"
 	authInterface "Qingyu_backend/repository/interfaces/auth"
 	BookstoreInterfaces "Qingyu_backend/repository/interfaces/bookstore"

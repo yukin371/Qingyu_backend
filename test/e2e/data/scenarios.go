@@ -114,10 +114,10 @@ func (sb *ScenarioBuilder) BuildSocialInteraction(userCount int) *SocialInteract
 
 // PaidContent 构建付费内容场景
 type PaidContent struct {
-	Author      *users.User
-	FreeUser    *users.User
-	VIPUser     *users.User
-	PaidBook    *bookstore.Book
+	Author       *users.User
+	FreeUser     *users.User
+	VIPUser      *users.User
+	PaidBook     *bookstore.Book
 	FreeChapters []*bookstore.Chapter
 	PaidChapters []*bookstore.Chapter
 }

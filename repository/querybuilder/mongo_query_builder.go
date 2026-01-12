@@ -9,14 +9,14 @@ import (
 
 // conditionGroup 条件组，支持嵌套逻辑
 type conditionGroup struct {
-	logic      string              // "and", "or"
+	logic      string // "and", "or"
 	conditions []map[string]interface{}
 }
 
 // MongoQueryBuilder MongoDB查询构建器实现
 type MongoQueryBuilder struct {
-	groups        []conditionGroup     // 条件分组，支持嵌套逻辑
-	currentGroup  *conditionGroup      // 当前激活的条件组
+	groups        []conditionGroup // 条件分组，支持嵌套逻辑
+	currentGroup  *conditionGroup  // 当前激活的条件组
 	sortFields    map[string]int
 	selectFields  []string
 	excludeFields []string
@@ -106,8 +106,10 @@ func (qb *MongoQueryBuilder) WhereNotNull(field string) infrastructure.QueryBuil
 
 // WhereLike 添加LIKE条件（模糊匹配）
 // 支持的通配符：
-//   % - 匹配任意数量的字符
-//   _ - 匹配单个字符
+//
+//	% - 匹配任意数量的字符
+//	_ - 匹配单个字符
+//
 // 转义字符：使用 \ 可以转义通配符，例如 \% 匹配字面量 %
 func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) infrastructure.QueryBuilder {
 	regexPattern := qb.convertLikeToRegex(pattern)
@@ -123,9 +125,10 @@ func (qb *MongoQueryBuilder) WhereLike(field string, pattern string) infrastruct
 
 // convertLikeToRegex 将 SQL LIKE 模式转换为 MongoDB 正则表达式
 // 支持转义字符，例如:
-//   "abc%"     -> "^abc.*$"
-//   "abc_def"  -> "^abc.def.$"
-//   "abc\%def" -> "^abc%def$"
+//
+//	"abc%"     -> "^abc.*$"
+//	"abc_def"  -> "^abc.def.$"
+//	"abc\%def" -> "^abc%def$"
 func (qb *MongoQueryBuilder) convertLikeToRegex(pattern string) string {
 	var sb strings.Builder
 	sb.WriteByte('^')

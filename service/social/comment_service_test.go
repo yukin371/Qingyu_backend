@@ -410,9 +410,9 @@ func TestCommentService_ReplyComment(t *testing.T) {
 		// Arrange - Mock获取父评论
 		parentComment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
-			AuthorID:        primitive.NewObjectID().Hex(),
-			TargetID:        primitive.NewObjectID().Hex(),
-			State:           social.CommentStateNormal,
+			AuthorID:         primitive.NewObjectID().Hex(),
+			TargetID:         primitive.NewObjectID().Hex(),
+			State:            social.CommentStateNormal,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
 			Return(parentComment, nil).Once()
@@ -478,9 +478,9 @@ func TestCommentService_UpdateComment(t *testing.T) {
 		// Arrange - Mock获取评论
 		comment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
-			AuthorID:        testUserID,
-			Timestamps:      social.Timestamps{CreatedAt: time.Now().Add(-10 * time.Minute)},
-			State:           social.CommentStateNormal,
+			AuthorID:         testUserID,
+			Timestamps:       social.Timestamps{CreatedAt: time.Now().Add(-10 * time.Minute)},
+			State:            social.CommentStateNormal,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
 			Return(comment, nil).Once()
@@ -509,8 +509,8 @@ func TestCommentService_UpdateComment(t *testing.T) {
 		// Arrange - Mock获取评论（不是自己的）
 		comment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
-			AuthorID:        primitive.NewObjectID().Hex(),
-			Timestamps:      social.Timestamps{CreatedAt: time.Now()},
+			AuthorID:         primitive.NewObjectID().Hex(),
+			Timestamps:       social.Timestamps{CreatedAt: time.Now()},
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
 			Return(comment, nil).Once()
@@ -544,7 +544,7 @@ func TestCommentService_DeleteComment(t *testing.T) {
 		// Arrange - Mock获取评论
 		comment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
-			AuthorID:        testUserID,
+			AuthorID:         testUserID,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
 			Return(comment, nil).Once()
@@ -568,7 +568,7 @@ func TestCommentService_DeleteComment(t *testing.T) {
 		// Arrange - Mock获取评论（不是自己的）
 		comment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
-			AuthorID:        primitive.NewObjectID().Hex(),
+			AuthorID:         primitive.NewObjectID().Hex(),
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
 			Return(comment, nil).Once()
