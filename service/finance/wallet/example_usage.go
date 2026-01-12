@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
-	mongoShared "Qingyu_backend/repository/mongodb/shared"
+	mongoFinance "Qingyu_backend/repository/mongodb/finance"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -16,7 +16,7 @@ func ExampleWalletServiceUsage(db *mongo.Database) {
 	ctx := context.Background()
 
 	// 1. 创建Repository
-	walletRepo := mongoShared.NewWalletRepository(db)
+	walletRepo := mongoFinance.NewWalletRepository(db)
 
 	// 2. 创建Wallet服务（使用统一的服务）
 	walletService := NewUnifiedWalletService(walletRepo)
