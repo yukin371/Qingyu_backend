@@ -3,23 +3,24 @@ package writer
 import (
 	"fmt"
 	"time"
+
+	shared "Qingyu_backend/models/shared"
 )
 
 // DocumentContent 文档内容
 // 用于存储文档的实际内容，与Document分离以提升性能
 type DocumentContent struct {
-	ID           string    `bson:"_id,omitempty" json:"id"`
-	DocumentID   string    `bson:"document_id" json:"documentId" validate:"required"`
-	Content      string    `bson:"content" json:"content"`                        // 文档内容
-	ContentType  string    `bson:"content_type" json:"contentType"`               // markdown | richtext
-	WordCount    int       `bson:"word_count" json:"wordCount"`                   // 字数统计
-	CharCount    int       `bson:"char_count" json:"charCount"`                   // 字符统计
-	GridFSID     string    `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
-	Version      int       `bson:"version" json:"version"`                        // 版本号（乐观锁）
-	LastSavedAt  time.Time `bson:"last_saved_at" json:"lastSavedAt"`              // 最后保存时间
-	LastEditedBy string    `bson:"last_edited_by" json:"lastEditedBy"`            // 最后编辑人
-	UpdatedAt    time.Time `bson:"updated_at" json:"updatedAt"`
-	CreatedAt    time.Time `bson:"created_at" json:"createdAt"`
+	shared.IdentifiedEntity `bson:",inline"`
+	shared.BaseEntity       `bson:",inline"`
+	shared.Edited           `bson:",inline"`
+
+	DocumentID  string `bson:"document_id" json:"documentId" validate:"required"`
+	Content     string `bson:"content" json:"content"`                        // 文档内容
+	ContentType string `bson:"content_type" json:"contentType"`               // markdown | richtext
+	WordCount   int    `bson:"word_count" json:"wordCount"`                   // 字数统计
+	CharCount   int    `bson:"char_count" json:"charCount"`                   // 字符统计
+	GridFSID    string `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
+	Version     int    `bson:"version" json:"version"`                        // 版本号（乐观锁）
 }
 
 // IsLargeDocument 判断是否为大文档（>1MB）
@@ -51,15 +52,9 @@ func (d *DocumentContent) Validate() error {
 
 // TouchForCreate 设置创建时的默认值
 func (d *DocumentContent) TouchForCreate() {
-	now := time.Now()
-	if d.CreatedAt.IsZero() {
-		d.CreatedAt = now
-	}
-	if d.UpdatedAt.IsZero() {
-		d.UpdatedAt = now
-	}
+	d.BaseEntity.TouchForCreate()
 	if d.LastSavedAt.IsZero() {
-		d.LastSavedAt = now
+		d.LastSavedAt = d.CreatedAt
 	}
 	if d.Version == 0 {
 		d.Version = 1
@@ -68,6 +63,6 @@ func (d *DocumentContent) TouchForCreate() {
 
 // TouchForUpdate 设置更新时的默认值
 func (d *DocumentContent) TouchForUpdate() {
-	d.UpdatedAt = time.Now()
+	d.BaseEntity.Touch()
 	d.LastSavedAt = time.Now()
 }
