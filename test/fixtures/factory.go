@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"Qingyu_backend/models/writer"
+	shared "Qingyu_backend/models/shared"
 	"fmt"
 	"time"
 
@@ -174,17 +175,18 @@ func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document
 
 // CreateDocumentContent 创建文档内容
 func (f *DocumentFactory) CreateDocumentContent(documentID string) *writer.DocumentContent {
+	id := primitive.NewObjectID().Hex()
+	now := time.Now()
 	return &writer.DocumentContent{
-		ID:          primitive.NewObjectID().Hex(),
-		DocumentID:  documentID,
-		Content:     fmt.Sprintf("这是文档%s的内容...", documentID),
-		ContentType: "markdown",
-		WordCount:   1000,
-		CharCount:   1000,
-		Version:     1,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		LastSavedAt: time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
+		DocumentID:       documentID,
+		Content:          fmt.Sprintf("这是文档%s的内容...", documentID),
+		ContentType:      "markdown",
+		WordCount:        1000,
+		CharCount:        1000,
+		Version:          1,
+		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		Edited:           shared.Edited{LastSavedAt: now},
 	}
 }
 
