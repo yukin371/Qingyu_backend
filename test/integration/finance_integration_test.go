@@ -153,7 +153,6 @@ func TestFinanceServiceInterfaceCompliance(t *testing.T) {
 		if svc == nil {
 			t.Error("作者收入服务为 nil")
 		}
-		}
 	})
 }
 
