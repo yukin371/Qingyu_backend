@@ -108,7 +108,7 @@ func (v *ConsistencyValidator) ValidateBookData(ctx context.Context, bookID stri
 			Description: fmt.Sprintf("章节数量不一致: 期望 %d, 实际 %d", expectedCount, actualCount),
 			Severity:    "error",
 			Details: map[string]interface{}{
-				"book_id":       bookID,
+				"book_id":        bookID,
 				"expected_count": expectedCount,
 				"actual_count":   actualCount,
 			},
@@ -148,10 +148,10 @@ func (v *ConsistencyValidator) ValidateBookData(ctx context.Context, bookID stri
 				Description: fmt.Sprintf("章节缺少内容: %s (第%d章)", chapterID.Hex(), chapterNum),
 				Severity:    "error",
 				Details: map[string]interface{}{
-					"book_id":        bookID,
-					"chapter_id":     chapterID.Hex(),
-					"chapter_num":    chapterNum,
-					"chapter_title":  chapterTitle,
+					"book_id":       bookID,
+					"chapter_id":    chapterID.Hex(),
+					"chapter_num":   chapterNum,
+					"chapter_title": chapterTitle,
 				},
 			})
 		}
