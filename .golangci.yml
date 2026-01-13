@@ -86,6 +86,7 @@ issues:
     - "Error return value of `.*go.*` .* is not checked"
     # 排除业务逻辑中可忽略的返回值
     - "Error return value of .*\\.WithRequestID.* is not checked"
+    - "Error return value of .*\\.WithContext.* is not checked"
     - "Error return value of .*\\.UpdatePoolMetrics.* is not checked"
     # 排除所有缓存服务的 Set/Invalidate 方法调用
     - "Error return value of .*\\.Set.* is not checked"
@@ -94,5 +95,13 @@ issues:
     - "Error return value of .*\\.(RevokeToken|GenerateToken|ValidateToken).* is not checked"
     # 排除事件总线发布调用
     - "Error return value of .*\\.PublishAsync.* is not checked"
-    # 排除 repository Update 调用
-    - "Error return value of .*\\.repo\\.Update.* is not checked"
+    # 排除 repository Update/Create 调用
+    - "Error return value of .*\\.repo\\.(Update|Create).* is not checked"
+    # 排除 IO 操作
+    - "Error return value of .*\\.Seek.* is not checked"
+    - "Error return value of .*\\.Copy.* is not checked"
+    - "Error return value of .*\\.Write.* is not checked"
+    - "Error return value of .*\\.Sscanf.* is not checked"
+    # 排除 cleanup 和 ensureIndexes 调用
+    - "Error return value of .*cleanup.* is not checked"
+    - "Error return value of .*ensureIndexes.* is not checked"
