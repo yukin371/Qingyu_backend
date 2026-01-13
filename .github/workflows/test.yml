@@ -239,6 +239,73 @@ jobs:
           go test -v -race -count=1 \
             ./test/api/...
 
+  # E2E 测试
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 15
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Run E2E Layer 1 - Basic Flows
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_DATABASE: qingyu_test
+          ENVIRONMENT: test
+        run: |
+          echo "=========================================="
+          echo "E2E Layer 1: Basic Flow Tests (2-3 min)"
+          echo "=========================================="
+          go test -v -race -count=1 -timeout 5m ./test/e2e/layer1_basic/...
+
+      - name: Run E2E Layer 2 - Data Consistency
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_DATABASE: qingyu_test
+          ENVIRONMENT: test
+        run: |
+          echo "=========================================="
+          echo "E2E Layer 2: Data Consistency Tests (3-5 min)"
+          echo "=========================================="
+          go test -v -race -count=1 -timeout 8m ./test/e2e/layer2_consistency/...
+
+      - name: Run E2E Layer 3 - Boundary Scenarios
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_DATABASE: qingyu_test
+          ENVIRONMENT: test
+        run: |
+          echo "=========================================="
+          echo "E2E Layer 3: Boundary Scenario Tests (5-8 min)"
+          echo "=========================================="
+          go test -v -race -count=1 -timeout 10m ./test/e2e/layer3_boundary/...
+
   # 代码质量检查
   lint:
     name: Code Quality
@@ -355,7 +422,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [test, integration-test, api-test, lint, security]
+    needs: [test, integration-test, api-test, e2e-test, lint, security]
     if: always()
 
     steps:
@@ -377,6 +444,9 @@ jobs:
           echo "## API Tests" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.api-test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## E2E Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.e2e-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Code Quality" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -387,7 +457,8 @@ jobs:
         if: |
           needs.test.result != 'success' ||
           needs.integration-test.result != 'success' ||
-          needs.api-test.result != 'success'
+          needs.api-test.result != 'success' ||
+          needs.e2e-test.result != 'success'
         run: |
           echo "One or more test jobs failed!"
           exit 1
