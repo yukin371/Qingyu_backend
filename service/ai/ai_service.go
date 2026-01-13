@@ -13,6 +13,7 @@ import (
 	pb "Qingyu_backend/pkg/grpc/pb" // 假设proto路径
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Service AI服务
@@ -142,7 +143,7 @@ func (s *Service) GenerateContent(ctx context.Context, req *GenerateContentReque
 	// 新增：如果Python服务配置可用，优先使用gRPC调用Python AI服务
 	if s.PythonConfig != nil && s.PythonConfig.GrpcPort > 0 {
 		pythonAddr := fmt.Sprintf("%s:%d", s.PythonConfig.Host, s.PythonConfig.GrpcPort)
-		conn, err := grpc.Dial(pythonAddr, grpc.WithInsecure())
+		conn, err := grpc.NewClient(pythonAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			fmt.Printf("警告: 无法连接Python AI服务 (%s)，回退到本地适配器: %v\n", pythonAddr, err)
 		} else {
