@@ -103,7 +103,10 @@ issues:
     - "Error return value of .*\\.Copy.* is not checked"
     - "Error return value of .*\\.Write.* is not checked"
     - "Error return value of .*\\.Sscanf.* is not checked"
+    - "Error return value of .*\\.Scanf.* is not checked"
+    - "Error return value of .*\\.Scanln.* is not checked"
     - "Error return value of .*\\.RemoveAll.* is not checked"
+    - "Error return value of .*\\.Decode.* is not checked"
     # 排除 fmt 输出函数（测试代码）
     - "Error return value of .*\\.Fprintf.* is not checked"
     - "Error return value of .*\\.Fprint.* is not checked"

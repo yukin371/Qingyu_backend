@@ -58,8 +58,6 @@ type RedisDocumentLockService struct {
 
 	// 本地缓存
 	localCache sync.Map
-	// 本地锁（用于并发控制）
-	mu sync.RWMutex
 }
 
 // NewRedisDocumentLockService 创建文档锁服务
