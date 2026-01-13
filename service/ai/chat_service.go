@@ -365,7 +365,7 @@ func (s *ChatService) buildSystemPrompt(contextType, projectID string) string {
 }
 
 // convertContextToMessage 将上下文转换为消息
-func (s *ChatService) convertContextToMessage(context *ai.AIContext) string {
+func (s *ChatService) convertContextToMessage(context *aiModels.AIContext) string {
 	if context == nil {
 		return ""
 	}
