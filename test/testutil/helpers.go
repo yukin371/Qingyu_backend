@@ -4,6 +4,7 @@ import (
 	shared "Qingyu_backend/models/shared"
 	"Qingyu_backend/models/writer"
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -19,6 +20,18 @@ import (
 // InitTestConfig 初始化测试配置
 func InitTestConfig() {
 	if config.GlobalConfig == nil {
+		// 从环境变量获取 MongoDB URI，如果没有则使用默认值（带认证）
+		mongoURI := os.Getenv("MONGODB_URI")
+		if mongoURI == "" {
+			mongoURI = "mongodb://admin:password@localhost:27017"
+		}
+
+		// 从环境变量获取数据库名，如果没有则使用默认值
+		mongoDB := os.Getenv("MONGODB_DATABASE")
+		if mongoDB == "" {
+			mongoDB = "qingyu_test"
+		}
+
 		config.GlobalConfig = &config.Config{
 			JWT: &config.JWTConfig{
 				Secret:          "test-secret-key-for-testing-only",
@@ -29,8 +42,8 @@ func InitTestConfig() {
 				Primary: config.DatabaseConnection{
 					Type: config.DatabaseTypeMongoDB,
 					MongoDB: &config.MongoDBConfig{
-						URI:      "mongodb://localhost:27017",
-						Database: "qingyu_test",
+						URI:      mongoURI,
+						Database: mongoDB,
 					},
 				},
 			},
