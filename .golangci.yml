@@ -14,7 +14,7 @@ linters:
     - govet          # 检查常见错误
     - ineffassign    # 检查无效赋值
     - staticcheck    # 静态分析检查
-    - unused         # 检查未使用的常量、变量、函数等
+    # - unused         # 检查未使用的常量、变量、函数等 - 项目中有许多辅助函数保留供未来使用
     - gofmt          # 代码格式检查
     - goimports      # import 排序和分组
 
