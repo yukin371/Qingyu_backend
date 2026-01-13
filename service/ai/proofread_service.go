@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
+
 	"github.com/google/uuid"
 )
 
