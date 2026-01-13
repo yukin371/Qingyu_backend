@@ -27,7 +27,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-cmd "mongosh --username admin --password password --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -127,7 +127,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-cmd "mongosh --username admin --password password --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -193,7 +193,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-cmd "mongosh --username admin --password password --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -256,7 +256,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-cmd "mongosh --username admin --password password --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -370,7 +370,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --u admin --p password --eval 'db.stats().ok'"
+          --health-cmd "mongosh --username admin --password password --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
