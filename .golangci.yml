@@ -49,6 +49,7 @@ linters-settings:
     enable-all: true
     disable:
       - shadow  # shadow 变量检查过于严格
+      - fieldalignment  # 字段对齐检查 - 纯性能优化，不影响功能，且手动修复成本高
 
   staticcheck:
     checks: ["all"]
