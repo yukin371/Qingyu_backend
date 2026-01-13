@@ -145,16 +145,16 @@ func testLayer3Boundary(t *testing.T) {
 // 测试函数占位符（实际测试在各层目录中实现）
 // 这些函数会在运行时通过包导入调用实际的测试
 
-func testAuthFlow(t *testing.T)           { t.Log("认证流程测试") }
-func testReadingFlow(t *testing.T)        { t.Log("阅读流程测试") }
-func testSocialFlow(t *testing.T)         { t.Log("社交流程测试") }
-func testWritingFlow(t *testing.T)        { t.Log("写作流程测试") }
-func testUserReadingConsistency(t *testing.T)    { t.Log("用户阅读一致性测试") }
-func testBookChapterConsistency(t *testing.T)     { t.Log("书籍章节一致性测试") }
+func testAuthFlow(t *testing.T)                     { t.Log("认证流程测试") }
+func testReadingFlow(t *testing.T)                  { t.Log("阅读流程测试") }
+func testSocialFlow(t *testing.T)                   { t.Log("社交流程测试") }
+func testWritingFlow(t *testing.T)                  { t.Log("写作流程测试") }
+func testUserReadingConsistency(t *testing.T)       { t.Log("用户阅读一致性测试") }
+func testBookChapterConsistency(t *testing.T)       { t.Log("书籍章节一致性测试") }
 func testSocialInteractionConsistency(t *testing.T) { t.Log("社交互动一致性测试") }
-func testConcurrentReading(t *testing.T)   { t.Log("并发阅读测试") }
-func testConcurrentSocialInteraction(t *testing.T) { t.Log("并发社交互动测试") }
-func testBoundaryDataSizes(t *testing.T)  { t.Log("边界数据量测试") }
+func testConcurrentReading(t *testing.T)            { t.Log("并发阅读测试") }
+func testConcurrentSocialInteraction(t *testing.T)  { t.Log("并发社交互动测试") }
+func testBoundaryDataSizes(t *testing.T)            { t.Log("边界数据量测试") }
 
 // TestE2EQuick 快速E2E测试（仅Layer 1）
 // 用于CI/CD流水线中的快速验证
@@ -181,8 +181,7 @@ func TestE2EStandard(t *testing.T) {
 
 // PrintE2ESummary 打印E2E测试摘要
 func PrintE2ESummary() {
-	fmt.Println(`
-========================================
+	fmt.Println(`========================================
 E2E 测试套件
 ========================================
 
@@ -216,6 +215,5 @@ E2E 测试套件
   - Redis降级模式下可运行
   - 测试数据会自动清理
 
-========================================
-`)
+========================================`)
 }

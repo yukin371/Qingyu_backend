@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/global"
-	"Qingyu_backend/test/e2e/data"
 	userRepo "Qingyu_backend/repository/mongodb/user"
+	"Qingyu_backend/test/e2e/data"
 )
 
 // E2EAssertions E2E 专用断言
