@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/global"
+	"Qingyu_backend/test/e2e/data"
 	userRepo "Qingyu_backend/repository/mongodb/user"
 )
 
@@ -155,4 +156,23 @@ func (ea *E2EAssertions) AssertSuccess(condition bool, msg string) {
 // AssertNoError 通用无错误断言
 func (ea *E2EAssertions) AssertNoError(err error, msg string) {
 	require.NoError(ea.env.T, err, msg)
+}
+
+// ============ 数据一致性验证器包装 ============
+
+// ConsistencyValidatorWrapper 数据一致性验证器包装器
+type ConsistencyValidatorWrapper struct {
+	env *TestEnvironment
+}
+
+// ValidateUserData 验证用户数据一致性
+func (cv *ConsistencyValidatorWrapper) ValidateUserData(userID string) []data.ConsistencyIssue {
+	validator := data.NewConsistencyValidator(cv.env.T)
+	return validator.ValidateUserData(cv.env.T.Context(), userID)
+}
+
+// ValidateBookData 验证书籍数据一致性
+func (cv *ConsistencyValidatorWrapper) ValidateBookData(bookID string) []data.ConsistencyIssue {
+	validator := data.NewConsistencyValidator(cv.env.T)
+	return validator.ValidateBookData(cv.env.T.Context(), bookID)
 }

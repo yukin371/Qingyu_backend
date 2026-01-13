@@ -143,8 +143,8 @@ func (ba *BusinessActions) StartReading(userID, bookID, chapterID, token string)
 }
 
 // GetReadingProgress 获取阅读进度
-func (ba *BusinessActions) GetReadingProgress(userID, bookID string) map[string]interface{} {
-	w := ba.env.DoRequest("GET", "/api/v1/reader/progress", nil, "")
+func (ba *BusinessActions) GetReadingProgress(userID, bookID string, token string) map[string]interface{} {
+	w := ba.env.DoRequest("GET", "/api/v1/reader/progress", nil, token)
 	require.Equal(ba.env.T, 200, w.Code, "获取阅读进度失败")
 
 	return ba.env.ParseJSONResponse(w)
