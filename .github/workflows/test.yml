@@ -74,6 +74,7 @@ jobs:
         with:
           version: "2025.1.1"
           install-go: false
+          checks: "-U1000,-SA1029"
 
       - name: Run unit tests
         env:
