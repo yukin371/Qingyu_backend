@@ -176,8 +176,8 @@ func (ba *BusinessActions) AddComment(token, bookID, chapterID, content string) 
 }
 
 // GetBookComments 获取书籍评论
-func (ba *BusinessActions) GetBookComments(bookID string) map[string]interface{} {
-	w := ba.env.DoRequest("GET", "/api/v1/social/comments?book_id="+bookID, nil, "")
+func (ba *BusinessActions) GetBookComments(bookID string, token string) map[string]interface{} {
+	w := ba.env.DoRequest("GET", "/api/v1/social/comments?book_id="+bookID, nil, token)
 	require.Equal(ba.env.T, 200, w.Code, "获取评论失败")
 
 	return ba.env.ParseJSONResponse(w)
@@ -197,8 +197,8 @@ func (ba *BusinessActions) CollectBook(token, bookID string) map[string]interfac
 }
 
 // GetReaderCollections 获取用户收藏列表
-func (ba *BusinessActions) GetReaderCollections(userID string) map[string]interface{} {
-	w := ba.env.DoRequest("GET", "/api/v1/social/collections", nil, "")
+func (ba *BusinessActions) GetReaderCollections(userID string, token string) map[string]interface{} {
+	w := ba.env.DoRequest("GET", "/api/v1/reader/collections", nil, token)
 	require.Equal(ba.env.T, 200, w.Code, "获取收藏列表失败")
 
 	return ba.env.ParseJSONResponse(w)
