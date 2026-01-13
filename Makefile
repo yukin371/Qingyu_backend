@@ -3,6 +3,7 @@
 .PHONY: help proto proto-go proto-python run-ai-service test-ai-service
 .PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run
 .PHONY: docker-up docker-down docker-logs benchmark check security deps deps-update
+.PHONY: test-e2e test-e2e-quick test-e2e-standard test-e2e-layer1 test-e2e-layer2 test-e2e-layer3
 
 # 默认目标
 help:
@@ -22,6 +23,14 @@ help:
 	@echo "  make test-all        - 运行所有测试"
 	@echo "  make test-coverage   - 生成测试覆盖率报告"
 	@echo "  make benchmark       - 运行性能基准测试"
+	@echo ""
+	@echo "E2E测试:"
+	@echo "  make test-e2e        - 运行所有E2E测试"
+	@echo "  make test-e2e-quick  - 运行快速E2E测试(仅Layer1)"
+	@echo "  make test-e2e-standard - 运行标准E2E测试(Layer1+2)"
+	@echo "  make test-e2e-layer1  - 运行Layer1基础流程测试"
+	@echo "  make test-e2e-layer2  - 运行Layer2数据一致性测试"
+	@echo "  make test-e2e-layer3  - 运行Layer3边界场景测试"
 	@echo ""
 	@echo "代码质量:"
 	@echo "  make fmt             - 格式化代码"
@@ -215,3 +224,41 @@ clean:
 	@rm -f integration_coverage.out integration_coverage.html
 	@rm -f benchmark.txt
 	@echo "清理完成！"
+
+# ========== E2E测试命令 ==========
+
+# 运行所有E2E测试
+test-e2e:
+	@echo "运行所有E2E测试..."
+	@echo "预计耗时: 10-15分钟"
+	go test -v -timeout 20m ./test/e2e/...
+
+# 运行快速E2E测试（仅Layer 1）
+test-e2e-quick:
+	@echo "运行快速E2E测试（仅Layer 1）..."
+	@echo "预计耗时: 2-3分钟"
+	go test -v -timeout 5m ./test/e2e/layer1_basic/...
+
+# 运行标准E2E测试（Layer 1 + Layer 2）
+test-e2e-standard:
+	@echo "运行标准E2E测试（Layer 1 + Layer 2）..."
+	@echo "预计耗时: 5-8分钟"
+	go test -v -timeout 10m ./test/e2e/layer1_basic/... ./test/e2e/layer2_consistency/...
+
+# 运行Layer 1基础流程测试
+test-e2e-layer1:
+	@echo "运行Layer 1基础流程测试..."
+	@echo "预计耗时: 2-3分钟"
+	go test -v -timeout 5m ./test/e2e/layer1_basic/...
+
+# 运行Layer 2数据一致性测试
+test-e2e-layer2:
+	@echo "运行Layer 2数据一致性测试..."
+	@echo "预计耗时: 3-5分钟"
+	go test -v -timeout 8m ./test/e2e/layer2_consistency/...
+
+# 运行Layer 3边界场景测试
+test-e2e-layer3:
+	@echo "运行Layer 3边界场景测试..."
+	@echo "预计耗时: 5-8分钟"
+	go test -v -timeout 10m ./test/e2e/layer3_boundary/...
