@@ -38,7 +38,7 @@ func NewAIClient(address string) (*AIClient, error) {
 	}
 
 	// 建立连接
-	conn, err := grpc.Dial(address, opts...)
+	conn, err := grpc.NewClient(address, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to AI service: %w", err)
 	}

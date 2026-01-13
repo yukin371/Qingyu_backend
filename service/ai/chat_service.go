@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/ai"
 	aiModels "Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
