@@ -103,6 +103,10 @@ issues:
     - "Error return value of .*\\.Copy.* is not checked"
     - "Error return value of .*\\.Write.* is not checked"
     - "Error return value of .*\\.Sscanf.* is not checked"
+    - "Error return value of .*\\.RemoveAll.* is not checked"
+    # 排除 fmt 输出函数（测试代码）
+    - "Error return value of .*\\.Fprintf.* is not checked"
+    - "Error return value of .*\\.Fprint.* is not checked"
     # 排除 cleanup 和 ensureIndexes 调用
     - "Error return value of .*cleanup.* is not checked"
     - "Error return value of .*ensureIndexes.* is not checked"
