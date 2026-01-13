@@ -12,6 +12,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: qingyu_test
+    # 关键：让 MongoDB 绑定到所有网络接口，允许从宿主机访问
+    command: ["mongod", "--bind_ip_all"]
     networks:
       - test-network
     healthcheck:
