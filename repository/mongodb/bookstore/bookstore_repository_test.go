@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/repository/mongodb/bookstore"
+	mongodb "Qingyu_backend/repository/mongodb/bookstore"
 	"Qingyu_backend/test/testutil"
 )
 
