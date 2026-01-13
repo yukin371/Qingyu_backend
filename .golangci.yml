@@ -52,23 +52,34 @@ linters-settings:
 
   staticcheck:
     checks: ["all"]
-    # 排除一些过于严格的检查
-    disable:
-      - SA1029  # context.WithValue 使用字符串作为 key - 在测试代码中是可接受的
-      - SA6005  # 应该使用 strings.EqualFold - 现有代码行为正确
-      - SA9003  # 空分支 - 某些防御性代码需要保留空分支
 
-  gosimple:
-    # 禁用一些过于严格的检查
-    disable:
-      - S1009  # 应该省略 nil 检查 - 现有代码模式更明确
-      - S1016  # 应该使用类型转换 - 现有代码更灵活
+  goimports:
+    local-prefixes: github.com/yukin371
 
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
+  # 排除特定检查ID
+  exclude-rules:
+    # 排除 staticcheck 的特定检查
+    - linters:
+        - staticcheck
+      text: "SA1029"  # context.WithValue 使用字符串作为 key
+    - linters:
+        - staticcheck
+      text: "SA6005"  # 应该使用 strings.EqualFold
+    - linters:
+        - staticcheck
+      text: "SA9003"  # 空分支
+    # 排除 gosimple 的特定检查
+    - linters:
+        - gosimple
+      text: "S1009"  # 应该省略 nil 检查
+    - linters:
+        - gosimple
+      text: "S1016"  # 应该使用类型转换
   # 排除特定错误模式的 errcheck 错误
   exclude:
     - "Error return value of .*\\.Close.* is not checked"
