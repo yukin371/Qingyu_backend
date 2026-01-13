@@ -40,10 +40,9 @@ func (f *DFAFilter) AddWord(word string, level int, category string) {
 
 	// 转换为小写并去除空格
 	word = strings.ToLower(strings.TrimSpace(word))
-	runes := []rune(word)
 
 	node := f.root
-	for _, r := range runes {
+	for _, r := range word {
 		if node.children[r] == nil {
 			node.children[r] = &TrieNode{
 				children: make(map[rune]*TrieNode),
