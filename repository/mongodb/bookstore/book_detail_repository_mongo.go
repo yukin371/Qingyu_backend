@@ -61,7 +61,7 @@ func (r *MongoBookDetailRepository) GetByID(ctx context.Context, id primitive.Ob
 
 // Update 更新书籍详情
 func (r *MongoBookDetailRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
-	if updates == nil || len(updates) == 0 {
+	if len(updates) == 0 {
 		return errors.New("updates cannot be nil or empty")
 	}
 

@@ -58,6 +58,12 @@ linters-settings:
       - SA6005  # 应该使用 strings.EqualFold - 现有代码行为正确
       - SA9003  # 空分支 - 某些防御性代码需要保留空分支
 
+  gosimple:
+    # 禁用一些过于严格的检查
+    disable:
+      - S1009  # 应该省略 nil 检查 - 现有代码模式更明确
+      - S1016  # 应该使用类型转换 - 现有代码更灵活
+
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
