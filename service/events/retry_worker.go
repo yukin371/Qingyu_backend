@@ -178,7 +178,7 @@ func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
 		log.Printf("[RetryWorker] 更新重试时间失败: %v", err)
 	} else {
 		log.Printf("[RetryWorker] 将在 %v 后进行第 %d 次重试",
-			nextRetryTime.Sub(time.Now()), nextAttempt+1)
+			time.Until(nextRetryTime), nextAttempt+1)
 	}
 }
 
