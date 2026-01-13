@@ -96,7 +96,8 @@ issues:
     # 排除事件总线发布调用
     - "Error return value of .*\\.PublishAsync.* is not checked"
     # 排除 repository Update/Create 调用
-    - "Error return value of .*\\.repo\\.(Update|Create).* is not checked"
+    - "Error return value of .*\\.Repo\\.(Update|Create).* is not checked"
+    - "Error return value of .*repo\\.(Update|Create).* is not checked"
     # 排除 IO 操作
     - "Error return value of .*\\.Seek.* is not checked"
     - "Error return value of .*\\.Copy.* is not checked"
