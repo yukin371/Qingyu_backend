@@ -173,3 +173,8 @@ func (env *TestEnvironment) LogInfo(format string, args ...interface{}) {
 func (env *TestEnvironment) LogError(format string, args ...interface{}) {
 	env.T.Logf("❌ "+format, args...)
 }
+
+// ConsistencyValidator 获取数据一致性验证器
+func (env *TestEnvironment) ConsistencyValidator() *ConsistencyValidatorWrapper {
+	return &ConsistencyValidatorWrapper{env: env}
+}
