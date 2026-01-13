@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,15 +17,43 @@ import (
 func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 	t.Helper()
 
-	// 加载配置 - 使用相对于项目根目录的路径
-	cfg, err := config.LoadConfig("config/config.yaml")
-	if err != nil {
-		// 如果失败，尝试使用相对路径
-		cfg, err = config.LoadConfig("../../config/config.yaml")
+	var cfg *config.Config
+	var err error
+
+	// 优先从环境变量获取配置（CI 环境）
+	if mongoURI := os.Getenv("MONGODB_URI"); mongoURI != "" {
+		mongoDB := os.Getenv("MONGODB_DATABASE")
+		if mongoDB == "" {
+			mongoDB = "qingyu_test"
+		}
+
+		cfg = &config.Config{
+			Database: &config.DatabaseConfig{
+				Type: "mongodb",
+				Primary: config.DatabaseConnection{
+					Type: config.DatabaseTypeMongoDB,
+					MongoDB: &config.MongoDBConfig{
+						URI:      mongoURI,
+						Database: mongoDB,
+					},
+				},
+			},
+			Server: &config.ServerConfig{
+				Port: ":8080",
+				Mode: "test",
+			},
+		}
+	} else {
+		// 如果没有环境变量，尝试从配置文件加载（本地开发）
+		cfg, err = config.LoadConfig("config/config.yaml")
 		if err != nil {
-			cfg, err = config.LoadConfig("../../../config/config.yaml")
+			// 如果失败，尝试使用相对路径
+			cfg, err = config.LoadConfig("../../config/config.yaml")
 			if err != nil {
-				t.Fatalf("加载配置失败: %v", err)
+				cfg, err = config.LoadConfig("../../../config/config.yaml")
+				if err != nil {
+					t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 config/config.yaml 存在)", err)
+				}
 			}
 		}
 	}
@@ -88,14 +117,42 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 	t.Helper()
 
-	// 加载配置
-	cfg, err := config.LoadConfig("config/config.yaml")
-	if err != nil {
-		cfg, err = config.LoadConfig("../../config/config.yaml")
+	var cfg *config.Config
+	var err error
+
+	// 优先从环境变量获取配置（CI 环境）
+	if mongoURI := os.Getenv("MONGODB_URI"); mongoURI != "" {
+		mongoDB := os.Getenv("MONGODB_DATABASE")
+		if mongoDB == "" {
+			mongoDB = "qingyu_test"
+		}
+
+		cfg = &config.Config{
+			Database: &config.DatabaseConfig{
+				Type: "mongodb",
+				Primary: config.DatabaseConnection{
+					Type: config.DatabaseTypeMongoDB,
+					MongoDB: &config.MongoDBConfig{
+						URI:      mongoURI,
+						Database: mongoDB,
+					},
+				},
+			},
+			Server: &config.ServerConfig{
+				Port: ":8080",
+				Mode: "test",
+			},
+		}
+	} else {
+		// 如果没有环境变量，尝试从配置文件加载（本地开发）
+		cfg, err = config.LoadConfig("config/config.yaml")
 		if err != nil {
-			cfg, err = config.LoadConfig("../../../config/config.yaml")
+			cfg, err = config.LoadConfig("../../config/config.yaml")
 			if err != nil {
-				t.Fatalf("加载配置失败: %v", err)
+				cfg, err = config.LoadConfig("../../../config/config.yaml")
+				if err != nil {
+					t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 config/config.yaml 存在)", err)
+				}
 			}
 		}
 	}
