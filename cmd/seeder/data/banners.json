@@ -1,0 +1,18 @@
+{
+  "banners": [
+    {
+      "title": "新书推荐",
+      "description": "本周热门新书",
+      "image": "/images/banners/new_book.jpg",
+      "link": "/bookstore?sort=new",
+      "priority": 1
+    },
+    {
+      "title": "限时免费",
+      "description": "精选免费好书",
+      "image": "/images/banners/free_books.jpg",
+      "link": "/bookstore?filter=free",
+      "priority": 2
+    }
+  ]
+}
