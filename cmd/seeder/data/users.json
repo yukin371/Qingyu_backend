@@ -1,0 +1,44 @@
+{
+  "test_users": [
+    {
+      "username": "admin",
+      "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+      "email": "admin@qingyu.com",
+      "role": "admin",
+      "nickname": "管理员",
+      "bio": "系统管理员账号"
+    },
+    {
+      "username": "author1",
+      "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+      "email": "author1@qingyu.com",
+      "role": "author",
+      "nickname": "墨小白",
+      "bio": "仙侠小说作者"
+    },
+    {
+      "username": "reader1",
+      "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+      "email": "reader1@qingyu.com",
+      "role": "reader",
+      "nickname": "书虫小王",
+      "bio": "热爱阅读的普通用户"
+    },
+    {
+      "username": "vip_user",
+      "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+      "email": "vip@qingyu.com",
+      "role": "vip",
+      "nickname": "VIP会员",
+      "bio": "付费会员用户"
+    },
+    {
+      "username": "normal_user",
+      "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+      "email": "normal@qingyu.com",
+      "role": "reader",
+      "nickname": "普通读者",
+      "bio": "普通用户"
+    }
+  ]
+}
