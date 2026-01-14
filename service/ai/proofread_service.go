@@ -36,7 +36,7 @@ func (s *ProofreadService) ProofreadContent(ctx context.Context, req *dto.Proofr
 	}
 
 	// 设置默认检查类型
-	checkTypes := req.CheckTypes
+	checkTypes := req.CheckTypes //nolint:ineffassign // 可能在后续被重新赋值
 	if len(checkTypes) == 0 {
 		checkTypes = []string{"spelling", "grammar", "punctuation"}
 	}

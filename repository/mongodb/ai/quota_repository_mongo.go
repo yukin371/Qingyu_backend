@@ -154,15 +154,6 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 		"reset_at":   bson.M{"$lte": time.Now()},
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"used_quota":      0,
-			"remaining_quota": "$total_quota",
-			"status":          aiModels.QuotaStatusActive,
-			"updated_at":      time.Now(),
-		},
-	}
-
 	// 根据配额类型设置下次重置时间
 	var resetAt time.Time
 	now := time.Now()
