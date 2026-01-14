@@ -408,6 +408,9 @@ func (s *AdminServiceImpl) GetAnnouncements(ctx context.Context, page, pageSize 
 	if pageSize > 100 {
 		pageSize = 100
 	}
+	// TODO: 实现分页查询时使用这些参数
+	_ = page      // 显式标记为有意未使用（待实现）
+	_ = pageSize  // 显式标记为有意未使用（待实现）
 
 	// 后续可连接AnnouncementService实现公告列表查询
 	announcements := []interface{}{}

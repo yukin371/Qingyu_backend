@@ -547,6 +547,7 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 		},
 		Token: "token_bob",
 	}
+	_ = userB.Token // 显式标记为有意未使用（测试数据完整性）
 
 	t.Logf("✓ 用户A: %s (ID: %s)", userA.User.Username, userA.User.ID)
 	t.Logf("✓ 用户B: %s (ID: %s)", userB.User.Username, userB.User.ID)

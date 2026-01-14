@@ -238,7 +238,7 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 进度同步服务（TODO: 需要添加到服务容器）
-		var progressSyncSvc *syncService.ProgressSyncService = nil //nolint:nilness // 待实现服务
+		var progressSyncSvc *syncService.ProgressSyncService = nil
 
 		// 书签服务（TODO: 需要添加到服务容器）
 		var bookmarkSvc readerservice.BookmarkService = nil
@@ -255,7 +255,7 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("    - GET /by-number/:chapterNum (按章节号获取)")
 		}
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
-		if progressSyncSvc != nil {
+		if progressSyncSvc != nil { //nolint:nilness // 待实现服务
 			logger.Info("  - /api/v1/reader/progress/ws (WebSocket同步)")
 			logger.Info("  - /api/v1/reader/progress/sync (进度同步)")
 			logger.Info("  - /api/v1/reader/progress/merge (合并离线进度)")
@@ -315,13 +315,13 @@ func RegisterRoutes(r *gin.Engine) {
 	// }
 
 	// 新增社交 API（待实现）
-	var followAPI *socialApi.FollowAPI     //nolint:nilness // 待实现服务
-	var messageAPI *messagesApi.MessageAPI //nolint:nilness // 待实现服务
-	var reviewAPI *socialApi.ReviewAPI     //nolint:nilness // 待实现服务
-	var booklistAPI *socialApi.BookListAPI //nolint:nilness // 待实现服务
+	var followAPI *socialApi.FollowAPI
+	var messageAPI *messagesApi.MessageAPI
+	var reviewAPI *socialApi.ReviewAPI
+	var booklistAPI *socialApi.BookListAPI
 
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil {
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil { //nolint:nilness // 待实现服务已排除
 		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
