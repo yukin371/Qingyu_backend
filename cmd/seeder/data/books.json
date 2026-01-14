@@ -1,0 +1,17 @@
+{
+  "real_books": [
+    {
+      "title": "青羽剑修",
+      "author": "墨小白",
+      "category": "仙侠",
+      "tags": ["修仙", "热血", "成长"],
+      "status": "completed",
+      "introduction": "少年叶青意外获得神秘青羽，踏上修仙之路。从凡人到仙帝，一路披荆斩棘，最终凌驾于九天之上。",
+      "cover": "/images/covers/qingyu_sword.jpg",
+      "is_recommended": true,
+      "is_featured": true,
+      "is_hot": true,
+      "chapters_count": 50
+    }
+  ]
+}
