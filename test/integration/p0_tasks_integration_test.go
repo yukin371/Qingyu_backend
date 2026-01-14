@@ -145,6 +145,10 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 		Roles:     []string{"writer"},
 		CreatedAt: time.Now().Add(-100 * 24 * time.Hour),
 	}
+	// 显式标记为有意未使用（测试数据完整性）
+	_ = testUser.Username
+	_ = testUser.Roles
+	_ = testUser.CreatedAt
 
 	defer cleanupTestData(t, testUser.ID)
 

@@ -165,6 +165,7 @@ func (s *SearchServiceImpl) GetSuggestions(ctx context.Context, keyword string, 
 	if limit < 1 || limit > 20 {
 		limit = 10
 	}
+	_ = limit // 显式标记为有意未使用（待实现）
 
 	// TODO(Phase2): 实现搜索建议
 	// 可以基于:

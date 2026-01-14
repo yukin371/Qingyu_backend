@@ -53,6 +53,7 @@ func TestSession_Model(t *testing.T) {
 		ExpiresAt: now.Add(24 * time.Hour),
 	}
 	_ = session.CreatedAt // 显式标记为有意未使用（测试数据完整性）
+	_ = session.ExpiresAt // 显式标记为有意未使用（测试数据完整性）
 
 	assert.Equal(t, "test_session_id", session.ID)
 	assert.Equal(t, "user_123", session.UserID)
