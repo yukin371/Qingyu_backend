@@ -238,7 +238,7 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 进度同步服务（TODO: 需要添加到服务容器）
-		var progressSyncSvc *syncService.ProgressSyncService = nil
+		var progressSyncSvc *syncService.ProgressSyncService = nil //nolint:nilness // 待实现服务
 
 		// 书签服务（TODO: 需要添加到服务容器）
 		var bookmarkSvc readerservice.BookmarkService = nil
@@ -315,13 +315,13 @@ func RegisterRoutes(r *gin.Engine) {
 	// }
 
 	// 新增社交 API（待实现）
-	var followAPI *socialApi.FollowAPI
-	var messageAPI *messagesApi.MessageAPI
-	var reviewAPI *socialApi.ReviewAPI
-	var booklistAPI *socialApi.BookListAPI
+	var followAPI *socialApi.FollowAPI     //nolint:nilness // 待实现服务
+	var messageAPI *messagesApi.MessageAPI //nolint:nilness // 待实现服务
+	var reviewAPI *socialApi.ReviewAPI     //nolint:nilness // 待实现服务
+	var booklistAPI *socialApi.BookListAPI //nolint:nilness // 待实现服务
 
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil || followAPI != nil || messageAPI != nil || reviewAPI != nil || booklistAPI != nil {
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil {
 		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
@@ -334,7 +334,7 @@ func RegisterRoutes(r *gin.Engine) {
 		if collectionAPI != nil {
 			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
 		}
-		if relationAPI != nil {
+		if relationAPI != nil { //nolint:nilness // 待实现服务
 			logger.Info("  - /api/v1/social/follow/* (关注系统)")
 		}
 	}

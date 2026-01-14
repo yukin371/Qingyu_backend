@@ -73,19 +73,17 @@ func RecordServiceMetrics(serviceName, method string, duration time.Duration, er
 	promMetrics := metrics.GetDefaultMetrics()
 
 	status := "success"
+	errorType := "unknown"
 	if err != nil {
 		status = "error"
 		// 记录错误
-		errorType := "unknown"
-		if err != nil {
-			errorType = err.Error()
-			// 限制错误类型长度，避免高基数
-			if len(errorType) > 50 {
-				errorType = errorType[:50]
-			}
+		errorType = err.Error()
+		// 限制错误类型长度，避免高基数
+		if len(errorType) > 50 {
+			errorType = errorType[:50]
 		}
-		promMetrics.ServiceErrors.WithLabelValues(serviceName, errorType).Inc()
 	}
+	promMetrics.ServiceErrors.WithLabelValues(serviceName, method, errorType).Inc()
 
 	// 记录调用总数
 	promMetrics.ServiceCallTotal.WithLabelValues(
@@ -148,12 +146,10 @@ func RecordDBMetrics(operation, collection string, duration time.Duration, err e
 	status := "success"
 	if err != nil {
 		status = "error"
-		errorType := "unknown"
-		if err != nil {
-			errorType = err.Error()
-			if len(errorType) > 50 {
-				errorType = errorType[:50]
-			}
+		errorType := err.Error()
+		// 限制错误类型长度，避免高基数
+		if len(errorType) > 50 {
+			errorType = errorType[:50]
 		}
 		promMetrics.DBErrors.WithLabelValues(operation, errorType).Inc()
 	}
