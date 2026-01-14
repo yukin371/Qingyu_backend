@@ -400,6 +400,7 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
 	logger.Info("  - /api/v1/writer/versions/* (版本控制)")
 	logger.Info("  - /api/v1/writer/search/documents (文档搜索)")
+	logger.Info("  ⚠️  注意: 测试需要使用 /api/v1/writer/ 前缀而非 /api/v1/")
 
 	// ============ 注册AI路由 ============
 	aiSvc, err := serviceContainer.GetAIService()

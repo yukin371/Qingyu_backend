@@ -42,6 +42,29 @@ services:
     tmpfs:
       - /data  # 使用内存存储
 
+  # gRPC AI服务（测试专用）
+  grpc-ai-service:
+    build:
+      context: ../python_ai_service
+      dockerfile: docker/Dockerfile.grpc
+    container_name: qingyu-grpc-ai-test
+    ports:
+      - "50051:50051"
+    networks:
+      - test-network
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-test-api-key}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-test-api-key}
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    tmpfs:
+      - /tmp
+
 networks:
   test-network:
     driver: bridge

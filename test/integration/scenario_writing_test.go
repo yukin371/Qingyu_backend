@@ -37,7 +37,7 @@ func TestWritingScenario(t *testing.T) {
 			"tags":        []string{"测试", "玄幻"},
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
 		data := helper.AssertSuccess(w, 201, "创建写作项目应该成功")
 
 		if id, ok := data["projectId"].(string); ok {
@@ -49,7 +49,7 @@ func TestWritingScenario(t *testing.T) {
 
 	if projectID != "" {
 		t.Run("2.项目管理_获取项目列表", func(t *testing.T) {
-			w := helper.DoAuthRequest("GET", "/api/v1/projects?page=1&size=10", nil, token)
+			w := helper.DoAuthRequest("GET", "/api/v1/writer/projects?page=1&size=10", nil, token)
 			data := helper.AssertSuccess(w, 200, "获取项目列表应该成功")
 
 			if projects, ok := data["projects"].([]interface{}); ok {
@@ -65,7 +65,7 @@ func TestWritingScenario(t *testing.T) {
 				"type":       "chapter",
 			}
 
-			w := helper.DoAuthRequest("POST", "/api/v1/documents", documentData, token)
+			w := helper.DoAuthRequest("POST", "/api/v1/writer/documents", documentData, token)
 			data := helper.AssertSuccess(w, 200, "创建文档应该成功")
 
 			if id, ok := data["id"].(string); ok {
@@ -82,7 +82,7 @@ func TestWritingScenario(t *testing.T) {
 					"status":  "draft",
 				}
 
-				url := fmt.Sprintf("/api/v1/documents/%s", documentID)
+				url := fmt.Sprintf("/api/v1/writer/documents/%s", documentID)
 				w := helper.DoAuthRequest("PUT", url, updateData, token)
 				helper.AssertSuccess(w, 200, "保存草稿应该成功")
 
@@ -95,7 +95,7 @@ func TestWritingScenario(t *testing.T) {
 					"note":        "第一版本",
 				}
 
-				url := fmt.Sprintf("/api/v1/documents/%s/versions", documentID)
+				url := fmt.Sprintf("/api/v1/writer/documents/%s/versions", documentID)
 				w := helper.DoAuthRequest("POST", url, versionData, token)
 
 				if w.Code == 200 {
@@ -110,7 +110,7 @@ func TestWritingScenario(t *testing.T) {
 					"status": "published",
 				}
 
-				url := fmt.Sprintf("/api/v1/documents/%s", documentID)
+				url := fmt.Sprintf("/api/v1/writer/documents/%s", documentID)
 				w := helper.DoAuthRequest("PUT", url, publishData, token)
 				helper.AssertSuccess(w, 200, "发布文档应该成功")
 
@@ -118,7 +118,7 @@ func TestWritingScenario(t *testing.T) {
 			})
 
 			t.Run("7.文档管理_获取文档详情", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/documents/%s", documentID)
+				url := fmt.Sprintf("/api/v1/writer/documents/%s", documentID)
 				w := helper.DoAuthRequest("GET", url, nil, token)
 				data := helper.AssertSuccess(w, 200, "获取文档详情应该成功")
 
@@ -130,7 +130,7 @@ func TestWritingScenario(t *testing.T) {
 
 		// 清理：删除测试项目
 		t.Run("8.清理_删除测试项目", func(t *testing.T) {
-			url := fmt.Sprintf("/api/v1/projects/%s", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s", projectID)
 			w := helper.DoAuthRequest("DELETE", url, nil, token)
 			helper.AssertSuccess(w, 200, "删除项目应该成功")
 
