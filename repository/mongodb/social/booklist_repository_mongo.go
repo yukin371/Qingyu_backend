@@ -364,9 +364,9 @@ func (r *MongoBookListRepository) ReorderBooks(ctx context.Context, bookListID s
 	}
 
 	// 更新排序
-	for _, book := range bookList.Books {
-		if newOrder, exists := bookOrders[book.BookID]; exists {
-			book.Order = newOrder
+	for i := range bookList.Books {
+		if newOrder, exists := bookOrders[bookList.Books[i].BookID]; exists {
+			bookList.Books[i].Order = newOrder
 		}
 	}
 
