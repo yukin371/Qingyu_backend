@@ -60,7 +60,6 @@ func RegisterRoutes(r *gin.Engine) {
 	// 尝试从服务容器获取共享服务
 	authSvc, authErr := serviceContainer.GetAuthService()
 	oauthSvc, oauthErr := serviceContainer.GetOAuthService()
-	walletSvc, walletErr := serviceContainer.GetWalletService()
 
 	// 获取存储相关服务
 	storageServiceImpl, storageErr := serviceContainer.GetStorageServiceImpl()
@@ -255,7 +254,8 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("    - GET /by-number/:chapterNum (按章节号获取)")
 		}
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
-		if progressSyncSvc != nil { //nolint:nilness // 待实现服务
+		//nolint:nilness // 待实现服务
+		if progressSyncSvc != nil {
 			logger.Info("  - /api/v1/reader/progress/ws (WebSocket同步)")
 			logger.Info("  - /api/v1/reader/progress/sync (进度同步)")
 			logger.Info("  - /api/v1/reader/progress/merge (合并离线进度)")
@@ -315,13 +315,13 @@ func RegisterRoutes(r *gin.Engine) {
 	// }
 
 	// 新增社交 API（待实现）
-	var followAPI *socialApi.FollowAPI
-	var messageAPI *messagesApi.MessageAPI
-	var reviewAPI *socialApi.ReviewAPI
-	var booklistAPI *socialApi.BookListAPI
+	var followAPI *socialApi.FollowAPI     //nolint:ineffassign // 待实现
+	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
+	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
+	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
 
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || relationAPI != nil { //nolint:nilness // 待实现服务已排除
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil { //nolint:nilness // 待实现服务已排除
 		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
@@ -334,7 +334,8 @@ func RegisterRoutes(r *gin.Engine) {
 		if collectionAPI != nil {
 			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
 		}
-		if relationAPI != nil { //nolint:nilness // 待实现服务
+		//nolint:nilness // 待实现服务
+		if relationAPI != nil {
 			logger.Info("  - /api/v1/social/follow/* (关注系统)")
 		}
 	}

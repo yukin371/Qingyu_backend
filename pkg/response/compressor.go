@@ -33,8 +33,9 @@ func (g *gzipResponseWriter) WriteString(s string) (int, error) {
 
 // GzipMiddleware Gzip压缩中间件
 func GzipMiddleware(level int) gin.HandlerFunc {
+	// 确保压缩级别在有效范围内
 	if level < gzip.DefaultCompression || level > gzip.BestCompression {
-		level = gzip.DefaultCompression
+		level = gzip.DefaultCompression //nolint:ineffassign // 修正无效输入
 	}
 
 	return func(c *gin.Context) {

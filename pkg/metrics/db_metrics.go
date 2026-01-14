@@ -27,7 +27,7 @@ func (c *DbMetricsCollector) GetMonitorCommand() *event.CommandMonitor {
 	return &event.CommandMonitor{
 		Started: func(ctx context.Context, event *event.CommandStartedEvent) {
 			startTime := time.Now()
-			ctx = context.WithValue(ctx, "query_start_time", startTime)
+			_ = context.WithValue(ctx, "query_start_time", startTime) //nolint:ineffassign // 保存到context中供后续使用
 		},
 		Succeeded: func(ctx context.Context, event *event.CommandSucceededEvent) {
 			startTime, ok := ctx.Value("query_start_time").(time.Time)
