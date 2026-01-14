@@ -157,7 +157,7 @@ jobs:
 
       - name: Run integration tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
         run: |
@@ -226,7 +226,7 @@ jobs:
 
       - name: Run application in background
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           REDIS_ADDR: localhost:6379
         run: |
           ./server &
@@ -234,11 +234,15 @@ jobs:
 
       - name: Run API tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           REDIS_ADDR: localhost:6379
         run: |
           go test -v -race -count=1 \
             ./test/api/...
+
+      - name: Cleanup
+        if: always()
+        run: pkill -f server || true
 
   # E2E 测试
   e2e-test:

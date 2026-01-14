@@ -39,7 +39,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 			"tags":        []string{"修真", "热血", "成长"},
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
 		data := helper.AssertSuccess(w, 201, "创建项目应该成功")
 
 		if id, ok := data["projectId"].(string); ok {
@@ -62,7 +62,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 			"currentState":      "金丹期巅峰，即将突破元婴",
 		}
 
-		url := fmt.Sprintf("/api/v1/projects/%s/characters", projectID)
+		url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 		w := helper.DoAuthRequest("POST", url, characterData, token)
 		data := helper.AssertSuccess(w, 201, "创建角色应该成功")
 
@@ -82,7 +82,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 			"atmosphere":  "剑气森然，庄严肃穆",
 		}
 
-		url := fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+		url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 		w := helper.DoAuthRequest("POST", url, locationData, token)
 		data := helper.AssertSuccess(w, 201, "创建地点应该成功")
 
@@ -99,7 +99,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 			"description": "主角从凡人到剑仙的成长历程",
 		}
 
-		url := fmt.Sprintf("/api/v1/projects/%s/timelines", projectID)
+		url := fmt.Sprintf("/api/v1/writer/projects/%s/timelines", projectID)
 		w := helper.DoAuthRequest("POST", url, timelineData, token)
 		data := helper.AssertSuccess(w, 201, "创建时间线应该成功")
 
@@ -124,7 +124,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 				"locationIds":  []string{locationID},
 			}
 
-			url := fmt.Sprintf("/api/v1/timelines/%s/events?projectId=%s", timelineID, projectID)
+			url := fmt.Sprintf("/api/v1/writer/timelines/%s/events?projectId=%s", timelineID, projectID)
 			w := helper.DoAuthRequest("POST", url, eventData, token)
 			data := helper.AssertSuccess(w, 201, "创建事件应该成功")
 
@@ -144,7 +144,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 			"status":     "draft",
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/documents", documentData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/documents", documentData, token)
 		data := helper.AssertSuccess(w, 200, "创建文档应该成功")
 
 		if id, ok := data["id"].(string); ok {
@@ -155,20 +155,20 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 	t.Run("阶段6：验证设定数据完整性", func(t *testing.T) {
 		// 验证角色列表
-		url := fmt.Sprintf("/api/v1/projects/%s/characters", projectID)
+		url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 		w := helper.DoAuthRequest("GET", url, nil, token)
 		helper.AssertSuccess(w, 200, "获取角色列表应该成功")
 		helper.LogSuccess("✓ 角色数据验证通过")
 
 		// 验证地点列表
-		url = fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+		url = fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 		w = helper.DoAuthRequest("GET", url, nil, token)
 		helper.AssertSuccess(w, 200, "获取地点列表应该成功")
 		helper.LogSuccess("✓ 地点数据验证通过")
 
 		// 验证时间线事件
 		if timelineID != "" {
-			url = fmt.Sprintf("/api/v1/timelines/%s/events", timelineID)
+			url = fmt.Sprintf("/api/v1/writer/timelines/%s/events", timelineID)
 			w = helper.DoAuthRequest("GET", url, nil, token)
 			helper.AssertSuccess(w, 200, "获取事件列表应该成功")
 			helper.LogSuccess("✓ 时间线数据验证通过")
@@ -176,7 +176,7 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 		// 验证可视化数据
 		if timelineID != "" {
-			url = fmt.Sprintf("/api/v1/timelines/%s/visualization", timelineID)
+			url = fmt.Sprintf("/api/v1/writer/timelines/%s/visualization", timelineID)
 			w = helper.DoAuthRequest("GET", url, nil, token)
 			helper.AssertSuccess(w, 200, "获取可视化数据应该成功")
 			helper.LogSuccess("✓ 可视化数据验证通过")

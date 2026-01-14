@@ -35,7 +35,7 @@ func TestTimelineScenario(t *testing.T) {
 			"category":    "玄幻",
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
 		data := helper.AssertSuccess(w, 201, "创建项目应该成功")
 
 		if id, ok := data["projectId"].(string); ok {
@@ -55,7 +55,7 @@ func TestTimelineScenario(t *testing.T) {
 				},
 			}
 
-			url := fmt.Sprintf("/api/v1/projects/%s/timelines", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/timelines", projectID)
 			w := helper.DoAuthRequest("POST", url, timelineData, token)
 			data := helper.AssertSuccess(w, 201, "创建时间线应该成功")
 
@@ -67,7 +67,7 @@ func TestTimelineScenario(t *testing.T) {
 		})
 
 		t.Run("3.获取时间线列表", func(t *testing.T) {
-			url := fmt.Sprintf("/api/v1/projects/%s/timelines", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/timelines", projectID)
 			w := helper.DoAuthRequest("GET", url, nil, token)
 			_ = helper.AssertSuccess(w, 200, "获取时间线列表应该成功")
 			helper.LogSuccess("时间线列表获取成功")
@@ -75,7 +75,7 @@ func TestTimelineScenario(t *testing.T) {
 
 		if timelineID != "" {
 			t.Run("4.获取时间线详情", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/timelines/%s?projectId=%s", timelineID, projectID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s?projectId=%s", timelineID, projectID)
 				w := helper.DoAuthRequest("GET", url, nil, token)
 				data := helper.AssertSuccess(w, 200, "获取时间线详情应该成功")
 
@@ -98,7 +98,7 @@ func TestTimelineScenario(t *testing.T) {
 					"impact": "主角的诞生，命运的开始",
 				}
 
-				url := fmt.Sprintf("/api/v1/timelines/%s/events?projectId=%s", timelineID, projectID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s/events?projectId=%s", timelineID, projectID)
 				w := helper.DoAuthRequest("POST", url, eventData, token)
 				data := helper.AssertSuccess(w, 201, "创建事件应该成功")
 
@@ -122,7 +122,7 @@ func TestTimelineScenario(t *testing.T) {
 					"impact": "踏上修炼之路，人生转折点",
 				}
 
-				url := fmt.Sprintf("/api/v1/timelines/%s/events?projectId=%s", timelineID, projectID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s/events?projectId=%s", timelineID, projectID)
 				w := helper.DoAuthRequest("POST", url, eventData, token)
 				data := helper.AssertSuccess(w, 201, "创建事件应该成功")
 
@@ -133,7 +133,7 @@ func TestTimelineScenario(t *testing.T) {
 			})
 
 			t.Run("7.获取时间线事件列表", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/timelines/%s/events", timelineID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s/events", timelineID)
 				w := helper.DoAuthRequest("GET", url, nil, token)
 				_ = helper.AssertSuccess(w, 200, "获取事件列表应该成功")
 				helper.LogSuccess("事件列表获取成功")
@@ -164,7 +164,7 @@ func TestTimelineScenario(t *testing.T) {
 			}
 
 			t.Run("10.获取时间线可视化数据", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/timelines/%s/visualization", timelineID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s/visualization", timelineID)
 				w := helper.DoAuthRequest("GET", url, nil, token)
 				_ = helper.AssertSuccess(w, 200, "获取可视化数据应该成功")
 				helper.LogSuccess("可视化数据获取成功")
@@ -180,7 +180,7 @@ func TestTimelineScenario(t *testing.T) {
 			}
 
 			t.Run("12.删除时间线", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/timelines/%s?projectId=%s", timelineID, projectID)
+				url := fmt.Sprintf("/api/v1/writer/timelines/%s?projectId=%s", timelineID, projectID)
 				w := helper.DoAuthRequest("DELETE", url, nil, token)
 				helper.AssertSuccess(w, 200, "删除时间线应该成功")
 				helper.LogSuccess("时间线删除成功")

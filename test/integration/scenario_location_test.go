@@ -36,7 +36,7 @@ func TestLocationScenario(t *testing.T) {
 			"category":    "仙侠",
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
 		data := helper.AssertSuccess(w, 201, "创建项目应该成功")
 
 		if id, ok := data["projectId"].(string); ok {
@@ -55,7 +55,7 @@ func TestLocationScenario(t *testing.T) {
 				"geography":   "地域辽阔，灵气充沛",
 			}
 
-			url := fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 			w := helper.DoAuthRequest("POST", url, locationData, token)
 			data := helper.AssertSuccess(w, 201, "创建大陆应该成功")
 
@@ -75,7 +75,7 @@ func TestLocationScenario(t *testing.T) {
 					"climate":     "四季分明，灵气浓郁",
 				}
 
-				url := fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+				url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 				w := helper.DoAuthRequest("POST", url, locationData, token)
 				data := helper.AssertSuccess(w, 201, "创建区域应该成功")
 
@@ -94,7 +94,7 @@ func TestLocationScenario(t *testing.T) {
 						"atmosphere":  "严肃庄重，剑气森然",
 					}
 
-					url := fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+					url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 					w := helper.DoAuthRequest("POST", url, locationData, token)
 					data := helper.AssertSuccess(w, 201, "创建城市应该成功")
 
@@ -107,14 +107,14 @@ func TestLocationScenario(t *testing.T) {
 		}
 
 		t.Run("5.获取地点列表", func(t *testing.T) {
-			url := fmt.Sprintf("/api/v1/projects/%s/locations", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 			w := helper.DoAuthRequest("GET", url, nil, token)
 			_ = helper.AssertSuccess(w, 200, "获取地点列表应该成功")
 			helper.LogSuccess("地点列表获取成功")
 		})
 
 		t.Run("6.获取地点层级树", func(t *testing.T) {
-			url := fmt.Sprintf("/api/v1/projects/%s/locations/tree", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/locations/tree", projectID)
 			w := helper.DoAuthRequest("GET", url, nil, token)
 			_ = helper.AssertSuccess(w, 200, "获取层级树应该成功")
 			helper.LogSuccess("层级树获取成功")

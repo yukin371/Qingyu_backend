@@ -35,7 +35,7 @@ func TestCharacterScenario(t *testing.T) {
 			"category":    "玄幻",
 		}
 
-		w := helper.DoAuthRequest("POST", "/api/v1/projects", projectData, token)
+		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
 		data := helper.AssertSuccess(w, 201, "创建项目应该成功")
 
 		if id, ok := data["projectId"].(string); ok {
@@ -56,7 +56,7 @@ func TestCharacterScenario(t *testing.T) {
 				"speechPattern":     "说话直爽，喜欢开玩笑",
 			}
 
-			url := fmt.Sprintf("/api/v1/projects/%s/characters", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 			w := helper.DoAuthRequest("POST", url, characterData, token)
 			data := helper.AssertSuccess(w, 201, "创建角色应该成功")
 
@@ -75,7 +75,7 @@ func TestCharacterScenario(t *testing.T) {
 				"traits":  []string{"温柔", "善良", "坚强"},
 			}
 
-			url := fmt.Sprintf("/api/v1/projects/%s/characters", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 			w := helper.DoAuthRequest("POST", url, characterData, token)
 			data := helper.AssertSuccess(w, 201, "创建角色应该成功")
 
@@ -86,7 +86,7 @@ func TestCharacterScenario(t *testing.T) {
 		})
 
 		t.Run("4.获取角色列表", func(t *testing.T) {
-			url := fmt.Sprintf("/api/v1/projects/%s/characters", projectID)
+			url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 			w := helper.DoAuthRequest("GET", url, nil, token)
 			_ = helper.AssertSuccess(w, 200, "获取角色列表应该成功")
 			helper.LogSuccess("角色列表获取成功")
@@ -136,7 +136,7 @@ func TestCharacterScenario(t *testing.T) {
 			})
 
 			t.Run("8.获取角色关系图", func(t *testing.T) {
-				url := fmt.Sprintf("/api/v1/projects/%s/characters/graph", projectID)
+				url := fmt.Sprintf("/api/v1/writer/projects/%s/characters/graph", projectID)
 				w := helper.DoAuthRequest("GET", url, nil, token)
 				_ = helper.AssertSuccess(w, 200, "获取关系图应该成功")
 				helper.LogSuccess("关系图获取成功")

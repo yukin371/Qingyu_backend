@@ -92,7 +92,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -107,6 +107,7 @@ jobs:
         run: |
           docker compose -f docker/docker-compose.test.yml up -d
           echo "Waiting for services to be healthy..."
+          sleep 5
 
       - name: Wait for MongoDB
         run: |
@@ -135,14 +136,29 @@ jobs:
           echo "Redis failed to start"
           exit 1
 
+      - name: Wait for gRPC AI Service
+        run: |
+          for i in {1..30}; do
+            if docker exec qingyu-grpc-ai-test python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost', 50051)); s.close()" 2>/dev/null; then
+              echo "gRPC AI Service is ready!"
+              exit 0
+            fi
+            echo "Waiting for gRPC AI Service... ($i/30)"
+            sleep 2
+          done
+          echo "gRPC AI Service failed to start"
+          docker compose -f docker/docker-compose.test.yml logs grpc-ai-service
+          exit 1
+
       - name: Download dependencies
         run: go mod download
 
       - name: Run integration tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
+          GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
         run: |
           go test -v -race -timeout 10m \
@@ -155,6 +171,8 @@ jobs:
           docker compose -f docker/docker-compose.test.yml logs mongodb-test
           echo "=== Redis Logs ==="
           docker compose -f docker/docker-compose.test.yml logs redis-test
+          echo "=== gRPC AI Service Logs ==="
+          docker compose -f docker/docker-compose.test.yml logs grpc-ai-service
 
       - name: Stop test infrastructure
         if: always()
@@ -164,7 +182,7 @@ jobs:
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -176,7 +194,9 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Start test infrastructure
-        run: docker compose -f docker/docker-compose.test.yml up -d
+        run: |
+          docker compose -f docker/docker-compose.test.yml up -d
+          sleep 5
 
       - name: Wait for MongoDB
         run: |
@@ -205,12 +225,38 @@ jobs:
           echo "Redis failed to start"
           exit 1
 
+      - name: Wait for gRPC AI Service
+        run: |
+          for i in {1..30}; do
+            if docker exec qingyu-grpc-ai-test python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost', 50051)); s.close()" 2>/dev/null; then
+              echo "gRPC AI Service is ready!"
+              exit 0
+            fi
+            echo "Waiting for gRPC AI Service... ($i/30)"
+            sleep 2
+          done
+          echo "gRPC AI Service check skipped (may not be needed for API tests)"
+
       - name: Download dependencies
         run: go mod download
 
+      - name: Build application
+        run: go build -o server cmd/server/main.go
+
+      - name: Start application
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          REDIS_ADDR: localhost:6379
+          GRPC_AI_SERVICE_ADDR: localhost:50051
+          ENVIRONMENT: test
+        run: |
+          ./server &
+          echo "Waiting for server to start..."
+          sleep 5
+
       - name: Run API tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
@@ -221,11 +267,18 @@ jobs:
       - name: Show logs on failure
         if: failure()
         run: |
-          docker compose -f docker/docker-compose.test.yml logs
+          echo "=== MongoDB Logs ==="
+          docker compose -f docker/docker-compose.test.yml logs mongodb-test
+          echo "=== Redis Logs ==="
+          docker compose -f docker/docker-compose.test.yml logs redis-test
+          echo "=== gRPC AI Service Logs ==="
+          docker compose -f docker/docker-compose.test.yml logs grpc-ai-service
 
       - name: Stop test infrastructure
         if: always()
-        run: docker compose -f docker/docker-compose.test.yml down -v
+        run: |
+          docker compose -f docker/docker-compose.test.yml down -v
+          pkill -f server || true
 
   # E2E测试（三层架构）
   e2e-tests:

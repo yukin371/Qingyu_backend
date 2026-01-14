@@ -38,9 +38,13 @@ func RegisterUserRoutes(
 	// 公开路由（不需要认证）
 	// ========================================
 	{
-		// 认证相关
+		// 认证相关 - 完整路径（新架构）
 		r.POST("/user/auth/register", handlers.AuthHandler.Register)
 		r.POST("/user/auth/login", handlers.AuthHandler.Login)
+
+		// 认证相关 - 简化路径（向后兼容）
+		r.POST("/register", handlers.AuthHandler.Register)
+		r.POST("/login", handlers.AuthHandler.Login)
 
 		// 安全相关 - 邮箱验证（需要登录后发送验证码）
 		// 密码重置（公开访问）
