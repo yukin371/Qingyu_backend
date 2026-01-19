@@ -114,7 +114,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// ============ 注册财务路由 ============
-	walletSvc, walletErr = serviceContainer.GetWalletService()
+	walletSvc, walletErr := serviceContainer.GetWalletService()
 	if walletErr != nil {
 		logger.Warn("获取钱包服务失败", zap.Error(walletErr))
 		logger.Info("财务路由未注册")

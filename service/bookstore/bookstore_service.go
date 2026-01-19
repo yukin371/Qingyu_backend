@@ -122,8 +122,8 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 		return nil, errors.New("book not found")
 	}
 
-	// 只返回已发布的书籍
-	if book.Status != "published" {
+	// 只返回已发布或已完成的书籍
+	if book.Status != "published" && book.Status != "completed" {
 		return nil, errors.New("book not available")
 	}
 
