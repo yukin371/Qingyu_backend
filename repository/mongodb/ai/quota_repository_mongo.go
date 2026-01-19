@@ -166,7 +166,7 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 		return fmt.Errorf("不支持的配额类型: %s", quotaType)
 	}
 
-	update = bson.M{
+	update := bson.M{
 		"$set": bson.M{
 			"used_quota": 0,
 			"status":     aiModels.QuotaStatusActive,

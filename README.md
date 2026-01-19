@@ -40,7 +40,7 @@
 ### AI服务生态
 
 - **Python AI Service** - FastAPI + LangGraph + LangChain
-- **多模型支持** - GPT-4、Claude、Gemini、GLM-4、DeepSeek
+- **多模型支持** - GPT、Claude、Gemini、GLM、DeepSeek
 - **RAG增强** - Milvus向量检索 + 文档索引
 - **流式响应** - 支持SSE实时推送
 
