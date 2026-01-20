@@ -207,6 +207,101 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 	shared.Success(c, http.StatusOK, "获取成功", progresses)
 }
 
+// UpdateBookStatusRequest 更新书籍状态请求
+type UpdateBookStatusRequest struct {
+	Status string `json:"status" binding:"required"` // reading(在读), want_read(想读), finished(读完)
+}
+
+// UpdateBookStatus 更新书籍状态
+//
+//	@Summary	更新书籍状态
+//	@Tags		阅读器-书架
+//	@Param		bookId	path	string	true	"书籍ID"
+//	@Param		request	body	UpdateBookStatusRequest	true	"状态信息"
+//	@Success	200		{object}	shared.APIResponse
+//	@Router		/api/v1/reader/books/{bookId}/status [put]
+func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
+	// 获取用户ID
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		return
+	}
+
+	bookID := c.Param("bookId")
+	if bookID == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		return
+	}
+
+	// 解析请求参数
+	var req UpdateBookStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "请求参数格式错误")
+		return
+	}
+
+	// 调用服务层更新状态
+	err := api.readerService.UpdateBookStatus(c.Request.Context(), userID.(string), bookID, req.Status)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "更新书籍状态失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "更新成功", nil)
+}
+
+// BatchUpdateBookStatusRequest 批量更新书籍状态请求
+type BatchUpdateBookStatusRequest struct {
+	BookIDs []string `json:"bookIds" binding:"required"` // 书籍ID列表
+	Status  string   `json:"status" binding:"required"`  // reading(在读), want_read(想读), finished(读完)
+}
+
+// BatchUpdateBookStatus 批量更新书籍状态
+//
+//	@Summary	批量更新书籍状态
+//	@Tags		阅读器-书架
+//	@Param		request	body	BatchUpdateBookStatusRequest	true	"批量状态信息"
+//	@Success	200		{object}	shared.APIResponse
+//	@Router		/api/v1/reader/books/batch/status [put]
+func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
+	// 获取用户ID
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		return
+	}
+
+	// 解析请求参数
+	var req BatchUpdateBookStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "请求参数格式错误")
+		return
+	}
+
+	// 验证书籍ID列表
+	if len(req.BookIDs) == 0 {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID列表不能为空")
+		return
+	}
+
+	if len(req.BookIDs) > 50 {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "批量更新数量不能超过50个")
+		return
+	}
+
+	// 调用服务层批量更新状态
+	err := api.readerService.BatchUpdateBookStatus(c.Request.Context(), userID.(string), req.BookIDs, req.Status)
+	if err != nil {
+		shared.Error(c, http.StatusInternalServerError, "批量更新书籍状态失败", err.Error())
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "批量更新成功", gin.H{
+		"count": len(req.BookIDs),
+	})
+}
+
 // parseInt 解析整数
 func parseInt(s string) (int, error) {
 	var i int

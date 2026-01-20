@@ -2,6 +2,7 @@ package bookstore
 
 import (
 	bookstore2 "Qingyu_backend/models/bookstore"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -261,6 +262,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 //	@Router			/api/v1/bookstore/books/search [get]
 func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
+	log.Printf("[API-DEBUG] SearchBooks called, keyword=%s", keyword)
 
 	// 构建过滤器
 	filter := &bookstore2.BookFilter{}
@@ -304,7 +306,13 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		filter.Keyword = &keyword
 	}
 
+	log.Printf("[API-DEBUG] Before SearchBooksWithFilter: keyword=%v, limit=%d, offset=%d",
+		filter.Keyword, filter.Limit, filter.Offset)
+
 	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
+
+	log.Printf("[API-DEBUG] After SearchBooksWithFilter: books=%d, total=%d, err=%v",
+		len(books), total, err)
 	if err != nil {
 		shared.InternalError(c, "搜索书籍失败", err)
 		return
