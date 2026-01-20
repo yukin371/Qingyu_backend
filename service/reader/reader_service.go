@@ -300,6 +300,78 @@ func (s *ReaderService) DeleteReadingProgress(ctx context.Context, userID, bookI
 	return nil
 }
 
+// UpdateBookStatus 更新书籍状态（在读/想读/读完）
+func (s *ReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, status string) error {
+	// 验证状态值
+	if status != "reading" && status != "want_read" && status != "finished" {
+		return fmt.Errorf("无效的状态值，必须是reading(在读)、want_read(想读)或finished(读完)")
+	}
+
+	// 获取现有进度记录
+	progress, err := s.progressRepo.GetByUserAndBook(ctx, userID, bookID)
+	if err != nil {
+		return fmt.Errorf("查询阅读进度失败: %w", err)
+	}
+
+	// 如果没有进度记录，创建一个新记录
+	if progress == nil {
+		progress = &reader2.ReadingProgress{
+			UserID:    userID,
+			BookID:    bookID,
+			Status:    status,
+			Progress:  0,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		err = s.progressRepo.Create(ctx, progress)
+		if err != nil {
+			return fmt.Errorf("创建阅读进度记录失败: %w", err)
+		}
+	} else {
+		// 更新现有记录的状态
+		updates := map[string]interface{}{
+			"status":     status,
+			"updated_at": time.Now(),
+		}
+		err = s.progressRepo.Update(ctx, progress.ID, updates)
+		if err != nil {
+			return fmt.Errorf("更新书籍状态失败: %w", err)
+		}
+	}
+
+	// 清除缓存
+	if s.cacheService != nil {
+		_ = s.cacheService.InvalidateReadingProgress(ctx, userID, bookID)
+	}
+
+	return nil
+}
+
+// BatchUpdateBookStatus 批量更新书籍状态
+func (s *ReaderService) BatchUpdateBookStatus(ctx context.Context, userID string, bookIDs []string, status string) error {
+	if len(bookIDs) == 0 {
+		return fmt.Errorf("书籍ID列表不能为空")
+	}
+
+	if len(bookIDs) > 50 {
+		return fmt.Errorf("批量更新数量不能超过50个")
+	}
+
+	// 验证状态值
+	if status != "reading" && status != "want_read" && status != "finished" {
+		return fmt.Errorf("无效的状态值，必须是reading(在读)、want_read(想读)或finished(读完)")
+	}
+
+	// 批量更新
+	for _, bookID := range bookIDs {
+		if err := s.UpdateBookStatus(ctx, userID, bookID, status); err != nil {
+			return fmt.Errorf("批量更新书籍 %s 状态失败: %w", bookID, err)
+		}
+	}
+
+	return nil
+}
+
 // =========================
 // 标注相关方法
 // =========================

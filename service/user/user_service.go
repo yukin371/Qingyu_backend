@@ -313,7 +313,14 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 		zap.String("user_id", user.ID),
 		zap.String("username", user.Username),
 		zap.String("status", string(user.Status)))
-	zap.L().Debug("密码哈希", zap.String("hash_prefix", user.Password[:20]+"..."))
+	// 安全地截取密码哈希前缀
+	hashPrefix := "..."
+	if len(user.Password) > 20 {
+		hashPrefix = user.Password[:20] + "..."
+	} else {
+		hashPrefix = user.Password
+	}
+	zap.L().Debug("密码哈希", zap.String("hash_prefix", hashPrefix))
 	zap.L().Debug("输入密码", zap.String("password", req.Password))
 
 	// 3. 验证密码
