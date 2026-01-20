@@ -1,10 +1,9 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package layer3_boundary
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 
@@ -12,9 +11,8 @@ import (
 	e2e "Qingyu_backend/test/e2e/framework"
 )
 
-// TestConcurrentReading 测试并发阅读场景
-// 验证: 多个用户同时阅读同一本书时的数据一致性
-func TestConcurrentReading(t *testing.T) {
+// RunConcurrentReading 导出的入口函数，供suite_test.go调用
+func RunConcurrentReading(t *testing.T) {
 	if testing.Short() {
 		t.Skip("跳过 E2E 测试")
 	}
@@ -166,5 +164,20 @@ func TestConcurrentReading(t *testing.T) {
 	})
 }
 
+// RunConcurrentSocialInteraction 导出的入口函数，供suite_test.go调用
+// TODO: 这个测试还没有实现
+func RunConcurrentSocialInteraction(t *testing.T) {
+	if testing.Short() {
+		t.Skip("跳过 E2E 测试")
+	}
+	t.Skip("TestConcurrentSocialInteraction 尚未实现")
+}
 
-
+// RunBoundaryDataSizes 导出的入口函数，供suite_test.go调用
+// TODO: 这个测试还没有实现
+func RunBoundaryDataSizes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("跳过 E2E 测试")
+	}
+	t.Skip("TestBoundaryDataSizes 尚未实现")
+}
