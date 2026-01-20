@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -6,9 +6,13 @@ package e2e
 import (
 	"fmt"
 	"testing"
+
+	layer1 "Qingyu_backend/test/e2e/layer1_basic"
+	layer2 "Qingyu_backend/test/e2e/layer2_consistency"
+	layer3 "Qingyu_backend/test/e2e/layer3_boundary"
 )
 
-// TestE2ESuite_E2E测试套件入口
+// TestE2ESuite E2E测试套件入口
 // 运行所有三层E2E测试
 func TestE2ESuite(t *testing.T) {
 	if testing.Short() {
@@ -54,10 +58,10 @@ func testLayer1Basic(t *testing.T) {
 		name string
 		fn   func(*testing.T)
 	}{
-		{"认证流程", testAuthFlow},
-		{"阅读流程", testReadingFlow},
-		{"社交流程", testSocialFlow},
-		{"写作流程", testWritingFlow},
+		{"认证流程", layer1.RunAuthFlow},
+		{"阅读流程", layer1.RunReadingFlow},
+		{"社交流程", layer1.RunSocialFlow},
+		{"写作流程", layer1.RunWritingFlow},
 	}
 
 	passed := 0
@@ -65,6 +69,7 @@ func testLayer1Basic(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.fn(t)
 			if !t.Failed() {
 				passed++
 			} else {
@@ -89,9 +94,9 @@ func testLayer2Consistency(t *testing.T) {
 		name string
 		fn   func(*testing.T)
 	}{
-		{"用户阅读一致性", testUserReadingConsistency},
-		{"书籍章节一致性", testBookChapterConsistency},
-		{"社交互动一致性", testSocialInteractionConsistency},
+		{"用户阅读一致性", layer2.RunUserReadingConsistency},
+		{"书籍章节一致性", layer2.RunBookChapterConsistency},
+		{"社交互动一致性", layer2.RunSocialInteractionConsistency},
 	}
 
 	passed := 0
@@ -99,6 +104,7 @@ func testLayer2Consistency(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.fn(t)
 			if !t.Failed() {
 				passed++
 			} else {
@@ -123,9 +129,9 @@ func testLayer3Boundary(t *testing.T) {
 		name string
 		fn   func(*testing.T)
 	}{
-		{"并发阅读", testConcurrentReading},
-		{"并发社交互动", testConcurrentSocialInteraction},
-		{"边界数据量", testBoundaryDataSizes},
+		{"并发阅读", layer3.RunConcurrentReading},
+		{"并发社交互动", layer3.RunConcurrentSocialInteraction},
+		{"边界数据量", layer3.RunBoundaryDataSizes},
 	}
 
 	passed := 0
@@ -133,6 +139,7 @@ func testLayer3Boundary(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.fn(t)
 			if !t.Failed() {
 				passed++
 			} else {
@@ -144,20 +151,6 @@ func testLayer3Boundary(t *testing.T) {
 	t.Logf("----------------------------------------")
 	t.Logf("Layer 3 完成: 通过 %d, 失败 %d", passed, failed)
 }
-
-// 测试函数占位符（实际测试在各层目录中实现）
-// 这些函数会在运行时通过包导入调用实际的测试
-
-func testAuthFlow(t *testing.T)                     { t.Log("认证流程测试") }
-func testReadingFlow(t *testing.T)                  { t.Log("阅读流程测试") }
-func testSocialFlow(t *testing.T)                   { t.Log("社交流程测试") }
-func testWritingFlow(t *testing.T)                  { t.Log("写作流程测试") }
-func testUserReadingConsistency(t *testing.T)       { t.Log("用户阅读一致性测试") }
-func testBookChapterConsistency(t *testing.T)       { t.Log("书籍章节一致性测试") }
-func testSocialInteractionConsistency(t *testing.T) { t.Log("社交互动一致性测试") }
-func testConcurrentReading(t *testing.T)            { t.Log("并发阅读测试") }
-func testConcurrentSocialInteraction(t *testing.T)  { t.Log("并发社交互动测试") }
-func testBoundaryDataSizes(t *testing.T)            { t.Log("边界数据量测试") }
 
 // TestE2EQuick 快速E2E测试（仅Layer 1）
 // 用于CI/CD流水线中的快速验证
@@ -220,4 +213,3 @@ E2E 测试套件
 
 ========================================`)
 }
-
