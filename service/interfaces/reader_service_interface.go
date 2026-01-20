@@ -28,6 +28,8 @@ type ReaderService interface {
 	GetUnfinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error)
 	GetFinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error)
 	DeleteReadingProgress(ctx context.Context, userID, bookID string) error
+	UpdateBookStatus(ctx context.Context, userID, bookID, status string) error
+	BatchUpdateBookStatus(ctx context.Context, userID string, bookIDs []string, status string) error
 
 	// =========================
 	// 标注相关方法

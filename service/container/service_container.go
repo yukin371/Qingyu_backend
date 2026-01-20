@@ -88,6 +88,7 @@ type ServiceContainer struct {
 	commentService        *socialService.CommentService
 	likeService           *socialService.LikeService
 	collectionService     *socialService.CollectionService
+	followService         *socialService.FollowService
 	readingHistoryService *readingService.ReadingHistoryService
 	projectService        *projectService.ProjectService
 
@@ -255,6 +256,14 @@ func (c *ServiceContainer) GetCollectionService() (*socialService.CollectionServ
 		return nil, fmt.Errorf("CollectionService未初始化")
 	}
 	return c.collectionService, nil
+}
+
+// GetFollowService 获取关注服务
+func (c *ServiceContainer) GetFollowService() (*socialService.FollowService, error) {
+	if c.followService == nil {
+		return nil, fmt.Errorf("FollowService未初始化")
+	}
+	return c.followService, nil
 }
 
 // GetReadingHistoryService 获取阅读历史服务
@@ -692,7 +701,16 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	c.services["CollectionService"] = c.collectionService
 
-	// ============ 4.7 创建阅读历史服务 ============
+	// ============ 4.7 创建关注服务 ============
+	followRepo := c.repositoryFactory.CreateFollowRepository()
+
+	c.followService = socialService.NewFollowService(
+		followRepo,
+		c.eventBus, // 注入事件总线
+	)
+	c.services["FollowService"] = c.followService
+
+	// ============ 4.8 创建阅读历史服务 ============
 	readingHistoryRepo := c.repositoryFactory.CreateReadingHistoryRepository()
 
 	c.readingHistoryService = readingService.NewReadingHistoryService(
