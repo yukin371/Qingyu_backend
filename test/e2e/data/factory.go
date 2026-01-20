@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package data
 
 import (
@@ -291,3 +294,4 @@ func (f *TestDataFactory) Cleanup(prefix string) {
 		}
 	}
 }
+

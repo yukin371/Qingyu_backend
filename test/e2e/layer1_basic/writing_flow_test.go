@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer1_basic
 
 import (
@@ -95,3 +98,4 @@ func TestWritingFlow(t *testing.T) {
 		}
 	})
 }
+

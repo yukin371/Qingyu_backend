@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package e2e_test
 
 import (
@@ -192,3 +195,4 @@ func TestE2E_VIPReadingFlow(t *testing.T) {
 
 	t.Log("========== VIP阅读流程测试完成 ==========")
 }
+

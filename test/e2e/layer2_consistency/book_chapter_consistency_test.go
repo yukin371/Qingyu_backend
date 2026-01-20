@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer2_consistency
 
 import (
@@ -139,3 +142,4 @@ func TestBookChapterConsistency(t *testing.T) {
 		}
 	})
 }
+

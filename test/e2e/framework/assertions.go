@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -176,3 +179,4 @@ func (cv *ConsistencyValidatorWrapper) ValidateBookData(bookID string) []data.Co
 	validator := data.NewConsistencyValidator(cv.env.T)
 	return validator.ValidateBookData(cv.env.T.Context(), bookID)
 }
+

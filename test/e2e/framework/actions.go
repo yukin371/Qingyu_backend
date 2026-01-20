@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -241,3 +244,4 @@ func (ba *BusinessActions) CreateProject(token string, req map[string]interface{
 
 	return ba.env.ParseJSONResponse(w)
 }
+
