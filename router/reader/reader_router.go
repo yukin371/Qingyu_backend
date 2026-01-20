@@ -95,12 +95,14 @@ func InitReaderRouter(
 		// 书架管理
 		books := readerGroup.Group("/books")
 		{
-			books.GET("", booksApiHandler.GetBookshelf)                   // 获取书架
-			books.GET("/recent", booksApiHandler.GetRecentReading)        // 获取最近阅读
-			books.GET("/unfinished", booksApiHandler.GetUnfinishedBooks)  // 获取未读完
-			books.GET("/finished", booksApiHandler.GetFinishedBooks)      // 获取已读完
-			books.POST("/:bookId", booksApiHandler.AddToBookshelf)        // 添加到书架
-			books.DELETE("/:bookId", booksApiHandler.RemoveFromBookshelf) // 从书架移除
+			books.GET("", booksApiHandler.GetBookshelf)                          // 获取书架
+			books.GET("/recent", booksApiHandler.GetRecentReading)               // 获取最近阅读
+			books.GET("/unfinished", booksApiHandler.GetUnfinishedBooks)         // 获取未读完
+			books.GET("/finished", booksApiHandler.GetFinishedBooks)             // 获取已读完
+			books.POST("/:bookId", booksApiHandler.AddToBookshelf)               // 添加到书架
+			books.DELETE("/:bookId", booksApiHandler.RemoveFromBookshelf)        // 从书架移除
+			books.PUT("/:bookId/status", booksApiHandler.UpdateBookStatus)       // 更新书籍状态
+			books.PUT("/batch/status", booksApiHandler.BatchUpdateBookStatus)    // 批量更新书籍状态
 
 			// 书籍点赞（如果likeApiHandler可用）
 			if likeApiHandler != nil {

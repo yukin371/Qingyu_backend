@@ -314,8 +314,14 @@ func RegisterRoutes(r *gin.Engine) {
 	//     relationAPI = socialApi.NewUserRelationAPI(relationSvc)
 	// }
 
+	// 关注服务
+	followSvc, followErr := serviceContainer.GetFollowService()
+	var followAPI *socialApi.FollowAPI
+	if followErr == nil && followSvc != nil {
+		followAPI = socialApi.NewFollowAPI(followSvc)
+	}
+
 	// 新增社交 API（待实现）
-	var followAPI *socialApi.FollowAPI     //nolint:ineffassign // 待实现
 	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
 	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
 	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
