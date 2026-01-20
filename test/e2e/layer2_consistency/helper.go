@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer2_consistency
 
 import "Qingyu_backend/test/e2e/data"
@@ -12,3 +15,4 @@ func filterIssuesByType(issues []data.ConsistencyIssue, issueType string) []data
 	}
 	return filtered
 }
+

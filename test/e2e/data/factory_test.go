@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package data
 
 import (
@@ -227,3 +230,4 @@ func TestDataFactory_Cleanup(t *testing.T) {
 
 	t.Log("Cleanup test passed")
 }
+

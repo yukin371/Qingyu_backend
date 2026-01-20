@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer1_basic
 
 import (
@@ -144,3 +147,4 @@ func TestSocialFlow(t *testing.T) {
 		t.Logf("✓ 书籍评论列表获取成功")
 	})
 }
+

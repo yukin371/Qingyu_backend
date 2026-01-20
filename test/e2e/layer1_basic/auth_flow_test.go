@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer1_basic
 
 import (
@@ -75,3 +78,4 @@ func TestAuthFlow(t *testing.T) {
 		}
 	})
 }
+

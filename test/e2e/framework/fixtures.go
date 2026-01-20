@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -285,3 +288,4 @@ func (f *Fixtures) CreateChapters(bookID string, count int) []*bookstore.Chapter
 
 	return chapters
 }
+

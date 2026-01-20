@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package data
 
 import (
@@ -199,3 +202,4 @@ func (sb *ScenarioBuilder) BuildPaidContent() *PaidContent {
 		PaidChapters: paidChapters,
 	}
 }
+

@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package data
 
 import (
@@ -426,3 +429,4 @@ func TestConsistencyValidator_BookNotExist(t *testing.T) {
 		assert.True(t, hasError, "应该检测到书籍不存在")
 	})
 }
+

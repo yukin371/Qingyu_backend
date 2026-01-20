@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -178,3 +181,4 @@ func (env *TestEnvironment) LogError(format string, args ...interface{}) {
 func (env *TestEnvironment) ConsistencyValidator() *ConsistencyValidatorWrapper {
 	return &ConsistencyValidatorWrapper{env: env}
 }
+

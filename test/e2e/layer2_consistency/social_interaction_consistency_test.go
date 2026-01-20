@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer2_consistency
 
 import (
@@ -197,3 +200,4 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		}
 	})
 }
+

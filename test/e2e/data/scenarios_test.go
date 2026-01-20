@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package data
 
 import (
@@ -158,3 +161,4 @@ func TestScenarioBuilder_Integration(t *testing.T) {
 
 	t.Log("Integration test passed: all scenarios work correctly")
 }
+

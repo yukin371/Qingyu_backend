@@ -1,3 +1,6 @@
+﻿//go:build e2e
+// +build e2e
+
 package layer1_basic
 
 import (
@@ -137,3 +140,4 @@ func TestReadingFlow(t *testing.T) {
 		assertions.AssertReadingProgress(user.ID, book.ID.Hex())
 	})
 }
+
