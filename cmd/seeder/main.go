@@ -64,6 +64,13 @@ var (
 		Short: "验证数据完整性",
 		Run:   runVerify,
 	}
+
+	// testCmd 填充E2E测试所需的数据
+	testCmd = &cobra.Command{
+		Use:   "test",
+		Short: "填充E2E测试所需的特定数据",
+		Run:   runTestData,
+	}
 )
 
 // init 初始化命令
@@ -81,6 +88,7 @@ func init() {
 	rootCmd.AddCommand(bookstoreCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(verifyCmd)
+	rootCmd.AddCommand(testCmd)
 }
 
 // initConfig 初始化配置
@@ -372,4 +380,28 @@ func seedSubscriptions(db *utils.Database) error {
 func seedSubscriptionsClean(db *utils.Database) error {
 	fmt.Println("订阅关系清空功能待实现...")
 	return nil
+}
+
+// runTestData 填充E2E测试数据
+func runTestData(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充E2E测试数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewTestDataSeeder(db)
+
+	if err := seeder.SeedTestData(); err != nil {
+		fmt.Printf("填充测试数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n✅ E2E测试数据填充完成!")
+	fmt.Println("\n测试账号: testuser / 123456")
+	fmt.Println("测试书籍: 修仙世界、修仙归来、万古修仙等")
+	fmt.Println("测试分类: 玄幻、修仙")
 }
