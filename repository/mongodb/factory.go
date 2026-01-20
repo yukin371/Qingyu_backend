@@ -191,6 +191,11 @@ func (f *MongoRepositoryFactory) CreateBookListRepository() socialRepo.BookListR
 	return mongoSocial.NewMongoBookListRepository(f.database)
 }
 
+// CreateFollowRepository 创建关注Repository
+func (f *MongoRepositoryFactory) CreateFollowRepository() socialRepo.FollowRepository {
+	return mongoSocial.NewMongoFollowRepository(f.database)
+}
+
 // CreateReadingHistoryRepository 创建阅读历史Repository
 func (f *MongoRepositoryFactory) CreateReadingHistoryRepository() readerRepo.ReadingHistoryRepository {
 	return mongoReading.NewMongoReadingHistoryRepository(f.database)
