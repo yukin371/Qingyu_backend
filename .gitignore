@@ -83,6 +83,7 @@ config.local.json
 config.prod.yaml    # 生产配置不提交
 
 # 测试覆盖率报告
+coverage/
 coverage.out
 coverage.html
 
