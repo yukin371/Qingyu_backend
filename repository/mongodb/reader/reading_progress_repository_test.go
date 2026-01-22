@@ -12,6 +12,7 @@ import (
 
 	readerModel "Qingyu_backend/models/reader"
 	readerRepo "Qingyu_backend/repository/mongodb/reader"
+	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/test/testutil"
 )
 
@@ -326,7 +327,7 @@ func TestReadingProgressRepository_GetRecentReadingByUser(t *testing.T) {
 			UserID:     userID,
 			BookID:     primitive.NewObjectID().Hex(),
 			ChapterID:  "chapter1",
-			Progress:   float64(i) * 0.2,
+			Progress:   types.Progress(float32(i) * 0.2),
 			LastReadAt: time.Now(),
 		}
 		err := repo.Create(ctx, progress)
@@ -407,7 +408,7 @@ func TestReadingProgressRepository_DeleteByBook(t *testing.T) {
 			UserID:     "user123",
 			BookID:     bookID,
 			ChapterID:  fmt.Sprintf("chapter%d", i+1),
-			Progress:   float64(i+1) * 0.3,
+			Progress:   types.Progress(float32(i+1) * 0.3),
 			LastReadAt: time.Now(),
 		}
 		err := repo.Create(ctx, progress)

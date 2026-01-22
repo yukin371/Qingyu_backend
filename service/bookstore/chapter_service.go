@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
@@ -16,42 +15,42 @@ import (
 type ChapterService interface {
 	// 章节基础操作
 	CreateChapter(ctx context.Context, chapter *bookstore.Chapter) error
-	GetChapterByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Chapter, error)
+	GetChapterByID(ctx context.Context, id string) (*bookstore.Chapter, error)
 	UpdateChapter(ctx context.Context, chapter *bookstore.Chapter) error
-	DeleteChapter(ctx context.Context, id primitive.ObjectID) error
+	DeleteChapter(ctx context.Context, id string) error
 
 	// 章节查询
-	GetChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error)
-	GetChapterByBookIDAndNum(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error)
+	GetChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
+	GetChapterByBookIDAndNum(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error)
 	GetChaptersByTitle(ctx context.Context, title string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
-	GetFreeChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error)
-	GetPaidChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error)
-	GetPublishedChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error)
+	GetFreeChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
+	GetPaidChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
+	GetPublishedChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
 
 	// 章节导航
-	GetPreviousChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error)
-	GetNextChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error)
-	GetFirstChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstore.Chapter, error)
-	GetLastChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstore.Chapter, error)
+	GetPreviousChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error)
+	GetNextChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error)
+	GetFirstChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error)
+	GetLastChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error)
 
 	// 章节统计
-	GetChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error)
-	GetFreeChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error)
-	GetPaidChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error)
-	GetTotalWordCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error)
-	GetChapterStats(ctx context.Context, bookID primitive.ObjectID) (map[string]interface{}, error)
+	GetChapterCountByBookID(ctx context.Context, bookID string) (int64, error)
+	GetFreeChapterCountByBookID(ctx context.Context, bookID string) (int64, error)
+	GetPaidChapterCountByBookID(ctx context.Context, bookID string) (int64, error)
+	GetTotalWordCountByBookID(ctx context.Context, bookID string) (int64, error)
+	GetChapterStats(ctx context.Context, bookID string) (map[string]interface{}, error)
 
 	// 章节内容管理
-	GetChapterContent(ctx context.Context, chapterID primitive.ObjectID, userID primitive.ObjectID) (string, error)
-	UpdateChapterContent(ctx context.Context, chapterID primitive.ObjectID, content string) error
-	PublishChapter(ctx context.Context, chapterID primitive.ObjectID) error
-	UnpublishChapter(ctx context.Context, chapterID primitive.ObjectID) error
+	GetChapterContent(ctx context.Context, chapterID string, userID string) (string, error)
+	UpdateChapterContent(ctx context.Context, chapterID string, content string) error
+	PublishChapter(ctx context.Context, chapterID string) error
+	UnpublishChapter(ctx context.Context, chapterID string) error
 
 	// 章节批量操作
-	BatchUpdateChapterPrice(ctx context.Context, chapterIDs []primitive.ObjectID, price float64) error
-	BatchPublishChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error
-	BatchDeleteChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error
-	BatchDeleteChaptersByBookID(ctx context.Context, bookID primitive.ObjectID) error
+	BatchUpdateChapterPrice(ctx context.Context, chapterIDs []string, price float64) error
+	BatchPublishChapters(ctx context.Context, chapterIDs []string) error
+	BatchDeleteChapters(ctx context.Context, chapterIDs []string) error
+	BatchDeleteChaptersByBookID(ctx context.Context, bookID string) error
 
 	// 章节搜索
 	SearchChapters(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore.Chapter, int64, error)
@@ -84,7 +83,7 @@ func (s *ChapterServiceImpl) CreateChapter(ctx context.Context, chapter *booksto
 	}
 
 	// 验证必填字段
-	if chapter.BookID.IsZero() {
+	if chapter.BookID == "" {
 		return errors.New("book ID is required")
 	}
 	if chapter.Title == "" {
@@ -115,10 +114,14 @@ func (s *ChapterServiceImpl) CreateChapter(ctx context.Context, chapter *booksto
 }
 
 // GetChapterByID 根据ID获取章节
-func (s *ChapterServiceImpl) GetChapterByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Chapter, error) {
+func (s *ChapterServiceImpl) GetChapterByID(ctx context.Context, id string) (*bookstore.Chapter, error) {
+	if id == "" {
+		return nil, errors.New("chapter ID cannot be empty")
+	}
+
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
-		if cachedChapter, err := s.cacheService.GetChapter(ctx, id.Hex()); err == nil && cachedChapter != nil {
+		if cachedChapter, err := s.cacheService.GetChapter(ctx, id); err == nil && cachedChapter != nil {
 			return cachedChapter, nil
 		}
 	}
@@ -134,7 +137,7 @@ func (s *ChapterServiceImpl) GetChapterByID(ctx context.Context, id primitive.Ob
 
 	// 缓存结果
 	if s.cacheService != nil {
-		s.cacheService.SetChapter(ctx, id.Hex(), chapter, 30*time.Minute)
+		s.cacheService.SetChapter(ctx, id, chapter, 30*time.Minute)
 	}
 
 	return chapter, nil
@@ -147,7 +150,7 @@ func (s *ChapterServiceImpl) UpdateChapter(ctx context.Context, chapter *booksto
 	}
 
 	// 验证必填字段
-	if chapter.BookID.IsZero() {
+	if chapter.BookID == "" {
 		return errors.New("book ID is required")
 	}
 	if chapter.Title == "" {
@@ -180,7 +183,11 @@ func (s *ChapterServiceImpl) UpdateChapter(ctx context.Context, chapter *booksto
 }
 
 // DeleteChapter 删除章节
-func (s *ChapterServiceImpl) DeleteChapter(ctx context.Context, id primitive.ObjectID) error {
+func (s *ChapterServiceImpl) DeleteChapter(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("chapter ID cannot be empty")
+	}
+
 	// 先获取章节信息用于清除缓存
 	chapter, err := s.chapterRepo.GetByID(ctx, id)
 	if err != nil {
@@ -202,8 +209,8 @@ func (s *ChapterServiceImpl) DeleteChapter(ctx context.Context, id primitive.Obj
 }
 
 // GetChaptersByBookID 根据书籍ID获取章节列表
-func (s *ChapterServiceImpl) GetChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
+	if bookID == "" {
 		return nil, 0, errors.New("book ID cannot be empty")
 	}
 	if page < 1 {
@@ -231,8 +238,8 @@ func (s *ChapterServiceImpl) GetChaptersByBookID(ctx context.Context, bookID pri
 }
 
 // GetChapterByBookIDAndNum 根据书籍ID和章节号获取章节
-func (s *ChapterServiceImpl) GetChapterByBookIDAndNum(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetChapterByBookIDAndNum(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 	if chapterNum <= 0 {
@@ -277,8 +284,8 @@ func (s *ChapterServiceImpl) GetChaptersByTitle(ctx context.Context, title strin
 }
 
 // GetFreeChaptersByBookID 获取免费章节列表
-func (s *ChapterServiceImpl) GetFreeChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetFreeChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
+	if bookID == "" {
 		return nil, 0, errors.New("book ID cannot be empty")
 	}
 	if page < 1 {
@@ -306,8 +313,8 @@ func (s *ChapterServiceImpl) GetFreeChaptersByBookID(ctx context.Context, bookID
 }
 
 // GetPaidChaptersByBookID 获取付费章节列表
-func (s *ChapterServiceImpl) GetPaidChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetPaidChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
+	if bookID == "" {
 		return nil, 0, errors.New("book ID cannot be empty")
 	}
 	if page < 1 {
@@ -335,8 +342,8 @@ func (s *ChapterServiceImpl) GetPaidChaptersByBookID(ctx context.Context, bookID
 }
 
 // GetPublishedChaptersByBookID 获取已发布章节列表
-func (s *ChapterServiceImpl) GetPublishedChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetPublishedChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstore.Chapter, int64, error) {
+	if bookID == "" {
 		return nil, 0, errors.New("book ID cannot be empty")
 	}
 	if page < 1 {
@@ -364,8 +371,8 @@ func (s *ChapterServiceImpl) GetPublishedChaptersByBookID(ctx context.Context, b
 }
 
 // GetPreviousChapter 获取上一章节
-func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 	if chapterNum <= 1 {
@@ -381,8 +388,8 @@ func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, bookID prim
 }
 
 // GetNextChapter 获取下一章节
-func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 	if chapterNum <= 0 {
@@ -398,8 +405,8 @@ func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, bookID primitiv
 }
 
 // GetFirstChapter 获取第一章节
-func (s *ChapterServiceImpl) GetFirstChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetFirstChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -412,8 +419,8 @@ func (s *ChapterServiceImpl) GetFirstChapter(ctx context.Context, bookID primiti
 }
 
 // GetLastChapter 获取最后章节
-func (s *ChapterServiceImpl) GetLastChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetLastChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -426,8 +433,8 @@ func (s *ChapterServiceImpl) GetLastChapter(ctx context.Context, bookID primitiv
 }
 
 // GetChapterCountByBookID 获取书籍章节总数
-func (s *ChapterServiceImpl) GetChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
+	if bookID == "" {
 		return 0, errors.New("book ID cannot be empty")
 	}
 
@@ -440,8 +447,8 @@ func (s *ChapterServiceImpl) GetChapterCountByBookID(ctx context.Context, bookID
 }
 
 // GetFreeChapterCountByBookID 获取免费章节数量
-func (s *ChapterServiceImpl) GetFreeChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetFreeChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
+	if bookID == "" {
 		return 0, errors.New("book ID cannot be empty")
 	}
 
@@ -454,8 +461,8 @@ func (s *ChapterServiceImpl) GetFreeChapterCountByBookID(ctx context.Context, bo
 }
 
 // GetPaidChapterCountByBookID 获取付费章节数量
-func (s *ChapterServiceImpl) GetPaidChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetPaidChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
+	if bookID == "" {
 		return 0, errors.New("book ID cannot be empty")
 	}
 
@@ -468,8 +475,8 @@ func (s *ChapterServiceImpl) GetPaidChapterCountByBookID(ctx context.Context, bo
 }
 
 // GetTotalWordCountByBookID 获取书籍总字数
-func (s *ChapterServiceImpl) GetTotalWordCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetTotalWordCountByBookID(ctx context.Context, bookID string) (int64, error) {
+	if bookID == "" {
 		return 0, errors.New("book ID cannot be empty")
 	}
 
@@ -482,8 +489,8 @@ func (s *ChapterServiceImpl) GetTotalWordCountByBookID(ctx context.Context, book
 }
 
 // GetChapterStats 获取章节统计信息
-func (s *ChapterServiceImpl) GetChapterStats(ctx context.Context, bookID primitive.ObjectID) (map[string]interface{}, error) {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) GetChapterStats(ctx context.Context, bookID string) (map[string]interface{}, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -521,8 +528,8 @@ func (s *ChapterServiceImpl) GetChapterStats(ctx context.Context, bookID primiti
 }
 
 // GetChapterContent 获取章节内容（从 ChapterContent 表）
-func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID primitive.ObjectID, userID primitive.ObjectID) (string, error) {
-	if chapterID.IsZero() {
+func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID string, userID string) (string, error) {
+	if chapterID == "" {
 		return "", errors.New("chapter ID cannot be empty")
 	}
 
@@ -541,7 +548,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID pr
 	}
 
 	// 检查权限（付费章节）
-	if !chapter.IsFree && userID.IsZero() {
+	if !chapter.IsFree && userID == "" {
 		return "", errors.New("user authentication required for paid content")
 	}
 
@@ -558,8 +565,8 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID pr
 }
 
 // UpdateChapterContent 更新章节内容
-func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID primitive.ObjectID, content string) error {
-	if chapterID.IsZero() {
+func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID string, content string) error {
+	if chapterID == "" {
 		return errors.New("chapter ID cannot be empty")
 	}
 	if content == "" {
@@ -583,7 +590,7 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 
 	// 更新章节元数据（内容大小、哈希、版本）
 	chapter.UpdateContentInfo(
-		fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapterID.Hex()),
+		fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapterID),
 		int64(len([]rune(content))),
 		updatedContent.CalculateHash(),
 		updatedContent.Version,
@@ -609,8 +616,8 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 }
 
 // PublishChapter 发布章节
-func (s *ChapterServiceImpl) PublishChapter(ctx context.Context, chapterID primitive.ObjectID) error {
-	if chapterID.IsZero() {
+func (s *ChapterServiceImpl) PublishChapter(ctx context.Context, chapterID string) error {
+	if chapterID == "" {
 		return errors.New("chapter ID cannot be empty")
 	}
 
@@ -642,8 +649,8 @@ func (s *ChapterServiceImpl) PublishChapter(ctx context.Context, chapterID primi
 }
 
 // UnpublishChapter 取消发布章节
-func (s *ChapterServiceImpl) UnpublishChapter(ctx context.Context, chapterID primitive.ObjectID) error {
-	if chapterID.IsZero() {
+func (s *ChapterServiceImpl) UnpublishChapter(ctx context.Context, chapterID string) error {
+	if chapterID == "" {
 		return errors.New("chapter ID cannot be empty")
 	}
 
@@ -674,7 +681,7 @@ func (s *ChapterServiceImpl) UnpublishChapter(ctx context.Context, chapterID pri
 }
 
 // BatchUpdateChapterPrice 批量更新章节价格
-func (s *ChapterServiceImpl) BatchUpdateChapterPrice(ctx context.Context, chapterIDs []primitive.ObjectID, price float64) error {
+func (s *ChapterServiceImpl) BatchUpdateChapterPrice(ctx context.Context, chapterIDs []string, price float64) error {
 	if len(chapterIDs) == 0 {
 		return errors.New("chapter IDs cannot be empty")
 	}
@@ -689,7 +696,7 @@ func (s *ChapterServiceImpl) BatchUpdateChapterPrice(ctx context.Context, chapte
 	// 清除相关缓存
 	for _, chapterID := range chapterIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateChapterCache(ctx, chapterID.Hex())
+			s.cacheService.InvalidateChapterCache(ctx, chapterID)
 		}
 	}
 
@@ -697,7 +704,7 @@ func (s *ChapterServiceImpl) BatchUpdateChapterPrice(ctx context.Context, chapte
 }
 
 // BatchPublishChapters 批量发布章节
-func (s *ChapterServiceImpl) BatchPublishChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error {
+func (s *ChapterServiceImpl) BatchPublishChapters(ctx context.Context, chapterIDs []string) error {
 	if len(chapterIDs) == 0 {
 		return errors.New("chapter IDs cannot be empty")
 	}
@@ -710,7 +717,7 @@ func (s *ChapterServiceImpl) BatchPublishChapters(ctx context.Context, chapterID
 	// 清除相关缓存
 	for _, chapterID := range chapterIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateChapterCache(ctx, chapterID.Hex())
+			s.cacheService.InvalidateChapterCache(ctx, chapterID)
 		}
 	}
 
@@ -718,7 +725,7 @@ func (s *ChapterServiceImpl) BatchPublishChapters(ctx context.Context, chapterID
 }
 
 // BatchDeleteChapters 批量删除章节
-func (s *ChapterServiceImpl) BatchDeleteChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error {
+func (s *ChapterServiceImpl) BatchDeleteChapters(ctx context.Context, chapterIDs []string) error {
 	if len(chapterIDs) == 0 {
 		return errors.New("chapter IDs cannot be empty")
 	}
@@ -730,7 +737,7 @@ func (s *ChapterServiceImpl) BatchDeleteChapters(ctx context.Context, chapterIDs
 	// 清除相关缓存
 	for _, chapterID := range chapterIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateChapterCache(ctx, chapterID.Hex())
+			s.cacheService.InvalidateChapterCache(ctx, chapterID)
 		}
 	}
 
@@ -738,8 +745,8 @@ func (s *ChapterServiceImpl) BatchDeleteChapters(ctx context.Context, chapterIDs
 }
 
 // BatchDeleteChaptersByBookID 批量删除书籍的所有章节
-func (s *ChapterServiceImpl) BatchDeleteChaptersByBookID(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *ChapterServiceImpl) BatchDeleteChaptersByBookID(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -749,7 +756,7 @@ func (s *ChapterServiceImpl) BatchDeleteChaptersByBookID(ctx context.Context, bo
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookChaptersCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookChaptersCache(ctx, bookID)
 	}
 
 	return nil
@@ -791,11 +798,11 @@ func (s *ChapterServiceImpl) invalidateRelatedCache(ctx context.Context, chapter
 	}
 
 	// 清除章节缓存
-	s.cacheService.InvalidateChapterCache(ctx, chapter.ID.Hex())
+	s.cacheService.InvalidateChapterCache(ctx, chapter.ID)
 
 	// 清除书籍章节列表缓存
-	s.cacheService.InvalidateBookChaptersCache(ctx, chapter.BookID.Hex())
+	s.cacheService.InvalidateBookChaptersCache(ctx, chapter.BookID)
 
 	// 清除书籍详情缓存（因为章节数量可能变化）
-	s.cacheService.InvalidateBookDetailCache(ctx, chapter.BookID.Hex())
+	s.cacheService.InvalidateBookDetailCache(ctx, chapter.BookID)
 }

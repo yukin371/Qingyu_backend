@@ -3,30 +3,34 @@ package writer
 import (
 	"Qingyu_backend/models/writer/base"
 	"Qingyu_backend/models/writer/types"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Document 文档模型（用于文档内容）
 // 文档类型现在是动态的，由项目的writing_type决定
 type Document struct {
-	base.IdentifiedEntity    `bson:",inline"` // ID
-	base.Timestamps          `bson:",inline"` // CreatedAt, UpdatedAt, DeletedAt
-	base.ProjectScopedEntity `bson:",inline"` // ProjectID
-	base.TitledEntity        `bson:",inline"` // Title
+	base.IdentifiedEntity `bson:",inline"` // ID
+	base.Timestamps       `bson:",inline"` // CreatedAt, UpdatedAt, DeletedAt
+
+	// 项目基础信息
+	ProjectID primitive.ObjectID `bson:"project_id" json:"projectId" validate:"required"`
+	Title     string             `bson:"title" json:"title" validate:"required,max=200"`
 
 	// 层级结构（保持BSON字段名不变，确保数据库兼容）
-	ParentID string `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空表示根文档
-	Type     string `bson:"type" json:"type" validate:"required"`          // 动态类型（如：volume, chapter, section, scene, article, act, beat等）
-	Level    int    `bson:"level" json:"level" validate:"min=0"`           // 层级深度
-	Order    int    `bson:"order" json:"order" validate:"min=0"`           // 同级排序
-	Status   string `bson:"status" json:"status"`                          // planned | writing | completed
+	ParentID primitive.ObjectID `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空值表示根文档
+	Type     string             `bson:"type" json:"type" validate:"required"`          // 动态类型（如：volume, chapter, section, scene, article, act, beat等）
+	Level    int                `bson:"level" json:"level" validate:"min=0"`           // 层级深度
+	Order    int                `bson:"order" json:"order" validate:"min=0"`           // 同级排序
+	Status   string             `bson:"status" json:"status"`                          // planned | writing | completed
 
 	// 统计信息（从DocumentContent同步）
 	WordCount int `bson:"word_count" json:"wordCount"` // 字数统计
 
 	// 关联信息（保持BSON字段名不变，确保数据库兼容）
-	CharacterIDs []string `bson:"character_ids,omitempty" json:"characterIds,omitempty" validate:"max=50"` // 关联角色
-	LocationIDs  []string `bson:"location_ids,omitempty" json:"locationIds,omitempty" validate:"max=50"`   // 关联地点
-	TimelineIDs  []string `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty" validate:"max=20"`   // 关联时间线
+	CharacterIDs []primitive.ObjectID `bson:"character_ids,omitempty" json:"characterIds,omitempty" validate:"max=50"` // 关联角色
+	LocationIDs  []primitive.ObjectID `bson:"location_ids,omitempty" json:"locationIds,omitempty" validate:"max=50"`   // 关联地点
+	TimelineIDs  []primitive.ObjectID `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty" validate:"max=20"`   // 关联时间线
 
 	// 写作辅助（AI上下文需要）
 	PlotThreads  []string `bson:"plot_threads,omitempty" json:"plotThreads,omitempty" validate:"max=20"`   // 情节线索
@@ -56,7 +60,7 @@ const (
 
 // IsRoot 判断是否为根文档
 func (d *Document) IsRoot() bool {
-	return d.ParentID == ""
+	return d.ParentID.IsZero()
 }
 
 // CanHaveChildren 判断是否可以有子文档
@@ -121,7 +125,7 @@ func (d *Document) Validate(writingType string) error {
 	}
 
 	// 验证项目ID
-	if d.ProjectID == "" {
+	if d.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 
@@ -151,7 +155,7 @@ func (d *Document) ValidateWithoutType() error {
 	}
 
 	// 验证项目ID
-	if d.ProjectID == "" {
+	if d.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 

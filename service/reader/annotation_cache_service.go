@@ -48,7 +48,7 @@ func (s *AnnotationCacheService) GetAnnotation(ctx context.Context, annotationID
 
 // SetAnnotation 设置单个注记缓存
 func (s *AnnotationCacheService) SetAnnotation(ctx context.Context, annotation *reader.Annotation) error {
-	key := s.getAnnotationKey(annotation.ID)
+	key := s.getAnnotationKey(annotation.ID.Hex())
 
 	data, err := json.Marshal(annotation)
 	if err != nil {
@@ -204,7 +204,7 @@ func (s *AnnotationCacheService) BatchSetAnnotations(ctx context.Context, annota
 	pipe := s.redisClient.Pipeline()
 
 	for _, annotation := range annotations {
-		key := s.getAnnotationKey(annotation.ID)
+		key := s.getAnnotationKey(annotation.ID.Hex())
 		data, err := json.Marshal(annotation)
 		if err != nil {
 			return fmt.Errorf("序列化注记数据失败: %w", err)

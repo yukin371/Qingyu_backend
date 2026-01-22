@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/bookstore"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,9 +49,14 @@ func (r *MongoBannerRepository) Create(ctx context.Context, banner *bookstore.Ba
 }
 
 // GetByID 根据ID获取Banner
-func (r *MongoBannerRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Banner, error) {
+func (r *MongoBannerRepository) GetByID(ctx context.Context, id string) (*bookstore.Banner, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var banner bookstore.Banner
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&banner)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&banner)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -61,12 +67,17 @@ func (r *MongoBannerRepository) GetByID(ctx context.Context, id primitive.Object
 }
 
 // Update 更新Banner
-func (r *MongoBannerRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (r *MongoBannerRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -81,8 +92,13 @@ func (r *MongoBannerRepository) Update(ctx context.Context, id primitive.ObjectI
 }
 
 // Delete 删除Banner
-func (r *MongoBannerRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *MongoBannerRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -145,8 +161,13 @@ func (r *MongoBannerRepository) List(ctx context.Context, filter infra.Filter) (
 }
 
 // Exists 判断Banner是否存在
-func (r *MongoBannerRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+func (r *MongoBannerRepository) Exists(ctx context.Context, id string) (bool, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -247,10 +268,15 @@ func (r *MongoBannerRepository) GetByTimeRange(ctx context.Context, startTime, e
 }
 
 // IncrementClickCount 增加点击次数
-func (r *MongoBannerRepository) IncrementClickCount(ctx context.Context, bannerID primitive.ObjectID) error {
-	_, err := r.collection.UpdateOne(
+func (r *MongoBannerRepository) IncrementClickCount(ctx context.Context, bannerID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bannerID)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": bannerID},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$inc": bson.M{"click_count": 1},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -260,9 +286,14 @@ func (r *MongoBannerRepository) IncrementClickCount(ctx context.Context, bannerI
 }
 
 // GetClickStats 获取点击统计
-func (r *MongoBannerRepository) GetClickStats(ctx context.Context, bannerID primitive.ObjectID) (int64, error) {
+func (r *MongoBannerRepository) GetClickStats(ctx context.Context, bannerID string) (int64, error) {
+	objectID, err := primitive.ObjectIDFromHex(bannerID)
+	if err != nil {
+		return 0, err
+	}
+
 	var banner bookstore.Banner
-	err := r.collection.FindOne(ctx, bson.M{"_id": bannerID}, options.FindOne().SetProjection(bson.M{"click_count": 1})).Decode(&banner)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}, options.FindOne().SetProjection(bson.M{"click_count": 1})).Decode(&banner)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
@@ -273,10 +304,20 @@ func (r *MongoBannerRepository) GetClickStats(ctx context.Context, bannerID prim
 }
 
 // BatchUpdateStatus 批量更新状态
-func (r *MongoBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs []primitive.ObjectID, isActive bool) error {
+func (r *MongoBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs []string, isActive bool) error {
+	// 转换 string ID 为 ObjectID
+	objectIDs := make([]primitive.ObjectID, 0, len(bannerIDs))
+	for _, id := range bannerIDs {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return fmt.Errorf("无效的ID: %s", id)
+		}
+		objectIDs = append(objectIDs, oid)
+	}
+
 	_, err := r.collection.UpdateMany(
 		ctx,
-		bson.M{"_id": bson.M{"$in": bannerIDs}},
+		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
 			"$set": bson.M{
 				"is_active":  isActive,

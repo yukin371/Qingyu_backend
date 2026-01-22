@@ -1,0 +1,61 @@
+# Qingyu_backend/api/v1/bookstore
+api\v1\bookstore\book_detail_api.go:54:66: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.GetBookDetailByID
+api\v1\bookstore\book_detail_api.go:383:65: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.GetSimilarBooks
+api\v1\bookstore\book_detail_api.go:545:12: cannot use id (variable of array type primitive.ObjectID) as string value in assignment
+api\v1\bookstore\book_detail_api.go:585:62: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.DeleteBookDetail
+api\v1\bookstore\book_detail_api.go:623:60: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.IncrementViewCount
+api\v1\bookstore\book_detail_api.go:657:60: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.IncrementLikeCount
+api\v1\bookstore\book_detail_api.go:691:60: cannot use id (variable of array type primitive.ObjectID) as string value in argument to api.service.DecrementLikeCount
+api\v1\bookstore\book_statistics_api.go:60:90: cannot use bookID (variable of array type primitive.ObjectID) as string value in argument to api.BookStatisticsService.GetStatisticsByBookID
+api\v1\bookstore\book_statistics_api.go:279:74: cannot use bookID (variable of array type primitive.ObjectID) as string value in argument to api.BookStatisticsService.IncrementViewCount
+api\v1\bookstore\book_statistics_api.go:324:78: cannot use bookID (variable of array type primitive.ObjectID) as string value in argument to api.BookStatisticsService.IncrementFavoriteCount
+api\v1\bookstore\book_statistics_api.go:324:78: too many errors
+# Qingyu_backend/repository/mongodb/bookstore
+repository\mongodb\bookstore\banner_repository_mongo.go:26:9: cannot use &MongoBannerRepository{…} (value of type *MongoBannerRepository) as "Qingyu_backend/repository/interfaces/bookstore".BannerRepository value in return statement: *MongoBannerRepository does not implement "Qingyu_backend/repository/interfaces/bookstore".BannerRepository (wrong type for method Delete)
+		have Delete(context.Context, primitive.ObjectID) error
+		want Delete(context.Context, string) error
+repository\mongodb\bookstore\banner_repository_mongo.go:282:11: undefined: fmt
+repository\mongodb\bookstore\book_detail_repository_mongo.go:26:9: cannot use &MongoBookDetailRepository{…} (value of type *MongoBookDetailRepository) as "Qingyu_backend/repository/interfaces/bookstore".BookDetailRepository value in return statement: *MongoBookDetailRepository does not implement "Qingyu_backend/repository/interfaces/bookstore".BookDetailRepository (wrong type for method BatchUpdatePublisher)
+		have BatchUpdatePublisher(context.Context, []primitive.ObjectID, string) error
+		want BatchUpdatePublisher(context.Context, []string, string) error
+repository\mongodb\bookstore\book_detail_repository_mongo.go:644:11: undefined: fmt
+repository\mongodb\bookstore\book_statistics_repository_mongo.go:26:9: cannot use &MongoBookStatisticsRepository{…} (value of type *MongoBookStatisticsRepository) as "Qingyu_backend/repository/interfaces/bookstore".BookStatisticsRepository value in return statement: *MongoBookStatisticsRepository does not implement "Qingyu_backend/repository/interfaces/bookstore".BookStatisticsRepository (wrong type for method BatchRecalculateStatistics)
+		have BatchRecalculateStatistics(context.Context, []primitive.ObjectID) error
+		want BatchRecalculateStatistics(context.Context, []string) error
+repository\mongodb\bookstore\book_statistics_repository_mongo.go:515:43: undefined: types
+repository\mongodb\bookstore\book_statistics_repository_mongo.go:548:43: undefined: types
+repository\mongodb\bookstore\book_statistics_repository_mongo.go:588:11: undefined: fmt
+repository\mongodb\bookstore\chapter_content_repository_mongo.go:27:9: cannot use &MongoChapterContentRepository{…} (value of type *MongoChapterContentRepository) as "Qingyu_backend/repository/interfaces/bookstore".ChapterContentRepository value in return statement: *MongoChapterContentRepository does not implement "Qingyu_backend/repository/interfaces/bookstore".ChapterContentRepository (wrong type for method Delete)
+		have Delete(context.Context, primitive.ObjectID) error
+		want Delete(context.Context, string) error
+# Qingyu_backend/api/v1/user/handler
+api\v1\user\handler\auth_handler.go:76:13: cannot use resp.User.ID (variable of array type primitive.ObjectID) as string value in struct literal
+api\v1\user\handler\auth_handler.go:143:14: cannot use resp.User.ID (variable of array type primitive.ObjectID) as string value in struct literal
+api\v1\user\handler\profile_handler.go:73:18: cannot use resp.User.ID (variable of array type primitive.ObjectID) as string value in struct literal
+api\v1\user\handler\public_user_handler.go:79:14: cannot use resp.User.ID (variable of array type primitive.ObjectID) as string value in struct literal
+api\v1\user\handler\public_user_handler.go:136:14: cannot use resp.User.ID (variable of array type primitive.ObjectID) as string value in struct literal
+# Qingyu_backend/repository/mongodb/reader
+repository\mongodb\reader\reading_progress_repository_mongo.go:167:20: undefined: generateProgressID
+# Qingyu_backend/service/reader
+service\reader\chapter_service.go:337:43: invalid operation: readingProgress.ChapterID == chapter.ID (mismatched types primitive.ObjectID and string)
+service\reader\reader_service.go:136:19: undefined: primitive
+service\reader\reader_service.go:140:19: undefined: primitive
+service\reader\reader_service.go:305:19: undefined: primitive
+service\reader\reader_service.go:309:19: undefined: primitive
+service\reader\reader_service.go:628:26: invalid operation: annotation.UserID == "" (mismatched types primitive.ObjectID and untyped string)
+service\reader\reader_service.go:631:26: invalid operation: annotation.BookID == "" (mismatched types primitive.ObjectID and untyped string)
+service\reader\reader_service.go:634:29: invalid operation: annotation.ChapterID == "" (mismatched types primitive.ObjectID and untyped string)
+service\reader\reader_service.go:831:17: cannot use userID (variable of type string) as primitive.ObjectID value in assignment
+service\reader\reading_history_service.go:107:17: cannot use userID (variable of type string) as primitive.ObjectID value in struct literal
+service\reader\reading_history_service.go:107:17: too many errors
+# Qingyu_backend/scripts/testing
+scripts\testing\import_test_users.go:165:15: cannot use primitive.NewObjectID().Hex() (value of type string) as primitive.ObjectID value in struct literal
+# Qingyu_backend/service/user
+service\user\transaction_manager.go:99:20: invalid operation: urt.User.ID == "" (mismatched types primitive.ObjectID and untyped string)
+service\user\transaction_manager.go:100:17: cannot use primitive.NewObjectID().Hex() (value of type string) as primitive.ObjectID value in assignment
+service\user\user_service.go:382:32: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to s.generateToken
+service\user\user_service.go:414:25: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to zap.String
+service\user\user_service.go:474:44: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to s.userRepo.UpdateLastLogin
+service\user\user_service.go:477:26: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to zap.String
+service\user\user_service.go:484:32: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to s.generateToken
+service\user\user_service.go:1035:43: cannot use user.ID (variable of array type primitive.ObjectID) as string value in argument to s.userRepo.UpdatePassword

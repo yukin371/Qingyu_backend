@@ -269,8 +269,8 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 
 	if categoryID := c.Query("categoryId"); categoryID != "" {
 		// 转换为ObjectID
-		if objID, err := primitive.ObjectIDFromHex(categoryID); err == nil {
-			filter.CategoryID = &objID
+		if _, err := primitive.ObjectIDFromHex(categoryID); err == nil {
+			filter.CategoryID = &categoryID
 		}
 	}
 

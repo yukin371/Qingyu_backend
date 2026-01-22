@@ -70,7 +70,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 		role = resp.User.Roles[0]
 	}
 	profileResp := dto.UserProfileResponse{
-		UserID:        resp.User.ID,
+		UserID:        resp.User.ID.Hex(),
 		Username:      resp.User.Username,
 		Email:         resp.User.Email,
 		Phone:         resp.User.Phone,

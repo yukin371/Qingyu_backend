@@ -57,7 +57,7 @@ func (api *BookStatisticsAPI) GetBookStatistics(c *gin.Context) {
 		return
 	}
 
-	statistics, err := api.BookStatisticsService.GetStatisticsByBookID(c.Request.Context(), bookID)
+	statistics, err := api.BookStatisticsService.GetStatisticsByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{
 			Code:    404,
@@ -276,7 +276,7 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	err = api.BookStatisticsService.IncrementViewCount(c.Request.Context(), bookID)
+	err = api.BookStatisticsService.IncrementViewCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -321,7 +321,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 		return
 	}
 
-	err = api.BookStatisticsService.IncrementFavoriteCount(c.Request.Context(), bookID)
+	err = api.BookStatisticsService.IncrementFavoriteCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,

@@ -172,7 +172,7 @@ func (r *MongoUserAdminRepository) GetStatistics(ctx context.Context, userID pri
 	registerDays := int(time.Since(user.CreatedAt).Hours() / 24)
 
 	stats := &users.UserStatistics{
-		UserID:       user.ID,
+		UserID:       user.ID.Hex(),
 		LastActiveAt: user.LastLoginAt,
 		RegisterDays: registerDays,
 	}

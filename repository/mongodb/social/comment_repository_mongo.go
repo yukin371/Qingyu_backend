@@ -74,8 +74,8 @@ func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
 
 // Create 创建评论
 func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Comment) error {
-	if comment.ID == "" {
-		comment.ID = primitive.NewObjectID().Hex()
+	if comment.ID.IsZero() {
+		comment.ID = primitive.NewObjectID()
 	}
 
 	if comment.CreatedAt.IsZero() {

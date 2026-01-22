@@ -51,7 +51,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 		return
 	}
 
-	book, err := api.service.GetBookDetailByID(c.Request.Context(), id)
+	book, err := api.service.GetBookDetailByID(c.Request.Context(), id.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.Success(c, http.StatusOK, "书籍不存在", nil)
@@ -380,7 +380,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	books, err := api.service.GetSimilarBooks(c.Request.Context(), id, limit)
+	books, err := api.service.GetSimilarBooks(c.Request.Context(), id.Hex(), limit)
 	if err != nil {
 		shared.InternalError(c, "获取相似书籍失败", err)
 		return
@@ -542,7 +542,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 		return
 	}
 
-	book.ID = id
+	book.ID = id.Hex()
 
 	if err := api.service.UpdateBookDetail(c.Request.Context(), &book); err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -582,7 +582,7 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 		return
 	}
 
-	if err := api.service.DeleteBookDetail(c.Request.Context(), id); err != nil {
+	if err := api.service.DeleteBookDetail(c.Request.Context(), id.Hex()); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.NotFound(c, "书籍不存在")
 			return
@@ -620,7 +620,7 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	err = api.service.IncrementViewCount(c.Request.Context(), id)
+	err = api.service.IncrementViewCount(c.Request.Context(), id.Hex())
 	if err != nil {
 		shared.InternalError(c, "增加浏览量失败", err)
 		return
@@ -654,7 +654,7 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 		return
 	}
 
-	err = api.service.IncrementLikeCount(c.Request.Context(), id)
+	err = api.service.IncrementLikeCount(c.Request.Context(), id.Hex())
 	if err != nil {
 		shared.InternalError(c, "增加点赞数失败", err)
 		return
@@ -688,7 +688,7 @@ func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 		return
 	}
 
-	err = api.service.DecrementLikeCount(c.Request.Context(), id)
+	err = api.service.DecrementLikeCount(c.Request.Context(), id.Hex())
 	if err != nil {
 		shared.InternalError(c, "取消点赞失败", err)
 		return

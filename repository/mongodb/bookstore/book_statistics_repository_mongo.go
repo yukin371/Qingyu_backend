@@ -2,8 +2,10 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/shared/types"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,14 +44,21 @@ func (r *MongoBookStatisticsRepository) Create(ctx context.Context, statistics *
 		return err
 	}
 
-	statistics.ID = result.InsertedID.(primitive.ObjectID)
+	// ID 是 string 类型，需要转换
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		statistics.ID = oid.Hex()
+	}
 	return nil
 }
 
 // GetByID 根据ID获取书籍统计
-func (r *MongoBookStatisticsRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetByID(ctx context.Context, id string) (*bookstore.BookStatistics, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid statistics ID: %w", err)
+	}
 	var statistics bookstore.BookStatistics
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&statistics)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&statistics)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -60,12 +69,16 @@ func (r *MongoBookStatisticsRepository) GetByID(ctx context.Context, id primitiv
 }
 
 // Update 更新书籍统计（符合基础CRUD接口）
-func (r *MongoBookStatisticsRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (r *MongoBookStatisticsRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid statistics ID: %w", err)
+	}
 	if len(updates) == 0 {
 		return errors.New("updates cannot be empty")
 	}
 	updates["updated_at"] = time.Now()
-	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return err
 	}
@@ -76,8 +89,12 @@ func (r *MongoBookStatisticsRepository) Update(ctx context.Context, id primitive
 }
 
 // Delete 删除书籍统计
-func (r *MongoBookStatisticsRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *MongoBookStatisticsRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -161,8 +178,12 @@ func (r *MongoBookStatisticsRepository) List(ctx context.Context, filter infra.F
 }
 
 // Exists 判断统计是否存在
-func (r *MongoBookStatisticsRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+func (r *MongoBookStatisticsRepository) Exists(ctx context.Context, id string) (bool, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid book ID: %w", err)
+	}
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -170,10 +191,14 @@ func (r *MongoBookStatisticsRepository) Exists(ctx context.Context, id primitive
 }
 
 // GetByBookID 根据书籍ID获取统计信息
-func (r *MongoBookStatisticsRepository) GetByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore.BookStatistics, error) {
+func (r *MongoBookStatisticsRepository) GetByBookID(ctx context.Context, bookID string) (*bookstore.BookStatistics, error) {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid book ID: %w", err)
+	}
 	var statistics bookstore.BookStatistics
-	filter := bson.M{"book_id": bookID}
-	err := r.collection.FindOne(ctx, filter).Decode(&statistics)
+	filter := bson.M{"book_id": objectID}
+	err = r.collection.FindOne(ctx, filter).Decode(&statistics)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -395,80 +420,104 @@ func (r *MongoBookStatisticsRepository) Search(ctx context.Context, keyword stri
 }
 
 // IncrementViewCount 增加浏览量
-func (r *MongoBookStatisticsRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) IncrementViewCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"view_count": 1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // IncrementFavoriteCount 增加收藏量
-func (r *MongoBookStatisticsRepository) IncrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) IncrementFavoriteCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"favorite_count": 1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // DecrementFavoriteCount 减少收藏量
-func (r *MongoBookStatisticsRepository) DecrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) DecrementFavoriteCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"favorite_count": -1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // IncrementCommentCount 增加评论量
-func (r *MongoBookStatisticsRepository) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) IncrementCommentCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"comment_count": 1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // DecrementCommentCount 减少评论量
-func (r *MongoBookStatisticsRepository) DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) DecrementCommentCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"comment_count": -1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // IncrementShareCount 增加分享量
-func (r *MongoBookStatisticsRepository) IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) IncrementShareCount(ctx context.Context, bookID string) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$inc": bson.M{"share_count": 1},
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
@@ -490,10 +539,14 @@ func (r *MongoBookStatisticsRepository) UpdateRatingSummary(ctx context.Context,
 }
 
 // UpdateRating 根据新增评分更新统计（按增量更新平均值与计数）
-func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating int) error {
+func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID string, rating int) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
 	// 读取当前统计
 	var stats bookstore.BookStatistics
-	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&stats)
+	err = r.collection.FindOne(ctx, bson.M{"book_id": objectID}).Decode(&stats)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			return err
@@ -503,21 +556,26 @@ func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID
 	}
 
 	newCount := stats.RatingCount + 1
-	newAvg := ((stats.AverageRating * float64(stats.RatingCount)) + float64(rating)) / float64(newCount)
+	// Rating 类型需要转换为 float64 进行运算
+	newAvg := ((float64(stats.AverageRating) * float64(stats.RatingCount)) + float64(rating)) / float64(newCount)
 
 	_, err = r.collection.UpdateOne(
 		ctx,
 		bson.M{"book_id": bookID},
-		bson.M{"$set": bson.M{"average_rating": newAvg, "rating_count": newCount, "updated_at": time.Now()}},
+		bson.M{"$set": bson.M{"average_rating": types.Rating(newAvg), "rating_count": newCount, "updated_at": time.Now()}},
 		options.Update().SetUpsert(true),
 	)
 	return err
 }
 
 // RemoveRating 根据移除评分更新统计
-func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID primitive.ObjectID, rating int) error {
+func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID string, rating int) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
 	var stats bookstore.BookStatistics
-	err := r.collection.FindOne(ctx, bson.M{"book_id": bookID}).Decode(&stats)
+	err = r.collection.FindOne(ctx, bson.M{"book_id": objectID}).Decode(&stats)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil
@@ -532,7 +590,8 @@ func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID
 	newCount := stats.RatingCount - 1
 	var newAvg float64
 	if newCount > 0 {
-		newAvg = ((stats.AverageRating * float64(stats.RatingCount)) - float64(rating)) / float64(newCount)
+		// Rating 类型需要转换为 float64 进行运算
+		newAvg = ((float64(stats.AverageRating) * float64(stats.RatingCount)) - float64(rating)) / float64(newCount)
 	} else {
 		newAvg = 0
 	}
@@ -540,14 +599,18 @@ func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID
 	_, err = r.collection.UpdateOne(
 		ctx,
 		bson.M{"book_id": bookID},
-		bson.M{"$set": bson.M{"average_rating": newAvg, "rating_count": newCount, "updated_at": time.Now()}},
+		bson.M{"$set": bson.M{"average_rating": types.Rating(newAvg), "rating_count": newCount, "updated_at": time.Now()}},
 	)
 	return err
 }
 
 // UpdateHotScore 更新热度分数
-func (r *MongoBookStatisticsRepository) UpdateHotScore(ctx context.Context, bookID primitive.ObjectID, hotScore float64) error {
-	filter := bson.M{"book_id": bookID}
+func (r *MongoBookStatisticsRepository) UpdateHotScore(ctx context.Context, bookID string, hotScore float64) error {
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
 	update := bson.M{
 		"$set": bson.M{
 			"hot_score":  hotScore,
@@ -556,13 +619,23 @@ func (r *MongoBookStatisticsRepository) UpdateHotScore(ctx context.Context, book
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
 // BatchUpdateHotScore 批量更新热度分数
-func (r *MongoBookStatisticsRepository) BatchUpdateHotScore(ctx context.Context, bookIDs []primitive.ObjectID) error {
-	filter := bson.M{"_id": bson.M{"$in": bookIDs}}
+func (r *MongoBookStatisticsRepository) BatchUpdateHotScore(ctx context.Context, bookIDs []string) error {
+	// 转换 string ID 为 ObjectID
+	objectIDs := make([]primitive.ObjectID, 0, len(bookIDs))
+	for _, id := range bookIDs {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return fmt.Errorf("无效的ID: %s", id)
+		}
+		objectIDs = append(objectIDs, oid)
+	}
+
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 	update := bson.M{
 		"$set": bson.M{
 			"updated_at": time.Now(),
@@ -574,10 +647,15 @@ func (r *MongoBookStatisticsRepository) BatchUpdateHotScore(ctx context.Context,
 }
 
 // BatchIncrementViewCount 批量增加浏览量
-func (r *MongoBookStatisticsRepository) BatchIncrementViewCount(ctx context.Context, increments map[primitive.ObjectID]int64) error {
+func (r *MongoBookStatisticsRepository) BatchIncrementViewCount(ctx context.Context, increments map[string]int64) error {
 	var operations []mongo.WriteModel
 
-	for bookID, count := range increments {
+	for bookIDStr, count := range increments {
+		bookID, err := primitive.ObjectIDFromHex(bookIDStr)
+		if err != nil {
+			return fmt.Errorf("无效的ID: %s", bookIDStr)
+		}
+
 		filter := bson.M{"book_id": bookID}
 		update := bson.M{
 			"$inc": bson.M{"view_count": count},
@@ -777,9 +855,13 @@ func (r *MongoBookStatisticsRepository) GetAverageRating(ctx context.Context) (f
 }
 
 // GetViewsInRange 获取指定时间范围内的浏览量
-func (r *MongoBookStatisticsRepository) GetViewsInRange(ctx context.Context, bookID primitive.ObjectID, days int) (int64, error) {
+func (r *MongoBookStatisticsRepository) GetViewsInRange(ctx context.Context, bookID string, days int) (int64, error) {
 	// 由于当前模型没有时间范围的浏览量记录，这里返回当前的浏览量
-	stats, err := r.GetByBookID(ctx, bookID)
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid book ID: %w", err)
+	}
+	stats, err := r.GetByBookID(ctx, objectID.Hex())
 	if err != nil {
 		return 0, err
 	}
@@ -790,9 +872,13 @@ func (r *MongoBookStatisticsRepository) GetViewsInRange(ctx context.Context, boo
 }
 
 // GetFavoritesInRange 获取指定时间范围内的收藏量
-func (r *MongoBookStatisticsRepository) GetFavoritesInRange(ctx context.Context, bookID primitive.ObjectID, days int) (int64, error) {
+func (r *MongoBookStatisticsRepository) GetFavoritesInRange(ctx context.Context, bookID string, days int) (int64, error) {
 	// 由于当前模型没有时间范围的收藏量记录，这里返回当前的收藏量
-	stats, err := r.GetByBookID(ctx, bookID)
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid book ID: %w", err)
+	}
+	stats, err := r.GetByBookID(ctx, objectID.Hex())
 	if err != nil {
 		return 0, err
 	}
@@ -803,9 +889,13 @@ func (r *MongoBookStatisticsRepository) GetFavoritesInRange(ctx context.Context,
 }
 
 // GetCommentsInRange 获取指定时间范围内的评论量
-func (r *MongoBookStatisticsRepository) GetCommentsInRange(ctx context.Context, bookID primitive.ObjectID, days int) (int64, error) {
+func (r *MongoBookStatisticsRepository) GetCommentsInRange(ctx context.Context, bookID string, days int) (int64, error) {
 	// 由于当前模型没有时间范围的评论量记录，这里返回当前的评论量
-	stats, err := r.GetByBookID(ctx, bookID)
+	objectID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid book ID: %w", err)
+	}
+	stats, err := r.GetByBookID(ctx, objectID.Hex())
 	if err != nil {
 		return 0, err
 	}
@@ -886,9 +976,19 @@ func (r *MongoBookStatisticsRepository) GetTrendingBooks(ctx context.Context, da
 }
 
 // BatchRecalculateStatistics 批量重新计算统计数据
-func (r *MongoBookStatisticsRepository) BatchRecalculateStatistics(ctx context.Context, bookIDs []primitive.ObjectID) error {
+func (r *MongoBookStatisticsRepository) BatchRecalculateStatistics(ctx context.Context, bookIDs []string) error {
+	// 转换 string ID 为 ObjectID
+	objectIDs := make([]primitive.ObjectID, 0, len(bookIDs))
+	for _, id := range bookIDs {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return fmt.Errorf("无效的ID: %s", id)
+		}
+		objectIDs = append(objectIDs, oid)
+	}
+
 	// 为每个书籍重新计算统计数据
-	for _, bookID := range bookIDs {
+	for _, bookID := range objectIDs {
 		// 这里可以根据实际需求实现统计数据的重新计算逻辑
 		// 例如：重新计算浏览量、收藏量、评分等
 		filter := bson.M{"book_id": bookID}
@@ -934,11 +1034,16 @@ func (r *MongoBookStatisticsRepository) Health(ctx context.Context) error {
 }
 
 // BatchUpdateViewCount 批量更新浏览量
-func (r *MongoBookStatisticsRepository) BatchUpdateViewCount(ctx context.Context, bookIDs []primitive.ObjectID, increment int64) error {
+func (r *MongoBookStatisticsRepository) BatchUpdateViewCount(ctx context.Context, bookIDs []string, increment int64) error {
 	var operations []mongo.WriteModel
 
 	for _, bookID := range bookIDs {
-		filter := bson.M{"book_id": bookID}
+		objectID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return fmt.Errorf("invalid book ID: %w", err)
+		}
+
+		filter := bson.M{"book_id": objectID}
 		update := bson.M{
 			"$inc": bson.M{"view_count": increment},
 			"$set": bson.M{"updated_at": time.Now()},

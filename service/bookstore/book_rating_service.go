@@ -29,7 +29,7 @@ type BookRatingService interface {
 
 	// 评分统计
 	GetAverageRating(ctx context.Context, bookID primitive.ObjectID) (float64, error)
-	GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[int]int64, error)
+	GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[string]int64, error)
 	GetRatingCount(ctx context.Context, bookID primitive.ObjectID) (int64, error)
 	GetRatingStats(ctx context.Context, bookID primitive.ObjectID) (map[string]interface{}, error)
 	GetTopRatedBooks(ctx context.Context, limit int) ([]*bookstore.BookRating, error)
@@ -355,7 +355,7 @@ func (s *BookRatingServiceImpl) GetAverageRating(ctx context.Context, bookID pri
 }
 
 // GetRatingDistribution 获取评分分布
-func (s *BookRatingServiceImpl) GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[int]int64, error) {
+func (s *BookRatingServiceImpl) GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[string]int64, error) {
 	if bookID.IsZero() {
 		return nil, errors.New("book ID cannot be empty")
 	}

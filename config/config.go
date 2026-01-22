@@ -17,6 +17,7 @@ type Config struct {
 	Database *DatabaseConfig                   `mapstructure:"database"`
 	Redis    *RedisConfig                      `mapstructure:"redis"`
 	Server   *ServerConfig                     `mapstructure:"server"`
+	Log      *LogConfig                        `mapstructure:"log"`
 	JWT      *JWTConfig                        `mapstructure:"jwt"`
 	AI       *AIConfig                         `mapstructure:"ai"`
 	External *ExternalAPIConfig                `mapstructure:"external"`
@@ -30,6 +31,26 @@ type Config struct {
 type ServerConfig struct {
 	Port string `mapstructure:"port"`
 	Mode string `mapstructure:"mode"`
+}
+
+// LogConfig 日志配置
+type LogConfig struct {
+	Level       string            `mapstructure:"level"`
+	Format      string            `mapstructure:"format"`
+	Output      string            `mapstructure:"output"`
+	Filename    string            `mapstructure:"filename"`
+	Development bool              `mapstructure:"development"`
+	Mode        string            `mapstructure:"mode"` // normal|strict
+	Request     *LogRequestConfig `mapstructure:"request"`
+	RedactKeys  []string          `mapstructure:"redact_keys"`
+}
+
+// LogRequestConfig 请求日志配置
+type LogRequestConfig struct {
+	EnableBody     bool     `mapstructure:"enable_body"`
+	MaxBodySize    int      `mapstructure:"max_body_size"`
+	SkipPaths      []string `mapstructure:"skip_paths"`
+	BodyAllowPaths []string `mapstructure:"body_allow_paths"`
 }
 
 // JWTConfig JWT配置
@@ -316,6 +337,19 @@ func setDefaults() {
 	// 服务器默认配置
 	v.SetDefault("server.port", "8080")
 	v.SetDefault("server.mode", "debug")
+
+	// 日志默认配置
+	v.SetDefault("log.level", "info")
+	v.SetDefault("log.format", "json")
+	v.SetDefault("log.output", "stdout")
+	v.SetDefault("log.filename", "logs/app.log")
+	v.SetDefault("log.development", false)
+	v.SetDefault("log.mode", "normal")
+	v.SetDefault("log.request.enable_body", false)
+	v.SetDefault("log.request.max_body_size", 2048)
+	v.SetDefault("log.request.skip_paths", []string{"/health", "/metrics", "/swagger"})
+	v.SetDefault("log.request.body_allow_paths", []string{})
+	v.SetDefault("log.redact_keys", []string{"authorization", "password", "token", "cookie"})
 
 	// JWT默认配置
 	v.SetDefault("jwt.secret", "qingyu_secret_key")

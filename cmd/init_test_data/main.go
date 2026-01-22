@@ -226,7 +226,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "writer_xuanhuan",
 			Email:       "writer_xuanhuan@qingyu.com",
 			Password:    "Writer@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "玄幻小说家",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=writer_xuanhuan",
 			Description: "测试玄幻小说创作功能",
@@ -235,7 +235,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "writer_yanqing",
 			Email:       "writer_yanqing@qingyu.com",
 			Password:    "Writer@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "言情作家",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=writer_yanqing",
 			Description: "测试言情小说创作功能",
@@ -244,7 +244,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "writer_dushi",
 			Email:       "writer_dushi@qingyu.com",
 			Password:    "Writer@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "都市创作者",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=writer_dushi",
 			Description: "测试都市小说创作功能",
@@ -253,7 +253,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "writer_newbie",
 			Email:       "writer_newbie@qingyu.com",
 			Password:    "Writer@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "新手作者",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=writer_newbie",
 			Description: "测试新手写作流程",
@@ -262,7 +262,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "writer_pro",
 			Email:       "writer_pro@qingyu.com",
 			Password:    "Writer@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "专业作家",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=writer_pro",
 			Description: "测试高级写作功能",
@@ -272,7 +272,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "reader01",
 			Email:       "reader01@qingyu.com",
 			Password:    "Reader@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "书虫小白",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=reader01",
 			Description: "测试基础阅读功能",
@@ -281,7 +281,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "reader02",
 			Email:       "reader02@qingyu.com",
 			Password:    "Reader@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "阅读达人",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=reader02",
 			Description: "测试书架管理功能",
@@ -290,7 +290,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "reader03",
 			Email:       "reader03@qingyu.com",
 			Password:    "Reader@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "小说爱好者",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=reader03",
 			Description: "测试搜索和推荐功能",
@@ -299,7 +299,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "reader04",
 			Email:       "reader04@qingyu.com",
 			Password:    "Reader@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "评论家",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=reader04",
 			Description: "测试评论和互动功能",
@@ -308,7 +308,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "reader05",
 			Email:       "reader05@qingyu.com",
 			Password:    "Reader@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "随性读者",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=reader05",
 			Description: "测试用户行为追踪",
@@ -318,7 +318,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "tester_all",
 			Email:       "tester_all@qingyu.com",
 			Password:    "Test@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "全功能测试员",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=tester_all",
 			Description: "测试所有用户功能",
@@ -327,7 +327,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Username:    "tester_api",
 			Email:       "tester_api@qingyu.com",
 			Password:    "Test@123456",
-			Role:        "user",
+			Role:        "reader",
 			Nickname:    "API测试专员",
 			Avatar:      "https://api.dicebear.com/7.x/avataaars/svg?seed=tester_api",
 			Description: "API接口测试专用账号",
@@ -363,7 +363,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 		// 创建用户
 		now := time.Now()
 		user := users.User{
-			ID:        primitive.NewObjectID().Hex(),
+			ID:        primitive.NewObjectID(),
 			Username:  betaUser.Username,
 			Email:     betaUser.Email,
 			Password:  string(hashedPassword),
@@ -702,7 +702,7 @@ func printFinalStats(ctx context.Context, db *mongo.Database) {
 	userCount, _ := db.Collection("users").CountDocuments(ctx, bson.M{})
 	adminCount, _ := db.Collection("users").CountDocuments(ctx, bson.M{"role": "admin"})
 	vipCount, _ := db.Collection("users").CountDocuments(ctx, bson.M{"role": "vip"})
-	normalCount, _ := db.Collection("users").CountDocuments(ctx, bson.M{"role": "user"})
+	normalCount, _ := db.Collection("users").CountDocuments(ctx, bson.M{"roles": "reader"})
 
 	fmt.Printf("【用户数据】\n")
 	fmt.Printf("  总用户数: %d\n", userCount)

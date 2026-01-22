@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
@@ -16,8 +15,8 @@ import (
 type BookDetailFilter struct {
 	Title          string                 `json:"title,omitempty"`
 	Author         string                 `json:"author,omitempty"`
-	AuthorID       *primitive.ObjectID    `json:"author_id,omitempty"`
-	CategoryIDs    []primitive.ObjectID   `json:"category_ids,omitempty"`
+	AuthorID       *string                `json:"author_id,omitempty"`
+	CategoryIDs    []string               `json:"category_ids,omitempty"`
 	Tags           []string               `json:"tags,omitempty"`
 	Status         *bookstore2.BookStatus `json:"status,omitempty"`
 	IsFree         *bool                  `json:"is_free,omitempty"`
@@ -44,14 +43,14 @@ type BookDetailFilter struct {
 type BookDetailService interface {
 	// 书籍详情基础操作
 	CreateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error
-	GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookDetail, error)
+	GetBookDetailByID(ctx context.Context, id string) (*bookstore2.BookDetail, error)
 	UpdateBookDetail(ctx context.Context, bookDetail *bookstore2.BookDetail) error
-	DeleteBookDetail(ctx context.Context, id primitive.ObjectID) error
+	DeleteBookDetail(ctx context.Context, id string) error
 
 	// 书籍详情查询
 	GetBookDetailByTitle(ctx context.Context, title string) (*bookstore2.BookDetail, error)
 	GetBookDetailsByAuthor(ctx context.Context, author string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
-	GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
+	GetBookDetailsByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 	GetBookDetailsByCategory(ctx context.Context, category string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 	GetBookDetailsByStatus(ctx context.Context, status bookstore2.BookStatus, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 	GetBookDetailsByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
@@ -66,20 +65,20 @@ type BookDetailService interface {
 	GetBooksByTags(ctx context.Context, tags []string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 	SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error)
 	GetRecommendedBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
-	GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
+	GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error)
 	GetPopularBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 	GetLatestBooks(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 	CountBooksByCategory(ctx context.Context, category string) (int64, error)
 
 	// 书籍详情统计和交互
-	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error
-	DecrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error
-	DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error
-	UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64, ratingCount int64) error
-	UpdateLastChapter(ctx context.Context, bookID primitive.ObjectID, chapterTitle string) error
+	IncrementViewCount(ctx context.Context, bookID string) error
+	IncrementLikeCount(ctx context.Context, bookID string) error
+	DecrementLikeCount(ctx context.Context, bookID string) error
+	IncrementCommentCount(ctx context.Context, bookID string) error
+	DecrementCommentCount(ctx context.Context, bookID string) error
+	IncrementShareCount(ctx context.Context, bookID string) error
+	UpdateRating(ctx context.Context, bookID string, rating float64, ratingCount int64) error
+	UpdateLastChapter(ctx context.Context, bookID string, chapterTitle string) error
 
 	// 书籍详情统计查询
 	GetBookDetailStats(ctx context.Context) (map[string]interface{}, error)
@@ -88,14 +87,14 @@ type BookDetailService interface {
 	GetBookDetailCountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error)
 
 	// 书籍详情推荐
-	GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
-	GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error)
+	GetRecommendedBookDetails(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error)
+	GetSimilarBookDetails(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error)
 	GetPopularBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 	GetLatestBookDetails(ctx context.Context, limit int) ([]*bookstore2.BookDetail, error)
 
 	// 书籍详情批量操作
-	BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error
-	BatchUpdateBookDetailTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error
+	BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []string, status bookstore2.BookStatus) error
+	BatchUpdateBookDetailTags(ctx context.Context, bookIDs []string, tags []string) error
 }
 
 // BookDetailServiceImpl 书籍详情服务实现
@@ -147,10 +146,14 @@ func (s *BookDetailServiceImpl) CreateBookDetail(ctx context.Context, bookDetail
 }
 
 // GetBookDetailByID 根据ID获取书籍详情
-func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id string) (*bookstore2.BookDetail, error) {
+	if id == "" {
+		return nil, errors.New("book ID cannot be empty")
+	}
+
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
-		if cachedBook, err := s.cacheService.GetBookDetail(ctx, id.Hex()); err == nil && cachedBook != nil {
+		if cachedBook, err := s.cacheService.GetBookDetail(ctx, id); err == nil && cachedBook != nil {
 			return cachedBook, nil
 		}
 	}
@@ -166,7 +169,7 @@ func (s *BookDetailServiceImpl) GetBookDetailByID(ctx context.Context, id primit
 
 	// 缓存结果
 	if s.cacheService != nil {
-		s.cacheService.SetBookDetail(ctx, id.Hex(), bookDetail, 30*time.Minute)
+		s.cacheService.SetBookDetail(ctx, id, bookDetail, 30*time.Minute)
 	}
 
 	return bookDetail, nil
@@ -179,7 +182,7 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 	}
 
 	// 验证必填字段
-	if bookDetail.ID.IsZero() {
+	if bookDetail.ID == "" {
 		return errors.New("book detail ID is required")
 	}
 	if bookDetail.Title == "" {
@@ -221,7 +224,11 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 }
 
 // DeleteBookDetail 删除书籍详情
-func (s *BookDetailServiceImpl) DeleteBookDetail(ctx context.Context, id primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) DeleteBookDetail(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	// 先获取书籍详情用于清除缓存
 	bookDetail, err := s.bookDetailRepo.GetByID(ctx, id)
 	if err != nil {
@@ -286,8 +293,8 @@ func (s *BookDetailServiceImpl) GetBookDetailsByAuthor(ctx context.Context, auth
 }
 
 // GetBookDetailsByAuthorID 根据作者ID获取书籍详情列表
-func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, authorID primitive.ObjectID, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
-	if authorID.IsZero() {
+func (s *BookDetailServiceImpl) GetBookDetailsByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.BookDetail, int64, error) {
+	if authorID == "" {
 		return nil, 0, errors.New("author ID cannot be empty")
 	}
 	if page < 1 {
@@ -564,7 +571,7 @@ func (s *BookDetailServiceImpl) GetBookDetailCountByStatus(ctx context.Context, 
 }
 
 // GetRecommendedBookDetails 获取推荐书籍详情
-func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
@@ -601,7 +608,7 @@ func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, b
 }
 
 // GetSimilarBookDetails 获取相似书籍详情
-func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error) {
 	if limit < 1 || limit > 50 {
 		limit = 10
 	}
@@ -669,119 +676,151 @@ func (s *BookDetailServiceImpl) GetLatestBookDetails(ctx context.Context, limit 
 }
 
 // IncrementViewCount 增加浏览计数
-func (s *BookDetailServiceImpl) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) IncrementViewCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.IncrementViewCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to increment view count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // IncrementLikeCount 增加点赞计数
-func (s *BookDetailServiceImpl) IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) IncrementLikeCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.IncrementLikeCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to increment like count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // DecrementLikeCount 减少点赞计数
-func (s *BookDetailServiceImpl) DecrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) DecrementLikeCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.DecrementLikeCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to decrement like count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // IncrementCommentCount 增加评论计数
-func (s *BookDetailServiceImpl) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) IncrementCommentCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.IncrementCommentCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to increment comment count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // DecrementCommentCount 减少评论计数
-func (s *BookDetailServiceImpl) DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) DecrementCommentCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.DecrementCommentCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to decrement comment count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // IncrementShareCount 增加分享计数
-func (s *BookDetailServiceImpl) IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (s *BookDetailServiceImpl) IncrementShareCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.IncrementShareCount(ctx, bookID); err != nil {
 		return fmt.Errorf("failed to increment share count: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // UpdateRating 更新评分
-func (s *BookDetailServiceImpl) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64, ratingCount int64) error {
+func (s *BookDetailServiceImpl) UpdateRating(ctx context.Context, bookID string, rating float64, ratingCount int64) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.UpdateRating(ctx, bookID, rating, ratingCount); err != nil {
 		return fmt.Errorf("failed to update rating: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // UpdateLastChapter 更新最新章节信息
-func (s *BookDetailServiceImpl) UpdateLastChapter(ctx context.Context, bookID primitive.ObjectID, chapterTitle string) error {
+func (s *BookDetailServiceImpl) UpdateLastChapter(ctx context.Context, bookID string, chapterTitle string) error {
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
+	}
+
 	if err := s.bookDetailRepo.UpdateLastChapter(ctx, bookID, chapterTitle); err != nil {
 		return fmt.Errorf("failed to update last chapter: %w", err)
 	}
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 	}
 
 	return nil
 }
 
 // BatchUpdateBookDetailStatus 批量更新书籍状态
-func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error {
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context, bookIDs []string, status bookstore2.BookStatus) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -793,7 +832,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context,
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 		}
 	}
 
@@ -801,7 +840,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailStatus(ctx context.Context,
 }
 
 // BatchUpdateBookDetailCategories 批量更新书籍分类
-func (s *BookDetailServiceImpl) BatchUpdateBookDetailCategories(ctx context.Context, bookIDs []primitive.ObjectID, categories []string) error {
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailCategories(ctx context.Context, bookIDs []string, categories []string) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -816,7 +855,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailCategories(ctx context.Cont
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 		}
 	}
 
@@ -824,7 +863,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailCategories(ctx context.Cont
 }
 
 // BatchUpdateBookDetailTags 批量更新书籍标签
-func (s *BookDetailServiceImpl) BatchUpdateBookDetailTags(ctx context.Context, bookIDs []primitive.ObjectID, tags []string) error {
+func (s *BookDetailServiceImpl) BatchUpdateBookDetailTags(ctx context.Context, bookIDs []string, tags []string) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -839,7 +878,7 @@ func (s *BookDetailServiceImpl) BatchUpdateBookDetailTags(ctx context.Context, b
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookDetailCache(ctx, bookID)
 		}
 	}
 
@@ -853,7 +892,7 @@ func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, book
 	}
 
 	// 清除书籍详情缓存
-	s.cacheService.InvalidateBookDetailCache(ctx, bookDetail.ID.Hex())
+	s.cacheService.InvalidateBookDetailCache(ctx, bookDetail.ID)
 
 	// 清除分类相关缓存
 	for _, category := range bookDetail.Categories {
@@ -918,7 +957,7 @@ func (s *BookDetailServiceImpl) GetRecommendedBooks(ctx context.Context, limit i
 }
 
 // GetSimilarBooks 获取相似书籍（API 兼容方法）
-func (s *BookDetailServiceImpl) GetSimilarBooks(ctx context.Context, bookID primitive.ObjectID, limit int) ([]*bookstore2.BookDetail, error) {
+func (s *BookDetailServiceImpl) GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.BookDetail, error) {
 	return s.GetSimilarBookDetails(ctx, bookID, limit)
 }
 

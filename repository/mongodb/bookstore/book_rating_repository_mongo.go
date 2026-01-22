@@ -513,11 +513,11 @@ func (r *MongoBookRatingRepository) GetAverageRating(ctx context.Context, bookID
 }
 
 // GetRatingDistribution 获取评分分布
-func (r *MongoBookRatingRepository) GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[int]int64, error) {
+func (r *MongoBookRatingRepository) GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[string]int64, error) {
 	pipeline := []bson.M{
 		{"$match": bson.M{"book_id": bookID}},
 		{"$group": bson.M{
-			"_id":   bson.M{"$floor": "$rating"},
+			"_id":   bson.M{"$toString": bson.M{"$floor": "$rating"}},
 			"count": bson.M{"$sum": 1},
 		}},
 	}
@@ -528,11 +528,11 @@ func (r *MongoBookRatingRepository) GetRatingDistribution(ctx context.Context, b
 	}
 	defer cursor.Close(ctx)
 
-	distribution := make(map[int]int64)
+	distribution := make(map[string]int64)
 	for cursor.Next(ctx) {
 		var result struct {
-			ID    int   `bson:"_id"`
-			Count int64 `bson:"count"`
+			ID    string `bson:"_id"`
+			Count int64  `bson:"count"`
 		}
 		if err := cursor.Decode(&result); err != nil {
 			return nil, err

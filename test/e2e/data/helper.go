@@ -12,6 +12,7 @@ import (
 	"Qingyu_backend/core"
 	"Qingyu_backend/global"
 	"Qingyu_backend/service"
+	"Qingyu_backend/test/testutil"
 )
 
 // SetupTestEnvironment 设置测试环境
@@ -26,6 +27,7 @@ func SetupTestEnvironment(t *testing.T) {
 
 	// 设置全局配置
 	config.GlobalConfig = cfg
+	testutil.EnableStrictLogAssertions(t)
 
 	// 初始化服务（包括数据库连接）
 	err = core.InitServices()

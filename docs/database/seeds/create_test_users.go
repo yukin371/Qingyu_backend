@@ -193,7 +193,7 @@ func CreateTestUsers() error {
 
 		// 创建用户对象
 		user := users.User{
-			ID:        primitive.NewObjectID().Hex(),
+			ID:        primitive.NewObjectID(),
 			Username:  testUser.Username,
 			Email:     testUser.Email,
 			Phone:     "",

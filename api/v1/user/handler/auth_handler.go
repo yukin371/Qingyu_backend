@@ -73,7 +73,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		role = resp.User.Roles[0]
 	}
 	registerResp := dto.RegisterResponse{
-		UserID:   resp.User.ID,
+		UserID:   resp.User.ID.Hex(),
 		Username: resp.User.Username,
 		Email:    resp.User.Email,
 		Role:     role,
@@ -140,7 +140,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	loginResp := dto.LoginResponse{
 		Token: resp.Token,
 		User: dto.UserBasicInfo{
-			UserID:   resp.User.ID,
+			UserID:   resp.User.ID.Hex(),
 			Username: resp.User.Username,
 			Email:    resp.User.Email,
 			Role:     role,

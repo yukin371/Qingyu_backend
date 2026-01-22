@@ -119,16 +119,30 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 		content = docContent.Content
 	}
 
+	// 转换ObjectID数组为string数组
+	characterIDs := make([]string, len(doc.CharacterIDs))
+	for i, id := range doc.CharacterIDs {
+		characterIDs[i] = id.Hex()
+	}
+	locationIDs := make([]string, len(doc.LocationIDs))
+	for i, id := range doc.LocationIDs {
+		locationIDs[i] = id.Hex()
+	}
+	timelineIDs := make([]string, len(doc.TimelineIDs))
+	for i, id := range doc.TimelineIDs {
+		timelineIDs[i] = id.Hex()
+	}
+
 	chapterInfo := &ai.ChapterInfo{
 		ID:           chapterID,
 		Title:        doc.Title,
 		Summary:      summary,
 		Content:      content,
-		CharacterIDs: doc.CharacterIDs,                     // 使用Document中的CharacterIDs字段
-		LocationIDs:  doc.LocationIDs,                      // 使用Document中的LocationIDs字段
-		TimelineIDs:  doc.TimelineIDs,                      // 使用Document中的TimelineIDs字段
-		PlotThreads:  doc.PlotThreads,                      // 使用Document中的PlotThreads字段
-		KeyPoints:    doc.KeyPoints,                        // 使用Document中的KeyPoints字段
+		CharacterIDs: characterIDs,                        // 转换后的字符ID数组
+		LocationIDs:  locationIDs,                         // 转换后的地点ID数组
+		TimelineIDs:  timelineIDs,                         // 转换后的时间线ID数组
+		PlotThreads:  doc.PlotThreads,                     // 使用Document中的PlotThreads字段
+		KeyPoints:    doc.KeyPoints,                       // 使用Document中的KeyPoints字段
 		WritingHints: strings.Join(doc.WritingHints, "\n"), // 将字符串数组转换为单个字符串
 	}
 

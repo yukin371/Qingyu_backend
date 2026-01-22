@@ -86,7 +86,7 @@ func (s *ExportService) ExportDocument(
 	}
 
 	// 验证项目权限
-	if document.ProjectID != projectID {
+	if document.ProjectID.Hex() != projectID {
 		return nil, errors.NewServiceError("ExportService", errors.ServiceErrorForbidden, "无权访问此文档", "", nil)
 	}
 

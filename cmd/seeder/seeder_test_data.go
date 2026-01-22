@@ -65,7 +65,7 @@ func (s *TestDataSeeder) seedTestUser() error {
 		Username:  "testuser",
 		Email:     "testuser@qingyu.com",
 		Password:  "123456", // ⚠️ 测试环境使用明文密码
-		Role:      "user",
+		Role:      "reader",
 		Nickname:  "测试用户",
 		Avatar:    "/images/avatars/default.png",
 		Bio:       "这是一个测试账号",

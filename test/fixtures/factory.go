@@ -1,7 +1,6 @@
 package fixtures
 
 import (
-	shared "Qingyu_backend/models/shared"
 	"Qingyu_backend/models/writer"
 	"fmt"
 	"time"
@@ -27,7 +26,7 @@ func NewUserFactory() *UserFactory {
 func (f *UserFactory) Create(opts ...func(*users.User)) *users.User {
 	f.counter++
 	user := &users.User{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        primitive.NewObjectID(),
 		Username:  fmt.Sprintf("user%d", f.counter),
 		Email:     fmt.Sprintf("user%d@test.com", f.counter),
 		Password:  "hashed_password_" + fmt.Sprint(f.counter),
@@ -153,17 +152,23 @@ func NewDocumentFactory() *DocumentFactory {
 func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document)) *writer.Document {
 	f.counter++
 	now := time.Now()
+	// 解析 projectID 为 ObjectID
+	projectOID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		return nil
+	}
+
 	doc := &writer.Document{
 		Type:      writer.TypeChapter,
 		Status:    "draft",
 		WordCount: 1000 + f.counter*100,
 	}
 	// 设置嵌入字段
-	doc.IdentifiedEntity.ID = primitive.NewObjectID()
-	doc.ProjectScopedEntity.ProjectID = projectID
-	doc.TitledEntity.Title = fmt.Sprintf("第%d章", f.counter)
-	doc.Timestamps.CreatedAt = now
-	doc.Timestamps.UpdatedAt = now
+	doc.ID = primitive.NewObjectID()
+	doc.ProjectID = projectOID
+	doc.Title = fmt.Sprintf("第%d章", f.counter)
+	doc.CreatedAt = now
+	doc.UpdatedAt = now
 
 	// 应用自定义选项
 	for _, opt := range opts {
@@ -175,18 +180,23 @@ func (f *DocumentFactory) Create(projectID string, opts ...func(*writer.Document
 
 // CreateDocumentContent 创建文档内容
 func (f *DocumentFactory) CreateDocumentContent(documentID string) *writer.DocumentContent {
-	id := primitive.NewObjectID().Hex()
+	documentOID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return nil
+	}
+
 	now := time.Now()
 	return &writer.DocumentContent{
-		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
-		DocumentID:       documentID,
-		Content:          fmt.Sprintf("这是文档%s的内容...", documentID),
-		ContentType:      "markdown",
-		WordCount:        1000,
-		CharCount:        1000,
-		Version:          1,
-		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-		Edited:           shared.Edited{LastSavedAt: now},
+		ID:        primitive.NewObjectID(),
+		DocumentID: documentOID,
+		Content:   fmt.Sprintf("这是文档%s的内容...", documentID),
+		ContentType: "markdown",
+		WordCount:   1000,
+		CharCount:   1000,
+		Version:     1,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		LastSavedAt: now,
 	}
 }
 

@@ -215,7 +215,7 @@ func (m *MockCategoryRepository) Create(ctx context.Context, category *bookstore
 	return args.Error(0)
 }
 
-func (m *MockCategoryRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.Category, error) {
+func (m *MockCategoryRepository) GetByID(ctx context.Context, id string) (*bookstore2.Category, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -223,12 +223,12 @@ func (m *MockCategoryRepository) GetByID(ctx context.Context, id primitive.Objec
 	return args.Get(0).(*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (m *MockCategoryRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
-func (m *MockCategoryRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+func (m *MockCategoryRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -243,7 +243,7 @@ func (m *MockCategoryRepository) GetByName(ctx context.Context, name string) (*b
 	return args.Get(0).(*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) GetByParent(ctx context.Context, parentID primitive.ObjectID, limit, offset int) ([]*bookstore2.Category, error) {
+func (m *MockCategoryRepository) GetByParent(ctx context.Context, parentID string, limit, offset int) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx, parentID, limit, offset)
 	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
@@ -263,32 +263,32 @@ func (m *MockCategoryRepository) GetCategoryTree(ctx context.Context) ([]*bookst
 	return args.Get(0).([]*bookstore2.CategoryTree), args.Error(1)
 }
 
-func (m *MockCategoryRepository) CountByParent(ctx context.Context, parentID primitive.ObjectID) (int64, error) {
+func (m *MockCategoryRepository) CountByParent(ctx context.Context, parentID string) (int64, error) {
 	args := m.Called(ctx, parentID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockCategoryRepository) UpdateBookCount(ctx context.Context, categoryID primitive.ObjectID, count int64) error {
+func (m *MockCategoryRepository) UpdateBookCount(ctx context.Context, categoryID string, count int64) error {
 	args := m.Called(ctx, categoryID, count)
 	return args.Error(0)
 }
 
-func (m *MockCategoryRepository) GetChildren(ctx context.Context, parentID primitive.ObjectID) ([]*bookstore2.Category, error) {
+func (m *MockCategoryRepository) GetChildren(ctx context.Context, parentID string) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx, parentID)
 	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) GetAncestors(ctx context.Context, categoryID primitive.ObjectID) ([]*bookstore2.Category, error) {
+func (m *MockCategoryRepository) GetAncestors(ctx context.Context, categoryID string) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx, categoryID)
 	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) GetDescendants(ctx context.Context, categoryID primitive.ObjectID) ([]*bookstore2.Category, error) {
+func (m *MockCategoryRepository) GetDescendants(ctx context.Context, categoryID string) ([]*bookstore2.Category, error) {
 	args := m.Called(ctx, categoryID)
 	return args.Get(0).([]*bookstore2.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []primitive.ObjectID, isActive bool) error {
+func (m *MockCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []string, isActive bool) error {
 	args := m.Called(ctx, categoryIDs, isActive)
 	return args.Error(0)
 }
@@ -303,7 +303,7 @@ func (m *MockCategoryRepository) Count(ctx context.Context, filter infrastructur
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockCategoryRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+func (m *MockCategoryRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(bool), args.Error(1)
 }
@@ -719,7 +719,7 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 
 func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	// 准备测试数据
-	categoryID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID().Hex()
 	expectedCategory := &bookstore2.Category{
 		ID:       categoryID,
 		Name:     "测试分类",
@@ -741,7 +741,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
 
 	// 执行测试
-	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
+	result, err := service.GetCategoryByID(context.Background(), categoryID)
 
 	// 验证结果
 	assert.NoError(t, err)
@@ -751,7 +751,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 
 func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	// 准备测试数据
-	categoryID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID().Hex()
 	category := &bookstore2.Category{
 		ID:       categoryID,
 		Name:     "测试分类",
@@ -773,7 +773,7 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
 
 	// 执行测试
-	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
+	result, err := service.GetCategoryByID(context.Background(), categoryID)
 
 	// 验证结果
 	assert.Error(t, err)
@@ -802,7 +802,7 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 
 	// 设置Mock期望
 	mockBookRepo.On("Search", mock.Anything, keyword, 10, 0).Return(expectedBooks, nil)
-	publishedStatus := bookstore2.BookStatusPublished
+	publishedStatus := bookstore2.BookStatusOngoing
 	keywordPtr := keyword
 	mockBookRepo.On("CountByFilter", mock.Anything, mock.MatchedBy(func(f *bookstore2.BookFilter) bool {
 		return f.Status != nil && *f.Status == publishedStatus && f.Keyword != nil && *f.Keyword == keywordPtr
@@ -862,7 +862,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 	}
 	expectedCategories := []*bookstore2.Category{
 		{
-			ID:       primitive.NewObjectID(),
+			ID:       primitive.NewObjectID().Hex(),
 			Name:     "测试分类",
 			IsActive: true,
 		},

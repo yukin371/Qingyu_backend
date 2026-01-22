@@ -17,6 +17,28 @@ server:
   port: "8080"
   mode: "debug"  # debug or release
 
+# 日志配置
+log:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  filename: "logs/app.log"
+  development: false
+  mode: "normal"  # normal or strict
+  request:
+    enable_body: false
+    max_body_size: 2048
+    skip_paths:
+      - "/health"
+      - "/metrics"
+      - "/swagger"
+    body_allow_paths: []
+  redact_keys:
+    - "authorization"
+    - "password"
+    - "token"
+    - "cookie"
+
 # JWT配置
 jwt:
   secret: "qingyu_secret_key"  # 生产环境请修改为强密钥

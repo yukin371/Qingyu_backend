@@ -15,6 +15,35 @@ import (
 	"go.uber.org/zap"
 )
 
+// isDuplicateKeyError 检查是否是MongoDB唯一索引冲突错误
+func isDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	// MongoDB Duplicate Key错误通常包含"11000"或"duplicate key"
+	return contains(errStr, "11000") || contains(errStr, "duplicate key") ||
+	       contains(errStr, "E11000")
+}
+
+// contains 检查字符串是否包含子串（忽略大小写）
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (
+		s[:len(substr)] == substr ||
+		s[len(s)-len(substr):] == substr ||
+		indexOf(s, substr) >= 0))
+}
+
+// indexOf 查找子串位置
+func indexOf(s, substr string) int {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
+}
+
 // UserServiceImpl 用户服务实现
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
@@ -87,6 +116,8 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *user2.CreateUserR
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
+		Status:   usersModel.UserStatusActive, // 默认设置为活跃状态
+		Roles:    []string{"reader"}, // 默认角色为reader
 	}
 
 	// 4. 设置密码
@@ -94,9 +125,44 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *user2.CreateUserR
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "设置密码失败", err)
 	}
 
-	// 5. 保存到数据库
-	if err := s.userRepo.Create(ctx, user); err != nil {
+	// 5. 保存到数据库（带重试机制处理并发冲突）
+	maxRetries := 3
+	var lastErr error
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		err := s.userRepo.Create(ctx, user)
+		if err == nil {
+			// 创建成功
+			break
+		}
+
+		lastErr = err
+
+		// 检查是否是唯一索引冲突（MongoDB错误代码11000）
+		if isDuplicateKeyError(err) {
+			// 重新检查用户是否已存在（可能是其他并发请求创建了）
+			exists, checkErr := s.userRepo.ExistsByUsername(ctx, req.Username)
+			if checkErr == nil && exists {
+				// 用户确实存在了，返回友好错误
+				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)
+			}
+
+			// 如果是最后一次尝试，返回错误
+			if attempt == maxRetries-1 {
+				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败（并发冲突）", err)
+			}
+
+			// 等待一小段时间后重试
+			time.Sleep(time.Duration(attempt+1) * 50 * time.Millisecond)
+			continue
+		}
+
+		// 其他类型的错误，直接返回
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
+	}
+
+	// 如果所有重试都失败，返回最后一次错误
+	if lastErr != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", lastErr)
 	}
 
 	return &user2.CreateUserResponse{
@@ -263,7 +329,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
-		Roles:    []string{"user"},            // 默认角色
+		Roles:    []string{"reader"},         // 默认角色
 		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 
@@ -272,13 +338,48 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "设置密码失败", err)
 	}
 
-	// 5. 保存到数据库
-	if err := s.userRepo.Create(ctx, user); err != nil {
+	// 5. 保存到数据库（带重试机制处理并发冲突）
+	maxRetries := 3
+	var lastErr error
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		err := s.userRepo.Create(ctx, user)
+		if err == nil {
+			// 创建成功
+			break
+		}
+
+		lastErr = err
+
+		// 检查是否是唯一索引冲突（MongoDB错误代码11000）
+		if isDuplicateKeyError(err) {
+			// 重新检查用户是否已存在（可能是其他并发请求创建了）
+			exists, checkErr := s.userRepo.ExistsByUsername(ctx, req.Username)
+			if checkErr == nil && exists {
+				// 用户确实存在了，返回友好错误
+				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)
+			}
+
+			// 如果是最后一次尝试，返回错误
+			if attempt == maxRetries-1 {
+				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败（并发冲突）", err)
+			}
+
+			// 等待一小段时间后重试
+			time.Sleep(time.Duration(attempt+1) * 50 * time.Millisecond)
+			continue
+		}
+
+		// 其他类型的错误，直接返回
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
 	}
 
+	// 如果所有重试都失败，返回最后一次错误
+	if lastErr != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", lastErr)
+	}
+
 	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID, "user")
+	token, err := s.generateToken(user.ID.Hex(), "user")
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -310,7 +411,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	zap.L().Debug("用户找到",
-		zap.String("user_id", user.ID),
+		zap.String("user_id", user.ID.Hex()),
 		zap.String("username", user.Username),
 		zap.String("status", string(user.Status)))
 	// 安全地截取密码哈希前缀
@@ -370,17 +471,17 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	if ip == "" {
 		ip = "unknown"
 	}
-	if err := s.userRepo.UpdateLastLogin(ctx, user.ID, ip); err != nil {
+	if err := s.userRepo.UpdateLastLogin(ctx, user.ID.Hex(), ip); err != nil {
 		// 记录错误但不影响登录流程
 		zap.L().Warn("更新最后登录时间失败",
-			zap.String("user_id", user.ID),
+			zap.String("user_id", user.ID.Hex()),
 			zap.String("ip", ip),
 			zap.Error(err),
 		)
 	}
 
 	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID, "user")
+	token, err := s.generateToken(user.ID.Hex(), "user")
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -931,7 +1032,7 @@ func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.C
 	hashedPassword := user.Password
 
 	// 5. 更新密码
-	if err := s.userRepo.UpdatePassword(ctx, user.ID, hashedPassword); err != nil {
+	if err := s.userRepo.UpdatePassword(ctx, user.ID.Hex(), hashedPassword); err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新密码失败", err)
 	}
 

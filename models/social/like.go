@@ -9,10 +9,10 @@ import (
 // Like 点赞模型
 type Like struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID     string             `bson:"user_id" json:"user_id" binding:"required"`
-	TargetType string             `bson:"target_type" json:"target_type" binding:"required"` // book, comment, chapter
-	TargetID   string             `bson:"target_id" json:"target_id" binding:"required"`
-	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+	UserID     string             `bson:"user_id" json:"userId" binding:"required"`
+	TargetType string             `bson:"target_type" json:"targetType" binding:"required"` // book, comment, chapter
+	TargetID   string             `bson:"target_id" json:"targetId" binding:"required"`
+	CreatedAt  time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // LikeTargetType 点赞目标类型常量

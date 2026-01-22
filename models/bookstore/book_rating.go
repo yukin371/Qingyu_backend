@@ -9,14 +9,14 @@ import (
 // BookRating 书籍评分模型
 type BookRating struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	BookID    primitive.ObjectID `bson:"book_id" json:"book_id"`
-	UserID    primitive.ObjectID `bson:"user_id" json:"user_id"`
+	BookID    primitive.ObjectID `bson:"book_id" json:"$1$2"`
+	UserID    primitive.ObjectID `bson:"user_id" json:"$1$2"`
 	Rating    int                `bson:"rating" json:"rating"` // 1-5星
 	Comment   string             `bson:"comment" json:"comment"`
 	Tags      []string           `bson:"tags" json:"tags"`
 	Likes     int                `bson:"likes" json:"likes"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	CreatedAt time.Time          `bson:"created_at" json:"$1$2"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"$1$2"`
 }
 
 // BeforeCreate 在创建前设置时间戳

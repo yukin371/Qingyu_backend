@@ -6,17 +6,17 @@ import "time"
 // 注意：新的推荐系统应使用 Behavior 模型
 type UserBehaviorRecord struct {
 	ID         string                 `json:"id" bson:"_id,omitempty"`
-	UserID     string                 `json:"user_id" bson:"user_id"`
-	ItemID     string                 `json:"item_id" bson:"item_id"`
-	ItemType   string                 `json:"item_type" bson:"item_type"`                   // book, chapter, article
-	ActionType string                 `json:"action_type" bson:"action_type"`               // view, click, favorite, read, purchase
+	UserID     string                 `json:"$1$2" bson:"user_id"`
+	ItemID     string                 `json:"$1$2" bson:"item_id"`
+	ItemType   string                 `json:"$1$2" bson:"item_type"`                   // book, chapter, article
+	ActionType string                 `json:"$1$2" bson:"action_type"`               // view, click, favorite, read, purchase
 	Duration   int64                  `json:"duration" bson:"duration"`                     // 停留时长（秒）
 	Progress   float64                `json:"progress,omitempty" bson:"progress,omitempty"` // 阅读进度（0-1）
 	Score      float64                `json:"score,omitempty" bson:"score,omitempty"`       // 评分（1-5）
 	Metadata   map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"` // 额外数据
 	IP         string                 `json:"ip,omitempty" bson:"ip,omitempty"`
 	UserAgent  string                 `json:"user_agent,omitempty" bson:"user_agent,omitempty"`
-	CreatedAt  time.Time              `json:"created_at" bson:"created_at"`
+	CreatedAt  time.Time              `json:"$1$2" bson:"created_at"`
 }
 
 // UserBehavior 是 UserBehaviorRecord 的别名，用于向后兼容
@@ -25,8 +25,8 @@ type UserBehavior = UserBehaviorRecord
 
 // RecommendedItem 推荐项（主要存储在缓存中）
 type RecommendedItem struct {
-	ItemID      string                 `json:"item_id"`
-	ItemType    string                 `json:"item_type"`
+	ItemID      string                 `json:"$1$2"`
+	ItemType    string                 `json:"$1$2"`
 	Score       float64                `json:"score"`                  // 推荐分数
 	Reason      string                 `json:"reason"`                 // 推荐理由
 	Rank        int                    `json:"rank"`                   // 排名

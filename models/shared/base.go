@@ -3,6 +3,8 @@ package shared
 import (
 	"fmt"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BaseEntity 通用实体基类
@@ -51,16 +53,16 @@ func (b *BaseEntity) IsDeleted() bool {
 
 // IdentifiedEntity 包含ID字段的基础实体
 type IdentifiedEntity struct {
-	ID string `bson:"_id,omitempty" json:"id"`
+	ID primitive.ObjectID `bson:"_id,omitempty" json:"-"`
 }
 
 // GetID 获取ID
-func (i *IdentifiedEntity) GetID() string {
+func (i *IdentifiedEntity) GetID() primitive.ObjectID {
 	return i.ID
 }
 
 // SetID 设置ID
-func (i *IdentifiedEntity) SetID(id string) {
+func (i *IdentifiedEntity) SetID(id primitive.ObjectID) {
 	i.ID = id
 }
 

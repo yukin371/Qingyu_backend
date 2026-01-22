@@ -140,6 +140,37 @@ func setConfigDefaults(cfg *Config) {
 		cfg.Server.Mode = "debug"
 	}
 
+	// 日志默认值
+	if cfg.Log == nil {
+		cfg.Log = &LogConfig{}
+	}
+	if cfg.Log.Level == "" {
+		cfg.Log.Level = "info"
+	}
+	if cfg.Log.Format == "" {
+		cfg.Log.Format = "json"
+	}
+	if cfg.Log.Output == "" {
+		cfg.Log.Output = "stdout"
+	}
+	if cfg.Log.Filename == "" {
+		cfg.Log.Filename = "logs/app.log"
+	}
+	if cfg.Log.Mode == "" {
+		cfg.Log.Mode = "normal"
+	}
+	if cfg.Log.Request == nil {
+		cfg.Log.Request = &LogRequestConfig{
+			EnableBody:     false,
+			MaxBodySize:    2048,
+			SkipPaths:      []string{"/health", "/metrics", "/swagger"},
+			BodyAllowPaths: []string{},
+		}
+	}
+	if cfg.Log.RedactKeys == nil {
+		cfg.Log.RedactKeys = []string{"authorization", "password", "token", "cookie"}
+	}
+
 	// JWT默认值
 	if cfg.JWT == nil {
 		cfg.JWT = &JWTConfig{}

@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	shared "Qingyu_backend/models/shared"
 	"Qingyu_backend/models/writer"
 	"context"
 	"os"
@@ -62,12 +61,13 @@ type UserOption func(*users.User)
 
 // CreateTestUser 创建测试用户
 func CreateTestUser(opts ...UserOption) *users.User {
+	id := primitive.NewObjectID()
 	user := &users.User{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        id,
 		Username:  "testuser",
 		Email:     "test@example.com",
 		Password:  "hashed_password_123",
-		Roles:     []string{"user"},
+		Roles:     []string{"reader"},
 		Status:    users.UserStatusActive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -219,14 +219,19 @@ type DocumentOption func(*writer.Document)
 // 如需创建文档内容，请使用CreateTestDocumentContent
 func CreateTestDocument(projectID string, opts ...DocumentOption) *writer.Document {
 	now := time.Now()
-	doc := &writer.Document{
-		Type:   writer.TypeChapter,
-		Status: "draft",
+	objectID := primitive.NewObjectID()
+	var projectObjectID primitive.ObjectID
+	if projectID != "" {
+		projectObjectID, _ = primitive.ObjectIDFromHex(projectID)
 	}
-	doc.TitledEntity.Title = "测试文档"
-	doc.ProjectScopedEntity.ProjectID = projectID
-	doc.Timestamps.CreatedAt = now
-	doc.Timestamps.UpdatedAt = now
+	doc := &writer.Document{}
+	doc.ID = objectID
+	doc.Type = writer.TypeChapter
+	doc.Status = "draft"
+	doc.Title = "测试文档"
+	doc.ProjectID = projectObjectID
+	doc.CreatedAt = now
+	doc.UpdatedAt = now
 
 	// 应用选项
 	for _, opt := range opts {
@@ -238,18 +243,23 @@ func CreateTestDocument(projectID string, opts ...DocumentOption) *writer.Docume
 
 // CreateTestDocumentContent 创建测试文档内容
 func CreateTestDocumentContent(documentID string, content string) *writer.DocumentContent {
-	id := primitive.NewObjectID().Hex()
+	id := primitive.NewObjectID()
+	var documentObjectID primitive.ObjectID
+	if documentID != "" {
+		documentObjectID, _ = primitive.ObjectIDFromHex(documentID)
+	}
 	now := time.Now()
 	return &writer.DocumentContent{
-		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
-		DocumentID:       documentID,
+		ID:               id,
+		DocumentID:       documentObjectID,
 		Content:          content,
 		ContentType:      "markdown",
 		WordCount:        len([]rune(content)),
 		CharCount:        len(content),
 		Version:          1,
-		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-		Edited:           shared.Edited{LastSavedAt: now},
+		CreatedAt:        now,
+		UpdatedAt:        now,
+		LastSavedAt:      now,
 	}
 }
 

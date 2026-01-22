@@ -146,7 +146,7 @@ func (f *Fixtures) CreateBook(authorID string, opts ...BookOption) *bookstore.Bo
 		Introduction: "E2E测试书籍",
 		Categories:   []string{"小说"},
 		Price:        0,
-		Status:       bookstore.BookStatusPublished,
+		Status:       bookstore.BookStatusOngoing,
 		WordCount:    10000,
 		IsFree:       true,
 	}

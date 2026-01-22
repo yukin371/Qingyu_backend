@@ -60,6 +60,7 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 
 	// 初始化全局配置
 	config.GlobalConfig = cfg
+	EnableStrictLogAssertions(t)
 
 	// 创建服务容器并初始化
 	c := container.NewServiceContainer()
@@ -159,6 +160,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 
 	// 初始化全局配置
 	config.GlobalConfig = cfg
+	EnableStrictLogAssertions(t)
 
 	// 初始化服务容器
 	err = service.InitializeServices()

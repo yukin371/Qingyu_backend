@@ -16,7 +16,7 @@ redis:
   poolsize: 10
 
 jwt:
-  secret: "test-secret-key-do-not-use-in-production"
+  secret: "qingyu_secret_key"  # 与config.yaml保持一致
   expire: 7200  # 2小时
   issuer: "qingyu-test"
 

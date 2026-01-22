@@ -21,7 +21,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # 复制Air配置
-COPY docker/.air.toml /app/.air.toml
+COPY .air.toml /app/.air.toml
 
 # 暴露应用端口
 EXPOSE 8080

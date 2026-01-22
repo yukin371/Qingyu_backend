@@ -241,7 +241,7 @@ func TestUserLogin_Success(t *testing.T) {
 		Username: "testuser",
 		Email:    "test@example.com",
 		Password: "$2a$10$YourHashedPasswordHere", // bcrypt hash
-		Role:     "user",
+		Role:     "reader",
 		Status:   usersModel.UserStatusActive,
 	}
 
@@ -284,7 +284,7 @@ func TestGetProfile_Success(t *testing.T) {
 		ID:       testUserID,
 		Username: "testuser",
 		Email:    "test@example.com",
-		Role:     "user",
+		Role:     "reader",
 		Status:   usersModel.UserStatusActive,
 	}
 
@@ -366,14 +366,14 @@ func TestListUsers_Success(t *testing.T) {
 			ID:       "user-1",
 			Username: "user1",
 			Email:    "user1@example.com",
-			Role:     "user",
+			Role:     "reader",
 			Status:   usersModel.UserStatusActive,
 		},
 		{
 			ID:       "user-2",
 			Username: "user2",
 			Email:    "user2@example.com",
-			Role:     "user",
+			Role:     "reader",
 			Status:   usersModel.UserStatusActive,
 		},
 	}

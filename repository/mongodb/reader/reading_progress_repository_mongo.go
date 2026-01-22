@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,8 +28,8 @@ func NewMongoReadingProgressRepository(db *mongo.Database) *MongoReadingProgress
 
 // Create 创建阅读进度
 func (r *MongoReadingProgressRepository) Create(ctx context.Context, progress *reader.ReadingProgress) error {
-	if progress.ID == "" {
-		progress.ID = generateProgressID()
+	if progress.ID.IsZero() {
+		progress.ID = primitive.NewObjectID()
 	}
 	progress.CreatedAt = time.Now()
 	progress.UpdatedAt = time.Now()
@@ -163,7 +164,7 @@ func (r *MongoReadingProgressRepository) SaveProgress(ctx context.Context, userI
 			"updated_at":   time.Now(),
 		},
 		"$setOnInsert": bson.M{
-			"_id":          generateProgressID(),
+			"_id":          primitive.NewObjectID(),
 			"reading_time": int64(0),
 			"created_at":   time.Now(),
 		},
@@ -202,10 +203,19 @@ func (r *MongoReadingProgressRepository) UpdateReadingTime(ctx context.Context, 
 
 	if result.MatchedCount == 0 {
 		// 如果没有记录，创建新记录
+		userOID, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			return fmt.Errorf("无效的用户ID: %w", err)
+		}
+		bookOID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return fmt.Errorf("无效的书籍ID: %w", err)
+		}
+
 		progress := &reader.ReadingProgress{
-			ID:          generateProgressID(),
-			UserID:      userID,
-			BookID:      bookID,
+			ID:          primitive.NewObjectID(),
+			UserID:      userOID,
+			BookID:      bookOID,
 			ReadingTime: duration,
 			Progress:    0,
 			LastReadAt:  time.Now(),
@@ -498,9 +508,4 @@ func (r *MongoReadingProgressRepository) DeleteByBook(ctx context.Context, bookI
 // Health 健康检查
 func (r *MongoReadingProgressRepository) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
-}
-
-// generateProgressID 生成进度ID
-func generateProgressID() string {
-	return fmt.Sprintf("prog_%d", time.Now().UnixNano())
 }

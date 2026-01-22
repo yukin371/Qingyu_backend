@@ -207,14 +207,14 @@ func (r *MongoRankingRepository) GetByTypeWithBooks(ctx context.Context, ranking
 	}
 
 	// 创建书籍ID到书籍的映射
-	bookMap := make(map[primitive.ObjectID]*bookstore2.Book)
+	bookMap := make(map[string]*bookstore2.Book)
 	for _, book := range books {
 		bookMap[book.ID] = book
 	}
 
 	// 填充书籍信息
 	for _, item := range items {
-		if book, exists := bookMap[item.BookID]; exists {
+		if book, exists := bookMap[item.BookID.Hex()]; exists {
 			item.Book = book
 		}
 	}

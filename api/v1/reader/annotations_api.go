@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
@@ -67,10 +68,14 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		return
 	}
 
+	userOID, _ := primitive.ObjectIDFromHex(userIDStr)
+	bookOID, _ := primitive.ObjectIDFromHex(req.BookID)
+	chapterOID, _ := primitive.ObjectIDFromHex(req.ChapterID)
+	
 	annotation := &readerModels.Annotation{
-		UserID:    userIDStr,
-		BookID:    req.BookID,
-		ChapterID: req.ChapterID,
+		UserID:    userOID,
+		BookID:    bookOID,
+		ChapterID: chapterOID,
 		Type:      req.Type,
 		Text:      req.Text,
 		Note:      req.Note,

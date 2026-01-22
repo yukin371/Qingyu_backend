@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
+	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
@@ -16,10 +15,10 @@ import (
 type BookStatisticsService interface {
 	// 统计基础操作
 	CreateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error
-	GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookStatistics, error)
-	GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore2.BookStatistics, error)
+	GetStatisticsByID(ctx context.Context, id string) (*bookstore2.BookStatistics, error)
+	GetStatisticsByBookID(ctx context.Context, bookID string) (*bookstore2.BookStatistics, error)
 	UpdateStatistics(ctx context.Context, stats *bookstore2.BookStatistics) error
-	DeleteStatistics(ctx context.Context, id primitive.ObjectID) error
+	DeleteStatistics(ctx context.Context, id string) error
 
 	// 统计数据查询
 	GetTopViewedBooks(ctx context.Context, limit int) ([]*bookstore2.BookStatistics, error)
@@ -29,32 +28,32 @@ type BookStatisticsService interface {
 	GetTrendingBooks(ctx context.Context, days int, limit int) ([]*bookstore2.BookStatistics, error)
 
 	// 统计数据更新
-	IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error
-	DecrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error
-	DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error
-	IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error
+	IncrementViewCount(ctx context.Context, bookID string) error
+	IncrementFavoriteCount(ctx context.Context, bookID string) error
+	DecrementFavoriteCount(ctx context.Context, bookID string) error
+	IncrementCommentCount(ctx context.Context, bookID string) error
+	DecrementCommentCount(ctx context.Context, bookID string) error
+	IncrementShareCount(ctx context.Context, bookID string) error
 
 	// 评分统计更新
-	UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error
-	RemoveRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error
-	RecalculateRating(ctx context.Context, bookID primitive.ObjectID) error
+	UpdateRating(ctx context.Context, bookID string, rating float64) error
+	RemoveRating(ctx context.Context, bookID string, rating float64) error
+	RecalculateRating(ctx context.Context, bookID string) error
 
 	// 热度分数管理
-	UpdateHotScore(ctx context.Context, bookID primitive.ObjectID) error
-	BatchUpdateHotScore(ctx context.Context, bookIDs []primitive.ObjectID) error
+	UpdateHotScore(ctx context.Context, bookID string) error
+	BatchUpdateHotScore(ctx context.Context, bookIDs []string) error
 	RecalculateAllHotScores(ctx context.Context) error
 
 	// 聚合统计
 	GetAggregatedStatistics(ctx context.Context) (map[string]interface{}, error)
 	GetStatisticsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*bookstore2.BookStatistics, error)
-	GetBookPopularityLevel(ctx context.Context, bookID primitive.ObjectID) (string, error)
+	GetBookPopularityLevel(ctx context.Context, bookID string) (string, error)
 
 	// 批量操作
-	BatchUpdateViewCount(ctx context.Context, bookIDs []primitive.ObjectID, increment int64) error
+	BatchUpdateViewCount(ctx context.Context, bookIDs []string, increment int64) error
 	BatchCreateStatistics(ctx context.Context, statsList []*bookstore2.BookStatistics) error
-	BatchDeleteStatistics(ctx context.Context, bookIDs []primitive.ObjectID) error
+	BatchDeleteStatistics(ctx context.Context, bookIDs []string) error
 
 	// 统计报告
 	GenerateDailyReport(ctx context.Context, date time.Time) (map[string]interface{}, error)
@@ -87,7 +86,7 @@ func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats 
 	}
 
 	// 验证必填字段
-	if stats.BookID.IsZero() {
+	if stats.BookID == "" {
 		return errors.New("book ID is required")
 	}
 
@@ -112,10 +111,14 @@ func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats 
 }
 
 // GetStatisticsByID 根据ID获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.BookStatistics, error) {
+func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id string) (*bookstore2.BookStatistics, error) {
+	if id == "" {
+		return nil, errors.New("statistics ID cannot be empty")
+	}
+
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
-		if cachedStats, err := s.cacheService.GetBookStatistics(ctx, id.Hex()); err == nil && cachedStats != nil {
+		if cachedStats, err := s.cacheService.GetBookStatistics(ctx, id); err == nil && cachedStats != nil {
 			return cachedStats, nil
 		}
 	}
@@ -131,21 +134,21 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByID(ctx context.Context, id pr
 
 	// 缓存结果
 	if s.cacheService != nil {
-		s.cacheService.SetBookStatistics(ctx, id.Hex(), stats, 10*time.Minute)
+		s.cacheService.SetBookStatistics(ctx, id, stats, 10*time.Minute)
 	}
 
 	return stats, nil
 }
 
 // GetStatisticsByBookID 根据书籍ID获取统计数据
-func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, bookID primitive.ObjectID) (*bookstore2.BookStatistics, error) {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, bookID string) (*bookstore2.BookStatistics, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
 	// 先尝试从缓存获取
 	if s.cacheService != nil {
-		if cachedStats, err := s.cacheService.GetBookStatistics(ctx, bookID.Hex()); err == nil && cachedStats != nil {
+		if cachedStats, err := s.cacheService.GetBookStatistics(ctx, bookID); err == nil && cachedStats != nil {
 			return cachedStats, nil
 		}
 	}
@@ -164,9 +167,9 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 			FavoriteCount:      0,
 			CommentCount:       0,
 			ShareCount:         0,
-			AverageRating:      0,
+			AverageRating:      types.Rating(0),
 			RatingCount:        0,
-			RatingDistribution: make(map[string]int64),
+			RatingDistribution: types.NewRatingDistribution(),
 			HotScore:           0,
 		}
 		if err := s.statsRepo.Create(ctx, stats); err != nil {
@@ -176,7 +179,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 
 	// 缓存结果
 	if s.cacheService != nil {
-		s.cacheService.SetBookStatistics(ctx, bookID.Hex(), stats, 10*time.Minute)
+		s.cacheService.SetBookStatistics(ctx, bookID, stats, 10*time.Minute)
 	}
 
 	return stats, nil
@@ -189,7 +192,7 @@ func (s *BookStatisticsServiceImpl) UpdateStatistics(ctx context.Context, stats 
 	}
 
 	// 验证必填字段
-	if stats.BookID.IsZero() {
+	if stats.BookID == "" {
 		return errors.New("book ID is required")
 	}
 
@@ -214,7 +217,11 @@ func (s *BookStatisticsServiceImpl) UpdateStatistics(ctx context.Context, stats 
 }
 
 // DeleteStatistics 删除统计数据
-func (s *BookStatisticsServiceImpl) DeleteStatistics(ctx context.Context, id primitive.ObjectID) error {
+func (s *BookStatisticsServiceImpl) DeleteStatistics(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("statistics ID cannot be empty")
+	}
+
 	// 先获取统计数据用于清除缓存
 	stats, err := s.statsRepo.GetByID(ctx, id)
 	if err != nil {
@@ -444,8 +451,8 @@ func (s *BookStatisticsServiceImpl) GetTrendingBooks(ctx context.Context, days i
 }
 
 // IncrementViewCount 增加浏览量
-func (s *BookStatisticsServiceImpl) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) IncrementViewCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -457,12 +464,12 @@ func (s *BookStatisticsServiceImpl) IncrementViewCount(ctx context.Context, book
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
 		// 热度分数更新失败不影响主要操作
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopViewedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -471,8 +478,8 @@ func (s *BookStatisticsServiceImpl) IncrementViewCount(ctx context.Context, book
 }
 
 // IncrementFavoriteCount 增加收藏量
-func (s *BookStatisticsServiceImpl) IncrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) IncrementFavoriteCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -483,12 +490,12 @@ func (s *BookStatisticsServiceImpl) IncrementFavoriteCount(ctx context.Context, 
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopFavoritedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -497,8 +504,8 @@ func (s *BookStatisticsServiceImpl) IncrementFavoriteCount(ctx context.Context, 
 }
 
 // DecrementFavoriteCount 减少收藏量
-func (s *BookStatisticsServiceImpl) DecrementFavoriteCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) DecrementFavoriteCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -509,12 +516,12 @@ func (s *BookStatisticsServiceImpl) DecrementFavoriteCount(ctx context.Context, 
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopFavoritedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -523,8 +530,8 @@ func (s *BookStatisticsServiceImpl) DecrementFavoriteCount(ctx context.Context, 
 }
 
 // IncrementCommentCount 增加评论量
-func (s *BookStatisticsServiceImpl) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) IncrementCommentCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -535,12 +542,12 @@ func (s *BookStatisticsServiceImpl) IncrementCommentCount(ctx context.Context, b
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
 
@@ -548,8 +555,8 @@ func (s *BookStatisticsServiceImpl) IncrementCommentCount(ctx context.Context, b
 }
 
 // DecrementCommentCount 减少评论量
-func (s *BookStatisticsServiceImpl) DecrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) DecrementCommentCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -560,12 +567,12 @@ func (s *BookStatisticsServiceImpl) DecrementCommentCount(ctx context.Context, b
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
 
@@ -573,8 +580,8 @@ func (s *BookStatisticsServiceImpl) DecrementCommentCount(ctx context.Context, b
 }
 
 // IncrementShareCount 增加分享量
-func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -585,12 +592,12 @@ func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, boo
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
 
@@ -598,8 +605,8 @@ func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, boo
 }
 
 // UpdateRating 更新评分统计
-func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID string, rating float64) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 	if rating < 1 || rating > 5 {
@@ -613,12 +620,12 @@ func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID pri
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopRatedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -627,8 +634,8 @@ func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID pri
 }
 
 // RemoveRating 移除评分统计
-func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID string, rating float64) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 	if rating < 1 || rating > 5 {
@@ -642,12 +649,12 @@ func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID pri
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID.Hex(), err)
+		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
 	}
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopRatedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -656,8 +663,8 @@ func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID pri
 }
 
 // RecalculateRating 重新计算评分统计
-func (s *BookStatisticsServiceImpl) RecalculateRating(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) RecalculateRating(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -669,7 +676,7 @@ func (s *BookStatisticsServiceImpl) RecalculateRating(ctx context.Context, bookI
 
 	// 清除相关缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		s.cacheService.InvalidateTopRatedBooksCache(ctx)
 		s.cacheService.InvalidateHottestBooksCache(ctx)
 	}
@@ -678,8 +685,8 @@ func (s *BookStatisticsServiceImpl) RecalculateRating(ctx context.Context, bookI
 }
 
 // UpdateHotScore 更新热度分数
-func (s *BookStatisticsServiceImpl) UpdateHotScore(ctx context.Context, bookID primitive.ObjectID) error {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) UpdateHotScore(ctx context.Context, bookID string) error {
+	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
@@ -704,7 +711,7 @@ func (s *BookStatisticsServiceImpl) UpdateHotScore(ctx context.Context, bookID p
 }
 
 // BatchUpdateHotScore 批量更新热度分数
-func (s *BookStatisticsServiceImpl) BatchUpdateHotScore(ctx context.Context, bookIDs []primitive.ObjectID) error {
+func (s *BookStatisticsServiceImpl) BatchUpdateHotScore(ctx context.Context, bookIDs []string) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -717,7 +724,7 @@ func (s *BookStatisticsServiceImpl) BatchUpdateHotScore(ctx context.Context, boo
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		}
 	}
 	if s.cacheService != nil {
@@ -776,8 +783,8 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByTimeRange(ctx context.Context
 }
 
 // GetBookPopularityLevel 获取书籍热度等级
-func (s *BookStatisticsServiceImpl) GetBookPopularityLevel(ctx context.Context, bookID primitive.ObjectID) (string, error) {
-	if bookID.IsZero() {
+func (s *BookStatisticsServiceImpl) GetBookPopularityLevel(ctx context.Context, bookID string) (string, error) {
+	if bookID == "" {
 		return "", errors.New("book ID cannot be empty")
 	}
 
@@ -796,7 +803,7 @@ func (s *BookStatisticsServiceImpl) GetBookPopularityLevel(ctx context.Context, 
 }
 
 // BatchUpdateViewCount 批量更新浏览量
-func (s *BookStatisticsServiceImpl) BatchUpdateViewCount(ctx context.Context, bookIDs []primitive.ObjectID, increment int64) error {
+func (s *BookStatisticsServiceImpl) BatchUpdateViewCount(ctx context.Context, bookIDs []string, increment int64) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -812,7 +819,7 @@ func (s *BookStatisticsServiceImpl) BatchUpdateViewCount(ctx context.Context, bo
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		}
 	}
 	if s.cacheService != nil {
@@ -831,7 +838,7 @@ func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, s
 
 	// 验证数据
 	for _, stats := range statsList {
-		if stats.BookID.IsZero() {
+		if stats.BookID == "" {
 			return errors.New("book ID is required for all statistics")
 		}
 	}
@@ -840,7 +847,7 @@ func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, s
 	// 这里简化处理，逐个创建
 	for _, stats := range statsList {
 		if err := s.statsRepo.Create(ctx, stats); err != nil {
-			return fmt.Errorf("failed to create statistics for book %s: %w", stats.BookID.Hex(), err)
+			return fmt.Errorf("failed to create statistics for book %s: %w", stats.BookID, err)
 		}
 	}
 
@@ -848,7 +855,7 @@ func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, s
 }
 
 // BatchDeleteStatistics 批量删除统计数据
-func (s *BookStatisticsServiceImpl) BatchDeleteStatistics(ctx context.Context, bookIDs []primitive.ObjectID) error {
+func (s *BookStatisticsServiceImpl) BatchDeleteStatistics(ctx context.Context, bookIDs []string) error {
 	if len(bookIDs) == 0 {
 		return errors.New("book IDs cannot be empty")
 	}
@@ -862,7 +869,7 @@ func (s *BookStatisticsServiceImpl) BatchDeleteStatistics(ctx context.Context, b
 		}
 		if stats != nil {
 			if err := s.statsRepo.Delete(ctx, stats.ID); err != nil {
-				return fmt.Errorf("failed to delete statistics for book %s: %w", bookID.Hex(), err)
+				return fmt.Errorf("failed to delete statistics for book %s: %w", bookID, err)
 			}
 		}
 	}
@@ -870,7 +877,7 @@ func (s *BookStatisticsServiceImpl) BatchDeleteStatistics(ctx context.Context, b
 	// 清除相关缓存
 	for _, bookID := range bookIDs {
 		if s.cacheService != nil {
-			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID.Hex())
+			s.cacheService.InvalidateBookStatisticsCache(ctx, bookID)
 		}
 	}
 
@@ -1033,7 +1040,7 @@ func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, 
 	}
 
 	// 清除统计数据缓存
-	s.cacheService.InvalidateBookStatisticsCache(ctx, stats.BookID.Hex())
+	s.cacheService.InvalidateBookStatisticsCache(ctx, stats.BookID)
 
 	// 清除排行榜缓存
 	s.cacheService.InvalidateTopViewedBooksCache(ctx)
@@ -1045,5 +1052,5 @@ func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, 
 	s.cacheService.InvalidateAggregatedStatisticsCache(ctx)
 
 	// 清除书籍详情缓存（因为统计数据可能影响显示）
-	s.cacheService.InvalidateBookDetailCache(ctx, stats.BookID.Hex())
+	s.cacheService.InvalidateBookDetailCache(ctx, stats.BookID)
 }

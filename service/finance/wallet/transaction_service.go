@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	"Qingyu_backend/models/shared/types"
 )
 
 // TransactionServiceImpl 交易服务实现
@@ -57,7 +58,7 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 	transaction := &financeModel.Transaction{
 		UserID:  wallet.UserID,
 		Type:    "recharge",
-		Amount:  amount,
+		Amount:  types.Money(amount),
 		Method:  method,
 		OrderNo: orderNo,
 		Status:  "success",
@@ -95,7 +96,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 	}
 
 	// 4. 检查余额
-	if wallet.Balance < amount {
+	if wallet.Balance < types.Money(amount) {
 		return nil, fmt.Errorf("余额不足")
 	}
 
@@ -103,7 +104,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 	transaction := &financeModel.Transaction{
 		UserID: wallet.UserID,
 		Type:   "consume",
-		Amount: -amount, // 负数表示消费
+		Amount: types.Money(-amount), // 负数表示消费
 		Status: "success",
 		Reason: reason,
 	}
@@ -145,7 +146,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 	}
 
 	// 5. 检查余额
-	if fromWallet.Balance < amount {
+	if fromWallet.Balance < types.Money(amount) {
 		return fmt.Errorf("余额不足")
 	}
 
@@ -153,7 +154,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 	outTransaction := &financeModel.Transaction{
 		UserID:        fromWallet.UserID,
 		Type:          "transfer_out",
-		Amount:        -amount,
+		Amount:        types.Money(-amount),
 		Status:        "success",
 		Reason:        "转账给 " + toWallet.UserID + ": " + reason,
 		RelatedUserID: toWallet.UserID,
@@ -167,7 +168,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 	inTransaction := &financeModel.Transaction{
 		UserID:        toWallet.UserID,
 		Type:          "transfer_in",
-		Amount:        amount,
+		Amount:        types.Money(amount),
 		Status:        "success",
 		Reason:        "来自 " + fromWallet.UserID + " 的转账: " + reason,
 		RelatedUserID: fromWallet.UserID,
@@ -229,8 +230,8 @@ func convertToTransactionResponse(transaction *financeModel.Transaction) *Transa
 		ID:              transaction.ID,
 		UserID:          transaction.UserID,
 		Type:            transaction.Type,
-		Amount:          transaction.Amount,
-		Balance:         transaction.Balance,
+		Amount:          int64(transaction.Amount),
+		Balance:         int64(transaction.Balance),
 		RelatedUserID:   transaction.RelatedUserID,
 		Method:          transaction.Method,
 		Reason:          transaction.Reason,

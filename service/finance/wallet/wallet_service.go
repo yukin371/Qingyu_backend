@@ -79,7 +79,7 @@ func (s *WalletServiceImpl) GetBalance(ctx context.Context, userID string) (int6
 		return 0, fmt.Errorf("钱包不存在")
 	}
 
-	return wallet.Balance, nil
+	return int64(wallet.Balance), nil
 }
 
 // FreezeWallet 冻结钱包（根据用户ID）
@@ -135,7 +135,7 @@ func convertToWalletResponse(wallet *financeModel.Wallet) *Wallet {
 	return &Wallet{
 		ID:        wallet.ID,
 		UserID:    wallet.UserID,
-		Balance:   wallet.Balance,
+		Balance:   int64(wallet.Balance),
 		Frozen:    wallet.Frozen,
 		CreatedAt: wallet.CreatedAt,
 		UpdatedAt: wallet.UpdatedAt,

@@ -35,10 +35,10 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 							"id":       "user_123",
 							"username": "testuser",
 							"email":    "test@example.com",
-							"role":     "user",
+							"role":     "reader",
 						},
 						"permissions": []string{"read:books"},
-						"roles":       []string{"user"},
+						"roles":       []string{"reader"},
 					},
 					"message": "注册成功",
 				})
@@ -54,10 +54,10 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 							"id":       "user_123",
 							"username": "testuser",
 							"email":    "test@example.com",
-							"role":     "user",
+							"role":     "reader",
 						},
 						"permissions": []string{"read:books", "write:books"},
-						"roles":       []string{"user"},
+						"roles":       []string{"reader"},
 					},
 					"message": "登录成功",
 				})
@@ -109,7 +109,7 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 						"username": "testuser",
 						"email":    "test@example.com",
 						"nickname": "测试用户",
-						"role":     "user",
+						"role":     "reader",
 					},
 					"message": "获取用户信息成功",
 				})
@@ -123,7 +123,7 @@ func TestFrontendAuthAPIIntegration(t *testing.T) {
 						"username": "testuser",
 						"email":    "test@example.com",
 						"nickname": "更新后的用户",
-						"role":     "user",
+						"role":     "reader",
 					},
 					"message": "更新用户信息成功",
 				})

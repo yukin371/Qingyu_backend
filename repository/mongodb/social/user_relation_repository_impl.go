@@ -27,8 +27,8 @@ func NewMongoUserRelationRepository(db *mongo.Database) socialRepo.UserRelationR
 
 // Create 创建用户关系
 func (r *MongoUserRelationRepository) Create(ctx context.Context, relation *social.UserRelation) error {
-	if relation.ID == "" {
-		relation.ID = primitive.NewObjectID().Hex()
+	if relation.ID.IsZero() {
+		relation.ID = primitive.NewObjectID()
 	}
 	now := time.Now()
 	relation.CreatedAt = now
@@ -190,8 +190,8 @@ func (r *MongoUserRelationRepository) BatchCreate(ctx context.Context, relations
 	now := time.Now()
 	documents := make([]interface{}, len(relations))
 	for i, relation := range relations {
-		if relation.ID == "" {
-			relation.ID = primitive.NewObjectID().Hex()
+		if relation.ID.IsZero() {
+			relation.ID = primitive.NewObjectID()
 		}
 		relation.CreatedAt = now
 		relation.UpdatedAt = now

@@ -1109,7 +1109,7 @@ func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID s
 	}
 
 	return &admin.UserStatistics{
-		UserID:           user.ID,
+		UserID:           user.ID.Hex(),
 		TotalBooks:       0,   // TODO: 从 BookRepository 获取
 		TotalChapters:    0,   // TODO: 从 ChapterRepository 获取
 		TotalWords:       0,   // TODO: 从统计数据获取

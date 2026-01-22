@@ -66,7 +66,7 @@ func (s *UserRelationServiceImpl) FollowUser(ctx context.Context, followerID, fo
 		updates := map[string]interface{}{
 			"status": "active",
 		}
-		if err := s.repo.Update(ctx, existingRelation.ID, updates); err != nil {
+	if err := s.repo.Update(ctx, existingRelation.ID.Hex(), updates); err != nil {
 			return fmt.Errorf("更新关注关系失败: %w", err)
 		}
 		return nil
@@ -108,7 +108,7 @@ func (s *UserRelationServiceImpl) UnfollowUser(ctx context.Context, followerID, 
 	updates := map[string]interface{}{
 		"status": "inactive",
 	}
-	if err := s.repo.Update(ctx, relation.ID, updates); err != nil {
+	if err := s.repo.Update(ctx, relation.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("取消关注失败: %w", err)
 	}
 
