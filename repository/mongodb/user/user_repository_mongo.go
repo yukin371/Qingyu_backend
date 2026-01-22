@@ -71,8 +71,8 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 	actualUser.UpdatedAt = now
 
 	// 生成ObjectID
-	if actualUser.ID == "" {
-		actualUser.ID = primitive.NewObjectID().Hex()
+	if actualUser.ID.IsZero() {
+		actualUser.ID = primitive.NewObjectID()
 	}
 
 	// 插入文档
@@ -747,8 +747,8 @@ func (r *MongoUserRepository) BatchCreate(ctx context.Context, users []*usersMod
 	for _, user := range users {
 		(*user).CreatedAt = now
 		(*user).UpdatedAt = now
-		if (*user).ID == "" {
-			(*user).ID = primitive.NewObjectID().Hex()
+		if (*user).ID.IsZero() {
+			(*user).ID = primitive.NewObjectID()
 		}
 		documents = append(documents, *user)
 	}

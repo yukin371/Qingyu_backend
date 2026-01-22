@@ -86,12 +86,12 @@ func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*
 	}
 
 	if role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID.Hex(), role.ID)
 	}
 
 	// 3. 生成JWT Token
 	roles := []string{defaultRole}
-	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID.Hex(), roles)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
@@ -99,7 +99,7 @@ func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*
 	// 4. 返回响应
 	return &RegisterResponse{
 		User: &UserInfo{
-			ID:       userResp.User.ID,
+			ID:       userResp.User.ID.Hex(),
 			Username: userResp.User.Username,
 			Email:    userResp.User.Email,
 			Roles:    roles,
@@ -122,7 +122,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 	}
 
 	// 2. 获取用户角色
-	userRoles, err := s.authRepo.GetUserRoles(ctx, loginResp.User.ID)
+	userRoles, err := s.authRepo.GetUserRoles(ctx, loginResp.User.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("获取用户角色失败: %w", err)
 	}
@@ -138,26 +138,26 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 	}
 
 	// 2.5. MVP: 强制执行多端登录限制（最多5台设备，超限自动踢出最老设备）
-	if err := s.sessionService.EnforceDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
+	if err := s.sessionService.EnforceDeviceLimit(ctx, loginResp.User.ID.Hex(), 5); err != nil {
 		// 记录错误但不中断登录（宽松策略）
 		zap.L().Warn("设备限制执行失败，允许登录",
-			zap.String("user_id", loginResp.User.ID),
+			zap.String("user_id", loginResp.User.ID.Hex()),
 			zap.Error(err),
 		)
 	}
 
 	// 3. 生成JWT Token
-	token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID, roleNames)
+	token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID.Hex(), roleNames)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
 
 	// 3.5. MVP: 创建会话
-	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
+	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID.Hex())
 	if err != nil {
 		// 会话创建失败不影响登录（降级处理）
 		zap.L().Warn("创建会话失败",
-			zap.String("user_id", loginResp.User.ID),
+			zap.String("user_id", loginResp.User.ID.Hex()),
 			zap.Error(err),
 		)
 	}
@@ -166,7 +166,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 	// 4. 返回响应
 	return &LoginResponse{
 		User: &UserInfo{
-			ID:       loginResp.User.ID,
+			ID:       loginResp.User.ID.Hex(),
 			Username: loginResp.User.Username,
 			Email:    loginResp.User.Email,
 			Roles:    roleNames,
@@ -196,7 +196,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 		_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID)
 
 		// 获取用户角色
-		userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID)
+		userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID.Hex())
 		if err != nil {
 			return nil, fmt.Errorf("获取用户角色失败: %w", err)
 		}
@@ -212,14 +212,14 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 		}
 
 		// 生成JWT Token
-		token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roleNames)
+		token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID.Hex(), roleNames)
 		if err != nil {
 			return nil, fmt.Errorf("生成Token失败: %w", err)
 		}
 
 		return &LoginResponse{
 			User: &UserInfo{
-				ID:       userResp.User.ID,
+				ID:       userResp.User.ID.Hex(),
 				Username: userResp.User.Username,
 				Email:    userResp.User.Email,
 				Roles:    roleNames,
@@ -254,12 +254,12 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 	defaultRole := "reader"
 	role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
 	if err == nil && role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID.Hex(), role.ID)
 	}
 
 	// 5. 创建OAuth账号记录
 	oauthAccount = &authModel.OAuthAccount{
-		UserID:         userResp.User.ID,
+		UserID:         userResp.User.ID.Hex(),
 		Provider:       req.Provider,
 		ProviderUserID: req.ProviderID,
 		Email:          req.Email,
@@ -276,7 +276,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 
 	// 6. 生成JWT Token
 	roles := []string{defaultRole}
-	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID.Hex(), roles)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
@@ -284,7 +284,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 	// 7. 返回响应
 	return &LoginResponse{
 		User: &UserInfo{
-			ID:       userResp.User.ID,
+			ID:       userResp.User.ID.Hex(),
 			Username: userResp.User.Username,
 			Email:    userResp.User.Email,
 			Roles:    roles,
@@ -501,7 +501,7 @@ func (s *AuthServiceImpl) GetVersion() string {
 // convertUserToUserInfo 转换User为UserInfo
 func convertUserToUserInfo(user *usersModel.User, roles []string) *UserInfo {
 	return &UserInfo{
-		ID:       user.ID,
+		ID:       user.ID.Hex(),
 		Username: user.Username,
 		Email:    user.Email,
 		Roles:    roles,

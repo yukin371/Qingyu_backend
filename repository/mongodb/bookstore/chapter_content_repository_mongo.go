@@ -49,9 +49,14 @@ func (r *MongoChapterContentRepository) Create(ctx context.Context, content *boo
 }
 
 // GetByID 根据 ID 获取章节内容
-func (r *MongoChapterContentRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.ChapterContent, error) {
+func (r *MongoChapterContentRepository) GetByID(ctx context.Context, id string) (*bookstore.ChapterContent, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chapter content ID: %w", err)
+	}
+
 	var content bookstore.ChapterContent
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&content)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -62,9 +67,14 @@ func (r *MongoChapterContentRepository) GetByID(ctx context.Context, id primitiv
 }
 
 // GetByChapterID 根据章节 ID 获取内容
-func (r *MongoChapterContentRepository) GetByChapterID(ctx context.Context, chapterID primitive.ObjectID) (*bookstore.ChapterContent, error) {
+func (r *MongoChapterContentRepository) GetByChapterID(ctx context.Context, chapterID string) (*bookstore.ChapterContent, error) {
+	objectID, err := primitive.ObjectIDFromHex(chapterID)
+	if err != nil {
+		return nil, err
+	}
+
 	var content bookstore.ChapterContent
-	err := r.collection.FindOne(ctx, bson.M{"chapter_id": chapterID}).Decode(&content)
+	err = r.collection.FindOne(ctx, bson.M{"chapter_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -98,8 +108,13 @@ func (r *MongoChapterContentRepository) Update(ctx context.Context, content *boo
 }
 
 // Delete 删除章节内容
-func (r *MongoChapterContentRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *MongoChapterContentRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete chapter content: %w", err)
 	}
@@ -112,12 +127,22 @@ func (r *MongoChapterContentRepository) Delete(ctx context.Context, id primitive
 }
 
 // GetContentByChapterIDs 批量获取章节内容
-func (r *MongoChapterContentRepository) GetContentByChapterIDs(ctx context.Context, chapterIDs []primitive.ObjectID) ([]*bookstore.ChapterContent, error) {
+func (r *MongoChapterContentRepository) GetContentByChapterIDs(ctx context.Context, chapterIDs []string) ([]*bookstore.ChapterContent, error) {
 	if len(chapterIDs) == 0 {
 		return []*bookstore.ChapterContent{}, nil
 	}
 
-	filter := bson.M{"chapter_id": bson.M{"$in": chapterIDs}}
+	// 转换 string IDs to ObjectIDs
+	objectIDs := make([]primitive.ObjectID, 0, len(chapterIDs))
+	for _, id := range chapterIDs {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, fmt.Errorf("invalid chapter ID: %w", err)
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
+
+	filter := bson.M{"chapter_id": bson.M{"$in": objectIDs}}
 
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -156,12 +181,22 @@ func (r *MongoChapterContentRepository) BatchCreate(ctx context.Context, content
 }
 
 // BatchDelete 批量删除章节内容
-func (r *MongoChapterContentRepository) BatchDelete(ctx context.Context, ids []primitive.ObjectID) error {
+func (r *MongoChapterContentRepository) BatchDelete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 
-	filter := bson.M{"_id": bson.M{"$in": ids}}
+	// 转换 string ID 为 ObjectID
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return fmt.Errorf("无效的ID: %s", id)
+		}
+		objectIDs = append(objectIDs, oid)
+	}
+
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 
 	_, err := r.collection.DeleteMany(ctx, filter)
 	if err != nil {
@@ -172,9 +207,13 @@ func (r *MongoChapterContentRepository) BatchDelete(ctx context.Context, ids []p
 }
 
 // GetLatestVersion 获取最新版本号
-func (r *MongoChapterContentRepository) GetLatestVersion(ctx context.Context, chapterID primitive.ObjectID) (int, error) {
+func (r *MongoChapterContentRepository) GetLatestVersion(ctx context.Context, chapterID string) (int, error) {
+	objectID, err := primitive.ObjectIDFromHex(chapterID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid chapter ID: %w", err)
+	}
 	options := options.Find().SetSort(bson.D{{Key: "version", Value: -1}}).SetLimit(1)
-	cursor, err := r.collection.Find(ctx, bson.M{"chapter_id": chapterID}, options)
+	cursor, err := r.collection.Find(ctx, bson.M{"chapter_id": objectID}, options)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get latest version: %w", err)
 	}
@@ -191,7 +230,11 @@ func (r *MongoChapterContentRepository) GetLatestVersion(ctx context.Context, ch
 }
 
 // UpdateContent 更新章节内容
-func (r *MongoChapterContentRepository) UpdateContent(ctx context.Context, chapterID primitive.ObjectID, content string) (*bookstore.ChapterContent, error) {
+func (r *MongoChapterContentRepository) UpdateContent(ctx context.Context, chapterID string, content string) (*bookstore.ChapterContent, error) {
+	objectID, err := primitive.ObjectIDFromHex(chapterID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chapter ID: %w", err)
+	}
 	// 先查找现有内容
 	existing, err := r.GetByChapterID(ctx, chapterID)
 	if err != nil {
@@ -201,7 +244,7 @@ func (r *MongoChapterContentRepository) UpdateContent(ctx context.Context, chapt
 	if existing == nil {
 		// 创建新内容
 		newContent := &bookstore.ChapterContent{
-			ChapterID: chapterID,
+			ChapterID: objectID,
 			Content:   content,
 			Format:    bookstore.ContentFormatMarkdown,
 		}

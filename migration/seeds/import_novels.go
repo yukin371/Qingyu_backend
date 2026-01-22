@@ -274,7 +274,7 @@ func (ni *NovelImporter) importChapters(ctx context.Context, bookID primitive.Ob
 			// 注意：Content字段已从Chapter模型中移除，内容现在存储在ChapterContent中
 			// 如果需要导入内容，应该使用ChapterContent模型
 			chapter := &bookstore2.Chapter{
-				BookID:      bookID,
+				BookID:      bookID.Hex(),
 				Title:       chapterData.Title,
 				ChapterNum:  chapterNum,
 				WordCount:   chapterData.WordCount,

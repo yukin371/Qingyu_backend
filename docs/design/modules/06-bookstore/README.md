@@ -122,9 +122,9 @@ const (
 type BookStatus string
 const (
     BookStatusDraft     BookStatus = "draft"
-    BookStatusPublished BookStatus = "published"
-    BookStatusRejected  BookStatus = "rejected"
-    BookStatusDeleted   BookStatus = "deleted"
+    BookStatusOngoing   BookStatus = "ongoing"
+    BookStatusCompleted BookStatus = "completed"
+    BookStatusPaused    BookStatus = "paused"
 )
 ```
 

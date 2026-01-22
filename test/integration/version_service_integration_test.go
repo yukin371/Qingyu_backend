@@ -11,6 +11,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
 	"Qingyu_backend/service/writer/project"
+	"Qingyu_backend/test/testutil"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -39,6 +40,8 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
+	testutil.EnableStrictLogging()
+
 	mongoCfg := config.GlobalConfig.Database.Primary.MongoDB
 	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -57,6 +60,7 @@ func TestMain(m *testing.M) {
 	global.DB = client.Database(mongoCfg.Database)
 
 	code := m.Run()
+	code = testutil.CheckStrictLogViolations(code)
 
 	// cleanup
 	_ = global.MongoClient.Disconnect(ctx)

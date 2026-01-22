@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -38,17 +37,17 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 	category.CreatedAt = time.Now()
 	category.UpdatedAt = time.Now()
 
-	result, err := r.collection.InsertOne(ctx, category)
+	_, err := r.collection.InsertOne(ctx, category)
 	if err != nil {
 		return err
 	}
 
-	category.ID = result.InsertedID.(primitive.ObjectID)
+	// ID 已在调用方设置（或自动生成），无需从结果获取
 	return nil
 }
 
 // GetByID 根据ID获取分类
-func (r *MongoCategoryRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.Category, error) {
+func (r *MongoCategoryRepository) GetByID(ctx context.Context, id string) (*bookstore.Category, error) {
 	var category bookstore.Category
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&category)
 	if err != nil {
@@ -61,7 +60,7 @@ func (r *MongoCategoryRepository) GetByID(ctx context.Context, id primitive.Obje
 }
 
 // Update 更新分类
-func (r *MongoCategoryRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (r *MongoCategoryRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
@@ -81,7 +80,7 @@ func (r *MongoCategoryRepository) Update(ctx context.Context, id primitive.Objec
 }
 
 // Delete 删除分类
-func (r *MongoCategoryRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+func (r *MongoCategoryRepository) Delete(ctx context.Context, id string) error {
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
@@ -142,7 +141,7 @@ func (r *MongoCategoryRepository) List(ctx context.Context, filter infra.Filter)
 }
 
 // Exists 判断分类是否存在
-func (r *MongoCategoryRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+func (r *MongoCategoryRepository) Exists(ctx context.Context, id string) (bool, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, err
@@ -164,7 +163,7 @@ func (r *MongoCategoryRepository) GetByName(ctx context.Context, name string) (*
 }
 
 // GetByParent 根据父分类获取子分类列表
-func (r *MongoCategoryRepository) GetByParent(ctx context.Context, parentID primitive.ObjectID, limit, offset int) ([]*bookstore.Category, error) {
+func (r *MongoCategoryRepository) GetByParent(ctx context.Context, parentID string, limit, offset int) ([]*bookstore.Category, error) {
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
@@ -239,7 +238,7 @@ func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*books
 	}
 
 	// 构建分类树
-	categoryMap := make(map[primitive.ObjectID]*bookstore.CategoryTree)
+	categoryMap := make(map[string]*bookstore.CategoryTree)
 	var roots []*bookstore.CategoryTree
 
 	// 创建所有节点
@@ -268,12 +267,12 @@ func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*books
 }
 
 // CountByParent 统计父分类下的子分类数量
-func (r *MongoCategoryRepository) CountByParent(ctx context.Context, parentID primitive.ObjectID) (int64, error) {
+func (r *MongoCategoryRepository) CountByParent(ctx context.Context, parentID string) (int64, error) {
 	return r.collection.CountDocuments(ctx, bson.M{"parent_id": parentID})
 }
 
 // UpdateBookCount 更新分类下的书籍数量
-func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryID primitive.ObjectID, count int64) error {
+func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryID string, count int64) error {
 	_, err := r.collection.UpdateOne(
 		ctx,
 		bson.M{"_id": categoryID},
@@ -288,7 +287,7 @@ func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryI
 }
 
 // GetChildren 获取子分类
-func (r *MongoCategoryRepository) GetChildren(ctx context.Context, parentID primitive.ObjectID) ([]*bookstore.Category, error) {
+func (r *MongoCategoryRepository) GetChildren(ctx context.Context, parentID string) ([]*bookstore.Category, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 	cursor, err := r.collection.Find(ctx, bson.M{"parent_id": parentID, "is_active": true}, opts)
 	if err != nil {
@@ -305,7 +304,7 @@ func (r *MongoCategoryRepository) GetChildren(ctx context.Context, parentID prim
 }
 
 // GetAncestors 获取祖先分类
-func (r *MongoCategoryRepository) GetAncestors(ctx context.Context, categoryID primitive.ObjectID) ([]*bookstore.Category, error) {
+func (r *MongoCategoryRepository) GetAncestors(ctx context.Context, categoryID string) ([]*bookstore.Category, error) {
 	var ancestors []*bookstore.Category
 	currentID := categoryID
 
@@ -332,12 +331,12 @@ func (r *MongoCategoryRepository) GetAncestors(ctx context.Context, categoryID p
 }
 
 // GetDescendants 获取后代分类
-func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID primitive.ObjectID) ([]*bookstore.Category, error) {
+func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID string) ([]*bookstore.Category, error) {
 	var descendants []*bookstore.Category
 
 	// 递归获取所有后代
-	var getChildren func(parentID primitive.ObjectID) error
-	getChildren = func(parentID primitive.ObjectID) error {
+	var getChildren func(parentID string) error
+	getChildren = func(parentID string) error {
 		children, err := r.GetChildren(ctx, parentID)
 		if err != nil {
 			return err
@@ -361,7 +360,7 @@ func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID
 }
 
 // BatchUpdateStatus 批量更新状态
-func (r *MongoCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []primitive.ObjectID, isActive bool) error {
+func (r *MongoCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []string, isActive bool) error {
 	_, err := r.collection.UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": categoryIDs}},

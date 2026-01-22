@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
@@ -108,12 +107,8 @@ func (s *BookstoreServiceImpl) GetAllBooks(ctx context.Context, page, pageSize i
 
 // GetBookByID 根据ID获取书籍详情
 func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
-	book, err := s.bookRepo.GetByID(ctx, objectID)
+	// Repository 层现在接受 string 类型的 ID
+	book, err := s.bookRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
@@ -132,22 +127,17 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 
 // GetBooksByCategory 根据分类获取书籍列表
 func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(categoryID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("invalid category ID: %w", err)
-	}
-
 	// 计算偏移量
 	offset := (page - 1) * pageSize
 
-	// 获取书籍列表
-	books, err := s.bookRepo.GetByCategory(ctx, objectID, pageSize, offset)
+	// 获取书籍列表 - Repository 层接受 string 类型的 categoryID
+	books, err := s.bookRepo.GetByCategory(ctx, categoryID, pageSize, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get books by category: %w", err)
 	}
 
 	// 获取总数
-	total, err := s.bookRepo.CountByCategory(ctx, objectID)
+	total, err := s.bookRepo.CountByCategory(ctx, categoryID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count books by category: %w", err)
 	}
@@ -165,16 +155,11 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 
 // GetBooksByAuthorID 根据作者ID获取书籍列表
 func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(authorID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("invalid author ID: %w", err)
-	}
-
 	// 计算偏移量
 	offset := (page - 1) * pageSize
 
-	// 获取书籍列表
-	books, err := s.bookRepo.GetByAuthorID(ctx, objectID, pageSize, offset)
+	// 获取书籍列表 - Repository 层接受 string 类型的 authorID
+	books, err := s.bookRepo.GetByAuthorID(ctx, authorID, pageSize, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get books by author: %w", err)
 	}
@@ -386,13 +371,8 @@ func (s *BookstoreServiceImpl) GetBookStats(ctx context.Context) (*bookstore2.Bo
 
 // IncrementBookView 增加书籍浏览量
 func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID string) error {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 先检查书籍是否存在且已发布
-	book, err := s.bookRepo.GetByID(ctx, objectID)
+	book, err := s.bookRepo.GetByID(ctx, bookID)
 	if err != nil {
 		return fmt.Errorf("failed to get book: %w", err)
 	}
@@ -406,7 +386,7 @@ func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID str
 	}
 
 	// 增加浏览量
-	err = s.bookRepo.IncrementViewCount(ctx, objectID)
+	err = s.bookRepo.IncrementViewCount(ctx, bookID)
 	if err != nil {
 		return fmt.Errorf("failed to increment view count: %w", err)
 	}
@@ -426,12 +406,8 @@ func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstor
 
 // GetCategoryByID 根据ID获取分类
 func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid category ID: %w", err)
-	}
-
-	category, err := s.categoryRepo.GetByID(ctx, objectID)
+	// 直接使用 string ID，无需转换
+	category, err := s.categoryRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
@@ -474,13 +450,8 @@ func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) 
 
 // IncrementBannerClick 增加Banner点击次数
 func (s *BookstoreServiceImpl) IncrementBannerClick(ctx context.Context, bannerID string) error {
-	objectID, err := primitive.ObjectIDFromHex(bannerID)
-	if err != nil {
-		return fmt.Errorf("invalid banner ID: %w", err)
-	}
-
 	// 先检查Banner是否存在且激活
-	banner, err := s.bannerRepo.GetByID(ctx, objectID)
+	banner, err := s.bannerRepo.GetByID(ctx, bannerID)
 	if err != nil {
 		return fmt.Errorf("failed to get banner: %w", err)
 	}
@@ -503,7 +474,7 @@ func (s *BookstoreServiceImpl) IncrementBannerClick(ctx context.Context, bannerI
 	}
 
 	// 增加点击次数
-	err = s.bannerRepo.IncrementClickCount(ctx, objectID)
+	err = s.bannerRepo.IncrementClickCount(ctx, bannerID)
 	if err != nil {
 		return fmt.Errorf("failed to increment click count: %w", err)
 	}

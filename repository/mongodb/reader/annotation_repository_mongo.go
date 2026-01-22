@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,8 +28,8 @@ func NewMongoAnnotationRepository(db *mongo.Database) *MongoAnnotationRepository
 
 // Create 创建标注
 func (r *MongoAnnotationRepository) Create(ctx context.Context, annotation *reader.Annotation) error {
-	if annotation.ID == "" {
-		annotation.ID = generateAnnotationID()
+	if annotation.ID.IsZero() {
+		annotation.ID = primitive.NewObjectID()
 	}
 	annotation.CreatedAt = time.Now()
 	annotation.UpdatedAt = time.Now()
@@ -334,8 +335,8 @@ func (r *MongoAnnotationRepository) BatchCreate(ctx context.Context, annotations
 	docs := make([]interface{}, len(annotations))
 	now := time.Now()
 	for i, annotation := range annotations {
-		if annotation.ID == "" {
-			annotation.ID = generateAnnotationID()
+		if annotation.ID.IsZero() {
+			annotation.ID = primitive.NewObjectID()
 		}
 		annotation.CreatedAt = now
 		annotation.UpdatedAt = now
@@ -404,8 +405,8 @@ func (r *MongoAnnotationRepository) SyncAnnotations(ctx context.Context, userID 
 
 	models := make([]mongo.WriteModel, len(annotations))
 	for i, annotation := range annotations {
-		if annotation.ID == "" {
-			annotation.ID = generateAnnotationID()
+		if annotation.ID.IsZero() {
+			annotation.ID = primitive.NewObjectID()
 		}
 
 		filter := bson.M{"_id": annotation.ID}
@@ -509,12 +510,4 @@ func (r *MongoAnnotationRepository) GetSharedAnnotations(ctx context.Context, us
 // Health 健康检查
 func (r *MongoAnnotationRepository) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
-}
-
-// generateAnnotationID 生成标注ID
-var annotationIDCounter int64
-
-func generateAnnotationID() string {
-	annotationIDCounter++
-	return fmt.Sprintf("ann_%d_%d", time.Now().UnixNano(), annotationIDCounter)
 }

@@ -16,30 +16,30 @@ import (
 // ChapterPurchaseService 章节购买服务接口
 type ChapterPurchaseService interface {
 	// 章节目录和权限
-	GetChapterCatalog(ctx context.Context, userID, bookID primitive.ObjectID) (*bookstore.ChapterCatalog, error)
-	GetTrialChapters(ctx context.Context, bookID primitive.ObjectID, trialCount int) ([]*bookstore.Chapter, error)
-	GetVIPChapters(ctx context.Context, bookID primitive.ObjectID) ([]*bookstore.Chapter, error)
+	GetChapterCatalog(ctx context.Context, userID, bookID string) (*bookstore.ChapterCatalog, error)
+	GetTrialChapters(ctx context.Context, bookID string, trialCount int) ([]*bookstore.Chapter, error)
+	GetVIPChapters(ctx context.Context, bookID string) ([]*bookstore.Chapter, error)
 
 	// 购买章节
-	PurchaseChapter(ctx context.Context, userID, chapterID primitive.ObjectID) (*bookstore.ChapterPurchase, error)
-	PurchaseChapters(ctx context.Context, userID primitive.ObjectID, chapterIDs []primitive.ObjectID) (*bookstore.ChapterPurchaseBatch, error)
-	PurchaseBook(ctx context.Context, userID, bookID primitive.ObjectID) (*bookstore.BookPurchase, error)
+	PurchaseChapter(ctx context.Context, userID, chapterID string) (*bookstore.ChapterPurchase, error)
+	PurchaseChapters(ctx context.Context, userID string, chapterIDs []string) (*bookstore.ChapterPurchaseBatch, error)
+	PurchaseBook(ctx context.Context, userID, bookID string) (*bookstore.BookPurchase, error)
 
 	// 查询购买记录
-	GetChapterPurchases(ctx context.Context, userID primitive.ObjectID, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error)
-	GetBookPurchases(ctx context.Context, userID, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error)
-	GetAllPurchases(ctx context.Context, userID primitive.ObjectID, page, pageSize int) (map[string]interface{}, error)
+	GetChapterPurchases(ctx context.Context, userID string, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error)
+	GetBookPurchases(ctx context.Context, userID, bookID string, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error)
+	GetAllPurchases(ctx context.Context, userID string, page, pageSize int) (map[string]interface{}, error)
 
 	// 权限检查
-	CheckChapterAccess(ctx context.Context, userID, chapterID primitive.ObjectID) (*bookstore.ChapterAccessInfo, error)
-	GetPurchasedChapterIDs(ctx context.Context, userID, bookID primitive.ObjectID) ([]primitive.ObjectID, error)
+	CheckChapterAccess(ctx context.Context, userID, chapterID string) (*bookstore.ChapterAccessInfo, error)
+	GetPurchasedChapterIDs(ctx context.Context, userID, bookID string) ([]string, error)
 
 	// 价格查询
-	GetChapterPrice(ctx context.Context, chapterID primitive.ObjectID) (float64, error)
-	CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (int64, int64, error) // originalPrice, discountedPrice (分)
+	GetChapterPrice(ctx context.Context, chapterID string) (float64, error)
+	CalculateBookPrice(ctx context.Context, bookID string) (int64, int64, error) // originalPrice, discountedPrice (分)
 
 	// VIP检查
-	IsVIPUser(ctx context.Context, userID primitive.ObjectID) (bool, error)
+	IsVIPUser(ctx context.Context, userID string) (bool, error)
 }
 
 // ChapterPurchaseServiceImpl 章节购买服务实现
@@ -69,8 +69,8 @@ func NewChapterPurchaseService(
 }
 
 // GetChapterCatalog 获取章节目录
-func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, userID, bookID primitive.ObjectID) (*bookstore.ChapterCatalog, error) {
-	if bookID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, userID, bookID string) (*bookstore.ChapterCatalog, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -90,12 +90,12 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	}
 
 	// 获取用户已购买的章节ID（如果提供了用户ID）
-	var purchasedChapterIDs []primitive.ObjectID
-	if !userID.IsZero() {
+	var purchasedChapterIDs []string
+	if userID != "" {
 		purchasedChapterIDs, err = s.purchaseRepo.GetPurchasedChapterIDs(ctx, userID, bookID)
 		if err != nil {
 			// 不影响主流程，继续处理
-			purchasedChapterIDs = []primitive.ObjectID{}
+			purchasedChapterIDs = []string{}
 		}
 	}
 
@@ -105,14 +105,15 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	paidCount := 0
 	vipCount := 0
 
-	purchasedIDSet := make(map[primitive.ObjectID]bool)
+	purchasedIDSet := make(map[string]bool)
 	for _, id := range purchasedChapterIDs {
 		purchasedIDSet[id] = true
 	}
 
 	for _, chapter := range chapters {
+		chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
 		item := bookstore.ChapterCatalogItem{
-			ChapterID:   chapter.ID,
+			ChapterID:   chapterOID,
 			Title:       chapter.Title,
 			ChapterNum:  chapter.ChapterNum,
 			WordCount:   chapter.WordCount,
@@ -123,7 +124,7 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 		}
 
 		// 标记是否已购买
-		if !userID.IsZero() {
+		if userID != "" {
 			item.IsPurchased = purchasedIDSet[chapter.ID]
 		}
 
@@ -142,8 +143,9 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	totalWordCount, _ := s.chapterRepo.GetTotalWordCount(ctx, bookID)
 
 	// 构建目录
+	bookOID, _ := primitive.ObjectIDFromHex(bookID)
 	catalog := &bookstore.ChapterCatalog{
-		BookID:         bookID,
+		BookID:         bookOID,
 		BookTitle:      book.Title,
 		TotalChapters:  int(totalChapters),
 		FreeChapters:   freeCount,
@@ -158,8 +160,8 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 }
 
 // GetTrialChapters 获取试读章节
-func (s *ChapterPurchaseServiceImpl) GetTrialChapters(ctx context.Context, bookID primitive.ObjectID, trialCount int) ([]*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetTrialChapters(ctx context.Context, bookID string, trialCount int) ([]*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -188,8 +190,8 @@ func (s *ChapterPurchaseServiceImpl) GetTrialChapters(ctx context.Context, bookI
 }
 
 // GetVIPChapters 获取VIP章节
-func (s *ChapterPurchaseServiceImpl) GetVIPChapters(ctx context.Context, bookID primitive.ObjectID) ([]*bookstore.Chapter, error) {
-	if bookID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetVIPChapters(ctx context.Context, bookID string) ([]*bookstore.Chapter, error) {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -206,11 +208,11 @@ func (s *ChapterPurchaseServiceImpl) GetVIPChapters(ctx context.Context, bookID 
 }
 
 // PurchaseChapter 购买单个章节
-func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID, chapterID primitive.ObjectID) (*bookstore.ChapterPurchase, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID, chapterID string) (*bookstore.ChapterPurchase, error) {
+	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
-	if chapterID.IsZero() {
+	if chapterID == "" {
 		return nil, errors.New("chapter ID cannot be empty")
 	}
 
@@ -244,7 +246,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	}
 
 	// 检查用户余额
-	balance, err := s.walletService.GetBalance(ctx, userID.Hex())
+	balance, err := s.walletService.GetBalance(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
@@ -256,16 +258,19 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	var purchase *bookstore.ChapterPurchase
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID.Hex(), chapter.Price, fmt.Sprintf("购买章节: %s", chapter.Title))
+		_, err := s.walletService.Consume(ctx, userID, chapter.Price, fmt.Sprintf("购买章节: %s", chapter.Title))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
 
-		// 创建购买记录
+		// 创建购买记录 - 需要将 string 转换为 primitive.ObjectID
+		userOID, _ := primitive.ObjectIDFromHex(userID)
+		chapterOID, _ := primitive.ObjectIDFromHex(chapterID)
+		bookOID, _ := primitive.ObjectIDFromHex(chapter.BookID)
 		purchase = &bookstore.ChapterPurchase{
-			UserID:       userID,
-			ChapterID:    chapterID,
-			BookID:       chapter.BookID,
+			UserID:       userOID,
+			ChapterID:    chapterOID,
+			BookID:       bookOID,
 			Price:        chapter.Price,
 			PurchaseTime: time.Now(),
 			ChapterTitle: chapter.Title,
@@ -288,16 +293,16 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateChapterCache(ctx, chapterID.Hex())
-		s.cacheService.InvalidateBookChaptersCache(ctx, chapter.BookID.Hex())
+		s.cacheService.InvalidateChapterCache(ctx, chapterID)
+		s.cacheService.InvalidateBookChaptersCache(ctx, chapter.BookID)
 	}
 
 	return purchase, nil
 }
 
 // PurchaseChapters 批量购买章节
-func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userID primitive.ObjectID, chapterIDs []primitive.ObjectID) (*bookstore.ChapterPurchaseBatch, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userID string, chapterIDs []string) (*bookstore.ChapterPurchaseBatch, error) {
+	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
 	if len(chapterIDs) == 0 {
@@ -307,15 +312,15 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 	// 获取所有章节信息
 	chapters := make([]*bookstore.Chapter, 0, len(chapterIDs))
 	totalPrice := int64(0)
-	bookID := primitive.NilObjectID
+	bookID := ""
 
 	for _, chapterID := range chapterIDs {
 		chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get chapter %s: %w", chapterID.Hex(), err)
+			return nil, fmt.Errorf("failed to get chapter %s: %w", chapterID, err)
 		}
 		if chapter == nil {
-			return nil, fmt.Errorf("chapter %s not found", chapterID.Hex())
+			return nil, fmt.Errorf("chapter %s not found", chapterID)
 		}
 
 		// 检查是否已购买
@@ -331,7 +336,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		chapters = append(chapters, chapter)
 		totalPrice += chapter.Price
 
-		if bookID.IsZero() {
+		if bookID == "" {
 			bookID = chapter.BookID
 		}
 	}
@@ -341,7 +346,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 	}
 
 	// 检查用户余额
-	balance, err := s.walletService.GetBalance(ctx, userID.Hex())
+	balance, err := s.walletService.GetBalance(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
@@ -357,20 +362,27 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	// 使用事务处理购买
 	var batch *bookstore.ChapterPurchaseBatch
-	purchasedChapterIDs := make([]primitive.ObjectID, 0)
+	purchasedChapterIDs := make([]string, 0)
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID.Hex(), totalPrice, fmt.Sprintf("批量购买章节: %d章", len(chapters)))
+		_, err := s.walletService.Consume(ctx, userID, totalPrice, fmt.Sprintf("批量购买章节: %d章", len(chapters)))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
 
-		// 创建批量购买记录
+		// 创建批量购买记录 - 需要转换类型
+		userOID, _ := primitive.ObjectIDFromHex(userID)
+		bookOID, _ := primitive.ObjectIDFromHex(bookID)
+		chapterOIDs := make([]primitive.ObjectID, len(chapterIDs))
+		for i, id := range chapterIDs {
+			chapterOIDs[i], _ = primitive.ObjectIDFromHex(id)
+		}
+
 		batch = &bookstore.ChapterPurchaseBatch{
-			UserID:        userID,
-			BookID:        bookID,
-			ChapterIDs:    chapterIDs,
+			UserID:        userOID,
+			BookID:        bookOID,
+			ChapterIDs:    chapterOIDs,
 			TotalPrice:    totalPrice,
 			ChaptersCount: len(chapters),
 			BookTitle:     book.Title,
@@ -384,10 +396,12 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 		// 为每个章节创建单独的购买记录
 		for _, chapter := range chapters {
+			chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
+			bookOID, _ := primitive.ObjectIDFromHex(chapter.BookID)
 			purchase := &bookstore.ChapterPurchase{
-				UserID:       userID,
-				ChapterID:    chapter.ID,
-				BookID:       chapter.BookID,
+				UserID:       userOID,
+				ChapterID:    chapterOID,
+				BookID:       bookOID,
 				Price:        chapter.Price,
 				PurchaseTime: time.Now(),
 				ChapterTitle: chapter.Title,
@@ -412,18 +426,18 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookChaptersCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookChaptersCache(ctx, bookID)
 	}
 
 	return batch, nil
 }
 
 // PurchaseBook 购买全书
-func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, bookID primitive.ObjectID) (*bookstore.BookPurchase, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, bookID string) (*bookstore.BookPurchase, error) {
+	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
-	if bookID.IsZero() {
+	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
 
@@ -449,7 +463,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 	}
 
 	// 检查用户余额
-	balance, err := s.walletService.GetBalance(ctx, userID.Hex())
+	balance, err := s.walletService.GetBalance(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
@@ -465,19 +479,21 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 
 	// 使用事务处理购买
 	var purchase *bookstore.BookPurchase
-	chapterIDs := make([]primitive.ObjectID, 0, len(chapters))
+	chapterIDs := make([]string, 0, len(chapters))
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID.Hex(), discountedPrice, fmt.Sprintf("购买全书: %s", book.Title))
+		_, err := s.walletService.Consume(ctx, userID, discountedPrice, fmt.Sprintf("购买全书: %s", book.Title))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
 
-		// 创建全书购买记录
+		// 创建全书购买记录 - 需要转换类型
+		userOID, _ := primitive.ObjectIDFromHex(userID)
+		bookOID, _ := primitive.ObjectIDFromHex(bookID)
 		purchase = &bookstore.BookPurchase{
-			UserID:        userID,
-			BookID:        bookID,
+			UserID:        userOID,
+			BookID:        bookOID,
 			TotalPrice:    discountedPrice,
 			OriginalPrice: originalPrice,
 			Discount:      1 - float64(discountedPrice)/float64(originalPrice),
@@ -493,10 +509,11 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 
 		// 为每个付费章节创建购买记录
 		for _, chapter := range chapters {
+			chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
 			chapterPurchase := &bookstore.ChapterPurchase{
-				UserID:       userID,
-				ChapterID:    chapter.ID,
-				BookID:       bookID,
+				UserID:       userOID,
+				ChapterID:    chapterOID,
+				BookID:       bookOID,
 				Price:        0, // 全书购买后，章节单价为0
 				PurchaseTime: time.Now(),
 				ChapterTitle: chapter.Title,
@@ -521,16 +538,16 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 
 	// 清除缓存
 	if s.cacheService != nil {
-		s.cacheService.InvalidateBookDetailCache(ctx, bookID.Hex())
-		s.cacheService.InvalidateBookChaptersCache(ctx, bookID.Hex())
+		s.cacheService.InvalidateBookDetailCache(ctx, bookID)
+		s.cacheService.InvalidateBookChaptersCache(ctx, bookID)
 	}
 
 	return purchase, nil
 }
 
 // GetChapterPurchases 获取章节购买记录
-func (s *ChapterPurchaseServiceImpl) GetChapterPurchases(ctx context.Context, userID primitive.ObjectID, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetChapterPurchases(ctx context.Context, userID string, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error) {
+	if userID == "" {
 		return nil, 0, errors.New("user ID cannot be empty")
 	}
 
@@ -550,11 +567,11 @@ func (s *ChapterPurchaseServiceImpl) GetChapterPurchases(ctx context.Context, us
 }
 
 // GetBookPurchases 获取某本书的购买记录
-func (s *ChapterPurchaseServiceImpl) GetBookPurchases(ctx context.Context, userID, bookID primitive.ObjectID, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetBookPurchases(ctx context.Context, userID, bookID string, page, pageSize int) ([]*bookstore.ChapterPurchase, int64, error) {
+	if userID == "" {
 		return nil, 0, errors.New("user ID cannot be empty")
 	}
-	if bookID.IsZero() {
+	if bookID == "" {
 		return nil, 0, errors.New("book ID cannot be empty")
 	}
 
@@ -574,8 +591,8 @@ func (s *ChapterPurchaseServiceImpl) GetBookPurchases(ctx context.Context, userI
 }
 
 // GetAllPurchases 获取所有购买记录（包括单章、批量、全书）
-func (s *ChapterPurchaseServiceImpl) GetAllPurchases(ctx context.Context, userID primitive.ObjectID, page, pageSize int) (map[string]interface{}, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetAllPurchases(ctx context.Context, userID string, page, pageSize int) (map[string]interface{}, error) {
+	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
 
@@ -622,8 +639,8 @@ func (s *ChapterPurchaseServiceImpl) GetAllPurchases(ctx context.Context, userID
 }
 
 // CheckChapterAccess 检查章节访问权限
-func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, userID, chapterID primitive.ObjectID) (*bookstore.ChapterAccessInfo, error) {
-	if chapterID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, userID, chapterID string) (*bookstore.ChapterAccessInfo, error) {
+	if chapterID == "" {
 		return nil, errors.New("chapter ID cannot be empty")
 	}
 
@@ -636,8 +653,9 @@ func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, use
 		return nil, errors.New("chapter not found")
 	}
 
+	chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
 	accessInfo := &bookstore.ChapterAccessInfo{
-		ChapterID:   chapter.ID,
+		ChapterID:   chapterOID,
 		Title:       chapter.Title,
 		ChapterNum:  chapter.ChapterNum,
 		WordCount:   chapter.WordCount,
@@ -656,7 +674,7 @@ func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, use
 	}
 
 	// 检查用户是否已购买
-	if !userID.IsZero() {
+	if userID != "" {
 		purchased, err := s.purchaseRepo.CheckUserPurchasedChapter(ctx, userID, chapterID)
 		if err == nil && purchased {
 			accessInfo.IsPurchased = true
@@ -694,8 +712,8 @@ func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, use
 }
 
 // GetPurchasedChapterIDs 获取已购买的章节ID列表
-func (s *ChapterPurchaseServiceImpl) GetPurchasedChapterIDs(ctx context.Context, userID, bookID primitive.ObjectID) ([]primitive.ObjectID, error) {
-	if userID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetPurchasedChapterIDs(ctx context.Context, userID, bookID string) ([]string, error) {
+	if userID == "" {
 		return nil, errors.New("user ID cannot be empty")
 	}
 
@@ -708,8 +726,8 @@ func (s *ChapterPurchaseServiceImpl) GetPurchasedChapterIDs(ctx context.Context,
 }
 
 // GetChapterPrice 获取章节价格
-func (s *ChapterPurchaseServiceImpl) GetChapterPrice(ctx context.Context, chapterID primitive.ObjectID) (float64, error) {
-	if chapterID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) GetChapterPrice(ctx context.Context, chapterID string) (float64, error) {
+	if chapterID == "" {
 		return 0, errors.New("chapter ID cannot be empty")
 	}
 
@@ -726,8 +744,8 @@ func (s *ChapterPurchaseServiceImpl) GetChapterPrice(ctx context.Context, chapte
 }
 
 // CalculateBookPrice 计算全书价格
-func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (int64, int64, error) {
-	if bookID.IsZero() {
+func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, bookID string) (int64, int64, error) {
+	if bookID == "" {
 		return 0, 0, errors.New("book ID cannot be empty")
 	}
 
@@ -751,7 +769,7 @@ func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, boo
 }
 
 // IsVIPUser 检查是否为VIP用户
-func (s *ChapterPurchaseServiceImpl) IsVIPUser(ctx context.Context, userID primitive.ObjectID) (bool, error) {
+func (s *ChapterPurchaseServiceImpl) IsVIPUser(ctx context.Context, userID string) (bool, error) {
 	// TODO: 实现VIP用户检查逻辑
 	// 这里需要与用户系统集成，检查用户的VIP状态和有效期
 	return false, nil

@@ -76,7 +76,7 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 		role = resp.User.Roles[0]
 	}
 	publicProfile := dto.PublicUserProfileResponse{
-		UserID:    resp.User.ID,
+		UserID:    resp.User.ID.Hex(),
 		Username:  resp.User.Username,
 		Avatar:    resp.User.Avatar,
 		Nickname:  resp.User.Nickname,
@@ -133,7 +133,7 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 		role = resp.User.Roles[0]
 	}
 	publicProfile := dto.PublicUserProfileResponse{
-		UserID:    resp.User.ID,
+		UserID:    resp.User.ID.Hex(),
 		Username:  resp.User.Username,
 		Avatar:    resp.User.Avatar,
 		Nickname:  resp.User.Nickname,

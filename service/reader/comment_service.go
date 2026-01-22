@@ -470,7 +470,8 @@ func (s *CommentService) getRootID(comment *social.Comment) *string {
 	if comment.ParentID != nil {
 		return comment.ParentID
 	}
-	return &comment.ID
+	idHex := comment.ID.Hex()
+	return &idHex
 }
 
 // publishCommentEvent 发布评论事件

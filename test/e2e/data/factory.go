@@ -157,7 +157,7 @@ func (f *TestDataFactory) CreateBook(ctx context.Context, opts BookOptions) *boo
 		Introduction: "E2E测试书籍 - 用于验证系统功能",
 		Categories:   categories,
 		Price:        opts.Price,
-		Status:       bookstore.BookStatusPublished,
+		Status:       bookstore.BookStatusOngoing,
 		WordCount:    wordCount,
 		IsFree:       opts.IsFree,
 		ChapterCount: opts.ChapterCount,

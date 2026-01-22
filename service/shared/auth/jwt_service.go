@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // JWTService接口已在interfaces.go中定义，这里直接实现
@@ -49,12 +50,12 @@ func (s *JWTServiceImpl) GenerateToken(ctx context.Context, userID string, roles
 	}
 
 	now := time.Now()
-	// 使用纳秒级精度确保同一秒内生成的token也不同
+	// 使用秒级时间戳以匹配标准JWT格式（middleware/jwt.go期望秒级）
 	claims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-		Iat:    now.UnixNano(),                          // 使用纳秒精度确保token唯一性
+		Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
+		Iat:    now.Unix(),                          // 使用秒级时间戳
 	}
 
 	return s.generateJWT(claims)
@@ -67,12 +68,12 @@ func (s *JWTServiceImpl) GenerateTokenWithUsername(ctx context.Context, userID s
 	}
 
 	now := time.Now()
-	// 使用纳秒级精度确保同一秒内生成的token也不同
+	// 使用秒级时间戳以匹配标准JWT格式（middleware/jwt.go期望秒级）
 	claims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-		Iat:    now.UnixNano(),                          // 使用纳秒精度确保token唯一性
+		Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
+		Iat:    now.Unix(),                          // 使用秒级时间戳
 	}
 
 	return s.generateJWT(claims)
@@ -91,8 +92,8 @@ func (s *JWTServiceImpl) GenerateTokenPair(ctx context.Context, userID string, r
 	refreshClaims := &TokenClaims{
 		UserID: userID,
 		Roles:  roles,
-		Exp:    now.Add(s.config.RefreshDuration).UnixNano(), // 使用纳秒精度支持短过期时间
-		Iat:    now.UnixNano(),                               // 纳秒精度确保token唯一性
+		Exp:    now.Add(s.config.RefreshDuration).Unix(), // 使用秒级时间戳
+		Iat:    now.Unix(),                               // 使用秒级时间戳
 	}
 
 	refreshToken, err = s.generateJWT(refreshClaims)
@@ -103,107 +104,87 @@ func (s *JWTServiceImpl) GenerateTokenPair(ctx context.Context, userID string, r
 	return accessToken, refreshToken, nil
 }
 
-// generateJWT 内部方法：生成JWT
-func (s *JWTServiceImpl) generateJWT(claims *TokenClaims) (string, error) {
-	// 1. 创建Header
-	header := map[string]string{
-		"alg": "HS256",
-		"typ": "JWT",
+// generateJWT 内部方法：使用标准JWT库生成token
+func (s *JWTServiceImpl) generateJWT(tokenClaims *TokenClaims) (string, error) {
+	// 创建标准JWT Claims结构
+	claims := jwt.MapClaims{
+		"user_id": tokenClaims.UserID,
+		"roles":   tokenClaims.Roles,
+		"exp":     float64(tokenClaims.Exp), // 标准JWT使用float64
+		"iat":     float64(tokenClaims.Iat),
+		"iss":     "Qingyu",
+		"sub":     tokenClaims.UserID,
 	}
-	headerJSON, _ := json.Marshal(header)
-	headerBase64 := base64.RawURLEncoding.EncodeToString(headerJSON)
 
-	// 2. 创建Payload
-	payloadJSON, err := json.Marshal(claims)
-	if err != nil {
-		return "", fmt.Errorf("序列化claims失败: %w", err)
-	}
-	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-
-	// 3. 创建签名
-	message := headerBase64 + "." + payloadBase64
-	signature := s.createSignature(message)
-
-	// 4. 组合JWT
-	token := message + "." + signature
-
-	return token, nil
-}
-
-// createSignature 创建HMAC-SHA256签名
-func (s *JWTServiceImpl) createSignature(message string) string {
-	h := hmac.New(sha256.New, []byte(s.config.SecretKey))
-	h.Write([]byte(message))
-	signature := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
-	return signature
+	// 使用标准JWT库生成token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(s.config.SecretKey))
 }
 
 // ============ Token验证 ============
 
 // ValidateToken 验证Token并返回Claims（匹配interfaces.go中的定义）
-func (s *JWTServiceImpl) ValidateToken(ctx context.Context, token string) (*TokenClaims, error) {
+func (s *JWTServiceImpl) ValidateToken(ctx context.Context, tokenString string) (*TokenClaims, error) {
 	// 1. 检查Token格式
-	if token == "" {
+	if tokenString == "" {
 		return nil, errors.New("token为空")
 	}
 
 	// 移除Bearer前缀
-	token = strings.TrimPrefix(token, "Bearer ")
-	token = strings.TrimSpace(token)
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+	tokenString = strings.TrimSpace(tokenString)
 
-	// 2. 解析Token
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return nil, errors.New("token格式错误")
-	}
+	// 2. 使用标准JWT库解析并验证token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// 验证签名方法
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.config.SecretKey), nil
+	})
 
-	headerBase64 := parts[0]
-	payloadBase64 := parts[1]
-	signatureBase64 := parts[2]
-
-	// 3. 验证签名
-	message := headerBase64 + "." + payloadBase64
-	expectedSignature := s.createSignature(message)
-	if signatureBase64 != expectedSignature {
-		return nil, errors.New("token签名验证失败")
-	}
-
-	// 4. 解析Claims
-	payloadJSON, err := base64.RawURLEncoding.DecodeString(payloadBase64)
 	if err != nil {
-		return nil, fmt.Errorf("解码payload失败: %w", err)
+		return nil, fmt.Errorf("token解析失败: %w", err)
 	}
 
-	var claims TokenClaims
-	if err := json.Unmarshal(payloadJSON, &claims); err != nil {
-		return nil, fmt.Errorf("解析claims失败: %w", err)
+	if !token.Valid {
+		return nil, errors.New("token无效")
 	}
 
-	// 5. 验证过期时间
-	// 支持秒级和纳秒级Exp字段
-	// 如果Exp > 1e15，认为是纳秒级时间戳（秒级时间戳约为1e9，纳秒级约为1e18）
-	now := time.Now()
-	if claims.Exp > 1e15 {
-		// 纳秒级时间戳
-		if now.UnixNano() > claims.Exp {
-			return nil, errors.New("token已过期")
+	// 3. 提取claims并转换为TokenClaims结构
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		userID, _ := claims["user_id"].(string)
+		exp, _ := claims["exp"].(float64)
+		iat, _ := claims["iat"].(float64)
+
+		// 提取roles
+		var roles []string
+		if rolesRaw, ok := claims["roles"].([]interface{}); ok {
+			roles = make([]string, len(rolesRaw))
+			for i, r := range rolesRaw {
+				roles[i] = r.(string)
+			}
 		}
-	} else {
-		// 秒级时间戳
-		if now.Unix() > claims.Exp {
-			return nil, errors.New("token已过期")
+
+		tokenClaims := &TokenClaims{
+			UserID: userID,
+			Roles:  roles,
+			Exp:    int64(exp),
+			Iat:    int64(iat),
 		}
+
+		// 4. 检查Token是否在黑名单中
+		if s.redisClient != nil {
+			revoked, err := s.IsTokenRevoked(ctx, tokenString)
+			if err == nil && revoked {
+				return nil, errors.New("token已被吊销")
+			}
+		}
+
+		return tokenClaims, nil
 	}
 
-	// 7. 检查Token是否在黑名单中
-	if s.redisClient != nil {
-		revoked, err := s.IsTokenRevoked(ctx, token)
-		if err == nil && revoked {
-			return nil, errors.New("token已被吊销")
-		}
-	}
-
-	return &claims, nil
+	return nil, errors.New("无法解析token claims")
 }
 
 // ============ Token刷新 ============

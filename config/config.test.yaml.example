@@ -26,6 +26,20 @@ log:
   level: "debug"
   format: "json"
   output: "stdout"
+  mode: "strict"
+  request:
+    enable_body: true
+    max_body_size: 4096
+    skip_paths:
+      - "/health"
+      - "/metrics"
+      - "/swagger"
+    body_allow_paths: []
+  redact_keys:
+    - "authorization"
+    - "password"
+    - "token"
+    - "cookie"
 
 # 测试特定配置
 test:

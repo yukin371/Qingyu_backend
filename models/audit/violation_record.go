@@ -5,21 +5,21 @@ import "time"
 // ViolationRecord 违规记录模型（用于统计和封号判断）
 type ViolationRecord struct {
 	ID              string     `bson:"_id,omitempty" json:"id"`
-	UserID          string     `bson:"userId" json:"userId" validate:"required"`         // 用户ID
-	AuditRecordID   string     `bson:"auditRecordId" json:"auditRecordId"`               // 关联的审核记录ID
-	TargetType      string     `bson:"targetType" json:"targetType"`                     // 违规对象类型
-	TargetID        string     `bson:"targetId" json:"targetId"`                         // 违规对象ID
-	ViolationType   string     `bson:"violationType" json:"violationType"`               // 违规类型
-	ViolationLevel  int        `bson:"violationLevel" json:"violationLevel"`             // 违规等级
-	ViolationCount  int        `bson:"violationCount" json:"violationCount"`             // 违规次数（累计）
-	PenaltyType     string     `bson:"penaltyType,omitempty" json:"penaltyType"`         // 处罚类型
-	PenaltyDuration int        `bson:"penaltyDuration,omitempty" json:"penaltyDuration"` // 处罚时长（天）
-	IsPenalized     bool       `bson:"isPenalized" json:"isPenalized"`                   // 是否已处罚
-	PenalizedAt     *time.Time `bson:"penalizedAt,omitempty" json:"penalizedAt"`         // 处罚时间
-	ExpiresAt       *time.Time `bson:"expiresAt,omitempty" json:"expiresAt"`             // 处罚到期时间
+	UserID          string     `bson:"user_id" json:"userId" validate:"required"`         // 用户ID
+	AuditRecordID   string     `bson:"audit_record_id" json:"auditRecordId"`               // 关联的审核记录ID
+	TargetType      string     `bson:"target_type" json:"targetType"`                     // 违规对象类型
+	TargetID        string     `bson:"target_id" json:"targetId"`                         // 违规对象ID
+	ViolationType   string     `bson:"violation_type" json:"violationType"`               // 违规类型
+	ViolationLevel  int        `bson:"violation_level" json:"violationLevel"`             // 违规等级
+	ViolationCount  int        `bson:"violation_count" json:"violationCount"`             // 违规次数（累计）
+	PenaltyType     string     `bson:"penalty_type,omitempty" json:"penaltyType"`         // 处罚类型
+	PenaltyDuration int        `bson:"penalty_duration,omitempty" json:"penaltyDuration"` // 处罚时长（天）
+	IsPenalized     bool       `bson:"is_penalized" json:"isPenalized"`                   // 是否已处罚
+	PenalizedAt     *time.Time `bson:"penalized_at,omitempty" json:"penalizedAt"`         // 处罚时间
+	ExpiresAt       *time.Time `bson:"expires_at,omitempty" json:"expiresAt"`             // 处罚到期时间
 	Description     string     `bson:"description" json:"description"`                   // 违规描述
-	CreatedAt       time.Time  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt       time.Time  `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt       time.Time  `bson:"created_at" json:"createdAt"`
+	UpdatedAt       time.Time  `bson:"updated_at" json:"updatedAt"`
 }
 
 // PenaltyType 处罚类型常量
@@ -68,14 +68,14 @@ func (v *ViolationRecord) ShouldEscalatePenalty() bool {
 // UserViolationSummary 用户违规统计
 type UserViolationSummary struct {
 	UserID              string    `bson:"_id" json:"userId"`
-	TotalViolations     int       `bson:"totalViolations" json:"totalViolations"`
-	WarningCount        int       `bson:"warningCount" json:"warningCount"`
-	RejectCount         int       `bson:"rejectCount" json:"rejectCount"`
-	HighRiskCount       int       `bson:"highRiskCount" json:"highRiskCount"`
-	LastViolationAt     time.Time `bson:"lastViolationAt" json:"lastViolationAt"`
-	ActivePenalties     int       `bson:"activePenalties" json:"activePenalties"`
-	IsBanned            bool      `bson:"isBanned" json:"isBanned"`
-	IsPermanentlyBanned bool      `bson:"isPermanentlyBanned" json:"isPermanentlyBanned"`
+	TotalViolations     int       `bson:"total_violations" json:"totalViolations"`
+	WarningCount        int       `bson:"warning_count" json:"warningCount"`
+	RejectCount         int       `bson:"reject_count" json:"rejectCount"`
+	HighRiskCount       int       `bson:"high_risk_count" json:"highRiskCount"`
+	LastViolationAt     time.Time `bson:"last_violation_at" json:"lastViolationAt"`
+	ActivePenalties     int       `bson:"active_penalties" json:"activePenalties"`
+	IsBanned            bool      `bson:"is_banned" json:"isBanned"`
+	IsPermanentlyBanned bool      `bson:"is_permanently_banned" json:"isPermanentlyBanned"`
 }
 
 // IsHighRiskUser 是否高风险用户

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	"Qingyu_backend/models/shared/types"
 )
 
 // MockWalletRepositoryV2 模拟WalletRepository（用于统一测试）
@@ -63,7 +64,7 @@ func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID str
 	for _, wallet := range m.wallets {
 		// 支持通过wallet.ID或userID查找
 		if wallet.ID == walletID || wallet.UserID == walletID {
-			wallet.Balance += amount
+			wallet.Balance = wallet.Balance.Add(types.Money(amount))
 			wallet.UpdatedAt = time.Now()
 			return nil
 		}

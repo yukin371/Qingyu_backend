@@ -1,25 +1,24 @@
 package bookstore
 
 import (
+	"Qingyu_backend/models/shared/types"
 	"strconv"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BookStatistics 书籍统计模型
 type BookStatistics struct {
-	ID                 primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	BookID             primitive.ObjectID `bson:"book_id" json:"book_id"`
-	ViewCount          int64              `bson:"view_count" json:"view_count"`
-	FavoriteCount      int64              `bson:"favorite_count" json:"favorite_count"`
-	CommentCount       int64              `bson:"comment_count" json:"comment_count"`
-	ShareCount         int64              `bson:"share_count" json:"share_count"`
-	AverageRating      float64            `bson:"average_rating" json:"average_rating"`
-	RatingCount        int64              `bson:"rating_count" json:"rating_count"`
-	RatingDistribution map[string]int64  `bson:"rating_distribution" json:"rating_distribution"` // 键为 "1"-"5" 的字符串
-	HotScore           float64            `bson:"hot_score" json:"hot_score"`
-	UpdatedAt          time.Time          `bson:"updated_at" json:"updated_at"`
+	ID                 string                   `bson:"_id,omitempty" json:"id"`
+	BookID             string                   `bson:"book_id" json:"$1$2"`
+	ViewCount          int64                    `bson:"view_count" json:"$1$2"`
+	FavoriteCount      int64                    `bson:"favorite_count" json:"$1$2"`
+	CommentCount       int64                    `bson:"comment_count" json:"$1$2"`
+	ShareCount         int64                    `bson:"share_count" json:"$1$2"`
+	AverageRating      types.Rating             `bson:"average_rating" json:"$1$2"`
+	RatingCount        int64                    `bson:"rating_count" json:"$1$2"`
+	RatingDistribution types.RatingDistribution `bson:"rating_distribution" json:"$1$2"` // 键为 "1"-"5" 的字符串
+	HotScore           float64                  `bson:"hot_score" json:"$1$2"`
+	UpdatedAt          time.Time                `bson:"updated_at" json:"$1$2"`
 }
 
 // BeforeUpdate 在更新前刷新更新时间戳
@@ -108,7 +107,7 @@ func (bs *BookStatistics) calculateAverageRating() {
 		totalScore += int64(rating) * count
 	}
 
-	bs.AverageRating = float64(totalScore) / float64(bs.RatingCount)
+	bs.AverageRating = types.Rating(float64(totalScore) / float64(bs.RatingCount))
 }
 
 // CalculateHotScore 计算热度分数
@@ -118,7 +117,7 @@ func (bs *BookStatistics) CalculateHotScore() {
 		float64(bs.FavoriteCount)*0.5 +
 		float64(bs.CommentCount)*0.3 +
 		float64(bs.ShareCount)*0.2 +
-		bs.AverageRating*10
+		float64(bs.AverageRating)*10
 	bs.BeforeUpdate()
 }
 

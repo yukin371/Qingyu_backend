@@ -25,11 +25,25 @@ func InitServer() (*gin.Engine, error) {
 	}
 
 	// 1. 初始化日志系统（P0中间件）
+	logCfg := config.GlobalConfig.Log
+	if logCfg == nil {
+		logCfg = &config.LogConfig{
+			Level:       "info",
+			Format:      "json",
+			Output:      "stdout",
+			Filename:    "logs/app.log",
+			Development: cfg.Mode == "debug",
+			Mode:        "normal",
+		}
+	}
+
 	loggerConfig := &logger.Config{
-		Level:       "info",
-		Format:      "json",
-		Output:      "stdout",
-		Development: cfg.Mode == "debug",
+		Level:       logCfg.Level,
+		Format:      logCfg.Format,
+		Output:      logCfg.Output,
+		Filename:    logCfg.Filename,
+		Development: logCfg.Development || cfg.Mode == "debug",
+		StrictMode:  logCfg.Mode == "strict",
 	}
 	if err := logger.Init(loggerConfig); err != nil {
 		return nil, fmt.Errorf("failed to initialize logger: %w", err)
@@ -55,11 +69,16 @@ func InitServer() (*gin.Engine, error) {
 	r.Use(pkgmiddleware.RecoveryMiddleware())
 
 	// LoggerMiddleware - 结构化日志记录
-	r.Use(pkgmiddleware.LoggerMiddleware(
-		"/health",  // 跳过健康检查
-		"/metrics", // 跳过Prometheus指标
-		"/swagger", // 跳过Swagger文档
-	))
+	accessCfg := pkgmiddleware.DefaultAccessLogConfig()
+	accessCfg.Mode = logCfg.Mode
+	accessCfg.RedactKeys = logCfg.RedactKeys
+	if logCfg.Request != nil {
+		accessCfg.SkipPaths = logCfg.Request.SkipPaths
+		accessCfg.BodyAllowPaths = logCfg.Request.BodyAllowPaths
+		accessCfg.EnableBody = logCfg.Request.EnableBody || logCfg.Mode == "strict"
+		accessCfg.MaxBodySize = logCfg.Request.MaxBodySize
+	}
+	r.Use(pkgmiddleware.LoggerMiddleware(accessCfg))
 
 	// PrometheusMiddleware - 监控指标收集
 	r.Use(metrics.Middleware())

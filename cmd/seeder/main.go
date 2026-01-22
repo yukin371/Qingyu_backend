@@ -71,6 +71,48 @@ var (
 		Short: "填充E2E测试所需的特定数据",
 		Run:   runTestData,
 	}
+
+	// chaptersCmd 填充章节数据
+	chaptersCmd = &cobra.Command{
+		Use:   "chapters",
+		Short: "填充章节数据（需要先有书籍）",
+		Run:   runChapters,
+	}
+
+	// socialCmd 填充社交数据
+	socialCmd = &cobra.Command{
+		Use:   "social",
+		Short: "填充社交数据（评论、点赞、收藏、关注）",
+		Run:   runSocial,
+	}
+
+	// walletsCmd 填充钱包数据
+	walletsCmd = &cobra.Command{
+		Use:   "wallets",
+		Short: "填充钱包和交易数据",
+		Run:   runWallets,
+	}
+
+	// rankingsCmd 填充榜单数据
+	rankingsCmd = &cobra.Command{
+		Use:   "rankings",
+		Short: "填充榜单数据",
+		Run:   runRankings,
+	}
+
+	// aiQuotaCmd 激活AI配额
+	aiQuotaCmd = &cobra.Command{
+		Use:   "ai-quota",
+		Short: "激活用户AI配额",
+		Run:   runAIQuota,
+	}
+
+	// importCmd 导入小说数据
+	importCmd = &cobra.Command{
+		Use:   "import",
+		Short: "从JSON文件导入小说数据",
+		Run:   runImport,
+	}
 )
 
 // init 初始化命令
@@ -86,6 +128,12 @@ func init() {
 	rootCmd.AddCommand(allCmd)
 	rootCmd.AddCommand(usersCmd)
 	rootCmd.AddCommand(bookstoreCmd)
+	rootCmd.AddCommand(chaptersCmd)
+	rootCmd.AddCommand(socialCmd)
+	rootCmd.AddCommand(walletsCmd)
+	rootCmd.AddCommand(rankingsCmd)
+	rootCmd.AddCommand(aiQuotaCmd)
+	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(testCmd)
@@ -404,4 +452,146 @@ func runTestData(cmd *cobra.Command, args []string) {
 	fmt.Println("\n测试账号: testuser / 123456")
 	fmt.Println("测试书籍: 修仙世界、修仙归来、万古修仙等")
 	fmt.Println("测试分类: 玄幻、修仙")
+}
+
+// runChapters 填充章节数据
+func runChapters(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充章节数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空章节数据...")
+		seeder := NewChapterSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空章节数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewChapterSeeder(db, cfg)
+
+	fmt.Println("\n生成章节...")
+	if err := seeder.SeedChapters(); err != nil {
+		fmt.Printf("生成章节失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n生成章节内容...")
+	if err := seeder.SeedChapterContents(); err != nil {
+		fmt.Printf("生成章节内容失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n章节数据填充完成!")
+}
+
+// runSocial 填充社交数据
+func runSocial(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充社交数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewSocialSeeder(db, cfg)
+
+	if err := seeder.SeedSocialData(); err != nil {
+		fmt.Printf("填充社交数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n社交数据填充完成!")
+}
+
+// runWallets 填充钱包数据
+func runWallets(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充钱包数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewWalletSeeder(db, cfg)
+
+	if err := seeder.SeedWallets(); err != nil {
+		fmt.Printf("填充钱包数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n钱包数据填充完成!")
+}
+
+// runRankings 填充榜单数据
+func runRankings(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充榜单数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewRankingSeeder(db, cfg)
+
+	if err := seeder.SeedRankings(); err != nil {
+		fmt.Printf("填充榜单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n榜单数据填充完成!")
+}
+
+// runAIQuota 激活AI配额
+func runAIQuota(cmd *cobra.Command, args []string) {
+	fmt.Println("开始激活AI配额...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewAIQuotaSeeder(db, cfg)
+
+	if err := seeder.SeedAIQuota(); err != nil {
+		fmt.Printf("激活AI配额失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\nAI配额激活完成!")
+}
+
+// runImport 导入小说数据
+func runImport(cmd *cobra.Command, args []string) {
+	fmt.Println("开始导入小说数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewImportSeeder(db, cfg)
+
+	if err := seeder.SeedFromJSON("data/novels_100.json"); err != nil {
+		fmt.Printf("导入小说数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n小说数据导入完成!")
 }

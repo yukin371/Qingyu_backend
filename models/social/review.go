@@ -9,44 +9,44 @@ import (
 // Review 书评
 type Review struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	BookID       string             `bson:"book_id" json:"book_id"`
-	UserID       string             `bson:"user_id" json:"user_id"`
-	UserName     string             `bson:"user_name" json:"user_name"`
-	UserAvatar   string             `bson:"user_avatar,omitempty" json:"user_avatar,omitempty"`
+	BookID       string             `bson:"book_id" json:"bookId"`
+	UserID       string             `bson:"user_id" json:"userId"`
+	UserName     string             `bson:"user_name" json:"userName"`
+	UserAvatar   string             `bson:"user_avatar,omitempty" json:"userAvatar,omitempty"`
 	Title        string             `bson:"title" json:"title"`
 	Content      string             `bson:"content" json:"content"`
 	Rating       int                `bson:"rating" json:"rating"` // 1-5星评分
-	LikeCount    int                `bson:"like_count" json:"like_count"`
-	CommentCount int                `bson:"comment_count" json:"comment_count"`
-	IsSpoiler    bool               `bson:"is_spoiler" json:"is_spoiler"` // 是否包含剧透
-	IsPublic     bool               `bson:"is_public" json:"is_public"`
-	CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt    time.Time          `bson:"updated_at" json:"updated_at"`
+	LikeCount    int                `bson:"like_count" json:"likeCount"`
+	CommentCount int                `bson:"comment_count" json:"commentCount"`
+	IsSpoiler    bool               `bson:"is_spoiler" json:"isSpoiler"` // 是否包含剧透
+	IsPublic     bool               `bson:"is_public" json:"isPublic"`
+	CreatedAt    time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt    time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // ReviewLike 书评点赞
 type ReviewLike struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ReviewID  string             `bson:"review_id" json:"review_id"`
-	UserID    string             `bson:"user_id" json:"user_id"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	ReviewID  string             `bson:"review_id" json:"reviewId"`
+	UserID    string             `bson:"user_id" json:"userId"`
+	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // ReviewInfo 书评信息
 type ReviewInfo struct {
 	ID           string    `json:"id"`
-	BookID       string    `json:"book_id"`
+	BookID       string    `json:"bookId"`
 	BookTitle    string    `json:"book_title,omitempty"`
 	BookCover    string    `json:"book_cover,omitempty"`
-	UserID       string    `json:"user_id"`
-	UserName     string    `json:"user_name"`
-	UserAvatar   string    `json:"user_avatar,omitempty"`
+	UserID       string    `json:"userId"`
+	UserName     string    `json:"userName"`
+	UserAvatar   string    `json:"userAvatar,omitempty"`
 	Title        string    `json:"title"`
 	Content      string    `json:"content"`
 	Rating       int       `json:"rating"`
-	LikeCount    int       `json:"like_count"`
-	CommentCount int       `json:"comment_count"`
-	IsLiked      bool      `json:"is_liked"`
-	IsSpoiler    bool      `json:"is_spoiler"`
-	CreatedAt    time.Time `json:"created_at"`
+	LikeCount    int       `json:"likeCount"`
+	CommentCount int       `json:"commentCount"`
+	IsLiked      bool      `json:"isLiked"`
+	IsSpoiler    bool      `json:"isSpoiler"`
+	CreatedAt    time.Time `json:"createdAt"`
 }

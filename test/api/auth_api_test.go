@@ -202,7 +202,7 @@ func TestAuthAPI_Register(t *testing.T) {
 						ID:       "user123",
 						Username: "testuser",
 						Email:    "test@example.com",
-						Roles:    []string{"user"},
+						Roles:    []string{"reader"},
 					},
 					Token: "test_token_123",
 				}
@@ -283,7 +283,7 @@ func TestAuthAPI_Login(t *testing.T) {
 						ID:       "user123",
 						Username: "testuser",
 						Email:    "test@example.com",
-						Roles:    []string{"user"},
+						Roles:    []string{"reader"},
 					},
 					Token: "test_token_123",
 				}

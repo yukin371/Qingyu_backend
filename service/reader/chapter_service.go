@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	bookstoremodels "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/service/bookstore"
 )
@@ -105,19 +103,8 @@ func NewChapterService(
 
 // GetChapterContent 获取章节内容（阅读器专用）
 func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, bookID, chapterID string) (*ChapterContentResponse, error) {
-	// 解析ID
-	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid chapter ID: %w", err)
-	}
-
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 获取章节元数据
-	chapter, err := s.chapterService.GetChapterByID(ctx, chapterOID)
+	chapter, err := s.chapterService.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter: %w", err)
 	}
@@ -131,12 +118,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 	}
 
 	// 权限检查
-	userOID := primitive.NilObjectID
-	if userID != "" {
-		userOID, _ = primitive.ObjectIDFromHex(userID)
-	}
-
-	canAccess, accessReason := s.checkChapterAccess(ctx, userOID, chapter, bookOID)
+	canAccess, accessReason := s.checkChapterAccess(ctx, userID, chapter, bookID)
 	if !canAccess {
 		// 返回章节信息但不含内容
 		return &ChapterContentResponse{
@@ -152,7 +134,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 	}
 
 	// 获取章节内容
-	content, err := s.chapterService.GetChapterContent(ctx, chapterOID, userOID)
+	content, err := s.chapterService.GetChapterContent(ctx, chapterID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter content: %w", err)
 	}
@@ -168,7 +150,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 	if userID != "" {
 		readingProgress, err := s.readerService.GetReadingProgress(ctx, userID, bookID)
 		if err == nil && readingProgress != nil {
-			progress = readingProgress.Progress
+			progress = float64(readingProgress.Progress)
 			readingTime = readingProgress.ReadingTime
 			lastReadAt = readingProgress.LastReadAt
 		}
@@ -196,13 +178,8 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 
 // GetChapterByNumber 根据章节号获取内容
 func (s *ChapterServiceImpl) GetChapterByNumber(ctx context.Context, userID, bookID string, chapterNum int) (*ChapterContentResponse, error) {
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 获取章节
-	chapter, err := s.chapterService.GetChapterByBookIDAndNum(ctx, bookOID, chapterNum)
+	chapter, err := s.chapterService.GetChapterByBookIDAndNum(ctx, bookID, chapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter: %w", err)
 	}
@@ -210,23 +187,13 @@ func (s *ChapterServiceImpl) GetChapterByNumber(ctx context.Context, userID, boo
 		return nil, ErrChapterNotFound
 	}
 
-	return s.GetChapterContent(ctx, userID, bookID, chapter.ID.Hex())
+	return s.GetChapterContent(ctx, userID, bookID, chapter.ID)
 }
 
 // GetNextChapter 获取下一章信息
 func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, userID, bookID, chapterID string) (*ChapterInfo, error) {
-	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid chapter ID: %w", err)
-	}
-
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 获取当前章节
-	currentChapter, err := s.chapterService.GetChapterByID(ctx, chapterOID)
+	currentChapter, err := s.chapterService.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current chapter: %w", err)
 	}
@@ -235,7 +202,7 @@ func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, userID, bookID,
 	}
 
 	// 获取下一章
-	nextChapter, err := s.chapterService.GetNextChapter(ctx, bookOID, currentChapter.ChapterNum)
+	nextChapter, err := s.chapterService.GetNextChapter(ctx, bookID, currentChapter.ChapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get next chapter: %w", err)
 	}
@@ -248,18 +215,8 @@ func (s *ChapterServiceImpl) GetNextChapter(ctx context.Context, userID, bookID,
 
 // GetPreviousChapter 获取上一章信息
 func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, userID, bookID, chapterID string) (*ChapterInfo, error) {
-	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid chapter ID: %w", err)
-	}
-
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 获取当前章节
-	currentChapter, err := s.chapterService.GetChapterByID(ctx, chapterOID)
+	currentChapter, err := s.chapterService.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current chapter: %w", err)
 	}
@@ -268,7 +225,7 @@ func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, userID, boo
 	}
 
 	// 获取上一章
-	prevChapter, err := s.chapterService.GetPreviousChapter(ctx, bookOID, currentChapter.ChapterNum)
+	prevChapter, err := s.chapterService.GetPreviousChapter(ctx, bookID, currentChapter.ChapterNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get previous chapter: %w", err)
 	}
@@ -281,13 +238,8 @@ func (s *ChapterServiceImpl) GetPreviousChapter(ctx context.Context, userID, boo
 
 // GetChapterList 获取章节目录
 func (s *ChapterServiceImpl) GetChapterList(ctx context.Context, userID, bookID string, page, size int) (*ChapterListResponse, error) {
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid book ID: %w", err)
-	}
-
 	// 获取章节列表
-	chapters, total, err := s.chapterService.GetChaptersByBookID(ctx, bookOID, page, size)
+	chapters, total, err := s.chapterService.GetChaptersByBookID(ctx, bookID, page, size)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter list: %w", err)
 	}
@@ -300,7 +252,7 @@ func (s *ChapterServiceImpl) GetChapterList(ctx context.Context, userID, bookID 
 	}
 
 	// 获取书籍统计信息
-	totalWords, _ := s.chapterService.GetTotalWordCountByBookID(ctx, bookOID)
+	totalWords, _ := s.chapterService.GetTotalWordCountByBookID(ctx, bookID)
 
 	return &ChapterListResponse{
 		Chapters:   chapterInfos,
@@ -316,12 +268,7 @@ func (s *ChapterServiceImpl) GetChapterList(ctx context.Context, userID, bookID 
 
 // GetChapterInfo 获取章节信息（不含内容）
 func (s *ChapterServiceImpl) GetChapterInfo(ctx context.Context, userID, chapterID string) (*ChapterInfo, error) {
-	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid chapter ID: %w", err)
-	}
-
-	chapter, err := s.chapterService.GetChapterByID(ctx, chapterOID)
+	chapter, err := s.chapterService.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter: %w", err)
 	}
@@ -333,26 +280,26 @@ func (s *ChapterServiceImpl) GetChapterInfo(ctx context.Context, userID, chapter
 }
 
 // checkChapterAccess 检查章节访问权限
-func (s *ChapterServiceImpl) checkChapterAccess(ctx context.Context, userID primitive.ObjectID, chapter *bookstoremodels.Chapter, bookID primitive.ObjectID) (bool, string) {
+func (s *ChapterServiceImpl) checkChapterAccess(ctx context.Context, userID string, chapter *bookstoremodels.Chapter, bookID string) (bool, string) {
 	// 免费章节，所有人可访问
 	if chapter.IsFree {
 		return true, ""
 	}
 
 	// 未登录用户无法访问付费章节
-	if userID.IsZero() {
+	if userID == "" {
 		return false, "需要登录后阅读付费章节"
 	}
 
 	// 检查VIP权限
 	if s.vipService != nil {
 		// 使用 CheckVIPAccess 检查VIP权限
-		hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID.Hex(), chapter.ID.Hex(), !chapter.IsFree)
+		hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapter.ID, !chapter.IsFree)
 		if err == nil && hasAccess {
 			return true, ""
 		}
 		// 如果VIP检查失败，继续检查是否已购买该章节
-		purchased, err := s.vipService.CheckChapterPurchased(ctx, userID.Hex(), chapter.ID.Hex())
+		purchased, err := s.vipService.CheckChapterPurchased(ctx, userID, chapter.ID)
 		if err == nil && purchased {
 			return true, ""
 		}
@@ -376,28 +323,23 @@ func (s *ChapterServiceImpl) getNavigationInfo(ctx context.Context, chapter *boo
 
 // buildChapterInfo 构建章节信息
 func (s *ChapterServiceImpl) buildChapterInfo(ctx context.Context, userID string, chapter *bookstoremodels.Chapter) (*ChapterInfo, error) {
-	userOID := primitive.NilObjectID
-	if userID != "" {
-		userOID, _ = primitive.ObjectIDFromHex(userID)
-	}
-
-	canAccess, accessReason := s.checkChapterAccess(ctx, userOID, chapter, chapter.BookID)
+	canAccess, accessReason := s.checkChapterAccess(ctx, userID, chapter, chapter.BookID)
 
 	// 获取阅读进度
 	var progress float64
 	isRead := false
 
 	if userID != "" {
-		readingProgress, err := s.readerService.GetReadingProgress(ctx, userID, chapter.BookID.Hex())
+		readingProgress, err := s.readerService.GetReadingProgress(ctx, userID, chapter.BookID)
 		if err == nil && readingProgress != nil {
-			progress = readingProgress.Progress
-			isRead = (readingProgress.ChapterID == chapter.ID.Hex())
+			progress = float64(readingProgress.Progress)
+				isRead = (readingProgress.ChapterID.Hex() == chapter.ID)
 		}
 	}
 
 	return &ChapterInfo{
-		ChapterID:    chapter.ID.Hex(),
-		BookID:       chapter.BookID.Hex(),
+		ChapterID:    chapter.ID,
+		BookID:       chapter.BookID,
 		Title:        chapter.Title,
 		ChapterNum:   chapter.ChapterNum,
 		WordCount:    chapter.WordCount,

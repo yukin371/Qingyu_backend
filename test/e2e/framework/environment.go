@@ -16,6 +16,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
+	"Qingyu_backend/test/testutil"
 )
 
 // TestEnvironment E2E 测试环境
@@ -35,6 +36,8 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, func()) {
 	// 1. 加载测试配置
 	cfg, err := config.LoadConfig("../../config")
 	require.NoError(t, err, "加载测试配置失败")
+	config.GlobalConfig = cfg
+	testutil.EnableStrictLogAssertions(t)
 
 	// 2. 初始化服务（会自动创建 ServiceContainer）
 	err = core.InitServices()

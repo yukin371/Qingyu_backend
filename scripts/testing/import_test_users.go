@@ -162,7 +162,7 @@ func main() {
 		// 创建用户
 		now := time.Now()
 		user := users.User{
-			ID:        primitive.NewObjectID().Hex(),
+			ID:        primitive.NewObjectID(),
 			Username:  testUser.Username,
 			Email:     testUser.Email,
 			Password:  string(hashedPassword),

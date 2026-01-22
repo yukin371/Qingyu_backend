@@ -4,23 +4,26 @@ import (
 	"fmt"
 	"time"
 
-	shared "Qingyu_backend/models/shared"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // DocumentContent 文档内容
 // 用于存储文档的实际内容，与Document分离以提升性能
 type DocumentContent struct {
-	shared.IdentifiedEntity `bson:",inline"`
-	shared.BaseEntity       `bson:",inline"`
-	shared.Edited           `bson:",inline"`
+	ID           primitive.ObjectID `bson:"_id" json:"id"`
+	CreatedAt    time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt    time.Time          `bson:"updated_at" json:"updatedAt"`
+	DeletedAt    time.Time          `bson:"deleted_at,omitempty" json:"deletedAt,omitempty"`
+	LastSavedAt  time.Time          `bson:"last_saved_at" json:"lastSavedAt"`
+	LastEditedBy string             `bson:"last_edited_by" json:"lastEditedBy"`
 
-	DocumentID  string `bson:"document_id" json:"documentId" validate:"required"`
-	Content     string `bson:"content" json:"content"`                        // 文档内容
-	ContentType string `bson:"content_type" json:"contentType"`               // markdown | richtext
-	WordCount   int    `bson:"word_count" json:"wordCount"`                   // 字数统计
-	CharCount   int    `bson:"char_count" json:"charCount"`                   // 字符统计
-	GridFSID    string `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
-	Version     int    `bson:"version" json:"version"`                        // 版本号（乐观锁）
+	DocumentID  primitive.ObjectID `bson:"document_id" json:"documentId" validate:"required"`
+	Content     string             `bson:"content" json:"content"`                        // 文档内容
+	ContentType string             `bson:"content_type" json:"contentType"`               // markdown | richtext
+	WordCount   int                `bson:"word_count" json:"wordCount"`                   // 字数统计
+	CharCount   int                `bson:"char_count" json:"charCount"`                   // 字符统计
+	GridFSID    primitive.ObjectID `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
+	Version     int                `bson:"version" json:"version"`                        // 版本号（乐观锁）
 }
 
 // IsLargeDocument 判断是否为大文档（>1MB）
@@ -38,7 +41,7 @@ func (d *DocumentContent) GetDisplayWordCount() int {
 
 // Validate 验证文档内容数据
 func (d *DocumentContent) Validate() error {
-	if d.DocumentID == "" {
+	if d.DocumentID.IsZero() {
 		return fmt.Errorf("文档ID不能为空")
 	}
 	if d.ContentType == "" {
@@ -52,17 +55,36 @@ func (d *DocumentContent) Validate() error {
 
 // TouchForCreate 设置创建时的默认值
 func (d *DocumentContent) TouchForCreate() {
-	d.BaseEntity.TouchForCreate()
+	now := time.Now()
+	if d.CreatedAt.IsZero() {
+		d.CreatedAt = now
+	}
+	if d.UpdatedAt.IsZero() {
+		d.UpdatedAt = now
+	}
 	if d.LastSavedAt.IsZero() {
 		d.LastSavedAt = d.CreatedAt
 	}
 	if d.Version == 0 {
 		d.Version = 1
 	}
+	if d.ID.IsZero() {
+		d.ID = primitive.NewObjectID()
+	}
 }
 
 // TouchForUpdate 设置更新时的默认值
 func (d *DocumentContent) TouchForUpdate() {
-	d.BaseEntity.Touch()
+	d.UpdatedAt = time.Now()
 	d.LastSavedAt = time.Now()
+}
+
+// GetID 获取ID
+func (d *DocumentContent) GetID() primitive.ObjectID {
+	return d.ID
+}
+
+// SetID 设置ID
+func (d *DocumentContent) SetID(id primitive.ObjectID) {
+	d.ID = id
 }

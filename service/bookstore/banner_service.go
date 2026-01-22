@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BannerService Banner服务接口
@@ -97,12 +96,7 @@ type BatchUpdateSortRequest struct {
 
 // GetBannerByID 获取Banner详情
 func (s *bannerServiceImpl) GetBannerByID(ctx context.Context, id string) (*bookstore.Banner, error) {
-	bannerID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", id)
-	}
-
-	banner, err := s.bannerRepo.GetByID(ctx, bannerID)
+	banner, err := s.bannerRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, errors.BookstoreServiceFactory.InternalError("BANNER_GET_FAILED", "获取Banner失败", err)
 	}
@@ -197,13 +191,13 @@ func (s *bannerServiceImpl) CreateBanner(ctx context.Context, req *CreateBannerR
 
 // UpdateBanner 更新Banner
 func (s *bannerServiceImpl) UpdateBanner(ctx context.Context, id string, req *UpdateBannerRequest) error {
-	bannerID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
+	// 验证ID格式
+	if id == "" {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", id)
 	}
 
 	// 检查Banner是否存在
-	exists, err := s.bannerRepo.Exists(ctx, bannerID)
+	exists, err := s.bannerRepo.Exists(ctx, id)
 	if err != nil {
 		return errors.BookstoreServiceFactory.InternalError("BANNER_CHECK_FAILED", "检查Banner是否存在失败", err)
 	}
@@ -250,7 +244,7 @@ func (s *bannerServiceImpl) UpdateBanner(ctx context.Context, id string, req *Up
 		return nil // 没有更新
 	}
 
-	if err := s.bannerRepo.Update(ctx, bannerID, updates); err != nil {
+	if err := s.bannerRepo.Update(ctx, id, updates); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("BANNER_UPDATE_FAILED", "更新Banner失败", err)
 	}
 
@@ -259,12 +253,12 @@ func (s *bannerServiceImpl) UpdateBanner(ctx context.Context, id string, req *Up
 
 // DeleteBanner 删除Banner
 func (s *bannerServiceImpl) DeleteBanner(ctx context.Context, id string) error {
-	bannerID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
+	// 验证ID格式
+	if id == "" {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", id)
 	}
 
-	if err := s.bannerRepo.Delete(ctx, bannerID); err != nil {
+	if err := s.bannerRepo.Delete(ctx, id); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("BANNER_DELETE_FAILED", "删除Banner失败", err)
 	}
 
@@ -277,17 +271,14 @@ func (s *bannerServiceImpl) BatchUpdateStatus(ctx context.Context, req *BatchUpd
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_INPUT", "Banner ID列表不能为空")
 	}
 
-	// 转换ID
-	bannerIDs := make([]primitive.ObjectID, 0, len(req.BannerIDs))
+	// 验证所有ID格式
 	for _, idStr := range req.BannerIDs {
-		id, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
+		if idStr == "" {
 			return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", idStr)
 		}
-		bannerIDs = append(bannerIDs, id)
 	}
 
-	if err := s.bannerRepo.BatchUpdateStatus(ctx, bannerIDs, req.IsActive); err != nil {
+	if err := s.bannerRepo.BatchUpdateStatus(ctx, req.BannerIDs, req.IsActive); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("BATCH_UPDATE_FAILED", "批量更新状态失败", err)
 	}
 
@@ -302,8 +293,8 @@ func (s *bannerServiceImpl) BatchUpdateSort(ctx context.Context, req *BatchUpdat
 
 	// 遍历更新每个Banner的排序
 	for _, item := range req.Items {
-		bannerID, err := primitive.ObjectIDFromHex(item.ID)
-		if err != nil {
+		// 验证ID格式
+		if item.ID == "" {
 			return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", item.ID)
 		}
 
@@ -311,7 +302,7 @@ func (s *bannerServiceImpl) BatchUpdateSort(ctx context.Context, req *BatchUpdat
 			"sort_order": item.SortOrder,
 		}
 
-		if err := s.bannerRepo.Update(ctx, bannerID, updates); err != nil {
+		if err := s.bannerRepo.Update(ctx, item.ID, updates); err != nil {
 			return errors.BookstoreServiceFactory.InternalError("BATCH_UPDATE_FAILED", "更新排序失败", err)
 		}
 	}
@@ -321,12 +312,12 @@ func (s *bannerServiceImpl) BatchUpdateSort(ctx context.Context, req *BatchUpdat
 
 // IncrementClickCount 增加点击次数
 func (s *bannerServiceImpl) IncrementClickCount(ctx context.Context, id string) error {
-	bannerID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
+	// 验证ID格式
+	if id == "" {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的Banner ID", id)
 	}
 
-	if err := s.bannerRepo.IncrementClickCount(ctx, bannerID); err != nil {
+	if err := s.bannerRepo.IncrementClickCount(ctx, id); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("INCREMENT_FAILED", "增加点击次数失败", err)
 	}
 

@@ -582,12 +582,12 @@ func (m *MockChapterService) BatchUpdateChapterPrice(ctx context.Context, chapte
 	return args.Error(0)
 }
 
-func (m *MockChapterService) BatchPublishChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error {
+func (m *MockChapterService) BatchPublishChapters(ctx context.Context, chapterIDs []string) error {
 	args := m.Called(ctx, chapterIDs)
 	return args.Error(0)
 }
 
-func (m *MockChapterService) BatchDeleteChapters(ctx context.Context, chapterIDs []primitive.ObjectID) error {
+func (m *MockChapterService) BatchDeleteChapters(ctx context.Context, chapterIDs []string) error {
 	args := m.Called(ctx, chapterIDs)
 	return args.Error(0)
 }
@@ -763,10 +763,14 @@ func TestReaderService_GetReadingProgress_Success(t *testing.T) {
 	userID := "user123"
 	bookID := "book123"
 
+	progressID := primitive.NewObjectID()
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	bookObjectID, _ := primitive.ObjectIDFromHex(bookID)
+
 	expectedProgress := &reader.ReadingProgress{
-		ID:       "progress123",
-		UserID:   userID,
-		BookID:   bookID,
+		ID:       progressID,
+		UserID:   userObjectID,
+		BookID:   bookObjectID,
 		Progress: 0.5,
 	}
 
@@ -953,9 +957,15 @@ func TestReaderService_GetRecentReading_Success(t *testing.T) {
 	userID := "user123"
 	limit := 10
 
+	progress1ID := primitive.NewObjectID()
+	progress2ID := primitive.NewObjectID()
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	book1ObjectID, _ := primitive.ObjectIDFromHex("book1")
+	book2ObjectID, _ := primitive.ObjectIDFromHex("book2")
+
 	expectedProgresses := []*reader.ReadingProgress{
-		{ID: "progress1", UserID: userID, BookID: "book1"},
-		{ID: "progress2", UserID: userID, BookID: "book2"},
+		{ID: progress1ID, UserID: userObjectID, BookID: book1ObjectID},
+		{ID: progress2ID, UserID: userObjectID, BookID: book2ObjectID},
 	}
 
 	mockProgressRepo.On("GetRecentReadingByUser", ctx, userID, limit).
@@ -1017,8 +1027,12 @@ func TestReaderService_GetReadingHistory_Success(t *testing.T) {
 	page := 1
 	size := 20
 
+	progressID := primitive.NewObjectID()
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	bookObjectID, _ := primitive.ObjectIDFromHex("book1")
+
 	expectedProgresses := []*reader.ReadingProgress{
-		{ID: "progress1", UserID: userID, BookID: "book1"},
+		{ID: progressID, UserID: userObjectID, BookID: bookObjectID},
 	}
 	total := int64(100)
 

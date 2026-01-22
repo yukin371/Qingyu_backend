@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"Qingyu_backend/models/reader"
+	"Qingyu_backend/models/shared/types"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
@@ -90,18 +93,38 @@ func (s *ReadingHistoryService) RecordReading(
 		return fmt.Errorf("阅读时长不合理")
 	}
 
-	// 验证进度范围
+	// 验证进度范围（0-100）
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("阅读进度必须在0-100之间")
 	}
 
+	// 将百分比转换为 types.Progress（0-1）
+	progressValue, err := types.NewProgressFromPercent(int(progress))
+	if err != nil {
+		return fmt.Errorf("进度转换失败: %w", err)
+	}
+
+	// 转换 ID
+	userOID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("无效的用户ID: %w", err)
+	}
+	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("无效的书籍ID: %w", err)
+	}
+	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
+	if err != nil {
+		return fmt.Errorf("无效的章节ID: %w", err)
+	}
+
 	// 创建历史记录
 	history := &reader.ReadingHistory{
-		UserID:       userID,
-		BookID:       bookID,
-		ChapterID:    chapterID,
+		UserID:       userOID,
+		BookID:       bookOID,
+		ChapterID:    chapterOID,
 		ReadDuration: duration,
-		Progress:     progress,
+		Progress:     progressValue,
 		DeviceType:   deviceType,
 		DeviceID:     deviceID,
 		StartTime:    startTime,
@@ -340,7 +363,7 @@ func (s *ReadingHistoryService) DeleteHistory(
 	}
 
 	// 验证是否为该用户的记录
-	if history.UserID != userID {
+	if history.UserID.Hex() != userID {
 		return fmt.Errorf("无权删除该历史记录")
 	}
 

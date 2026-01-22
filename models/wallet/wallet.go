@@ -5,18 +5,18 @@ import "time"
 // Wallet 钱包模型
 type Wallet struct {
 	ID        string    `json:"id" bson:"_id,omitempty"`
-	UserID    string    `json:"user_id" bson:"user_id"` // 用户ID（唯一）
+	UserID    string    `json:"$1$2" bson:"user_id"` // 用户ID（唯一）
 	Balance   float64   `json:"balance" bson:"balance"` // 余额
 	Frozen    bool      `json:"frozen" bson:"frozen"`   // 是否冻结
 	FrozenAt  time.Time `json:"frozen_at,omitempty" bson:"frozen_at,omitempty"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+	CreatedAt time.Time `json:"$1$2" bson:"created_at"`
+	UpdatedAt time.Time `json:"$1$2" bson:"updated_at"`
 }
 
 // Transaction 交易记录
 type Transaction struct {
 	ID              string    `json:"id" bson:"_id,omitempty"`
-	UserID          string    `json:"user_id" bson:"user_id"`                                     // 用户ID
+	UserID          string    `json:"$1$2" bson:"user_id"`                                     // 用户ID
 	Type            string    `json:"type" bson:"type"`                                           // 交易类型
 	Amount          float64   `json:"amount" bson:"amount"`                                       // 交易金额
 	Balance         float64   `json:"balance" bson:"balance"`                                     // 交易后余额
@@ -26,20 +26,20 @@ type Transaction struct {
 	Status          string    `json:"status" bson:"status"`                                       // 交易状态
 	OrderNo         string    `json:"order_no,omitempty" bson:"order_no,omitempty"`               // 订单号（雪花算法）
 	ThirdPartyNo    string    `json:"third_party_no,omitempty" bson:"third_party_no,omitempty"`   // 第三方流水号
-	TransactionTime time.Time `json:"transaction_time" bson:"transaction_time"`
-	CreatedAt       time.Time `json:"created_at" bson:"created_at"`
+	TransactionTime time.Time `json:"$1$2" bson:"transaction_time"`
+	CreatedAt       time.Time `json:"$1$2" bson:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 }
 
 // WithdrawRequest 提现申请
 type WithdrawRequest struct {
 	ID            string    `json:"id" bson:"_id,omitempty"`
-	UserID        string    `json:"user_id" bson:"user_id"`                               // 用户ID
+	UserID        string    `json:"$1$2" bson:"user_id"`                               // 用户ID
 	Amount        float64   `json:"amount" bson:"amount"`                                 // 提现金额
 	Fee           float64   `json:"fee" bson:"fee"`                                       // 手续费
-	ActualAmount  float64   `json:"actual_amount" bson:"actual_amount"`                   // 实际到账金额
+	ActualAmount  float64   `json:"$1$2" bson:"actual_amount"`                   // 实际到账金额
 	Account       string    `json:"account" bson:"account"`                               // 提现账号
-	AccountType   string    `json:"account_type" bson:"account_type"`                     // 账号类型：alipay, wechat, bank
+	AccountType   string    `json:"$1$2" bson:"account_type"`                     // 账号类型：alipay, wechat, bank
 	AccountName   string    `json:"account_name,omitempty" bson:"account_name,omitempty"` // 账户名
 	Status        string    `json:"status" bson:"status"`                                 // 状态
 	ReviewedBy    string    `json:"reviewed_by,omitempty" bson:"reviewed_by,omitempty"`
@@ -47,9 +47,9 @@ type WithdrawRequest struct {
 	RejectReason  string    `json:"reject_reason,omitempty" bson:"reject_reason,omitempty"`
 	ProcessedAt   time.Time `json:"processed_at,omitempty" bson:"processed_at,omitempty"`
 	TransactionID string    `json:"transaction_id,omitempty" bson:"transaction_id,omitempty"` // 关联交易ID
-	OrderNo       string    `json:"order_no" bson:"order_no"`                                 // 订单号
-	CreatedAt     time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" bson:"updated_at"`
+	OrderNo       string    `json:"$1$2" bson:"order_no"`                                 // 订单号
+	CreatedAt     time.Time `json:"$1$2" bson:"created_at"`
+	UpdatedAt     time.Time `json:"$1$2" bson:"updated_at"`
 }
 
 // 交易类型

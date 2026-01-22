@@ -28,3 +28,27 @@ type Book struct {
 	CreatedAt     time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt     time.Time `bson:"updated_at" json:"updated_at"`
 }
+
+// Chapter 章节模型
+type Chapter struct {
+	ID          string    `bson:"_id,omitempty" json:"id"`
+	BookID      string    `bson:"book_id" json:"book_id"`
+	ChapterNum  int       `bson:"chapter_num" json:"chapter_num"`
+	Title       string    `bson:"title" json:"title"`
+	WordCount   int       `bson:"word_count" json:"word_count"`
+	Price       float64   `bson:"price" json:"price"`
+	IsFree      bool      `bson:"is_free" json:"is_free"`
+	Status      string    `bson:"status" json:"status"`
+	PublishedAt time.Time `bson:"published_at" json:"published_at"`
+	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+// ChapterContent 章节内容模型
+type ChapterContent struct {
+	ChapterID string    `bson:"chapter_id" json:"chapter_id"`
+	Content   string    `bson:"content" json:"content"`
+	WordCount int       `bson:"word_count" json:"word_count"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+}

@@ -2,6 +2,7 @@ package finance
 
 import (
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
@@ -163,9 +164,9 @@ func (s *AuthorRevenueServiceImpl) CreateWithdrawalRequest(ctx context.Context, 
 	// 4. 创建提现申请
 	request := &financeModel.WithdrawalRequest{
 		UserID:       userID,
-		Amount:       amount,
-		Fee:          fee,
-		ActualAmount: actualAmount,
+		Amount:       types.NewMoneyFromYuan(amount),
+		Fee:          types.NewMoneyFromYuan(fee),
+		ActualAmount: types.NewMoneyFromYuan(actualAmount),
 		Method:       method,
 		AccountInfo:  account,
 		Status:       financeModel.WithdrawStatusPending,

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
 )
@@ -68,10 +69,14 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	// 转换为注记模型
 	annotations := make([]*readerModels.Annotation, len(req.Annotations))
 	for i, annReq := range req.Annotations {
+		userOID, _ := primitive.ObjectIDFromHex(userIDStr)
+		bookOID, _ := primitive.ObjectIDFromHex(annReq.BookID)
+		chapterOID, _ := primitive.ObjectIDFromHex(annReq.ChapterID)
+		
 		annotations[i] = &readerModels.Annotation{
-			UserID:    userIDStr,
-			BookID:    annReq.BookID,
-			ChapterID: annReq.ChapterID,
+			UserID:    userOID,
+			BookID:    bookOID,
+			ChapterID: chapterOID,
 			Type:      annReq.Type,
 			Text:      annReq.Text,
 			Note:      annReq.Note,

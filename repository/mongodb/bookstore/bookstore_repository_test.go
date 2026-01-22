@@ -27,7 +27,7 @@ func TestMongoBookRepository_Create(t *testing.T) {
 		Author:        "测试作者",
 		Introduction:  "这是一本测试书籍",
 		Cover:         "https://example.com/cover.jpg",
-		Status:        bookstore.BookStatusPublished,
+		Status:        bookstore.BookStatusOngoing,
 		WordCount:     100000,
 		ChapterCount:  100,
 		Price:         19.99,
@@ -61,7 +61,7 @@ func TestMongoBookRepository_GetByID(t *testing.T) {
 		Title:        "测试书籍",
 		Author:       "测试作者",
 		Introduction: "测试简介",
-		Status:       bookstore.BookStatusPublished,
+		Status:       bookstore.BookStatusOngoing,
 	}
 	err := repo.Create(ctx, book)
 	require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestMongoBookRepository_Update(t *testing.T) {
 	updates := map[string]interface{}{
 		"title":        "更新后的标题",
 		"introduction": "更新后的简介",
-		"status":       bookstore.BookStatusPublished,
+		"status":       bookstore.BookStatusOngoing,
 	}
 	err = repo.Update(ctx, book.ID, updates)
 
@@ -173,8 +173,8 @@ func TestMongoBookRepository_List(t *testing.T) {
 
 	// 创建多个测试书籍
 	books := []*bookstore.Book{
-		{Title: "书籍1", Author: "作者1", Status: bookstore.BookStatusPublished},
-		{Title: "书籍2", Author: "作者2", Status: bookstore.BookStatusPublished},
+		{Title: "书籍1", Author: "作者1", Status: bookstore.BookStatusOngoing},
+		{Title: "书籍2", Author: "作者2", Status: bookstore.BookStatusOngoing},
 		{Title: "书籍3", Author: "作者3", Status: bookstore.BookStatusDraft},
 	}
 
@@ -184,7 +184,7 @@ func TestMongoBookRepository_List(t *testing.T) {
 	}
 
 	// Act - 获取所有已发布书籍
-	result, err := repo.GetByStatus(ctx, bookstore.BookStatusPublished, 10, 0)
+	result, err := repo.GetByStatus(ctx, bookstore.BookStatusOngoing, 10, 0)
 
 	// Assert
 	require.NoError(t, err)
@@ -202,20 +202,20 @@ func TestMongoBookRepository_GetByStatus(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试书籍
-	book1 := &bookstore.Book{Title: "已发布书籍", Status: bookstore.BookStatusPublished}
+	book1 := &bookstore.Book{Title: "已发布书籍", Status: bookstore.BookStatusOngoing}
 	book2 := &bookstore.Book{Title: "草稿书籍", Status: bookstore.BookStatusDraft}
 	repo.Create(ctx, book1)
 	repo.Create(ctx, book2)
 
 	// Act
-	result, err := repo.GetByStatus(ctx, bookstore.BookStatusPublished, 10, 0)
+	result, err := repo.GetByStatus(ctx, bookstore.BookStatusOngoing, 10, 0)
 
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, result)
 	// 验证返回的都是已发布状态
 	for _, book := range result {
-		assert.Equal(t, bookstore.BookStatusPublished, book.Status)
+		assert.Equal(t, bookstore.BookStatusOngoing, book.Status)
 	}
 }
 
@@ -233,7 +233,7 @@ func TestMongoBookRepository_Search(t *testing.T) {
 		Title:        "玄幻小说测试",
 		Author:       "知名作家",
 		Introduction: "这是一部精彩的玄幻小说",
-		Status:       bookstore.BookStatusPublished,
+		Status:       bookstore.BookStatusOngoing,
 	}
 	repo.Create(ctx, book)
 
@@ -267,7 +267,7 @@ func TestMongoBookRepository_IncrementViewCount(t *testing.T) {
 	book := &bookstore.Book{
 		Title:     "热门书籍",
 		Author:    "测试作者",
-		Status:    bookstore.BookStatusPublished,
+		Status:    bookstore.BookStatusOngoing,
 		ViewCount: 100,
 	}
 	repo.Create(ctx, book)
@@ -297,13 +297,13 @@ func TestMongoBookRepository_CountByStatus(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		book := &bookstore.Book{
 			Title:  "测试书籍",
-			Status: bookstore.BookStatusPublished,
+			Status: bookstore.BookStatusOngoing,
 		}
 		repo.Create(ctx, book)
 	}
 
 	// Act
-	count, err := repo.CountByStatus(ctx, bookstore.BookStatusPublished)
+	count, err := repo.CountByStatus(ctx, bookstore.BookStatusOngoing)
 
 	// Assert
 	require.NoError(t, err)
@@ -330,7 +330,7 @@ func TestMongoBookRepository_BatchUpdateStatus(t *testing.T) {
 
 	// Act - 批量更新状态
 	bookIDs := []primitive.ObjectID{book1.ID, book2.ID, book3.ID}
-	err := repo.BatchUpdateStatus(ctx, bookIDs, bookstore.BookStatusPublished)
+	err := repo.BatchUpdateStatus(ctx, bookIDs, bookstore.BookStatusOngoing)
 
 	// Assert
 	require.NoError(t, err)
@@ -338,7 +338,7 @@ func TestMongoBookRepository_BatchUpdateStatus(t *testing.T) {
 	// 验证所有书籍都已更新
 	for _, bookID := range bookIDs {
 		book, _ := repo.GetByID(ctx, bookID)
-		assert.Equal(t, bookstore.BookStatusPublished, book.Status)
+		assert.Equal(t, bookstore.BookStatusOngoing, book.Status)
 	}
 }
 
@@ -354,12 +354,12 @@ func TestMongoBookRepository_BatchUpdateRecommended(t *testing.T) {
 	// 创建测试书籍
 	book1 := &bookstore.Book{
 		Title:         "书籍1",
-		Status:        bookstore.BookStatusPublished,
+		Status:        bookstore.BookStatusOngoing,
 		IsRecommended: false,
 	}
 	book2 := &bookstore.Book{
 		Title:         "书籍2",
-		Status:        bookstore.BookStatusPublished,
+		Status:        bookstore.BookStatusOngoing,
 		IsRecommended: false,
 	}
 	repo.Create(ctx, book1)

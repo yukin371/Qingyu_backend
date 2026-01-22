@@ -130,20 +130,21 @@ func InitBookstoreRouter(
 			// 注意：BookDetailAPI中已包含GetBookStatistics
 			// Statistics API在BookDetail中已实现，这里备注即可
 
-			// ✅ Chapter Catalog API（章节目录和试读）- 公开接口
+			// ✅ Chapter API（章节管理）- 公开接口（优先注册，不需要PurchaseService）
+			if chapterApiHandler != nil {
+				public.GET("/books/:id/chapters", chapterApiHandler.GetChaptersByBookID)              // 获取章节列表（使用ChapterAPI）
+				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID)         // 别名路由
+				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                             // 获取章节详情
+				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent)             // 获取章节内容（公开接口）
+			}
+
+			// ✅ Chapter Catalog API（章节目录和购买）- 需要ChapterService和PurchaseService
 			if chapterCatalogApiHandler != nil {
-				public.GET("/books/:id/chapters", chapterCatalogApiHandler.GetChapterCatalog)          // 获取章节目录
-				public.GET("/books/:id/chapters/:chapterId", chapterCatalogApiHandler.GetChapterInfo)  // 获取单个章节信息
+				// 这些路由需要购买服务支持（VIP章节、价格、购买记录等）
 				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters)     // 获取试读章节
 				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)         // 获取VIP章节列表
 				public.GET("/chapters/:chapterId/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
 				public.GET("/chapters/:chapterId/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限
-			}
-
-			// ✅ Chapter API（章节管理）- 公开接口
-			if chapterApiHandler != nil {
-				public.GET("/chapters/:id", chapterApiHandler.GetChapter)
-				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID)
 			}
 		}
 	}

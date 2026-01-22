@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -11,6 +12,7 @@ import (
 var (
 	globalLogger *Logger
 	once         sync.Once
+	strictStats  StrictStats
 )
 
 // Logger 结构化日志记录器
@@ -30,6 +32,15 @@ type Config struct {
 	MaxAge      int    `json:"maxAge"`      // 保留旧日志文件的最大天数
 	Compress    bool   `json:"compress"`    // 是否压缩旧日志文件
 	Development bool   `json:"development"` // 是否开发模式
+	StrictMode  bool   `json:"strict_mode"` // 严格模式（测试用）
+}
+
+// StrictStats 严格模式统计
+type StrictStats struct {
+	WarnCount  int64
+	ErrorCount int64
+	PanicCount int64
+	FatalCount int64
 }
 
 // DefaultConfig 默认配置
@@ -39,6 +50,7 @@ func DefaultConfig() *Config {
 		Format:      "json",
 		Output:      "stdout",
 		Development: false,
+		StrictMode:  false,
 	}
 }
 
@@ -122,6 +134,9 @@ func NewLogger(config *Config) (*Logger, error) {
 
 	// 创建Core
 	core := zapcore.NewCore(encoder, writeSyncer, level)
+	if config.StrictMode {
+		core = zapcore.RegisterHooks(core, strictHook)
+	}
 
 	// 创建Logger
 	zapLogger := zap.New(core,
@@ -138,6 +153,21 @@ func NewLogger(config *Config) (*Logger, error) {
 		Logger: zapLogger,
 		sugar:  zapLogger.Sugar(),
 	}, nil
+}
+
+// strictHook 严格模式日志钩子
+func strictHook(entry zapcore.Entry) error {
+	switch entry.Level {
+	case zapcore.WarnLevel:
+		atomic.AddInt64(&strictStats.WarnCount, 1)
+	case zapcore.ErrorLevel:
+		atomic.AddInt64(&strictStats.ErrorCount, 1)
+	case zapcore.PanicLevel:
+		atomic.AddInt64(&strictStats.PanicCount, 1)
+	case zapcore.FatalLevel:
+		atomic.AddInt64(&strictStats.FatalCount, 1)
+	}
+	return nil
 }
 
 // Get 获取全局日志记录器
@@ -297,4 +327,22 @@ func WithUser(userID string) *Logger {
 // WithModule 添加模块字段
 func WithModule(module string) *Logger {
 	return Get().WithModule(module)
+}
+
+// ResetStrictStats 重置严格模式统计
+func ResetStrictStats() {
+	atomic.StoreInt64(&strictStats.WarnCount, 0)
+	atomic.StoreInt64(&strictStats.ErrorCount, 0)
+	atomic.StoreInt64(&strictStats.PanicCount, 0)
+	atomic.StoreInt64(&strictStats.FatalCount, 0)
+}
+
+// GetStrictStats 获取严格模式统计
+func GetStrictStats() StrictStats {
+	return StrictStats{
+		WarnCount:  atomic.LoadInt64(&strictStats.WarnCount),
+		ErrorCount: atomic.LoadInt64(&strictStats.ErrorCount),
+		PanicCount: atomic.LoadInt64(&strictStats.PanicCount),
+		FatalCount: atomic.LoadInt64(&strictStats.FatalCount),
+	}
 }

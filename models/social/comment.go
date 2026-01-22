@@ -19,8 +19,8 @@ type Comment struct {
 	TargetID   string            `bson:"target_id" json:"targetId" validate:"required"`     // 目标ID
 
 	// 旧字段兼容（向后兼容）
-	BookID    string `bson:"book_id,omitempty" json:"book_id,omitempty"`       // 书籍ID（兼容旧版本）
-	ChapterID string `bson:"chapter_id,omitempty" json:"chapter_id,omitempty"` // 章节ID（兼容旧版本）
+	BookID    string `bson:"book_id,omitempty" json:"bookId,omitempty"`       // 书籍ID（兼容旧版本）
+	ChapterID string `bson:"chapter_id,omitempty" json:"chapterId,omitempty"` // 章节ID（兼容旧版本）
 
 	// 评论内容
 	Content     string      `bson:"content" json:"content" validate:"required,min=1,max=5000"` // 评论内容
@@ -335,15 +335,17 @@ func (c *Comment) MarkAsAuthorReply() {
 
 // SetReplyTarget 设置回复目标
 func (c *Comment) SetReplyTarget(parentComment *Comment, replyToUserSnapshot *CommentAuthorSnapshot) {
-	c.ParentID = &parentComment.ID
+	parentIDStr := parentComment.ID.Hex()
+	c.ParentID = &parentIDStr
 	if parentComment.RootID != nil {
 		c.RootID = parentComment.RootID
 	} else {
-		rootID := parentComment.ID
-		c.RootID = &rootID
+		rootIDStr := parentComment.ID.Hex()
+		c.RootID = &rootIDStr
 	}
 
-	c.ReplyToCommentID = &parentComment.ID
+	replyToCommentIDStr := parentComment.ID.Hex()
+	c.ReplyToCommentID = &replyToCommentIDStr
 	c.ReplyToUserID = &parentComment.AuthorID
 	c.ReplyToUserSnapshot = replyToUserSnapshot
 

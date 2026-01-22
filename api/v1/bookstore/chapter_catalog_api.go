@@ -63,7 +63,7 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 		}
 	}
 
-	catalog, err := api.purchaseService.GetChapterCatalog(c.Request.Context(), userID, bookID)
+	catalog, err := api.purchaseService.GetChapterCatalog(c.Request.Context(), userID.Hex(), bookID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.NotFound(c, "书籍不存在")
@@ -107,7 +107,7 @@ func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 		return
 	}
 
-	chapter, err := api.chapterService.GetChapterByID(c.Request.Context(), chapterID)
+	chapter, err := api.chapterService.GetChapterByID(c.Request.Context(), chapterID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.NotFound(c, "章节不存在")
@@ -155,7 +155,7 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 		trialCount = 10
 	}
 
-	chapters, err := api.purchaseService.GetTrialChapters(c.Request.Context(), bookID, trialCount)
+	chapters, err := api.purchaseService.GetTrialChapters(c.Request.Context(), bookID.Hex(), trialCount)
 	if err != nil {
 		shared.InternalError(c, "获取试读章节失败", err)
 		return
@@ -197,7 +197,7 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 		return
 	}
 
-	chapters, err := api.purchaseService.GetVIPChapters(c.Request.Context(), bookID)
+	chapters, err := api.purchaseService.GetVIPChapters(c.Request.Context(), bookID.Hex())
 	if err != nil {
 		shared.InternalError(c, "获取VIP章节失败", err)
 		return
@@ -240,7 +240,7 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 		return
 	}
 
-	price, err := api.purchaseService.GetChapterPrice(c.Request.Context(), chapterID)
+	price, err := api.purchaseService.GetChapterPrice(c.Request.Context(), chapterID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.NotFound(c, "章节不存在")
@@ -311,7 +311,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 		return
 	}
 
-	purchase, err := api.purchaseService.PurchaseChapter(c.Request.Context(), userID, chapterID)
+	purchase, err := api.purchaseService.PurchaseChapter(c.Request.Context(), userID.Hex(), chapterID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "already purchased") {
 			c.JSON(http.StatusConflict, APIResponse{
@@ -393,7 +393,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 		return
 	}
 
-	purchase, err := api.purchaseService.PurchaseBook(c.Request.Context(), userID, bookID)
+	purchase, err := api.purchaseService.PurchaseBook(c.Request.Context(), userID.Hex(), bookID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "already purchased") {
 			c.JSON(http.StatusConflict, APIResponse{
@@ -469,7 +469,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 		size = 20
 	}
 
-	purchases, total, err := api.purchaseService.GetChapterPurchases(c.Request.Context(), userID, page, size)
+	purchases, total, err := api.purchaseService.GetChapterPurchases(c.Request.Context(), userID.Hex(), page, size)
 	if err != nil {
 		shared.InternalError(c, "获取购买记录失败", err)
 		return
@@ -547,7 +547,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 		size = 20
 	}
 
-	purchases, total, err := api.purchaseService.GetBookPurchases(c.Request.Context(), userID, bookID, page, size)
+	purchases, total, err := api.purchaseService.GetBookPurchases(c.Request.Context(), userID.Hex(), bookID.Hex(), page, size)
 	if err != nil {
 		shared.InternalError(c, "获取购买记录失败", err)
 		return
@@ -597,7 +597,7 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 		}
 	}
 
-	accessInfo, err := api.purchaseService.CheckChapterAccess(c.Request.Context(), userID, chapterID)
+	accessInfo, err := api.purchaseService.CheckChapterAccess(c.Request.Context(), userID.Hex(), chapterID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			shared.NotFound(c, "章节不存在")

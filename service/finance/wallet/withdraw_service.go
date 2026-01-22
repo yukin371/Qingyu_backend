@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	"Qingyu_backend/models/shared/types"
 )
 
 // WithdrawServiceImpl 提现服务实现
@@ -56,14 +57,14 @@ func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID,
 	}
 
 	// 4. 检查余额
-	if wallet.Balance < amount {
+	if wallet.Balance < types.Money(amount) {
 		return nil, fmt.Errorf("余额不足")
 	}
 
 	// 5. 创建提现请求
 	request := &financeModel.WithdrawRequest{
 		UserID:      userID,
-		Amount:      amount,
+		Amount:      types.Money(amount),
 		Account:     account,
 		AccountType: method, // 使用AccountType字段
 		Status:      "pending",
@@ -112,7 +113,7 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 	transaction := &financeModel.Transaction{
 		UserID: request.UserID,
 		Type:   "withdraw",
-		Amount: -request.Amount,
+		Amount: types.Money(-int64(request.Amount)),
 		Method: request.AccountType,
 		Status: "success",
 		Reason: "提现",
@@ -144,7 +145,7 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 		return fmt.Errorf("获取钱包失败: %w", err)
 	}
 
-	if err := s.walletRepo.UpdateBalance(ctx, wallet.ID, request.Amount); err != nil {
+	if err := s.walletRepo.UpdateBalance(ctx, wallet.ID, int64(request.Amount)); err != nil {
 		return fmt.Errorf("退还金额失败: %w", err)
 	}
 
@@ -203,7 +204,7 @@ func convertToWithdrawResponse(request *financeModel.WithdrawRequest) *WithdrawR
 	return &WithdrawRequest{
 		ID:           request.ID,
 		UserID:       request.UserID,
-		Amount:       request.Amount,
+		Amount:       int64(request.Amount),
 		Account:      request.Account,
 		Status:       request.Status,
 		ReviewedBy:   request.ReviewedBy,

@@ -42,9 +42,9 @@ func (r *MongoAnnouncementRepository) Create(ctx context.Context, announcement *
 		return err
 	}
 
-	// ID现在是string类型，从MongoDB的ObjectID转换
+	// ID现在是ObjectID类型，直接使用MongoDB返回的ObjectID
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		announcement.ID = oid.Hex()
+		announcement.ID = oid
 	}
 	return nil
 }

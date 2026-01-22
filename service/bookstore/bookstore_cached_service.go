@@ -117,8 +117,8 @@ func (s *BookstoreCachedService) WarmUpCache(ctx context.Context) error {
 		// 构建预热数据
 		data := make(map[string]interface{})
 		for _, book := range hotBooks {
-			// 使用 book.ID.Hex() 获取字符串形式的 ID
-			bookID := book.ID.Hex()
+			// 直接使用 book.ID，它已经是 string 类型
+			bookID := book.ID
 			cacheKey := cache.BuildBookKey(bookID, "detail")
 			data[cacheKey] = book
 		}

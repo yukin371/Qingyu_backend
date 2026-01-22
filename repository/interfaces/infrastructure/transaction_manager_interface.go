@@ -381,8 +381,8 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 						return fmt.Errorf("获取用户失败: %w", err) // 用户不存在，无需补偿
 					}
 
-					// 删除用户
-					return userRepo.Delete(txCtx, user.ID)
+					// 删除用户（使用 Hex 转换 ObjectID 为 string）
+					return userRepo.Delete(txCtx, user.ID.Hex())
 				},
 			},
 			{
@@ -403,8 +403,8 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 						return fmt.Errorf("获取默认角色失败: %w", err)
 					}
 
-					// 分配角色
-					return roleRepo.AssignRole(txCtx, user.ID, defaultRole.ID)
+					// 分配角色（使用 Hex 转换 ObjectID 为 string）
+					return roleRepo.AssignRole(txCtx, user.ID.Hex(), defaultRole.ID)
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					// 角色分配的补偿操作

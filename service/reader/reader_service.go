@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/shared/types"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 	bookstoreService "Qingyu_backend/service/bookstore"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ReaderService 阅读器服务
@@ -91,20 +92,9 @@ func (s *ReaderService) GetVersion() string {
 // GetChapterContent 获取章节内容（调用 Bookstore 的 ChapterService）
 // 这个方法为前端提供便捷的章节内容获取接口
 func (s *ReaderService) GetChapterContent(ctx context.Context, userID, chapterID string) (string, error) {
-	// 将字符串 ID 转换为 ObjectID
-	oid, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return "", fmt.Errorf("无效的章节ID: %w", err)
-	}
-
-	// 将字符串 userID 转换为 ObjectID
-	userOid, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return "", fmt.Errorf("无效的用户ID: %w", err)
-	}
-
-	// 调用 Bookstore 的 ChapterService 获取章节内容
-	content, err := s.chapterService.GetChapterContent(ctx, oid, userOid)
+	// 直接调用 Bookstore 的 ChapterService 获取章节内容
+	// Bookstore ChapterService 接受 string 类型的 ID
+	content, err := s.chapterService.GetChapterContent(ctx, chapterID, userID)
 	if err != nil {
 		return "", fmt.Errorf("获取章节内容失败: %w", err)
 	}
@@ -114,12 +104,7 @@ func (s *ReaderService) GetChapterContent(ctx context.Context, userID, chapterID
 
 // GetChapterByID 获取章节信息（调用 Bookstore 的 ChapterService）
 func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (interface{}, error) {
-	oid, err := primitive.ObjectIDFromHex(chapterID)
-	if err != nil {
-		return nil, fmt.Errorf("无效的章节ID: %w", err)
-	}
-
-	chapter, err := s.chapterService.GetChapterByID(ctx, oid)
+	chapter, err := s.chapterService.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节信息失败: %w", err)
 	}
@@ -129,12 +114,7 @@ func (s *ReaderService) GetChapterByID(ctx context.Context, chapterID string) (i
 
 // GetBookChapters 获取书籍的章节列表（调用 Bookstore 的 ChapterService）
 func (s *ReaderService) GetBookChapters(ctx context.Context, bookID string, page, size int) (interface{}, int64, error) {
-	oid, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("无效的书籍ID: %w", err)
-	}
-
-	chapters, total, err := s.chapterService.GetChaptersByBookID(ctx, oid, page, size)
+	chapters, total, err := s.chapterService.GetChaptersByBookID(ctx, bookID, page, size)
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取章节列表失败: %w", err)
 	}
@@ -155,10 +135,19 @@ func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID s
 
 	// 如果没有阅读记录，返回空进度
 	if progress == nil {
+		userOID, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			return nil, fmt.Errorf("无效的用户ID: %w", err)
+		}
+		bookOID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return nil, fmt.Errorf("无效的书籍ID: %w", err)
+		}
+
 		progress = &reader2.ReadingProgress{
-			UserID:      userID,
-			BookID:      bookID,
-			Progress:    0,
+			UserID:      userOID,
+			BookID:      bookOID,
+			Progress:    types.Progress(0),
 			ReadingTime: 0,
 		}
 	}
@@ -287,7 +276,7 @@ func (s *ReaderService) DeleteReadingProgress(ctx context.Context, userID, bookI
 	}
 
 	// 删除进度记录
-	err = s.progressRepo.Delete(ctx, progress.ID)
+	err = s.progressRepo.Delete(ctx, progress.ID.Hex())
 	if err != nil {
 		return fmt.Errorf("删除阅读进度失败: %w", err)
 	}
@@ -315,11 +304,20 @@ func (s *ReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, st
 
 	// 如果没有进度记录，创建一个新记录
 	if progress == nil {
+		userOID, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			return fmt.Errorf("无效的用户ID: %w", err)
+		}
+		bookOID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return fmt.Errorf("无效的书籍ID: %w", err)
+		}
+
 		progress = &reader2.ReadingProgress{
-			UserID:    userID,
-			BookID:    bookID,
+			UserID:    userOID,
+			BookID:    bookOID,
 			Status:    status,
-			Progress:  0,
+			Progress:  types.Progress(0),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -333,7 +331,7 @@ func (s *ReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, st
 			"status":     status,
 			"updated_at": time.Now(),
 		}
-		err = s.progressRepo.Update(ctx, progress.ID, updates)
+		err = s.progressRepo.Update(ctx, progress.ID.Hex(), updates)
 		if err != nil {
 			return fmt.Errorf("更新书籍状态失败: %w", err)
 		}
@@ -629,13 +627,13 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 
 // validateAnnotation 验证标注参数
 func (s *ReaderService) validateAnnotation(annotation *reader2.Annotation) error {
-	if annotation.UserID == "" {
+	if annotation.UserID.IsZero() {
 		return fmt.Errorf("用户ID不能为空")
 	}
-	if annotation.BookID == "" {
+	if annotation.BookID.IsZero() {
 		return fmt.Errorf("书籍ID不能为空")
 	}
-	if annotation.ChapterID == "" {
+	if annotation.ChapterID.IsZero() {
 		return fmt.Errorf("章节ID不能为空")
 	}
 	if annotation.Type == "" {
@@ -832,7 +830,11 @@ func (s *ReaderService) SyncAnnotations(ctx context.Context, userID string, req 
 	uploadedCount := 0
 	if len(syncReq.LocalAnnotations) > 0 {
 		for _, ann := range syncReq.LocalAnnotations {
-			ann.UserID = userID // 确保UserID正确
+			userOID, err := primitive.ObjectIDFromHex(userID)
+			if err != nil {
+				return nil, fmt.Errorf("无效的用户ID: %w", err)
+			}
+			ann.UserID = userOID // 确保UserID正确
 			if err := s.CreateAnnotation(ctx, ann); err != nil {
 				// 记录错误但继续
 				continue

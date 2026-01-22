@@ -35,8 +35,8 @@ func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *wr
 		return fmt.Errorf("文档内容对象不能为空")
 	}
 
-	if content.ID == "" {
-		content.ID = primitive.NewObjectID().Hex()
+	if content.ID.IsZero() {
+		content.ID = primitive.NewObjectID()
 	}
 
 	content.TouchForCreate()

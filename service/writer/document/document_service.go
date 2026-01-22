@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	serviceBase "Qingyu_backend/service/base"
@@ -85,17 +87,61 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 
 	// 4. 创建文档对象（使用base mixins）
 	doc := &writer.Document{}
-	doc.ProjectID = req.ProjectID
+	
+	// 转换 ProjectID string -> ObjectID
+	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目ID", "", err)
+	}
+	doc.ProjectID = projectID
 	doc.Title = req.Title
-	doc.ParentID = req.ParentID
+	
+	// 转换 ParentID string -> ObjectID（如果有）
+	var parentID primitive.ObjectID
+	if req.ParentID != "" {
+		parentID, err = primitive.ObjectIDFromHex(req.ParentID)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的父文档ID", "", err)
+		}
+	}
+	doc.ParentID = parentID
+	
 	doc.Type = req.Type // DocumentType现在是string类型
 	doc.Level = level
 	doc.Order = req.Order
 	doc.Status = "planned"
 	doc.WordCount = 0
-	doc.CharacterIDs = req.CharacterIDs
-	doc.LocationIDs = req.LocationIDs
-	doc.TimelineIDs = req.TimelineIDs
+	
+	// 转换 CharacterIDs []string -> []ObjectID
+	doc.CharacterIDs = make([]primitive.ObjectID, 0, len(req.CharacterIDs))
+	for _, id := range req.CharacterIDs {
+		charID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的角色ID: "+id, "", err)
+		}
+		doc.CharacterIDs = append(doc.CharacterIDs, charID)
+	}
+	
+	// 转换 LocationIDs []string -> []ObjectID
+	doc.LocationIDs = make([]primitive.ObjectID, 0, len(req.LocationIDs))
+	for _, id := range req.LocationIDs {
+		locID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的地点ID: "+id, "", err)
+		}
+		doc.LocationIDs = append(doc.LocationIDs, locID)
+	}
+	
+	// 转换 TimelineIDs []string -> []ObjectID
+	doc.TimelineIDs = make([]primitive.ObjectID, 0, len(req.TimelineIDs))
+	for _, id := range req.TimelineIDs {
+		timeID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的时间线ID: "+id, "", err)
+		}
+		doc.TimelineIDs = append(doc.TimelineIDs, timeID)
+	}
+	
 	doc.Tags = req.Tags
 	doc.Notes = req.Notes
 
@@ -113,7 +159,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 			EventType: "document.created",
 			EventData: map[string]interface{}{
 				"document_id": doc.ID.Hex(),
-				"project_id":  doc.ProjectID,
+				"project_id":  doc.ProjectID.Hex(),
 				"title":       doc.Title,
 			},
 			Timestamp: time.Now(),
@@ -142,7 +188,7 @@ func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*
 	}
 
 	// 2. 验证项目权限
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -212,7 +258,7 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 	}
 
 	// 2. 验证项目权限
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -252,7 +298,7 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 	}
 
 	// 4. 更新文档
-	if err := s.documentRepo.UpdateByProject(ctx, documentID, doc.ProjectID, updates); err != nil {
+	if err := s.documentRepo.UpdateByProject(ctx, documentID, doc.ProjectID.Hex(), updates); err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
 	}
 
@@ -262,7 +308,7 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 			EventType: "document.updated",
 			EventData: map[string]interface{}{
 				"document_id": documentID,
-				"project_id":  doc.ProjectID,
+				"project_id":  doc.ProjectID.Hex(),
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
@@ -285,7 +331,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 	}
 
 	// 2. 验证项目权限
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -300,12 +346,12 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 	}
 
 	// 3. 软删除文档
-	if err := s.documentRepo.SoftDelete(ctx, documentID, doc.ProjectID); err != nil {
+	if err := s.documentRepo.SoftDelete(ctx, documentID, doc.ProjectID.Hex()); err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "删除文档失败", "", err)
 	}
 
 	// 4. 更新项目统计（异步）
-	go s.updateProjectStatistics(context.Background(), doc.ProjectID)
+	go s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
 
 	// 5. 发布事件
 	if s.eventBus != nil {
@@ -313,7 +359,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 			EventType: "document.deleted",
 			EventData: map[string]interface{}{
 				"document_id": documentID,
-				"project_id":  doc.ProjectID,
+				"project_id":  doc.ProjectID.Hex(),
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
@@ -341,10 +387,10 @@ func (s *DocumentService) buildDocumentTree(documents []*writer.Document) []*Doc
 	// 第二遍遍历：建立父子关系
 	for _, doc := range documents {
 		node := nodeMap[doc.ID.Hex()]
-		if doc.ParentID == "" {
+		if doc.ParentID.IsZero() {
 			rootNodes = append(rootNodes, node)
 		} else {
-			if parent, exists := nodeMap[doc.ParentID]; exists {
+			if parent, exists := nodeMap[doc.ParentID.Hex()]; exists {
 				parent.Children = append(parent.Children, node)
 			}
 		}
@@ -493,7 +539,7 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -504,6 +550,7 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 
 	// 4. 验证新父节点
 	var level int
+	var newParentID primitive.ObjectID
 	if req.NewParentID != "" {
 		parent, err := s.documentRepo.GetByID(ctx, req.NewParentID)
 		if err != nil {
@@ -519,11 +566,12 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 		}
 
 		level = parent.GetNextLevel()
+		newParentID = parent.ID
 	}
 
 	// 5. 更新文档
 	updates := map[string]interface{}{
-		"parent_id": req.NewParentID,
+		"parent_id": newParentID,
 		"level":     level,
 		"order":     req.Order,
 	}
@@ -538,8 +586,8 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 			EventType: "document.moved",
 			EventData: map[string]interface{}{
 				"document_id":   req.DocumentID,
-				"new_parent_id": req.NewParentID,
-				"project_id":    doc.ProjectID,
+				"new_parent_id": newParentID.Hex(),
+				"project_id":    doc.ProjectID.Hex(),
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
@@ -628,7 +676,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -648,8 +696,12 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 
 	if content == nil {
 		// 首次保存，创建新DocumentContent
+		documentID, err := primitive.ObjectIDFromHex(req.DocumentID)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
+		}
 		newContent := &writer.DocumentContent{
-			DocumentID: req.DocumentID,
+			DocumentID: documentID,
 			Content:    req.Content,
 			Version:    1,
 			WordCount:  len([]rune(req.Content)),
@@ -812,7 +864,7 @@ func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID str
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -868,7 +920,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
-	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID)
+	project, err := s.projectRepo.GetByID(ctx, doc.ProjectID.Hex())
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
@@ -886,8 +938,12 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 	// 5. 保存内容
 	if existingContent == nil {
 		// 首次保存，创建新内容
+		documentID, err := primitive.ObjectIDFromHex(req.DocumentID)
+		if err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
+		}
 		newContent := &writer.DocumentContent{
-			DocumentID: req.DocumentID,
+			DocumentID: documentID,
 			Content:    req.Content,
 			Version:    1,
 			WordCount:  len([]rune(req.Content)),

@@ -335,7 +335,7 @@ func (s *PublishService) PublishDocument(
 	}
 
 	// 验证项目权限
-	if document.ProjectID != projectID {
+	if document.ProjectID.Hex() != projectID {
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorForbidden, "无权访问此文档", "", nil)
 	}
 
@@ -417,7 +417,7 @@ func (s *PublishService) executeDocumentPublish(
 
 	// 调用书城API
 	bookstoreReq := &BookstorePublishChapterRequest{
-		ProjectID:     document.ProjectID,
+		ProjectID:     document.ProjectID.Hex(),
 		DocumentID:    document.ID.Hex(),
 		ChapterTitle:  req.ChapterTitle,
 		ChapterNumber: req.ChapterNumber,
@@ -460,7 +460,7 @@ func (s *PublishService) UpdateDocumentPublishStatus(
 		return errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "文档不存在", "", err)
 	}
 
-	if document.ProjectID != projectID {
+	if document.ProjectID.Hex() != projectID {
 		return errors.NewServiceError("PublishService", errors.ServiceErrorForbidden, "无权访问此文档", "", nil)
 	}
 

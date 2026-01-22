@@ -33,7 +33,7 @@ type BookRatingRepository interface {
 	CountByUserID(ctx context.Context, userID primitive.ObjectID) (int64, error)
 	CountByRating(ctx context.Context, bookID primitive.ObjectID, rating int) (int64, error)
 	GetAverageRating(ctx context.Context, bookID primitive.ObjectID) (float64, error)
-	GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[int]int64, error)
+	GetRatingDistribution(ctx context.Context, bookID primitive.ObjectID) (map[string]int64, error)
 	GetTotalLikes(ctx context.Context, bookID primitive.ObjectID) (int64, error)
 
 	// 评分操作

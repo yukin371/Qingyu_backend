@@ -96,8 +96,8 @@ type UserConfig struct {
 
 func (urt *UserRegistrationTransaction) Execute(ctx mongo.SessionContext, db *mongo.Database) error {
 	// 1. 创建用户
-	if urt.User.ID == "" {
-		urt.User.ID = primitive.NewObjectID().Hex()
+	if urt.User.ID.IsZero() {
+		urt.User.ID = primitive.NewObjectID()
 	}
 	urt.User.TouchForCreate()
 
