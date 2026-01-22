@@ -6,7 +6,7 @@ import "time"
 type Wallet struct {
 	ID        string    `json:"id" bson:"_id,omitempty"`
 	UserID    string    `json:"user_id" bson:"user_id"` // 用户ID（唯一）
-	Balance   float64   `json:"balance" bson:"balance"` // 余额
+	Balance   int64     `json:"balance" bson:"balance"` // 余额 (分)
 	Frozen    bool      `json:"frozen" bson:"frozen"`   // 是否冻结
 	FrozenAt  time.Time `json:"frozen_at,omitempty" bson:"frozen_at,omitempty"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
@@ -18,8 +18,8 @@ type Transaction struct {
 	ID              string    `json:"id" bson:"_id,omitempty"`
 	UserID          string    `json:"user_id" bson:"user_id"`                                     // 用户ID
 	Type            string    `json:"type" bson:"type"`                                           // 交易类型
-	Amount          float64   `json:"amount" bson:"amount"`                                       // 交易金额
-	Balance         float64   `json:"balance" bson:"balance"`                                     // 交易后余额
+	Amount          int64     `json:"amount" bson:"amount"`                                       // 交易金额 (分)
+	Balance         int64     `json:"balance" bson:"balance"`                                     // 交易后余额 (分)
 	RelatedUserID   string    `json:"related_user_id,omitempty" bson:"related_user_id,omitempty"` // 关联用户（转账）
 	Method          string    `json:"method,omitempty" bson:"method,omitempty"`                   // 支付方式
 	Reason          string    `json:"reason,omitempty" bson:"reason,omitempty"`                   // 交易原因
@@ -35,9 +35,9 @@ type Transaction struct {
 type WithdrawRequest struct {
 	ID            string    `json:"id" bson:"_id,omitempty"`
 	UserID        string    `json:"user_id" bson:"user_id"`                               // 用户ID
-	Amount        float64   `json:"amount" bson:"amount"`                                 // 提现金额
-	Fee           float64   `json:"fee" bson:"fee"`                                       // 手续费
-	ActualAmount  float64   `json:"actual_amount" bson:"actual_amount"`                   // 实际到账金额
+	Amount        int64     `json:"amount" bson:"amount"`                                 // 提现金额 (分)
+	Fee           int64     `json:"fee" bson:"fee"`                                       // 手续费 (分)
+	ActualAmount  int64     `json:"actual_amount" bson:"actual_amount"`                   // 实际到账金额 (分)
 	Account       string    `json:"account" bson:"account"`                               // 提现账号
 	AccountType   string    `json:"account_type" bson:"account_type"`                     // 账号类型：alipay, wechat, bank
 	AccountName   string    `json:"account_name,omitempty" bson:"account_name,omitempty"` // 账户名

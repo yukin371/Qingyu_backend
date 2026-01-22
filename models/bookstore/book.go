@@ -11,8 +11,7 @@ type BookStatus string
 
 const (
 	BookStatusDraft     BookStatus = "draft"     // 草稿
-	BookStatusPublished BookStatus = "published" // 已发布
-	BookStatusOngoing   BookStatus = "ongoing"   // 连载中
+	BookStatusOngoing   BookStatus = "ongoing"   // 连载中 (已发布且正在更新)
 	BookStatusCompleted BookStatus = "completed" // 已完结
 	BookStatusPaused    BookStatus = "paused"    // 暂停更新
 )
@@ -29,12 +28,12 @@ type Book struct {
 	Categories    []string             `bson:"categories" json:"categories"`                           // 分类名称（冗余字段，便于展示）
 	Tags          []string             `bson:"tags" json:"tags"`                                       // 标签
 	Status        BookStatus           `bson:"status" json:"status" validate:"required"`               // 状态
-	Rating        float64              `bson:"rating" json:"rating"`                                   // 评分 (0-10)
+	Rating        float64              `bson:"rating" json:"rating" validate:"min=1,max=5"`             // 评分 (1-5星)
 	RatingCount   int64                `bson:"rating_count" json:"ratingCount"`                        // 评分人数
 	ViewCount     int64                `bson:"view_count" json:"viewCount"`                            // 浏览量
 	WordCount     int64                `bson:"word_count" json:"wordCount"`                            // 字数
 	ChapterCount  int                  `bson:"chapter_count" json:"chapterCount"`                      // 章节数
-	Price         float64              `bson:"price" json:"price"`                                     // 价格
+	Price         int64                `bson:"price" json:"price"`                                     // 价格 (分)
 	IsFree        bool                 `bson:"is_free" json:"isFree"`                                  // 是否免费
 	IsRecommended bool                 `bson:"is_recommended" json:"isRecommended"`                    // 是否推荐
 	IsFeatured    bool                 `bson:"is_featured" json:"isFeatured"`                          // 是否精选

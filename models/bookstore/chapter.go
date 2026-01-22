@@ -15,7 +15,7 @@ type Chapter struct {
 	// Content 字段已移除，使用 ChapterContent 单独存储
 	WordCount int     `bson:"word_count" json:"word_count"`
 	IsFree    bool    `bson:"is_free" json:"is_free"`
-	Price     float64 `bson:"price" json:"price"`
+	Price     int64   `bson:"price" json:"price"` // 价格 (分)
 
 	// 内容引用信息
 	ContentURL     string `bson:"content_url,omitempty" json:"contentUrl,omitempty"`         // 内容获取 URL
@@ -48,8 +48,8 @@ func (c *Chapter) IsPublished() bool {
 	return !c.PublishTime.After(time.Now())
 }
 
-// GetReadingPrice 获取阅读价格
-func (c *Chapter) GetReadingPrice() float64 {
+// GetReadingPrice 获取阅读价格 (分)
+func (c *Chapter) GetReadingPrice() int64 {
 	if c.IsFree {
 		return 0
 	}

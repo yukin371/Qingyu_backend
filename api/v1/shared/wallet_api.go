@@ -126,7 +126,10 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 		return
 	}
 
-	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), req.Amount, req.Method)
+	// 将元转换为分
+	amountInCents := int64(req.Amount * 100)
+
+	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), amountInCents, req.Method)
 	if err != nil {
 		InternalError(c, "充值失败", err)
 		return
@@ -174,7 +177,10 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 		return
 	}
 
-	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), req.Amount, req.Reason)
+	// 将元转换为分
+	amountInCents := int64(req.Amount * 100)
+
+	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), amountInCents, req.Reason)
 	if err != nil {
 		InternalError(c, "消费失败", err)
 		return
@@ -223,7 +229,10 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 		return
 	}
 
-	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID.(string), req.ToUserID, req.Amount, req.Reason)
+	// 将元转换为分
+	amountInCents := int64(req.Amount * 100)
+
+	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID.(string), req.ToUserID, amountInCents, req.Reason)
 	if err != nil {
 		InternalError(c, "转账失败", err)
 		return
@@ -322,7 +331,10 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 		return
 	}
 
-	withdrawReq, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), req.Amount, req.Account)
+	// 将元转换为分
+	amountInCents := int64(req.Amount * 100)
+
+	withdrawReq, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), amountInCents, req.Account)
 	if err != nil {
 		InternalError(c, "申请提现失败", err)
 		return

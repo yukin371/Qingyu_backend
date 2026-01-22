@@ -15,9 +15,9 @@ type TransactionServiceImpl struct {
 
 // TransactionService 交易服务接口
 type TransactionService interface {
-	Recharge(ctx context.Context, walletID string, amount float64, method, orderNo string) (*Transaction, error)
-	Consume(ctx context.Context, walletID string, amount float64, reason string) (*Transaction, error)
-	Transfer(ctx context.Context, fromWalletID, toWalletID string, amount float64, reason string) error
+	Recharge(ctx context.Context, walletID string, amount int64, method, orderNo string) (*Transaction, error)
+	Consume(ctx context.Context, walletID string, amount int64, reason string) (*Transaction, error)
+	Transfer(ctx context.Context, fromWalletID, toWalletID string, amount int64, reason string) error
 	GetTransaction(ctx context.Context, transactionID string) (*Transaction, error)
 	ListTransactions(ctx context.Context, walletID string, limit, offset int) ([]*Transaction, error)
 }
@@ -33,7 +33,7 @@ func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionSe
 
 // Recharge 充值
 // 注意：walletID实际上在当前实现中被当作userID使用
-func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, amount float64, method, orderNo string) (*Transaction, error) {
+func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, amount int64, method, orderNo string) (*Transaction, error) {
 	// 1. 验证金额
 	if amount <= 0 {
 		return nil, fmt.Errorf("充值金额必须大于0")
@@ -77,7 +77,7 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 }
 
 // Consume 消费
-func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, amount float64, reason string) (*Transaction, error) {
+func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, amount int64, reason string) (*Transaction, error) {
 	// 1. 验证金额
 	if amount <= 0 {
 		return nil, fmt.Errorf("消费金额必须大于0")
@@ -121,7 +121,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 }
 
 // Transfer 转账
-func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toWalletID string, amount float64, reason string) error {
+func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toWalletID string, amount int64, reason string) error {
 	// 1. 验证金额
 	if amount <= 0 {
 		return fmt.Errorf("转账金额必须大于0")

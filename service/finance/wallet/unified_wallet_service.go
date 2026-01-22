@@ -44,7 +44,7 @@ func (s *UnifiedWalletService) GetWallet(ctx context.Context, userID string) (*W
 }
 
 // GetBalance 获取余额（根据用户ID）
-func (s *UnifiedWalletService) GetBalance(ctx context.Context, userID string) (float64, error) {
+func (s *UnifiedWalletService) GetBalance(ctx context.Context, userID string) (int64, error) {
 	return s.walletMgr.GetBalance(ctx, userID)
 }
 
@@ -61,7 +61,7 @@ func (s *UnifiedWalletService) UnfreezeWallet(ctx context.Context, userID string
 // ============ 交易操作 ============
 
 // Recharge 充值（根据用户ID）
-func (s *UnifiedWalletService) Recharge(ctx context.Context, userID string, amount float64, method string) (*Transaction, error) {
+func (s *UnifiedWalletService) Recharge(ctx context.Context, userID string, amount int64, method string) (*Transaction, error) {
 	// 1. 验证钱包存在
 	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *UnifiedWalletService) Recharge(ctx context.Context, userID string, amou
 }
 
 // Consume 消费（根据用户ID）
-func (s *UnifiedWalletService) Consume(ctx context.Context, userID string, amount float64, reason string) (*Transaction, error) {
+func (s *UnifiedWalletService) Consume(ctx context.Context, userID string, amount int64, reason string) (*Transaction, error) {
 	// 1. 验证钱包存在
 	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *UnifiedWalletService) Consume(ctx context.Context, userID string, amoun
 }
 
 // Transfer 转账（根据用户ID）
-func (s *UnifiedWalletService) Transfer(ctx context.Context, fromUserID, toUserID string, amount float64, reason string) (*Transaction, error) {
+func (s *UnifiedWalletService) Transfer(ctx context.Context, fromUserID, toUserID string, amount int64, reason string) (*Transaction, error) {
 	// 1. 验证源钱包存在
 	_, err := s.walletMgr.GetWallet(ctx, fromUserID)
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *UnifiedWalletService) ListTransactions(ctx context.Context, userID stri
 // ============ 提现管理 ============
 
 // RequestWithdraw 申请提现（根据用户ID）
-func (s *UnifiedWalletService) RequestWithdraw(ctx context.Context, userID string, amount float64, account string) (*WithdrawRequest, error) {
+func (s *UnifiedWalletService) RequestWithdraw(ctx context.Context, userID string, amount int64, account string) (*WithdrawRequest, error) {
 	// 1. 验证钱包存在
 	_, err := s.walletMgr.GetWallet(ctx, userID)
 	if err != nil {

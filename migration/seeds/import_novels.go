@@ -220,7 +220,7 @@ func (ni *NovelImporter) convertToBook(novel *NovelItem) *bookstore2.Book {
 	case "ongoing":
 		status = bookstore2.BookStatusOngoing
 	default:
-		status = bookstore2.BookStatusPublished
+		status = bookstore2.BookStatusOngoing
 	}
 
 	// 默认封面

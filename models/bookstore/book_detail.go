@@ -30,7 +30,7 @@ type BookDetail struct {
 	Status       BookStatus           `bson:"status" json:"status"`                                // 状态
 	WordCount    int64                `bson:"word_count" json:"word_count" validate:"min=0"`       // 总字数
 	ChapterCount int64                `bson:"chapter_count" json:"chapter_count" validate:"min=0"` // 章节数
-	Price        float64              `bson:"price" json:"price" validate:"min=0"`                 // 价格（按章节或全本）
+	Price        int64                `bson:"price" json:"price" validate:"min=0"`                 // 价格 (分，按章节或全本)
 	IsFree       bool                 `bson:"is_free" json:"is_free"`                              // 是否免费
 
 	// 统计数据
@@ -39,7 +39,7 @@ type BookDetail struct {
 	CommentCount int64   `bson:"comment_count" json:"comment_count" validate:"min=0"` // 评论数
 	ShareCount   int64   `bson:"share_count" json:"share_count" validate:"min=0"`     // 分享数
 	CollectCount int64   `bson:"collect_count" json:"collect_count" validate:"min=0"` // 收藏数
-	Rating       float64 `bson:"rating" json:"rating" validate:"min=0,max=5"`         // 评分
+	Rating       float64 `bson:"rating" json:"rating" validate:"min=1,max=5"`         // 评分 (1-5星)
 	RatingCount  int64   `bson:"rating_count" json:"rating_count" validate:"min=0"`   // 评分人数
 
 	// 最新章节信息

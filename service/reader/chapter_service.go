@@ -402,7 +402,7 @@ func (s *ChapterServiceImpl) buildChapterInfo(ctx context.Context, userID string
 		ChapterNum:   chapter.ChapterNum,
 		WordCount:    chapter.WordCount,
 		IsFree:       chapter.IsFree,
-		Price:        chapter.Price,
+		Price:        float64(chapter.Price) / 100.0, // 分转换为元
 		PublishTime:  chapter.PublishTime,
 		Progress:     progress,
 		IsRead:       isRead,

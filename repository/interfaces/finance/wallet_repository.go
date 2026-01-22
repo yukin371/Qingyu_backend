@@ -12,7 +12,7 @@ type WalletRepository interface {
 	CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error
 	GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error)
 	UpdateWallet(ctx context.Context, userID string, updates map[string]interface{}) error
-	UpdateBalance(ctx context.Context, userID string, amount float64) error
+	UpdateBalance(ctx context.Context, userID string, amount int64) error
 
 	// 交易记录
 	CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error

@@ -10,21 +10,21 @@ type WalletService interface {
 	// 钱包管理
 	CreateWallet(ctx context.Context, userID string) (*Wallet, error)
 	GetWallet(ctx context.Context, userID string) (*Wallet, error)
-	GetBalance(ctx context.Context, userID string) (float64, error)
+	GetBalance(ctx context.Context, userID string) (int64, error)
 	FreezeWallet(ctx context.Context, userID string) error
 	UnfreezeWallet(ctx context.Context, userID string) error
 
 	// 交易操作
-	Recharge(ctx context.Context, userID string, amount float64, method string) (*Transaction, error)
-	Consume(ctx context.Context, userID string, amount float64, reason string) (*Transaction, error)
-	Transfer(ctx context.Context, fromUserID, toUserID string, amount float64, reason string) (*Transaction, error)
+	Recharge(ctx context.Context, userID string, amount int64, method string) (*Transaction, error)
+	Consume(ctx context.Context, userID string, amount int64, reason string) (*Transaction, error)
+	Transfer(ctx context.Context, fromUserID, toUserID string, amount int64, reason string) (*Transaction, error)
 
 	// 交易查询
 	GetTransaction(ctx context.Context, transactionID string) (*Transaction, error)
 	ListTransactions(ctx context.Context, userID string, req *ListTransactionsRequest) ([]*Transaction, error)
 
 	// 提现管理
-	RequestWithdraw(ctx context.Context, userID string, amount float64, account string) (*WithdrawRequest, error)
+	RequestWithdraw(ctx context.Context, userID string, amount int64, account string) (*WithdrawRequest, error)
 	GetWithdrawRequest(ctx context.Context, withdrawID string) (*WithdrawRequest, error)
 	ListWithdrawRequests(ctx context.Context, req *ListWithdrawRequestsRequest) ([]*WithdrawRequest, error)
 	ApproveWithdraw(ctx context.Context, withdrawID, adminID string) error
@@ -60,7 +60,7 @@ type ListWithdrawRequestsRequest struct {
 type Wallet struct {
 	ID        string    `json:"id" bson:"_id,omitempty"`
 	UserID    string    `json:"user_id" bson:"user_id"`
-	Balance   float64   `json:"balance" bson:"balance"`
+	Balance   int64     `json:"balance" bson:"balance"` // 余额 (分)
 	Frozen    bool      `json:"frozen" bson:"frozen"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
@@ -71,8 +71,8 @@ type Transaction struct {
 	ID              string    `json:"id" bson:"_id,omitempty"`
 	UserID          string    `json:"user_id" bson:"user_id"`
 	Type            string    `json:"type" bson:"type"` // recharge, consume, transfer_in, transfer_out
-	Amount          float64   `json:"amount" bson:"amount"`
-	Balance         float64   `json:"balance" bson:"balance"` // 交易后余额
+	Amount          int64     `json:"amount" bson:"amount"`   // 交易金额 (分)
+	Balance         int64     `json:"balance" bson:"balance"` // 交易后余额 (分)
 	RelatedUserID   string    `json:"related_user_id,omitempty" bson:"related_user_id,omitempty"`
 	Method          string    `json:"method,omitempty" bson:"method,omitempty"` // 支付方式
 	Reason          string    `json:"reason,omitempty" bson:"reason,omitempty"`
@@ -85,7 +85,7 @@ type Transaction struct {
 type WithdrawRequest struct {
 	ID            string    `json:"id" bson:"_id,omitempty"`
 	UserID        string    `json:"user_id" bson:"user_id"`
-	Amount        float64   `json:"amount" bson:"amount"`
+	Amount        int64     `json:"amount" bson:"amount"` // 提现金额 (分)
 	Account       string    `json:"account" bson:"account"` // 提现账号
 	Status        string    `json:"status" bson:"status"`   // pending, approved, rejected, processed
 	ReviewedBy    string    `json:"reviewed_by,omitempty" bson:"reviewed_by,omitempty"`

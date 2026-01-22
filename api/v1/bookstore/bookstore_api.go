@@ -268,12 +268,31 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	filter := &bookstore2.BookFilter{}
 
 	if categoryID := c.Query("categoryId"); categoryID != "" {
-		// 这里需要转换为ObjectID，简化处理
-		filter.CategoryID = nil // 实际实现中需要转换
+		// 转换为ObjectID
+		if objID, err := primitive.ObjectIDFromHex(categoryID); err == nil {
+			filter.CategoryID = &objID
+		}
 	}
 
 	if author := c.Query("author"); author != "" {
 		filter.Author = &author
+	}
+
+	// 处理status参数 - 前端使用"serializing"，后端使用"ongoing"
+	if status := c.Query("status"); status != "" {
+		// 映射前端状态值到后端状态值
+		var backendStatus string
+		switch status {
+		case "serializing":
+			backendStatus = "ongoing"
+		case "completed", "paused":
+			backendStatus = status
+		default:
+			// 其他状态值也尝试使用
+			backendStatus = status
+		}
+		bookStatus := bookstore2.BookStatus(backendStatus)
+		filter.Status = &bookStatus
 	}
 
 	if tags := c.QueryArray("tags"); len(tags) > 0 {

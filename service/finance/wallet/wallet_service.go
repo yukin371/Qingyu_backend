@@ -70,7 +70,7 @@ func (s *WalletServiceImpl) GetWalletByID(ctx context.Context, walletID string) 
 }
 
 // GetBalance 获取余额（根据用户ID）
-func (s *WalletServiceImpl) GetBalance(ctx context.Context, userID string) (float64, error) {
+func (s *WalletServiceImpl) GetBalance(ctx context.Context, userID string) (int64, error) {
 	wallet, err := s.walletRepo.GetWallet(ctx, userID)
 	if err != nil {
 		return 0, fmt.Errorf("获取余额失败: %w", err)

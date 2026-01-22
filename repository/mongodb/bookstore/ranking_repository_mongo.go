@@ -507,7 +507,7 @@ func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, p
 	pipeline := mongo.Pipeline{
 		// 只筛选已发布的书籍
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore2.BookStatusPublished,
+			"status": bookstore2.BookStatusOngoing,
 		}}},
 		// 计算综合分数：浏览量权重70%，点赞数权重30%
 		{{Key: "$addFields", Value: bson.M{
@@ -571,7 +571,7 @@ func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, per
 	// 简化实现：使用最近更新时间和浏览量
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore2.BookStatusPublished,
+			"status": bookstore2.BookStatusOngoing,
 		}}},
 		{{Key: "$addFields", Value: bson.M{
 			"weekly_score": bson.M{
@@ -629,7 +629,7 @@ func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, pe
 	// 月榜：基于本月的综合表现
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status": bookstore2.BookStatusPublished,
+			"status": bookstore2.BookStatusOngoing,
 		}}},
 		{{Key: "$addFields", Value: bson.M{
 			"monthly_score": bson.M{
@@ -690,7 +690,7 @@ func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, per
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"status":     bookstore2.BookStatusPublished,
+			"status":     bookstore2.BookStatusOngoing,
 			"created_at": bson.M{"$gte": threeMonthsAgo},
 		}}},
 		{{Key: "$addFields", Value: bson.M{
