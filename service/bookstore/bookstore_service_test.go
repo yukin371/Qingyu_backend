@@ -681,8 +681,8 @@ func TestBookstoreService_GetAllBooks(t *testing.T) {
 			name: "成功获取书籍列表",
 			setupMock: func(m *MockBookRepositoryForService) {
 				books := []*bookstoreModel.Book{
-					{ID: primitive.NewObjectID(), Title: "书籍1", Status: "published"},
-					{ID: primitive.NewObjectID(), Title: "书籍2", Status: "published"},
+					{ID: primitive.NewObjectID(), Title: "书籍1", Status: bookstoreModel.BookStatusOngoing},
+					{ID: primitive.NewObjectID(), Title: "书籍2", Status: bookstoreModel.BookStatusOngoing},
 				}
 				m.On("GetHotBooks", mock.Anything, 10, 0).Return(books, nil)
 				m.On("CountByFilter", mock.Anything, mock.Anything).Return(int64(2), nil)
@@ -742,7 +742,7 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 				book := &bookstoreModel.Book{
 					ID:     bookID,
 					Title:  "测试书籍",
-					Status: "published",
+					Status: bookstoreModel.BookStatusOngoing,
 				}
 				m.On("GetByID", mock.Anything, mock.Anything).Return(book, nil)
 			},
@@ -812,8 +812,8 @@ func TestBookstoreService_GetBooksByCategory(t *testing.T) {
 
 	categoryID := primitive.NewObjectID()
 	books := []*bookstoreModel.Book{
-		{ID: primitive.NewObjectID(), Title: "玄幻小说1", Status: "published"},
-		{ID: primitive.NewObjectID(), Title: "玄幻小说2", Status: "published"},
+		{ID: primitive.NewObjectID(), Title: "玄幻小说1", Status: bookstoreModel.BookStatusOngoing},
+		{ID: primitive.NewObjectID(), Title: "玄幻小说2", Status: bookstoreModel.BookStatusOngoing},
 	}
 
 	mockBookRepo.On("GetByCategory", ctx, categoryID, 20, 0).Return(books, nil)
@@ -837,7 +837,7 @@ func TestBookstoreService_GetBooksByAuthorID(t *testing.T) {
 
 	authorID := primitive.NewObjectID()
 	books := []*bookstoreModel.Book{
-		{ID: primitive.NewObjectID(), Title: "作品1", Status: "published"},
+		{ID: primitive.NewObjectID(), Title: "作品1", Status: bookstoreModel.BookStatusOngoing},
 	}
 
 	mockBookRepo.On("GetByAuthorID", ctx, authorID, 20, 0).Return(books, nil)
@@ -1085,7 +1085,7 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 				book := &bookstoreModel.Book{
 					ID:     bookID,
 					Title:  "测试书籍",
-					Status: "published",
+					Status: bookstoreModel.BookStatusOngoing,
 				}
 				m.On("GetByID", mock.Anything, mock.Anything).Return(book, nil)
 				m.On("IncrementViewCount", mock.Anything, mock.Anything).Return(nil)

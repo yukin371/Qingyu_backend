@@ -112,7 +112,7 @@ func (r *WalletRepositoryImpl) UpdateWallet(ctx context.Context, walletID string
 }
 
 // UpdateBalance 更新余额（原子操作）
-func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string, amount float64) error {
+func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string, amount int64) error {
 	// 使用user_id查询钱包
 	result, err := r.walletCollection.UpdateOne(
 		ctx,

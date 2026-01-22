@@ -12,6 +12,7 @@ import (
 
 // ExampleWalletServiceUsage 展示如何使用Wallet服务
 // 这是一个示例文件，演示如何创建和使用统一的Wallet服务
+// 注意：所有金额单位都是"分"（int64），100分 = 1元
 func ExampleWalletServiceUsage(db *mongo.Database) {
 	ctx := context.Background()
 
@@ -32,24 +33,24 @@ func ExampleWalletServiceUsage(db *mongo.Database) {
 	}
 	fmt.Printf("创建钱包成功: %+v\n", wallet)
 
-	// 3.2 充值
-	transaction, err := walletService.Recharge(ctx, userID, 100.0, "alipay")
+	// 3.2 充值（10000分 = 100元）
+	transaction, err := walletService.Recharge(ctx, userID, 10000, "alipay")
 	if err != nil {
 		fmt.Printf("充值失败: %v\n", err)
 		return
 	}
 	fmt.Printf("充值成功: %+v\n", transaction)
 
-	// 3.3 查询余额
+	// 3.3 查询余额（返回分）
 	balance, err := walletService.GetBalance(ctx, userID)
 	if err != nil {
 		fmt.Printf("查询余额失败: %v\n", err)
 		return
 	}
-	fmt.Printf("当前余额: %.2f\n", balance)
+	fmt.Printf("当前余额: %.2f元\n", float64(balance)/100.0)
 
-	// 3.4 消费
-	consumeTx, err := walletService.Consume(ctx, userID, 30.0, "购买VIP会员")
+	// 3.4 消费（3000分 = 30元）
+	consumeTx, err := walletService.Consume(ctx, userID, 3000, "购买VIP会员")
 	if err != nil {
 		fmt.Printf("消费失败: %v\n", err)
 		return
@@ -67,8 +68,8 @@ func ExampleWalletServiceUsage(db *mongo.Database) {
 	}
 	fmt.Printf("交易记录数量: %d\n", len(txList))
 
-	// 3.6 申请提现
-	withdrawReq, err := walletService.RequestWithdraw(ctx, userID, 50.0, "alipay@example.com")
+	// 3.6 申请提现（5000分 = 50元）
+	withdrawReq, err := walletService.RequestWithdraw(ctx, userID, 5000, "alipay@example.com")
 	if err != nil {
 		fmt.Printf("申请提现失败: %v\n", err)
 		return

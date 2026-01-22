@@ -122,8 +122,8 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 		return nil, errors.New("book not found")
 	}
 
-	// 只返回已发布或已完成的书籍
-	if book.Status != "published" && book.Status != "completed" {
+	// 只有连载中和已完结的书籍可以访问
+	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
 		return nil, errors.New("book not available")
 	}
 
@@ -152,10 +152,10 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 		return nil, 0, fmt.Errorf("failed to count books by category: %w", err)
 	}
 
-	// 过滤只返回已发布的书籍
+	// 过滤只返回已发布的书籍（连载中或已完结）
 	var publishedBooks []*bookstore2.Book
 	for _, book := range books {
-		if book.Status == "published" {
+		if book.Status == bookstore2.BookStatusOngoing || book.Status == bookstore2.BookStatusCompleted {
 			publishedBooks = append(publishedBooks, book)
 		}
 	}
@@ -185,10 +185,10 @@ func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID 
 		return nil, 0, fmt.Errorf("failed to count books by author: %w", err)
 	}
 
-	// 过滤只返回已发布的书籍
+	// 过滤只返回已发布的书籍（连载中或已完结）
 	var publishedBooks []*bookstore2.Book
 	for _, book := range books {
-		if book.Status == "published" {
+		if book.Status == bookstore2.BookStatusOngoing || book.Status == bookstore2.BookStatusCompleted {
 			publishedBooks = append(publishedBooks, book)
 		}
 	}
@@ -315,11 +315,11 @@ func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, 
 	}
 
 	// 计算总数
-	publishedStatus := bookstore2.BookStatusPublished
+	ongoingStatus := bookstore2.BookStatusOngoing
 	keywordPtr := keyword
 	filter := &bookstore2.BookFilter{
 		Keyword: &keywordPtr,
-		Status:  &publishedStatus,
+		Status:  &ongoingStatus,
 	}
 	total, err := s.bookRepo.CountByFilter(ctx, filter)
 	if err != nil {
@@ -401,7 +401,7 @@ func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID str
 		return errors.New("book not found")
 	}
 
-	if book.Status != "published" {
+	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
 		return errors.New("book not available")
 	}
 

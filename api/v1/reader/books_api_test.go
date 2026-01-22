@@ -238,6 +238,16 @@ func (m *MockReaderServiceForBooks) GetAnnotationStats(ctx context.Context, user
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
+func (m *MockReaderServiceForBooks) BatchUpdateBookStatus(ctx context.Context, userID string, bookIDs []string, status string) error {
+	args := m.Called(ctx, userID, bookIDs, status)
+	return args.Error(0)
+}
+
+func (m *MockReaderServiceForBooks) UpdateBookStatus(ctx context.Context, userID, bookID, status string) error {
+	args := m.Called(ctx, userID, bookID, status)
+	return args.Error(0)
+}
+
 func setupBooksTestRouter(readerService interfaces.ReaderService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

@@ -16,7 +16,7 @@ type WithdrawServiceImpl struct {
 
 // WithdrawService 提现服务接口
 type WithdrawService interface {
-	CreateWithdrawRequest(ctx context.Context, userID, walletID string, amount float64, method, account string) (*WithdrawRequest, error)
+	CreateWithdrawRequest(ctx context.Context, userID, walletID string, amount int64, method, account string) (*WithdrawRequest, error)
 	ApproveWithdraw(ctx context.Context, requestID, reviewerID, remark string) error
 	RejectWithdraw(ctx context.Context, requestID, reviewerID, reason string) error
 	GetWithdrawRequest(ctx context.Context, requestID string) (*WithdrawRequest, error)
@@ -33,14 +33,14 @@ func NewWithdrawService(walletRepo sharedRepo.WalletRepository) WithdrawService 
 // ============ 提现操作 ============
 
 // CreateWithdrawRequest 创建提现请求
-func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID, walletID string, amount float64, method, account string) (*WithdrawRequest, error) {
+func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID, walletID string, amount int64, method, account string) (*WithdrawRequest, error) {
 	// 1. 验证金额
 	if amount <= 0 {
 		return nil, fmt.Errorf("提现金额必须大于0")
 	}
 
-	// 最小提现金额
-	if amount < 10 {
+	// 最小提现金额：1000分 = 10元
+	if amount < 1000 {
 		return nil, fmt.Errorf("提现金额不能小于10元")
 	}
 

@@ -409,7 +409,7 @@ func (m *MockAnalyticsService) TrackReadingProgress(ctx context.Context, userID,
 // Test Helper Functions
 
 // CreateTestChapter creates a test chapter for testing purposes
-func CreateTestChapter(id, bookID primitive.ObjectID, num int, isFree bool, price float64) *bookstore.Chapter {
+func CreateTestChapter(id, bookID primitive.ObjectID, num int, isFree bool, price int64) *bookstore.Chapter {
 	return &bookstore.Chapter{
 		ID:          id,
 		BookID:      bookID,
@@ -417,7 +417,7 @@ func CreateTestChapter(id, bookID primitive.ObjectID, num int, isFree bool, pric
 		ChapterNum:  num,
 		WordCount:   2000,
 		IsFree:      isFree,
-		Price:       price,
+		Price:       price, // 价格（分）
 		PublishTime: time.Now(),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -436,13 +436,13 @@ func CreateTestBook(id primitive.ObjectID, title string) map[string]interface{} 
 }
 
 // CreateTestPurchase creates a test chapter purchase for testing purposes
-func CreateTestPurchase(id, userID, chapterID, bookID primitive.ObjectID, price float64) *bookstore.ChapterPurchase {
+func CreateTestPurchase(id, userID, chapterID, bookID primitive.ObjectID, price int64) *bookstore.ChapterPurchase {
 	return &bookstore.ChapterPurchase{
 		ID:           id,
 		UserID:       userID,
 		ChapterID:    chapterID,
 		BookID:       bookID,
-		Price:        price,
+		Price:        price, // 价格（分）
 		PurchaseTime: time.Now(),
 		CreatedAt:    time.Now(),
 	}

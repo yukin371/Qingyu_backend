@@ -246,6 +246,16 @@ func (m *MockReaderService) SyncAnnotations(ctx context.Context, userID string, 
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
+func (m *MockReaderService) BatchUpdateBookStatus(ctx context.Context, userID string, bookIDs []string, status string) error {
+	args := m.Called(ctx, userID, bookIDs, status)
+	return args.Error(0)
+}
+
+func (m *MockReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, status string) error {
+	args := m.Called(ctx, userID, bookID, status)
+	return args.Error(0)
+}
+
 // setupProgressTestRouter 设置测试路由
 func setupProgressTestRouter(readerService interfaces.ReaderService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)

@@ -1,7 +1,8 @@
 package bookstore
 
 import (
-	"fmt"
+	"crypto/sha256"
+	"encoding/hex"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,6 +64,7 @@ func (cc *ChapterContent) IsMarkdown() bool {
 
 // CalculateHash 计算内容哈希
 func (cc *ChapterContent) CalculateHash() string {
-	// 简单哈希实现，生产环境建议使用 crypto/sha256
-	return fmt.Sprintf("%s:%d", cc.ChapterID.Hex(), cc.Version)
+	// 使用 SHA-256 计算内容哈希，用于内容校验和去重
+	hash := sha256.Sum256([]byte(cc.Content))
+	return hex.EncodeToString(hash[:])
 }

@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,7 +17,7 @@ type BookStatistics struct {
 	ShareCount         int64              `bson:"share_count" json:"share_count"`
 	AverageRating      float64            `bson:"average_rating" json:"average_rating"`
 	RatingCount        int64              `bson:"rating_count" json:"rating_count"`
-	RatingDistribution map[int]int64      `bson:"rating_distribution" json:"rating_distribution"`
+	RatingDistribution map[string]int64  `bson:"rating_distribution" json:"rating_distribution"` // 键为 "1"-"5" 的字符串
 	HotScore           float64            `bson:"hot_score" json:"hot_score"`
 	UpdatedAt          time.Time          `bson:"updated_at" json:"updated_at"`
 }
@@ -61,11 +62,12 @@ func (bs *BookStatistics) IncrementShareCount() {
 // UpdateRating 更新评分统计
 func (bs *BookStatistics) UpdateRating(rating int) {
 	if bs.RatingDistribution == nil {
-		bs.RatingDistribution = make(map[int]int64)
+		bs.RatingDistribution = make(map[string]int64)
 	}
 
-	// 增加对应星级的计数
-	bs.RatingDistribution[rating]++
+	// 增加对应星级的计数 (使用字符串键 "1"-"5")
+	ratingKey := strconv.Itoa(rating)
+	bs.RatingDistribution[ratingKey]++
 	bs.RatingCount++
 
 	// 重新计算平均评分
@@ -79,8 +81,9 @@ func (bs *BookStatistics) RemoveRating(rating int) {
 		return
 	}
 
-	if bs.RatingDistribution[rating] > 0 {
-		bs.RatingDistribution[rating]--
+	ratingKey := strconv.Itoa(rating)
+	if bs.RatingDistribution[ratingKey] > 0 {
+		bs.RatingDistribution[ratingKey]--
 		if bs.RatingCount > 0 {
 			bs.RatingCount--
 		}
@@ -99,7 +102,9 @@ func (bs *BookStatistics) calculateAverageRating() {
 	}
 
 	totalScore := int64(0)
-	for rating, count := range bs.RatingDistribution {
+	for ratingKey, count := range bs.RatingDistribution {
+		// 将字符串键转换为整数 ("1"-"5" -> 1-5)
+		rating, _ := strconv.Atoi(ratingKey)
 		totalScore += int64(rating) * count
 	}
 

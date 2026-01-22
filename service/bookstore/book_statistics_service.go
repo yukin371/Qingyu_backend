@@ -166,7 +166,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 			ShareCount:         0,
 			AverageRating:      0,
 			RatingCount:        0,
-			RatingDistribution: make(map[int]int64),
+			RatingDistribution: make(map[string]int64),
 			HotScore:           0,
 		}
 		if err := s.statsRepo.Create(ctx, stats); err != nil {

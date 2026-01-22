@@ -36,7 +36,7 @@ type ChapterPurchaseService interface {
 
 	// 价格查询
 	GetChapterPrice(ctx context.Context, chapterID primitive.ObjectID) (float64, error)
-	CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (float64, float64, error) // originalPrice, discountedPrice
+	CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (int64, int64, error) // originalPrice, discountedPrice (分)
 
 	// VIP检查
 	IsVIPUser(ctx context.Context, userID primitive.ObjectID) (bool, error)
@@ -306,7 +306,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	// 获取所有章节信息
 	chapters := make([]*bookstore.Chapter, 0, len(chapterIDs))
-	totalPrice := 0.0
+	totalPrice := int64(0)
 	bookID := primitive.NilObjectID
 
 	for _, chapterID := range chapterIDs {
@@ -480,7 +480,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 			BookID:        bookID,
 			TotalPrice:    discountedPrice,
 			OriginalPrice: originalPrice,
-			Discount:      1 - (discountedPrice / originalPrice),
+			Discount:      1 - float64(discountedPrice)/float64(originalPrice),
 			BookTitle:     book.Title,
 			BookCover:     book.Cover,
 			ChapterCount:  len(chapters),
@@ -721,11 +721,12 @@ func (s *ChapterPurchaseServiceImpl) GetChapterPrice(ctx context.Context, chapte
 		return 0, errors.New("chapter not found")
 	}
 
-	return chapter.Price, nil
+	// 转换为元 (除以100)
+	return float64(chapter.Price) / 100.0, nil
 }
 
 // CalculateBookPrice 计算全书价格
-func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (float64, float64, error) {
+func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, bookID primitive.ObjectID) (int64, int64, error) {
 	if bookID.IsZero() {
 		return 0, 0, errors.New("book ID cannot be empty")
 	}
@@ -736,15 +737,15 @@ func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, boo
 		return 0, 0, fmt.Errorf("failed to get paid chapters: %w", err)
 	}
 
-	// 计算原价
-	originalPrice := 0.0
+	// 计算原价 (分)
+	originalPrice := int64(0)
 	for _, chapter := range chapters {
 		originalPrice += chapter.Price
 	}
 
 	// 计算折扣价（全书购买通常有折扣，例如8折）
 	discount := 0.8
-	discountedPrice := originalPrice * discount
+	discountedPrice := int64(float64(originalPrice) * discount)
 
 	return originalPrice, discountedPrice, nil
 }
