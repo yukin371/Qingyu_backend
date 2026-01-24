@@ -9,6 +9,7 @@ import (
 	aiModels "Qingyu_backend/models/ai"
 	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
+	aiInterfaces "Qingyu_backend/service/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -30,8 +31,21 @@ type ChatRepositoryInterface interface {
 
 // AIServiceInterface AI服务接口
 type AIServiceInterface interface {
-	GenerateContent(ctx context.Context, req *GenerateContentRequest) (*GenerateContentResponse, error)
-	GenerateContentStream(ctx context.Context, req *GenerateContentRequest) (<-chan *GenerateContentResponse, error)
+	GenerateContent(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (*aiInterfaces.GenerateContentResponse, error)
+	GenerateContentStream(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (<-chan *aiInterfaces.GenerateContentResponse, error)
+}
+
+// serviceAdapter 服务适配器，将本地 Service 适配到 AIServiceInterface
+type serviceAdapter struct {
+	service *Service
+}
+
+func (a *serviceAdapter) GenerateContent(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (*aiInterfaces.GenerateContentResponse, error) {
+	return a.service.GenerateContent(ctx, req)
+}
+
+func (a *serviceAdapter) GenerateContentStream(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (<-chan *aiInterfaces.GenerateContentResponse, error) {
+	return a.service.GenerateContentStreamWithInterface(ctx, req)
 }
 
 // ChatService AI聊天服务
@@ -44,7 +58,7 @@ type ChatService struct {
 // NewChatService 创建聊天服务
 func NewChatService(aiService *Service, repository ChatRepositoryInterface) *ChatService {
 	return &ChatService{
-		aiService:      aiService,
+		aiService:      &serviceAdapter{service: aiService},
 		adapterManager: aiService.adapterManager,
 		repository:     repository,
 	}
@@ -121,10 +135,30 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 	startTime := time.Now()
 
 	// 准备AI请求 - 使用GenerateContentRequest
-	aiRequest := &GenerateContentRequest{
-		ProjectID: req.ProjectID,
-		Prompt:    req.Message,
-		Options:   req.Options,
+	aiRequest := &aiInterfaces.GenerateContentRequest{
+		Model:  "gpt-4", // 使用默认模型，后续可以从配置读取
+		Prompt: req.Message,
+		Stream: false,
+		Context: map[string]string{
+			"project_id": req.ProjectID,
+			"session_id": req.SessionID,
+		},
+		UserID:    "", // TODO: 从请求中获取用户ID
+		SessionID: req.SessionID,
+	}
+
+	// 如果有选项，设置相关参数
+	if req.Options != nil {
+		if req.Options.Model != "" {
+			aiRequest.Model = req.Options.Model
+		}
+		if req.Options.MaxTokens > 0 {
+			aiRequest.MaxTokens = req.Options.MaxTokens
+		}
+		if req.Options.Temperature > 0 {
+			aiRequest.Temperature = float64(req.Options.Temperature)
+		}
+		// 注意：GenerateOptions 没有 Stop 字段，需要时可以扩展
 	}
 
 	aiResponse, err := s.aiService.GenerateContent(ctx, aiRequest)
@@ -212,10 +246,29 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		startTime := time.Now()
 
 		// 准备AI请求
-		aiRequest := &GenerateContentRequest{
-			ProjectID: req.ProjectID,
-			Prompt:    req.Message,
-			Options:   req.Options,
+		aiRequest := &aiInterfaces.GenerateContentRequest{
+			Model:  "gpt-4", // 使用默认模型
+			Prompt: req.Message,
+			Stream: true,    // 流式生成
+			Context: map[string]string{
+				"project_id": req.ProjectID,
+				"session_id": req.SessionID,
+			},
+			UserID:    "", // TODO: 从请求中获取用户ID
+			SessionID: req.SessionID,
+		}
+
+		// 如果有选项，设置相关参数
+		if req.Options != nil {
+			if req.Options.Model != "" {
+				aiRequest.Model = req.Options.Model
+			}
+			if req.Options.MaxTokens > 0 {
+				aiRequest.MaxTokens = req.Options.MaxTokens
+			}
+			if req.Options.Temperature > 0 {
+				aiRequest.Temperature = float64(req.Options.Temperature)
+			}
 		}
 
 		// 调用流式AI生成
