@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	documentModel "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/service/writer/project"
 )
 
@@ -63,7 +64,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse{data=document.Project}
+// @Success 200 {object} shared.APIResponse{data=documentModel.Project}
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/projects/{id} [get]
 func (api *ProjectApi) GetProject(c *gin.Context) {
@@ -206,3 +207,5 @@ func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "更新成功", nil)
 }
+
+var _ = documentModel.Project{}

@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/document"
+	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 )
 
 // DocumentApi 文档API
@@ -59,7 +60,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse{data=document.Document}
+// @Success 200 {object} shared.APIResponse{data=writerModels.Document}
 // @Router /api/v1/documents/{id} [get]
 func (api *DocumentApi) GetDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -230,3 +231,5 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "排序成功", nil)
 }
+
+var _ = writerModels.Document{}

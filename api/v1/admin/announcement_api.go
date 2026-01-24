@@ -110,7 +110,7 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Success 200 {object} shared.APIResponse{data=messagingModel.Announcement}
+// @Success 200 {object} shared.APIResponse{data=models.Announcement}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -139,7 +139,7 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body messagingService.CreateAnnouncementRequest true "创建公告请求"
-// @Success 201 {object} shared.APIResponse{data=messagingModel.Announcement}
+// @Success 201 {object} shared.APIResponse{data=models.Announcement}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -290,3 +290,6 @@ func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "批量删除成功", nil)
 }
+
+// 这个变量用于避免 "imported and not used" 错误
+var _ = messagingModel.Announcement{}

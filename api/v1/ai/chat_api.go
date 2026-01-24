@@ -276,3 +276,5 @@ func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "删除成功", nil)
 }
+
+var _ = aiDto.ChatSessionDTO{}

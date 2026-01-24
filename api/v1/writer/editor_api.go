@@ -166,7 +166,7 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=document.ShortcutConfig}
+// @Success 200 {object} shared.APIResponse{data=documentModel.ShortcutConfig}
 // @Router /api/v1/user/shortcuts [get]
 func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 	userID, exists := c.Get("userID")
@@ -243,7 +243,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=[]document.ShortcutCategory}
+// @Success 200 {object} shared.APIResponse{data=[]documentModel.ShortcutCategory}
 // @Router /api/v1/user/shortcuts/help [get]
 func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 	userID, exists := c.Get("userID")
