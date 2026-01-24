@@ -1,15 +1,18 @@
 package bookstore
 
 import (
-	"Qingyu_backend/models/shared/types"
 	"strconv"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/shared/types"
 )
 
 // BookStatistics 书籍统计模型
 type BookStatistics struct {
-	ID                 string                   `bson:"_id,omitempty" json:"id"`
-	BookID             string                   `bson:"book_id" json:"$1$2"`
+	ID                 primitive.ObjectID                   `bson:"_id,omitempty" json:"id"`
+	BookID             primitive.ObjectID                   `bson:"book_id" json:"$1$2"`
 	ViewCount          int64                    `bson:"view_count" json:"$1$2"`
 	FavoriteCount      int64                    `bson:"favorite_count" json:"$1$2"`
 	CommentCount       int64                    `bson:"comment_count" json:"$1$2"`

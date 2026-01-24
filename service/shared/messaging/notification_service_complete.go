@@ -12,11 +12,11 @@ import (
 // NotificationService 完整的通知服务接口
 type NotificationService interface {
 	// 创建通知
-	CreateNotification(ctx context.Context, notification *messagingModel.Notification) error
+	CreateNotification(ctx context.Context, notification *messagingModel.NotificationDelivery) error
 	// 获取通知
-	GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error)
+	GetNotification(ctx context.Context, notificationID string) (*messagingModel.NotificationDelivery, error)
 	// 列出用户通知
-	ListNotifications(ctx context.Context, userID string, page, pageSize int) ([]*messagingModel.Notification, int64, error)
+	ListNotifications(ctx context.Context, userID string, page, pageSize int) ([]*messagingModel.NotificationDelivery, int64, error)
 	// 标记为已读
 	MarkAsRead(ctx context.Context, notificationID string) error
 	// 标记所有为已读
@@ -32,7 +32,7 @@ type NotificationService interface {
 	SendTemplateEmail(ctx context.Context, to, templateName string, variables map[string]string) error
 
 	// 批量创建通知
-	CreateBatchNotifications(ctx context.Context, notifications []*messagingModel.Notification) error
+	CreateBatchNotifications(ctx context.Context, notifications []*messagingModel.NotificationDelivery) error
 }
 
 // NotificationServiceComplete 完整的通知服务实现
@@ -56,7 +56,7 @@ func NewNotificationServiceComplete(
 }
 
 // CreateNotification 创建通知
-func (s *NotificationServiceComplete) CreateNotification(ctx context.Context, notification *messagingModel.Notification) error {
+func (s *NotificationServiceComplete) CreateNotification(ctx context.Context, notification *messagingModel.NotificationDelivery) error {
 	// 1. 参数验证
 	if notification.UserID == "" {
 		return fmt.Errorf("用户ID不能为空")
@@ -75,7 +75,7 @@ func (s *NotificationServiceComplete) CreateNotification(ctx context.Context, no
 }
 
 // GetNotification 获取通知
-func (s *NotificationServiceComplete) GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error) {
+func (s *NotificationServiceComplete) GetNotification(ctx context.Context, notificationID string) (*messagingModel.NotificationDelivery, error) {
 	if notificationID == "" {
 		return nil, fmt.Errorf("通知ID不能为空")
 	}
@@ -83,7 +83,7 @@ func (s *NotificationServiceComplete) GetNotification(ctx context.Context, notif
 }
 
 // ListNotifications 列出用户通知
-func (s *NotificationServiceComplete) ListNotifications(ctx context.Context, userID string, page, pageSize int) ([]*messagingModel.Notification, int64, error) {
+func (s *NotificationServiceComplete) ListNotifications(ctx context.Context, userID string, page, pageSize int) ([]*messagingModel.NotificationDelivery, int64, error) {
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
@@ -213,7 +213,7 @@ func (s *NotificationServiceComplete) SendTemplateEmail(ctx context.Context, to,
 }
 
 // CreateBatchNotifications 批量创建通知
-func (s *NotificationServiceComplete) CreateBatchNotifications(ctx context.Context, notifications []*messagingModel.Notification) error {
+func (s *NotificationServiceComplete) CreateBatchNotifications(ctx context.Context, notifications []*messagingModel.NotificationDelivery) error {
 	// 批量创建通知
 	for _, notification := range notifications {
 		notification.Status = messagingModel.NotificationStatusSent

@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	authModel "Qingyu_backend/models/auth"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
@@ -361,13 +362,15 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 创建用户
-					user := &usersModel.User{
-						Username:  userReq.Username,
-						Email:     userReq.Email,
-						Password:  userReq.HashedPassword,
-						CreatedAt: time.Now(),
-						UpdatedAt: time.Now(),
-					}
+user := &usersModel.User{
+    BaseEntity: shared.BaseEntity{
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
+    },
+    Username:  userReq.Username,
+    Email:     userReq.Email,
+    Password:  userReq.HashedPassword,
+}
 
 					// Note: 实际实现中需要调用 userRepo.Create 方法
 					return userRepo.Create(txCtx, user)

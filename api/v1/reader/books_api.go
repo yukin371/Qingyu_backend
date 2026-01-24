@@ -59,8 +59,10 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 		return
 	}
 
+	// 转换为 DTO
+	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
 	shared.Success(c, http.StatusOK, "获取成功", gin.H{
-		"books": progresses,
+		"books": progressDTOs,
 		"total": total,
 		"page":  page,
 		"size":  size,
@@ -158,7 +160,9 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", progresses)
+	// 转换为 DTO
+	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
+	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
 }
 
 // GetUnfinishedBooks 获取未读完的书
@@ -181,7 +185,9 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", progresses)
+	// 转换为 DTO
+	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
+	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
 }
 
 // GetFinishedBooks 获取已读完的书
@@ -204,7 +210,9 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", progresses)
+	// 转换为 DTO
+	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
+	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
 }
 
 // UpdateBookStatusRequest 更新书籍状态请求

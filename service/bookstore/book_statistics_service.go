@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
@@ -86,12 +89,12 @@ func (s *BookStatisticsServiceImpl) CreateStatistics(ctx context.Context, stats 
 	}
 
 	// 验证必填字段
-	if stats.BookID == "" {
+	if stats.BookID.IsZero() {
 		return errors.New("book ID is required")
 	}
 
 	// 检查是否已存在
-	existingStats, err := s.statsRepo.GetByBookID(ctx, stats.BookID)
+	existingStats, err := s.statsRepo.GetByBookID(ctx, stats.BookID.Hex())
 	if err != nil {
 		return fmt.Errorf("failed to check existing statistics: %w", err)
 	}
@@ -161,8 +164,13 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 
 	// 如果不存在，创建默认统计数据
 	if stats == nil {
+		// 将 string bookID 转换为 primitive.ObjectID
+		objectID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid book ID: %w", err)
+		}
 		stats = &bookstore2.BookStatistics{
-			BookID:             bookID,
+			BookID:             objectID,
 			ViewCount:          0,
 			FavoriteCount:      0,
 			CommentCount:       0,
@@ -192,12 +200,12 @@ func (s *BookStatisticsServiceImpl) UpdateStatistics(ctx context.Context, stats 
 	}
 
 	// 验证必填字段
-	if stats.BookID == "" {
+	if stats.BookID.IsZero() {
 		return errors.New("book ID is required")
 	}
 
 	// 更新统计数据
-	if err := s.statsRepo.Update(ctx, stats.ID, map[string]interface{}{
+	if err := s.statsRepo.Update(ctx, stats.ID.Hex(), map[string]interface{}{
 		"view_count":     stats.ViewCount,
 		"favorite_count": stats.FavoriteCount,
 		"comment_count":  stats.CommentCount,
@@ -279,8 +287,9 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-				ID: stats.BookID,
-			}
+    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+    BaseEntity:       shared.BaseEntity{},
+    }
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopViewedBooks(ctx, booksForCache, 5*time.Minute)
@@ -326,8 +335,9 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-				ID: stats.BookID,
-			}
+    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+    BaseEntity:       shared.BaseEntity{},
+    }
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopFavoritedBooks(ctx, booksForCache, 5*time.Minute)
@@ -373,8 +383,9 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-				ID: stats.BookID,
-			}
+    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+    BaseEntity:       shared.BaseEntity{},
+    }
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopRatedBooks(ctx, booksForCache, 5*time.Minute)
@@ -420,8 +431,9 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-				ID: stats.BookID,
-			}
+    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+    BaseEntity:       shared.BaseEntity{},
+    }
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetHottestBooks(ctx, booksForCache, 5*time.Minute)
@@ -838,7 +850,7 @@ func (s *BookStatisticsServiceImpl) BatchCreateStatistics(ctx context.Context, s
 
 	// 验证数据
 	for _, stats := range statsList {
-		if stats.BookID == "" {
+		if stats.BookID.IsZero() {
 			return errors.New("book ID is required for all statistics")
 		}
 	}
@@ -868,7 +880,7 @@ func (s *BookStatisticsServiceImpl) BatchDeleteStatistics(ctx context.Context, b
 			continue // 忽略获取失败的情况
 		}
 		if stats != nil {
-			if err := s.statsRepo.Delete(ctx, stats.ID); err != nil {
+			if err := s.statsRepo.Delete(ctx, stats.ID.Hex()); err != nil {
 				return fmt.Errorf("failed to delete statistics for book %s: %w", bookID, err)
 			}
 		}
@@ -1040,7 +1052,7 @@ func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, 
 	}
 
 	// 清除统计数据缓存
-	s.cacheService.InvalidateBookStatisticsCache(ctx, stats.BookID)
+	s.cacheService.InvalidateBookStatisticsCache(ctx, stats.BookID.Hex())
 
 	// 清除排行榜缓存
 	s.cacheService.InvalidateTopViewedBooksCache(ctx)
@@ -1052,5 +1064,5 @@ func (s *BookStatisticsServiceImpl) invalidateRelatedCache(ctx context.Context, 
 	s.cacheService.InvalidateAggregatedStatisticsCache(ctx)
 
 	// 清除书籍详情缓存（因为统计数据可能影响显示）
-	s.cacheService.InvalidateBookDetailCache(ctx, stats.BookID)
+	s.cacheService.InvalidateBookDetailCache(ctx, stats.BookID.Hex())
 }

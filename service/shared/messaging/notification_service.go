@@ -86,7 +86,7 @@ func (s *NotificationServiceImpl) SendPush(ctx context.Context, userID, title, c
 
 // SendSystemNotification 发送系统通知
 func (s *NotificationServiceImpl) SendSystemNotification(ctx context.Context, userID, title, content string) error {
-	notification := &msgModel.Notification{
+	notification := &msgModel.NotificationDelivery{
 		UserID:  userID,
 		Type:    msgModel.NotificationTypeSystem,
 		Title:   title,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 // Money 金额类型（最小货币单位：分）
@@ -141,10 +142,10 @@ func MaxMoneyValue(a, b Money) Money {
 // ParseMoney 从字符串解析金额
 // 支持格式："12.99", "¥12.99", "1299"（分）
 func ParseMoney(s string) (Money, error) {
-	// 移除货币符号
-	if len(s) > 0 && s[0] == '¥' {
-		s = s[1:]
-	}
+	// 移除货币符号（使用 TrimPrefix 以正确处理 UTF-8 编码）
+	s = strings.TrimPrefix(s, "¥")
+	s = strings.TrimPrefix(s, "￥")
+
 
 	// 尝试解析为浮点数（元）
 	if len(s) > 0 && (s[0] == '-' || (s[0] >= '0' && s[0] <= '9')) {

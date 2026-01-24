@@ -64,30 +64,8 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// 构建响应
-	role := ""
-	if len(resp.User.Roles) > 0 {
-		role = resp.User.Roles[0]
-	}
-	profileResp := dto.UserProfileResponse{
-		UserID:        resp.User.ID.Hex(),
-		Username:      resp.User.Username,
-		Email:         resp.User.Email,
-		Phone:         resp.User.Phone,
-		Role:          role,
-		Status:        string(resp.User.Status),
-		Avatar:        resp.User.Avatar,
-		Nickname:      resp.User.Nickname,
-		Bio:           resp.User.Bio,
-		EmailVerified: resp.User.EmailVerified,
-		PhoneVerified: resp.User.PhoneVerified,
-		LastLoginAt:   resp.User.LastLoginAt,
-		LastLoginIP:   resp.User.LastLoginIP,
-		CreatedAt:     resp.User.CreatedAt,
-		UpdatedAt:     resp.User.UpdatedAt,
-	}
-
-	shared.Success(c, http.StatusOK, "获取成功", profileResp)
+	// 直接返回 Service 层的 DTO
+	shared.Success(c, http.StatusOK, "获取成功", resp.User)
 }
 
 // UpdateProfile 更新当前用户信息

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/audit"
+	"Qingyu_backend/models/shared"
 	pkgAudit "Qingyu_backend/pkg/audit"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
@@ -162,18 +163,28 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 	}
 
 	// 3. 创建审核记录
-	record := &audit.AuditRecord{
-		ID:         primitive.NewObjectID().Hex(),
-		TargetType: audit.TargetTypeDocument,
-		TargetID:   documentID,
-		AuthorID:   authorID,
-		Content:    content,
-		RiskLevel:  checkResult.RiskLevel,
-		RiskScore:  checkResult.RiskScore,
-		Violations: checkResult.Violations,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+	// 转换 ID
+	targetOID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid document ID: %w", err)
 	}
+	authorOID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid author ID: %w", err)
+	}
+
+	now := time.Now()
+	record := &audit.AuditRecord{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		TargetType:       audit.TargetTypeDocument,
+		TargetID:         targetOID,
+		AuthorID:         authorOID,
+		Content:          content,
+		RiskLevel:        checkResult.RiskLevel,
+		RiskScore:        checkResult.RiskScore,
+		Violations:       checkResult.Violations,
+		}
 
 	// 4. 确定审核状态和结果
 	// 修复: 优先根据风险等级判断，高风险直接拒绝
@@ -261,20 +272,27 @@ func (s *ContentAuditService) BatchAuditDocuments(ctx context.Context, documentI
 
 			// 注意：实际生产环境应该调用 DocumentService 获取文档内容
 			// 当前实现：创建简化的审核记录
-			record := &audit.AuditRecord{
-				TargetType: audit.TargetTypeDocument,
-				TargetID:   docID,
-				Status:     audit.StatusPending,
-				Result:     audit.ResultPass, // 简化处理，默认通过
-				RiskLevel:  1,                // 低风险
-				RiskScore:  0.0,
-				Violations: []audit.ViolationDetail{},
-				CreatedAt:  time.Now(),
-				UpdatedAt:  time.Now(),
+			docOID, err := primitive.ObjectIDFromHex(docID)
+			if err != nil {
+				resultChan <- result{err: fmt.Errorf("invalid doc ID: %w", err)}
+				return
 			}
 
+			now := time.Now()
+			record := &audit.AuditRecord{
+				IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+				BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+				TargetType:       audit.TargetTypeDocument,
+				TargetID:         docOID,
+				Status:           audit.StatusPending,
+				Result:           audit.ResultPass,
+				RiskLevel:        1,
+				RiskScore:        0.0,
+				Violations:       []audit.ViolationDetail{},
+				}
+
 			// 保存审核记录
-			err := s.auditRecordRepo.Create(ctx, record)
+			err = s.auditRecordRepo.Create(ctx, record)
 			if err != nil {
 				resultChan <- result{nil, err}
 				return
@@ -335,7 +353,7 @@ func (s *ContentAuditService) ReviewAudit(ctx context.Context, auditID string, r
 	}
 
 	// 4. 如果拒绝且有作者ID，创建违规记录
-	if !approved && record.AuthorID != "" {
+	if !approved && !record.AuthorID.IsZero() {
 		record.Status = status
 		record.Result = result
 		if err := s.createViolationRecord(ctx, record); err != nil {
@@ -378,7 +396,11 @@ func (s *ContentAuditService) SubmitAppeal(ctx context.Context, auditID string, 
 	}
 
 	// 3. 验证权限
-	if record.AuthorID != authorID {
+	authorOID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的作者ID", "", nil)
+	}
+	if record.AuthorID != authorOID {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权申诉此记录", "", nil)
 	}
 
@@ -611,23 +633,24 @@ func (s *ContentAuditService) generateSuggestions(violations []audit.ViolationDe
 
 // createViolationRecord 创建违规记录
 func (s *ContentAuditService) createViolationRecord(ctx context.Context, record *audit.AuditRecord) error {
-	if record.AuthorID == "" {
+	if record.AuthorID.IsZero() {
 		return nil
 	}
 
+	now := time.Now()
 	violation := &audit.ViolationRecord{
 		ID:             primitive.NewObjectID().Hex(),
-		UserID:         record.AuthorID,
-		AuditRecordID:  record.ID,
+		UserID:         record.AuthorID.Hex(),
+		AuditRecordID:  record.ID.Hex(),
 		TargetType:     record.TargetType,
-		TargetID:       record.TargetID,
+		TargetID:       record.TargetID.Hex(),
 		ViolationType:  "content_violation",
 		ViolationLevel: record.RiskLevel,
 		ViolationCount: 1,
 		Description:    fmt.Sprintf("内容违规，风险等级：%d", record.RiskLevel),
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		}
 
 	// 根据风险等级确定处罚
 	if record.RiskLevel >= audit.LevelBanned {

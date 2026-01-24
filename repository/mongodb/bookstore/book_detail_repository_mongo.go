@@ -43,9 +43,9 @@ func (r *MongoBookDetailRepository) Create(ctx context.Context, bookDetail *book
 		return err
 	}
 
-	// ID 是 string 类型，需要转换
+	// ID 是 primitive.ObjectID 类型
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		bookDetail.ID = oid.Hex()
+		bookDetail.ID = oid
 	}
 	return nil
 }

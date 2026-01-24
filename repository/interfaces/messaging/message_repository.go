@@ -16,12 +16,12 @@ type MessageRepository interface {
 	ListMessages(ctx context.Context, filter *MessageFilter) ([]*messagingModel.Message, error)
 	CountMessages(ctx context.Context, filter *MessageFilter) (int64, error)
 
-	// 通知记录管理
-	CreateNotification(ctx context.Context, notification *messagingModel.Notification) error
-	GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error)
+	// 通知记录管理（外部通知发送记录）
+	CreateNotification(ctx context.Context, notification *messagingModel.NotificationDelivery) error
+	GetNotification(ctx context.Context, notificationID string) (*messagingModel.NotificationDelivery, error)
 	UpdateNotification(ctx context.Context, notificationID string, updates map[string]interface{}) error
 	DeleteNotification(ctx context.Context, notificationID string) error
-	ListNotifications(ctx context.Context, filter *NotificationFilter) ([]*messagingModel.Notification, int64, error)
+	ListNotifications(ctx context.Context, filter *NotificationFilter) ([]*messagingModel.NotificationDelivery, int64, error)
 	CountNotifications(ctx context.Context, filter *NotificationFilter) (int64, error)
 
 	// 通知已读状态管理

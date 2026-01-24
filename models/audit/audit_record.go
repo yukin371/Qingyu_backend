@@ -1,26 +1,32 @@
 package audit
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/shared"
+)
 
 // AuditRecord 审核记录模型
 type AuditRecord struct {
-	ID           string                 `bson:"_id,omitempty" json:"id"`
+	shared.IdentifiedEntity `bson:",inline"`
+	shared.BaseEntity       `bson:",inline"`
+
 	TargetType   string                 `bson:"target_type" json:"targetType" validate:"required"`     // 审核对象类型（document/chapter/comment）
-	TargetID     string                 `bson:"target_id" json:"targetId" validate:"required"`         // 审核对象ID
-	AuthorID     string                 `bson:"author_id" json:"authorId"`                             // 作者ID
+	TargetID     primitive.ObjectID      `bson:"target_id" json:"targetId" validate:"required"`         // 审核对象ID
+	AuthorID     primitive.ObjectID      `bson:"author_id" json:"authorId"`                             // 作者ID
 	Content      string                 `bson:"content" json:"content"`                               // 审核内容（可能很长，考虑存储策略）
 	Status       string                 `bson:"status" json:"status" validate:"required"`             // 审核状态
 	Result       string                 `bson:"result" json:"result"`                                 // 审核结果
 	RiskLevel    int                    `bson:"risk_level" json:"riskLevel"`                           // 风险等级 1-5
 	RiskScore    float64                `bson:"risk_score" json:"riskScore"`                           // 风险分数 0-100
-	Violations   []ViolationDetail      `bson:"violations" json:"violations"`                         // 违规详情列表
-	ReviewerID   string                 `bson:"reviewer_id,omitempty" json:"reviewerId,omitempty"`     // 复核人ID
+	Violations   []ViolationDetail       `bson:"violations" json:"violations"`                         // 违规详情列表
+	ReviewerID   primitive.ObjectID      `bson:"reviewer_id,omitempty" json:"reviewerId,omitempty"`     // 复核人ID
 	ReviewNote   string                 `bson:"review_note,omitempty" json:"reviewNote,omitempty"`     // 复核说明
 	AppealStatus string                 `bson:"appeal_status,omitempty" json:"appealStatus,omitempty"` // 申诉状态
 	Metadata     map[string]interface{} `bson:"metadata,omitempty" json:"metadata,omitempty"`         // 额外元数据
-	CreatedAt    time.Time              `bson:"created_at" json:"createdAt"`
-	UpdatedAt    time.Time              `bson:"updated_at" json:"updatedAt"`
-	ReviewedAt   *time.Time             `bson:"reviewed_at,omitempty" json:"reviewedAt,omitempty"` // 复核时间
+	ReviewedAt   *time.Time             `bson:"reviewed_at,omitempty" json:"reviewedAt,omitempty"`     // 复核时间
 }
 
 // AuditStatus 审核状态常量

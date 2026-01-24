@@ -2,6 +2,7 @@ package reader
 
 import (
 	"Qingyu_backend/models/reader"
+	"Qingyu_backend/models/shared"
 	"context"
 	"fmt"
 	"time"
@@ -213,14 +214,13 @@ func (r *MongoReadingProgressRepository) UpdateReadingTime(ctx context.Context, 
 		}
 
 		progress := &reader.ReadingProgress{
-			ID:          primitive.NewObjectID(),
-			UserID:      userOID,
-			BookID:      bookOID,
-			ReadingTime: duration,
-			Progress:    0,
-			LastReadAt:  time.Now(),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+		BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		UserID:      userOID,
+		BookID:      bookOID,
+		ReadingTime: duration,
+		Progress:    0,
+		LastReadAt:  time.Now(),
 		}
 		return r.Create(ctx, progress)
 	}

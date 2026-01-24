@@ -115,20 +115,108 @@ func (r *InMemoryChatRepository) GetSessionStatistics(ctx context.Context, proje
 
 	var totalSessions int
 	var totalMessages int
-	var totalTokens int
+	var activeSessions int
 
 	for _, session := range r.sessions {
 		if session.ProjectID == projectID {
 			totalSessions++
-			totalMessages += len(session.Messages)
-			for _, msg := range session.Messages {
-				totalTokens += msg.TokenUsed
+			if session.Status == "active" {
+				activeSessions++
 			}
+			// 从独立消息集合统计
+			totalMessages += len(r.messages[session.SessionID])
 		}
 	}
 
 	return &ChatStatistics{
-		TotalSessions: totalSessions,
-		TotalMessages: totalMessages,
+		TotalSessions:  totalSessions,
+		ActiveSessions: activeSessions,
+		TotalMessages:  totalMessages,
 	}, nil
+}
+
+// GetMessagesBySessionID 获取会话的所有消息
+func (r *InMemoryChatRepository) GetMessagesBySessionID(ctx context.Context, sessionID string) ([]ai.ChatMessage, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	msgs, exists := r.messages[sessionID]
+	if !exists {
+		return []ai.ChatMessage{}, nil
+	}
+
+	result := make([]ai.ChatMessage, len(msgs))
+	for i, msg := range msgs {
+		result[i] = *msg
+	}
+
+	return result, nil
+}
+
+// GetRecentMessagesBySessionID 获取会话的最近消息
+func (r *InMemoryChatRepository) GetRecentMessagesBySessionID(ctx context.Context, sessionID string, limit int) ([]ai.ChatMessage, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	msgs, exists := r.messages[sessionID]
+	if !exists {
+		return []ai.ChatMessage{}, nil
+	}
+
+	// 获取最近的 limit 条消息
+	start := 0
+	if len(msgs) > limit {
+		start = len(msgs) - limit
+	}
+
+	result := make([]ai.ChatMessage, 0, limit)
+	for i := start; i < len(msgs); i++ {
+		result = append(result, *msgs[i])
+	}
+
+	return result, nil
+}
+
+// GetMessagesBySessionIDPaginated 分页获取消息
+func (r *InMemoryChatRepository) GetMessagesBySessionIDPaginated(ctx context.Context, sessionID string, limit, offset int) ([]ai.ChatMessage, int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	msgs, exists := r.messages[sessionID]
+	if !exists {
+		return []ai.ChatMessage{}, 0, nil
+	}
+
+	total := int64(len(msgs))
+
+	// 分页
+	start := offset
+	if start >= len(msgs) {
+		return []ai.ChatMessage{}, total, nil
+	}
+
+	end := offset + limit
+	if end > len(msgs) {
+		end = len(msgs)
+	}
+
+	result := make([]ai.ChatMessage, 0, end-start)
+	for i := start; i < end; i++ {
+		result = append(result, *msgs[i])
+	}
+
+	return result, total, nil
+}
+
+// GetMessageCountBySessionID 获取会话的消息总数
+func (r *InMemoryChatRepository) GetMessageCountBySessionID(ctx context.Context, sessionID string) (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	msgs, exists := r.messages[sessionID]
+	if !exists {
+		return 0, nil
+	}
+
+	return int64(len(msgs)), nil
 }

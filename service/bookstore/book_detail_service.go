@@ -182,7 +182,7 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 	}
 
 	// 验证必填字段
-	if bookDetail.ID == "" {
+	if bookDetail.ID.IsZero() {
 		return errors.New("book detail ID is required")
 	}
 	if bookDetail.Title == "" {
@@ -213,7 +213,7 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 	}
 
 	// 更新数据库
-	if err := s.bookDetailRepo.Update(ctx, bookDetail.ID, updates); err != nil {
+	if err := s.bookDetailRepo.Update(ctx, bookDetail.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("failed to update book detail: %w", err)
 	}
 
@@ -595,7 +595,7 @@ func (s *BookDetailServiceImpl) GetRecommendedBookDetails(ctx context.Context, b
 		// 过滤掉当前书籍
 		var filteredBooks []*bookstore2.BookDetail
 		for _, book := range recommendedBooks {
-			if book.ID != bookID {
+			if book.ID.Hex() != bookID {
 				filteredBooks = append(filteredBooks, book)
 			}
 		}
@@ -632,7 +632,7 @@ func (s *BookDetailServiceImpl) GetSimilarBookDetails(ctx context.Context, bookI
 		// 过滤掉当前书籍
 		var filteredBooks []*bookstore2.BookDetail
 		for _, book := range similarBooks {
-			if book.ID != bookID {
+			if book.ID.Hex() != bookID {
 				filteredBooks = append(filteredBooks, book)
 			}
 		}
@@ -892,7 +892,7 @@ func (s *BookDetailServiceImpl) invalidateRelatedCache(ctx context.Context, book
 	}
 
 	// 清除书籍详情缓存
-	s.cacheService.InvalidateBookDetailCache(ctx, bookDetail.ID)
+	s.cacheService.InvalidateBookDetailCache(ctx, bookDetail.ID.Hex())
 
 	// 清除分类相关缓存
 	for _, category := range bookDetail.Categories {

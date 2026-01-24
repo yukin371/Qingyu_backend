@@ -47,6 +47,7 @@ func (r *ChatRepository) CreateSession(ctx context.Context, session *aiModels.Ch
 }
 
 // GetSessionByID 根据ID获取会话
+// 注意：不再加载消息到 session.Messages，需要单独调用消息查询方法
 func (r *ChatRepository) GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error) {
 	collection := r.getSessionCollection()
 
@@ -64,17 +65,11 @@ func (r *ChatRepository) GetSessionByID(ctx context.Context, sessionID string) (
 		return nil, fmt.Errorf("获取会话失败: %w", err)
 	}
 
-	// 加载消息
-	messages, err := r.GetMessagesBySessionID(ctx, sessionID)
-	if err != nil {
-		return nil, fmt.Errorf("加载消息失败: %w", err)
-	}
-	session.Messages = messages
-
 	return &session, nil
 }
 
 // GetSessionsByProjectID 根据项目ID获取会话列表
+// 注意：不再加载消息到 session.Messages
 func (r *ChatRepository) GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error) {
 	collection := r.getSessionCollection()
 
@@ -99,12 +94,6 @@ func (r *ChatRepository) GetSessionsByProjectID(ctx context.Context, projectID s
 		var session aiModels.ChatSession
 		if err := cursor.Decode(&session); err != nil {
 			return nil, fmt.Errorf("解码会话失败: %w", err)
-		}
-
-		// 加载最新的几条消息
-		messages, err := r.GetRecentMessagesBySessionID(ctx, session.SessionID, 10)
-		if err == nil {
-			session.Messages = messages
 		}
 
 		sessions = append(sessions, &session)
@@ -260,6 +249,99 @@ func (r *ChatRepository) DeleteMessagesBySessionID(ctx context.Context, sessionI
 	}
 
 	return nil
+}
+
+// GetMessagesBySessionIDPaginated 根据会话ID分页获取消息
+func (r *ChatRepository) GetMessagesBySessionIDPaginated(ctx context.Context, sessionID string, limit, offset int) ([]aiModels.ChatMessage, int64, error) {
+	collection := r.getMessageCollection()
+
+	filter := bson.M{
+		"session_id": sessionID,
+		"deleted_at": bson.M{"$exists": false},
+	}
+
+	// 获取总数
+	total, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("统计消息数失败: %w", err)
+	}
+
+	// 分页查询
+	opts := options.Find().
+		SetSort(bson.M{"timestamp": 1}).
+		SetSkip(int64(offset)).
+		SetLimit(int64(limit))
+
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("查询消息失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var messages []aiModels.ChatMessage
+	for cursor.Next(ctx) {
+		var message aiModels.ChatMessage
+		if err := cursor.Decode(&message); err != nil {
+			return nil, 0, fmt.Errorf("解码消息失败: %w", err)
+		}
+		messages = append(messages, message)
+	}
+
+	return messages, total, nil
+}
+
+// GetMessageCountBySessionID 获取会话的消息总数
+func (r *ChatRepository) GetMessageCountBySessionID(ctx context.Context, sessionID string) (int64, error) {
+	collection := r.getMessageCollection()
+
+	filter := bson.M{
+		"session_id": sessionID,
+		"deleted_at": bson.M{"$exists": false},
+	}
+
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("统计消息数失败: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetMessagesBeforeTimestamp 获取指定时间戳之前的消息
+func (r *ChatRepository) GetMessagesBeforeTimestamp(ctx context.Context, sessionID string, timestamp time.Time, limit int) ([]aiModels.ChatMessage, error) {
+	collection := r.getMessageCollection()
+
+	filter := bson.M{
+		"session_id": sessionID,
+		"timestamp":  bson.M{"$lt": timestamp},
+		"deleted_at": bson.M{"$exists": false},
+	}
+
+	opts := options.Find().
+		SetSort(bson.M{"timestamp": -1}).
+		SetLimit(int64(limit))
+
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询消息失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var messages []aiModels.ChatMessage
+	for cursor.Next(ctx) {
+		var message aiModels.ChatMessage
+		if err := cursor.Decode(&message); err != nil {
+			return nil, fmt.Errorf("解码消息失败: %w", err)
+		}
+		messages = append(messages, message)
+	}
+
+	// 反转顺序，使其按时间正序排列
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
+
+	return messages, nil
 }
 
 // GetSessionStatistics 获取会话统计信息

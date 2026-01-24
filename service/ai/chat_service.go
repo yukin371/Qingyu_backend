@@ -15,13 +15,17 @@ import (
 
 // ChatRepositoryInterface 聊天仓库接口
 type ChatRepositoryInterface interface {
-	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 创建会话
-	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                              // 获取会话
-	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                           // 更新会话
-	DeleteSession(ctx context.Context, sessionID string) error                                                        // 删除会话
-	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error) // 获取项目会话列表
-	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                           // 创建消息
-	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                              // 获取会话统计信息
+	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                             // 创建会话
+	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                                // 获取会话
+	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                             // 更新会话
+	DeleteSession(ctx context.Context, sessionID string) error                                                          // 删除会话
+	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error)   // 获取项目会话列表
+	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                             // 创建消息
+	GetMessagesBySessionID(ctx context.Context, sessionID string) ([]aiModels.ChatMessage, error)                       // 获取会话的所有消息
+	GetRecentMessagesBySessionID(ctx context.Context, sessionID string, limit int) ([]aiModels.ChatMessage, error)      // 获取会话的最近消息
+	GetMessagesBySessionIDPaginated(ctx context.Context, sessionID string, limit, offset int) ([]aiModels.ChatMessage, int64, error) // 分页获取消息
+	GetMessageCountBySessionID(ctx context.Context, sessionID string) (int64, error)                                     // 获取会话的消息总数
+	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                                // 获取会话统计信息
 }
 
 // AIServiceInterface AI服务接口
@@ -99,7 +103,7 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		return nil, fmt.Errorf("构建上下文失败: %w", err)
 	}
 
-	// 添加用户消息到会话
+	// 创建用户消息
 	userMessage := &aiModels.ChatMessage{
 		ID:        primitive.NewObjectID(),
 		SessionID: session.SessionID,
@@ -107,7 +111,6 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		Content:   req.Message,
 		Timestamp: time.Now(),
 	}
-	session.Messages = append(session.Messages, *userMessage)
 
 	// 保存用户消息
 	if err := s.repository.CreateMessage(ctx, userMessage); err != nil {
@@ -131,7 +134,7 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 
 	responseTime := time.Since(startTime)
 
-	// 添加AI响应到会话
+	// 创建AI响应消息
 	assistantMessage := &aiModels.ChatMessage{
 		ID:        primitive.NewObjectID(),
 		SessionID: session.SessionID, // 使用SessionID字段
@@ -140,7 +143,6 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		TokenUsed: aiResponse.TokensUsed,
 		Timestamp: time.Now(),
 	}
-	session.Messages = append(session.Messages, *assistantMessage)
 
 	// 保存AI消息
 	if err := s.repository.CreateMessage(ctx, assistantMessage); err != nil {
@@ -186,7 +188,7 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		return nil, fmt.Errorf("构建上下文失败: %w", err)
 	}
 
-	// 添加用户消息到会话
+	// 创建用户消息
 	userMessage := &aiModels.ChatMessage{
 		ID:        primitive.NewObjectID(),
 		SessionID: session.SessionID,
@@ -194,7 +196,6 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		Content:   req.Message,
 		Timestamp: time.Now(),
 	}
-	session.Messages = append(session.Messages, *userMessage)
 
 	// 保存用户消息
 	if err := s.repository.CreateMessage(ctx, userMessage); err != nil {
@@ -297,7 +298,6 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 			TokenUsed: totalTokens,
 			Timestamp: time.Now(),
 		}
-		session.Messages = append(session.Messages, *assistantMessage)
 
 		// 保存AI消息
 		if err := s.repository.CreateMessage(ctx, assistantMessage); err != nil {
@@ -317,6 +317,7 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 }
 
 // buildChatContext 构建对话上下文
+// 从独立集合获取历史消息，而不是从 session.Messages
 func (s *ChatService) buildChatContext(ctx context.Context, session *aiModels.ChatSession, req *ChatRequest) ([]*aiModels.ChatMessage, error) {
 	messages := make([]*aiModels.ChatMessage, 0)
 
@@ -336,13 +337,17 @@ func (s *ChatService) buildChatContext(ctx context.Context, session *aiModels.Ch
 
 	// 添加历史对话（保留最近的对话）
 	historyLimit := 10 // 保留最近10轮对话
-	startIndex := 0
-	if len(session.Messages) > historyLimit*2 {
-		startIndex = len(session.Messages) - historyLimit*2
+
+	// 从 Repository 获取最近的历史消息
+	recentMessages, err := s.repository.GetRecentMessagesBySessionID(ctx, session.SessionID, historyLimit*2)
+	if err != nil {
+		// 如果获取失败，继续使用空上下文
+		return messages, nil
 	}
 
-	for i := startIndex; i < len(session.Messages); i++ {
-		messages = append(messages, &session.Messages[i])
+	// 将消息转换为指针类型并添加到上下文
+	for i := range recentMessages {
+		messages = append(messages, &recentMessages[i])
 	}
 
 	return messages, nil
@@ -419,7 +424,6 @@ func (s *ChatService) getOrCreateSession(ctx context.Context, sessionID, project
 		Status:      "active",
 		Settings:    &aiModels.ChatSettings{},
 		Metadata:    &aiModels.ChatMetadata{},
-		Messages:    []aiModels.ChatMessage{},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -443,13 +447,29 @@ func generateMessageID() string {
 }
 
 // GetChatHistory 获取聊天历史
-func (s *ChatService) GetChatHistory(ctx context.Context, sessionID string) (*dto.ChatSessionDTO, error) {
+func (s *ChatService) GetChatHistory(ctx context.Context, sessionID string, limit, offset int) (*dto.ChatHistoryDTO, error) {
 	session, err := s.repository.GetSessionByID(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
 
-	return dto.ToSessionDTO(session), nil
+	// 获取分页消息
+	messages, total, err := s.repository.GetMessagesBySessionIDPaginated(ctx, sessionID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ToChatHistoryDTO(session, messages, total, limit, offset), nil
+}
+
+// GetMessagesPaginated 分页获取消息
+func (s *ChatService) GetMessagesPaginated(ctx context.Context, sessionID string, limit, offset int) (*dto.PaginatedMessagesDTO, error) {
+	messages, total, err := s.repository.GetMessagesBySessionIDPaginated(ctx, sessionID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ToMessagesDTO(messages, total, limit, offset), nil
 }
 
 // ListChatSessions 获取会话列表

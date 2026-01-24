@@ -65,7 +65,9 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", progress)
+	// 转换为 DTO
+	progressDTO := ToReadingProgressDTO(progress)
+	shared.Success(c, http.StatusOK, "获取成功", progressDTO)
 }
 
 // SaveReadingProgress 保存阅读进度

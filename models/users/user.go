@@ -4,8 +4,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/auth"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
+	"Qingyu_backend/models/shared"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,11 +21,13 @@ const (
 // User 表示系统中的用户数据模型
 // 仅包含与数据本身紧密相关的字段与方法
 type User struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"-"`
-	Username string             `bson:"username" json:"username" validate:"required,min=3,max=50"`
-	Email    string             `bson:"email,omitempty" json:"email" validate:"omitempty,email"`
-	Phone    string             `bson:"phone,omitempty" json:"phone" validate:"omitempty,e164"`
-	Password string             `bson:"password" json:"-" validate:"required,min=6"`
+	shared.IdentifiedEntity `bson:",inline"`
+	shared.BaseEntity       `bson:",inline"`
+
+	Username string `bson:"username" json:"username" validate:"required,min=3,max=50"`
+	Email    string `bson:"email,omitempty" json:"email" validate:"omitempty,email"`
+	Phone    string `bson:"phone,omitempty" json:"phone" validate:"omitempty,e164"`
+	Password string `bson:"password" json:"-" validate:"required,min=6"`
 
 	// 角色和权限
 	Roles    []string `bson:"roles" json:"roles" validate:"required,dive,oneof=reader author admin"` // 多角色支持
@@ -42,10 +43,6 @@ type User struct {
 	PhoneVerified bool      `bson:"phone_verified" json:"phoneVerified"`
 	LastLoginAt   time.Time `bson:"last_login_at,omitempty" json:"lastLoginAt,omitempty"`
 	LastLoginIP   string    `bson:"last_login_ip,omitempty" json:"lastLoginIP,omitempty"`
-
-	// 时间戳
-	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
 
 // SetPassword 对明文密码进行哈希并设置到用户模型中
@@ -69,17 +66,7 @@ func (u *User) ValidatePassword(plainPassword string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(plainPassword)) == nil
 }
 
-// TouchForCreate 在创建前设置时间戳
-func (u *User) TouchForCreate() {
-	now := time.Now()
-	u.CreatedAt = now
-	u.UpdatedAt = now
-}
 
-// TouchForUpdate 在更新前刷新更新时间戳
-func (u *User) TouchForUpdate() {
-	u.UpdatedAt = time.Now()
-}
 
 // IsActive 检查用户是否为活跃状态
 func (u *User) IsActive() bool {

@@ -33,18 +33,18 @@ type MessageTemplate struct {
 	shared.BaseEntity
 }
 
-// Notification 通知记录
-type Notification struct {
+// NotificationDelivery 外部通知发送记录（email/sms/push）
+type NotificationDelivery struct {
 	ID                string                 `json:"id" bson:"_id,omitempty"`
-	UserID            string                 `json:"$1$2" bson:"user_id"`
+	UserID            string                 `json:"userId" bson:"user_id"`
 	Type              string                 `json:"type" bson:"type"` // email, sms, push, system
 	Title             string                 `json:"title" bson:"title"`
 	Content           string                 `json:"content" bson:"content"`
 	Status            string                 `json:"status" bson:"status"` // sent, pending, failed
 	shared.ReadStatus                        // 嵌入已读状态
 	Metadata          map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"`
-	CreatedAt         time.Time              `json:"$1$2" bson:"created_at"`
-	SentAt            *time.Time             `json:"sent_at,omitempty" bson:"sent_at,omitempty"`
+	CreatedAt         time.Time              `json:"createdAt" bson:"created_at"`
+	SentAt            *time.Time             `json:"sentAt,omitempty" bson:"sent_at,omitempty"`
 }
 
 // 消息状态
@@ -78,5 +78,8 @@ const (
 	MessageTemplateTypePush  = "push"
 )
 
-// NotificationType 通知类型（类型别名）
-type NotificationType string
+// NotificationDeliveryType 通知发送类型（类型别名）
+type NotificationDeliveryType string
+
+// 向后兼容的类型别名
+type NotificationType = NotificationDeliveryType

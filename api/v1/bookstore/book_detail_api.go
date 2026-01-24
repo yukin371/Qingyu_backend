@@ -530,7 +530,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(idStr)
+	_, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		shared.BadRequest(c, "参数错误", "无效的书籍ID格式")
 		return
@@ -542,7 +542,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 		return
 	}
 
-	book.ID = id.Hex()
+	// ID 已在 DTO 中处理，无需再赋值
 
 	if err := api.service.UpdateBookDetail(c.Request.Context(), &book); err != nil {
 		if strings.Contains(err.Error(), "not found") {

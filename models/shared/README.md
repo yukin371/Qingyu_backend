@@ -1,19 +1,66 @@
 # 共享基础模型
 
-> 可复用的基础数据模型混入（Mixins），供各业务领域模型组合使用
+> 可复用的基础数据模型和类型系统，为项目提供统一的类型定义和转换工具
 
 ---
 
 ## 概述
 
-`models/shared/` 目录包含可复用的基础模型组件，通过 **组合模式** 为各业务领域模型提供通用功能。
+`models/shared/` 目录包含可复用的基础模型组件和类型系统：
+
+1. **基础模型混入（Mixins）** - 通过组合模式为各业务领域模型提供通用功能
+2. **统一类型系统（types/）** - 提供跨模块的统一类型定义和转换工具
 
 ### 设计原则
 
 1. **组合优于继承** - 通过 `bson:",inline"` 将基础模型嵌入到领域模型中
 2. **单一职责** - 每个混入文件专注于一类通用功能
 3. **类型安全** - 提供方法封装，确保数据一致性
-4. **向后兼容** - 部分模块通过类型别名保持兼容性
+4. **分层架构** - Model 层使用 ObjectID，API/DTO 层使用 string
+
+---
+
+## 📁 目录结构
+
+```
+models/shared/
+├── base.go           # 核心基础模型混入
+├── social.go         # 社交功能混入
+├── communication.go  # 通信功能混入
+├── content.go        # 内容相关混入
+├── metadata.go       # 元数据混入
+├── types/            # 统一类型系统
+│   ├── id.go         # ID 类型转换
+│   ├── money.go      # 金额类型
+│   ├── rating.go     # 评分类型
+│   ├── progress.go   # 进度类型
+│   ├── enums.go      # 枚举类型
+│   ├── converter.go  # DTO 转换辅助
+│   └── README.md     # 类型系统文档
+└── README.md         # 本文档
+```
+
+---
+
+## 🏗️ 分层架构（方案B）
+
+```
+┌─────────────────────────────────────────────┐
+│  API 层 (DTO)         → string id           │  ← 对外接口，JSON友好
+├─────────────────────────────────────────────┤
+│  Service 层          → 转换逻辑              │  ← Model↔DTO转换
+├─────────────────────────────────────────────┤
+│  Model 层            → ObjectID             │  ← 数据库存储，高效
+└─────────────────────────────────────────────┘
+```
+
+### ID 类型说明
+
+| 层级 | ID 类型 | JSON 标签 | BSON 标签 |
+|------|---------|-----------|-----------|
+| Model 层 | `primitive.ObjectID` | `-` (不暴露) | `_id` |
+| DTO 层 | `string` | `id` | N/A |
+| Service 层 | `string` | N/A | N/A |
 
 ---
 
@@ -25,7 +72,7 @@
 
 **核心模型**:
 - `BaseEntity` - 通用实体基类（时间戳）
-- `IdentifiedEntity` - ID 字段实体
+- `IdentifiedEntity` - ID 字段实体（Model 层）
 - `ReadStatus` - 已读状态混入
 - `Edited` - 编辑追踪混入
 
@@ -43,14 +90,14 @@ type BaseEntity struct {
 // - SoftDelete() - 软删除
 // - IsDeleted() - 判断是否已删除
 
-// IdentifiedEntity - ID 字段
+// IdentifiedEntity - ID 字段（Model 层使用）
 type IdentifiedEntity struct {
-    ID string `bson:"_id,omitempty" json:"id"`
+    ID primitive.ObjectID `bson:"_id,omitempty" json:"-"`
 }
 
 // 方法:
-// - GetID() string - 获取ID
-// - SetID(id string) - 设置ID
+// - GetID() primitive.ObjectID - 获取ID
+// - SetID(id primitive.ObjectID) - 设置ID
 
 // ReadStatus - 已读状态
 type ReadStatus struct {
@@ -196,175 +243,171 @@ type TargetEntity struct {
 
 ---
 
+## 🧬 types/ 统一类型系统
+
+**文件**: `types/README.md`
+
+**包含**:
+- `id.go` - ID 转换工具（ObjectID ↔ string）
+- `money.go` - 金额类型（int64，最小单位：分）
+- `rating.go` - 评分类型（0-5）
+- `progress.go` - 进度类型（0-1）
+- `enums.go` - 枚举类型（角色、状态等）
+- `converter.go` - DTO 转换辅助
+
+**使用示例**:
+```go
+import "Qingyu_backend/models/shared/types"
+
+// Model → DTO 转换
+var converter types.DTOConverter
+
+dto.ID = converter.ModelIDToDTO(model.ID)              // ObjectID → string
+dto.CreatedAt = converter.TimeToISO8601(model.CreatedAt) // time.Time → string
+
+// DTO → Model 转换
+id, err := converter.DTOIDToModel(dto.ID)               // string → ObjectID
+createdAt, err := converter.ISO8601ToTime(dto.CreatedAt) // string → time.Time
+```
+
+详见 [types/README.md](./types/README.md)
+
+---
+
 ## 📚 使用示例
 
-### 方式一：直接导入 shared 包（推荐）
+### Model 层使用 shared.IdentifiedEntity
 
 ```go
 import "Qingyu_backend/models/shared"
 
-type Comment struct {
-    shared.IdentifiedEntity     `bson:",inline"`
-    shared.BaseEntity           `bson:",inline"`
-    shared.ThreadedConversation `bson:",inline"`
-    shared.Likable              `bson:",inline"`
+type User struct {
+    shared.IdentifiedEntity `bson:",inline"`  // ID = primitive.ObjectID
+    shared.BaseEntity       `bson:",inline"`  // 时间戳
 
-    AuthorID string `bson:"author_id" json:"authorId"`
-    Content  string `bson:"content" json:"content"`
+    Username string `bson:"username" json:"username"`
+    Email    string `bson:"email" json:"email"`
 }
 ```
 
-### 方式二：通过领域模块的 base 包（向后兼容）
-
-部分模块（如 `social`、`messaging`、`writer`）提供了 `base/base.go` 文件，通过类型别名重新导出 shared 类型：
+### DTO 层使用 string ID
 
 ```go
-// social/base.go
-import (shared "Qingyu_backend/models/shared")
-
-type BaseEntity = shared.BaseEntity
-type IdentifiedEntity = shared.IdentifiedEntity
-type Likable = shared.Likable
-type ThreadedConversation = shared.ThreadedConversation
-```
-
-使用方式：
-
-```go
-import "Qingyu_backend/models/social"
-
-type Comment struct {
-    social.IdentifiedEntity     `bson:",inline"`
-    social.BaseEntity           `bson:",inline"`
-    social.ThreadedConversation `bson:",inline"`
-    social.Likable              `bson:",inline"`
-
-    AuthorID string `bson:"author_id" json:"authorId"`
-    Content  string `bson:"content" json:"content"`
+// api/v1/shared/user_types.go
+type UserDTO struct {
+    ID        string `json:"id"`                     // string ID
+    CreatedAt string `json:"createdAt"`              // ISO8601 时间字符串
+    UpdatedAt string `json:"updatedAt"`
+    Username  string `json:"username"`
+    Email     string `json:"email"`
 }
 ```
 
-### 完整示例：创建评论
+### Service 层转换
 
 ```go
 import (
-    "time"
     "Qingyu_backend/models/shared"
+    "Qingyu_backend/models/shared/types"
 )
 
-func CreateComment(authorID, content string) *Comment {
-    comment := &Comment{
-        AuthorID: authorID,
-        Content:  content,
+// Model → DTO
+func ToUserDTO(user *User) *UserDTO {
+    var converter types.DTOConverter
+    return &UserDTO{
+        ID:        converter.ModelIDToDTO(user.ID),
+        CreatedAt: converter.TimeToISO8601(user.CreatedAt),
+        UpdatedAt: converter.TimeToISO8601(user.UpdatedAt),
+        Username:  user.Username,
+        Email:     user.Email,
+    }
+}
+
+// DTO → Model
+func ToUser(dto *UserDTO) (*User, error) {
+    var converter types.DTOConverter
+    id, createdAt, updatedAt, err := converter.ParseBaseFields(
+        dto.ID, dto.CreatedAt, dto.UpdatedAt,
+    )
+    if err != nil {
+        return nil, err
     }
 
-    // 使用 shared 基础模型的方法
-    comment.ID = primitive.NewObjectID().Hex()
-    comment.TouchForCreate()  // 设置创建和更新时间
-
-    return comment
-}
-
-func MarkCommentRead(comment *Comment) {
-    // 如果嵌入了 shared.ReadStatus
-    comment.MarkAsRead()
-}
-
-func LikeComment(comment *Comment) {
-    // 如果嵌入了 shared.Likable
-    comment.AddLike(1)
-}
-```
-
-### 使用编辑追踪（Edited）
-
-```go
-import (
-    "Qingyu_backend/models/shared"
-)
-
-type DocumentContent struct {
-    shared.IdentifiedEntity `bson:",inline"`
-    shared.BaseEntity       `bson:",inline"`
-    shared.Edited           `bson:",inline"`
-
-    DocumentID string `bson:"document_id" json:"documentId"`
-    Content    string `bson:"content" json:"content"`
-}
-
-func SaveDocument(doc *DocumentContent, userID string) {
-    // 使用 Edited 混入的方法
-    doc.MarkEdited(userID)  // 更新 LastSavedAt 和 LastEditedBy
-    doc.Touch()             // 更新 UpdatedAt
-}
-```
-
-### 处理指针字段（ThreadedConversation）
-
-```go
-reply := &Comment{
-    // ...
-    ThreadedConversation: shared.ThreadedConversation{
-        ReplyToCommentID: &parentCommentID,  // 使用 & 取地址
-        RootID:           &rootCommentID,
-    },
-}
-
-// 安全检查
-if reply.ReplyToCommentID != nil {
-    fmt.Println("回复评论ID:", *reply.ReplyToCommentID)
+    return &User{
+        IdentifiedEntity: shared.IdentifiedEntity{ID: id},
+        BaseEntity:       shared.BaseEntity{CreatedAt: createdAt, UpdatedAt: updatedAt},
+        Username:          dto.Username,
+        Email:            dto.Email,
+    }, nil
 }
 ```
 
 ---
 
-## 🏗️ 模块关系
+## ⚠️ 重要注意事项
 
-### 目录结构
+### 1. ID 类型区分
 
-```
-models/
-├── shared/                    # 基础模型混入（本目录）
-│   ├── base.go
-│   ├── social.go
-│   ├── communication.go
-│   ├── content.go
-│   └── metadata.go
-├── auth/                      # 认证授权模型
-├── wallet/                    # 钱包模型
-├── social/                    # 社交模型
-│   └── base.go               # 类型别名（向后兼容）
-├── messaging/                 # 消息模型
-│   └── base/                 # 类型别名（向后兼容）
-├── writer/                    # 写作模型
-│   └── base/                 # 类型别名（向后兼容）
-└── ... (其他领域模块)
+**Model 层**:
+```go
+type User struct {
+    shared.IdentifiedEntity `bson:",inline"`  // ID 是 primitive.ObjectID
+}
+
+// ✅ 正确
+user.ID = primitive.NewObjectID()
+
+// ❌ 错误
+user.ID = "abc123"  // 类型不匹配
 ```
 
-### 模块依赖关系
-
+**DTO 层**:
+```go
+type UserDTO struct {
+    ID string `json:"id"`  // ID 是 string
+}
 ```
-┌─────────────────────────────────────────┐
-│          models/shared/                  │
-│        (基础模型混入层)                   │
-│  base.go, social.go, communication.go   │
-└──────────────────┬──────────────────────┘
-                   │
-                   │ 通过类型别名或直接导入
-                   │
-    ┌──────────────┴──────────────┐
-    │                             │
-    ▼                             ▼
-┌─────────┐                   ┌─────────┐
-│ social/ │                   │messaging│
-│ (社交)  │                   │ (消息)  │
-└─────────┘                   └─────────┘
-    │                             │
-    ▼                             ▼
-┌─────────────────────────────────────┐
-│       service/social/                │
-│      (使用 social 模型)               │
-└─────────────────────────────────────┘
+
+### 2. JSON 序列化
+
+`IdentifiedEntity` 的 JSON 标签是 `json:"-"`，不会序列化到 JSON：
+
+```go
+user := &User{
+    IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+    Username: "test",
+}
+
+// JSON 序列化
+// {"username": "test"}  ← ID 不会出现
+```
+
+如果需要返回 ID 给前端，使用 DTO：
+```go
+dto := &UserDTO{
+    ID: user.ID.Hex(),  // 手动转换为 string
+    Username: user.Username,
+}
+
+// JSON 序列化
+// {"id": "507f1f77bcf86cd799439011", "username": "test"}
+```
+
+### 3. BSON inline 标签
+
+嵌入时务必使用 `bson:",inline"` 标签：
+
+```go
+// ✅ 正确
+type User struct {
+    shared.IdentifiedEntity `bson:",inline"`
+    shared.BaseEntity       `bson:",inline"`
+}
+
+// ❌ 错误（会创建嵌套对象）
+type User struct {
+    shared.IdentifiedEntity `bson:"identified"`
+}
 ```
 
 ---
@@ -373,7 +416,7 @@ models/
 
 | 需求 | 推荐使用的混入 | 文件 |
 |------|--------------|------|
-| 需要ID字段 | `IdentifiedEntity` | base.go |
+| 需要ID字段（Model层） | `IdentifiedEntity` | base.go |
 | 需要时间戳 | `BaseEntity` | base.go |
 | 需要软删除 | `BaseEntity` + `SoftDelete()` | base.go |
 | 需要已读状态 | `ReadStatus` | base.go |
@@ -390,70 +433,18 @@ models/
 
 ---
 
-## ⚠️ 注意事项
+## 📖 相关文档
 
-### 1. ID 类型
-
-`IdentifiedEntity.ID` 是 `string` 类型，**不是** `primitive.ObjectID`：
-
-```go
-type IdentifiedEntity struct {
-    ID string `bson:"_id,omitempty" json:"id"`
-}
-
-// ✅ 正确
-comment.ID = primitive.NewObjectID().Hex()
-
-// ❌ 错误
-comment.ID = primitive.NewObjectID()  // 类型不匹配
-```
-
-### 2. 指针字段
-
-`ThreadedConversation.ReplyToCommentID` 和 `RootID` 是 `*string` 类型，使用前需要 nil 检查：
-
-```go
-// ✅ 正确
-if reply.ReplyToCommentID != nil {
-    fmt.Println(*reply.ReplyToCommentID)
-}
-
-// ❌ 错误（可能 panic）
-fmt.Println(*reply.ReplyToCommentID)
-```
-
-### 3. BSON inline 标签
-
-嵌入时务必使用 `bson:",inline"` 标签，否则字段不会被合并到 MongoDB 文档中：
-
-```go
-// ✅ 正确
-type Comment struct {
-    shared.IdentifiedEntity `bson:",inline"`
-}
-
-// ❌ 错误（会创建嵌套对象）
-type Comment struct {
-    shared.IdentifiedEntity `bson:"identified"`
-}
-```
-
-### 4. 方法接收者
-
-所有混入的方法都是值接收者，既可以值调用也可以指针调用：
-
-```go
-comment.Touch()        // ✅ 值调用
-comment.TouchForCreate() // ✅ 值调用
-```
+- [类型系统文档](./types/README.md) - types/ 包详细说明
+- [模型一致性修复指南](../../docs/architecture/model-consistency-fix-guide.md) - 模型重构指南
+- [分层架构重构计划](../../.serena/memories/backend-layered-architecture-plan.md) - 方案B实施计划
 
 ---
 
-## 📖 相关文档
+## 📝 更新历史
 
-- [测试规范](../../doc/standards/testing/) - 测试层级规范
-- [重构说明](./P0_REFACTOR_SUMMARY.md) - ID 类型重构总结
-- [领域模型](../README.md) - 各领域模型说明
+- **2026-01-23**: 清理冗余文件（删除 json_bson.go），完善 types/converter.go，更新分层架构说明
+- **2026-01-22**: 初始版本，包含基础模型混入
 
 ---
 

@@ -92,7 +92,9 @@ func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, books, total, page, size, "获取书籍列表成功")
+	// 转换为 DTO
+	bookDTOs := ToBookDTOsFromPtrSlice(books)
+	shared.Paginated(c, bookDTOs, total, page, size, "获取书籍列表成功")
 }
 
 // GetBookByID 根据ID获取书籍详情
@@ -127,7 +129,9 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书籍详情成功", book)
+	// 转换为 DTO
+	bookDTO := ToBookDTO(book)
+	shared.Success(c, http.StatusOK, "获取书籍详情成功", bookDTO)
 }
 
 // GetBooksByCategory 根据分类获取书籍列表
@@ -173,7 +177,9 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, books, total, page, size, "获取分类书籍成功")
+	// 转换为 DTO
+	bookDTOs := ToBookDTOsFromPtrSlice(books)
+	shared.Paginated(c, bookDTOs, total, page, size, "获取分类书籍成功")
 }
 
 // GetRecommendedBooks 获取推荐书籍
@@ -205,7 +211,9 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, books, total, page, size, "获取推荐书籍成功")
+	// 转换为 DTO
+	bookDTOs := ToBookDTOsFromPtrSlice(books)
+	shared.Paginated(c, bookDTOs, total, page, size, "获取推荐书籍成功")
 }
 
 // GetFeaturedBooks 获取精选书籍
@@ -237,7 +245,9 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, books, total, page, size, "获取精选书籍成功")
+	// 转换为 DTO
+	bookDTOs := ToBookDTOsFromPtrSlice(books)
+	shared.Paginated(c, bookDTOs, total, page, size, "获取精选书籍成功")
 }
 
 // SearchBooks 搜索书籍
@@ -342,9 +352,12 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		books = make([]*bookstore2.Book, 0)
 	}
 
+	// 转换为 DTO
+	bookDTOs := ToBookDTOsFromPtrSlice(books)
+
 	// 构造响应数据
 	responseData := map[string]interface{}{
-		"books": books,
+		"books": bookDTOs,
 		"total": total,
 	}
 

@@ -417,7 +417,7 @@ func CreateTestChapter(id, bookID primitive.ObjectID, num int, isFree bool, pric
 		ChapterNum:  num,
 		WordCount:   2000,
 		IsFree:      isFree,
-		Price:       price, // 价格（分）
+		Price:       float64(price), // 价格（分，转换为 float64）
 		PublishTime: time.Now(),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -442,7 +442,7 @@ func CreateTestPurchase(id, userID, chapterID, bookID primitive.ObjectID, price 
 		UserID:       userID,
 		ChapterID:    chapterID,
 		BookID:       bookID,
-		Price:        price, // 价格（分）
+		Price:        float64(price), // 价格（分，转换为 float64）
 		PurchaseTime: time.Now(),
 		CreatedAt:    time.Now(),
 	}

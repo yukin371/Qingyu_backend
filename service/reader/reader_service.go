@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
@@ -314,12 +315,12 @@ func (s *ReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, st
 		}
 
 		progress = &reader2.ReadingProgress{
-			UserID:    userOID,
-			BookID:    bookOID,
-			Status:    status,
-			Progress:  types.Progress(0),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			IdentifiedEntity: shared.IdentifiedEntity{},
+			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+			UserID:           userOID,
+			BookID:           bookOID,
+			Status:           status,
+			Progress:         types.Progress(0),
 		}
 		err = s.progressRepo.Create(ctx, progress)
 		if err != nil {

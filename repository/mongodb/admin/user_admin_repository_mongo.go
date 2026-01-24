@@ -83,7 +83,7 @@ func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string)
 // Update 更新用户信息
 func (r *MongoUserAdminRepository) Update(ctx context.Context, userID primitive.ObjectID, user *users.User) error {
 	user.UpdatedAt = time.Now()
-	user.TouchForUpdate()
+	user.Touch()
 
 	filter := bson.M{"_id": userID}
 	update := bson.M{"$set": user}

@@ -6,6 +6,41 @@ import (
 	"Qingyu_backend/models/messaging/base"
 )
 
+// ============================================================================
+// 站内通知模型 (Inbox Notification Model)
+// ============================================================================
+//
+// 【模型说明】
+// 这是改进版的站内通知模型，设计上优于旧的 notification.Notification 模型。
+//
+// 【设计优势】
+// 1. 使用 mixin 模式（IdentifiedEntity, CommunicationBase, Timestamps 等）提高代码复用性
+// 2. 字段命名统一（JSON camelCase, BSON snake_case）
+// 3. ID 类型统一使用 primitive.ObjectID
+// 4. 支持更丰富的功能：目标关联、置顶、发送者快照等
+// 5. 类型枚举更细化（comment, like, follow, mention 等）
+//
+// 【当前状态】
+// - ✅ 模型设计完成（Phase 1）
+// - ✅ Repository 和 Service 实现已创建（Phase 2）
+// - ⏸️  未在生产环境使用
+//
+// 【与 notification.Notification 的关系】
+// 两者功能相似（都是站内通知），但当前生产环境使用的是 notification.Notification。
+// 本模型（InboxNotification）设计更优，但考虑到系统稳定性，迁移计划已延后。
+//
+// 【使用建议】
+// - 当前：仅供参考，不建议在生产环境使用
+// - 未来：当 notification.Notification 无法满足需求时，可考虑迁移到此模型
+//
+// 【迁移评估】
+// 详见: docs/plans/2026-01-24-messaging-notification-future-migration-plan.md
+//
+// 【并存说明】
+// 详见: docs/architecture/messaging-notification-model-coexistence.md
+//
+// ============================================================================
+
 // InboxNotificationType 站内通知类型
 type InboxNotificationType string
 
@@ -18,6 +53,11 @@ const (
 	InboxNotificationTypeAnnouncement InboxNotificationType = "announcement" // 公告通知
 	InboxNotificationTypeUpdate       InboxNotificationType = "update"       // 内容更新通知
 	InboxNotificationTypeInvite       InboxNotificationType = "invite"       // 邀请通知
+	InboxNotificationTypeReward       InboxNotificationType = "reward"       // 打赏通知
+	InboxNotificationTypeMembership   InboxNotificationType = "membership"   // 会员通知
+	InboxNotificationTypeMessage      InboxNotificationType = "message"      // 私信通知
+	InboxNotificationTypeSocial       InboxNotificationType = "social"       // 社交通知（关注、点赞、评论等）
+	InboxNotificationTypeContent      InboxNotificationType = "content"      // 内容通知（作品审核、上架、下架等）
 )
 
 // InboxNotificationPriority 通知优先级
@@ -43,6 +83,7 @@ type InboxNotification struct {
 	Priority   InboxNotificationPriority `bson:"priority" json:"priority" validate:"required,oneof=low normal high urgent"` // 优先级
 	Title      string                    `bson:"title" json:"title" validate:"required,min=1,max=200"`                      // 通知标题
 	Content    string                    `bson:"content" json:"content" validate:"required,min=1,max=1000"`                 // 通知内容
+	Data       map[string]interface{}    `bson:"data,omitempty" json:"data,omitempty"`                                     // 扩展数据（灵活存储额外的结构化信息）
 	ActionURL  string                    `bson:"action_url,omitempty" json:"actionUrl,omitempty"`                           // 操作链接
 	ActionText string                    `bson:"action_text,omitempty" json:"actionText,omitempty"`                         // 操作按钮文字
 
@@ -291,5 +332,125 @@ func CreateInboxSystemNotification(receiverID, title, content string, priority I
 		Priority: priority,
 		Title:    title,
 		Content:  content,
+		Data:     make(map[string]interface{}),
+	}
+}
+
+// CreateRewardNotification 创建打赏通知的辅助函数
+func CreateInboxRewardNotification(receiverID, senderID, username, avatar, targetID string, amount float64, content string) *InboxNotification {
+	return &InboxNotification{
+		CommunicationBase: base.CommunicationBase{
+			SenderID:   senderID,
+			ReceiverID: receiverID,
+		},
+		TargetEntity: base.TargetEntity{
+			TargetType: "book",
+			TargetID:   targetID,
+		},
+		Type:     InboxNotificationTypeReward,
+		Priority: InboxNotificationPriorityNormal,
+		Title:    "收到打赏",
+		Content:  content,
+		Data: map[string]interface{}{
+			"amount": amount,
+		},
+		ActorSnapshot: &NotificationActorSnapshot{
+			ID:       senderID,
+			Username: username,
+			Avatar:   avatar,
+		},
+	}
+}
+
+// CreateMembershipNotification 创建会员通知的辅助函数
+func CreateInboxMembershipNotification(receiverID, title, content string, membershipType string, expiryDate *time.Time) *InboxNotification {
+	notif := &InboxNotification{
+		CommunicationBase: base.CommunicationBase{
+			SenderID:   "system",
+			ReceiverID: receiverID,
+		},
+		Type:     InboxNotificationTypeMembership,
+		Priority: InboxNotificationPriorityHigh,
+		Title:    title,
+		Content:  content,
+		Data: map[string]interface{}{
+			"membershipType": membershipType,
+		},
+	}
+
+	if expiryDate != nil {
+		notif.ExpiresAt = expiryDate
+		notif.Data["expiryDate"] = expiryDate
+	}
+
+	return notif
+}
+
+// CreateMessageNotification 创建私信通知的辅助函数
+func CreateInboxMessageNotification(receiverID, senderID, username, avatar, conversationID string, messageContent string) *InboxNotification {
+	return &InboxNotification{
+		CommunicationBase: base.CommunicationBase{
+			SenderID:   senderID,
+			ReceiverID: receiverID,
+		},
+		Type:     InboxNotificationTypeMessage,
+		Priority: InboxNotificationPriorityNormal,
+		Title:    "新私信",
+		Content:  messageContent,
+		Data: map[string]interface{}{
+			"conversationId": conversationID,
+		},
+		ActorSnapshot: &NotificationActorSnapshot{
+			ID:       senderID,
+			Username: username,
+			Avatar:   avatar,
+		},
+	}
+}
+
+// CreateSocialNotification 创建社交通知的辅助函数（关注、点赞、评论等）
+func CreateInboxSocialNotification(receiverID, senderID, username, avatar, targetID, targetType, action string) *InboxNotification {
+	return &InboxNotification{
+		CommunicationBase: base.CommunicationBase{
+			SenderID:   senderID,
+			ReceiverID: receiverID,
+		},
+		TargetEntity: base.TargetEntity{
+			TargetType: targetType,
+			TargetID:   targetID,
+		},
+		Type:     InboxNotificationTypeSocial,
+		Priority: InboxNotificationPriorityNormal,
+		Title:    "社交互动通知",
+		Content:  "", // 由调用者根据 action 类型填充
+		Data: map[string]interface{}{
+			"action": action, // follow, like, comment, mention
+		},
+		ActorSnapshot: &NotificationActorSnapshot{
+			ID:       senderID,
+			Username: username,
+			Avatar:   avatar,
+		},
+	}
+}
+
+// CreateContentNotification 创建内容通知的辅助函数（作品审核、上架、下架等）
+func CreateInboxContentNotification(receiverID, title, content string, contentID string, contentType string, action string) *InboxNotification {
+	return &InboxNotification{
+		CommunicationBase: base.CommunicationBase{
+			SenderID:   "system",
+			ReceiverID: receiverID,
+		},
+		TargetEntity: base.TargetEntity{
+			TargetType: contentType, // book, chapter, etc.
+			TargetID:   contentID,
+		},
+		Type:     InboxNotificationTypeContent,
+		Priority: InboxNotificationPriorityHigh,
+		Title:    title,
+		Content:  content,
+		Data: map[string]interface{}{
+			"action": action, // approved, rejected, published, unpublished, etc.
+		},
 	}
 }

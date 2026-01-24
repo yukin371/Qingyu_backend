@@ -1,8 +1,11 @@
 package bookstore
 
 import (
-	"Qingyu_backend/models/shared/types"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/shared/types"
 )
 
 // 使用 book.go 中定义的 BookStatus 枚举
@@ -10,7 +13,7 @@ import (
 // BookDetail 书籍详情模型 - 用于详情页面展示的完整信息
 // 包含统计数据、交互数据等详细信息，适用于书籍详情页面
 type BookDetail struct {
-	ID           string `bson:"_id,omitempty" json:"id,omitempty"`                      // 书籍ID
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`                      // 书籍ID
 	Title        string `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
 	Subtitle     string `bson:"subtitle" json:"subtitle" validate:"max=200"`            // 副标题
 	Author       string `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者名
@@ -29,7 +32,7 @@ type BookDetail struct {
 	Status       BookStatus `bson:"status" json:"status"`                               // 状态
 	WordCount    int64      `bson:"word_count" json:"wordCount" validate:"min=0"`       // 总字数
 	ChapterCount int        `bson:"chapter_count" json:"chapterCount" validate:"min=0"` // 章节数
-	Price        int64      `bson:"price" json:"price" validate:"min=0"`                // 价格 (分，按章节或全本)
+	Price        float64    `bson:"price" json:"price" validate:"min=0"`                  // 价格 (分，按章节或全本，使用float64兼容MongoDB)
 	IsFree       bool       `bson:"is_free" json:"isFree"`                              // 是否免费
 
 	// 统计数据

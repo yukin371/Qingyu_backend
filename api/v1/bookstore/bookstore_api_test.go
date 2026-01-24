@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/shared"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -304,7 +305,7 @@ func TestBookstoreAPI_GetBookByID_Success(t *testing.T) {
 	router := setupBookstoreTestRouter(mockService)
 
 	bookID := primitive.NewObjectID()
-	book := &bookstoreModel.Book{ID: bookID, Title: "测试书籍"}
+	book := &bookstoreModel.Book{IdentifiedEntity: shared.IdentifiedEntity{ID: bookID}, Title: "测试书籍"}
 	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(book, nil)
 
 	// When
@@ -522,7 +523,7 @@ func TestBookstoreAPI_GetCategoryByID_Success(t *testing.T) {
 	router := setupBookstoreTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	category := &bookstoreModel.Category{ID: primitive.NewObjectID(), Name: "测试分类"}
+	category := &bookstoreModel.Category{ID: primitive.NewObjectID().Hex(), Name: "测试分类"}
 	mockService.On("GetCategoryByID", mock.Anything, categoryID).Return(category, nil)
 
 	// When
