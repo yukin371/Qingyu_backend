@@ -139,18 +139,19 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 	// ctx := context.Background()  // 待实现时使用
 
 	// 准备测试数据
+	testUserID := primitive.NewObjectID()
 	testUser := &users.User{
-		ID:        primitive.NewObjectID().Hex(),
-		Username:  "integration_test_user",
-		Roles:     []string{"writer"},
-		CreatedAt: time.Now().Add(-100 * 24 * time.Hour),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: testUserID},
+		BaseEntity:       shared.BaseEntity{CreatedAt: time.Now().Add(-100 * 24 * time.Hour)},
+		Username:         "integration_test_user",
+		Roles:            []string{"writer"},
 	}
 	// 显式标记为有意未使用（测试数据完整性）
 	_ = testUser.Username
 	_ = testUser.Roles
 	_ = testUser.CreatedAt
 
-	defer cleanupTestData(t, testUser.ID)
+	defer cleanupTestData(t, testUser.ID.Hex())
 
 	t.Run("GetUserStats_WithRealRepositories", func(t *testing.T) {
 		// TODO: 实现真实Repository查询测试
@@ -217,11 +218,12 @@ func TestStress_HighConcurrency(t *testing.T) {
 
 // createTestUser 创建测试用户
 func createTestUser(t *testing.T, username string) *users.User {
+	userID := primitive.NewObjectID()
 	return &users.User{
-		ID:        primitive.NewObjectID().Hex(),
-		Username:  username,
-		Roles:     []string{"writer"},
-		CreatedAt: time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: userID},
+		BaseEntity:       shared.BaseEntity{CreatedAt: time.Now()},
+		Username:         username,
+		Roles:            []string{"writer"},
 	}
 }
 

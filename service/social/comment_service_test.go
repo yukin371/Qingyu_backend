@@ -408,8 +408,9 @@ func TestCommentService_ReplyComment(t *testing.T) {
 
 	t.Run("ReplyComment_Success", func(t *testing.T) {
 		// Arrange - Mock获取父评论
+		commentID, _ := primitive.ObjectIDFromHex(testCommentID)
 		parentComment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
+			IdentifiedEntity: social.IdentifiedEntity{ID: commentID},
 			AuthorID:         primitive.NewObjectID().Hex(),
 			TargetID:         primitive.NewObjectID().Hex(),
 			State:            social.CommentStateNormal,
@@ -476,8 +477,9 @@ func TestCommentService_UpdateComment(t *testing.T) {
 
 	t.Run("UpdateComment_Success", func(t *testing.T) {
 		// Arrange - Mock获取评论
+		commentID, _ := primitive.ObjectIDFromHex(testCommentID)
 		comment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
+			IdentifiedEntity: social.IdentifiedEntity{ID: commentID},
 			AuthorID:         testUserID,
 			Timestamps:       social.Timestamps{CreatedAt: time.Now().Add(-10 * time.Minute)},
 			State:            social.CommentStateNormal,
@@ -507,8 +509,9 @@ func TestCommentService_UpdateComment(t *testing.T) {
 
 	t.Run("UpdateComment_NotOwner", func(t *testing.T) {
 		// Arrange - Mock获取评论（不是自己的）
+		commentID, _ := primitive.ObjectIDFromHex(testCommentID)
 		comment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
+			IdentifiedEntity: social.IdentifiedEntity{ID: commentID},
 			AuthorID:         primitive.NewObjectID().Hex(),
 			Timestamps:       social.Timestamps{CreatedAt: time.Now()},
 		}
@@ -542,8 +545,9 @@ func TestCommentService_DeleteComment(t *testing.T) {
 
 	t.Run("DeleteComment_Success", func(t *testing.T) {
 		// Arrange - Mock获取评论
+		commentID, _ := primitive.ObjectIDFromHex(testCommentID)
 		comment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
+			IdentifiedEntity: social.IdentifiedEntity{ID: commentID},
 			AuthorID:         testUserID,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
@@ -566,8 +570,9 @@ func TestCommentService_DeleteComment(t *testing.T) {
 
 	t.Run("DeleteComment_NotOwner", func(t *testing.T) {
 		// Arrange - Mock获取评论（不是自己的）
+		commentID, _ := primitive.ObjectIDFromHex(testCommentID)
 		comment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: testCommentID},
+			IdentifiedEntity: social.IdentifiedEntity{ID: commentID},
 			AuthorID:         primitive.NewObjectID().Hex(),
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).
@@ -600,8 +605,8 @@ func TestCommentService_GetCommentList(t *testing.T) {
 	t.Run("GetCommentList_Success", func(t *testing.T) {
 		// Arrange - Mock查询
 		comments := []*social.Comment{
-			{IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()}, Content: "评论1"},
-			{IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()}, Content: "评论2"},
+			{IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID()}, Content: "评论1"},
+			{IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID()}, Content: "评论2"},
 		}
 		mockRepo.On("GetCommentsByBookIDSorted", ctx, testBookID, "latest", 1, 20).
 			Return(comments, int64(2), nil).Once()

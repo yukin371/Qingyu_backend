@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	_ "Qingyu_backend/models/writer" // Import for Swagger annotations
+	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -302,3 +302,5 @@ func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "获取成功", graph)
 }
+
+var _ = writerModels.Character{}

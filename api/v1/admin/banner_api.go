@@ -104,7 +104,7 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "Banner ID"
-// @Success 200 {object} shared.APIResponse{data=bookstoreModel.Banner}
+// @Success 200 {object} shared.APIResponse{data=models.Banner}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -133,7 +133,7 @@ func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body bookstore.CreateBannerRequest true "创建Banner请求"
-// @Success 201 {object} shared.APIResponse{data=bookstoreModel.Banner}
+// @Success 201 {object} shared.APIResponse{data=models.Banner}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -300,3 +300,5 @@ func (api *BannerAPI) IncrementClickCount(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "记录成功", nil)
 }
+
+var _ = bookstoreModel.Banner{}
