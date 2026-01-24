@@ -63,16 +63,16 @@ type BatchOperationProgress struct {
 
 // BatchOperationServiceImpl 批量操作服务实现
 type BatchOperationServiceImpl struct {
-	batchOpRepo  mongodbwriter.BatchOperationRepository
-	opLogRepo    mongodbwriter.OperationLogRepository
+	batchOpRepo  *mongodbwriter.BatchOperationRepositoryImpl
+	opLogRepo    *mongodbwriter.OperationLogRepositoryImpl
 	docRepo      writerInterface.DocumentRepository
 	preflightSvc PreflightService
 }
 
 // NewBatchOperationService 创建批量操作服务
 func NewBatchOperationService(
-	batchOpRepo mongodbwriter.BatchOperationRepository,
-	opLogRepo mongodbwriter.OperationLogRepository,
+	batchOpRepo *mongodbwriter.BatchOperationRepositoryImpl,
+	opLogRepo *mongodbwriter.OperationLogRepositoryImpl,
 	docRepo writerInterface.DocumentRepository,
 ) BatchOperationService {
 	return &BatchOperationServiceImpl{
