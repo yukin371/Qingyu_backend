@@ -24,6 +24,7 @@ func InitWriterRouter(
 	publishService interfaces.PublishService,
 	lockService lock.DocumentLockService,
 	commentService writerservice.CommentService,
+	batchOpService document.BatchOperationService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -41,6 +42,12 @@ func InitWriterRouter(
 	var commentApi *writer.CommentAPI
 	if commentService != nil {
 		commentApi = writer.NewCommentAPI(commentService)
+	}
+
+	// 批量操作API（如果可用）
+	var batchOpApi *writer.BatchOperationAPI
+	if batchOpService != nil {
+		batchOpApi = writer.NewBatchOperationAPI(batchOpService)
 	}
 
 	// 写作端路由组
@@ -77,6 +84,11 @@ func InitWriterRouter(
 		// 批注路由
 		if commentApi != nil {
 			InitCommentRouter(writerGroup, commentApi)
+		}
+
+		// 批量操作路由
+		if batchOpApi != nil {
+			batchOpApi.RegisterRoutes(writerGroup)
 		}
 	}
 }

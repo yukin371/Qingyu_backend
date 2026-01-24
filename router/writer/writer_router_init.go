@@ -82,6 +82,14 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 	commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
 	commentSvc = writerservice.NewCommentService(commentRepo)
 
+	// 创建BatchOperationService（批量操作服务）
+	var batchOpSvc documentService.BatchOperationService
+	// 创建所需的repositories
+	batchOpRepo := writerrepo.NewBatchOperationRepository(mongoDB)
+	opLogRepo := writerrepo.NewOperationLogRepository(mongoDB)
+	// 创建批量操作服务
+	batchOpSvc = documentService.NewBatchOperationService(batchOpRepo, opLogRepo, documentRepo)
+
 	// 调用InitWriterRouter初始化所有写作路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, batchOpSvc)
 }
