@@ -7,9 +7,17 @@ import (
 	"sync"
 
 	"Qingyu_backend/config"
+	"github.com/sirupsen/logrus"
 )
 
-// AdapterManager 适配器管理器
+// Deprecated: Use Qingyu-Ai-Service gRPC API instead.
+// This adapter manager is kept only for emergency fallback.
+// Will be removed in v2.0.0
+//
+// Migration guide:
+// 1. Use service/ai/grpc_client.go to call Qingyu-Ai-Service
+// 2. Configure AI_SERVICE_ENDPOINT environment variable
+// 3. Enable fallback with AI_ENABLE_FALLBACK=true if needed
 type AdapterManager struct {
 	adapters        map[string]AIAdapter
 	config          *config.ExternalAPIConfig
@@ -17,8 +25,13 @@ type AdapterManager struct {
 	mu              sync.RWMutex
 }
 
-// NewAdapterManager 创建适配器管理器
+// Deprecated: Use gRPC client instead
 func NewAdapterManager(cfg *config.ExternalAPIConfig) *AdapterManager {
+	// Log deprecation warning
+	logrus.Warn("AdapterManager is deprecated. Use Qingyu-Ai-Service gRPC API instead. " +
+		"This is kept only for emergency fallback and will be removed in v2.0.0. " +
+		"See docs/plans/2026-01-24-ai-service-complete-migration-design.md for migration guide.")
+
 	manager := &AdapterManager{
 		adapters:        make(map[string]AIAdapter),
 		config:          cfg,

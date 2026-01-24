@@ -8,17 +8,21 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
-// QwenAdapter 阿里通义千问适配器实现
+// Deprecated: Qwen calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type QwenAdapter struct {
 	apiKey  string
 	baseURL string
 	client  *http.Client
 }
 
-// NewQwenAdapter 创建通义千问适配器实例
+// Deprecated: Use gRPC client instead
 func NewQwenAdapter(apiKey, baseURL string) *QwenAdapter {
+	logrus.Warn("QwenAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://dashscope.aliyuncs.com"
 	}

@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/sirupsen/logrus"
 )
 
-// OpenAIAdapter OpenAI适配器实现
+// Deprecated: OpenAI calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type OpenAIAdapter struct {
 	apiKey       string
 	baseURL      string
@@ -22,8 +24,9 @@ type OpenAIAdapter struct {
 	errorHandler *ErrorHandler
 }
 
-// NewOpenAIAdapter 创建OpenAI适配器实例
+// Deprecated: Use gRPC client instead
 func NewOpenAIAdapter(apiKey, baseURL string) *OpenAIAdapter {
+	logrus.Warn("OpenAIAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://api.openai.com/v1"
 	}
