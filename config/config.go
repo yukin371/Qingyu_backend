@@ -66,6 +66,14 @@ type AIConfig struct {
 	MaxTokens     int                    `mapstructure:"max_tokens"`
 	Temperature   int                    `mapstructure:"temperature"`
 	PythonService *PythonAIServiceConfig `mapstructure:"python_service"`
+	AIService     *AIServiceConfig       `mapstructure:"ai_service"`
+}
+
+// AIServiceConfig AI服务配置（gRPC）
+type AIServiceConfig struct {
+	Endpoint       string `mapstructure:"endpoint"`        // gRPC服务端点
+	EnableFallback bool   `mapstructure:"enable_fallback"` // 是否启用适配器回退
+	Timeout        int    `mapstructure:"timeout"`         // 请求超时（秒）
 }
 
 // PythonAIServiceConfig Python AI服务配置
@@ -369,6 +377,11 @@ func setDefaults() {
 	v.SetDefault("ai.python_service.milvus_port", 19530)
 	v.SetDefault("ai.python_service.redis_host", "localhost")
 	v.SetDefault("ai.python_service.redis_port", 6379)
+
+	// AI服务默认配置（gRPC）
+	v.SetDefault("ai.ai_service.endpoint", "localhost:50052")
+	v.SetDefault("ai.ai_service.enable_fallback", false)
+	v.SetDefault("ai.ai_service.timeout", 30)
 
 	// 邮件默认配置
 	v.SetDefault("email.enabled", false)
