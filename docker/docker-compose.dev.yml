@@ -181,7 +181,7 @@ services:
       # Redis 配置
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_KEY_PREFIX=qingyu-ai:
+      - REDIS_KEY_PREFIX="qingyu-ai:"
       # Milvus 配置
       - MILVUS_HOST=milvus
       - MILVUS_PORT=19530
