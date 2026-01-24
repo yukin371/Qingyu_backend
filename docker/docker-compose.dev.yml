@@ -37,6 +37,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL数据库 (新增，用于AI服务配额管理)
+  postgres:
+    image: postgres:15-alpine
+    container_name: qingyu-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=qingyu_ai_service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - qingyu-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Milvus向量数据库 (新增，用于Python AI的RAG)
   milvus:
     image: milvusdb/milvus:v2.3.0
@@ -113,53 +134,80 @@ services:
       - /app/tmp
     environment:
       - GIN_MODE=debug
+      # AI 服务配置
+      - AI_SERVICE_ENDPOINT=qingyu-ai-service:50051
+      - AI_SERVICE_TIMEOUT=30s
+      - AI_SERVICE_MAX_RETRIES=3
+      - AI_ENABLE_FALLBACK=true
+      - AI_CIRCUIT_BREAKER_THRESHOLD=5
+      - AI_CIRCUIT_BREAKER_TIMEOUT=60s
       # 共享环境变量 (从宿主机.env加载)
       - QINGYU_AI_API_KEY=${OPENAI_API_KEY}
-      - QINGYU_AI_PYTHON_HOST=python-ai-service
-      - QINGYU_AI_PYTHON_GRPC_PORT=50052
       - QINGYU_REDIS_HOST=redis
       - QINGYU_REDIS_PORT=6379
+      - QINGYU_MONGO_HOST=mongodb
+      - QINGYU_MONGO_PORT=27017
     depends_on:
       mongodb:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qingyu-ai-service:
         condition: service_healthy
     networks:
       - qingyu-network
     stdin_open: true
     tty: true
 
-  # Python AI服务 (新增)
-  python-ai-service:
+  # Qingyu-Ai-Service (独立AI服务)
+  qingyu-ai-service:
     build:
-      context: ./python_ai_service
-      dockerfile: Dockerfile
-    container_name: qingyu-python-ai
+      context: ../../Qingyu-Ai-Service
+      dockerfile: docker/Dockerfile
+    container_name: qingyu-ai-service
     restart: unless-stopped
     ports:
-      - "8000:8000"  # FastAPI
-      - "50052:50052"  # gRPC
+      - "8000:8000"      # HTTP API
+      - "50051:50051"    # gRPC
     environment:
-      # 共享AI密钥
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      # gRPC连接Go
-      - GO_GRPC_HOST=go-backend
-      - GO_GRPC_PORT=50051
-      # 向量DB和缓存
-      - MILVUS_HOST=milvus
-      - MILVUS_PORT=19530
+      # 数据库配置
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=qingyu_ai_service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      # Redis 配置
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # 服务端口
-      - SERVICE_PORT=8000
-    depends_on:
-      - milvus
-      - redis
+      - REDIS_KEY_PREFIX=qingyu-ai:
+      # Milvus 配置
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      # LLM API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # 服务配置
+      - SERVICE_NAME=Qingyu-Ai-Service
+      - SERVICE_VERSION=1.1.0
+      - LOG_LEVEL=INFO
+      - GRPC_PORT=50051
     volumes:
-      - ./shared_config:/app/shared_config  # 可选：共享配置
+      - ../../logs/ai-service:/var/log/qingyu-ai
     networks:
       - qingyu-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     stdin_open: true
     tty: true
 
@@ -174,6 +222,8 @@ volumes:
   mongodb_config:
     driver: local
   redis_data:
+    driver: local
+  postgres_data:
     driver: local
   milvus_data:
     driver: local
