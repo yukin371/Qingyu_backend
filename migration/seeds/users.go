@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,38 +28,39 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 	}
 
 	// 准备测试用户
+	now := time.Now()
 	testUsers := []users.User{
 		{
-			Username:  "admin",
-			Email:     "admin@qingyu.com",
-			Phone:     "13800138000",
-			Roles:     []string{"admin"},
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			IdentifiedEntity: shared.IdentifiedEntity{},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         "admin",
+			Email:            "admin@qingyu.com",
+			Phone:            "13800138000",
+			Roles:            []string{"admin"},
 		},
 		{
-			Username:  "author1",
-			Email:     "author1@qingyu.com",
-			Phone:     "13800138001",
-			Roles:     []string{"author"},
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			IdentifiedEntity: shared.IdentifiedEntity{},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         "author1",
+			Email:            "author1@qingyu.com",
+			Phone:            "13800138001",
+			Roles:            []string{"author"},
 		},
 		{
-			Username:  "reader1",
-			Email:     "reader1@qingyu.com",
-			Phone:     "13800138002",
-			Roles:     []string{"reader"},
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			IdentifiedEntity: shared.IdentifiedEntity{},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         "reader1",
+			Email:            "reader1@qingyu.com",
+			Phone:            "13800138002",
+			Roles:            []string{"reader"},
 		},
 		{
-			Username:  "reader2",
-			Email:     "reader2@qingyu.com",
-			Phone:     "13800138003",
-			Roles:     []string{"reader"},
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			IdentifiedEntity: shared.IdentifiedEntity{},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         "reader2",
+			Email:            "reader2@qingyu.com",
+			Phone:            "13800138003",
+			Roles:            []string{"reader"},
 		},
 	}
 
