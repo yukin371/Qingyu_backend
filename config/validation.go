@@ -193,6 +193,17 @@ func setConfigDefaults(cfg *Config) {
 		cfg.AI.Temperature = 7
 	}
 
+	// AI服务默认值（gRPC）
+	if cfg.AI.AIService == nil {
+		cfg.AI.AIService = &AIServiceConfig{}
+	}
+	if cfg.AI.AIService.Endpoint == "" {
+		cfg.AI.AIService.Endpoint = "localhost:50052"
+	}
+	if cfg.AI.AIService.Timeout == 0 {
+		cfg.AI.AIService.Timeout = 30
+	}
+
 	// 邮件默认值
 	if cfg.Email == nil {
 		cfg.Email = &EmailConfig{
