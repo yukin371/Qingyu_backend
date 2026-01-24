@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	writerModel "Qingyu_backend/models/writer"
-	writerRepo "Qingyu_backend/repository/mongodb/writer"
+	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/test/testutil"
 

@@ -117,6 +117,13 @@ func (d *Document) TouchForCreate() {
 	if d.Status == "" {
 		d.Status = DocumentStatusPlanned
 	}
+	// 初始化v1.1新增字段
+	if d.StableRef == "" {
+		d.StableRef = primitive.NewObjectID().Hex()
+	}
+	if d.OrderKey == "" {
+		d.OrderKey = DefaultOrderKey
+	}
 }
 
 // TouchForUpdate 更新时设置默认值
