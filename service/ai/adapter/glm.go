@@ -8,17 +8,21 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
-// GLMAdapter 智谱AI适配器实现
+// Deprecated: GLM calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type GLMAdapter struct {
 	apiKey  string
 	baseURL string
 	client  *http.Client
 }
 
-// NewGLMAdapter 创建智谱AI适配器实例
+// Deprecated: Use gRPC client instead
 func NewGLMAdapter(apiKey, baseURL string) *GLMAdapter {
+	logrus.Warn("GLMAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://open.bigmodel.cn/api/paas/v4"
 	}

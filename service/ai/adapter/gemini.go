@@ -12,17 +12,20 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/sirupsen/logrus"
 )
 
-// GeminiAdapter Google Gemini 适配器实现
+// Deprecated: Gemini calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type GeminiAdapter struct {
 	apiKey  string
 	baseURL string
 	client  *http.Client
 }
 
-// NewGeminiAdapter 创建Gemini适配器实例
+// Deprecated: Use gRPC client instead
 func NewGeminiAdapter(apiKey, baseURL string) *GeminiAdapter {
+	logrus.Warn("GeminiAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://generativelanguage.googleapis.com"
 	}

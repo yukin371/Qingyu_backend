@@ -12,17 +12,20 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/sirupsen/logrus"
 )
 
-// ClaudeAdapter Claude (Anthropic) 适配器实现
+// Deprecated: Claude calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type ClaudeAdapter struct {
 	apiKey  string
 	baseURL string
 	client  *http.Client
 }
 
-// NewClaudeAdapter 创建Claude适配器实例
+// Deprecated: Use gRPC client instead
 func NewClaudeAdapter(apiKey, baseURL string) *ClaudeAdapter {
+	logrus.Warn("ClaudeAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://api.anthropic.com"
 	}

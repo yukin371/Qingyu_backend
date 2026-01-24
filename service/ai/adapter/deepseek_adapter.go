@@ -2,15 +2,19 @@ package adapter
 
 import (
 	"context"
+
+	"github.com/sirupsen/logrus"
 )
 
-// DeepSeekAdapter DeepSeek适配器实现（基于OpenAI兼容API）
+// Deprecated: DeepSeek calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type DeepSeekAdapter struct {
 	*OpenAIAdapter // 继承OpenAI适配器的所有功能
 }
 
-// NewDeepSeekAdapter 创建DeepSeek适配器实例
+// Deprecated: Use gRPC client instead
 func NewDeepSeekAdapter(apiKey, baseURL string) *DeepSeekAdapter {
+	logrus.Warn("DeepSeekAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		// DeepSeek的文本补全API需要使用/beta endpoint
 		baseURL = "https://api.deepseek.com/beta"
