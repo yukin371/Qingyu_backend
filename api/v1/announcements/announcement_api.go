@@ -1,9 +1,11 @@
 package announcements
 
 import (
-	"Qingyu_backend/api/v1/shared"
-	messagingService "Qingyu_backend/service/messaging"
 	"strconv"
+
+	"Qingyu_backend/api/v1/shared"
+	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
+	messagingService "Qingyu_backend/service/messaging"
 
 	"github.com/gin-gonic/gin"
 )

@@ -92,7 +92,7 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 //
 //	@Summary	创建自定义字体
 //	@Tags		阅读器-字体
-//	@Param		request	body	reader.CreateCustomFontRequest	true	"创建字体请求"
+//	@Param		request	body readerModels.CreateCustomFontRequest	true	"创建字体请求"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/fonts [post]
 func (api *FontAPI) CreateCustomFont(c *gin.Context) {
@@ -138,7 +138,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 //	@Summary	更新自定义字体
 //	@Tags		阅读器-字体
 //	@Param		id		path	string						true	"字体ID"
-//	@Param		request	body	reader.UpdateFontRequest	true	"更新字体请求"
+//	@Param		request	body readerModels.UpdateFontRequest	true	"更新字体请求"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [put]
 func (api *FontAPI) UpdateFont(c *gin.Context) {
@@ -203,7 +203,7 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 //
 //	@Summary	设置字体偏好
 //	@Tags		阅读器-字体
-//	@Param		request	body	reader.FontPreference	true	"字体偏好"
+//	@Param		request	body readerModels.FontPreference	true	"字体偏好"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/settings/font [post]
 func (api *FontAPI) SetFontPreference(c *gin.Context) {

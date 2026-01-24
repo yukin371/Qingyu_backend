@@ -5,7 +5,8 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
-	_ "Qingyu_backend/models/ai" // Imported for swagger annotations
+	aiModel "Qingyu_backend/models/ai" // Imported for Swagger annotations
+	aiInterfaces "Qingyu_backend/repository/interfaces/ai" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
@@ -77,7 +78,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=interfaces.QuotaStatistics}
+// @Success 200 {object} shared.APIResponse{data=aiInterfaces.QuotaStatistics}
 // @Router /api/v1/ai/quota/statistics [get]
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 	userID, exists := c.Get("userId")

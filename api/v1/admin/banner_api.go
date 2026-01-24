@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
+	bookstoreModel "Qingyu_backend/models/bookstore" // Imported for Swagger annotations
 	"Qingyu_backend/service/bookstore"
 
 	"github.com/gin-gonic/gin"
@@ -103,7 +104,7 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "Banner ID"
-// @Success 200 {object} shared.APIResponse{data=bookstore.Banner}
+// @Success 200 {object} shared.APIResponse{data=bookstoreModel.Banner}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -132,7 +133,7 @@ func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body bookstore.CreateBannerRequest true "创建Banner请求"
-// @Success 201 {object} shared.APIResponse{data=bookstore.Banner}
+// @Success 201 {object} shared.APIResponse{data=bookstoreModel.Banner}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse

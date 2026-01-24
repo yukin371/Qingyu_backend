@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"Qingyu_backend/api/v1/shared"
+	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
 	messagingService "Qingyu_backend/service/messaging"
 
 	"github.com/gin-gonic/gin"
@@ -109,7 +110,7 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Success 200 {object} shared.APIResponse{data=models.Announcement}
+// @Success 200 {object} shared.APIResponse{data=messagingModel.Announcement}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -138,7 +139,7 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body messagingService.CreateAnnouncementRequest true "创建公告请求"
-// @Success 201 {object} shared.APIResponse{data=models.Announcement}
+// @Success 201 {object} shared.APIResponse{data=messagingModel.Announcement}
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse

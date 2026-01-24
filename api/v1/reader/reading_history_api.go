@@ -28,8 +28,8 @@ func NewReadingHistoryAPI(historyService interfaces.ReadingHistoryService) *Read
 // @Accept json
 // @Produce json
 // @Param body body RecordReadingRequest true "阅读记录参数"
-// @Success 200 {object} shared.Response{data=RecordReadingResponse}
-// @Failure 400 {object} shared.Response
+// @Success 200 {object} shared.APIResponse{data=RecordReadingResponse}
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history [post]
 func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 	var req RecordReadingRequest
@@ -73,8 +73,8 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
 // @Param book_id query string false "书籍ID"
-// @Success 200 {object} shared.Response{data=HistoryListResponse}
-// @Failure 400 {object} shared.Response
+// @Success 200 {object} shared.APIResponse{data=HistoryListResponse}
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history [get]
 func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	// 从上下文获取用户ID
@@ -128,8 +128,8 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "统计天数" default(30)
-// @Success 200 {object} shared.Response{data=ReadingStatsResponse}
-// @Failure 400 {object} shared.Response
+// @Success 200 {object} shared.APIResponse{data=ReadingStatsResponse}
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history/stats [get]
 func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 	// 从上下文获取用户ID
@@ -175,8 +175,8 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "历史记录ID"
-// @Success 200 {object} shared.Response
-// @Failure 400 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history/:id [delete]
 func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 	// 从上下文获取用户ID
@@ -211,8 +211,8 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 // @Tags 阅读历史
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.Response
-// @Failure 400 {object} shared.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history [delete]
 func (api *ReadingHistoryAPI) ClearHistories(c *gin.Context) {
 	// 从上下文获取用户ID

@@ -43,7 +43,7 @@ type ContinueWritingRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body ContinueWritingRequest true "续写请求"
-// @Success 200 {object} response.Response{data=aiService.GenerateContentResponse}
+// @Success 200 {object} shared.APIResponse{data=aiService.GenerateContentResponse}
 // @Router /api/v1/ai/writing/continue [post]
 func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	var req ContinueWritingRequest
@@ -199,7 +199,7 @@ type RewriteTextRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body RewriteTextRequest true "改写请求"
-// @Success 200 {object} response.Response{data=aiService.GenerateContentResponse}
+// @Success 200 {object} shared.APIResponse{data=aiService.GenerateContentResponse}
 // @Router /api/v1/ai/writing/rewrite [post]
 func (api *WritingApi) RewriteText(c *gin.Context) {
 	var req RewriteTextRequest
