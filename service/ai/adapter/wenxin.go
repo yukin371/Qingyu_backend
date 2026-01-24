@@ -8,9 +8,12 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
-// WenxinAdapter 百度文心一言适配器实现
+// Deprecated: Wenxin calls should go through Qingyu-Ai-Service.
+// This adapter is kept for emergency fallback only.
 type WenxinAdapter struct {
 	apiKey    string
 	secretKey string
@@ -20,8 +23,9 @@ type WenxinAdapter struct {
 	tokenExp  time.Time
 }
 
-// NewWenxinAdapter 创建文心一言适配器实例
+// Deprecated: Use gRPC client instead
 func NewWenxinAdapter(apiKey, secretKey, baseURL string) *WenxinAdapter {
+	logrus.Warn("WenxinAdapter is deprecated. Use Qingyu-Ai-Service gRPC API.")
 	if baseURL == "" {
 		baseURL = "https://aip.baidubce.com"
 	}
