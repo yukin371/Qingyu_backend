@@ -176,3 +176,6 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 
 // 注意：管理员配额管理功能已迁移到 admin 模块
 // 参见: api/v1/admin/quota_admin_api.go
+
+var _ = aiModel.UserQuota{}
+var _ = aiInterfaces.QuotaStatistics{}

@@ -431,7 +431,7 @@ func (m *MockChapterService) CreateChapter(ctx context.Context, chapter *booksto
 	return args.Error(0)
 }
 
-func (m *MockChapterService) GetChapterByID(ctx context.Context, id primitive.ObjectID) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetChapterByID(ctx context.Context, id string) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -444,12 +444,12 @@ func (m *MockChapterService) UpdateChapter(ctx context.Context, chapter *booksto
 	return args.Error(0)
 }
 
-func (m *MockChapterService) DeleteChapter(ctx context.Context, id primitive.ObjectID) error {
+func (m *MockChapterService) DeleteChapter(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockChapterService) GetChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
+func (m *MockChapterService) GetChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
 	args := m.Called(ctx, bookID, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -457,7 +457,7 @@ func (m *MockChapterService) GetChaptersByBookID(ctx context.Context, bookID pri
 	return args.Get(0).([]*bookstoreModel.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockChapterService) GetChapterByBookIDAndNum(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetChapterByBookIDAndNum(ctx context.Context, bookID string, chapterNum int) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, bookID, chapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -473,7 +473,7 @@ func (m *MockChapterService) GetChaptersByTitle(ctx context.Context, title strin
 	return args.Get(0).([]*bookstoreModel.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockChapterService) GetFreeChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
+func (m *MockChapterService) GetFreeChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
 	args := m.Called(ctx, bookID, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -481,7 +481,7 @@ func (m *MockChapterService) GetFreeChaptersByBookID(ctx context.Context, bookID
 	return args.Get(0).([]*bookstoreModel.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockChapterService) GetPaidChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
+func (m *MockChapterService) GetPaidChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
 	args := m.Called(ctx, bookID, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -489,7 +489,7 @@ func (m *MockChapterService) GetPaidChaptersByBookID(ctx context.Context, bookID
 	return args.Get(0).([]*bookstoreModel.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockChapterService) GetPublishedChaptersByBookID(ctx context.Context, bookID primitive.ObjectID, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
+func (m *MockChapterService) GetPublishedChaptersByBookID(ctx context.Context, bookID string, page, pageSize int) ([]*bookstoreModel.Chapter, int64, error) {
 	args := m.Called(ctx, bookID, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -497,7 +497,7 @@ func (m *MockChapterService) GetPublishedChaptersByBookID(ctx context.Context, b
 	return args.Get(0).([]*bookstoreModel.Chapter), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockChapterService) GetPreviousChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetPreviousChapter(ctx context.Context, bookID string, chapterNum int) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, bookID, chapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -505,7 +505,7 @@ func (m *MockChapterService) GetPreviousChapter(ctx context.Context, bookID prim
 	return args.Get(0).(*bookstoreModel.Chapter), args.Error(1)
 }
 
-func (m *MockChapterService) GetNextChapter(ctx context.Context, bookID primitive.ObjectID, chapterNum int) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetNextChapter(ctx context.Context, bookID string, chapterNum int) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, bookID, chapterNum)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -513,7 +513,7 @@ func (m *MockChapterService) GetNextChapter(ctx context.Context, bookID primitiv
 	return args.Get(0).(*bookstoreModel.Chapter), args.Error(1)
 }
 
-func (m *MockChapterService) GetFirstChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetFirstChapter(ctx context.Context, bookID string) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -521,7 +521,7 @@ func (m *MockChapterService) GetFirstChapter(ctx context.Context, bookID primiti
 	return args.Get(0).(*bookstoreModel.Chapter), args.Error(1)
 }
 
-func (m *MockChapterService) GetLastChapter(ctx context.Context, bookID primitive.ObjectID) (*bookstoreModel.Chapter, error) {
+func (m *MockChapterService) GetLastChapter(ctx context.Context, bookID string) (*bookstoreModel.Chapter, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -529,27 +529,27 @@ func (m *MockChapterService) GetLastChapter(ctx context.Context, bookID primitiv
 	return args.Get(0).(*bookstoreModel.Chapter), args.Error(1)
 }
 
-func (m *MockChapterService) GetChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
+func (m *MockChapterService) GetChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
 	args := m.Called(ctx, bookID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockChapterService) GetFreeChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
+func (m *MockChapterService) GetFreeChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
 	args := m.Called(ctx, bookID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockChapterService) GetPaidChapterCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
+func (m *MockChapterService) GetPaidChapterCountByBookID(ctx context.Context, bookID string) (int64, error) {
 	args := m.Called(ctx, bookID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockChapterService) GetTotalWordCountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
+func (m *MockChapterService) GetTotalWordCountByBookID(ctx context.Context, bookID string) (int64, error) {
 	args := m.Called(ctx, bookID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockChapterService) GetChapterStats(ctx context.Context, bookID primitive.ObjectID) (map[string]interface{}, error) {
+func (m *MockChapterService) GetChapterStats(ctx context.Context, bookID string) (map[string]interface{}, error) {
 	args := m.Called(ctx, bookID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -557,27 +557,27 @@ func (m *MockChapterService) GetChapterStats(ctx context.Context, bookID primiti
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
-func (m *MockChapterService) GetChapterContent(ctx context.Context, chapterID, userID primitive.ObjectID) (string, error) {
+func (m *MockChapterService) GetChapterContent(ctx context.Context, chapterID, userID string) (string, error) {
 	args := m.Called(ctx, chapterID, userID)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockChapterService) UpdateChapterContent(ctx context.Context, chapterID primitive.ObjectID, content string) error {
+func (m *MockChapterService) UpdateChapterContent(ctx context.Context, chapterID string, content string) error {
 	args := m.Called(ctx, chapterID, content)
 	return args.Error(0)
 }
 
-func (m *MockChapterService) PublishChapter(ctx context.Context, chapterID primitive.ObjectID) error {
+func (m *MockChapterService) PublishChapter(ctx context.Context, chapterID string) error {
 	args := m.Called(ctx, chapterID)
 	return args.Error(0)
 }
 
-func (m *MockChapterService) UnpublishChapter(ctx context.Context, chapterID primitive.ObjectID) error {
+func (m *MockChapterService) UnpublishChapter(ctx context.Context, chapterID string) error {
 	args := m.Called(ctx, chapterID)
 	return args.Error(0)
 }
 
-func (m *MockChapterService) BatchUpdateChapterPrice(ctx context.Context, chapterIDs []primitive.ObjectID, price float64) error {
+func (m *MockChapterService) BatchUpdateChapterPrice(ctx context.Context, chapterIDs []string, price float64) error {
 	args := m.Called(ctx, chapterIDs, price)
 	return args.Error(0)
 }
@@ -592,7 +592,7 @@ func (m *MockChapterService) BatchDeleteChapters(ctx context.Context, chapterIDs
 	return args.Error(0)
 }
 
-func (m *MockChapterService) BatchDeleteChaptersByBookID(ctx context.Context, bookID primitive.ObjectID) error {
+func (m *MockChapterService) BatchDeleteChaptersByBookID(ctx context.Context, bookID string) error {
 	args := m.Called(ctx, bookID)
 	return args.Error(0)
 }
@@ -768,11 +768,11 @@ func TestReaderService_GetReadingProgress_Success(t *testing.T) {
 	bookObjectID, _ := primitive.ObjectIDFromHex(bookID)
 
 	expectedProgress := &reader.ReadingProgress{
-		ID:       progressID,
 		UserID:   userObjectID,
 		BookID:   bookObjectID,
 		Progress: 0.5,
 	}
+	expectedProgress.ID = progressID
 
 	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
 		Return(expectedProgress, nil)
@@ -963,9 +963,21 @@ func TestReaderService_GetRecentReading_Success(t *testing.T) {
 	book1ObjectID, _ := primitive.ObjectIDFromHex("book1")
 	book2ObjectID, _ := primitive.ObjectIDFromHex("book2")
 
+	progress1 := &reader.ReadingProgress{
+		UserID: userObjectID,
+		BookID: book1ObjectID,
+	}
+	progress1.ID = progress1ID
+
+	progress2 := &reader.ReadingProgress{
+		UserID: userObjectID,
+		BookID: book2ObjectID,
+	}
+	progress2.ID = progress2ID
+
 	expectedProgresses := []*reader.ReadingProgress{
-		{ID: progress1ID, UserID: userObjectID, BookID: book1ObjectID},
-		{ID: progress2ID, UserID: userObjectID, BookID: book2ObjectID},
+		progress1,
+		progress2,
 	}
 
 	mockProgressRepo.On("GetRecentReadingByUser", ctx, userID, limit).
@@ -1031,8 +1043,14 @@ func TestReaderService_GetReadingHistory_Success(t *testing.T) {
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
 	bookObjectID, _ := primitive.ObjectIDFromHex("book1")
 
+	progress := &reader.ReadingProgress{
+		UserID: userObjectID,
+		BookID: bookObjectID,
+	}
+	progress.ID = progressID
+
 	expectedProgresses := []*reader.ReadingProgress{
-		{ID: progressID, UserID: userObjectID, BookID: bookObjectID},
+		progress,
 	}
 	total := int64(100)
 
@@ -1102,14 +1120,14 @@ func TestReaderService_DeleteReadingProgress_Success(t *testing.T) {
 	bookID := "book123"
 
 	existingProgress := &reader.ReadingProgress{
-		ID:     "progress123",
 		UserID: userID,
 		BookID: bookID,
 	}
+	existingProgress.ID = primitive.NewObjectID()
 
 	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
 		Return(existingProgress, nil)
-	mockProgressRepo.On("Delete", ctx, existingProgress.ID).
+	mockProgressRepo.On("Delete", ctx, existingProgress.ID.Hex()).
 		Return(nil)
 	mockCacheService.On("InvalidateReadingProgress", ctx, userID, bookID).
 		Return(nil)
@@ -1182,10 +1200,14 @@ func TestReaderService_CreateAnnotation_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
 
+	userObjectID, _ := primitive.ObjectIDFromHex("user123")
+	bookObjectID, _ := primitive.ObjectIDFromHex("book123")
+	chapterObjectID, _ := primitive.ObjectIDFromHex("chapter123")
+
 	annotation := &reader.Annotation{
-		UserID:    "user123",
-		BookID:    "book123",
-		ChapterID: "chapter123",
+		UserID:    userObjectID,
+		BookID:    bookObjectID,
+		ChapterID: chapterObjectID,
 		Type:      "note",
 		Note:      "这是笔记内容",
 	}

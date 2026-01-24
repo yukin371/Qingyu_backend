@@ -33,7 +33,7 @@ func NewAnnouncementPublicAPI(announcementService messagingService.AnnouncementS
 //	@Produce		json
 //	@Param			targetRole	query		string	false	"目标角色(all/reader/writer/admin)"	default(all)
 //	@Param			limit			query		int		false	"限制数量"	default(10)
-//	@Success		200				{object}	shared.APIResponse{data=[]messagingModel.Announcement}
+//	@Success		200				{object}	shared.APIResponse{data=[]models.Announcement}
 //	@Failure		500				{object}	shared.ErrorResponse
 //	@Router			/api/v1/announcements/effective [get]
 func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
@@ -99,7 +99,7 @@ func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"公告ID"
-//	@Success		200		{object}	shared.APIResponse{data=messagingModel.Announcement}
+//	@Success		200		{object}	shared.APIResponse{data=models.Announcement}
 //	@Failure		400		{object}	shared.ErrorResponse
 //	@Failure		404		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
@@ -132,3 +132,5 @@ func (api *AnnouncementPublicAPI) GetAnnouncementByID(c *gin.Context) {
 	// 3. 返回结果
 	shared.Success(c, 200, "获取成功", announcement)
 }
+
+var _ = messagingModel.Announcement{}
