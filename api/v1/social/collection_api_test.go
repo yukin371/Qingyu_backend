@@ -25,12 +25,12 @@ type MockCollectionService struct {
 }
 
 // AddToCollection 模拟添加收藏
-func (m *MockCollectionService) AddToCollection(ctx context.Context, userID, bookID, folderID, note string, tags []string, isPublic bool) (*reader.Collection, error) {
+func (m *MockCollectionService) AddToCollection(ctx context.Context, userID, bookID, folderID, note string, tags []string, isPublic bool) (*readerModels.Collection, error) {
 	args := m.Called(ctx, userID, bookID, folderID, note, tags, isPublic)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.Collection), args.Error(1)
+	return args.Get(0).(*readerModels.Collection), args.Error(1)
 }
 
 // RemoveFromCollection 模拟移除收藏
@@ -46,21 +46,21 @@ func (m *MockCollectionService) UpdateCollection(ctx context.Context, userID, co
 }
 
 // GetUserCollections 模拟获取用户收藏列表
-func (m *MockCollectionService) GetUserCollections(ctx context.Context, userID, folderID string, page, size int) ([]*reader.Collection, int64, error) {
+func (m *MockCollectionService) GetUserCollections(ctx context.Context, userID, folderID string, page, size int) ([]*readerModels.Collection, int64, error) {
 	args := m.Called(ctx, userID, folderID, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*readerModels.Collection), args.Get(1).(int64), args.Error(2)
 }
 
 // GetCollectionsByTag 模拟按标签获取收藏
-func (m *MockCollectionService) GetCollectionsByTag(ctx context.Context, userID, tag string, page, size int) ([]*reader.Collection, int64, error) {
+func (m *MockCollectionService) GetCollectionsByTag(ctx context.Context, userID, tag string, page, size int) ([]*readerModels.Collection, int64, error) {
 	args := m.Called(ctx, userID, tag, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*readerModels.Collection), args.Get(1).(int64), args.Error(2)
 }
 
 // IsCollected 模拟检查是否已收藏
@@ -70,21 +70,21 @@ func (m *MockCollectionService) IsCollected(ctx context.Context, userID, bookID 
 }
 
 // CreateFolder 模拟创建收藏夹
-func (m *MockCollectionService) CreateFolder(ctx context.Context, userID, name, description string, isPublic bool) (*reader.CollectionFolder, error) {
+func (m *MockCollectionService) CreateFolder(ctx context.Context, userID, name, description string, isPublic bool) (*readerModels.CollectionFolder, error) {
 	args := m.Called(ctx, userID, name, description, isPublic)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*reader.CollectionFolder), args.Error(1)
+	return args.Get(0).(*readerModels.CollectionFolder), args.Error(1)
 }
 
 // GetUserFolders 模拟获取用户收藏夹列表
-func (m *MockCollectionService) GetUserFolders(ctx context.Context, userID string) ([]*reader.CollectionFolder, error) {
+func (m *MockCollectionService) GetUserFolders(ctx context.Context, userID string) ([]*readerModels.CollectionFolder, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*reader.CollectionFolder), args.Error(1)
+	return args.Get(0).([]*readerModels.CollectionFolder), args.Error(1)
 }
 
 // UpdateFolder 模拟更新收藏夹
@@ -112,12 +112,12 @@ func (m *MockCollectionService) UnshareCollection(ctx context.Context, userID, c
 }
 
 // GetPublicCollections 模拟获取公开收藏列表
-func (m *MockCollectionService) GetPublicCollections(ctx context.Context, page, size int) ([]*reader.Collection, int64, error) {
+func (m *MockCollectionService) GetPublicCollections(ctx context.Context, page, size int) ([]*readerModels.Collection, int64, error) {
 	args := m.Called(ctx, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]*readerModels.Collection), args.Get(1).(int64), args.Error(2)
 }
 
 // GetUserCollectionStats 模拟获取用户收藏统计
@@ -181,7 +181,7 @@ func TestCollectionAPI_AddCollection_Success(t *testing.T) {
 	bookID := primitive.NewObjectID().Hex()
 	router := setupCollectionTestRouter(mockService, userID)
 
-	expectedCollection := &reader.Collection{
+	expectedCollection := &readerModels.Collection{
 		ID:        primitive.NewObjectID(),
 		UserID:    userID,
 		BookID:    bookID,
@@ -254,7 +254,7 @@ func TestCollectionAPI_GetCollections_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupCollectionTestRouter(mockService, userID)
 
-	expectedCollections := []*reader.Collection{
+	expectedCollections := []*readerModels.Collection{
 		{
 			ID:     primitive.NewObjectID(),
 			BookID: primitive.NewObjectID().Hex(),
@@ -389,7 +389,7 @@ func TestCollectionAPI_CreateFolder_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupCollectionTestRouter(mockService, userID)
 
-	expectedFolder := &reader.CollectionFolder{
+	expectedFolder := &readerModels.CollectionFolder{
 		ID:          primitive.NewObjectID(),
 		UserID:      userID,
 		Name:        "我的收藏夹",
@@ -461,7 +461,7 @@ func TestCollectionAPI_GetFolders_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupCollectionTestRouter(mockService, userID)
 
-	expectedFolders := []*reader.CollectionFolder{
+	expectedFolders := []*readerModels.CollectionFolder{
 		{
 			ID:   primitive.NewObjectID(),
 			Name: "收藏夹1",
@@ -613,7 +613,7 @@ func TestCollectionAPI_GetPublicCollections_Success(t *testing.T) {
 	mockService := new(MockCollectionService)
 	router := setupCollectionTestRouter(mockService, "")
 
-	expectedCollections := []*reader.Collection{
+	expectedCollections := []*readerModels.Collection{
 		{
 			ID:     primitive.NewObjectID(),
 			BookID: primitive.NewObjectID().Hex(),
@@ -691,7 +691,7 @@ func TestCollectionAPI_GetCollectionsByTag_Success(t *testing.T) {
 	tag := "推荐"
 	router := setupCollectionTestRouter(mockService, userID)
 
-	expectedCollections := []*reader.Collection{
+	expectedCollections := []*readerModels.Collection{
 		{
 			ID:     primitive.NewObjectID(),
 			BookID: primitive.NewObjectID().Hex(),

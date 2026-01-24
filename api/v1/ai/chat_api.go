@@ -7,7 +7,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
-	_ "Qingyu_backend/service/ai/dto" // Imported for swagger annotations
+	aiDto "Qingyu_backend/service/ai/dto" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"

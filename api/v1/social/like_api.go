@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	socialModels "Qingyu_backend/models/social" // Import for Swagger annotations
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -31,10 +32,10 @@ func NewLikeAPI(likeService interfaces.LikeService) *LikeAPI {
 // @Accept json
 // @Produce json
 // @Param bookId path string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.ErrorResponse
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/books/{bookId}/like [post]
 // @Security Bearer
 func (api *LikeAPI) LikeBook(c *gin.Context) {
@@ -68,10 +69,10 @@ func (api *LikeAPI) LikeBook(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param bookId path string true "书籍ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.ErrorResponse
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/books/{bookId}/like [delete]
 // @Security Bearer
 func (api *LikeAPI) UnlikeBook(c *gin.Context) {
@@ -104,9 +105,9 @@ func (api *LikeAPI) UnlikeBook(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param bookId path string true "书籍ID"
-// @Success 200 {object} response.Response{data=object{like_count=int64,is_liked=bool}}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse{data=object{like_count=int64,is_liked=bool}}
+// @Failure 400 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/books/{bookId}/like/info [get]
 func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 	bookID := c.Param("bookId")
@@ -148,10 +149,10 @@ func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评论ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.ErrorResponse
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/comments/{id}/like [post]
 // @Security Bearer
 func (api *LikeAPI) LikeComment(c *gin.Context) {
@@ -184,10 +185,10 @@ func (api *LikeAPI) LikeComment(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评论ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse
+// @Failure 400 {object} shared.ErrorResponse
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/comments/{id}/like [delete]
 // @Security Bearer
 func (api *LikeAPI) UnlikeComment(c *gin.Context) {
@@ -225,9 +226,9 @@ func (api *LikeAPI) UnlikeComment(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response{data=object{list=[]reader.Like,total=int64,page=int,size=int}}
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse{data=object{list=[]socialModels.Like,total=int64,page=int,size=int}}
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/likes/books [get]
 // @Security Bearer
 func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
@@ -270,9 +271,9 @@ func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
 // @Tags 阅读端-点赞
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=object{total_likes=int64}}
-// @Failure 401 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} shared.APIResponse{data=object{total_likes=int64}}
+// @Failure 401 {object} shared.ErrorResponse
+// @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/likes/stats [get]
 // @Security Bearer
 func (api *LikeAPI) GetUserLikeStats(c *gin.Context) {

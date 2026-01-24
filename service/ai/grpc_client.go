@@ -51,9 +51,9 @@ type AgentResponse struct {
 func (c *GRPCClient) ExecuteAgent(ctx context.Context, req *AgentRequest) (*AgentResponse, error) {
 	// 构建请求
 	grpcReq := &pb.AgentExecutionRequest{
-		UserId:       req.UserID,
 		WorkflowType: req.WorkflowType,
-		Parameters:   convertMapToStruct(req.Parameters),
+		ProjectId:    req.UserID, // 使用 UserID 作为 ProjectId
+		Parameters:   convertInterfaceMapToStringMap(req.Parameters),
 	}
 
 	// 设置超时
@@ -69,16 +69,14 @@ func (c *GRPCClient) ExecuteAgent(ctx context.Context, req *AgentRequest) (*Agen
 		return nil, fmt.Errorf("gRPC ExecuteAgent failed: %w", err)
 	}
 
-	if !resp.Success {
-		return nil, fmt.Errorf("AI agent execution failed: %s", resp.ErrorMessage)
+	// 检查执行状态
+	if resp.Status != "completed" {
+		return nil, fmt.Errorf("AI agent execution failed with status %s: %v", resp.Status, resp.Errors)
 	}
 
 	return &AgentResponse{
-		Content:      resp.Content,
-		TokensUsed:   resp.TokensUsed,
-		Usage:        convertStructToMap(resp.Usage),
-		Model:        resp.Model,
-		AgentType:    resp.AgentType,
+		Content:      resp.Result, // Result 是 JSON 字符串
+		TokensUsed:   int64(resp.TokensUsed),
 		WorkflowType: req.WorkflowType,
 	}, nil
 }
@@ -118,14 +116,8 @@ func (c *GRPCClient) HealthCheck(ctx context.Context) error {
 		defer cancel()
 	}
 
-	// 尝试调用一个简单的 gRPC 方法（这里假设有健康检查方法）
-	// 如果没有专门的健康检查方法，可以调用 ExecuteAgent 并检查响应
-	_, err := c.client.ExecuteAgent(ctx, &pb.AgentExecutionRequest{
-		UserId:       "health-check",
-		WorkflowType: "health",
-	})
-
-	// 对于健康检查，我们主要关心连接是否可用，而不是具体的业务错误
+	// 调用专门的健康检查方法
+	_, err := c.client.HealthCheck(ctx, &pb.HealthCheckRequest{})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.Unavailable {
@@ -165,91 +157,16 @@ func isRetryableError(err error) bool {
 	}
 }
 
-// convertMapToStruct 转换 map[string]interface{} 到 protobuf Struct
-func convertMapToStruct(m map[string]interface{}) *pb.Struct {
+// convertInterfaceMapToStringMap 转换 map[string]interface{} 到 map[string]string
+func convertInterfaceMapToStringMap(m map[string]interface{}) map[string]string {
 	if m == nil {
 		return nil
 	}
 
-	structValue := &pb.Struct{
-		Fields: make(map[string]*pb.Value),
-	}
-
+	result := make(map[string]string)
 	for k, v := range m {
-		structValue.Fields[k] = convertValue(v)
-	}
-
-	return structValue
-}
-
-// convertStructToMap 转换 protobuf Struct 到 map[string]interface{}
-func convertStructToMap(s *pb.Struct) map[string]interface{} {
-	if s == nil {
-		return nil
-	}
-
-	result := make(map[string]interface{})
-	for k, v := range s.Fields {
-		result[k] = convertValueToInterface(v)
+		result[k] = fmt.Sprintf("%v", v)
 	}
 
 	return result
-}
-
-// convertValue 转换 Go 类型到 protobuf Value
-func convertValue(v interface{}) *pb.Value {
-	if v == nil {
-		return &pb.Value{Kind: &pb.Value_NullValue{}}
-	}
-
-	switch val := v.(type) {
-	case bool:
-		return &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: val}}
-	case float64:
-		return &pb.Value{Kind: &pb.Value_NumberValue{NumberValue: val}}
-	case int:
-		return &pb.Value{Kind: &pb.Value_NumberValue{NumberValue: float64(val)}}
-	case int64:
-		return &pb.Value{Kind: &pb.Value_NumberValue{NumberValue: float64(val)}}
-	case string:
-		return &pb.Value{Kind: &pb.Value_StringValue{StringValue: val}}
-	case []interface{}:
-		list := &pb.ListValue{Values: make([]*pb.Value, 0)}
-		for _, item := range val {
-			list.Values = append(list.Values, convertValue(item))
-		}
-		return &pb.Value{Kind: &pb.Value_ListValue{ListValue: list}}
-	case map[string]interface{}:
-		return &pb.Value{Kind: &pb.Value_StructValue{StructValue: convertMapToStruct(val)}}
-	default:
-		return &pb.Value{Kind: &pb.Value_StringValue{StringValue: fmt.Sprintf("%v", v)}}
-	}
-}
-
-// convertValueToInterface 转换 protobuf Value 到 Go 类型
-func convertValueToInterface(v *pb.Value) interface{} {
-	if v == nil {
-		return nil
-	}
-
-	switch kind := v.Kind.(type) {
-	case *pb.Value_NullValue:
-		return nil
-	case *pb.Value_BoolValue:
-		return kind.BoolValue
-	case *pb.Value_NumberValue:
-		return kind.NumberValue
-	case *pb.Value_StringValue:
-		return kind.StringValue
-	case *pb.Value_ListValue:
-		result := make([]interface{}, 0)
-		for _, item := range kind.ListValue.Values {
-			result = append(result, convertValueToInterface(item))
-		}
-		return result
-	case *pb.Value_StructValue:
-		return convertStructToMap(kind.StructValue)
-	default:
-		return nil
-	}
 }
