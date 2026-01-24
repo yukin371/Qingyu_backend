@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -75,14 +76,16 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 	if len(resp.User.Roles) > 0 {
 		role = resp.User.Roles[0]
 	}
+	// 解析 CreatedAt 字符串为 time.Time
+	createdAt, _ := time.Parse(time.RFC3339, resp.User.CreatedAt)
 	publicProfile := dto.PublicUserProfileResponse{
-		UserID:    resp.User.ID.Hex(),
+		UserID:    resp.User.ID,
 		Username:  resp.User.Username,
 		Avatar:    resp.User.Avatar,
 		Nickname:  resp.User.Nickname,
 		Bio:       resp.User.Bio,
 		Role:      role,
-		CreatedAt: resp.User.CreatedAt,
+		CreatedAt: createdAt,
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", publicProfile)
@@ -132,14 +135,16 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 	if len(resp.User.Roles) > 0 {
 		role = resp.User.Roles[0]
 	}
+	// 解析 CreatedAt 字符串为 time.Time
+	createdAt, _ := time.Parse(time.RFC3339, resp.User.CreatedAt)
 	publicProfile := dto.PublicUserProfileResponse{
-		UserID:    resp.User.ID.Hex(),
+		UserID:    resp.User.ID,
 		Username:  resp.User.Username,
 		Avatar:    resp.User.Avatar,
 		Nickname:  resp.User.Nickname,
 		Bio:       resp.User.Bio,
 		Role:      role,
-		CreatedAt: resp.User.CreatedAt,
+		CreatedAt: createdAt,
 	}
 
 	shared.Success(c, http.StatusOK, "获取成功", publicProfile)

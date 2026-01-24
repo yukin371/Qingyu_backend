@@ -12,7 +12,7 @@ type ChapterPurchase struct {
 	UserID        primitive.ObjectID `bson:"user_id" json:"$1$2"`
 	ChapterID     primitive.ObjectID `bson:"chapter_id" json:"$1$2"`
 	BookID        primitive.ObjectID `bson:"book_id" json:"$1$2"`
-	Price         int64              `bson:"price" json:"price"` // 价格 (分)
+	Price         float64            `bson:"price" json:"price"` // 价格 (分，使用float64以兼容MongoDB)
 	PurchaseTime  time.Time          `bson:"purchase_time" json:"$1$2"`
 	TransactionID string             `bson:"transaction_id,omitempty" json:"transaction_id,omitempty"`
 	CreatedAt     time.Time          `bson:"created_at" json:"$1$2"`
@@ -30,7 +30,7 @@ type ChapterPurchaseBatch struct {
 	UserID        primitive.ObjectID   `bson:"user_id" json:"$1$2"`
 	BookID        primitive.ObjectID   `bson:"book_id" json:"$1$2"`
 	ChapterIDs    []primitive.ObjectID `bson:"chapter_ids" json:"$1$2"`
-	TotalPrice    int64                `bson:"total_price" json:"$1$2"` // 总价 (分)
+	TotalPrice    float64             `bson:"total_price" json:"$1$2"` // 总价 (分，使用float64以兼容MongoDB)
 	ChaptersCount int                  `bson:"chapters_count" json:"$1$2"`
 	PurchaseTime  time.Time            `bson:"purchase_time" json:"$1$2"`
 	TransactionID string               `bson:"transaction_id,omitempty" json:"transaction_id,omitempty"`
@@ -46,8 +46,8 @@ type BookPurchase struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserID        primitive.ObjectID `bson:"user_id" json:"$1$2"`
 	BookID        primitive.ObjectID `bson:"book_id" json:"$1$2"`
-	TotalPrice    int64              `bson:"total_price" json:"$1$2"`       // 总价 (分)
-	OriginalPrice int64              `bson:"original_price" json:"$1$2"` // 原价 (分)
+	TotalPrice    float64            `bson:"total_price" json:"$1$2"`       // 总价 (分，使用float64以兼容MongoDB)
+	OriginalPrice float64            `bson:"original_price" json:"$1$2"` // 原价 (分，使用float64以兼容MongoDB)
 	Discount      float64            `bson:"discount" json:"discount"`             // 折扣（0-1，浮点数）
 	PurchaseTime  time.Time          `bson:"purchase_time" json:"$1$2"`
 	TransactionID string             `bson:"transaction_id,omitempty" json:"transaction_id,omitempty"`
@@ -93,7 +93,7 @@ type ChapterAccessInfo struct {
 	ChapterNum   int                `json:"$1$2"`
 	WordCount    int                `json:"$1$2"`
 	IsFree       bool               `json:"$1$2"`
-	Price        int64              `json:"price"` // 价格 (分)
+	Price        float64            `json:"price"` // 价格 (分，使用float64以兼容MongoDB)
 	IsPurchased  bool               `json:"$1$2"`
 	IsVIP        bool               `json:"$1$2"`
 	CanAccess    bool               `json:"$1$2"`
@@ -108,7 +108,7 @@ type ChapterCatalogItem struct {
 	ChapterNum  int                `json:"$1$2"`
 	WordCount   int                `json:"$1$2"`
 	IsFree      bool               `json:"$1$2"`
-	Price       int64              `json:"price"` // 价格 (分)
+	Price       float64            `json:"price"` // 价格 (分，使用float64以兼容MongoDB)
 	PublishTime time.Time          `json:"$1$2"`
 	IsPublished bool               `json:"$1$2"`
 	IsPurchased bool               `json:"is_purchased,omitempty"` // 仅在认证用户的请求中返回

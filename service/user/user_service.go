@@ -166,7 +166,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *user2.CreateUserR
 	}
 
 	return &user2.CreateUserResponse{
-		User: user,
+		User: ToUserDTO(user),
 	}, nil
 }
 
@@ -187,7 +187,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, req *user2.GetUserRequest
 	}
 
 	return &user2.GetUserResponse{
-		User: user,
+		User: ToUserDTO(user),
 	}, nil
 }
 
@@ -222,7 +222,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *user2.UpdateUserR
 	}
 
 	return &user2.UpdateUserResponse{
-		User: *updatedUser,
+		User: ToUserDTO(updatedUser),
 	}, nil
 }
 
@@ -284,15 +284,14 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *user2.ListUsersReq
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户总数失败", err)
 	}
 
-	// 5. 转换用户列表类型
-	var userList []*usersModel.User
-	userList = append(userList, users...)
+	// 5. 转换用户列表为 DTO
+	userDTOs := ToUserDTOs(users)
 
 	// 6. 计算总页数
 	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
 
 	return &user2.ListUsersResponse{
-		Users:      userList,
+		Users:      userDTOs,
 		Total:      total,
 		Page:       req.Page,
 		PageSize:   req.PageSize,
@@ -385,7 +384,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 	}
 
 	return &user2.RegisterUserResponse{
-		User:  user,
+		User:  ToUserDTO(user),
 		Token: token,
 	}, nil
 }
@@ -487,7 +486,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 
 	return &user2.LoginUserResponse{
-		User:  user,
+		User:  ToUserDTO(user),
 		Token: token,
 	}, nil
 }

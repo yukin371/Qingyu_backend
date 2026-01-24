@@ -6,7 +6,7 @@ import (
 )
 
 // Rating 评分类型（0.0-5.0）
-type Rating float32
+type Rating float64
 
 const (
 	// RatingMin 最小评分
@@ -22,7 +22,7 @@ var (
 )
 
 // NewRating 创建评分
-func NewRating(value float32) (Rating, error) {
+func NewRating(value float64) (Rating, error) {
 	r := Rating(value)
 	if !r.IsValid() {
 		return RatingDefault, ErrInvalidRating
@@ -31,7 +31,7 @@ func NewRating(value float32) (Rating, error) {
 }
 
 // MustRating 创建评分（panic on invalid）
-func MustRating(value float32) Rating {
+func MustRating(value float64) Rating {
 	r, err := NewRating(value)
 	if err != nil {
 		panic(err)
@@ -44,9 +44,9 @@ func (r Rating) IsValid() bool {
 	return r >= RatingMin && r <= RatingMax
 }
 
-// ToFloat 转换为 float32
-func (r Rating) ToFloat() float32 {
-	return float32(r)
+// ToFloat 转换为 float64
+func (r Rating) ToFloat() float64 {
+	return float64(r)
 }
 
 // String 格式化为字符串（保留 1 位小数）

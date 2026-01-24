@@ -6,6 +6,57 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ============================================================================
+// 站内通知模型 (Notification Model)
+// ============================================================================
+//
+// 【模型说明】
+// 这是当前生产环境使用的站内通知模型，功能完善且运行稳定。
+//
+// 【主要功能】
+// 1. 基础通知管理：创建、查询、更新、删除
+// 2. 已读状态管理：标记已读/未读
+// 3. 通知类型：system, social, content, reward, message, update, membership
+// 4. 优先级管理：low, normal, high, urgent
+// 5. 过期时间支持
+//
+// 【生态组件】
+// - NotificationPreference: 用户通知偏好设置
+// - PushDevice: 推送设备管理
+// - NotificationTemplate: 通知模板
+// - NotificationStats: 通知统计
+//
+// 【实现层次】
+// - Repository: repository/mongodb/notification/notification_repository_impl.go
+// - Service: service/notification/notification_service.go
+// - API: api/v1/notifications/notification_api.go
+// - 测试: 完整的单元测试和集成测试
+//
+// 【当前状态】
+// - ✅ 生产环境使用中
+// - ✅ 功能完善，运行稳定
+// - ✅ 测试覆盖完整
+// - ✅ 有完整的 Repository/Service/API 实现
+//
+// 【与 messaging.InboxNotification 的关系】
+// 存在一个改进版的模型 messaging.InboxNotification，设计上更优
+//（使用 mixin 模式，字段命名更统一）。考虑到系统稳定性和迁移风险，
+//当前保持现状，不进行迁移。
+//
+// 【未来考虑】
+// 当出现以下情况时，可考虑迁移到 InboxNotification：
+// 1. 功能需求超出当前模型的支持范围
+// 2. 性能瓶颈无法优化
+// 3. 重大架构升级
+//
+// 【迁移评估】
+// 详见: docs/plans/2026-01-24-messaging-notification-future-migration-plan.md
+//
+// 【并存说明】
+// 详见: docs/architecture/messaging-notification-model-coexistence.md
+//
+// ============================================================================
+
 // NotificationType 通知类型
 type NotificationType string
 

@@ -2,6 +2,7 @@ package bookstore
 
 import (
 	bookstore2 "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/dto"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -78,3 +79,12 @@ type CategoryResponse struct {
 	BookCount int64               `json:"bookCount"`
 	Children  []CategoryNode      `json:"children,omitempty"`
 }
+
+// ===========================
+// 重新导出 models/dto 中的类型（向后兼容）
+// ===========================
+
+// BookDTO 书籍数据传输对象
+// 重新导出 models/dto 中的类型
+type BookDTO = dto.BookDTO
+

@@ -184,7 +184,7 @@ func (r *MessageRepositoryImpl) CountMessages(ctx context.Context, filter *messa
 // ============ 通知记录管理 ============
 
 // CreateNotification 创建通知
-func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notification *messagingModel.Notification) error {
+func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notification *messagingModel.NotificationDelivery) error {
 	if notification == nil {
 		return fmt.Errorf("notification cannot be nil")
 	}
@@ -205,8 +205,8 @@ func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notifica
 }
 
 // GetNotification 获取通知
-func (r *MessageRepositoryImpl) GetNotification(ctx context.Context, notificationID string) (*messagingModel.Notification, error) {
-	var notification messagingModel.Notification
+func (r *MessageRepositoryImpl) GetNotification(ctx context.Context, notificationID string) (*messagingModel.NotificationDelivery, error) {
+	var notification messagingModel.NotificationDelivery
 	err := r.notificationsCollection.FindOne(ctx, bson.M{"_id": notificationID}).Decode(&notification)
 
 	if err == mongo.ErrNoDocuments {
@@ -254,7 +254,7 @@ func (r *MessageRepositoryImpl) DeleteNotification(ctx context.Context, notifica
 }
 
 // ListNotifications 获取通知列表
-func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) ([]*messagingModel.Notification, int64, error) {
+func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) ([]*messagingModel.NotificationDelivery, int64, error) {
 	query := bson.M{}
 
 	if filter != nil {
@@ -310,7 +310,7 @@ func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *m
 	}
 	defer cursor.Close(ctx)
 
-	var notifications []*messagingModel.Notification
+	var notifications []*messagingModel.NotificationDelivery
 	if err = cursor.All(ctx, &notifications); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode notifications: %w", err)
 	}

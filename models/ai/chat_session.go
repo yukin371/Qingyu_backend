@@ -7,6 +7,8 @@ import (
 )
 
 // ChatSession 聊天会话模型
+// 注意：消息已拆分到独立的 ai_chat_messages 集合，不再内嵌在会话文档中
+// 这样可以避免单文档过大，支持分页查询，提高性能
 type ChatSession struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	SessionID   string             `json:"sessionId" bson:"session_id"`
@@ -17,7 +19,6 @@ type ChatSession struct {
 	Status      string             `json:"status" bson:"status"`
 	Settings    *ChatSettings      `json:"settings" bson:"settings"`
 	Metadata    *ChatMetadata      `json:"metadata" bson:"metadata"`
-	Messages    []ChatMessage      `json:"messages" bson:"messages"`
 	CreatedAt   time.Time          `json:"createdAt" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updated_at"`
 	DeletedAt   *time.Time         `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
@@ -132,26 +133,6 @@ func randomString(length int) string {
 	return string(b)
 }
 
-// GetActiveMessages 获取活跃消息（未删除）
-func (cs *ChatSession) GetActiveMessages() []ChatMessage {
-	var activeMessages []ChatMessage
-	for _, msg := range cs.Messages {
-		if msg.DeletedAt == nil {
-			activeMessages = append(activeMessages, msg)
-		}
-	}
-	return activeMessages
-}
-
-// GetTotalTokens 获取总token数
-func (cs *ChatSession) GetTotalTokens() int {
-	total := 0
-	for _, msg := range cs.Messages {
-		total += msg.TokenUsed
-	}
-	return total
-}
-
 // IsActive 检查会话是否活跃
 func (cs *ChatSession) IsActive() bool {
 	return cs.Status == "active"
@@ -169,50 +150,6 @@ func (cs *ChatSession) Activate() {
 	cs.UpdatedAt = time.Now()
 }
 
-// AddMessage 添加消息
-func (cs *ChatSession) AddMessage(role, content string, tokenUsed int, metadata *MessageMeta) *ChatMessage {
-	message := &ChatMessage{
-		SessionID: cs.SessionID,
-		Role:      role,
-		Content:   content,
-		TokenUsed: tokenUsed,
-		Metadata:  metadata,
-		Timestamp: time.Now(),
-	}
-
-	cs.Messages = append(cs.Messages, *message)
-	cs.UpdatedAt = time.Now()
-
-	// 更新元数据
-	if cs.Metadata == nil {
-		cs.Metadata = &ChatMetadata{}
-	}
-	cs.Metadata.TotalMessages = len(cs.Messages)
-	cs.Metadata.TotalTokens = cs.GetTotalTokens()
-	cs.Metadata.LastActiveAt = time.Now()
-
-	return message
-}
-
-// GetLastMessage 获取最后一条消息
-func (cs *ChatSession) GetLastMessage() *ChatMessage {
-	if len(cs.Messages) == 0 {
-		return nil
-	}
-	return &cs.Messages[len(cs.Messages)-1]
-}
-
-// GetMessagesByRole 根据角色获取消息
-func (cs *ChatSession) GetMessagesByRole(role string) []ChatMessage {
-	var messages []ChatMessage
-	for _, msg := range cs.Messages {
-		if msg.Role == role {
-			messages = append(messages, msg)
-		}
-	}
-	return messages
-}
-
 // UpdateSettings 更新设置
 func (cs *ChatSession) UpdateSettings(settings *ChatSettings) {
 	cs.Settings = settings
@@ -222,5 +159,17 @@ func (cs *ChatSession) UpdateSettings(settings *ChatSettings) {
 // UpdateMetadata 更新元数据
 func (cs *ChatSession) UpdateMetadata(metadata *ChatMetadata) {
 	cs.Metadata = metadata
+	cs.UpdatedAt = time.Now()
+}
+
+// UpdateMessageStats 更新消息统计信息
+// 注意：此方法不再从 Messages 数组计算，而是由外部传入统计数据
+func (cs *ChatSession) UpdateMessageStats(totalMessages, totalTokens int) {
+	if cs.Metadata == nil {
+		cs.Metadata = &ChatMetadata{}
+	}
+	cs.Metadata.TotalMessages = totalMessages
+	cs.Metadata.TotalTokens = totalTokens
+	cs.Metadata.LastActiveAt = time.Now()
 	cs.UpdatedAt = time.Now()
 }

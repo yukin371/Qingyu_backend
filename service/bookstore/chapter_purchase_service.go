@@ -250,15 +250,15 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
-	if balance < chapter.Price {
+	if float64(balance) < chapter.Price {
 		return nil, errors.New("insufficient balance")
 	}
 
 	// 使用事务处理购买
 	var purchase *bookstore.ChapterPurchase
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
-		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID, chapter.Price, fmt.Sprintf("购买章节: %s", chapter.Title))
+		// 扣除用户余额 (chapter.Price 是 float64，需要转为 int64)
+		_, err := s.walletService.Consume(ctx, userID, int64(chapter.Price), fmt.Sprintf("购买章节: %s", chapter.Title))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
@@ -311,7 +311,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	// 获取所有章节信息
 	chapters := make([]*bookstore.Chapter, 0, len(chapterIDs))
-	totalPrice := int64(0)
+	totalPrice := float64(0)
 	bookID := ""
 
 	for _, chapterID := range chapterIDs {
@@ -350,7 +350,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
 	}
-	if balance < totalPrice {
+	if float64(balance) < totalPrice {
 		return nil, errors.New("insufficient balance")
 	}
 
@@ -365,8 +365,8 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 	purchasedChapterIDs := make([]string, 0)
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
-		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID, totalPrice, fmt.Sprintf("批量购买章节: %d章", len(chapters)))
+		// 扣除用户余额 (totalPrice 是 float64，需要转为 int64)
+		_, err := s.walletService.Consume(ctx, userID, int64(totalPrice), fmt.Sprintf("批量购买章节: %d章", len(chapters)))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
@@ -494,8 +494,8 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 		purchase = &bookstore.BookPurchase{
 			UserID:        userOID,
 			BookID:        bookOID,
-			TotalPrice:    discountedPrice,
-			OriginalPrice: originalPrice,
+			TotalPrice:    float64(discountedPrice),
+			OriginalPrice: float64(originalPrice),
 			Discount:      1 - float64(discountedPrice)/float64(originalPrice),
 			BookTitle:     book.Title,
 			BookCover:     book.Cover,
@@ -756,16 +756,16 @@ func (s *ChapterPurchaseServiceImpl) CalculateBookPrice(ctx context.Context, boo
 	}
 
 	// 计算原价 (分)
-	originalPrice := int64(0)
+	originalPrice := float64(0)
 	for _, chapter := range chapters {
 		originalPrice += chapter.Price
 	}
 
 	// 计算折扣价（全书购买通常有折扣，例如8折）
 	discount := 0.8
-	discountedPrice := int64(float64(originalPrice) * discount)
+	discountedPrice := float64(originalPrice * discount)
 
-	return originalPrice, discountedPrice, nil
+	return int64(originalPrice), int64(discountedPrice), nil
 }
 
 // IsVIPUser 检查是否为VIP用户

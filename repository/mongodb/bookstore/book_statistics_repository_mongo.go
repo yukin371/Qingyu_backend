@@ -44,9 +44,9 @@ func (r *MongoBookStatisticsRepository) Create(ctx context.Context, statistics *
 		return err
 	}
 
-	// ID 是 string 类型，需要转换
+	// ID 是 primitive.ObjectID 类型
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		statistics.ID = oid.Hex()
+		statistics.ID = oid
 	}
 	return nil
 }
@@ -552,7 +552,7 @@ func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID
 			return err
 		}
 		// 初始创建
-		stats = bookstore.BookStatistics{BookID: bookID, AverageRating: 0, RatingCount: 0}
+		stats = bookstore.BookStatistics{BookID: objectID, AverageRating: 0, RatingCount: 0}
 	}
 
 	newCount := stats.RatingCount + 1

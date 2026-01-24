@@ -54,8 +54,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
-
-	authModel "Qingyu_backend/models/auth"
 )
 
 // ServiceContainer 服务容器
@@ -822,32 +820,34 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	// 5.2.1 创建 OAuthService（可选，需要配置）
-	// 获取OAuth配置
-	oauthConfigs := make(map[string]*authModel.OAuthConfig)
-	// TODO: 从配置文件加载OAuth配置
-	// oauthConfigs["google"] = &authModel.OAuthConfig{
-	//     Enabled: true,
-	//     ClientID: config.GetOAuthConfig("google").ClientID,
-	//     ClientSecret: config.GetOAuthConfig("google").ClientSecret,
-	//     RedirectURI: config.GetOAuthConfig("google").RedirectURI,
-	//     Scopes: "openid profile email",
-	// }
-
-	if len(oauthConfigs) > 0 {
-		// 如果有OAuth配置，创建OAuthService
-		logger, err := zap.NewProduction()
-		if err == nil {
-			oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
-			if err != nil {
-				fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
-			} else {
-				c.oauthService = oauthSvc
-				fmt.Println("  ✓ OAuthService初始化完成")
-			}
+		// 初始化 OAuth 配置管理器
+		oauthConfigMgr := config.NewOAuthConfigManager()
+		oauthConfigMgr.LoadFromEnv()
+		
+		// 尝试从全局配置加载
+		if config.GlobalConfig != nil {
+			oauthConfigMgr.LoadFromConfig(config.GlobalConfig)
 		}
-	} else {
-		fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
-	}
+		
+		oauthConfigs := oauthConfigMgr.GetConfigs()
+		enabledProviders := oauthConfigMgr.GetEnabledProviders()
+
+		if len(oauthConfigs) > 0 && len(enabledProviders) > 0 {
+			// 如果有OAuth配置，创建OAuthService
+			logger, err := zap.NewProduction()
+			if err == nil {
+				oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
+				if err != nil {
+					fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
+				} else {
+					c.oauthService = oauthSvc
+					fmt.Printf("  ✓ OAuthService初始化完成 (启用的提供商: %v)\n", enabledProviders)
+				}
+			}
+		} else {
+			fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
+			fmt.Println("    提示: 设置环境变量 GOOGLE_CLIENT_ID、GITHUB_CLIENT_ID 等来启用OAuth登录")
+		}
 
 	// 5.3 创建 RecommendationService
 	if c.redisClient != nil {

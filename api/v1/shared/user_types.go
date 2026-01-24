@@ -1,6 +1,9 @@
 package shared
 
-import "time"
+import (
+	"Qingyu_backend/models/dto"
+	"time"
+)
 
 // ===========================
 // 用户相关 DTO（统一定义，消除重复）
@@ -46,3 +49,11 @@ type UserBasicInfo struct {
 	Email    string `json:"email"`
 	Role     string `json:"role,omitempty"`
 }
+
+// ===========================
+// 重新导出 models/dto 中的类型（向后兼容）
+// ===========================
+
+// UserDTO 用户数据传输对象
+// 重新导出 models/dto 中的类型
+type UserDTO = dto.UserDTO

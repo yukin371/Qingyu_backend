@@ -32,7 +32,7 @@ func NewNotificationAPI(notificationService messaging.NotificationService) *Noti
 //	@Param			page		query		int		false	"页码（默认1）"
 //	@Param			page_size	query		int		false	"每页大小（默认20）"
 //	@Param			is_read		query		bool	false	"是否已读过滤"
-//	@Success		200			{object}	PaginatedResponse{data=[]messagingModel.Notification}
+//	@Success		200			{object}	PaginatedResponse{data=[]messagingModel.NotificationDelivery}
 //	@Failure		401			{object}	ErrorResponse
 //	@Failure		500			{object}	ErrorResponse
 //	@Router			/api/v1/notifications [get]
@@ -211,7 +211,7 @@ func (api *NotificationAPI) CreateNotification(c *gin.Context) {
 	}
 
 	// 2. 创建通知
-	notification := &messagingModel.Notification{
+	notification := &messagingModel.NotificationDelivery{
 		UserID:  req.UserID,
 		Type:    req.Type,
 		Title:   req.Title,

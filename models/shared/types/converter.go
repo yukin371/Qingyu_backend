@@ -2,11 +2,15 @@ package types
 
 import (
 	"fmt"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // DTOConverter DTO 转换辅助
 type DTOConverter struct{}
+
+// ===== ID 转换 =====
 
 // ModelIDToDTO Model ID → DTO ID (ObjectID → string)
 func (DTOConverter) ModelIDToDTO(id primitive.ObjectID) string {
@@ -31,6 +35,8 @@ func (DTOConverter) DTOIDsToModel(ids []string) ([]primitive.ObjectID, error) {
 	}
 	return oids, nil
 }
+
+// ===== 金额转换 =====
 
 // MoneyToDTO Money → 金额字符串 (Money → "¥12.99")
 func (DTOConverter) MoneyToDTO(money Money) string {
@@ -57,19 +63,21 @@ func (DTOConverter) DTOMoneyToCents(cents int64) Money {
 	return NewMoneyFromCents(cents)
 }
 
+// ===== 评分转换 =====
+
 // RatingToDTO Rating → 评分字符串 (Rating → "4.5")
 func (DTOConverter) RatingToDTO(rating Rating) string {
 	return rating.String()
 }
 
-// RatingToFloat Rating → float32
-func (DTOConverter) RatingToFloat(rating Rating) float32 {
+// RatingToFloat Rating → float64
+func (DTOConverter) RatingToFloat(rating Rating) float64 {
 	return rating.ToFloat()
 }
 
 // DTORatingToModel 评分字符串 → Rating ("4.5" → Rating)
 func (DTOConverter) DTORatingToModel(s string) (Rating, error) {
-	var value float32
+	var value float64
 	_, err := fmt.Sscanf(s, "%f", &value)
 	if err != nil {
 		return RatingDefault, err
@@ -77,10 +85,12 @@ func (DTOConverter) DTORatingToModel(s string) (Rating, error) {
 	return NewRating(value)
 }
 
-// DTORatingToFloat float32 → Rating
-func (DTOConverter) DTORatingToFloat(value float32) (Rating, error) {
+// DTORatingToFloat float64 → Rating
+func (DTOConverter) DTORatingToFloat(value float64) (Rating, error) {
 	return NewRating(value)
 }
+
+// ===== 进度转换 =====
 
 // ProgressToDTO Progress → 百分比 (Progress → 75)
 func (DTOConverter) ProgressToDTO(progress Progress) int {
@@ -106,6 +116,62 @@ func (DTOConverter) DTOProgressToModel(percent int) (Progress, error) {
 func (DTOConverter) DTOProgressFromFloat(value float32) (Progress, error) {
 	return NewProgress(value)
 }
+
+// ===== 时间戳转换 =====
+
+// TimeToISO8601 time.Time → ISO8601 字符串 (RFC3339)
+// 用于将 BaseEntity 的时间字段转换为 API 层的字符串格式
+func (DTOConverter) TimeToISO8601(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
+// ISO8601ToTime ISO8601 字符串 → time.Time
+// 用于将 API 层的时间字符串转换为 Model 层的 time.Time
+func (DTOConverter) ISO8601ToTime(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+	return time.Parse(time.RFC3339, s)
+}
+
+// TimeToUnix time.Time → Unix 时间戳（秒）
+// 用于返回 Unix 时间戳给前端
+func (DTOConverter) TimeToUnix(t time.Time) int64 {
+	return t.Unix()
+}
+
+// UnixToTime Unix 时间戳 → time.Time
+// 用于将前端传来的 Unix 时间戳转换为 time.Time
+func (DTOConverter) UnixToTime(ts int64) time.Time {
+	return time.Unix(ts, 0)
+}
+
+// TimesToISO8601 批量转换 time.Time → ISO8601 字符串
+func (DTOConverter) TimesToISO8601(times []time.Time) []string {
+	result := make([]string, len(times))
+	for i, t := range times {
+		result[i] = t.Format(time.RFC3339)
+	}
+	return result
+}
+
+// ISO8601sToTimes 批量转换 ISO8601 字符串 → time.Time
+func (DTOConverter) ISO8601sToTimes(strs []string) ([]time.Time, error) {
+	result := make([]time.Time, len(strs))
+	for i, s := range strs {
+		t, err := time.Parse(time.RFC3339, s)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse time at index %d: %w", i, err)
+		}
+		result[i] = t
+	}
+	return result, nil
+}
+
+// ===== 枚举转换 =====
 
 // UserRoleToString UserRole → string
 func (DTOConverter) UserRoleToString(role UserRole) string {
@@ -165,6 +231,41 @@ func (DTOConverter) OrderStatusToString(status OrderStatus) string {
 // StringToOrderStatus string → OrderStatus
 func (DTOConverter) StringToOrderStatus(s string) (OrderStatus, error) {
 	return ParseOrderStatus(s)
+}
+
+// ===== BaseEntity 转换辅助 =====
+
+// CopyBaseFields 复制 BaseEntity 字段到 DTO 格式
+// 返回: (id string, createdAt string, updatedAt string)
+// 用法:
+//   dto.ID, dto.CreatedAt, dto.UpdatedAt = converter.CopyBaseFields(model.ID, model.CreatedAt, model.UpdatedAt)
+func (DTOConverter) CopyBaseFields(id primitive.ObjectID, createdAt, updatedAt time.Time) (string, string, string) {
+	return ToHex(id),
+		createdAt.Format(time.RFC3339),
+		updatedAt.Format(time.RFC3339)
+}
+
+// ParseBaseFields 从 DTO 解析 BaseEntity 字段
+// 返回: (id ObjectID, createdAt time.Time, updatedAt time.Time, error)
+// 用法:
+//   id, createdAt, updatedAt, err := converter.ParseBaseFields(dto.ID, dto.CreatedAt, dto.UpdatedAt)
+func (DTOConverter) ParseBaseFields(idStr, createdAtStr, updatedAtStr string) (primitive.ObjectID, time.Time, time.Time, error) {
+	id, err := ParseObjectID(idStr)
+	if err != nil {
+		return primitive.ObjectID{}, time.Time{}, time.Time{}, fmt.Errorf("invalid id: %w", err)
+	}
+
+	createdAt, err := time.Parse(time.RFC3339, createdAtStr)
+	if err != nil {
+		return primitive.ObjectID{}, time.Time{}, time.Time{}, fmt.Errorf("invalid createdAt: %w", err)
+	}
+
+	updatedAt, err := time.Parse(time.RFC3339, updatedAtStr)
+	if err != nil {
+		return primitive.ObjectID{}, time.Time{}, time.Time{}, fmt.Errorf("invalid updatedAt: %w", err)
+	}
+
+	return id, createdAt, updatedAt, nil
 }
 
 // DefaultConverter 默认转换器实例

@@ -45,7 +45,7 @@ func (r *MongoBookRepository) Create(ctx context.Context, book *bookstore.Book) 
 		return err
 	}
 
-	book.ID = result.InsertedID.(primitive.ObjectID).Hex()
+	book.ID = result.InsertedID.(primitive.ObjectID)
 	return nil
 }
 

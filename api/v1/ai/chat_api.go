@@ -206,12 +206,14 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 
 // GetChatHistory 获取聊天历史
 // @Summary 获取聊天历史
-// @Description 获取指定会话的聊天历史
+// @Description 获取指定会话的聊天历史，支持分页
 // @Tags AI聊天
 // @Accept json
 // @Produce json
 // @Param sessionId path string true "会话ID"
-// @Success 200 {object} response.Response{data=dto.ChatSessionDTO}
+// @Param limit query int false "每页数量" default(50) minimum(1) maximum(100)
+// @Param offset query int false "偏移量" default(0) minimum(0)
+// @Success 200 {object} response.Response{data=dto.ChatHistoryDTO}
 // @Router /api/v1/ai/chat/sessions/:sessionId [get]
 func (api *ChatApi) GetChatHistory(c *gin.Context) {
 	sessionID := c.Param("sessionId")
@@ -220,7 +222,27 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 		return
 	}
 
-	session, err := api.chatService.GetChatHistory(c.Request.Context(), sessionID)
+	// 获取分页参数，设置默认值和最大值
+	limit := 50  // 默认50条
+	offset := 0  // 默认从头开始
+
+	if l, ok := c.GetQuery("limit"); ok {
+		if n, err := strconv.Atoi(l); err == nil && n > 0 {
+			if n > 100 {
+				limit = 100  // 最大100条
+			} else {
+				limit = n
+			}
+		}
+	}
+
+	if o, ok := c.GetQuery("offset"); ok {
+		if n, err := strconv.Atoi(o); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+
+	session, err := api.chatService.GetChatHistory(c.Request.Context(), sessionID, limit, offset)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "获取聊天历史失败", err.Error())
 		return

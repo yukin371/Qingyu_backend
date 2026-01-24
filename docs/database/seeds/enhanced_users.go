@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -271,17 +272,16 @@ func SeedEnhancedUsers(ctx context.Context, db *mongo.Database) error {
 		// 创建用户
 		now := time.Now()
 		user := users.User{
-			ID:        primitive.NewObjectID(),
-			Username:  testUser.Username,
-			Email:     testUser.Email,
-			Phone:     testUser.Phone,
-			Password:  string(hashedPassword),
-			Roles:     []string{testUser.Role},
-			Status:    users.UserStatus(testUser.Status),
-			Avatar:    testUser.Avatar,
-			Bio:       testUser.Bio,
-			CreatedAt: now,
-			UpdatedAt: now,
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         testUser.Username,
+			Email:            testUser.Email,
+			Phone:            testUser.Phone,
+			Password:         string(hashedPassword),
+			Roles:            []string{testUser.Role},
+			Status:           users.UserStatus(testUser.Status),
+			Avatar:           testUser.Avatar,
+			Bio:              testUser.Bio,
 		}
 
 		_, err = collection.InsertOne(ctx, user)

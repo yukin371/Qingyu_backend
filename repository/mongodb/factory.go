@@ -58,12 +58,23 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 	}
 
 	// 创建客户端选项
+	// 注意：Go 1.24 对 float64 到 int64 的转换更严格，需要启用截断选项
 	clientOptions := options.Client().
 		ApplyURI(config.URI).
 		SetMaxPoolSize(config.MaxPoolSize).
 		SetMinPoolSize(config.MinPoolSize).
 		SetConnectTimeout(config.ConnectTimeout).
 		SetServerSelectionTimeout(config.ServerTimeout)
+
+	// 配置 BSON 解码器选项，启用 float64 到 int64 的截断
+	// 这样 MongoDB 中存储的 float64 类型的数字可以正确解码到 Go 的 int64 字段
+	bsonRegistryOptions := options.BSONOptions{
+		// 允许将 float64 截断为 int64 (例如价格字段)
+		AllowTruncatingDoubles: true,
+		// 使用本地时区
+		UseLocalTimeZone: false,
+	}
+	clientOptions.SetBSONOptions(&bsonRegistryOptions)
 
 	// 连接MongoDB
 	ctx, cancel := context.WithTimeout(context.Background(), config.ConnectTimeout)
