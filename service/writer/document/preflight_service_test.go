@@ -132,8 +132,8 @@ func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 	doc1 := &writer.Document{
 		ProjectID: projectID,
 		Title:     "Test Doc 1",
-		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		StableRef:  generateStableRef(),
+		OrderKey:  "a0", // DefaultOrderKey
 		Type:      writer.TypeChapter,
 		Level:     0,
 	}
@@ -244,7 +244,7 @@ func TestPreflightService_WrongProject(t *testing.T) {
 		ProjectID: otherProjectID, // 属于其他项目
 		Title:     "Test Doc 1",
 		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		OrderKey:  "a0",
 		Type:      writer.TypeChapter,
 		Level:     0,
 	}
@@ -307,7 +307,7 @@ func TestPreflightService_NormalizeTargetIDs_Descendants(t *testing.T) {
 		ProjectID: projectID,
 		Title:     "Parent Doc",
 		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		OrderKey:  "a0",
 		Type:      writer.TypeVolume,
 		Level:     0,
 		ParentID:  primitive.NilObjectID, // 根节点
@@ -319,7 +319,7 @@ func TestPreflightService_NormalizeTargetIDs_Descendants(t *testing.T) {
 		ProjectID: projectID,
 		Title:     "Child Doc",
 		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		OrderKey:  "a0",
 		Type:      writer.TypeChapter,
 		Level:     1,
 		ParentID:  parentDoc.ID, // 父节点是parentDoc
@@ -361,7 +361,7 @@ func TestPreflightService_MixedValidInvalid(t *testing.T) {
 		ProjectID: projectID,
 		Title:     "Valid Doc",
 		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		OrderKey:  "a0",
 		Type:      writer.TypeChapter,
 		Level:     0,
 	}
@@ -413,7 +413,7 @@ func TestPreflightService_ContinueOnInvalid(t *testing.T) {
 		ProjectID: projectID,
 		Title:     "Valid Doc",
 		StableRef: generateStableRef(),
-		OrderKey:  writer.DefaultOrderKey,
+		OrderKey:  "a0",
 		Type:      writer.TypeChapter,
 		Level:     0,
 	}
