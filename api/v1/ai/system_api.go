@@ -28,7 +28,7 @@ func NewSystemApi(aiService *aiService.Service) *SystemApi {
 // @Tags AI系统
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/health [get]
 func (api *SystemApi) HealthCheck(c *gin.Context) {
 	status := gin.H{
@@ -46,7 +46,7 @@ func (api *SystemApi) HealthCheck(c *gin.Context) {
 // @Tags AI系统
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/providers [get]
 func (api *SystemApi) GetProviders(c *gin.Context) {
 	// 获取支持的AI提供商列表
@@ -72,7 +72,7 @@ func (api *SystemApi) GetProviders(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param provider query string false "提供商名称"
-// @Success 200 {object} response.Response
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/models [get]
 func (api *SystemApi) GetModels(c *gin.Context) {
 	provider := c.Query("provider")
