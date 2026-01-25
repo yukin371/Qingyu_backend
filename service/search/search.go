@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/search"
+	"Qingyu_backend/pkg/metrics"
 	"Qingyu_backend/service/search/cache"
 	searchengine "Qingyu_backend/service/search/engine"
 	"Qingyu_backend/service/search/provider"
@@ -77,6 +78,28 @@ func (s *SearchService) SetCache(c cache.Cache) {
 // SetESConfig 设置 ES 配置
 func (s *SearchService) SetESConfig(config *SearchConfig) {
 	s.esConfig = config
+
+	// 更新灰度百分比指标
+	if config != nil && config.ES.GrayScale.Enabled {
+		s.updateGrayscaleMetrics()
+	}
+}
+
+// updateGrayscaleMetrics 更新灰度指标
+func (s *SearchService) updateGrayscaleMetrics() {
+	if s.esConfig == nil {
+		return
+	}
+
+	// 为每个搜索类型更新灰度百分比
+	percent := s.esConfig.ES.GrayScale.Percent
+	searchTypes := []string{"books", "projects", "documents"}
+
+	for _, searchType := range searchTypes {
+		metrics.UpdateGrayscalePercent(searchType, percent)
+	}
+
+	s.logger.Printf("[SearchService] Updated grayscale metrics: percent=%d", percent)
 }
 
 // SetESEngine 设置 ES 引擎
@@ -267,6 +290,9 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 	// 3. 判断是否使用 ES（灰度逻辑）
 	useES := s.shouldUseES(ctx, req.Type, userID)
 
+	// 记录灰度决策
+	metrics.RecordGrayscaleDecision(string(req.Type), useES)
+
 	// 4. 生成缓存键（基于是否使用 ES）
 	cacheKey := s.generateCacheKeyWithEngine(req, useES)
 
@@ -302,17 +328,27 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 	if useES && s.esEngine != nil {
 		// 使用 ES 搜索
 		resp, err = s.searchWithES(ctx, req)
-		// 记录 ES 使用情况
+		searchTook := time.Since(startTime)
+
+		// 记录 ES 使用情况（原有灰度决策器）
 		if s.grayscaleDecision != nil {
-			s.grayscaleDecision.RecordUsage("elasticsearch", time.Since(startTime))
+			s.grayscaleDecision.RecordUsage("elasticsearch", searchTook)
 		}
+
+		// 记录 Prometheus 指标
+		metrics.RecordSearch("elasticsearch", searchTook)
 	} else {
 		// 使用 Provider（原有逻辑）
 		resp, err = s.searchWithProvider(ctx, req)
-		// 记录 MongoDB 使用情况
+		searchTook := time.Since(startTime)
+
+		// 记录 MongoDB 使用情况（原有灰度决策器）
 		if s.grayscaleDecision != nil {
-			s.grayscaleDecision.RecordUsage("mongodb", time.Since(startTime))
+			s.grayscaleDecision.RecordUsage("mongodb", searchTook)
 		}
+
+		// 记录 Prometheus 指标
+		metrics.RecordSearch("mongodb", searchTook)
 	}
 
 	if err != nil {
