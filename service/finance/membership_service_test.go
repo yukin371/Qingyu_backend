@@ -249,7 +249,7 @@ func createTestPlan(name, planType string, duration int, price float64, enabled 
 		Name:      name,
 		Type:      planType,
 		Duration:  duration,
-		Price:     price,
+		Price:     types.NewMoneyFromYuan(price),
 		IsEnabled: enabled,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

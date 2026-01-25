@@ -237,7 +237,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 
 		// 回复嵌套评论
 		nestedComment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()},
+			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID()},
 			AuthorID:         primitive.NewObjectID().Hex(),
 			TargetID:         primitive.NewObjectID().Hex(),
 			State:            social.CommentStateNormal,
@@ -280,7 +280,7 @@ func TestCommentServiceReplyChain(t *testing.T) {
 
 		// 回复已删除评论
 		deletedComment := &social.Comment{
-			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID().Hex()},
+			IdentifiedEntity: social.IdentifiedEntity{ID: primitive.NewObjectID()},
 			State:            social.CommentStateDeleted,
 		}
 		mockRepo.On("GetByID", ctx, testCommentID).Return(deletedComment, nil).Once()

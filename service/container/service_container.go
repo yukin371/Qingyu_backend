@@ -88,6 +88,7 @@ type ServiceContainer struct {
 	collectionService     *socialService.CollectionService
 	followService         *socialService.FollowService
 	readingHistoryService *readingService.ReadingHistoryService
+	bookmarkService       readingService.BookmarkService
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
@@ -278,6 +279,14 @@ func (c *ServiceContainer) GetReadingStatsService() (*readingStatsService.Readin
 		return nil, fmt.Errorf("ReadingStatsService未初始化")
 	}
 	return c.readingStatsService, nil
+}
+
+// GetBookmarkService 获取书签服务
+func (c *ServiceContainer) GetBookmarkService() (readingService.BookmarkService, error) {
+	if c.bookmarkService == nil {
+		return nil, fmt.Errorf("BookmarkService未初始化")
+	}
+	return c.bookmarkService, nil
 }
 
 // GetQuotaService 获取配额服务
@@ -717,7 +726,16 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	c.services["ReadingHistoryService"] = c.readingHistoryService
 
-	// ============ 4.8 创建阅读统计服务 ============
+	// ============ 4.9 创建书签服务 ============
+	// 书签服务暂时不需要 ChapterService（当前未使用）
+	bookmarkRepo := c.repositoryFactory.CreateBookmarkRepository()
+	c.bookmarkService = readingService.NewBookmarkService(
+		bookmarkRepo,
+		nil, // ChapterService 暂时传入 nil，因为书签服务当前未使用它
+	)
+	// 注意：BookmarkService 不实现 BaseService 接口，不注册到 services map
+
+	// ============ 4.10 创建阅读统计服务 ============
 	chapterStatsRepo := c.repositoryFactory.CreateChapterStatsRepository()
 	readerBehaviorRepo := c.repositoryFactory.CreateReaderBehaviorRepository()
 	bookStatsRepo := c.repositoryFactory.CreateBookStatsRepository()

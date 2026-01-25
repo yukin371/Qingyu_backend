@@ -430,22 +430,28 @@ func (s *BatchOperationService) validateSubmitRequest(req *SubmitBatchOperationR
 // runPreflight 运行预检查
 func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *writer.BatchOperation) (*writer.PreflightSummary, error) {
 	summary := &writer.PreflightSummary{
-		TotalCount: len(batchOp.TargetIDs),
-		ValidCount: 0,
+		TotalCount:   len(batchOp.TargetIDs),
+		ValidCount:   0,
 		InvalidCount: 0,
 		SkippedCount: 0,
 	}
 
+	// 批量查询所有目标文档
+	docs, err := s.docRepo.GetByIDs(ctx, batchOp.TargetIDs)
+	if err != nil {
+		return nil, fmt.Errorf("批量查询文档失败: %w", err)
+	}
+
+	// 创建一个map来快速查找文档
+	docMap := make(map[string]*writer.Document)
+	for _, doc := range docs {
+		docMap[doc.ID.Hex()] = doc
+	}
+
 	// 验证每个目标ID
 	for _, targetID := range batchOp.TargetIDs {
-		doc, err := s.docRepo.GetByID(ctx, targetID)
-		if err != nil {
-			summary.InvalidCount++
-			summary.Errors = append(summary.Errors, fmt.Sprintf("目标 %s 验证失败: %v", targetID, err))
-			continue
-		}
-
-		if doc == nil {
+		doc, exists := docMap[targetID]
+		if !exists || doc == nil {
 			summary.InvalidCount++
 			summary.Errors = append(summary.Errors, fmt.Sprintf("目标 %s 不存在", targetID))
 			continue
@@ -466,35 +472,85 @@ func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *write
 
 // executeDelete 执行批量删除
 func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writer.BatchOperation) error {
-	// 转换RetryConfig
+	// 转换RetryConfig，如果为nil则使用默认配置
 	retryConfig := s.convertMapToRetryConfig(batchOp.RetryConfig)
+	if retryConfig == nil {
+		retryConfig = DefaultRetryConfig()
+	}
 
 	for i := range batchOp.Items {
 		item := &batchOp.Items[i]
 
-		// 更新状态为处理中
-		item.Status = writer.BatchItemStatusProcessing
-		s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
-
-		// 执行删除
-		err := s.docRepo.SoftDelete(ctx, item.TargetID, batchOp.ProjectID.Hex())
+		// 检查操作是否被取消或状态已改变（并发安全保护）
+		currentOp, err := s.batchOpRepo.GetByID(ctx, batchOp.ID.Hex())
 		if err != nil {
-			item.Status = writer.BatchItemStatusFailed
-			item.ErrorCode = "DELETE_FAILED"
-			item.ErrorMsg = err.Error()
-			item.Retryable = s.retrySvc.ShouldRetry(err, retryConfig)
-
-			s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
-
-			if batchOp.Atomic {
-				return fmt.Errorf("删除目标 %s 失败: %w", item.TargetID, err)
-			}
-			continue
+			return fmt.Errorf("检查操作状态失败: %w", err)
+		}
+		if currentOp.Status == writer.BatchOpStatusCancelled {
+			return fmt.Errorf("操作已被取消")
+		}
+		if currentOp.Status != writer.BatchOpStatusProcessing {
+			return fmt.Errorf("操作状态已改变为: %s", currentOp.Status)
 		}
 
-		// 成功
-		item.Status = writer.BatchItemStatusSucceeded
-		s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+		// 重试循环：从0到MaxRetries
+		for attempt := 0; attempt <= retryConfig.MaxRetries; attempt++ {
+			// 更新重试次数
+			item.RetryCount = attempt
+
+			// 更新状态为处理中
+			item.Status = writer.BatchItemStatusProcessing
+			s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+
+			// 执行删除
+			err := s.docRepo.SoftDelete(ctx, item.TargetID, batchOp.ProjectID.Hex())
+			if err == nil {
+				// 删除成功
+				item.Status = writer.BatchItemStatusSucceeded
+				item.Retryable = false
+				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+				break // 成功，跳出重试循环
+			}
+
+			// 删除失败，判断是否可重试
+			item.Retryable = s.retrySvc.ShouldRetry(err, retryConfig)
+
+			// 判断是否需要重试
+			if attempt < retryConfig.MaxRetries && item.Retryable {
+				// 可以重试，等待后继续
+				delay := s.retrySvc.GetRetryDelay(attempt, retryConfig)
+				select {
+				case <-ctx.Done():
+					// 上下文被取消，返回错误
+					item.Status = writer.BatchItemStatusFailed
+					item.ErrorCode = "CANCELLED"
+					item.ErrorMsg = "操作被取消"
+					s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+					if batchOp.Atomic {
+						return fmt.Errorf("删除目标 %s 被取消: %w", item.TargetID, ctx.Err())
+					}
+					break // 跳出重试循环，处理下一项
+				case <-time.After(delay):
+					// 等待完成，继续下一次重试
+					continue
+				}
+			} else {
+				// 不可重试或已达最大重试次数，标记为失败
+				item.Status = writer.BatchItemStatusFailed
+				item.ErrorCode = "DELETE_FAILED"
+				item.ErrorMsg = err.Error()
+				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+
+				if batchOp.Atomic {
+					// 原子操作：任何失败都返回错误
+					return fmt.Errorf("删除目标 %s 失败 (尝试%d次): %w", item.TargetID, attempt+1, err)
+				}
+				break // 跳出重试循环，处理下一项
+			}
+		}
+
+		// 如果是原子操作且上一项失败，已经在上面的if中返回了
+		// 如果是非原子操作，继续处理下一项（无论成功或失败）
 	}
 
 	return nil

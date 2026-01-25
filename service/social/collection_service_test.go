@@ -285,7 +285,7 @@ func TestCollectionService_RemoveCollection(t *testing.T) {
 		// Arrange - Mock获取收藏（不是自己的）
 		collection := &social.Collection{
 			ID:     primitive.NewObjectID(),
-			UserID: primitive.NewObjectID().Hex(),
+			UserID: primitive.NewObjectID(),
 		}
 		mockRepo.On("GetByID", ctx, testCollectionID).
 			Return(collection, nil).Once()
@@ -346,7 +346,7 @@ func TestCollectionService_UpdateCollection(t *testing.T) {
 		// Arrange - Mock获取收藏（不是自己的）
 		collection := &social.Collection{
 			ID:     primitive.NewObjectID(),
-			UserID: primitive.NewObjectID().Hex(),
+			UserID: primitive.NewObjectID(),
 		}
 		mockRepo.On("GetByID", ctx, testCollectionID).
 			Return(collection, nil).Once()
@@ -484,7 +484,7 @@ func TestCollectionService_UpdateFolder(t *testing.T) {
 		// Arrange - Mock获取收藏夹（不是自己的）
 		folder := &social.CollectionFolder{
 			ID:     primitive.NewObjectID(),
-			UserID: primitive.NewObjectID().Hex(),
+			UserID: primitive.NewObjectID(),
 		}
 		mockRepo.On("GetFolderByID", ctx, testFolderID).
 			Return(folder, nil).Once()
