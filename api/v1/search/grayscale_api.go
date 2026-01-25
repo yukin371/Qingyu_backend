@@ -41,6 +41,42 @@ type GrayscaleStatusResponse struct {
 	MongoDBAvgTook  int64   `json:"mongodb_avg_took_ms"` // MongoDB 平均耗时（毫秒）
 }
 
+// GrayscaleMetricsResponse 灰度指标响应
+type GrayscaleMetricsResponse struct {
+	// 配置
+	Config GrayscaleConfig `json:"config"`
+
+	// 使用统计
+	ESCount        int64   `json:"es_count"`
+	MongoDBCount   int64   `json:"mongodb_count"`
+
+	// 流量分配
+	ESTraffic      float64 `json:"es_traffic"`
+	MongoDBTraffic float64 `json:"mongodb_traffic"`
+
+	// 性能指标
+	ESAvgTook      float64 `json:"es_avg_took_ms"`
+	MongoDBAvgTook float64 `json:"mongodb_avg_took_ms"`
+
+	// 决策统计
+	TotalDecisions  int64 `json:"total_decisions"`
+	ESDecisions     int64 `json:"es_decisions"`
+	MongoDBDecisions int64 `json:"mongodb_decisions"`
+}
+
+// GrayscaleConfig 灰度配置
+type GrayscaleConfig struct {
+	Enabled bool `json:"enabled"`
+	Percent int  `json:"percent"`
+}
+
+// TrafficDistributionResponse 流量分配响应
+type TrafficDistributionResponse struct {
+	ESTraffic      float64 `json:"es_traffic"`
+	MongoDBTraffic float64 `json:"mongodb_traffic"`
+	TotalRequests  int64   `json:"total_requests"`
+}
+
 // GetGrayscaleStatus 获取灰度状态
 //
 //	@Summary		获取灰度状态
@@ -247,6 +283,159 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":      http.StatusOK,
 		"message":   "灰度配置更新成功",
+		"data":      response,
+		"timestamp": c.GetInt64("request_time"),
+		"request_id": requestID,
+	})
+}
+
+// GetGrayscaleMetrics 获取灰度指标
+//
+//	@Summary		获取灰度指标
+//	@Description	获取完整的灰度监控指标数据，包括配置、使用统计、流量分配、性能指标等
+//	@Tags			搜索-灰度
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	shared.APIResponse
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
+//	@Router			/api/v1/search/grayscale/metrics [get]
+func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
+	// 获取请求ID
+	requestID := c.GetString("requestId")
+	if requestID == "" {
+		requestID = c.GetHeader("X-Request-ID")
+	}
+
+	// 构建日志记录器
+	apiLogger := logger.WithRequest(
+		requestID,
+		c.Request.Method,
+		c.Request.URL.Path,
+		c.ClientIP(),
+	)
+
+	// 获取灰度决策器
+	grayscaleDecision := api.searchService.GetGrayscaleDecision()
+	if grayscaleDecision == nil {
+		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    http.StatusInternalServerError,
+			"message": "灰度决策器未初始化",
+		})
+		return
+	}
+
+	// 获取灰度配置
+	config := grayscaleDecision.GetConfig()
+
+	// 获取灰度指标
+	metrics := grayscaleDecision.GetMetrics()
+
+	// 计算流量分配
+	esTraffic, mongoTraffic := metrics.GetTrafficDistribution()
+
+	// 转换平均耗时为毫秒
+	esAvgTook := float64(metrics.ESAvgTook.Milliseconds())
+	mongoAvgTook := float64(metrics.MongoDBAvgTook.Milliseconds())
+
+	// 计算总决策次数
+	totalDecisions := metrics.ESCount + metrics.MongoDBCount
+
+	// 构造响应
+	response := GrayscaleMetricsResponse{
+		Config: GrayscaleConfig{
+			Enabled: config.Enabled,
+			Percent: config.Percent,
+		},
+		ESCount:         metrics.ESCount,
+		MongoDBCount:    metrics.MongoDBCount,
+		ESTraffic:       esTraffic,
+		MongoDBTraffic:  mongoTraffic,
+		ESAvgTook:       esAvgTook,
+		MongoDBAvgTook:  mongoAvgTook,
+		TotalDecisions:  totalDecisions,
+		ESDecisions:     metrics.ESCount,
+		MongoDBDecisions: metrics.MongoDBCount,
+	}
+
+	apiLogger.WithModule("search").Info("获取灰度指标成功",
+		zap.Bool("enabled", config.Enabled),
+		zap.Int("percent", config.Percent),
+		zap.Int64("total_decisions", totalDecisions),
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":      http.StatusOK,
+		"message":   "获取灰度指标成功",
+		"data":      response,
+		"timestamp": c.GetInt64("request_time"),
+		"request_id": requestID,
+	})
+}
+
+// GetTrafficDistribution 获取流量分配
+//
+//	@Summary		获取流量分配
+//	@Description	获取当前流量分配比例数据
+//	@Tags			搜索-灰度
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	shared.APIResponse
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
+//	@Router			/api/v1/search/grayscale/traffic [get]
+func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
+	// 获取请求ID
+	requestID := c.GetString("requestId")
+	if requestID == "" {
+		requestID = c.GetHeader("X-Request-ID")
+	}
+
+	// 构建日志记录器
+	apiLogger := logger.WithRequest(
+		requestID,
+		c.Request.Method,
+		c.Request.URL.Path,
+		c.ClientIP(),
+	)
+
+	// 获取灰度决策器
+	grayscaleDecision := api.searchService.GetGrayscaleDecision()
+	if grayscaleDecision == nil {
+		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    http.StatusInternalServerError,
+			"message": "灰度决策器未初始化",
+		})
+		return
+	}
+
+	// 获取灰度指标
+	metrics := grayscaleDecision.GetMetrics()
+
+	// 计算流量分配
+	esTraffic, mongoTraffic := metrics.GetTrafficDistribution()
+
+	// 计算总请求数
+	totalRequests := metrics.ESCount + metrics.MongoDBCount
+
+	// 构造响应
+	response := TrafficDistributionResponse{
+		ESTraffic:      esTraffic,
+		MongoDBTraffic: mongoTraffic,
+		TotalRequests:  totalRequests,
+	}
+
+	apiLogger.WithModule("search").Info("获取流量分配成功",
+		zap.Float64("es_traffic", esTraffic),
+		zap.Float64("mongodb_traffic", mongoTraffic),
+		zap.Int64("total_requests", totalRequests),
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":      http.StatusOK,
+		"message":   "获取流量分配成功",
 		"data":      response,
 		"timestamp": c.GetInt64("request_time"),
 		"request_id": requestID,
