@@ -31,6 +31,12 @@ func RegisterSearchRoutes(router *gin.RouterGroup, searchSvc *searchService.Sear
 		// 获取灰度状态
 		grayscaleGroup.GET("/status", grayscaleAPI.GetGrayscaleStatus)
 
+		// 获取灰度指标
+		grayscaleGroup.GET("/metrics", grayscaleAPI.GetGrayscaleMetrics)
+
+		// 获取流量分配
+		grayscaleGroup.GET("/traffic", grayscaleAPI.GetTrafficDistribution)
+
 		// 更新灰度配置
 		grayscaleGroup.POST("/config", grayscaleAPI.UpdateGrayscaleConfig)
 	}
