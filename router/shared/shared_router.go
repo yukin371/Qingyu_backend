@@ -9,7 +9,7 @@ import (
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/shared/auth"
-	searchService "Qingyu_backend/service/shared/search"
+	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	"Qingyu_backend/service/shared/storage"
 )
 
@@ -155,7 +155,7 @@ func RegisterStorageRoutes(
 // 注意：此路由只提供通用的搜索建议功能
 // - 书籍搜索已迁移到 /api/v1/bookstore/search
 // - 文档搜索已迁移到 /api/v1/writer/search
-func RegisterSearchRoutes(r *gin.RouterGroup, searchSvc searchService.SearchService) {
+func RegisterSearchRoutes(r *gin.RouterGroup, searchSvc search_legacy.SearchService) {
 	// 创建API处理器
 	searchAPI := shared.NewSearchAPI(searchSvc)
 

@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/shared/search"
+	"Qingyu_backend/service/shared/search_legacy"
 )
 
 // SearchAPI 搜索API处理器（写作端）
 type SearchAPI struct {
-	searchService search.SearchService
+	searchService search_legacy.SearchService
 }
 
 // NewSearchAPI 创建搜索API实例
-func NewSearchAPI(searchService search.SearchService) *SearchAPI {
+func NewSearchAPI(searchService search_legacy.SearchService) *SearchAPI {
 	return &SearchAPI{
 		searchService: searchService,
 	}
@@ -59,7 +59,7 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
 	// 3. 构建搜索请求
-	req := &search.SearchRequest{
+	req := &search_legacy.SearchRequest{
 		Keyword:   keyword,
 		ProjectID: projectID,
 		Page:      page,

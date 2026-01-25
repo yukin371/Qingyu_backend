@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/shared/search"
+	"Qingyu_backend/service/shared/search_legacy"
 )
 
 // SearchAPI 搜索API处理器
@@ -14,11 +14,11 @@ import (
 // - 书籍搜索已迁移到 bookstore 模块
 // - 文档搜索已迁移到 writer 模块
 type SearchAPI struct {
-	searchService search.SearchService
+	searchService search_legacy.SearchService
 }
 
 // NewSearchAPI 创建搜索API实例
-func NewSearchAPI(searchService search.SearchService) *SearchAPI {
+func NewSearchAPI(searchService search_legacy.SearchService) *SearchAPI {
 	return &SearchAPI{
 		searchService: searchService,
 	}

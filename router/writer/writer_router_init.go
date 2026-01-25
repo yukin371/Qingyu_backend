@@ -8,7 +8,7 @@ import (
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/interfaces"
-	searchService "Qingyu_backend/service/shared/search"
+	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
@@ -53,7 +53,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 
 	// 创建SearchService（用于文档搜索）
 	bookRepo := repositoryFactory.CreateBookRepository()
-	searchSvc := searchService.NewSearchService(bookRepo, documentRepo)
+	searchSvc := search_legacy.NewSearchService(bookRepo, documentRepo)
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口

@@ -7,7 +7,7 @@ import (
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/interfaces"
-	searchService "Qingyu_backend/service/shared/search"
+	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
@@ -19,7 +19,7 @@ func InitWriterRouter(
 	projectService *projectService.ProjectService,
 	documentService *document.DocumentService,
 	versionService *projectService.VersionService,
-	searchSvc searchService.SearchService,
+	searchSvc search_legacy.SearchService,
 	exportService interfaces.ExportService,
 	publishService interfaces.PublishService,
 	lockService lock.DocumentLockService,
@@ -193,7 +193,7 @@ func InitEditorRouter(r *gin.RouterGroup, editorApi *writer.EditorApi) {
 }
 
 // InitSearchRouter 初始化搜索路由
-func InitSearchRouter(r *gin.RouterGroup, searchSvc searchService.SearchService) {
+func InitSearchRouter(r *gin.RouterGroup, searchSvc search_legacy.SearchService) {
 	// 创建搜索API实例
 	searchAPI := writer.NewSearchAPI(searchSvc)
 
