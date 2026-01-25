@@ -54,6 +54,9 @@ func RegisterUserRoutes(
 	if bookstoreService != nil {
 		handlers.PublicUserHandler.SetBookstoreService(bookstoreService)
 	}
+	// 设置存储服务（需要从外部注入）
+	// TODO: 将storageService作为参数传入RegisterUserRoutes
+	// handlers.ProfileHandler.SetStorageService(storageService)
 
 	// ========================================
 	// 公开路由（不需要认证）
@@ -99,7 +102,8 @@ func RegisterUserRoutes(
 		// 个人信息管理
 		authenticated.GET("/profile", handlers.ProfileHandler.GetProfile)
 		authenticated.PUT("/profile", handlers.ProfileHandler.UpdateProfile)
-		authenticated.PUT("/password", handlers.ProfileHandler.ChangePassword)
+		authenticated.PUT("/password", handlers.ProfileHandler.UpdatePassword)
+		authenticated.POST("/avatar", handlers.ProfileHandler.UploadAvatar)
 
 		// 安全相关 - 邮箱验证（需要登录）
 		authenticated.POST("/email/send-code", handlers.SecurityHandler.SendEmailVerification)
