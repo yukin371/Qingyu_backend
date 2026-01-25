@@ -977,11 +977,18 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	pushDeviceRepo := mongoNotification.NewPushDeviceRepository(c.mongoDB)
 	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
 
+	// TODO: 初始化WebSocket Hub和EmailService
+	// 暂时传入nil，后续需要完善
+	var wsHub notificationService.WSHub
+	var emailService notificationService.EmailService
+
 	notificationSvc := notificationService.NewNotificationService(
 		notificationRepo,
 		preferenceRepo,
 		pushDeviceRepo,
 		templateRepo,
+		emailService,
+		wsHub,
 	)
 	c.notificationService = notificationSvc
 
