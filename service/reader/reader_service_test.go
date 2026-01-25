@@ -1116,12 +1116,14 @@ func TestReaderService_DeleteReadingProgress_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, mockCacheService := setupReaderService()
 	ctx := context.Background()
-	userID := primitive.NewObjectID()
-	bookID := primitive.NewObjectID()
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	existingProgress := &reader.ReadingProgress{
-		UserID: userID,
-		BookID: bookID,
+		UserID: userIDObj,
+		BookID: bookIDObj,
 	}
 	existingProgress.ID = primitive.NewObjectID()
 
@@ -1278,9 +1280,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "无效类型",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "invalid",
 			},
 			wantErrSub: "标注类型必须是bookmark(书签)、highlight(高亮)或note(笔记)",
@@ -1308,10 +1310,12 @@ func TestReaderService_GetAnnotationsByChapter_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
 	chapterID := "chapter123"
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	expectedAnnotations := []*reader.Annotation{
-		{ID: "annotation1", UserID: userID, BookID: bookID, ChapterID: chapterID},
-		{ID: "annotation2", UserID: userID, BookID: bookID, ChapterID: chapterID},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, BookID: bookIDObj, ChapterID: primitive.NewObjectID()},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, BookID: bookIDObj, ChapterID: primitive.NewObjectID()},
 	}
 
 	mockAnnotationRepo.On("GetByUserAndChapter", ctx, userID, bookID, chapterID).

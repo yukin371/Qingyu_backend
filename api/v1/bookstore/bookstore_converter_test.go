@@ -288,7 +288,7 @@ func TestPriceConversion(t *testing.T) {
 				Title:            "测试",
 				Author:           "作者",
 				Status:           bookstore.BookStatusDraft,
-				Price:            int64(tc.expected),
+				Price:            float64(tc.expected),
 			}
 
 			bookDTO := ToBookDTO(bookModel)

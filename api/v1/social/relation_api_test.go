@@ -373,7 +373,7 @@ func TestRelationAPI_GetFollowing_Success(t *testing.T) {
 	expectedRelations := []*social.UserRelation{
 		{
 			IdentifiedEntity: social.IdentifiedEntity{
-				ID: primitive.NewObjectID().Hex(),
+				ID: primitive.NewObjectID(),
 			},
 			FollowerID: userID,
 			FolloweeID: "user1",
@@ -385,7 +385,7 @@ func TestRelationAPI_GetFollowing_Success(t *testing.T) {
 		},
 		{
 			IdentifiedEntity: social.IdentifiedEntity{
-				ID: primitive.NewObjectID().Hex(),
+				ID: primitive.NewObjectID(),
 			},
 			FollowerID: userID,
 			FolloweeID: "user2",
