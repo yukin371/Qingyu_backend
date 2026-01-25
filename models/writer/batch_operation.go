@@ -86,6 +86,10 @@ type PreflightSummary struct {
 	ValidCount   int `bson:"valid_count" json:"validCount"`
 	InvalidCount int `bson:"invalid_count" json:"invalidCount"`
 	SkippedCount int `bson:"skipped_count" json:"skippedCount"`
+
+	// P1扩展：支持atomic=false模式的结果统计
+	SuccessCount int `bson:"success_count" json:"successCount"` // 成功项数
+	FailedCount  int `bson:"failed_count" json:"failedCount"`  // 失败项数
 }
 
 // TouchForCreate 创建时设置默认值
@@ -139,6 +143,9 @@ type BatchOperationItem struct {
 	// 撤销信息
 	InverseCommand map[string]interface{} `bson:"inverse_command,omitempty" json:"inverseCommand,omitempty"`
 	InverseLogID   primitive.ObjectID      `bson:"inverse_log_id,omitempty" json:"inverseLogId,omitempty"`
+
+	// 重试控制
+	Retryable bool `bson:"retryable" json:"retryable"` // 可重试标记
 
 	// 时间
 	StartedAt  *time.Time `bson:"started_at,omitempty" json:"startedAt,omitempty"`

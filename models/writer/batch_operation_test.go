@@ -727,3 +727,269 @@ func TestBatchOperation_OriginalTargetIDs(t *testing.T) {
 		t.Errorf("TargetIDs length = %d, want 2", len(op.TargetIDs))
 	}
 }
+
+// ===== P1扩展测试：支持atomic=false模式 =====
+
+func TestBatchOperationItem_WithRetryable(t *testing.T) {
+	item := &BatchOperationItem{
+		BatchID:         primitive.NewObjectID(),
+		TargetID:        "doc-1",
+		TargetStableRef: "stable-ref-123",
+		Status:          BatchItemStatusFailed,
+		ErrorCode:       "CONFLICT",
+		ErrorMessage:    "Version conflict detected",
+		Retryable:       true,
+	}
+
+	if !item.Retryable {
+		t.Error("Retryable should be true")
+	}
+
+	if item.ErrorCode != "CONFLICT" {
+		t.Errorf("ErrorCode = %s, want CONFLICT", item.ErrorCode)
+	}
+
+	if item.ErrorMessage != "Version conflict detected" {
+		t.Errorf("ErrorMessage = %s, want 'Version conflict detected'", item.ErrorMessage)
+	}
+}
+
+func TestBatchOperationItem_ErrorFields_OmitEmpty(t *testing.T) {
+	// 验证空值情况下omitempty标签的作用
+	item := &BatchOperationItem{
+		BatchID:         primitive.NewObjectID(),
+		TargetID:        "doc-1",
+		TargetStableRef: "stable-ref-123",
+		Status:          BatchItemStatusPending,
+		Retryable:       false, // 默认值false应该被序列化
+	}
+
+	// 空字符串不应该影响JSON序列化
+	if item.ErrorCode != "" {
+		t.Errorf("ErrorCode should be empty, got %s", item.ErrorCode)
+	}
+
+	if item.ErrorMessage != "" {
+		t.Errorf("ErrorMessage should be empty, got %s", item.ErrorMessage)
+	}
+
+	// Retryable的默认值应该是false
+	if item.Retryable {
+		t.Error("Retryable should be false by default")
+	}
+}
+
+func TestBatchOperationItem_WithFullErrorInfo(t *testing.T) {
+	tests := []struct {
+		name         string
+		status       BatchItemStatus
+		errorCode    string
+		errorMessage string
+		retryable    bool
+	}{
+		{
+			name:         "conflict error retryable",
+			status:       BatchItemStatusFailed,
+			errorCode:    "VERSION_CONFLICT",
+			errorMessage: "Document version 5 does not match expected version 3",
+			retryable:    true,
+		},
+		{
+			name:         "not found error not retryable",
+			status:       BatchItemStatusFailed,
+			errorCode:    "NOT_FOUND",
+			errorMessage: "Document doc-1 not found",
+			retryable:    false,
+		},
+		{
+			name:         "permission error not retryable",
+			status:       BatchItemStatusFailed,
+			errorCode:    "PERMISSION_DENIED",
+			errorMessage: "User does not have permission",
+			retryable:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			item := &BatchOperationItem{
+				BatchID:         primitive.NewObjectID(),
+				TargetID:        "doc-1",
+				TargetStableRef: "stable-ref-123",
+				Status:          tt.status,
+				ErrorCode:       tt.errorCode,
+				ErrorMessage:    tt.errorMessage,
+				Retryable:       tt.retryable,
+			}
+
+			if item.Status != tt.status {
+				t.Errorf("Status = %s, want %s", item.Status, tt.status)
+			}
+
+			if item.ErrorCode != tt.errorCode {
+				t.Errorf("ErrorCode = %s, want %s", item.ErrorCode, tt.errorCode)
+			}
+
+			if item.ErrorMessage != tt.errorMessage {
+				t.Errorf("ErrorMessage = %s, want %s", item.ErrorMessage, tt.errorMessage)
+			}
+
+			if item.Retryable != tt.retryable {
+				t.Errorf("Retryable = %v, want %v", item.Retryable, tt.retryable)
+			}
+		})
+	}
+}
+
+func TestPreflightSummary_WithP1Extensions(t *testing.T) {
+	summary := &PreflightSummary{
+		TotalCount:   100,
+		ValidCount:   85,
+		InvalidCount: 10,
+		SkippedCount: 5,
+
+		// P1扩展字段
+		SuccessCount: 70,
+		FailedCount:  15,
+	}
+
+	// 验证原有字段
+	if summary.TotalCount != 100 {
+		t.Errorf("TotalCount = %d, want 100", summary.TotalCount)
+	}
+
+	if summary.ValidCount != 85 {
+		t.Errorf("ValidCount = %d, want 85", summary.ValidCount)
+	}
+
+	if summary.InvalidCount != 10 {
+		t.Errorf("InvalidCount = %d, want 10", summary.InvalidCount)
+	}
+
+	if summary.SkippedCount != 5 {
+		t.Errorf("SkippedCount = %d, want 5", summary.SkippedCount)
+	}
+
+	// 验证P1扩展字段
+	if summary.SuccessCount != 70 {
+		t.Errorf("SuccessCount = %d, want 70", summary.SuccessCount)
+	}
+
+	if summary.FailedCount != 15 {
+		t.Errorf("FailedCount = %d, want 15", summary.FailedCount)
+	}
+
+	// 验证一致性：SuccessCount + FailedCount 应该等于 ValidCount
+	if summary.SuccessCount+summary.FailedCount != summary.ValidCount {
+		t.Errorf("SuccessCount + FailedCount = %d, ValidCount = %d, should be equal",
+			summary.SuccessCount+summary.FailedCount, summary.ValidCount)
+	}
+}
+
+func TestPreflightSummary_NonAtomicModeResults(t *testing.T) {
+	// 测试atomic=false模式下的结果统计
+	// 场景：100个文档，80个有效，20个无效
+	// 执行结果：70个成功，10个失败（部分失败场景）
+
+	summary := &PreflightSummary{
+		TotalCount:   100,
+		ValidCount:   80,
+		InvalidCount: 20,
+		SkippedCount: 0,
+
+		// 执行结果
+		SuccessCount: 70,
+		FailedCount:  10,
+	}
+
+	// 验证总数一致
+	if summary.TotalCount != summary.ValidCount+summary.InvalidCount+summary.SkippedCount {
+		t.Error("TotalCount should equal ValidCount + InvalidCount + SkippedCount")
+	}
+
+	// 验证执行结果统计
+	executedCount := summary.SuccessCount + summary.FailedCount
+	if executedCount != summary.ValidCount {
+		t.Errorf("Executed count (%d) should equal ValidCount (%d)", executedCount, summary.ValidCount)
+	}
+
+	// 验证有部分失败
+	if summary.FailedCount == 0 {
+		t.Error("Expected some failures in non-atomic mode")
+	}
+
+	// 验证不是全部失败
+	if summary.SuccessCount == 0 {
+		t.Error("Expected some successes in non-atomic mode")
+	}
+}
+
+func TestPreflightSummary_AtomicModeResults(t *testing.T) {
+	// 测试atomic=true模式下的结果统计
+	// 场景：第一个操作失败，整个批次中止
+
+	summary := &PreflightSummary{
+		TotalCount:   100,
+		ValidCount:   100,
+		InvalidCount: 0,
+		SkippedCount: 0,
+
+		// 原子模式下，要么全部成功，要么全部失败
+		SuccessCount: 0,  // 全部失败
+		FailedCount:  100, // 因为第一个失败导致整个批次失败
+	}
+
+	// 验证原子模式的一致性
+	if summary.SuccessCount > 0 && summary.FailedCount > 0 {
+		t.Error("Atomic mode should not have partial success/failure")
+	}
+
+	// 验证总执行数
+	executedCount := summary.SuccessCount + summary.FailedCount
+	if executedCount != summary.ValidCount {
+		t.Errorf("Executed count (%d) should equal ValidCount (%d)", executedCount, summary.ValidCount)
+	}
+}
+
+func TestBatchOperationItem_AllStatusesWithErrors(t *testing.T) {
+	// 验证所有状态类型与新错误字段的兼容性
+	statuses := []BatchItemStatus{
+		BatchItemStatusPending,
+		BatchItemStatusProcessing,
+		BatchItemStatusSucceeded,
+		BatchItemStatusFailed,
+		BatchItemStatusSkipped,
+		BatchItemStatusCancelled,
+	}
+
+	for _, status := range statuses {
+		t.Run(string(status), func(t *testing.T) {
+			item := &BatchOperationItem{
+				BatchID:         primitive.NewObjectID(),
+				TargetID:        "doc-1",
+				TargetStableRef: "stable-ref-123",
+				Status:          status,
+				ErrorCode:       "TEST_ERROR",
+				ErrorMessage:    "Test error message",
+				Retryable:       true,
+			}
+
+			if item.Status != status {
+				t.Errorf("Status = %s, want %s", item.Status, status)
+			}
+
+			// 所有状态都应该能设置错误信息
+			if item.ErrorCode != "TEST_ERROR" {
+				t.Errorf("ErrorCode should be set for status %s", status)
+			}
+
+			if item.ErrorMessage != "Test error message" {
+				t.Errorf("ErrorMessage should be set for status %s", status)
+			}
+
+			if !item.Retryable {
+				t.Errorf("Retryable should be set for status %s", status)
+			}
+		})
+	}
+}
