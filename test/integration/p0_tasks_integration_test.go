@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/models/writer"
 )
@@ -54,8 +55,8 @@ func setupTestDB(t *testing.T) {
 	}
 }
 
-// cleanupTestData 清理测试数据
-func cleanupTestData(t *testing.T, userID string) {
+// cleanupP0TestData 清理P0任务测试数据
+func cleanupP0TestData(t *testing.T, userID string) {
 	// TODO: 实现测试数据清理
 	// 删除测试用户、项目、文档等
 }
@@ -103,7 +104,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 	// projectID := primitive.NewObjectID().Hex()  // 待实现时使用
 	// documentID := primitive.NewObjectID().Hex()  // 待实现时使用
 
-	defer cleanupTestData(t, userID)
+	defer cleanupP0TestData(t, userID)
 
 	t.Run("AutoSave_CreateAndUpdate", func(t *testing.T) {
 		// TODO: 实现自动保存集成测试
@@ -151,7 +152,7 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 	_ = testUser.Roles
 	_ = testUser.CreatedAt
 
-	defer cleanupTestData(t, testUser.ID.Hex())
+	defer cleanupP0TestData(t, testUser.ID.Hex())
 
 	t.Run("GetUserStats_WithRealRepositories", func(t *testing.T) {
 		// TODO: 实现真实Repository查询测试
