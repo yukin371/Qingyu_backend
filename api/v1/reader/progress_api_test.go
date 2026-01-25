@@ -298,11 +298,13 @@ func TestProgressAPI_GetReadingProgress_Success(t *testing.T) {
 	bookID := primitive.NewObjectID().Hex()
 	router := setupProgressTestRouter(mockService, userID)
 
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
+
 	expectedProgress := &reader.ReadingProgress{
-		ID:         primitive.NewObjectID().Hex(),
-		UserID:     userID,
-		BookID:     bookID,
-		ChapterID:  primitive.NewObjectID().Hex(),
+		UserID:     userIDObj,
+		BookID:     bookIDObj,
+		ChapterID:  primitive.NewObjectID(),
 		Progress:   0.5,
 		LastReadAt: time.Now(),
 	}
@@ -479,10 +481,12 @@ func TestProgressAPI_GetRecentReading_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupProgressTestRouter(mockService, userID)
 
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+
 	expectedProgresses := []*reader.ReadingProgress{
 		{
-			UserID: userID,
-			BookID: primitive.NewObjectID().Hex(),
+			UserID: userIDObj,
+			BookID: primitive.NewObjectID(),
 		},
 	}
 
@@ -536,10 +540,12 @@ func TestProgressAPI_GetReadingHistory_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupProgressTestRouter(mockService, userID)
 
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+
 	expectedProgresses := []*reader.ReadingProgress{
 		{
-			UserID: userID,
-			BookID: primitive.NewObjectID().Hex(),
+			UserID: userIDObj,
+			BookID: primitive.NewObjectID(),
 		},
 	}
 
@@ -603,10 +609,12 @@ func TestProgressAPI_GetUnfinishedBooks_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupProgressTestRouter(mockService, userID)
 
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+
 	expectedProgresses := []*reader.ReadingProgress{
 		{
-			UserID:   userID,
-			BookID:   primitive.NewObjectID().Hex(),
+			UserID:   userIDObj,
+			BookID:   primitive.NewObjectID(),
 			Progress: 0.3,
 		},
 	}
@@ -639,10 +647,12 @@ func TestProgressAPI_GetFinishedBooks_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	router := setupProgressTestRouter(mockService, userID)
 
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+
 	expectedProgresses := []*reader.ReadingProgress{
 		{
-			UserID:   userID,
-			BookID:   primitive.NewObjectID().Hex(),
+			UserID:   userIDObj,
+			BookID:   primitive.NewObjectID(),
 			Progress: 1.0,
 		},
 	}
