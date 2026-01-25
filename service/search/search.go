@@ -299,7 +299,7 @@ func (s *SearchService) Health(ctx context.Context) map[string]error {
 	}
 
 	// 检查各 Provider 健康状态
-	for searchType, provider := range s.providers {
+	for searchType := range s.providers {
 		// 这里假设 Provider 实现了 Health 方法
 		// 如果没有，可以跳过或返回 nil
 		status[string(searchType)] = nil
