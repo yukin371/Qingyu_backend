@@ -205,8 +205,8 @@ func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) 
 		newClaims := &TokenClaims{
 			UserID: claims.UserID,
 			Roles:  claims.Roles,
-			Exp:    now.Add(s.config.Expiration).UnixNano(), // 使用纳秒精度支持短过期时间
-			Iat:    now.UnixNano(),                          // 纳秒精度确保唯一性
+			Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
+			Iat:    now.Unix(),                         // 使用秒级时间戳
 		}
 		newToken, err = s.generateJWT(newClaims)
 		if err != nil {

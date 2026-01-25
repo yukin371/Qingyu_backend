@@ -457,7 +457,9 @@ func TestUserService_GetUser_Success(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, expectedUser, resp.User)
+	assert.Equal(t, expectedUser.ID.Hex(), resp.User.ID)
+	assert.Equal(t, expectedUser.Username, resp.User.Username)
+	assert.Equal(t, expectedUser.Email, resp.User.Email)
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -534,7 +536,9 @@ func TestUserService_UpdateUser_Success(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, *updatedUser, resp.User)
+	assert.Equal(t, updatedUser.ID.Hex(), resp.User.ID)
+	assert.Equal(t, updatedUser.Username, resp.User.Username)
+	assert.Equal(t, updatedUser.Email, resp.User.Email)
 
 	mockUserRepo.AssertExpectations(t)
 }
