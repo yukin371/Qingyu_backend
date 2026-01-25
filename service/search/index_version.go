@@ -286,14 +286,11 @@ func (m *elasticsearchIndexVersionManager) ListVersions(ctx context.Context, ali
 	}
 
 	// 2. 获取当前 alias 指向的索引
-	aliasResult, err := m.client.Aliases().Alias(alias).Do(ctx)
+	catAliasesResult, err := m.client.CatAliases().Alias(alias).Do(ctx)
 	var activeIndex string
-	if err == nil && aliasResult != nil {
-		// 使用 IndicesByAlias 方法获取 alias 指向的所有索引
-		activeIndices := aliasResult.IndicesByAlias(alias)
-		if len(activeIndices) > 0 {
-			activeIndex = activeIndices[0]
-		}
+	if err == nil && len(catAliasesResult) > 0 {
+		// CatAliasesResponse 是 []CatAliasesResponseRow，第一个元素就是 alias 指向的索引
+		activeIndex = catAliasesResult[0].Index
 	}
 
 	// 3. 过滤出匹配 alias 的版本索引
