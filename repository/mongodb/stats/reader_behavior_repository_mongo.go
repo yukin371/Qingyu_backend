@@ -40,8 +40,13 @@ func (r *MongoReaderBehaviorRepository) Create(ctx context.Context, behavior *st
 
 // GetByID 根据ID获取
 func (r *MongoReaderBehaviorRepository) GetByID(ctx context.Context, id string) (*stats.ReaderBehavior, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var behavior stats.ReaderBehavior
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&behavior)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&behavior)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -50,7 +55,12 @@ func (r *MongoReaderBehaviorRepository) GetByID(ctx context.Context, id string) 
 
 // Delete 删除
 func (r *MongoReaderBehaviorRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	return err
 }
 
