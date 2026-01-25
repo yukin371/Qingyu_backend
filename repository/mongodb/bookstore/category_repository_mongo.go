@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -48,8 +49,13 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 
 // GetByID 根据ID获取分类
 func (r *MongoCategoryRepository) GetByID(ctx context.Context, id string) (*bookstore.Category, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var category bookstore.Category
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&category)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -61,11 +67,16 @@ func (r *MongoCategoryRepository) GetByID(ctx context.Context, id string) (*book
 
 // Update 更新分类
 func (r *MongoCategoryRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -81,7 +92,12 @@ func (r *MongoCategoryRepository) Update(ctx context.Context, id string, updates
 
 // Delete 删除分类
 func (r *MongoCategoryRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -142,7 +158,12 @@ func (r *MongoCategoryRepository) List(ctx context.Context, filter infra.Filter)
 
 // Exists 判断分类是否存在
 func (r *MongoCategoryRepository) Exists(ctx context.Context, id string) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -273,9 +294,14 @@ func (r *MongoCategoryRepository) CountByParent(ctx context.Context, parentID st
 
 // UpdateBookCount 更新分类下的书籍数量
 func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryID string, count int64) error {
-	_, err := r.collection.UpdateOne(
+	objectID, err := primitive.ObjectIDFromHex(categoryID)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": categoryID},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$set": bson.M{
 				"book_count": count,
@@ -309,8 +335,13 @@ func (r *MongoCategoryRepository) GetAncestors(ctx context.Context, categoryID s
 	currentID := categoryID
 
 	for {
+		objectID, err := primitive.ObjectIDFromHex(currentID)
+		if err != nil {
+			return nil, err
+		}
+
 		var category bookstore.Category
-		err := r.collection.FindOne(ctx, bson.M{"_id": currentID}).Decode(&category)
+		err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				break
@@ -361,9 +392,18 @@ func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID
 
 // BatchUpdateStatus 批量更新状态
 func (r *MongoCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []string, isActive bool) error {
+	objectIDs := make([]primitive.ObjectID, 0, len(categoryIDs))
+	for _, id := range categoryIDs {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return err
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
+
 	_, err := r.collection.UpdateMany(
 		ctx,
-		bson.M{"_id": bson.M{"$in": categoryIDs}},
+		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
 			"$set": bson.M{
 				"is_active":  isActive,
