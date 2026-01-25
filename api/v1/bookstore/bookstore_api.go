@@ -2,14 +2,16 @@ package bookstore
 
 import (
 	bookstore2 "Qingyu_backend/models/bookstore"
-	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -271,25 +273,72 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/search [get]
 func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
+	startTime := time.Now()
+
+	// 获取请求ID
+	requestID := c.GetString("requestId")
+	if requestID == "" {
+		requestID = c.GetHeader("X-Request-ID")
+	}
+
+	// 获取用户ID
+	var userID string
+	if uid, exists := c.Get("userId"); exists {
+		userID = uid.(string)
+	}
+
+	// 构建日志记录器
+	searchLogger := logger.WithRequest(
+		requestID,
+		c.Request.Method,
+		c.Request.URL.Path,
+		c.ClientIP(),
+	)
+
+	if userID != "" {
+		searchLogger = searchLogger.WithUser(userID)
+	}
+
+	// 获取搜索参数
 	keyword := c.Query("keyword")
-	log.Printf("[API-DEBUG] SearchBooks called, keyword=%s", keyword)
+	author := c.Query("author")
+	categoryID := c.Query("categoryId")
+	status := c.Query("status")
+	tags := c.QueryArray("tags")
+	sortBy := c.DefaultQuery("sortBy", "created_at")
+	sortOrder := c.DefaultQuery("sortOrder", "desc")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	// 记录搜索请求
+	searchLogger.WithModule("search").Info("搜索请求",
+		zap.String("keyword", keyword),
+		zap.String("author", author),
+		zap.String("category_id", categoryID),
+		zap.String("status", status),
+		zap.Strings("tags", tags),
+		zap.String("sort_by", sortBy),
+		zap.String("sort_order", sortOrder),
+		zap.Int("page", page),
+		zap.Int("page_size", size),
+	)
 
 	// 构建过滤器
 	filter := &bookstore2.BookFilter{}
 
-	if categoryID := c.Query("categoryId"); categoryID != "" {
+	if categoryID != "" {
 		// 转换为ObjectID
 		if _, err := primitive.ObjectIDFromHex(categoryID); err == nil {
 			filter.CategoryID = &categoryID
 		}
 	}
 
-	if author := c.Query("author"); author != "" {
+	if author != "" {
 		filter.Author = &author
 	}
 
 	// 处理status参数 - 前端使用"serializing"，后端使用"ongoing"
-	if status := c.Query("status"); status != "" {
+	if status != "" {
 		// 映射前端状态值到后端状态值
 		var backendStatus string
 		switch status {
@@ -305,15 +354,12 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		filter.Status = &bookStatus
 	}
 
-	if tags := c.QueryArray("tags"); len(tags) > 0 {
+	if len(tags) > 0 {
 		filter.Tags = tags
 	}
 
-	filter.SortBy = c.DefaultQuery("sortBy", "created_at")
-	filter.SortOrder = c.DefaultQuery("sortOrder", "desc")
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	filter.SortBy = sortBy
+	filter.SortOrder = sortOrder
 
 	if page < 1 {
 		page = 1
@@ -326,6 +372,11 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	filter.Offset = (page - 1) * size
 
 	if keyword == "" && filter.CategoryID == nil && filter.Author == nil {
+		searchLogger.WithModule("search").Warn("搜索参数不完整",
+			zap.String("keyword", keyword),
+			zap.Bool("has_category", filter.CategoryID != nil),
+			zap.Bool("has_author", filter.Author != nil),
+		)
 		shared.BadRequest(c, "参数错误", "请提供搜索关键词或过滤条件")
 		return
 	}
@@ -335,14 +386,17 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		filter.Keyword = &keyword
 	}
 
-	log.Printf("[API-DEBUG] Before SearchBooksWithFilter: keyword=%v, limit=%d, offset=%d",
-		filter.Keyword, filter.Limit, filter.Offset)
-
+	// 执行搜索
 	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
 
-	log.Printf("[API-DEBUG] After SearchBooksWithFilter: books=%d, total=%d, err=%v",
-		len(books), total, err)
+	// 计算耗时
+	duration := time.Since(startTime)
+
 	if err != nil {
+		searchLogger.WithModule("search").Error("搜索失败",
+			zap.Error(err),
+			zap.Duration("duration", duration),
+		)
 		shared.InternalError(c, "搜索书籍失败", err)
 		return
 	}
@@ -350,6 +404,21 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	// 确保返回空数组而不是nil
 	if books == nil {
 		books = make([]*bookstore2.Book, 0)
+	}
+
+	// 记录搜索结果
+	searchLogger.WithModule("search").Info("搜索成功",
+		zap.Int64("total", total),
+		zap.Int("returned", len(books)),
+		zap.Duration("duration", duration),
+	)
+
+	// 如果结果为空，记录警告
+	if total == 0 {
+		searchLogger.WithModule("search").Debug("搜索无结果",
+			zap.String("keyword", keyword),
+			zap.String("author", author),
+		)
 	}
 
 	// 转换为 DTO
