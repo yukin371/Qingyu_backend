@@ -1,0 +1,85 @@
+# Elasticsearch 索引配置
+# 定义各实体的索引结构和映射
+
+# 索引配置
+indices:
+  # 书籍索引
+  books:
+    alias: books_search              # 索引别名
+    number_of_shards: 3               # 主分片数
+    number_of_replicas: 1             # 副本数
+    mapping:
+      properties:
+        title:
+          type: text
+          analyzer: ik_max_word
+          search_analyzer: ik_smart
+          fields:
+            keyword:
+              type: keyword
+        content:
+          type: text
+          analyzer: ik_max_word
+        author:
+          type: text
+          analyzer: ik_max_word
+          fields:
+            keyword:
+              type: keyword
+        status:
+          type: keyword
+        created_at:
+          type: date
+        updated_at:
+          type: date
+
+  # 项目索引（Writer 模块）
+  projects:
+    alias: projects_search
+    number_of_shards: 2
+    number_of_replicas: 1
+    mapping:
+      properties:
+        title:
+          type: text
+          analyzer: ik_max_word
+        description:
+          type: text
+          analyzer: ik_max_word
+        user_id:
+          type: keyword
+        status:
+          type: keyword
+        created_at:
+          type: date
+
+  # 文档索引（Writer 模块）
+  documents:
+    alias: documents_search
+    number_of_shards: 2
+    number_of_replicas: 1
+    mapping:
+      properties:
+        title:
+          type: text
+          analyzer: ik_max_word
+        content:
+          type: text
+          analyzer: ik_max_word
+        project_id:
+          type: keyword
+        user_id:
+          type: keyword
+        created_at:
+          type: date
+
+# 全局设置
+settings:
+  analysis:
+    analyzer:
+      ik_max_word:
+        type: custom
+        tokenizer: ik_max_word
+      ik_smart:
+        type: custom
+        tokenizer: ik_smart
