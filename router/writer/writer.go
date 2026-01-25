@@ -24,6 +24,7 @@ func InitWriterRouter(
 	publishService interfaces.PublishService,
 	lockService lock.DocumentLockService,
 	commentService writerservice.CommentService,
+	templateService *document.TemplateService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -41,6 +42,12 @@ func InitWriterRouter(
 	var commentApi *writer.CommentAPI
 	if commentService != nil {
 		commentApi = writer.NewCommentAPI(commentService)
+	}
+
+	// 模板API
+	var templateApi *writer.TemplateAPI
+	if templateService != nil {
+		templateApi = writer.NewTemplateAPI(templateService, nil) // logger由service内部处理
 	}
 
 	// 写作端路由组
@@ -77,6 +84,11 @@ func InitWriterRouter(
 		// 批注路由
 		if commentApi != nil {
 			InitCommentRouter(writerGroup, commentApi)
+		}
+
+		// 模板路由
+		if templateApi != nil {
+			InitTemplateRouter(writerGroup, templateApi)
 		}
 	}
 }
@@ -223,5 +235,22 @@ func InitCommentRouter(r *gin.RouterGroup, commentApi *writer.CommentAPI) {
 
 		// 批量操作
 		commentGroup.POST("/batch-delete", commentApi.BatchDeleteComments)
+	}
+}
+
+// InitTemplateRouter 初始化模板路由
+func InitTemplateRouter(r *gin.RouterGroup, templateApi *writer.TemplateAPI) {
+	// 模板管理路由
+	templateGroup := r.Group("/templates")
+	{
+		// 模板CRUD
+		templateGroup.POST("", templateApi.CreateTemplate)
+		templateGroup.GET("", templateApi.ListTemplates)
+		templateGroup.GET("/:id", templateApi.GetTemplate)
+		templateGroup.PUT("/:id", templateApi.UpdateTemplate)
+		templateGroup.DELETE("/:id", templateApi.DeleteTemplate)
+
+		// 应用模板
+		templateGroup.POST("/:id/apply", templateApi.ApplyTemplate)
 	}
 }
