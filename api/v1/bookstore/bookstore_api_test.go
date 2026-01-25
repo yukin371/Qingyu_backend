@@ -13,6 +13,7 @@ import (
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/shared"
+	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -216,7 +217,8 @@ func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	api := NewBookstoreAPI(service)
+	logger := logger.Get()
+	api := NewBookstoreAPI(service, nil, logger)
 
 	v1 := r.Group("/api/v1/bookstore")
 	{
@@ -226,6 +228,8 @@ func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 		v1.GET("/books/recommended", api.GetRecommendedBooks)
 		v1.GET("/books/featured", api.GetFeaturedBooks)
 		v1.GET("/books/search", api.SearchBooks)
+		v1.GET("/books/tags", api.GetBooksByTags) // 新增：按标签筛选
+		v1.GET("/books/status", api.GetBooksByStatus) // 新增：按状态筛选
 		v1.GET("/books/:id/view", api.IncrementBookView)
 		v1.GET("/categories/:id/books", api.GetBooksByCategory)
 		v1.GET("/categories/tree", api.GetCategoryTree)
@@ -857,4 +861,123 @@ func TestBookstoreAPI_SearchBooks_OnlyTags_NoKeyword(t *testing.T) {
 
 	// Then - Should return 400 Bad Request (tags alone are not sufficient)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByTags_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/tags?tags=玄幻,仙侠&page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByTags_MissingTags(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	// When - Missing tags parameter
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/tags?page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - Should return 400 Bad Request
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByTags_InvalidPagination(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil)
+
+	// When - Invalid size (> 100)
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/tags?tags=玄幻&size=150", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - Should still return 200 (size will be normalized to 20)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByStatus_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/status?status=ongoing&page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByStatus_MissingStatus(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	// When - Missing status parameter
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/status?page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - Should return 400 Bad Request
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByStatus_InvalidStatus(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	// When - Invalid status value
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/status?status=invalid", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - Should return 400 Bad Request
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestBookstoreAPI_GetBooksByStatus_ValidStatuses(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+
+	// Test all valid status values
+	validStatuses := []string{"ongoing", "completed", "paused"}
+
+	for _, status := range validStatuses {
+		// Reset mock for each iteration
+		mockService.ExpectedCalls = nil
+		mockService.Calls = nil
+		mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil)
+
+		// When
+		req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/status?status="+status, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		// Then - All valid statuses should return 200
+		assert.Equal(t, http.StatusOK, w.Code, "Status "+status+" should be valid")
+	}
 }

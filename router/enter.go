@@ -42,6 +42,9 @@ import (
 	socialApi "Qingyu_backend/api/v1/social"
 	syncService "Qingyu_backend/pkg/sync"
 	readerservice "Qingyu_backend/service/reader"
+	messagingService "Qingyu_backend/service/messaging"
+	modelsMessaging "Qingyu_backend/models/messaging"
+	websocketHub "Qingyu_backend/realtime/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic/v7"
@@ -345,12 +348,43 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 新增社交 API（待实现）
 	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
+	var messageAPIV2 *socialApi.MessageAPIV2
 	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
 	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
 
+	// 初始化MessageAPIV2（消息服务V2）
+	messagingWSHub, wsHubErr := serviceContainer.GetMessagingWSHub()
+
+	if wsHubErr == nil && messagingWSHub != nil {
+		// 获取MongoDB数据库
+		mongoDB := serviceContainer.GetMongoDB()
+		repositoryFactory := serviceContainer.GetRepositoryFactory()
+		if mongoDB != nil && repositoryFactory != nil {
+			// 创建消息服务和会话服务（使用models/messaging中的Repository）
+			messageRepo := repositoryFactory.CreateMessageRepository()
+			conversationRepo := modelsMessaging.NewMongoConversationRepository(mongoDB)
+
+			// 先创建ConversationService
+			conversationSvc := messagingService.NewConversationService(conversationRepo, messageRepo)
+			// 再创建MessageService（需要ConversationService）
+			messageSvc := messagingService.NewMessageService(messageRepo, conversationSvc)
+
+			messageAPIV2 = socialApi.NewMessageAPIV2(messageSvc, conversationSvc, messagingWSHub)
+			logger.Info("✓ MessageAPIV2初始化完成")
+		}
+	} else {
+		logger.Warn("MessagingWSHub未配置", zap.Error(wsHubErr))
+	}
+
+	// 注册WebSocket路由
+	if messagingWSHub != nil {
+		r.GET("/ws/messages", messagingWSHub.HandleMessagingWebSocket)
+		logger.Info("✓ WebSocket路由已注册: /ws/messages")
+	}
+
 	// 注册统一社交路由
 	if commentAPI != nil || likeAPI != nil || collectionAPI != nil { //nolint:nilness // 待实现服务已排除
-		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
+		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
 		if commentAPI != nil {
