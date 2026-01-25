@@ -2,6 +2,8 @@ package bookstore
 
 import (
 	bookstore2 "Qingyu_backend/models/bookstore"
+	searchModels "Qingyu_backend/models/search"
+	"Qingyu_backend/models/shared/types"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,17 +15,22 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
+	"Qingyu_backend/service/search"
 )
 
 // BookstoreAPI 书城API处理器
 type BookstoreAPI struct {
-	service bookstoreService.BookstoreService
+	service       bookstoreService.BookstoreService
+	searchService *search.SearchService
+	logger        *logger.Logger
 }
 
 // NewBookstoreAPI 创建书城API实例
-func NewBookstoreAPI(service bookstoreService.BookstoreService) *BookstoreAPI {
+func NewBookstoreAPI(service bookstoreService.BookstoreService, searchService *search.SearchService, logger *logger.Logger) *BookstoreAPI {
 	return &BookstoreAPI{
-		service: service,
+		service:       service,
+		searchService: searchService,
+		logger:        logger,
 	}
 }
 
@@ -323,6 +330,96 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		zap.Int("page_size", size),
 	)
 
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 || size > 100 {
+		size = 20
+	}
+
+	// 优先尝试新路径（SearchService）
+	if api.searchService != nil {
+		// 检查是否有搜索关键词
+		if keyword == "" && categoryID == "" && author == "" {
+			searchLogger.WithModule("search").Warn("搜索参数不完整",
+				zap.String("keyword", keyword),
+				zap.Bool("has_category", categoryID != ""),
+				zap.Bool("has_author", author != ""),
+			)
+			shared.BadRequest(c, "参数错误", "请提供搜索关键词或过滤条件")
+			return
+		}
+
+		// 构建新的搜索请求
+		newReq := &searchModels.SearchRequest{
+			Type:     searchModels.SearchTypeBooks,
+			Query:    keyword,
+			Filter:   api.buildSearchFilter(categoryID, author, status, tags),
+			Sort:     api.buildSearchSort(sortBy, sortOrder),
+			Page:     page,
+			PageSize: size,
+		}
+
+		// 如果 query 为空但有 filter，使用通配符查询
+		if newReq.Query == "" && (newReq.Filter != nil || categoryID != "" || author != "") {
+			newReq.Query = "*"
+		}
+
+		// 尝试新路径
+		newResp, newErr := api.searchService.Search(c.Request.Context(), newReq)
+		duration := time.Since(startTime)
+
+		if newErr == nil && newResp != nil && newResp.Success && newResp.Data != nil {
+			// 新路径成功
+			searchLogger.WithModule("search").Info("搜索成功",
+				zap.String("path", "new_search"),
+				zap.Int64("total", newResp.Data.Total),
+				zap.Int("returned", len(newResp.Data.Results)),
+				zap.Duration("duration", duration),
+				zap.Duration("took", newResp.Data.Took),
+			)
+
+			// 转换响应
+			books := api.convertSearchResponseToBooks(newResp.Data.Results)
+			bookDTOs := ToBookDTOsFromPtrSlice(books)
+
+			responseData := map[string]interface{}{
+				"books": bookDTOs,
+				"total": newResp.Data.Total,
+			}
+
+			c.JSON(http.StatusOK, shared.APIResponse{
+				Code:      http.StatusOK,
+				Message:   "搜索书籍成功",
+				Data:      responseData,
+				Timestamp: 0,
+			})
+			return
+		}
+
+		// 新路径失败，记录日志并 fallback 到旧路径
+		fallbackReason := "unknown"
+		if newErr != nil {
+			fallbackReason = newErr.Error()
+		} else if newResp != nil && newResp.Error != nil {
+			fallbackReason = newResp.Error.Message
+		} else if newResp != nil && !newResp.Success {
+			fallbackReason = "search failed"
+		}
+
+		searchLogger.WithModule("search").Warn("新路径失败，fallback 到旧路径",
+			zap.String("path", "new_search"),
+			zap.String("status", "fallback"),
+			zap.String("fallback_reason", fallbackReason),
+			zap.Duration("duration", duration),
+		)
+	}
+
+	// 旧路径（原有实现）
+	searchLogger.WithModule("search").Info("使用旧路径搜索",
+		zap.String("path", "old_search"),
+	)
+
 	// 构建过滤器
 	filter := &bookstore2.BookFilter{}
 
@@ -360,14 +457,6 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 
 	filter.SortBy = sortBy
 	filter.SortOrder = sortOrder
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
 	filter.Limit = size
 	filter.Offset = (page - 1) * size
 
@@ -394,6 +483,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 
 	if err != nil {
 		searchLogger.WithModule("search").Error("搜索失败",
+			zap.String("path", "old_search"),
 			zap.Error(err),
 			zap.Duration("duration", duration),
 		)
@@ -408,6 +498,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 
 	// 记录搜索结果
 	searchLogger.WithModule("search").Info("搜索成功",
+		zap.String("path", "old_search"),
 		zap.Int64("total", total),
 		zap.Int("returned", len(books)),
 		zap.Duration("duration", duration),
@@ -737,4 +828,96 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 	}
 
 	shared.Success(c, http.StatusOK, "获取榜单成功", rankings)
+}
+
+// buildSearchFilter 构建搜索过滤条件
+func (api *BookstoreAPI) buildSearchFilter(categoryID, author, status string, tags []string) map[string]interface{} {
+	filter := make(map[string]interface{})
+
+	if categoryID != "" {
+		filter["category_id"] = categoryID
+	}
+
+	if author != "" {
+		filter["author"] = author
+	}
+
+	if status != "" {
+		// 映射前端状态值到后端状态值
+		var backendStatus string
+		switch status {
+		case "serializing":
+			backendStatus = "ongoing"
+		case "completed", "paused":
+			backendStatus = status
+		default:
+			backendStatus = status
+		}
+		filter["status"] = backendStatus
+	}
+
+	if len(tags) > 0 {
+		filter["tags"] = tags
+	}
+
+	return filter
+}
+
+// buildSearchSort 构建搜索排序条件
+func (api *BookstoreAPI) buildSearchSort(sortBy, sortOrder string) []searchModels.SortField {
+	var ascending bool
+	if sortOrder == "asc" {
+		ascending = true
+	}
+
+	return []searchModels.SortField{
+		{
+			Field:     sortBy,
+			Ascending: ascending,
+		},
+	}
+}
+
+// convertSearchResponseToBooks 将搜索响应转换为 Book 切片
+func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2.Book {
+	books := make([]*bookstore2.Book, 0, len(items))
+
+	for _, item := range items {
+		book := &bookstore2.Book{}
+
+		// 从 Data 中提取字段
+		if id, ok := item.Data["id"].(string); ok {
+			if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+				book.ID = objectID
+			}
+		}
+		if title, ok := item.Data["title"].(string); ok {
+			book.Title = title
+		}
+		if author, ok := item.Data["author"].(string); ok {
+			book.Author = author
+		}
+		if intro, ok := item.Data["introduction"].(string); ok {
+			book.Introduction = intro
+		}
+		if coverURL, ok := item.Data["cover_url"].(string); ok {
+			book.Cover = coverURL
+		}
+		if viewCount, ok := item.Data["view_count"].(int64); ok {
+			book.ViewCount = viewCount
+		}
+		if rating, ok := item.Data["rating"].(float64); ok {
+			book.Rating = types.Rating(rating)
+		}
+		if wordCount, ok := item.Data["word_count"].(int64); ok {
+			book.WordCount = wordCount
+		}
+		if status, ok := item.Data["status"].(string); ok {
+			book.Status = bookstore2.BookStatus(status)
+		}
+
+		books = append(books, book)
+	}
+
+	return books
 }
