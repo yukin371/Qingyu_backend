@@ -55,9 +55,14 @@ func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *wr
 
 // GetByID 根据ID获取文档内容
 func (r *MongoDocumentContentRepository) GetByID(ctx context.Context, id string) (*writer.DocumentContent, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID: %w", err)
+	}
+
 	var content writer.DocumentContent
 
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&content)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
