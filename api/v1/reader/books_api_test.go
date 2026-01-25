@@ -278,10 +278,11 @@ func TestBooksAPI_GetBookshelf_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderServiceForBooks)
 	userID := primitive.NewObjectID().Hex()
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 	router := setupBooksTestRouter(mockService, userID)
 
 	expectedProgresses := []*readerModels.ReadingProgress{
-		{UserID: userID, BookID: primitive.NewObjectID().Hex()},
+		{UserID: userIDObj, BookID: primitive.NewObjectID()},
 	}
 
 	mockService.On("GetReadingHistory", mock.Anything, userID, 1, 20).
