@@ -1,11 +1,15 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"Qingyu_backend/service/shared/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -18,6 +22,7 @@ type MessagingWSHub struct {
 	register   chan *MessagingWSClient
 	unregister chan *MessagingWSClient
 	broadcast  chan *MessageBroadcast
+	jwtService auth.JWTService
 }
 
 // MessagingWSClient 消息WebSocket客户端
@@ -52,12 +57,13 @@ var messagingUpgrader = websocket.Upgrader{
 }
 
 // NewMessagingWSHub 创建消息WebSocket Hub
-func NewMessagingWSHub() *MessagingWSHub {
+func NewMessagingWSHub(jwtService auth.JWTService) *MessagingWSHub {
 	hub := &MessagingWSHub{
 		clients:    make(map[string]*MessagingWSClient),
 		register:   make(chan *MessagingWSClient),
 		unregister: make(chan *MessagingWSClient),
 		broadcast:  make(chan *MessageBroadcast, 256),
+		jwtService: jwtService,
 	}
 	go hub.Run()
 	return hub
@@ -146,7 +152,7 @@ func (h *MessagingWSHub) HandleMessagingWebSocket(c *gin.Context) {
 		return
 	}
 
-	userID, err := validateMessagingToken(token)
+	userID, err := h.validateMessagingToken(c.Request.Context(), token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的token"})
 		return
@@ -251,11 +257,20 @@ func (c *MessagingWSClient) writePump() {
 	}
 }
 
-// validateMessagingToken 验证JWT token（TODO: 实现真正的token验证）
-func validateMessagingToken(token string) (string, error) {
-	// TODO: 实现真正的JWT token验证
-	// 这里应该调用认证服务验证token并返回userID
-	return "user123", nil
+// validateMessagingToken 验证JWT token
+func (h *MessagingWSHub) validateMessagingToken(ctx context.Context, token string) (string, error) {
+	if h.jwtService == nil {
+		return "", fmt.Errorf("JWT服务未初始化")
+	}
+
+	// 验证token
+	claims, err := h.jwtService.ValidateToken(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("token验证失败: %w", err)
+	}
+
+	// 返回userID
+	return claims.UserID, nil
 }
 
 // generateMessagingClientID 生成客户端ID

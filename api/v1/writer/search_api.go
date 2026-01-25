@@ -7,16 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/shared/search_legacy"
+	"Qingyu_backend/models/search"
+	searchservice "Qingyu_backend/service/search"
 )
 
 // SearchAPI 搜索API处理器（写作端）
 type SearchAPI struct {
-	searchService search_legacy.SearchService
+	searchService *searchservice.SearchService
 }
 
 // NewSearchAPI 创建搜索API实例
-func NewSearchAPI(searchService search_legacy.SearchService) *SearchAPI {
+func NewSearchAPI(searchService *searchservice.SearchService) *SearchAPI {
 	return &SearchAPI{
 		searchService: searchService,
 	}
@@ -41,7 +42,7 @@ func NewSearchAPI(searchService search_legacy.SearchService) *SearchAPI {
 //	@Router			/api/v1/writer/search/documents [get]
 func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 1. 验证用户登录
-	_, exists := c.Get("userId")
+	userID, exists := c.Get("userId")
 	if !exists {
 		shared.Unauthorized(c, "未授权")
 		return
@@ -59,20 +60,35 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
 	// 3. 构建搜索请求
-	req := &search_legacy.SearchRequest{
-		Keyword:   keyword,
-		ProjectID: projectID,
-		Page:      page,
-		PageSize:  pageSize,
+	req := &search.SearchRequest{
+		Type:     search.SearchTypeDocuments,
+		Query:    keyword,
+		Page:     page,
+		PageSize: pageSize,
+		Filter:   make(map[string]interface{}),
+	}
+
+	// 添加用户ID过滤（必需）
+	req.Filter["user_id"] = userID
+
+	// 如果指定了项目ID，添加项目过滤
+	if projectID != "" {
+		req.Filter["project_id"] = projectID
 	}
 
 	// 4. 执行搜索
-	result, err := api.searchService.SearchDocuments(c.Request.Context(), req)
+	resp, err := api.searchService.Search(c.Request.Context(), req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "搜索失败", err.Error())
 		return
 	}
 
-	// 5. 返回结果
-	shared.Success(c, http.StatusOK, "搜索成功", result)
+	// 5. 检查响应
+	if !resp.Success {
+		shared.Error(c, http.StatusInternalServerError, "搜索失败", resp.Error.Message)
+		return
+	}
+
+	// 6. 返回结果
+	shared.Success(c, http.StatusOK, "搜索成功", resp.Data)
 }

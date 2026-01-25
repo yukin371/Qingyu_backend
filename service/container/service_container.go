@@ -991,9 +991,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	pushDeviceRepo := mongoNotification.NewPushDeviceRepository(c.mongoDB)
 	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
 
-	// TODO: 初始化WebSocket Hub和EmailService
+	// 初始化通知WebSocket Hub（传入JWT服务）
+	notificationWSHub := websocketHub.NewWSHub(jwtService)
+
+	// TODO: 初始化EmailService
 	// 暂时传入nil，后续需要完善
-	var wsHub notificationService.WSHub
 	var emailService notificationService.EmailService
 
 	notificationSvc := notificationService.NewNotificationService(
@@ -1002,7 +1004,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		pushDeviceRepo,
 		templateRepo,
 		emailService,
-		wsHub,
+		notificationWSHub,
 	)
 	c.notificationService = notificationSvc
 
@@ -1021,8 +1023,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 	fmt.Println("  ✓ NotificationService初始化完成")
 
-	// 5.9.1 初始化消息WebSocket Hub
-	c.messagingWSHub = websocketHub.NewMessagingWSHub()
+	// 5.9.1 初始化消息WebSocket Hub（传入JWT服务）
+	c.messagingWSHub = websocketHub.NewMessagingWSHub(jwtService)
 	fmt.Println("  ✓ MessagingWSHub初始化完成")
 
 	// 5.10 Finance Services
