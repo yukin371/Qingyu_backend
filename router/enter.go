@@ -680,6 +680,33 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 		zap.Strings("allowed_statuses", bookProviderConfig.AllowedStatuses),
 	)
 
+	// 创建 UserProvider
+	userProviderConfig := &searchprovider.UserProviderConfig{}
+	userProvider, err := searchprovider.NewUserProvider(mongoEngine, userProviderConfig)
+	if err != nil {
+		logger.Error("创建 UserProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ UserProvider 创建成功")
+
+	// 创建 ProjectProvider
+	projectProviderConfig := &searchprovider.ProjectProviderConfig{}
+	projectProvider, err := searchprovider.NewProjectProvider(mongoEngine, projectProviderConfig)
+	if err != nil {
+		logger.Error("创建 ProjectProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ ProjectProvider 创建成功")
+
+	// 创建 DocumentProvider
+	documentProviderConfig := &searchprovider.DocumentProviderConfig{}
+	documentProvider, err := searchprovider.NewDocumentProvider(mongoEngine, documentProviderConfig)
+	if err != nil {
+		logger.Error("创建 DocumentProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ DocumentProvider 创建成功")
+
 	// 创建 SearchService 配置
 	searchConfig := &searchService.Config{
 		EnableCache:           true,
@@ -717,6 +744,18 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	// 注册 BookProvider 到 SearchService
 	searchSvc.RegisterProvider(bookProvider)
 	logger.Info("✓ BookProvider 已注册到 SearchService")
+
+	// 注册 UserProvider 到 SearchService
+	searchSvc.RegisterProvider(userProvider)
+	logger.Info("✓ UserProvider 已注册到 SearchService")
+
+	// 注册 ProjectProvider 到 SearchService
+	searchSvc.RegisterProvider(projectProvider)
+	logger.Info("✓ ProjectProvider 已注册到 SearchService")
+
+	// 注册 DocumentProvider 到 SearchService
+	searchSvc.RegisterProvider(documentProvider)
+	logger.Info("✓ DocumentProvider 已注册到 SearchService")
 
 	// 设置 ES 配置和引擎
 	if esEngine != nil {
