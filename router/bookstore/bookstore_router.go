@@ -3,9 +3,12 @@ package bookstore
 import (
 	bookstoreApi "Qingyu_backend/api/v1/bookstore"
 	"Qingyu_backend/middleware"
+	"Qingyu_backend/pkg/logger"
+	searchService "Qingyu_backend/service/search"
 	"Qingyu_backend/service/bookstore"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // =====================================================
@@ -50,9 +53,11 @@ func InitBookstoreRouter(
 	statisticsService bookstore.BookStatisticsService,
 	chapterService bookstore.ChapterService,
 	purchaseService bookstore.ChapterPurchaseService,
+	searchSvc *searchService.SearchService,
+	zapLogger *zap.Logger,
 ) {
 	// 创建API实例
-	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService)
+	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService, searchSvc, logger.Get())
 
 	// 初始化其他服务的API处理器
 	var bookDetailApiHandler *bookstoreApi.BookDetailAPI
