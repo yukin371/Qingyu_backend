@@ -26,6 +26,12 @@ type UserDTO struct {
 	Nickname string `json:"nickname,omitempty" validate:"max=50"`
 	Bio      string `json:"bio,omitempty" validate:"max=500"`
 
+	// 个人资料扩展字段
+	Gender   string `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
+	Birthday string `json:"birthday,omitempty"` // ISO8601格式
+	Location string `json:"location,omitempty" validate:"max=100"`
+	Website  string `json:"website,omitempty" validate:"omitempty,url"`
+
 	// 认证相关
 	EmailVerified bool   `json:"emailVerified"`
 	PhoneVerified bool   `json:"phoneVerified"`
