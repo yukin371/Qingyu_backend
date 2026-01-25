@@ -83,9 +83,18 @@ func (r *MongoRoleRepository) Create(ctx context.Context, role *authModel.Role) 
 
 // GetByID 根据ID获取角色
 func (r *MongoRoleRepository) GetByID(ctx context.Context, id string) (*authModel.Role, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+
 	var role authModel.Role
 
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&role)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&role)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -106,9 +115,18 @@ func (r *MongoRoleRepository) GetByID(ctx context.Context, id string) (*authMode
 
 // Update 更新角色信息
 func (r *MongoRoleRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+
 	updates["updated_at"] = time.Now()
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": updates}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -133,7 +151,16 @@ func (r *MongoRoleRepository) Update(ctx context.Context, id string, updates map
 
 // Delete 删除角色
 func (r *MongoRoleRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
