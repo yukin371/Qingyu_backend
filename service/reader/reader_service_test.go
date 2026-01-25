@@ -1641,9 +1641,14 @@ func TestReaderService_BatchCreateAnnotations_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID1 := primitive.NewObjectID()
+	chapterID2 := primitive.NewObjectID()
+
 	annotations := []*reader.Annotation{
-		{UserID: "user123", BookID: "book123", ChapterID: "chapter123", Type: "note"},
-		{UserID: "user123", BookID: "book123", ChapterID: "chapter124", Type: "bookmark"},
+		{UserID: userID, BookID: bookID, ChapterID: chapterID1, Type: "note"},
+		{UserID: userID, BookID: bookID, ChapterID: chapterID2, Type: "bookmark"},
 	}
 
 	mockAnnotationRepo.On("Create", ctx, mock.AnythingOfType("*reader.Annotation")).
@@ -1666,11 +1671,14 @@ func TestReaderService_BatchCreateAnnotations_TooMany(t *testing.T) {
 	ctx := context.Background()
 
 	annotations := make([]*reader.Annotation, 51)
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
 	for i := range annotations {
 		annotations[i] = &reader.Annotation{
-			UserID:    "user123",
-			BookID:    "book123",
-			ChapterID: "chapter123",
+			UserID:    userID,
+			BookID:    bookID,
+			ChapterID: chapterID,
 			Type:      "note",
 		}
 	}
