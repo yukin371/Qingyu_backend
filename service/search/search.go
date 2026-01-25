@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
 	"Qingyu_backend/models/search"
 	"Qingyu_backend/service/search/cache"
+	searchengine "Qingyu_backend/service/search/engine"
 	"Qingyu_backend/service/search/provider"
 )
 
@@ -20,6 +22,11 @@ type SearchService struct {
 	cache     cache.Cache
 	logger    *log.Logger
 	config    *Config
+
+	// ES 相关
+	esConfig      *SearchConfig // ES 配置
+	esEngine      searchengine.Engine // ES 引擎（如果启用）
+	mongoEngine   searchengine.Engine // MongoDB 引擎（fallback）
 }
 
 // Config 搜索服务配置
@@ -43,9 +50,12 @@ func NewSearchService(logger *log.Logger, config *Config) *SearchService {
 	}
 
 	return &SearchService{
-		providers: make(map[search.SearchType]provider.Provider),
-		logger:    logger,
-		config:    config,
+		providers:  make(map[search.SearchType]provider.Provider),
+		logger:     logger,
+		config:     config,
+		esConfig:   nil,      // 将通过 SetESConfig 设置
+		esEngine:   nil,      // 将通过 SetESEngine 设置
+		mongoEngine: nil,     // 将通过 SetMongoEngine 设置
 	}
 }
 
@@ -60,6 +70,176 @@ func (s *SearchService) SetCache(c cache.Cache) {
 	s.cache = c
 }
 
+// SetESConfig 设置 ES 配置
+func (s *SearchService) SetESConfig(config *SearchConfig) {
+	s.esConfig = config
+}
+
+// SetESEngine 设置 ES 引擎
+func (s *SearchService) SetESEngine(engine searchengine.Engine) {
+	s.esEngine = engine
+}
+
+// SetMongoEngine 设置 MongoDB 引擎
+func (s *SearchService) SetMongoEngine(engine searchengine.Engine) {
+	s.mongoEngine = engine
+}
+
+// shouldUseES 判断是否应该使用 ES（灰度逻辑）
+func (s *SearchService) shouldUseES() bool {
+	// 如果 ES 未启用，使用 MongoDB
+	if s.esConfig == nil || !s.esConfig.ES.Enabled {
+		return false
+	}
+
+	// 如果 ES 引擎未初始化，使用 MongoDB
+	if s.esEngine == nil {
+		return false
+	}
+
+	// 如果未启用灰度，直接使用 ES
+	if !s.esConfig.ES.GrayScale.Enabled {
+		return true
+	}
+
+	// 灰度模式：根据百分比决定
+	percent := s.esConfig.ES.GrayScale.Percent
+	if percent <= 0 {
+		return false
+	}
+	if percent >= 100 {
+		return true
+	}
+
+	// 使用随机数决定是否使用 ES
+	return rand.Intn(100) < percent
+}
+
+// searchWithProvider 使用 Provider 搜索（原有逻辑）
+func (s *SearchService) searchWithProvider(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error) {
+	// 获取对应的 Provider
+	prov, err := s.GetProvider(req.Type)
+	if err != nil {
+		s.logger.Printf("[SearchService] Provider not found: %s", req.Type)
+		return nil, fmt.Errorf("provider not found: %s", req.Type)
+	}
+
+	// Provider 级别验证
+	if err := prov.Validate(req); err != nil {
+		s.logger.Printf("[SearchService] Provider validation failed: %v", err)
+		return nil, fmt.Errorf("provider validation failed: %w", err)
+	}
+
+	// 执行搜索
+	return prov.Search(ctx, req)
+}
+
+// searchWithES 使用 ES 搜索
+func (s *SearchService) searchWithES(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error) {
+	// 根据搜索类型确定索引名称
+	indexName := s.getESIndexName(req.Type)
+	if indexName == "" {
+		s.logger.Printf("[SearchService] Unsupported search type for ES: %s", req.Type)
+		return nil, fmt.Errorf("unsupported search type for ES: %s", req.Type)
+	}
+
+	// 构建搜索选项
+	opts := &searchengine.SearchOptions{
+		From: (req.Page - 1) * req.PageSize,
+		Size: req.PageSize,
+	}
+
+	// 添加排序
+	if req.Sort != nil {
+		for _, sortField := range req.Sort {
+			opts.Sort = append(opts.Sort, searchengine.SortField{
+				Field:     sortField.Field,
+				Ascending: sortField.Ascending,
+			})
+		}
+	}
+
+	// 添加过滤条件
+	if req.Filter != nil {
+		opts.Filter = req.Filter
+	}
+
+	// 执行 ES 搜索
+	result, err := s.esEngine.Search(ctx, indexName, req.Query, opts)
+	if err != nil {
+		s.logger.Printf("[SearchService] ES search failed: %v", err)
+		return nil, fmt.Errorf("ES search failed: %w", err)
+	}
+
+	// 转换为 SearchResponse
+	return s.convertESToSearchResponse(result, req.Type)
+}
+
+// getESIndexName 根据搜索类型获取 ES 索引名称
+func (s *SearchService) getESIndexName(searchType search.SearchType) string {
+	// 使用配置的索引前缀
+	prefix := ""
+	if s.esConfig != nil && s.esConfig.ES.IndexPrefix != "" {
+		prefix = s.esConfig.ES.IndexPrefix + "_"
+	}
+
+	switch searchType {
+	case search.SearchTypeBooks:
+		return prefix + "books"
+	case search.SearchTypeProjects:
+		return prefix + "projects"
+	case search.SearchTypeDocuments:
+		return prefix + "documents"
+	case search.SearchTypeUsers:
+		return prefix + "users"
+	default:
+		return ""
+	}
+}
+
+// convertESToSearchResponse 将 ES 搜索结果转换为 SearchResponse
+func (s *SearchService) convertESToSearchResponse(result *searchengine.SearchResult, searchType search.SearchType) (*search.SearchResponse, error) {
+	results := make([]search.SearchItem, 0, len(result.Hits))
+
+	for _, hit := range result.Hits {
+		// 将 ES 的 Source 转换为对应类型的模型
+		item := s.convertHitToItem(hit, searchType)
+		if item != nil {
+			results = append(results, *item)
+		}
+	}
+
+	return &search.SearchResponse{
+		Success: true,
+		Data: &search.SearchData{
+			Type:     searchType,
+			Total:    result.Total,
+			Results:  results,
+			Page:     0, // 需要从外部设置
+			PageSize: len(results),
+			Took:     result.Took,
+		},
+	}, nil
+}
+
+// convertHitToItem 将 ES 命中项转换为对应的模型
+func (s *SearchService) convertHitToItem(hit searchengine.Hit, searchType search.SearchType) *search.SearchItem {
+	// 这里需要根据不同的搜索类型转换为对应的模型
+	// 暂时返回通用的 SearchItem，实际使用时应该转换为具体的模型结构
+	item := &search.SearchItem{
+		ID:    hit.ID,
+		Score: hit.Score,
+		Data:  hit.Source,
+	}
+
+	// 添加高亮信息
+	if hit.Highlight != nil && len(hit.Highlight) > 0 {
+		item.Highlight = hit.Highlight
+	}
+
+	return item
+}
+
 // Search 统一搜索入口
 func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error) {
 	// 1. 验证请求参数
@@ -68,30 +248,23 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		return s.errorResponse(search.ErrInvalidRequest), nil
 	}
 
-	// 2. 获取对应的 Provider
-	provider, err := s.GetProvider(req.Type)
-	if err != nil {
-		s.logger.Printf("[SearchService] Provider not found: %s", req.Type)
-		return s.errorResponse(search.WrapError(err, search.ErrCodeUnsupportedType, "Unsupported search type")), nil
-	}
+	// 2. 判断是否使用 ES（灰度逻辑）
+	useES := s.shouldUseES()
 
-	// 3. Provider 级别验证
-	if err := provider.Validate(req); err != nil {
-		s.logger.Printf("[SearchService] Provider validation failed: %v", err)
-		return s.errorResponse(search.WrapError(err, search.ErrCodeInvalidRequest, "Request validation failed")), nil
-	}
+	// 3. 生成缓存键（基于是否使用 ES）
+	cacheKey := s.generateCacheKeyWithEngine(req, useES)
 
-	// 4. 生成缓存键
-	cacheKey := s.generateCacheKey(req)
-
-	// 5. 检查缓存（如果启用）
-	var cachedData []byte
+	// 4. 检查缓存（如果启用）
 	var cacheHit bool
 	if s.config.EnableCache && s.cache != nil {
-		cachedData, err = s.cache.Get(ctx, cacheKey)
+		cachedData, err := s.cache.Get(ctx, cacheKey)
 		if err == nil && cachedData != nil {
 			cacheHit = true
-			s.logger.Printf("[SearchService] Cache hit for key: %s", cacheKey)
+			engineName := "MongoDB"
+			if useES {
+				engineName = "ES"
+			}
+			s.logger.Printf("[SearchService] Cache hit for key: %s (engine: %s)", cacheKey, engineName)
 			// 从缓存反序列化响应
 			resp := &search.SearchResponse{}
 			if err := s.unmarshalResponse(cachedData, resp); err == nil {
@@ -105,21 +278,35 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		}
 	}
 
-	// 6. 执行搜索
+	// 5. 执行搜索
 	start := time.Now()
-	resp, err := provider.Search(ctx, req)
+	var resp *search.SearchResponse
+	var err error
+
+	if useES && s.esEngine != nil {
+		// 使用 ES 搜索
+		resp, err = s.searchWithES(ctx, req)
+	} else {
+		// 使用 Provider（原有逻辑）
+		resp, err = s.searchWithProvider(ctx, req)
+	}
+
 	if err != nil {
-		s.logger.Printf("[SearchService] Search failed: type=%s, error=%v", req.Type, err)
+		engineName := "MongoDB"
+		if useES {
+			engineName = "ES"
+		}
+		s.logger.Printf("[SearchService] Search failed: type=%s, engine=%s, error=%v", req.Type, engineName, err)
 		return nil, search.WrapError(err, search.ErrCodeEngineFailure, "Search execution failed")
 	}
 
-	// 7. 记录耗时
+	// 6. 记录耗时
 	took := time.Since(start)
 	if resp.Data != nil {
 		resp.Data.Took = took
 	}
 
-	// 8. 更新缓存
+	// 7. 更新缓存
 	if s.config.EnableCache && s.cache != nil && !cacheHit && resp.Success && resp.Data != nil {
 		if data, err := s.marshalResponse(resp); err == nil {
 			ttl := s.calculateTTL(req)
@@ -131,16 +318,20 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		}
 	}
 
-	// 9. 添加元信息
+	// 8. 添加元信息
 	if resp.Meta == nil {
 		resp.Meta = &search.MetaInfo{}
 	}
 	resp.Meta.RequestID = s.generateRequestID()
 	resp.Meta.TookMs = took.Milliseconds()
 
-	// 10. 记录搜索日志
-	s.logger.Printf("[SearchService] Search completed: type=%s, query=%s, took=%v, total=%d, cache_hit=%v",
-		req.Type, req.Query, took, resp.Data.Total, cacheHit)
+	// 9. 记录搜索日志
+	engineName := "MongoDB"
+	if useES {
+		engineName = "ES"
+	}
+	s.logger.Printf("[SearchService] Search completed: type=%s, engine=%s, query=%s, took=%v, total=%d, cache_hit=%v",
+		req.Type, engineName, req.Query, took, resp.Data.Total, cacheHit)
 
 	return resp, nil
 }
@@ -232,6 +423,11 @@ func (s *SearchService) validateRequest(req *search.SearchRequest) error {
 
 // generateCacheKey 生成缓存键
 func (s *SearchService) generateCacheKey(req *search.SearchRequest) string {
+	return s.generateCacheKeyWithEngine(req, false)
+}
+
+// generateCacheKeyWithEngine 生成包含引擎信息的缓存键
+func (s *SearchService) generateCacheKeyWithEngine(req *search.SearchRequest, useES bool) string {
 	// 序列化过滤条件
 	filterData, _ := json.Marshal(req.Filter)
 	filterHash := md5.Sum(filterData)
@@ -240,9 +436,15 @@ func (s *SearchService) generateCacheKey(req *search.SearchRequest) string {
 	sortData, _ := json.Marshal(req.Sort)
 	sortHash := md5.Sum(sortData)
 
-	// 生成缓存键: search:{type}:{query}:{filter_hash}:{sort_hash}:{page}:{page_size}
-	return fmt.Sprintf("search:%s:%s:%x:%x:%d:%d",
-		req.Type, req.Query, filterHash, sortHash, req.Page, req.PageSize)
+	// 引擎标识
+	engine := "mongodb"
+	if useES {
+		engine = "es"
+	}
+
+	// 生成缓存键: search:{engine}:{type}:{query}:{filter_hash}:{sort_hash}:{page}:{page_size}
+	return fmt.Sprintf("search:%s:%s:%s:%x:%x:%d:%d",
+		engine, req.Type, req.Query, filterHash, sortHash, req.Page, req.PageSize)
 }
 
 // calculateTTL 计算缓存过期时间
