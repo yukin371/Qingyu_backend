@@ -105,6 +105,8 @@ func InitBookstoreRouter(
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
+			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags) // 新增：按标签筛选
+			public.GET("/books/status", bookstoreApiHandler.GetBooksByStatus) // 新增：按状态筛选
 			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
 
 			// 分类 - 注意：具体路由必须放在参数化路由之前

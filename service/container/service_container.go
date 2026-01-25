@@ -28,6 +28,9 @@ import (
 	// Messaging service
 	messagingSvc "Qingyu_backend/service/messaging"
 
+	// WebSocket Hub
+	websocketHub "Qingyu_backend/realtime/websocket"
+
 	// Notification service
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
@@ -114,6 +117,9 @@ type ServiceContainer struct {
 
 	// 审核服务
 	auditService *auditSvc.ContentAuditService
+
+	// WebSocket Hub
+	messagingWSHub *websocketHub.MessagingWSHub
 
 	// 存储相关具体实现（用于API层）
 	storageServiceImpl *storage.StorageServiceImpl
@@ -401,6 +407,14 @@ func (c *ServiceContainer) GetTemplateService() (notificationService.TemplateSer
 		return nil, fmt.Errorf("TemplateService未初始化")
 	}
 	return c.templateService, nil
+}
+
+// GetMessagingWSHub 获取消息WebSocket Hub
+func (c *ServiceContainer) GetMessagingWSHub() (*websocketHub.MessagingWSHub, error) {
+	if c.messagingWSHub == nil {
+		return nil, fmt.Errorf("MessagingWSHub未初始化")
+	}
+	return c.messagingWSHub, nil
 }
 
 // GetMembershipService 获取会员服务
@@ -1006,6 +1020,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 	}
 	fmt.Println("  ✓ NotificationService初始化完成")
+
+	// 5.9.1 初始化消息WebSocket Hub
+	c.messagingWSHub = websocketHub.NewMessagingWSHub()
+	fmt.Println("  ✓ MessagingWSHub初始化完成")
 
 	// 5.10 Finance Services
 	membershipRepo := c.repositoryFactory.CreateMembershipRepository()
