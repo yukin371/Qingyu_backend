@@ -651,9 +651,28 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 		MaxConcurrentSearches: 10,
 	}
 
-	// 创建 SearchService
-	searchSvc := searchService.NewSearchService(log.Default(), searchConfig)
-	logger.Info("✓ SearchService 创建成功")
+	// 尝试初始化 Elasticsearch，获取灰度配置
+	var grayscaleConfig *searchService.GrayScaleConfig
+	esConfig, esEngine := initElasticsearch(logger)
+	if esConfig != nil {
+		grayscaleConfig = &esConfig.ES.GrayScale
+	}
+
+	// 创建灰度决策器
+	var grayscaleDecision searchService.GrayScaleDecision
+	if grayscaleConfig != nil && grayscaleConfig.Enabled {
+		grayscaleDecision = searchService.NewGrayScaleDecision(grayscaleConfig, logger)
+		logger.Info("✓ 灰度决策器已创建",
+			zap.Int("percent", grayscaleConfig.Percent),
+		)
+	} else {
+		logger.Info("⚠ 灰度未启用，创建默认灰度决策器")
+		grayscaleDecision = searchService.NewGrayScaleDecision(nil, logger)
+	}
+
+	// 创建 SearchService（传入灰度决策器）
+	searchSvc := searchService.NewSearchService(log.Default(), searchConfig, grayscaleDecision)
+	logger.Info("✓ SearchService 创建成功（已集成灰度决策器）")
 
 	// 设置 MongoDB 引擎（作为 fallback）
 	searchSvc.SetMongoEngine(mongoEngine)
@@ -663,10 +682,8 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	searchSvc.RegisterProvider(bookProvider)
 	logger.Info("✓ BookProvider 已注册到 SearchService")
 
-	// 尝试初始化 Elasticsearch
-	esConfig, esEngine := initElasticsearch(logger)
+	// 设置 ES 配置和引擎
 	if esEngine != nil {
-		// 设置 ES 配置和引擎
 		searchSvc.SetESConfig(esConfig)
 		searchSvc.SetESEngine(esEngine)
 		logger.Info("✓ Elasticsearch 已集成到 SearchService")
