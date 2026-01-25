@@ -1116,8 +1116,8 @@ func TestReaderService_DeleteReadingProgress_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, mockCacheService := setupReaderService()
 	ctx := context.Background()
-	userID := primitive.NewObjectID().Hex()
-	bookID := primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
 
 	existingProgress := &reader.ReadingProgress{
 		UserID: userID,
@@ -1238,9 +1238,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空用户ID",
 			annotation: &reader.Annotation{
-				UserID:    "",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NilObjectID,
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "note",
 			},
 			wantErrSub: "用户ID不能为空",
@@ -1248,9 +1248,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空书籍ID",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NilObjectID,
+				ChapterID: primitive.NewObjectID(),
 				Type:      "note",
 			},
 			wantErrSub: "书籍ID不能为空",
@@ -1258,9 +1258,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空章节ID",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NilObjectID,
 				Type:      "note",
 			},
 			wantErrSub: "章节ID不能为空",
@@ -1268,9 +1268,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空类型",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "",
 			},
 			wantErrSub: "标注类型不能为空",
