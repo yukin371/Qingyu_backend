@@ -1,11 +1,12 @@
 package fixtures
 
 import (
-	"Qingyu_backend/models/writer"
 	"fmt"
 	"time"
 
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
+	"Qingyu_backend/models/writer"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,16 +26,16 @@ func NewUserFactory() *UserFactory {
 // Create 创建用户（支持自定义选项）
 func (f *UserFactory) Create(opts ...func(*users.User)) *users.User {
 	f.counter++
+	now := time.Now()
 	user := &users.User{
-		ID:        primitive.NewObjectID(),
-		Username:  fmt.Sprintf("user%d", f.counter),
-		Email:     fmt.Sprintf("user%d@test.com", f.counter),
-		Password:  "hashed_password_" + fmt.Sprint(f.counter),
-		Roles:     []string{"reader"}, // 默认为读者角色
-		VIPLevel:  0,
-		Status:    users.UserStatusActive,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		Username:         fmt.Sprintf("user%d", f.counter),
+		Email:            fmt.Sprintf("user%d@test.com", f.counter),
+		Password:         "hashed_password_" + fmt.Sprint(f.counter),
+		Roles:            []string{"reader"}, // 默认为读者角色
+		VIPLevel:         0,
+		Status:           users.UserStatusActive,
 	}
 
 	// 应用自定义选项

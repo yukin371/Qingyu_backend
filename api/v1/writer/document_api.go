@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,35 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/projects/{projectId}/documents [post]
 func (api *DocumentApi) CreateDocument(c *gin.Context) {
+	// 检查服务是否初始化
+	if api.documentService == nil {
+		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "文档服务未正确初始化")
+		return
+	}
+
 	projectID := c.Param("projectId")
+
+	// 验证项目ID
+	if projectID == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		return
+	}
+
+	// 获取并验证用户ID
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok || userIDStr == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		return
+	}
+
+	// 将用户ID添加到context
+	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
 
 	var req document.CreateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,7 +73,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	req.ProjectID = projectID
 
-	resp, err := api.documentService.CreateDocument(c.Request.Context(), &req)
+	resp, err := api.documentService.CreateDocument(ctx, &req)
 	if err != nil {
 		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
 		return
@@ -230,6 +259,54 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	}
 
 	shared.Success(c, http.StatusOK, "排序成功", nil)
+}
+
+// DuplicateDocument 复制文档
+// @Summary 复制文档
+// @Description 复制文档到指定位置，可选择是否复制内容
+// @Tags 文档管理
+// @Accept json
+// @Produce json
+// @Param id path string true "文档ID"
+// @Param request body document.DuplicateRequest true "复制文档请求"
+// @Success 200 {object} shared.APIResponse{data=document.DuplicateResponse}
+// @Failure 400 {object} shared.APIResponse
+// @Failure 403 {object} shared.APIResponse
+// @Failure 404 {object} shared.APIResponse
+// @Failure 500 {object} shared.APIResponse
+// @Router /api/v1/writer/documents/{id}/duplicate [post]
+func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
+	documentID := c.Param("id")
+
+	// 获取并验证用户ID
+	userID, exists := c.Get("userId")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok || userIDStr == "" {
+		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		return
+	}
+
+	// 将用户ID添加到context
+	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+
+	var req document.DuplicateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		return
+	}
+
+	resp, err := api.documentService.DuplicateDocument(ctx, documentID, &req)
+	if err != nil {
+		shared.HandleError(c, err)
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "复制成功", resp)
 }
 
 var _ = writerModels.Document{}

@@ -264,7 +264,7 @@ func TestuserserviceUpdateuser(t *testing.T) {
 		updates := map[string]interface{}{"username": "newname"}
 
 		// Act
-		err := service.UpdateUser(ctx, user.ID, updates)
+		err := service.UpdateUser(ctx, user.ID.Hex(), updates)
 
 		// Assert
 		assert.NoError(t, err)
@@ -311,12 +311,12 @@ func TestuserserviceWithhelpers(t *testing.T) {
 	service := NewUserService(mockRepo)
 
 	// 测试获取用户1
-	result1, err := service.GetUser(ctx, user1.ID)
+	result1, err := service.GetUser(ctx, user1.ID.Hex())
 	testutil.AssertNoErrorWithMessage(t, err, "获取用户1失败")
 	testutil.AssertUserEqual(t, user1, result1)
 
 	// 测试获取用户2
-	result2, err := service.GetUser(ctx, user2.ID)
+	result2, err := service.GetUser(ctx, user2.ID.Hex())
 	testutil.AssertNoErrorWithMessage(t, err, "获取用户2失败")
 	assert.Contains(t, result2.Roles, "admin")
 

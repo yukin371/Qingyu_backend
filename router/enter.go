@@ -236,11 +236,18 @@ func RegisterRoutes(r *gin.Engine) {
 			readingHistorySvc = nil
 		}
 
+		// 获取书签服务（如果可用）
+		var bookmarkSvc readerservice.BookmarkService
+		bookmarkSvc, bookmarkErr := serviceContainer.GetBookmarkService()
+		if bookmarkErr != nil {
+			logger.Warn("书签服务未配置", zap.Error(bookmarkErr))
+			bookmarkSvc = nil
+		} else {
+			logger.Info("✓ 书签服务已配置")
+		}
+
 		// 进度同步服务（TODO: 需要添加到服务容器）
 		var progressSyncSvc *syncService.ProgressSyncService = nil
-
-		// 书签服务（TODO: 需要添加到服务容器）
-		var bookmarkSvc readerservice.BookmarkService = nil
 
 		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc)
 

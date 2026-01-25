@@ -160,8 +160,16 @@ func TestAuditAdminAPI_GetPendingAudits_Success(t *testing.T) {
 	router := setupAuditAdminTestRouter(mockService)
 
 	expectedRecords := []*audit.AuditRecord{
-		{ID: primitive.NewObjectID().Hex(), TargetType: "document", Status: "pending"},
-		{ID: primitive.NewObjectID().Hex(), TargetType: "chapter", Status: "pending"},
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "document", Status: "pending"}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "chapter", Status: "pending"}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
 	}
 
 	mockService.On("GetPendingReviews", mock.Anything, 50).Return(expectedRecords, nil)
@@ -189,7 +197,11 @@ func TestAuditAdminAPI_GetPendingAudits_WithTargetType(t *testing.T) {
 	router := setupAuditAdminTestRouter(mockService)
 
 	expectedRecords := []*audit.AuditRecord{
-		{ID: primitive.NewObjectID().Hex(), TargetType: "document", Status: "pending"},
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "document", Status: "pending"}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
 	}
 
 	mockService.On("GetPendingReviews", mock.Anything, 20).Return(expectedRecords, nil)
@@ -565,8 +577,16 @@ func TestAuditAdminAPI_GetHighRiskAudits_Success(t *testing.T) {
 	router := setupAuditAdminTestRouter(mockService)
 
 	expectedRecords := []*audit.AuditRecord{
-		{ID: primitive.NewObjectID().Hex(), TargetType: "document", RiskLevel: 5},
-		{ID: primitive.NewObjectID().Hex(), TargetType: "chapter", RiskLevel: 4},
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "document", RiskLevel: 5}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "chapter", RiskLevel: 4}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
 	}
 
 	mockService.On("GetHighRiskAudits", mock.Anything, 3, 50).Return(expectedRecords, nil)
@@ -594,7 +614,11 @@ func TestAuditAdminAPI_GetHighRiskAudits_WithFilters(t *testing.T) {
 	router := setupAuditAdminTestRouter(mockService)
 
 	expectedRecords := []*audit.AuditRecord{
-		{ID: primitive.NewObjectID().Hex(), TargetType: "document", RiskLevel: 5},
+		func() *audit.AuditRecord {
+			r := &audit.AuditRecord{TargetType: "document", RiskLevel: 5}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
 	}
 
 	mockService.On("GetHighRiskAudits", mock.Anything, 4, 20).Return(expectedRecords, nil)

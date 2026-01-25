@@ -82,6 +82,46 @@ func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writ
 	return &doc, nil
 }
 
+// GetByIDs 根据ID列表批量获取文档
+func (r *MongoDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([]*writer.Document, error) {
+	if len(ids) == 0 {
+		return []*writer.Document{}, nil
+	}
+
+	// 转换字符串ID为ObjectID
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			// 跳过无效的ID
+			continue
+		}
+		objectIDs = append(objectIDs, objID)
+	}
+
+	if len(objectIDs) == 0 {
+		return []*writer.Document{}, nil
+	}
+
+	filter := bson.M{
+		"_id":        bson.M{"$in": objectIDs},
+		"deleted_at": nil,
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("批量查询文档失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var docs []*writer.Document
+	if err = cursor.All(ctx, &docs); err != nil {
+		return nil, fmt.Errorf("解析文档数据失败: %w", err)
+	}
+
+	return docs, nil
+}
+
 // Update 更新文档
 func (r *MongoDocumentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	objID, err := primitive.ObjectIDFromHex(id)

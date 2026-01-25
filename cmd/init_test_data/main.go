@@ -9,6 +9,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/migration/seeds"
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -363,16 +364,15 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 		// 创建用户
 		now := time.Now()
 		user := users.User{
-			ID:        primitive.NewObjectID(),
-			Username:  betaUser.Username,
-			Email:     betaUser.Email,
-			Password:  string(hashedPassword),
-			Nickname:  betaUser.Nickname,
-			Avatar:    betaUser.Avatar,
-			Roles:     []string{betaUser.Role},
-			Status:    "active",
-			CreatedAt: now,
-			UpdatedAt: now,
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         betaUser.Username,
+			Email:            betaUser.Email,
+			Password:         string(hashedPassword),
+			Nickname:         betaUser.Nickname,
+			Avatar:           betaUser.Avatar,
+			Roles:            []string{betaUser.Role},
+			Status:           "active",
 		}
 
 		_, err = userCollection.InsertOne(ctx, user)

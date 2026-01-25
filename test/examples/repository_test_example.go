@@ -151,7 +151,7 @@ func TestuserrepositoryCrudComplete(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 再查询
-		found, err := repo.GetByID(ctx, user.ID)
+		found, err := repo.GetByID(ctx, user.ID.Hex())
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
 		testutil.AssertUserEqual(t, user, found)
@@ -191,11 +191,11 @@ func TestuserrepositoryCrudComplete(t *testing.T) {
 		assert.NoError(t, err)
 
 		// 删除
-		err = repo.Delete(ctx, user.ID)
+		err = repo.Delete(ctx, user.ID.Hex())
 		assert.NoError(t, err)
 
 		// 验证已删除
-		found, err := repo.GetByID(ctx, user.ID)
+		found, err := repo.GetByID(ctx, user.ID.Hex())
 		assert.Error(t, err)
 		assert.Nil(t, found)
 	})
@@ -227,21 +227,21 @@ func TestuserrepositoryWithdatapreparation(t *testing.T) {
 	// 注册清理函数
 	testutil.RegisterCleanup(t, func() {
 		for _, user := range testUsers {
-			_ = repo.Delete(ctx, user.ID)
+			_ = repo.Delete(ctx, user.ID.Hex())
 		}
 	})
 
 	// Act & Assert: 执行测试
 	t.Run("验证管理员用户存在", func(t *testing.T) {
 		admin := testUsers[0]
-		found, err := repo.GetByID(ctx, admin.ID)
+		found, err := repo.GetByID(ctx, admin.ID.Hex())
 		assert.NoError(t, err)
 		assert.Contains(t, found.Roles, "admin")
 	})
 
 	t.Run("验证作者用户存在", func(t *testing.T) {
 		author := testUsers[1]
-		found, err := repo.GetByID(ctx, author.ID)
+		found, err := repo.GetByID(ctx, author.ID.Hex())
 		assert.NoError(t, err)
 		assert.Contains(t, found.Roles, "author")
 	})
@@ -280,13 +280,13 @@ func TestuserrepositoryBatchoperations(t *testing.T) {
 
 		// 批量删除
 		for _, user := range users {
-			err := repo.Delete(ctx, user.ID)
+			err := repo.Delete(ctx, user.ID.Hex())
 			assert.NoError(t, err)
 		}
 
 		// 验证都已删除
 		for _, user := range users {
-			found, err := repo.GetByID(ctx, user.ID)
+			found, err := repo.GetByID(ctx, user.ID.Hex())
 			assert.Error(t, err)
 			assert.Nil(t, found)
 		}
@@ -391,7 +391,7 @@ func BenchmarkuserrepositoryGetbyid(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = repo.GetByID(ctx, user.ID)
+		_, _ = repo.GetByID(ctx, user.ID.Hex())
 	}
 }
 

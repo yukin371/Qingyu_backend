@@ -6,6 +6,7 @@ import (
 	"time"
 
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
