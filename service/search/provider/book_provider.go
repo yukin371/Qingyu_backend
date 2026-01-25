@@ -220,7 +220,7 @@ func (p *BookProvider) GetByID(ctx context.Context, id string) (*search.SearchIt
 		Size: 1,
 	}
 
-	result, err := p.engine.Search(ctx, booksCollection, "", opts)
+	result, err := p.engine.Search(ctx, booksCollection, query, opts)
 	if err != nil {
 		p.logger.Error("Get book by ID failed",
 			zap.Error(err),
