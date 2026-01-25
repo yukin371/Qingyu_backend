@@ -46,8 +46,13 @@ func (r *MongoReadingProgressRepository) Create(ctx context.Context, progress *r
 
 // GetByID 根据ID获取阅读进度
 func (r *MongoReadingProgressRepository) GetByID(ctx context.Context, id string) (*reader.ReadingProgress, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID: %w", err)
+	}
+
 	var progress reader.ReadingProgress
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&progress)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&progress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("阅读进度不存在")
@@ -60,11 +65,16 @@ func (r *MongoReadingProgressRepository) GetByID(ctx context.Context, id string)
 
 // Update 更新阅读进度
 func (r *MongoReadingProgressRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -80,7 +90,12 @@ func (r *MongoReadingProgressRepository) Update(ctx context.Context, id string, 
 
 // Delete 删除阅读进度
 func (r *MongoReadingProgressRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("删除阅读进度失败: %w", err)
 	}

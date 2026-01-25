@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -43,8 +44,13 @@ func (r *MongoReadingSettingsRepository) Create(ctx context.Context, settings *r
 
 // GetByID 根据ID获取阅读设置
 func (r *MongoReadingSettingsRepository) GetByID(ctx context.Context, id string) (*reader.ReadingSettings, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var settings reader.ReadingSettings
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&settings)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&settings)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -57,14 +63,24 @@ func (r *MongoReadingSettingsRepository) GetByID(ctx context.Context, id string)
 
 // Update 更新阅读设置
 func (r *MongoReadingSettingsRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	return err
 }
 
 // Delete 删除阅读设置
 func (r *MongoReadingSettingsRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	return err
 }
 
