@@ -102,15 +102,24 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 
 // GetByID 根据ID获取用户
 func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersModel.User, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	var user usersModel.User
 
 	// 构建查询条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	err := r.collection.FindOne(ctx, mongoFilter).Decode(&user)
+	err = r.collection.FindOne(ctx, mongoFilter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -131,12 +140,21 @@ func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersMod
 
 // Update 更新用户信息
 func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
 	// 构建更新条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": updates}
@@ -163,10 +181,19 @@ func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map
 
 // Delete 软删除用户
 func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
 	// 构建查询条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}
@@ -193,7 +220,16 @@ func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 
 // HardDelete 硬删除用户
 func (r *MongoUserRepository) HardDelete(ctx context.Context, id string) error {
-	filter := bson.M{"_id": id}
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
+	filter := bson.M{"_id": objectID}
 
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
