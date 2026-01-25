@@ -9,8 +9,9 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/global"
-	"Qingyu_backend/models/writer"
+	writerModel "Qingyu_backend/models/writer"
 	writerRepo "Qingyu_backend/repository/mongodb/writer"
+	writerInterfaces "Qingyu_backend/repository/interfaces/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	"Qingyu_backend/test/testutil"
 
@@ -66,7 +67,7 @@ func TestMain(m *testing.M) {
 }
 
 // setupTestEnv 创建测试环境
-func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperationService, writerRepo.BatchOperationRepository, writerRepo.DocumentRepository, primitive.ObjectID) {
+func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperationService, writerInterfaces.BatchOperationRepository, writerInterfaces.DocumentRepository, primitive.ObjectID) {
 	ctx := context.Background()
 
 	// 创建测试项目ID
@@ -92,11 +93,11 @@ func cleanupTestData(t *testing.T, projectID primitive.ObjectID, batchOpID primi
 }
 
 // createTestDocuments 创建测试文档
-func createTestDocuments(t *testing.T, ctx context.Context, docRepo writerRepo.DocumentRepository, projectID primitive.ObjectID, count int) []string {
+func createTestDocuments(t *testing.T, ctx context.Context, docRepo writerInterfaces.DocumentRepository, projectID primitive.ObjectID, count int) []string {
 	docIDs := make([]string, count)
 
 	for i := 0; i < count; i++ {
-		doc := &writer.Document{
+		doc := &writerModel.Document{
 			ProjectID: projectID,
 			Title:     fmt.Sprintf("Test Document %d", i),
 			Type:      "chapter", // 使用Type字段代替ContentType
@@ -131,7 +132,7 @@ func TestAtomicFalse_PartialFailure(t *testing.T) {
 	// 创建批量删除请求（atomic=false）
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    false, // 非原子操作
 		RetryConfig: &documentService.RetryConfig{
@@ -168,7 +169,7 @@ func TestAtomicFalse_PartialFailure(t *testing.T) {
 	}
 
 	// 验证状态
-	if result.Status != writer.BatchOpStatusPartial {
+	if result.Status != writerModel.BatchOpStatusPartial {
 		t.Errorf("期望状态为partial，实际为: %s", result.Status)
 	}
 
@@ -185,9 +186,9 @@ func TestAtomicFalse_PartialFailure(t *testing.T) {
 	successCount := 0
 	failedCount := 0
 	for _, item := range result.Items {
-		if item.Status == writer.BatchItemStatusSucceeded {
+		if item.Status == writerModel.BatchItemStatusSucceeded {
 			successCount++
-		} else if item.Status == writer.BatchItemStatusFailed {
+		} else if item.Status == writerModel.BatchItemStatusFailed {
 			failedCount++
 			// 验证失败项有错误信息
 			if item.ErrorCode == "" {
@@ -226,7 +227,7 @@ func TestAtomicTrue_ImmediateStop(t *testing.T) {
 	// 创建批量删除请求（atomic=true）
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    true, // 原子操作
 		RetryConfig: &documentService.RetryConfig{
@@ -261,7 +262,7 @@ func TestAtomicTrue_ImmediateStop(t *testing.T) {
 	}
 
 	// 验证状态：atomic=true时，任何失败都应该导致整体失败
-	if result.Status != writer.BatchOpStatusFailed {
+	if result.Status != writerModel.BatchOpStatusFailed {
 		t.Errorf("期望状态为failed，实际为: %s", result.Status)
 	}
 
@@ -277,7 +278,7 @@ func TestAtomicTrue_ImmediateStop(t *testing.T) {
 	// 应该有至少1个成功（第1个），第2个失败
 	successCount := 0
 	for _, item := range result.Items {
-		if item.Status == writer.BatchItemStatusSucceeded {
+		if item.Status == writerModel.BatchItemStatusSucceeded {
 			successCount++
 		}
 	}
@@ -307,7 +308,7 @@ func TestAtomicFalse_RetryMechanism(t *testing.T) {
 	// 创建批量删除请求
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    false,
 		RetryConfig: &documentService.RetryConfig{
@@ -370,7 +371,7 @@ func TestSummaryStatistics(t *testing.T) {
 	// 创建批量删除请求（atomic=false）
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    false,
 		RetryConfig: &documentService.RetryConfig{
@@ -432,7 +433,7 @@ func TestSummaryStatistics(t *testing.T) {
 	}
 
 	// 验证状态
-	if result.Status != writer.BatchOpStatusPartial {
+	if result.Status != writerModel.BatchOpStatusPartial {
 		t.Errorf("期望状态为partial，实际为: %s", result.Status)
 	}
 
@@ -450,7 +451,7 @@ func TestAllSuccess(t *testing.T) {
 	// 创建批量删除请求
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    false,
 		RetryConfig: &documentService.RetryConfig{
@@ -481,7 +482,7 @@ func TestAllSuccess(t *testing.T) {
 	}
 
 	// 验证状态：全部成功应该是completed
-	if result.Status != writer.BatchOpStatusCompleted {
+	if result.Status != writerModel.BatchOpStatusCompleted {
 		t.Errorf("期望状态为completed，实际为: %s", result.Status)
 	}
 
@@ -496,7 +497,7 @@ func TestAllSuccess(t *testing.T) {
 
 	// 验证所有item都是成功状态
 	for i, item := range result.Items {
-		if item.Status != writer.BatchItemStatusSucceeded {
+		if item.Status != writerModel.BatchItemStatusSucceeded {
 			t.Errorf("第%d个项期望成功，实际: %s", i, item.Status)
 		}
 	}
@@ -523,7 +524,7 @@ func TestAllFailure(t *testing.T) {
 	// 创建批量删除请求
 	req := &documentService.SubmitBatchOperationRequest{
 		ProjectID: projectID.Hex(),
-		Type:      writer.BatchOpTypeDelete,
+		Type:      writerModel.BatchOpTypeDelete,
 		TargetIDs: docIDs,
 		Atomic:    false,
 		RetryConfig: &documentService.RetryConfig{
@@ -554,7 +555,7 @@ func TestAllFailure(t *testing.T) {
 	}
 
 	// 验证状态：全部失败应该是failed
-	if result.Status != writer.BatchOpStatusFailed {
+	if result.Status != writerModel.BatchOpStatusFailed {
 		t.Errorf("期望状态为failed，实际为: %s", result.Status)
 	}
 
@@ -569,7 +570,7 @@ func TestAllFailure(t *testing.T) {
 
 	// 验证所有item都有错误信息
 	for i, item := range result.Items {
-		if item.Status != writer.BatchItemStatusFailed {
+		if item.Status != writerModel.BatchItemStatusFailed {
 			t.Errorf("第%d个项期望失败，实际: %s", i, item.Status)
 		}
 		if item.ErrorCode == "" {
