@@ -2,6 +2,7 @@ package search
 
 import (
 	"context"
+	"fmt"
 	"hash/crc32"
 	"math/rand"
 	"sync"
@@ -20,6 +21,12 @@ type GrayScaleDecision interface {
 
 	// GetMetrics 获取灰度指标
 	GetMetrics() GrayScaleMetrics
+
+	// UpdateConfig 更新灰度配置
+	UpdateConfig(enabled bool, percent int) error
+
+	// GetConfig 获取灰度配置
+	GetConfig() *GrayScaleConfig
 }
 
 // GrayScaleMetrics 灰度指标
@@ -46,6 +53,7 @@ type grayscaleDecision struct {
 	config  *GrayScaleConfig
 	metrics *grayscaleMetrics
 	logger  *zap.Logger
+	mu      sync.RWMutex
 }
 
 // NewGrayScaleDecision 创建灰度决策器
@@ -176,4 +184,42 @@ func (m *GrayScaleMetrics) GetTrafficDistribution() (esPercent, mongoPercent flo
 	mongoPercent = float64(m.MongoDBCount) / float64(total) * 100
 
 	return esPercent, mongoPercent
+}
+
+// UpdateConfig 更新灰度配置（热更新）
+func (g *grayscaleDecision) UpdateConfig(enabled bool, percent int) error {
+	// 参数验证
+	if percent < 0 || percent > 100 {
+		return fmt.Errorf("invalid percent: %d, must be between 0 and 100", percent)
+	}
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	oldEnabled := g.config.Enabled
+	oldPercent := g.config.Percent
+
+	g.config.Enabled = enabled
+	g.config.Percent = percent
+
+	// 记录配置变更
+	g.logger.Info("灰度配置已更新",
+		zap.Bool("old_enabled", oldEnabled),
+		zap.Bool("new_enabled", enabled),
+		zap.Int("old_percent", oldPercent),
+		zap.Int("new_percent", percent),
+	)
+
+	return nil
+}
+
+// GetConfig 获取当前灰度配置
+func (g *grayscaleDecision) GetConfig() *GrayScaleConfig {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+
+	return &GrayScaleConfig{
+		Enabled: g.config.Enabled,
+		Percent: g.config.Percent,
+	}
 }

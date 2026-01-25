@@ -632,3 +632,8 @@ func (s *SearchService) Close() error {
 
 	return nil
 }
+
+// GetGrayscaleDecision 获取灰度决策器
+func (s *SearchService) GetGrayscaleDecision() GrayScaleDecision {
+	return s.grayscaleDecision
+}
