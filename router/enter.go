@@ -24,6 +24,7 @@ import (
 
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/container"
 	adminservice "Qingyu_backend/service/admin"
@@ -558,21 +559,22 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 获取统计服务（用于用户统计功能）
 	var statsSvc statsService.PlatformStatsService
+	var userRepoInstance userRepo.UserRepository // 用于用户路由
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
-		userRepo := repositoryFactory.CreateUserRepository()
+		userRepoInstance = repositoryFactory.CreateUserRepository()
 		bookRepo := repositoryFactory.CreateBookRepository()
 		projectRepo := repositoryFactory.CreateProjectRepository()
 		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
 
-		if userRepo != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
-			statsSvc = statsService.NewPlatformStatsService(userRepo, bookRepo, projectRepo, chapterRepo)
+		if userRepoInstance != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
+			statsSvc = statsService.NewPlatformStatsService(userRepoInstance, bookRepo, projectRepo, chapterRepo)
 		}
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
+	userRouter.RegisterUserRoutes(v1, userSvc, userRepoInstance, bookstoreSvcInterface, statsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")
