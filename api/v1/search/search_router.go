@@ -2,22 +2,23 @@ package search
 
 import (
 	"github.com/gin-gonic/gin"
+	searchService "Qingyu_backend/service/search"
 )
 
 // RegisterSearchRoutes 注册搜索路由
-func RegisterSearchRoutes(router *gin.RouterGroup) {
-	searchAPI := NewSearchAPI()
+func RegisterSearchRoutes(router *gin.RouterGroup, searchSvc *searchService.SearchService) {
+	searchAPI := NewSearchAPI(searchSvc)
 
 	// 统一搜索路由组
 	searchGroup := router.Group("/search")
 	{
-		// 无需认证的搜索
-		searchGroup.GET("/books", searchAPI.SearchBooks)
-		searchGroup.GET("/users", searchAPI.SearchUsers)
+		// 统一搜索入口
+		searchGroup.POST("/search", searchAPI.Search)
 
-		// 需要认证的搜索
-		// TODO: 添加认证中间件
-		searchGroup.GET("/projects", searchAPI.SearchProjects)
-		searchGroup.GET("/documents", searchAPI.SearchDocuments)
+		// 批量搜索
+		searchGroup.POST("/batch", searchAPI.SearchBatch)
+
+		// 健康检查
+		searchGroup.GET("/health", searchAPI.Health)
 	}
 }
