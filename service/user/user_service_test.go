@@ -442,9 +442,10 @@ func TestUserService_GetUser_Success(t *testing.T) {
 	service, mockUserRepo, _ := setupUserService()
 	ctx := context.Background()
 
-	userID := primitive.NewObjectID().Hex()
+	userObjectID := primitive.NewObjectID()
+	userID := userObjectID.Hex()
 	expectedUser := &usersModel.User{
-		ID:       userID,
+		ID:       userObjectID,
 		Username: "testuser",
 		Email:    "test@example.com",
 	}
