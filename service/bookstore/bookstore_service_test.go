@@ -1313,7 +1313,10 @@ func TestBookstoreService_IncrementBannerClick(t *testing.T) {
 		{
 			name:        "无效的Banner ID",
 			bannerID:    "invalid-id",
-			setupMock:   func(m *MockBannerRepositoryForService) {},
+			setupMock: func(m *MockBannerRepositoryForService) {
+				// 无效ID应该返回错误
+				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid banner ID"))
+			},
 			wantErr:     true,
 			errContains: "invalid banner ID",
 		},
