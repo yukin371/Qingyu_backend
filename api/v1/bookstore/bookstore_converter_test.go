@@ -338,7 +338,7 @@ func TestRatingConversion(t *testing.T) {
 			}
 
 			bookDTO := ToBookDTO(bookModel)
-			assert.Equal(t, tc.rating, bookDTO.Rating)
+			assert.Equal(t, float64(tc.rating), bookDTO.Rating)
 
 			// DTO → Model
 			bookDTO2 := &dto.BookDTO{

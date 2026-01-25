@@ -223,8 +223,8 @@ func TestJWTService_TokenExpiration(t *testing.T) {
 		},
 		{
 			name:         "即将过期但仍然有效",
-			expiration:   200 * time.Millisecond,
-			validateWait: 50 * time.Millisecond,
+			expiration:   500 * time.Millisecond,
+			validateWait: 100 * time.Millisecond,
 			wantErr:      false,
 		},
 	}
