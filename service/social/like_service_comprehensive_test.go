@@ -4,7 +4,6 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"errors"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
