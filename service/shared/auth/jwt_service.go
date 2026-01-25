@@ -197,29 +197,17 @@ func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) 
 		return "", fmt.Errorf("刷新Token验证失败: %w", err)
 	}
 
-	// 2. 生成新的访问Token，确保与旧token不同
-	var newToken string
-	maxAttempts := 10 // 最多尝试10次
-	for i := 0; i < maxAttempts; i++ {
-		now := time.Now()
-		newClaims := &TokenClaims{
-			UserID: claims.UserID,
-			Roles:  claims.Roles,
-			Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
-			Iat:    now.Unix(),                         // 使用秒级时间戳
-		}
-		newToken, err = s.generateJWT(newClaims)
-		if err != nil {
-			return "", fmt.Errorf("生成新Token失败: %w", err)
-		}
-
-		// 确保新token与旧token不同
-		if newToken != refreshToken {
-			break
-		}
-
-		// 如果相同，等待一小段时间再试
-		time.Sleep(time.Nanosecond)
+	// 2. 生成新的访问Token
+	now := time.Now()
+	newClaims := &TokenClaims{
+		UserID: claims.UserID,
+		Roles:  claims.Roles,
+		Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
+		Iat:    now.Unix(),                         // 使用秒级时间戳
+	}
+	newToken, err = s.generateJWT(newClaims)
+	if err != nil {
+		return "", fmt.Errorf("生成新Token失败: %w", err)
 	}
 
 	// 3. 不将refreshToken加入黑名单，允许正常刷新
