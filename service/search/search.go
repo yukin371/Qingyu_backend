@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -27,6 +26,10 @@ type SearchService struct {
 	esConfig      *SearchConfig // ES 配置
 	esEngine      searchengine.Engine // ES 引擎（如果启用）
 	mongoEngine   searchengine.Engine // MongoDB 引擎（fallback）
+
+	// 灰度决策
+	grayscaleDecision GrayScaleDecision // 灰度决策器
+	mu                sync.RWMutex     // 读写锁
 }
 
 // Config 搜索服务配置
@@ -40,7 +43,7 @@ type Config struct {
 }
 
 // NewSearchService 创建搜索服务实例
-func NewSearchService(logger *log.Logger, config *Config) *SearchService {
+func NewSearchService(logger *log.Logger, config *Config, grayscaleDecision GrayScaleDecision) *SearchService {
 	if config == nil {
 		config = &Config{
 			EnableCache:           true,
@@ -50,12 +53,13 @@ func NewSearchService(logger *log.Logger, config *Config) *SearchService {
 	}
 
 	return &SearchService{
-		providers:  make(map[search.SearchType]provider.Provider),
-		logger:     logger,
-		config:     config,
-		esConfig:   nil,      // 将通过 SetESConfig 设置
-		esEngine:   nil,      // 将通过 SetESEngine 设置
-		mongoEngine: nil,     // 将通过 SetMongoEngine 设置
+		providers:          make(map[search.SearchType]provider.Provider),
+		logger:             logger,
+		config:             config,
+		esConfig:           nil,                  // 将通过 SetESConfig 设置
+		esEngine:           nil,                  // 将通过 SetESEngine 设置
+		mongoEngine:        nil,                  // 将通过 SetMongoEngine 设置
+		grayscaleDecision:  grayscaleDecision,    // 灰度决策器
 	}
 }
 
@@ -86,7 +90,7 @@ func (s *SearchService) SetMongoEngine(engine searchengine.Engine) {
 }
 
 // shouldUseES 判断是否应该使用 ES（灰度逻辑）
-func (s *SearchService) shouldUseES() bool {
+func (s *SearchService) shouldUseES(ctx context.Context, searchType search.SearchType, userID string) bool {
 	// 如果 ES 未启用，使用 MongoDB
 	if s.esConfig == nil || !s.esConfig.ES.Enabled {
 		return false
@@ -102,17 +106,24 @@ func (s *SearchService) shouldUseES() bool {
 		return true
 	}
 
-	// 灰度模式：根据百分比决定
-	percent := s.esConfig.ES.GrayScale.Percent
-	if percent <= 0 {
-		return false
-	}
-	if percent >= 100 {
-		return true
+	// 使用灰度决策器
+	if s.grayscaleDecision != nil {
+		return s.grayscaleDecision.ShouldUseES(ctx, string(searchType), userID)
 	}
 
-	// 使用随机数决定是否使用 ES
-	return rand.Intn(100) < percent
+	// 默认使用 MongoDB
+	return false
+}
+
+// getUserID 从 context 获取用户 ID
+func (s *SearchService) getUserID(ctx context.Context) string {
+	if uid, exists := ctx.Value("userId").(string); exists {
+		return uid
+	}
+	if uid, exists := ctx.Value("user_id").(string); exists {
+		return uid
+	}
+	return ""
 }
 
 // searchWithProvider 使用 Provider 搜索（原有逻辑）
@@ -242,19 +253,24 @@ func (s *SearchService) convertHitToItem(hit searchengine.Hit, searchType search
 
 // Search 统一搜索入口
 func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error) {
+	startTime := time.Now()
+
 	// 1. 验证请求参数
 	if err := s.validateRequest(req); err != nil {
 		s.logger.Printf("[SearchService] Invalid request: %v", err)
 		return s.errorResponse(search.ErrInvalidRequest), nil
 	}
 
-	// 2. 判断是否使用 ES（灰度逻辑）
-	useES := s.shouldUseES()
+	// 2. 获取用户 ID
+	userID := s.getUserID(ctx)
 
-	// 3. 生成缓存键（基于是否使用 ES）
+	// 3. 判断是否使用 ES（灰度逻辑）
+	useES := s.shouldUseES(ctx, req.Type, userID)
+
+	// 4. 生成缓存键（基于是否使用 ES）
 	cacheKey := s.generateCacheKeyWithEngine(req, useES)
 
-	// 4. 检查缓存（如果启用）
+	// 5. 检查缓存（如果启用）
 	var cacheHit bool
 	if s.config.EnableCache && s.cache != nil {
 		cachedData, err := s.cache.Get(ctx, cacheKey)
@@ -278,7 +294,7 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		}
 	}
 
-	// 5. 执行搜索
+	// 6. 执行搜索
 	start := time.Now()
 	var resp *search.SearchResponse
 	var err error
@@ -286,9 +302,17 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 	if useES && s.esEngine != nil {
 		// 使用 ES 搜索
 		resp, err = s.searchWithES(ctx, req)
+		// 记录 ES 使用情况
+		if s.grayscaleDecision != nil {
+			s.grayscaleDecision.RecordUsage("elasticsearch", time.Since(startTime))
+		}
 	} else {
 		// 使用 Provider（原有逻辑）
 		resp, err = s.searchWithProvider(ctx, req)
+		// 记录 MongoDB 使用情况
+		if s.grayscaleDecision != nil {
+			s.grayscaleDecision.RecordUsage("mongodb", time.Since(startTime))
+		}
 	}
 
 	if err != nil {
@@ -300,13 +324,13 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		return nil, search.WrapError(err, search.ErrCodeEngineFailure, "Search execution failed")
 	}
 
-	// 6. 记录耗时
+	// 7. 记录耗时
 	took := time.Since(start)
 	if resp.Data != nil {
 		resp.Data.Took = took
 	}
 
-	// 7. 更新缓存
+	// 8. 更新缓存
 	if s.config.EnableCache && s.cache != nil && !cacheHit && resp.Success && resp.Data != nil {
 		if data, err := s.marshalResponse(resp); err == nil {
 			ttl := s.calculateTTL(req)
@@ -318,14 +342,14 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		}
 	}
 
-	// 8. 添加元信息
+	// 9. 添加元信息
 	if resp.Meta == nil {
 		resp.Meta = &search.MetaInfo{}
 	}
 	resp.Meta.RequestID = s.generateRequestID()
 	resp.Meta.TookMs = took.Milliseconds()
 
-	// 9. 记录搜索日志
+	// 10. 记录搜索日志
 	engineName := "MongoDB"
 	if useES {
 		engineName = "ES"
