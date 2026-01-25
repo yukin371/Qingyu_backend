@@ -201,7 +201,7 @@ func TestToBookModel(t *testing.T) {
 	assert.Equal(t, bookstore.BookStatusOngoing, bookModel.Status)
 
 	// 验证评分
-	assert.Equal(t, types.Rating(4.5), bookModel.Rating)
+	assert.Equal(t, float64(4.5), float64(bookModel.Rating))
 	assert.Equal(t, int64(1000), bookModel.RatingCount)
 
 	// 验证统计
@@ -210,7 +210,7 @@ func TestToBookModel(t *testing.T) {
 	assert.Equal(t, 500, bookModel.ChapterCount)
 
 	// 验证价格 - 应该是 9900 分
-	assert.Equal(t, int64(9900), bookModel.Price)
+	assert.Equal(t, float64(9900), bookModel.Price)
 
 	// 验证标记
 	assert.False(t, bookModel.IsFree)
@@ -308,7 +308,7 @@ func TestPriceConversion(t *testing.T) {
 
 			bookModel2, err := ToBookModel(bookDTO2)
 			require.NoError(t, err)
-			assert.Equal(t, tc.expected, bookModel2.Price)
+			assert.Equal(t, float64(tc.expected), bookModel2.Price)
 		})
 	}
 }
@@ -355,7 +355,7 @@ func TestRatingConversion(t *testing.T) {
 
 			bookModel2, err := ToBookModel(bookDTO2)
 			require.NoError(t, err)
-			assert.Equal(t, types.Rating(tc.expected), bookModel2.Rating)
+			assert.Equal(t, float64(tc.expected), float64(bookModel2.Rating))
 		})
 	}
 }

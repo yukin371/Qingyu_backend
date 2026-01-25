@@ -839,8 +839,8 @@ func TestBookstoreService_GetBooksByCategory(t *testing.T) {
 		newTestBook("玄幻小说2", "", bookstoreModel.BookStatusOngoing),
 	}
 
-	mockBookRepo.On("GetByCategory", ctx, categoryID, 20, 0).Return(books, nil)
-	mockBookRepo.On("CountByCategory", ctx, categoryID).Return(int64(2), nil)
+	mockBookRepo.On("GetByCategory", ctx, categoryID.Hex(), 20, 0).Return(books, nil)
+	mockBookRepo.On("CountByCategory", ctx, categoryID.Hex()).Return(int64(2), nil)
 
 	// Act
 	result, total, err := service.GetBooksByCategory(ctx, categoryID.Hex(), 1, 20)

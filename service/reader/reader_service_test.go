@@ -803,9 +803,11 @@ func TestReaderService_GetReadingProgress_NotFound(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, progress)
-	assert.Equal(t, userID, progress.UserID)
-	assert.Equal(t, bookID, progress.BookID)
-	assert.Equal(t, 0.0, progress.Progress)
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
+	assert.Equal(t, userIDObj, progress.UserID)
+	assert.Equal(t, bookIDObj, progress.BookID)
+	assert.Equal(t, 0.0, float64(progress.Progress))
 	mockProgressRepo.AssertExpectations(t)
 }
 
@@ -1202,9 +1204,9 @@ func TestReaderService_CreateAnnotation_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
 
-	userObjectID, _ := primitive.ObjectIDFromHex("user123")
-	bookObjectID, _ := primitive.ObjectIDFromHex("book123")
-	chapterObjectID, _ := primitive.ObjectIDFromHex("chapter123")
+	userObjectID := primitive.NewObjectID()
+	bookObjectID := primitive.NewObjectID()
+	chapterObjectID := primitive.NewObjectID()
 
 	annotation := &reader.Annotation{
 		UserID:    userObjectID,
