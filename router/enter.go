@@ -457,7 +457,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// ============ 注册写作端路由 ============
-	writerRouter.RegisterWriterRoutes(v1)
+	writerRouter.RegisterWriterRoutes(v1, searchSvc)
 	logger.Info("✓ 写作端路由已注册到: /api/v1/writer/")
 	logger.Info("  - /api/v1/writer/projects/* (项目管理)")
 	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
