@@ -24,6 +24,9 @@ type SearchConfig struct {
 	Documents DocumentSearchConfig `yaml:"documents"`
 	// 用户搜索配置
 	Users UserSearchConfig `yaml:"users"`
+
+	// Elasticsearch 配置
+	ES ESConfig `yaml:"elasticsearch"`
 }
 
 // SearchIndicesConfig 索引配置（从 search_indices.yaml 加载）
@@ -284,4 +287,24 @@ type DocumentSearchConfig struct {
 type UserSearchConfig struct {
 	// 是否启用
 	Enabled bool `yaml:"enabled"`
+}
+
+// ESConfig Elasticsearch 配置
+type ESConfig struct {
+	// 是否启用 ES
+	Enabled bool `yaml:"enabled"`
+	// ES 地址
+	URL string `yaml:"url"`
+	// 索引前缀
+	IndexPrefix string `yaml:"index_prefix"`
+	// 灰度发布配置
+	GrayScale GrayScaleConfig `yaml:"grayscale"`
+}
+
+// GrayScaleConfig 灰度发布配置
+type GrayScaleConfig struct {
+	// 是否启用灰度
+	Enabled bool `yaml:"enabled"`
+	// 灰度流量百分比(0-100)
+	Percent int `yaml:"percent"`
 }

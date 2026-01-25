@@ -1,8 +1,10 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
@@ -41,6 +43,7 @@ import (
 	readerservice "Qingyu_backend/service/reader"
 
 	"github.com/gin-gonic/gin"
+	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
@@ -606,6 +609,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 // initSearchService 初始化搜索服务
 // 创建 MongoEngine、BookProvider，并注册到 SearchService
+// 如果启用 Elasticsearch，则同时创建 ES 引擎并配置灰度
 func initSearchService(container *container.ServiceContainer, logger *zap.Logger) *searchService.SearchService {
 	// 获取 MongoDB 客户端和数据库
 	mongoClient := container.GetMongoClient()
@@ -651,11 +655,124 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	searchSvc := searchService.NewSearchService(log.Default(), searchConfig)
 	logger.Info("✓ SearchService 创建成功")
 
+	// 设置 MongoDB 引擎（作为 fallback）
+	searchSvc.SetMongoEngine(mongoEngine)
+	logger.Info("✓ MongoDB 引擎已设置到 SearchService")
+
 	// 注册 BookProvider 到 SearchService
 	searchSvc.RegisterProvider(bookProvider)
 	logger.Info("✓ BookProvider 已注册到 SearchService")
 
+	// 尝试初始化 Elasticsearch
+	esConfig, esEngine := initElasticsearch(logger)
+	if esEngine != nil {
+		// 设置 ES 配置和引擎
+		searchSvc.SetESConfig(esConfig)
+		searchSvc.SetESEngine(esEngine)
+		logger.Info("✓ Elasticsearch 已集成到 SearchService")
+
+		// 记录灰度配置
+		if esConfig.ES.GrayScale.Enabled {
+			logger.Info("✓ ES 灰度模式已启用",
+				zap.Int("grayscale_percent", esConfig.ES.GrayScale.Percent),
+			)
+		} else {
+			logger.Info("✓ ES 全量模式已启用")
+		}
+	} else {
+		logger.Info("⚠ Elasticsearch 未配置或初始化失败，使用 MongoDB 搜索")
+	}
+
 	return searchSvc
+}
+
+// initElasticsearch 初始化 Elasticsearch 客户端和引擎
+func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searchengine.Engine) {
+	// 从环境变量读取 ES 配置
+	esURL := os.Getenv("ELASTICSEARCH_URL")
+	if esURL == "" {
+		esURL = "http://localhost:9200" // 默认地址
+	}
+
+	esEnabled := os.Getenv("ELASTICSEARCH_ENABLED")
+	if esEnabled == "" || esEnabled == "false" {
+		logger.Info("Elasticsearch 未启用")
+		return nil, nil
+	}
+
+	esIndexPrefix := os.Getenv("ELASTICSEARCH_INDEX_PREFIX")
+	if esIndexPrefix == "" {
+		esIndexPrefix = "qingyu" // 默认前缀
+	}
+
+	// 灰度配置
+	grayscaleEnabled := os.Getenv("ELASTICSEARCH_GRAYSCALE_ENABLED")
+	grayscalePercent := 0
+	if grayscaleEnabled == "true" {
+		percentStr := os.Getenv("ELASTICSEARCH_GRAYSCALE_PERCENT")
+		if percentStr != "" {
+			fmt.Sscanf(percentStr, "%d", &grayscalePercent)
+		}
+		if grayscalePercent == 0 {
+			grayscalePercent = 10 // 默认 10%
+		}
+		logger.Info("Elasticsearch 灰度模式配置",
+			zap.Int("percent", grayscalePercent),
+		)
+	}
+
+	// 创建 ES 客户端
+	esClient, err := initElasticsearchClient(esURL)
+	if err != nil {
+		logger.Error("创建 Elasticsearch 客户端失败", zap.Error(err))
+		return nil, nil
+	}
+	logger.Info("✓ Elasticsearch 客户端创建成功", zap.String("url", esURL))
+
+	// 创建 ElasticsearchEngine
+	esEngine, err := searchengine.NewElasticsearchEngine(esClient)
+	if err != nil {
+		logger.Error("创建 ElasticsearchEngine 失败", zap.Error(err))
+		return nil, nil
+	}
+
+	// 检查 ES 健康状态
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := esEngine.Health(ctx); err != nil {
+		logger.Warn("Elasticsearch 健康检查失败，将使用 MongoDB fallback", zap.Error(err))
+		return nil, nil
+	}
+	logger.Info("✓ Elasticsearch 健康检查通过")
+
+	// 构建 SearchConfig
+	searchConfig := &searchService.SearchConfig{
+		ES: searchService.ESConfig{
+			Enabled:    true,
+			URL:        esURL,
+			IndexPrefix: esIndexPrefix,
+			GrayScale: searchService.GrayScaleConfig{
+				Enabled: grayscaleEnabled == "true",
+				Percent: grayscalePercent,
+			},
+		},
+	}
+
+	return searchConfig, esEngine
+}
+
+// initElasticsearchClient 初始化 Elasticsearch 客户端
+func initElasticsearchClient(esURL string) (*elastic.Client, error) {
+	client, err := elastic.NewClient(
+		elastic.SetURL(esURL),
+		elastic.SetSniff(false),
+		elastic.SetHealthcheckInterval(10*time.Second),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create elasticsearch client: %w", err)
+	}
+
+	return client, nil
 }
 
 // initRouterLogger 初始化路由日志器
