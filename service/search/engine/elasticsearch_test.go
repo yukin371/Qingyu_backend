@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -56,7 +55,7 @@ func cleanupTestIndex(t *testing.T, ctx context.Context, engine *ElasticsearchEn
 	t.Helper()
 
 	// 忽略删除错误，可能索引已经不存在
-	_, _ = engine.client.DeleteIndex(indexName).Do(ctx)
+	_ = engine.DeleteIndex(ctx, indexName)
 }
 
 // =========================
@@ -75,7 +74,11 @@ func TestElasticsearchEngine_NewEngine(t *testing.T) {
 	engine, err := NewElasticsearchEngine(client)
 	assert.NoError(t, err)
 	assert.NotNil(t, engine)
-	assert.NotNil(t, engine.client)
+
+	// 通过 Health 方法验证引擎可用
+	ctx := context.Background()
+	err = engine.Health(ctx)
+	assert.NoError(t, err, "Engine health check should pass")
 
 	// 测试 nil 客户端
 	_, err = NewElasticsearchEngine(nil)
@@ -133,12 +136,7 @@ func TestElasticsearchEngine_CreateIndex(t *testing.T) {
 	err := engine.CreateIndex(ctx, indexName, mapping)
 	assert.NoError(t, err, "Failed to create index")
 
-	// 验证索引存在
-	exists, err := engine.client.IndexExists(indexName).Do(ctx)
-	require.NoError(t, err)
-	assert.True(t, exists, "Index should exist")
-
-	// 测试创建已存在的索引（应该失败）
+	// 尝试创建已存在的索引（应该失败）
 	err = engine.CreateIndex(ctx, indexName, mapping)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "already exists")
@@ -159,10 +157,14 @@ func TestElasticsearchEngine_CreateIndexWithDefaultMapping(t *testing.T) {
 	err := engine.CreateIndex(ctx, indexName, nil)
 	assert.NoError(t, err, "Failed to create index with default mapping")
 
-	// 验证索引存在
-	exists, err := engine.client.IndexExists(indexName).Do(ctx)
-	require.NoError(t, err)
-	assert.True(t, exists, "Index should exist")
+	// 验证删除索引功能
+	err = engine.DeleteIndex(ctx, indexName)
+	assert.NoError(t, err, "Should be able to delete index")
+
+	// 再次删除应该失败
+	err = engine.DeleteIndex(ctx, indexName)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
 }
 
 // =========================
@@ -219,15 +221,17 @@ func TestElasticsearchEngine_Index(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	assert.NoError(t, err, "Failed to index documents")
 
-	// 刷新索引以确保文档可搜索
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待 ES 索引刷新
+	time.Sleep(1 * time.Second)
 
-	// 验证文档已索引
-	doc, err := engine.client.Get().Index(indexName).Id("1").Do(ctx)
-	require.NoError(t, err)
-	assert.True(t, doc.Found)
-	assert.Equal(t, "1", doc.Id)
+	// 通过搜索验证文档已索引
+	opts := &SearchOptions{
+		From: 0,
+		Size: 10,
+	}
+	result, err := engine.Search(ctx, indexName, "测试书籍1", opts)
+	assert.NoError(t, err, "Search should succeed")
+	assert.Greater(t, result.Total, int64(0), "Should find indexed document")
 }
 
 // TestElasticsearchEngine_IndexEmpty 测试索引空文档列表
@@ -290,9 +294,8 @@ func TestElasticsearchEngine_Update(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引
+	time.Sleep(1 * time.Second)
 
 	// 更新文档
 	updateDoc := Document{
@@ -304,19 +307,22 @@ func TestElasticsearchEngine_Update(t *testing.T) {
 	err = engine.Update(ctx, indexName, "1", updateDoc)
 	assert.NoError(t, err, "Failed to update document")
 
-	// 刷新并验证更新
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引更新
+	time.Sleep(1 * time.Second)
 
-	doc, err := engine.client.Get().Index(indexName).Id("1").Do(ctx)
-	require.NoError(t, err)
-	assert.True(t, doc.Found)
+	// 通过搜索验证更新
+	opts := &SearchOptions{
+		From: 0,
+		Size: 10,
+	}
+	result, err := engine.Search(ctx, indexName, "新标题", opts)
+	assert.NoError(t, err)
+	assert.Greater(t, result.Total, int64(0), "Should find updated document")
 
-	// 验证更新后的内容
-	var source map[string]interface{}
-	err = json.Unmarshal(doc.Source, &source)
-	require.NoError(t, err)
-	assert.Equal(t, "新标题", source["title"])
+	// 验证内容
+	if len(result.Hits) > 0 {
+		assert.Equal(t, "新标题", result.Hits[0].Source["title"])
+	}
 }
 
 // TestElasticsearchEngine_UpdateNotFound 测试更新不存在的文档
@@ -383,21 +389,26 @@ func TestElasticsearchEngine_Delete(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
+	// 等待索引
+	time.Sleep(1 * time.Second)
+
+	// 验证文档存在
+	opts := &SearchOptions{From: 0, Size: 10}
+	result, err := engine.Search(ctx, indexName, "要删除的文档", opts)
 	require.NoError(t, err)
+	assert.Greater(t, result.Total, int64(0), "Document should exist before deletion")
 
 	// 删除文档
 	err = engine.Delete(ctx, indexName, "1")
 	assert.NoError(t, err, "Failed to delete document")
 
-	// 刷新并验证删除
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引更新
+	time.Sleep(1 * time.Second)
 
-	doc, err := engine.client.Get().Index(indexName).Id("1").Do(ctx)
-	require.NoError(t, err)
-	assert.False(t, doc.Found, "Document should be deleted")
+	// 验证删除 - 搜索应该找不到文档
+	result, err = engine.Search(ctx, indexName, "要删除的文档", opts)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), result.Total, "Document should be deleted")
 }
 
 // TestElasticsearchEngine_DeleteNotFound 测试删除不存在的文档
@@ -476,9 +487,8 @@ func TestElasticsearchEngine_SearchKeyword(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试关键词搜索
 	opts := &SearchOptions{
@@ -544,9 +554,8 @@ func TestElasticsearchEngine_SearchBooleanQuery(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试布尔查询
 	query := map[string]interface{}{
@@ -630,9 +639,8 @@ func TestElasticsearchEngine_SearchWithFilter(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试带过滤条件的搜索
 	opts := &SearchOptions{
@@ -694,9 +702,8 @@ func TestElasticsearchEngine_SearchWithSort(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试按价格降序排序
 	opts := &SearchOptions{
@@ -753,9 +760,8 @@ func TestElasticsearchEngine_SearchWithPagination(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试第一页
 	opts := &SearchOptions{
@@ -809,9 +815,8 @@ func TestElasticsearchEngine_SearchWithHighlight(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试高亮搜索
 	opts := &SearchOptions{
@@ -887,9 +892,8 @@ func TestElasticsearchEngine_SearchRange(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 测试范围查询：价格在 20 到 60 之间
 	query := map[string]interface{}{
@@ -969,9 +973,8 @@ func TestElasticsearchEngine_FullWorkflow(t *testing.T) {
 	err = engine.Index(ctx, indexName, docs)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
 	// 3. 搜索文档
 	opts := &SearchOptions{
@@ -991,28 +994,27 @@ func TestElasticsearchEngine_FullWorkflow(t *testing.T) {
 	err = engine.Update(ctx, indexName, "1", updateDoc)
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
-	// 5. 验证更新
-	doc, err := engine.client.Get().Index(indexName).Id("1").Do(ctx)
+	// 5. 验证更新 - 通过搜索验证
+	result, err = engine.Search(ctx, indexName, "Go", opts)
 	require.NoError(t, err)
-	var source map[string]interface{}
-	err = json.Unmarshal(doc.Source, &source)
-	require.NoError(t, err)
-	assert.Equal(t, 69, int(source["price"].(float64)), "Price should be updated")
+	assert.Greater(t, result.Total, int64(0), "Should find updated document")
+	if len(result.Hits) > 0 {
+		price := result.Hits[0].Source["price"]
+		assert.Equal(t, 69, int(price.(float64)), "Price should be updated")
+	}
 
 	// 6. 删除文档
 	err = engine.Delete(ctx, indexName, "2")
 	require.NoError(t, err)
 
-	// 刷新索引
-	_, err = engine.client.Refresh(indexName).Do(ctx)
-	require.NoError(t, err)
+	// 等待索引刷新
+	time.Sleep(1 * time.Second)
 
-	// 7. 验证删除
-	_, err = engine.client.Get().Index(indexName).Id("2").Do(ctx)
+	// 7. 验证删除 - 搜索应该找不到文档
+	result, err = engine.Search(ctx, indexName, "Python", opts)
 	require.NoError(t, err)
-	assert.False(t, doc.Found, "Document should be deleted")
+	assert.Equal(t, int64(0), result.Total, "Document should be deleted")
 }

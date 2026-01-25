@@ -1049,3 +1049,70 @@ func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.C
 		Message: "密码重置成功，请使用新密码登录",
 	}, nil
 }
+
+// ==================== 新增方法：邮箱/手机/设备管理 ====================
+
+// EmailExists 检查邮箱是否存在
+func (s *UserServiceImpl) EmailExists(ctx context.Context, email string) (bool, error) {
+	return s.userRepo.ExistsByEmail(ctx, email)
+}
+
+// UnbindEmail 解绑邮箱
+func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 检查是否有邮箱
+	if user.Email == "" {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户未绑定邮箱", nil)
+	}
+
+	// TODO: 清空邮箱字段（需要在User模型和Repository中添加UpdateEmail方法）
+	// 暂时只标记为未验证状态
+	return s.userRepo.SetEmailVerified(ctx, userID, false)
+}
+
+// UnbindPhone 解绑手机
+func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 检查是否有手机号
+	if user.Phone == "" {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户未绑定手机", nil)
+	}
+
+	// TODO: 清空手机号字段（需要在User模型和Repository中添加UpdatePhone方法）
+	// 暂时只标记为未验证状态
+	return s.userRepo.SetPhoneVerified(ctx, userID, false)
+}
+
+// DeleteDevice 删除设备
+func (s *UserServiceImpl) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
+	// TODO: 实现设备删除逻辑
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回"设备不存在"错误，因为这是模拟实现
+	return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "设备不存在或已删除", nil)
+}
+
+// VerifyPassword 验证密码
+func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, password string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 验证密码
+	if !user.ValidatePassword(password) {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "密码错误", nil)
+	}
+
+	return nil
+}

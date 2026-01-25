@@ -587,3 +587,49 @@ func (e *ElasticsearchEngine) Health(ctx context.Context) error {
 
 	return nil
 }
+
+// DeleteIndex 删除索引
+func (e *ElasticsearchEngine) DeleteIndex(ctx context.Context, index string) error {
+	startTime := time.Now()
+
+	// 检查索引是否存在
+	exists, err := e.client.IndexExists(index).Do(ctx)
+	if err != nil {
+		e.logger.Error("Elasticsearch check index existence failed",
+			zap.Error(err),
+			zap.String("index", index),
+		)
+		return fmt.Errorf("check index existence failed: %w", err)
+	}
+
+	if !exists {
+		e.logger.Warn("Elasticsearch index does not exist",
+			zap.String("index", index),
+		)
+		return fmt.Errorf("index does not exist: %s", index)
+	}
+
+	// 删除索引
+	result, err := e.client.DeleteIndex(index).Do(ctx)
+	if err != nil {
+		e.logger.Error("Elasticsearch delete index failed",
+			zap.Error(err),
+			zap.String("index", index),
+		)
+		return fmt.Errorf("delete index failed: %w", err)
+	}
+
+	if !result.Acknowledged {
+		return fmt.Errorf("delete index not acknowledged: %s", index)
+	}
+
+	took := time.Since(startTime)
+
+	e.logger.Info("Elasticsearch index deleted",
+		zap.String("index", index),
+		zap.Bool("acknowledged", result.Acknowledged),
+		zap.Duration("took", took),
+	)
+
+	return nil
+}
