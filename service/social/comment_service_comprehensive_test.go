@@ -192,7 +192,8 @@ func TestCommentServiceReplyChain(t *testing.T) {
 		service := NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
 
 		// 回复根评论 - 使用实际的testCommentID
-		localCommentID := primitive.NewObjectID().Hex()
+		localCommentID := primitive.NewObjectID()
+		localCommentIDStr := localCommentID.Hex()
 		parentComment := &social.Comment{
 			IdentifiedEntity: social.IdentifiedEntity{ID: localCommentID},
 			AuthorID:         primitive.NewObjectID().Hex(),
@@ -203,19 +204,19 @@ func TestCommentServiceReplyChain(t *testing.T) {
 				RootID:   nil,
 			},
 		}
-		mockRepo.On("GetByID", ctx, localCommentID).Return(parentComment, nil).Once()
+		mockRepo.On("GetByID", ctx, localCommentIDStr).Return(parentComment, nil).Once()
 		mockSensitiveRepo.On("GetEnabledWords", ctx).Return([]*audit.SensitiveWord{}, nil).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*social.Comment")).Return(nil).Once()
-		mockRepo.On("IncrementReplyCount", ctx, localCommentID).Return(nil).Once()
+		mockRepo.On("IncrementReplyCount", ctx, localCommentIDStr).Return(nil).Once()
 
 		// Act
-		reply, err := service.ReplyComment(ctx, testUserID, localCommentID, "回复根评论的内容")
+		reply, err := service.ReplyComment(ctx, testUserID, localCommentIDStr, "回复根评论的内容")
 
 		// Assert
 		assert.NoError(t, err)
 		assert.NotNil(t, reply)
 		if reply.ReplyToCommentID != nil {
-			assert.Equal(t, localCommentID, *reply.ReplyToCommentID)
+			assert.Equal(t, localCommentIDStr, *reply.ReplyToCommentID)
 		}
 		if reply.RootID != nil {
 			assert.NotNil(t, *reply.RootID)
