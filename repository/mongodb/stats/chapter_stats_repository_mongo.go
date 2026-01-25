@@ -38,8 +38,13 @@ func (r *MongoChapterStatsRepository) Create(ctx context.Context, chapterStats *
 
 // GetByID 根据ID获取
 func (r *MongoChapterStatsRepository) GetByID(ctx context.Context, id string) (*stats.ChapterStats, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var chapterStats stats.ChapterStats
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&chapterStats)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&chapterStats)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -48,14 +53,24 @@ func (r *MongoChapterStatsRepository) GetByID(ctx context.Context, id string) (*
 
 // Update 更新
 func (r *MongoChapterStatsRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	return err
 }
 
 // Delete 删除
 func (r *MongoChapterStatsRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	return err
 }
 

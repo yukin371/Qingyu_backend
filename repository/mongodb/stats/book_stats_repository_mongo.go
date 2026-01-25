@@ -39,8 +39,13 @@ func (r *MongoBookStatsRepository) Create(ctx context.Context, bookStats *stats.
 
 // GetByID 根据ID获取
 func (r *MongoBookStatsRepository) GetByID(ctx context.Context, id string) (*stats.BookStats, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var bookStats stats.BookStats
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&bookStats)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&bookStats)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -49,14 +54,24 @@ func (r *MongoBookStatsRepository) GetByID(ctx context.Context, id string) (*sta
 
 // Update 更新
 func (r *MongoBookStatsRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	return err
 }
 
 // Delete 删除
 func (r *MongoBookStatsRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	return err
 }
 
