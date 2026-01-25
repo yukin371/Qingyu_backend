@@ -295,30 +295,32 @@ func TestRelationAPI_GetFollowers_Success(t *testing.T) {
 	router := setupRelationTestRouter(mockService, "")
 
 	expectedRelations := []*social.UserRelation{
-		{
-			IdentifiedEntity: social.IdentifiedEntity{
-				ID: primitive.NewObjectID().Hex(),
-			},
-			FollowerID: "user1",
-			FolloweeID: userID,
-			Status:     social.RelationStatusActive,
-			Timestamps: social.Timestamps{
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-		},
-		{
-			IdentifiedEntity: social.IdentifiedEntity{
-				ID: primitive.NewObjectID().Hex(),
-			},
-			FollowerID: "user2",
-			FolloweeID: userID,
-			Status:     social.RelationStatusActive,
-			Timestamps: social.Timestamps{
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-		},
+		func() *social.UserRelation {
+			r := &social.UserRelation{
+				FollowerID: "user1",
+				FolloweeID: userID,
+				Status:     social.RelationStatusActive,
+				Timestamps: social.Timestamps{
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
+			}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
+		func() *social.UserRelation {
+			r := &social.UserRelation{
+				FollowerID: "user2",
+				FolloweeID: userID,
+				Status:     social.RelationStatusActive,
+				Timestamps: social.Timestamps{
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
+			}
+			r.ID = primitive.NewObjectID()
+			return r
+		}(),
 	}
 
 	mockService.On("GetFollowers", mock.Anything, userID, 1, 20).

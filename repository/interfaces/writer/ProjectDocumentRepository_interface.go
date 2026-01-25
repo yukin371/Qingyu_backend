@@ -82,6 +82,7 @@ type DocumentRepository interface {
 	// 文档特定的查询方法
 	GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.Document, error)
 	GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*writer.Document, error)
+	GetByIDs(ctx context.Context, ids []string) ([]*writer.Document, error)
 	UpdateByProject(ctx context.Context, documentID, projectID string, updates map[string]interface{}) error
 	DeleteByProject(ctx context.Context, documentID, projectID string) error
 	RestoreByProject(ctx context.Context, documentID, projectID string) error

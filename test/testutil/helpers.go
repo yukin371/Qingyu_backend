@@ -1,14 +1,15 @@
 package testutil
 
 import (
-	"Qingyu_backend/models/writer"
 	"context"
 	"os"
 	"testing"
 	"time"
 
 	"Qingyu_backend/config"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
+	"Qingyu_backend/models/writer"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -62,15 +63,15 @@ type UserOption func(*users.User)
 // CreateTestUser 创建测试用户
 func CreateTestUser(opts ...UserOption) *users.User {
 	id := primitive.NewObjectID()
+	now := time.Now()
 	user := &users.User{
-		ID:        id,
-		Username:  "testuser",
-		Email:     "test@example.com",
-		Password:  "hashed_password_123",
-		Roles:     []string{"reader"},
-		Status:    users.UserStatusActive,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
+		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		Username:         "testuser",
+		Email:            "test@example.com",
+		Password:         "hashed_password_123",
+		Roles:            []string{"reader"},
+		Status:           users.UserStatusActive,
 	}
 
 	// 应用选项

@@ -115,6 +115,7 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi, loc
 		documentGroup.PUT("/:id", documentApi.UpdateDocument)
 		documentGroup.DELETE("/:id", documentApi.DeleteDocument)
 		documentGroup.PUT("/:id/move", documentApi.MoveDocument)
+		documentGroup.POST("/:id/duplicate", documentApi.DuplicateDocument)
 
 		// 文档锁定路由
 		if lockApi != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -162,15 +163,14 @@ func main() {
 		// 创建用户
 		now := time.Now()
 		user := users.User{
-			ID:        primitive.NewObjectID(),
-			Username:  testUser.Username,
-			Email:     testUser.Email,
-			Password:  string(hashedPassword),
-			Roles:     testUser.Roles,
-			VIPLevel:  testUser.VIPLevel,
-			Status:    users.UserStatusActive,
-			CreatedAt: now,
-			UpdatedAt: now,
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+			Username:         testUser.Username,
+			Email:            testUser.Email,
+			Password:         string(hashedPassword),
+			Roles:            testUser.Roles,
+			VIPLevel:         testUser.VIPLevel,
+			Status:           users.UserStatusActive,
 		}
 
 		_, err = userCollection.InsertOne(ctx, user)

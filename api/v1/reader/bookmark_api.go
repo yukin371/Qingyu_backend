@@ -34,7 +34,7 @@ func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 //	@Produce		json
 //	@Param			bookId		path	string				true	"书籍ID"
 //	@Param			request	body	CreateBookmarkRequest	true	"书签信息"
-//	@Success		200		{object}	shared.APIResponse
+//	@Success		201		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse
 //	@Failure		401		{object}	shared.APIResponse
 //	@Failure		409		{object}	shared.APIResponse	"书签已存在"
@@ -70,7 +70,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "创建成功", bookmark)
+	shared.Success(c, http.StatusCreated, "创建成功", bookmark)
 }
 
 // GetBookmarks 获取书签列表

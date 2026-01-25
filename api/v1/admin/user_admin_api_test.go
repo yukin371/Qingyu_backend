@@ -159,8 +159,16 @@ func TestUserAdminAPI_ListUsers_Success(t *testing.T) {
 	router := setupUserAdminTestRouter(mockService)
 
 	expectedUsers := []*users.User{
-		{ID: primitive.NewObjectID().Hex(), Username: "user1", Email: "user1@example.com"},
-		{ID: primitive.NewObjectID().Hex(), Username: "user2", Email: "user2@example.com"},
+		func() *users.User {
+			u := &users.User{Username: "user1", Email: "user1@example.com"}
+			u.ID = primitive.NewObjectID()
+			return u
+		}(),
+		func() *users.User {
+			u := &users.User{Username: "user2", Email: "user2@example.com"}
+			u.ID = primitive.NewObjectID()
+			return u
+		}(),
 	}
 
 	mockService.On("GetUserList", mock.Anything, mock.Anything, 1, 20).
@@ -229,12 +237,12 @@ func TestUserAdminAPI_GetUserDetail_Success(t *testing.T) {
 	mockService := new(MockUserAdminService)
 	router := setupUserAdminTestRouter(mockService)
 
-	userID := primitive.NewObjectID().Hex()
 	expectedUser := &users.User{
-		ID:       userID,
 		Username: "testuser",
 		Email:    "test@example.com",
 	}
+	expectedUser.ID = primitive.NewObjectID()
+	userID := expectedUser.ID.Hex()
 
 	mockService.On("GetUserDetail", mock.Anything, userID).Return(expectedUser, nil)
 
@@ -769,7 +777,11 @@ func TestUserAdminAPI_SearchUsers_Success(t *testing.T) {
 
 	keyword := "testuser"
 	expectedUsers := []*users.User{
-		{ID: primitive.NewObjectID().Hex(), Username: "testuser1", Email: "test1@example.com"},
+		func() *users.User {
+			u := &users.User{Username: "testuser1", Email: "test1@example.com"}
+			u.ID = primitive.NewObjectID()
+			return u
+		}(),
 	}
 
 	mockService.On("SearchUsers", mock.Anything, keyword, 1, 20).

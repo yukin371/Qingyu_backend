@@ -183,7 +183,7 @@ func TestCommentAPI_CreateComment_Success(t *testing.T) {
 	}
 
 	expectedComment := &social.Comment{}
-	expectedComment.ID = primitive.NewObjectID().Hex()
+	expectedComment.ID = primitive.NewObjectID()
 	expectedComment.AuthorID = userID
 	expectedComment.TargetID = bookID
 	expectedComment.Content = "这是一本非常好的书，推荐大家阅读！"
@@ -310,12 +310,12 @@ func TestCommentAPI_GetCommentList_Success(t *testing.T) {
 
 	bookID := primitive.NewObjectID().Hex()
 	comment1 := &social.Comment{}
-	comment1.ID = primitive.NewObjectID().Hex()
+	comment1.ID = primitive.NewObjectID()
 	comment1.Content = "非常好的书！"
 	comment1.Rating = 5
 
 	comment2 := &social.Comment{}
-	comment2.ID = primitive.NewObjectID().Hex()
+	comment2.ID = primitive.NewObjectID()
 	comment2.Content = "推荐阅读"
 	comment2.Rating = 4
 
@@ -473,7 +473,7 @@ func TestCommentAPI_ReplyComment_Success(t *testing.T) {
 	}
 
 	expectedReply := &social.Comment{}
-	expectedReply.ID = primitive.NewObjectID().Hex()
+	expectedReply.ID = primitive.NewObjectID()
 	expectedReply.AuthorID = userID
 	expectedReply.Content = "我同意你的观点，这本书确实很棒！"
 	expectedReply.State = social.CommentStateNormal

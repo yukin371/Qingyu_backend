@@ -17,6 +17,11 @@ type Document struct {
 	ProjectID primitive.ObjectID `bson:"project_id" json:"projectId" validate:"required"`
 	Title     string             `bson:"title" json:"title" validate:"required,max=200"`
 
+	// ===== v1.1 新增：稳定引用标识 =====
+	StableRef string `bson:"stable_ref" json:"stableRef" validate:"required"`
+	OrderKey  string `bson:"order_key" json:"orderKey" validate:"required"` // LexoRank排序键
+	// ===== v1.1 新增结束 =====
+
 	// 层级结构（保持BSON字段名不变，确保数据库兼容）
 	ParentID primitive.ObjectID `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空值表示根文档
 	Type     string             `bson:"type" json:"type" validate:"required"`          // 动态类型（如：volume, chapter, section, scene, article, act, beat等）
@@ -47,6 +52,9 @@ const (
 	DocumentStatusPlanned   = "planned"   // 计划中
 	DocumentStatusWriting   = "writing"   // 写作中
 	DocumentStatusCompleted = "completed" // 已完成
+
+	// 默认OrderKey（用于新文档）
+	DefaultOrderKey = "a0"
 )
 
 // 历史文档类型常量（保持向后兼容，但已废弃，建议使用WritingType系统）
@@ -108,6 +116,13 @@ func (d *Document) TouchForCreate() {
 	d.Timestamps.TouchForCreate()
 	if d.Status == "" {
 		d.Status = DocumentStatusPlanned
+	}
+	// 初始化v1.1新增字段
+	if d.StableRef == "" {
+		d.StableRef = primitive.NewObjectID().Hex()
+	}
+	if d.OrderKey == "" {
+		d.OrderKey = DefaultOrderKey
 	}
 }
 

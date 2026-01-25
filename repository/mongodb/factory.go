@@ -217,6 +217,11 @@ func (f *MongoRepositoryFactory) CreateReaderThemeRepository() readerRepo.Reader
 	return mongoReading.NewReaderThemeRepositoryMongo(f.database)
 }
 
+// CreateBookmarkRepository 创建书签Repository
+func (f *MongoRepositoryFactory) CreateBookmarkRepository() readerRepo.BookmarkRepository {
+	return mongoReading.NewBookmarkMongoRepository(f.database)
+}
+
 // ========== Bookstore Module Repositories ==========
 
 // CreateBookRepository 创建书籍Repository
