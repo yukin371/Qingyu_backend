@@ -205,7 +205,7 @@ func (s *JWTServiceImpl) RefreshToken(ctx context.Context, refreshToken string) 
 		Exp:    now.Add(s.config.Expiration).Unix(), // 使用秒级时间戳（标准JWT格式）
 		Iat:    now.Unix(),                         // 使用秒级时间戳
 	}
-	newToken, err = s.generateJWT(newClaims)
+	newToken, err := s.generateJWT(newClaims)
 	if err != nil {
 		return "", fmt.Errorf("生成新Token失败: %w", err)
 	}
