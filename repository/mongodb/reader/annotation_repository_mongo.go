@@ -44,8 +44,13 @@ func (r *MongoAnnotationRepository) Create(ctx context.Context, annotation *read
 
 // GetByID 根据ID获取标注
 func (r *MongoAnnotationRepository) GetByID(ctx context.Context, id string) (*reader.Annotation, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID: %w", err)
+	}
+
 	var annotation reader.Annotation
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&annotation)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&annotation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("标注不存在")
@@ -58,11 +63,16 @@ func (r *MongoAnnotationRepository) GetByID(ctx context.Context, id string) (*re
 
 // Update 更新标注
 func (r *MongoAnnotationRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -78,7 +88,12 @@ func (r *MongoAnnotationRepository) Update(ctx context.Context, id string, updat
 
 // Delete 删除标注
 func (r *MongoAnnotationRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("删除标注失败: %w", err)
 	}
