@@ -145,7 +145,7 @@ func TestBookmarkAPI_CreateBookmark_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 	mockService.AssertExpectations(t)
 }
 
