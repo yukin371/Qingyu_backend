@@ -1336,10 +1336,11 @@ func TestReaderService_SearchNotes_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
 	userID := "user123"
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 	keyword := "重要"
 
 	expectedNotes := []*reader.Annotation{
-		{ID: "note1", UserID: userID, Type: "note", Note: "重要内容"},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, Type: "note", Note: "重要内容"},
 	}
 
 	mockAnnotationRepo.On("SearchNotes", ctx, userID, keyword).
@@ -1377,13 +1378,15 @@ func TestReaderService_GetLatestBookmark_Success(t *testing.T) {
 	ctx := context.Background()
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	expectedBookmark := &reader.Annotation{
-		ID:        "bookmark1",
-		UserID:    userID,
-		BookID:    bookID,
+		ID:        primitive.NewObjectID(),
+		UserID:    userIDObj,
+		BookID:    bookIDObj,
 		Type:      "bookmark",
-		ChapterID: "chapter123",
+		ChapterID: primitive.NewObjectID(),
 	}
 
 	mockAnnotationRepo.On("GetLatestBookmark", ctx, userID, bookID).
@@ -1407,10 +1410,10 @@ func TestReaderService_GetAnnotationStats_Success(t *testing.T) {
 	bookID := primitive.NewObjectID().Hex()
 
 	expectedAnnotations := []*reader.Annotation{
-		{ID: "annotation1", Type: "bookmark"},
-		{ID: "annotation2", Type: "highlight"},
-		{ID: "annotation3", Type: "note"},
-		{ID: "annotation4", Type: "highlight"},
+		{ID: primitive.NewObjectID(), Type: "bookmark"},
+		{ID: primitive.NewObjectID(), Type: "highlight"},
+		{ID: primitive.NewObjectID(), Type: "note"},
+		{ID: primitive.NewObjectID(), Type: "highlight"},
 	}
 
 	mockAnnotationRepo.On("GetByUserAndBook", ctx, userID, bookID).
