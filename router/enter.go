@@ -13,6 +13,7 @@ import (
 	readerRouter "Qingyu_backend/router/reader"
 	readingstatsRouter "Qingyu_backend/router/reading-stats"
 	recommendationRouter "Qingyu_backend/router/recommendation"
+	searchRouter "Qingyu_backend/api/v1/search"
 	sharedRouter "Qingyu_backend/router/shared"
 	socialRouter "Qingyu_backend/router/social"
 	systemRouter "Qingyu_backend/router/system"
@@ -22,9 +23,13 @@ import (
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	"Qingyu_backend/service"
+	"Qingyu_backend/service/container"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
 	sharedService "Qingyu_backend/service/shared"
+	searchService "Qingyu_backend/service/search"
+	searchengine "Qingyu_backend/service/search/engine"
+	searchprovider "Qingyu_backend/service/search/provider"
 	statsService "Qingyu_backend/service/shared/stats"
 
 	financeApi "Qingyu_backend/api/v1/finance"
@@ -38,6 +43,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
 )
 
 // RegisterRoutes 注册所有路由
@@ -152,6 +158,10 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - ⚠️  旧路由 /api/v1/shared/wallet/* 继续保留以向后兼容")
 	}
 
+	// ============ 初始化搜索服务（需要在书店路由之前）============
+	// 创建 MongoEngine、BookProvider，并注册到 SearchService
+	searchSvc := initSearchService(serviceContainer, logger)
+
 	// ============ 注册书店路由 ============
 	bookstoreSvc, err := serviceContainer.GetBookstoreService()
 	if err != nil {
@@ -176,7 +186,8 @@ func RegisterRoutes(r *gin.Engine) {
 		//     chapterPurchaseSvc = svc
 		// }
 
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc)
+		// 注册书店路由，传入搜索服务
+		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")
@@ -452,6 +463,18 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 	}
 
+	// ============ 注册统一搜索路由 ============
+	if searchSvc != nil {
+		// 注册搜索路由
+		searchRouter.RegisterSearchRoutes(v1, searchSvc)
+		logger.Info("✓ 统一搜索路由已注册到: /api/v1/search/")
+		logger.Info("  - /api/v1/search/search (统一搜索)")
+		logger.Info("  - /api/v1/search/batch (批量搜索)")
+		logger.Info("  - /api/v1/search/health (健康检查)")
+	} else {
+		logger.Warn("⚠ 搜索服务初始化失败，搜索路由未注册")
+	}
+
 	// ============ 注册管理员路由 ============
 	// 获取配额服务（用于管理员管理）
 	quotaService, _ := serviceContainer.GetQuotaService()
@@ -579,6 +602,60 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("\n========================================")
 	logger.Info("✓ 所有路由注册完成!")
 	logger.Info("==========================================")
+}
+
+// initSearchService 初始化搜索服务
+// 创建 MongoEngine、BookProvider，并注册到 SearchService
+func initSearchService(container *container.ServiceContainer, logger *zap.Logger) *searchService.SearchService {
+	// 获取 MongoDB 客户端和数据库
+	mongoClient := container.GetMongoClient()
+	mongoDB := container.GetMongoDB()
+
+	if mongoClient == nil || mongoDB == nil {
+		logger.Warn("MongoDB client 或 database 未初始化，无法创建搜索服务")
+		return nil
+	}
+
+	// 创建 MongoEngine
+	mongoEngine, err := searchengine.NewMongoEngine(mongoClient, mongoDB)
+	if err != nil {
+		logger.Error("创建 MongoEngine 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ MongoEngine 创建成功")
+
+	// 创建 BookProvider 配置
+	bookProviderConfig := &searchprovider.BookProviderConfig{
+		AllowedStatuses: []string{"ongoing", "completed"},
+		AllowedPrivacy:  []bool{false}, // 只允许公开书籍
+	}
+
+	// 创建 BookProvider
+	bookProvider, err := searchprovider.NewBookProvider(mongoEngine, bookProviderConfig)
+	if err != nil {
+		logger.Error("创建 BookProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ BookProvider 创建成功",
+		zap.Strings("allowed_statuses", bookProviderConfig.AllowedStatuses),
+	)
+
+	// 创建 SearchService 配置
+	searchConfig := &searchService.Config{
+		EnableCache:           true,
+		DefaultCacheTTL:       300, // 5分钟
+		MaxConcurrentSearches: 10,
+	}
+
+	// 创建 SearchService
+	searchSvc := searchService.NewSearchService(log.Default(), searchConfig)
+	logger.Info("✓ SearchService 创建成功")
+
+	// 注册 BookProvider 到 SearchService
+	searchSvc.RegisterProvider(bookProvider)
+	logger.Info("✓ BookProvider 已注册到 SearchService")
+
+	return searchSvc
 }
 
 // initRouterLogger 初始化路由日志器
