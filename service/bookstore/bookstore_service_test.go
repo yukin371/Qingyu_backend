@@ -776,7 +776,10 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 		{
 			name:        "无效的书籍ID",
 			bookID:      "invalid-id",
-			setupMock:   func(m *MockBookRepositoryForService) {},
+			setupMock: func(m *MockBookRepositoryForService) {
+				// 无效ID应该返回错误
+				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid book ID"))
+			},
 			wantErr:     true,
 			errContains: "invalid book ID",
 		},
@@ -1110,7 +1113,10 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 		{
 			name:        "无效的书籍ID",
 			bookID:      "invalid-id",
-			setupMock:   func(m *MockBookRepositoryForService) {},
+			setupMock: func(m *MockBookRepositoryForService) {
+				// 无效ID应该返回错误
+				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid book ID"))
+			},
 			wantErr:     true,
 			errContains: "invalid book ID",
 		},
