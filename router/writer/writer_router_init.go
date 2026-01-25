@@ -2,6 +2,7 @@ package writer
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/pkg/lock"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
@@ -82,6 +83,15 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 	commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
 	commentSvc = writerservice.NewCommentService(commentRepo)
 
+	// 创建TemplateService（模板服务）
+	var templateSvc *documentService.TemplateService
+	templateRepo := repositoryFactory.CreateTemplateRepository()
+	if templateRepo != nil {
+		// 创建一个简单的logger
+		logger, _ := zap.NewDevelopment()
+		templateSvc = documentService.NewTemplateService(templateRepo, logger)
+	}
+
 	// 调用InitWriterRouter初始化所有写作路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc)
 }

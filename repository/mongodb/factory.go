@@ -165,6 +165,11 @@ func (f *MongoRepositoryFactory) CreateTimelineEventRepository() writerRepo.Time
 	return mongoWriter.NewTimelineEventRepository(f.database)
 }
 
+// CreateTemplateRepository 创建模板Repository
+func (f *MongoRepositoryFactory) CreateTemplateRepository() writerRepo.TemplateRepository {
+	return mongoWriter.NewMongoTemplateRepository(f.database)
+}
+
 // ========== Reading Module Repositories ==========
 
 // CreateReadingSettingsRepository 创建阅读设置Repository
