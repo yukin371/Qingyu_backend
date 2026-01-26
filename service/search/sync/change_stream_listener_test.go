@@ -85,8 +85,8 @@ func TestNewChangeStreamListener(t *testing.T) {
 	// 注意：由于 ChangeStreamListener 需要 *mongo.Client 和 *mongo.Database
 	// 这里我们只测试基本结构，实际的集成测试需要真实的 MongoDB
 	t.Run("valid structure", func(t *testing.T) {
-		listener := &ChangeStreamListener{
-			logger:         logger,
+		listener := &ChangeStreamListenerImpl{
+			zapLogger:      logger,
 			collections:    []string{"books", "projects", "documents", "users"},
 			eventBuffer:    make([]search.SyncEvent, 0, 100),
 			resumeTokenMap: make(map[string][]byte),
@@ -107,8 +107,8 @@ func TestConvertEventToSyncEvent(t *testing.T) {
 		Addr: miniRedis.Addr(),
 	})
 
-	listener := &ChangeStreamListener{
-		logger:         logger,
+	listener := &ChangeStreamListenerImpl{
+		zapLogger:      logger,
 		redisClient:    redisClient,
 		eventBuffer:    make([]search.SyncEvent, 0, 100),
 		resumeTokenMap: make(map[string][]byte),
@@ -253,8 +253,8 @@ func TestFlushEvents(t *testing.T) {
 			Addr: miniRedis.Addr(),
 		})
 
-		listener := &ChangeStreamListener{
-			logger:      logger,
+		listener := &ChangeStreamListenerImpl{
+			zapLogger:      logger,
 			redisClient: redisClient,
 			eventBuffer: []search.SyncEvent{
 				{
@@ -289,8 +289,8 @@ func TestFlushEvents(t *testing.T) {
 			Addr: miniRedis.Addr(),
 		})
 
-		listener := &ChangeStreamListener{
-			logger:      logger,
+		listener := &ChangeStreamListenerImpl{
+			zapLogger:      logger,
 			redisClient: redisClient,
 			eventBuffer: []search.SyncEvent{},
 		}
@@ -306,8 +306,8 @@ func TestSaveResumeToken(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	t.Run("save resume token", func(t *testing.T) {
-		listener := &ChangeStreamListener{
-			logger:         logger,
+		listener := &ChangeStreamListenerImpl{
+			zapLogger:      logger,
 			resumeTokenMap: make(map[string][]byte),
 		}
 
@@ -320,8 +320,8 @@ func TestSaveResumeToken(t *testing.T) {
 	})
 
 	t.Run("overwrite existing token", func(t *testing.T) {
-		listener := &ChangeStreamListener{
-			logger:         logger,
+		listener := &ChangeStreamListenerImpl{
+			zapLogger:      logger,
 			resumeTokenMap: make(map[string][]byte),
 		}
 
@@ -385,8 +385,8 @@ func BenchmarkConvertEvent(b *testing.B) {
 		Addr: miniRedis.Addr(),
 	})
 
-	listener := &ChangeStreamListener{
-		logger:         logger,
+	listener := &ChangeStreamListenerImpl{
+		zapLogger:      logger,
 		redisClient:    redisClient,
 		eventBuffer:    make([]search.SyncEvent, 0, 100),
 		resumeTokenMap: make(map[string][]byte),

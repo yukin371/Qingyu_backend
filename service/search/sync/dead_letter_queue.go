@@ -68,7 +68,6 @@ func (dlq *DeadLetterQueue) Send(event *search.SyncEvent, err error) {
 		Event:        event,
 		ErrorMessage: err.Error(),
 		RetryCount:   0,
-		Timestamp:    time.Now().Unix(),
 	}
 
 	// 序列化事件
@@ -104,7 +103,7 @@ func (dlq *DeadLetterQueue) Send(event *search.SyncEvent, err error) {
 		dlq.zapLogger.Warn("Event sent to DLQ",
 			zap.String("event_id", event.ID),
 			zap.String("type", string(event.Type)),
-			zap.String("collection", event.Collection),
+			zap.String("index", event.Index),
 			zap.String("error", err.Error()),
 		)
 	}
