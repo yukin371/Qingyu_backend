@@ -67,14 +67,8 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		return
 	}
 
-	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
-		return
-	}
-
 	submitReq := &document.SubmitBatchOperationRequest{
-		ProjectID:          projectID,
+		ProjectID:          req.ProjectID,
 		Type:               req.Type,
 		TargetIDs:          req.TargetIDs,
 		Atomic:             req.Atomic,
@@ -82,7 +76,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		ConflictPolicy:     req.ConflictPolicy,
 		ExpectedVersions:   req.ExpectedVersions,
 		ClientRequestID:    req.ClientRequestID,
-		UserID:             userID.(primitive.ObjectID),
+		UserID:             userID.(string),
 		IncludeDescendants: req.IncludeDescendants,
 	}
 
@@ -96,7 +90,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		api.batchOpSvc.Execute(ctx, batchOp.ID)
+		api.batchOpSvc.Execute(ctx, batchOp.ID.Hex())
 	}()
 
 	c.JSON(http.StatusOK, SubmitBatchOperationResponse{
@@ -123,7 +117,7 @@ func (api *BatchOperationAPI) GetBatchOperationStatus(c *gin.Context) {
 		return
 	}
 
-	progress, err := api.batchOpSvc.GetProgress(c.Request.Context(), batchID)
+	progress, err := api.batchOpSvc.GetProgress(c.Request.Context(), batchID.Hex())
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "batch operation not found"})
 		return
@@ -149,13 +143,13 @@ func (api *BatchOperationAPI) CancelBatchOperation(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
+	_, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	err = api.batchOpSvc.Cancel(c.Request.Context(), batchID, userID.(primitive.ObjectID))
+	err = api.batchOpSvc.Cancel(c.Request.Context(), batchID.Hex())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -187,7 +181,7 @@ func (api *BatchOperationAPI) UndoBatchOperation(c *gin.Context) {
 		return
 	}
 
-	err = api.batchOpSvc.Undo(c.Request.Context(), batchID, userID.(primitive.ObjectID))
+	err = api.batchOpSvc.Undo(c.Request.Context(), batchID.Hex(), userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

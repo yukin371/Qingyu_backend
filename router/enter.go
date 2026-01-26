@@ -347,7 +347,6 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 新增社交 API（待实现）
 	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
-	var messageAPIV2 *socialApi.MessageAPIV2
 	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
 	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
 
@@ -367,7 +366,9 @@ func RegisterRoutes(r *gin.Engine) {
 			// 再创建MessageService（需要ConversationService）
 			messageSvc := messagingService.NewMessageService(messageRepo, conversationSvc)
 
-			messageAPIV2 = socialApi.NewMessageAPIV2(messageSvc, conversationSvc, messagingWSHub)
+			// messageAPIV2 = socialApi.NewMessageAPIV2(messageSvc, conversationSvc, messagingWSHub)
+			// 暂时不使用 messageAPIV2
+			_ = socialApi.NewMessageAPIV2(messageSvc, conversationSvc, messagingWSHub)
 			logger.Info("✓ MessageAPIV2初始化完成")
 		}
 	} else {
@@ -382,7 +383,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 注册统一社交路由
 	if commentAPI != nil || likeAPI != nil || collectionAPI != nil { //nolint:nilness // 待实现服务已排除
-		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
+		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
 		if commentAPI != nil {
@@ -455,7 +456,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// ============ 注册写作端路由 ============
-	writerRouter.RegisterWriterRoutes(v1, searchSvc)
+	writerRouter.RegisterWriterRoutes(v1)
 	logger.Info("✓ 写作端路由已注册到: /api/v1/writer/")
 	logger.Info("  - /api/v1/writer/projects/* (项目管理)")
 	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
@@ -606,7 +607,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, userRepoInstance, bookstoreSvcInterface, statsSvc)
+	userRouter.RegisterUserRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")
@@ -679,8 +680,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	)
 
 	// 创建 UserProvider
-	userProviderConfig := &searchprovider.UserProviderConfig{}
-	userProvider, err := searchprovider.NewUserProvider(mongoEngine, userProviderConfig)
+	userProvider, err := searchprovider.NewUserProvider()
 	if err != nil {
 		logger.Error("创建 UserProvider 失败", zap.Error(err))
 		return nil
@@ -688,8 +688,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	logger.Info("✓ UserProvider 创建成功")
 
 	// 创建 ProjectProvider
-	projectProviderConfig := &searchprovider.ProjectProviderConfig{}
-	projectProvider, err := searchprovider.NewProjectProvider(mongoEngine, projectProviderConfig)
+	projectProvider, err := searchprovider.NewProjectProvider()
 	if err != nil {
 		logger.Error("创建 ProjectProvider 失败", zap.Error(err))
 		return nil
@@ -697,8 +696,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	logger.Info("✓ ProjectProvider 创建成功")
 
 	// 创建 DocumentProvider
-	documentProviderConfig := &searchprovider.DocumentProviderConfig{}
-	documentProvider, err := searchprovider.NewDocumentProvider(mongoEngine, documentProviderConfig)
+	documentProvider, err := searchprovider.NewDocumentProvider()
 	if err != nil {
 		logger.Error("创建 DocumentProvider 失败", zap.Error(err))
 		return nil
@@ -714,7 +712,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 
 	// 尝试初始化 Elasticsearch，获取灰度配置
 	var grayscaleConfig *searchService.GrayScaleConfig
-	esConfig, esEngine := initElasticsearch(logger)
+	esConfig, _ := initElasticsearch(logger)
 	if esConfig != nil {
 		grayscaleConfig = &esConfig.ES.GrayScale
 	}
@@ -735,10 +733,6 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	searchSvc := searchService.NewSearchService(log.Default(), searchConfig, grayscaleDecision)
 	logger.Info("✓ SearchService 创建成功（已集成灰度决策器）")
 
-	// 设置 MongoDB 引擎（作为 fallback）
-	searchSvc.SetMongoEngine(mongoEngine)
-	logger.Info("✓ MongoDB 引擎已设置到 SearchService")
-
 	// 注册 BookProvider 到 SearchService
 	searchSvc.RegisterProvider(bookProvider)
 	logger.Info("✓ BookProvider 已注册到 SearchService")
@@ -755,23 +749,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	searchSvc.RegisterProvider(documentProvider)
 	logger.Info("✓ DocumentProvider 已注册到 SearchService")
 
-	// 设置 ES 配置和引擎
-	if esEngine != nil {
-		searchSvc.SetESConfig(esConfig)
-		searchSvc.SetESEngine(esEngine)
-		logger.Info("✓ Elasticsearch 已集成到 SearchService")
-
-		// 记录灰度配置
-		if esConfig.ES.GrayScale.Enabled {
-			logger.Info("✓ ES 灰度模式已启用",
-				zap.Int("grayscale_percent", esConfig.ES.GrayScale.Percent),
-			)
-		} else {
-			logger.Info("✓ ES 全量模式已启用")
-		}
-	} else {
-		logger.Info("⚠ Elasticsearch 未配置或初始化失败，使用 MongoDB 搜索")
-	}
+	logger.Info("⚠ Elasticsearch 集成暂未实现，使用 MongoDB 搜索")
 
 	return searchSvc
 }
@@ -811,16 +789,8 @@ func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searche
 		)
 	}
 
-	// 创建 ES 客户端
-	esClient, err := initElasticsearchClient(esURL)
-	if err != nil {
-		logger.Error("创建 Elasticsearch 客户端失败", zap.Error(err))
-		return nil, nil
-	}
-	logger.Info("✓ Elasticsearch 客户端创建成功", zap.String("url", esURL))
-
-	// 创建 ElasticsearchEngine
-	esEngine, err := searchengine.NewElasticsearchEngine(esClient)
+	// 创建 ElasticsearchEngine（目前不需要参数）
+	esEngine, err := searchengine.NewElasticsearchEngine()
 	if err != nil {
 		logger.Error("创建 ElasticsearchEngine 失败", zap.Error(err))
 		return nil, nil

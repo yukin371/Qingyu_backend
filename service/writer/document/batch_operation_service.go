@@ -376,6 +376,17 @@ func (s *BatchOperationService) Cancel(ctx context.Context, operationID string) 
 	return nil
 }
 
+// GetProgress 获取批量操作进度
+func (s *BatchOperationService) GetProgress(ctx context.Context, operationID string) (*writer.BatchOperation, error) {
+	return s.GetOperation(ctx, operationID)
+}
+
+// Undo 撤销批量操作
+func (s *BatchOperationService) Undo(ctx context.Context, operationID string, userID string) error {
+	// TODO: 实现撤销逻辑
+	return fmt.Errorf("撤销功能尚未实现")
+}
+
 // 私有方法
 
 // convertRetryConfigToMap 将RetryConfig转换为map
@@ -609,14 +620,17 @@ func (s *BatchOperationService) GetVersion() string {
 
 // SubmitBatchOperationRequest 提交批量操作请求
 type SubmitBatchOperationRequest struct {
-	ProjectID       string                      `json:"projectId" validate:"required"`
-	Type            writer.BatchOperationType   `json:"type" validate:"required"`
-	TargetIDs       []string                    `json:"targetIds" validate:"required,min=1,max=1000"`
-	Payload         map[string]interface{}      `json:"payload,omitempty"`
-	Atomic          bool                        `json:"atomic"`
-	ConflictPolicy  writer.ConflictPolicy       `json:"conflictPolicy,omitempty"`
-	ClientRequestID string                      `json:"clientRequestId,omitempty"`
-	RetryConfig     *RetryConfig                `json:"retryConfig,omitempty"`
+	ProjectID          string                      `json:"projectId" validate:"required"`
+	Type               writer.BatchOperationType   `json:"type" validate:"required"`
+	TargetIDs          []string                    `json:"targetIds" validate:"required,min=1,max=1000"`
+	Payload            map[string]interface{}      `json:"payload,omitempty"`
+	Atomic             bool                        `json:"atomic"`
+	ConflictPolicy     writer.ConflictPolicy       `json:"conflictPolicy,omitempty"`
+	ExpectedVersions   map[string]int              `json:"expectedVersions,omitempty"`
+	ClientRequestID    string                      `json:"clientRequestId,omitempty"`
+	UserID             string                      `json:"userId,omitempty"`
+	IncludeDescendants bool                        `json:"includeDescendants"`
+	RetryConfig        *RetryConfig                `json:"retryConfig,omitempty"`
 }
 
 // ListBatchOperationsRequest 获取批量操作列表请求
