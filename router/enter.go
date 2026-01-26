@@ -44,7 +44,6 @@ import (
 	readerservice "Qingyu_backend/service/reader"
 	messagingService "Qingyu_backend/service/messaging"
 	modelsMessaging "Qingyu_backend/models/messaging"
-	websocketHub "Qingyu_backend/realtime/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic/v7"
@@ -358,10 +357,9 @@ func RegisterRoutes(r *gin.Engine) {
 	if wsHubErr == nil && messagingWSHub != nil {
 		// 获取MongoDB数据库
 		mongoDB := serviceContainer.GetMongoDB()
-		repositoryFactory := serviceContainer.GetRepositoryFactory()
-		if mongoDB != nil && repositoryFactory != nil {
+		if mongoDB != nil {
 			// 创建消息服务和会话服务（使用models/messaging中的Repository）
-			messageRepo := repositoryFactory.CreateMessageRepository()
+			messageRepo := modelsMessaging.NewMongoMessageRepository(mongoDB)
 			conversationRepo := modelsMessaging.NewMongoConversationRepository(mongoDB)
 
 			// 先创建ConversationService
