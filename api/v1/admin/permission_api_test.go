@@ -320,7 +320,7 @@ func TestPermissionAPI_CreatePermission_Success(t *testing.T) {
 	router.ServeHTTP(w, reqHTTP)
 
 	// Then
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -537,7 +537,7 @@ func TestPermissionAPI_CreateRole_Success(t *testing.T) {
 	router.ServeHTTP(w, reqHTTP)
 
 	// Then
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 
 	mockService.AssertExpectations(t)
 }

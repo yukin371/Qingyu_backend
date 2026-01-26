@@ -12,7 +12,7 @@ import (
 type BaseEntity struct {
 	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updated_at"`
-	DeletedAt time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty" bson:"deleted_at,omitempty"`
 }
 
 // Touch 更新时间戳
@@ -42,7 +42,7 @@ func (b *BaseEntity) TouchForCreate() {
 // SoftDelete 软删除
 func (b *BaseEntity) SoftDelete() {
 	now := time.Now()
-	b.DeletedAt = now
+	b.DeletedAt = &now
 	b.Touch(now)
 }
 
@@ -53,7 +53,7 @@ func (b *BaseEntity) IsDeleted() bool {
 
 // IdentifiedEntity 包含ID字段的基础实体
 type IdentifiedEntity struct {
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"-"`
+	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 }
 
 // GetID 获取ID
@@ -64,6 +64,13 @@ func (i *IdentifiedEntity) GetID() primitive.ObjectID {
 // SetID 设置ID
 func (i *IdentifiedEntity) SetID(id primitive.ObjectID) {
 	i.ID = id
+}
+
+// GenerateID 生成新的ObjectID
+func (i *IdentifiedEntity) GenerateID() {
+	if i.ID.IsZero() {
+		i.ID = primitive.NewObjectID()
+	}
 }
 
 // ReadStatus 已读状态混入

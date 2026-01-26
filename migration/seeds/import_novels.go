@@ -229,24 +229,23 @@ func (ni *NovelImporter) convertToBook(novel *NovelItem) *bookstore2.Book {
 	defaultCover := "https://via.placeholder.com/300x400?text=" + novel.Title
 
 	book := &bookstore2.Book{
-		IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
-		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-		Title:            novel.Title,
-		Author:           novel.Author,
-		Introduction:     novel.Introduction,
-		Cover:            defaultCover,
-		Categories:       []string{novel.Category},
-		Tags:             []string{novel.Category},
-		Status:           status,
-		WordCount:        novel.WordCount,
-		ChapterCount:     novel.ChapterCount,
-		Price:            0, // 免费
-		IsFree:           novel.IsFree,
-		IsRecommended:    novel.Rating >= 4.5,      // 评分>=4.5的推荐
-		IsFeatured:       novel.Rating >= 4.8,      // 评分>=4.8的精选
-		IsHot:            novel.WordCount > 500000, // 字数>50万的标记为热门
-		PublishedAt:      &publishedAt,
-		LastUpdateAt:     &now,
+		BaseEntity:     shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
+		Title:          novel.Title,
+		Author:         novel.Author,
+		Introduction:   novel.Introduction,
+		Cover:          defaultCover,
+		Categories:     []string{novel.Category},
+		Tags:           []string{novel.Category},
+		Status:         status,
+		WordCount:      novel.WordCount,
+		ChapterCount:   novel.ChapterCount,
+		Price:          0, // 免费
+		IsFree:         novel.IsFree,
+		IsRecommended:  novel.Rating >= 4.5,      // 评分>=4.5的推荐
+		IsFeatured:     novel.Rating >= 4.8,      // 评分>=4.8的精选
+		IsHot:          novel.WordCount > 500000, // 字数>50万的标记为热门
+		PublishedAt:    &publishedAt,
+		LastUpdateAt:   &now,
 	}
 
 	return book

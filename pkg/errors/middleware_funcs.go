@@ -1,16 +1,57 @@
 package errors
 
 import (
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // ErrorMiddleware 错误处理中间件
 func ErrorMiddleware(service string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				// 捕获panic并记录详细信息
+				stack := debug.Stack()
+
+				// 尝试记录日志
+				if logger, exists := c.Get("logger"); exists {
+					if zapLogger, ok := logger.(*zap.Logger); ok {
+						zapLogger.Error("API panic recovered",
+							zap.String("service", service),
+							zap.String("path", c.Request.URL.Path),
+							zap.String("method", c.Request.Method),
+							zap.Any("error", err),
+							zap.String("stack", string(stack)),
+						)
+					}
+				}
+
+				// 返回500错误
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code":    500,
+					"message": "内部服务器错误",
+					"details": "服务器发生未预期的错误，请稍后重试",
+				})
+				c.Abort()
+			}
+		}()
+
 		c.Next()
+
+		// 检查是否有错误写入
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
 	}
 }
 
@@ -48,10 +89,21 @@ func (h *ErrorHandler) Handle(err *UnifiedError) (int, gin.H) {
 
 // HandlePanic 处理panic
 func (h *ErrorHandler) HandlePanic(c *gin.Context, r interface{}, service, path string) {
-	// 简单的panic处理
-	c.JSON(500, gin.H{
+	// 记录详细的panic信息
+	stack := debug.Stack()
+	errorMsg := fmt.Sprintf("PANIC in %s at %s: %v\nStack:\n%s", service, path, r, string(stack))
+
+	// 尝试记录日志
+	if h.enableLogging {
+		// 这里应该使用项目配置的logger
+		// 暂时使用简单的日志记录
+		fmt.Printf("[ERROR] %s\n", errorMsg)
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{
 		"code":    500,
 		"message": "内部服务器错误",
+		"details": "服务器发生未预期的错误",
 	})
 }
 

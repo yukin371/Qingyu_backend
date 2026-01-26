@@ -81,7 +81,7 @@ func (api *PermissionAPI) GetPermission(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.Permission	true	"权限信息"
-//	@Success		200		{object}	shared.APIResponse
+//	@Success		201		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse
 //	@Failure		401		{object}	shared.APIResponse
 //	@Failure		403		{object}	shared.APIResponse
@@ -98,7 +98,7 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "创建成功", nil)
+	shared.Success(c, http.StatusCreated, "创建成功", nil)
 }
 
 // UpdatePermission 更新权限
@@ -222,7 +222,7 @@ func (api *PermissionAPI) GetRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.Role	true	"角色信息"
-//	@Success		200		{object}	shared.APIResponse
+//	@Success		201		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse
 //	@Failure		401		{object}	shared.APIResponse
 //	@Failure		403		{object}	shared.APIResponse
@@ -239,7 +239,7 @@ func (api *PermissionAPI) CreateRole(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "创建成功", nil)
+	shared.Success(c, http.StatusCreated, "创建成功", nil)
 }
 
 // UpdateRole 更新角色

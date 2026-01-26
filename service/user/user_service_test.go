@@ -146,6 +146,16 @@ func (m *MockUserRepository) SetPhoneVerified(ctx context.Context, id string, ve
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UnbindEmail(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) UnbindPhone(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error {
 	args := m.Called(ctx, ids, status)
 	return args.Error(0)
@@ -189,6 +199,24 @@ func (m *MockUserRepository) Transaction(ctx context.Context, user *usersModel.U
 
 func (m *MockUserRepository) Health(ctx context.Context) error {
 	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
+	args := m.Called(ctx, userID, deviceID)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) GetDevices(ctx context.Context, userID string) ([]interface{}, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]interface{}), args.Error(1)
+}
+
+func (m *MockUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	args := m.Called(ctx, email, hashedPassword)
 	return args.Error(0)
 }
 
@@ -442,12 +470,12 @@ func TestUserService_GetUser_Success(t *testing.T) {
 	service, mockUserRepo, _ := setupUserService()
 	ctx := context.Background()
 
-	userID := primitive.NewObjectID().Hex()
 	expectedUser := &usersModel.User{
-		ID:       userID,
 		Username: "testuser",
 		Email:    "test@example.com",
 	}
+	expectedUser.ID = primitive.NewObjectID()
+	userID := expectedUser.ID.Hex()
 
 	mockUserRepo.On("GetByID", ctx, userID).Return(expectedUser, nil)
 
@@ -457,7 +485,9 @@ func TestUserService_GetUser_Success(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, expectedUser, resp.User)
+	assert.Equal(t, expectedUser.ID.Hex(), resp.User.ID)
+	assert.Equal(t, expectedUser.Username, resp.User.Username)
+	assert.Equal(t, expectedUser.Email, resp.User.Email)
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -510,12 +540,12 @@ func TestUserService_UpdateUser_Success(t *testing.T) {
 	service, mockUserRepo, _ := setupUserService()
 	ctx := context.Background()
 
-	userID := primitive.NewObjectID().Hex()
 	updatedUser := &usersModel.User{
-		ID:       userID,
 		Username: "updateduser",
 		Email:    "updated@example.com",
 	}
+	updatedUser.ID = primitive.NewObjectID()
+	userID := updatedUser.ID.Hex()
 
 	updates := map[string]interface{}{
 		"username": "updateduser",
@@ -534,7 +564,9 @@ func TestUserService_UpdateUser_Success(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, *updatedUser, resp.User)
+	assert.Equal(t, updatedUser.ID.Hex(), resp.User.ID)
+	assert.Equal(t, updatedUser.Username, resp.User.Username)
+	assert.Equal(t, updatedUser.Email, resp.User.Email)
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -643,8 +675,16 @@ func TestUserService_ListUsers_Success(t *testing.T) {
 	ctx := context.Background()
 
 	expectedUsers := []*usersModel.User{
-		{ID: "user1", Username: "user1"},
-		{ID: "user2", Username: "user2"},
+		func() *usersModel.User {
+			u := &usersModel.User{Username: "user1"}
+			u.ID = primitive.NewObjectID()
+			return u
+		}(),
+		func() *usersModel.User {
+			u := &usersModel.User{Username: "user2"}
+			u.ID = primitive.NewObjectID()
+			return u
+		}(),
 	}
 
 	req := &user2.ListUsersRequest{
@@ -749,18 +789,18 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 	}
 
 	user := &usersModel.User{
-		ID:       "user123",
 		Username: "testuser",
 		Email:    "test@example.com",
 		Status:   usersModel.UserStatusActive,
 	}
+	user.ID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 
 	// 设置密码
 	err := user.SetPassword(req.Password)
 	require.NoError(t, err)
 
 	mockUserRepo.On("GetByUsername", ctx, req.Username).Return(user, nil)
-	mockUserRepo.On("UpdateLastLogin", ctx, user.ID, req.ClientIP).Return(nil)
+	mockUserRepo.On("UpdateLastLogin", ctx, user.ID.Hex(), req.ClientIP).Return(nil)
 
 	// Act
 	resp, err := service.LoginUser(ctx, req)
@@ -810,10 +850,10 @@ func TestUserService_LoginUser_WrongPassword(t *testing.T) {
 	}
 
 	user := &usersModel.User{
-		ID:       "user123",
 		Username: "testuser",
 		Status:   usersModel.UserStatusActive,
 	}
+	user.ID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 
 	// 设置正确的密码
 	err := user.SetPassword("correctpassword")
@@ -844,10 +884,10 @@ func TestUserService_LoginUser_AccountInactive(t *testing.T) {
 	}
 
 	user := &usersModel.User{
-		ID:       "user123",
 		Username: "testuser",
 		Status:   usersModel.UserStatusInactive,
 	}
+	user.ID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 
 	user.SetPassword(req.Password)
 
@@ -876,10 +916,10 @@ func TestUserService_LoginUser_AccountBanned(t *testing.T) {
 	}
 
 	user := &usersModel.User{
-		ID:       "user123",
 		Username: "testuser",
 		Status:   usersModel.UserStatusBanned,
 	}
+	user.ID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 
 	user.SetPassword(req.Password)
 
@@ -910,9 +950,8 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 	oldPassword := "oldpassword"
 	newPassword := "newpassword123"
 
-	user := &usersModel.User{
-		ID: userID,
-	}
+	user := &usersModel.User{}
+	user.ID, _ = primitive.ObjectIDFromHex(userID)
 
 	user.SetPassword(oldPassword)
 
@@ -945,9 +984,8 @@ func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 
 	userID := primitive.NewObjectID().Hex()
 
-	user := &usersModel.User{
-		ID: userID,
-	}
+	user := &usersModel.User{}
+	user.ID, _ = primitive.ObjectIDFromHex(userID)
 
 	user.SetPassword("correctpassword")
 
@@ -1012,7 +1050,8 @@ func TestUserService_AssignRole_Success(t *testing.T) {
 		RoleID: "role123",
 	}
 
-	user := &usersModel.User{ID: req.UserID}
+	user := &usersModel.User{}
+	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
 	role := &authModel.Role{ID: req.RoleID}
 
 	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)
@@ -1065,7 +1104,8 @@ func TestUserService_AssignRole_RoleNotFound(t *testing.T) {
 		RoleID: "nonexistent",
 	}
 
-	user := &usersModel.User{ID: req.UserID}
+	user := &usersModel.User{}
+	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
 
 	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)
 	mockAuthRepo.On("GetRole", ctx, req.RoleID).Return(nil, assert.AnError)

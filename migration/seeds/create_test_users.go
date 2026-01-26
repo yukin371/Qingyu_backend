@@ -192,6 +192,7 @@ func CreateTestUsers() error {
 			continue
 		}
 
+		now := time.Now()
 		// 创建用户对象
 		now := time.Now()
 		user := users.User{

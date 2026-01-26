@@ -103,8 +103,13 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Com
 
 // GetByID 根据ID获取评论
 func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*social.Comment, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid id: %w", err)
+	}
+
 	var comment social.Comment
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("comment not found")
@@ -117,11 +122,16 @@ func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*socia
 
 // Update 更新评论
 func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 

@@ -102,15 +102,24 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 
 // GetByID 根据ID获取用户
 func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersModel.User, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	var user usersModel.User
 
 	// 构建查询条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	err := r.collection.FindOne(ctx, mongoFilter).Decode(&user)
+	err = r.collection.FindOne(ctx, mongoFilter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -131,12 +140,21 @@ func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersMod
 
 // Update 更新用户信息
 func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
 	// 构建更新条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": updates}
@@ -163,10 +181,19 @@ func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map
 
 // Delete 软删除用户
 func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
 	// 构建查询条件
 	mongoFilter := bson.M{
-		"_id":        id,
+		"_id":        objectID,
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}
@@ -193,7 +220,16 @@ func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 
 // HardDelete 硬删除用户
 func (r *MongoUserRepository) HardDelete(ctx context.Context, id string) error {
-	filter := bson.M{"_id": id}
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
+	filter := bson.M{"_id": objectID}
 
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
@@ -1319,4 +1355,121 @@ func (r *MongoUserRepository) CountByStatus(ctx context.Context, status usersMod
 	}
 
 	return count, nil
+}
+
+// ==================== 新增方法：邮箱/手机/设备管理 ====================
+
+// UnbindEmail 解绑邮箱（清空邮箱并标记为未验证）
+func (r *MongoUserRepository) UnbindEmail(ctx context.Context, id string) error {
+	now := time.Now()
+	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"email":          "",
+			"email_verified": false,
+			"updated_at":     now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"解绑邮箱失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
+}
+
+// UnbindPhone 解绑手机（清空手机号并标记为未验证）
+func (r *MongoUserRepository) UnbindPhone(ctx context.Context, id string) error {
+	now := time.Now()
+	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"phone":          "",
+			"phone_verified": false,
+			"updated_at":     now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"解绑手机失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
+}
+
+// DeleteDevice 删除设备
+func (r *MongoUserRepository) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
+	// TODO: 实现设备删除逻辑
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回"设备不存在"错误
+	return UserInterface.NewUserRepositoryError(
+		UserInterface.ErrorTypeNotFound,
+		"设备不存在或已删除",
+		nil,
+	)
+}
+
+// GetDevices 获取用户设备列表
+func (r *MongoUserRepository) GetDevices(ctx context.Context, userID string) ([]interface{}, error) {
+	// TODO: 实现获取设备列表逻辑
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回空列表
+	return []interface{}{}, nil
+}
+
+// UpdatePasswordByEmail 根据邮箱更新密码
+func (r *MongoUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	now := time.Now()
+	filter := bson.M{"email": email, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"password":   hashedPassword,
+			"updated_at": now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"更新密码失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
 }

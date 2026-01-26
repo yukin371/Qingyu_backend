@@ -29,38 +29,35 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 
 	// 准备测试用户
 	now := time.Now()
+	base := shared.BaseEntity{CreatedAt: now, UpdatedAt: now}
 	testUsers := []users.User{
 		{
-			IdentifiedEntity: shared.IdentifiedEntity{},
-			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-			Username:         "admin",
-			Email:            "admin@qingyu.com",
-			Phone:            "13800138000",
-			Roles:            []string{"admin"},
+			BaseEntity: base,
+			Username:   "admin",
+			Email:      "admin@qingyu.com",
+			Phone:      "13800138000",
+			Roles:      []string{"admin"},
 		},
 		{
-			IdentifiedEntity: shared.IdentifiedEntity{},
-			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-			Username:         "author1",
-			Email:            "author1@qingyu.com",
-			Phone:            "13800138001",
-			Roles:            []string{"author"},
+			BaseEntity: base,
+			Username:   "author1",
+			Email:      "author1@qingyu.com",
+			Phone:      "13800138001",
+			Roles:      []string{"author"},
 		},
 		{
-			IdentifiedEntity: shared.IdentifiedEntity{},
-			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-			Username:         "reader1",
-			Email:            "reader1@qingyu.com",
-			Phone:            "13800138002",
-			Roles:            []string{"reader"},
+			BaseEntity: base,
+			Username:   "reader1",
+			Email:      "reader1@qingyu.com",
+			Phone:      "13800138002",
+			Roles:      []string{"reader"},
 		},
 		{
-			IdentifiedEntity: shared.IdentifiedEntity{},
-			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
-			Username:         "reader2",
-			Email:            "reader2@qingyu.com",
-			Phone:            "13800138003",
-			Roles:            []string{"reader"},
+			BaseEntity: base,
+			Username:   "reader2",
+			Email:      "reader2@qingyu.com",
+			Phone:      "13800138003",
+			Roles:      []string{"reader"},
 		},
 	}
 

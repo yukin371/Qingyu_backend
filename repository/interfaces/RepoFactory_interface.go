@@ -37,6 +37,7 @@ type RepositoryFactory interface {
 	CreateProjectRepository() writer.ProjectRepository
 	CreateDocumentRepository() writer.DocumentRepository
 	CreateDocumentContentRepository() writer.DocumentContentRepository
+	CreateTemplateRepository() writer.TemplateRepository
 
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository
@@ -47,6 +48,7 @@ type RepositoryFactory interface {
 	CreateCollectionRepository() ReadingInterfaces.CollectionRepository
 	CreateReadingHistoryRepository() ReadingInterfaces.ReadingHistoryRepository
 	CreateReaderThemeRepository() ReadingInterfaces.ReaderThemeRepository
+	CreateBookmarkRepository() ReadingInterfaces.BookmarkRepository
 
 	// 书城相关Repository
 	CreateBookRepository() BookstoreInterfaces.BookRepository

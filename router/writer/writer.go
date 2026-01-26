@@ -7,7 +7,7 @@ import (
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/interfaces"
-	searchService "Qingyu_backend/service/shared/search"
+	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
@@ -19,12 +19,13 @@ func InitWriterRouter(
 	projectService *projectService.ProjectService,
 	documentService *document.DocumentService,
 	versionService *projectService.VersionService,
-	searchSvc searchService.SearchService,
+	searchSvc *searchservice.SearchService,
 	exportService interfaces.ExportService,
 	publishService interfaces.PublishService,
 	lockService lock.DocumentLockService,
 	commentService writerservice.CommentService,
 	batchOpService document.BatchOperationService,
+	templateService *document.TemplateService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -48,6 +49,12 @@ func InitWriterRouter(
 	var batchOpApi *writer.BatchOperationAPI
 	if batchOpService != nil {
 		batchOpApi = writer.NewBatchOperationAPI(batchOpService)
+	}
+
+	// 模板API
+	var templateApi *writer.TemplateAPI
+	if templateService != nil {
+		templateApi = writer.NewTemplateAPI(templateService, nil) // logger由service内部处理
 	}
 
 	// 写作端路由组
@@ -90,6 +97,11 @@ func InitWriterRouter(
 		if batchOpApi != nil {
 			batchOpApi.RegisterRoutes(writerGroup)
 		}
+
+		// 模板路由
+		if templateApi != nil {
+			InitTemplateRouter(writerGroup, templateApi)
+		}
 	}
 }
 
@@ -127,6 +139,7 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi, loc
 		documentGroup.PUT("/:id", documentApi.UpdateDocument)
 		documentGroup.DELETE("/:id", documentApi.DeleteDocument)
 		documentGroup.PUT("/:id/move", documentApi.MoveDocument)
+		documentGroup.POST("/:id/duplicate", documentApi.DuplicateDocument)
 
 		// 文档锁定路由
 		if lockApi != nil {
@@ -192,7 +205,7 @@ func InitEditorRouter(r *gin.RouterGroup, editorApi *writer.EditorApi) {
 }
 
 // InitSearchRouter 初始化搜索路由
-func InitSearchRouter(r *gin.RouterGroup, searchSvc searchService.SearchService) {
+func InitSearchRouter(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
 	// 创建搜索API实例
 	searchAPI := writer.NewSearchAPI(searchSvc)
 
@@ -234,5 +247,22 @@ func InitCommentRouter(r *gin.RouterGroup, commentApi *writer.CommentAPI) {
 
 		// 批量操作
 		commentGroup.POST("/batch-delete", commentApi.BatchDeleteComments)
+	}
+}
+
+// InitTemplateRouter 初始化模板路由
+func InitTemplateRouter(r *gin.RouterGroup, templateApi *writer.TemplateAPI) {
+	// 模板管理路由
+	templateGroup := r.Group("/templates")
+	{
+		// 模板CRUD
+		templateGroup.POST("", templateApi.CreateTemplate)
+		templateGroup.GET("", templateApi.ListTemplates)
+		templateGroup.GET("/:id", templateApi.GetTemplate)
+		templateGroup.PUT("/:id", templateApi.UpdateTemplate)
+		templateGroup.DELETE("/:id", templateApi.DeleteTemplate)
+
+		// 应用模板
+		templateGroup.POST("/:id/apply", templateApi.ApplyTemplate)
 	}
 }

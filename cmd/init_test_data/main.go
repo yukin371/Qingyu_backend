@@ -372,7 +372,7 @@ func createBetaUsers(ctx context.Context, db *mongo.Database) error {
 			Nickname:         betaUser.Nickname,
 			Avatar:           betaUser.Avatar,
 			Roles:            []string{betaUser.Role},
-			Status:           users.UserStatusActive,
+			Status:           "active",
 		}
 
 		_, err = userCollection.InsertOne(ctx, user)

@@ -1,11 +1,13 @@
 package notifications
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/notifications/dto"
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/notification"
 	notifService "Qingyu_backend/service/notification"
@@ -170,7 +172,7 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 // @Produce json
 // @Param id path string true "通知ID"
 // @Success 200 {object} shared.APIResponse
-// @Router /api/v1/notifications/{id}/read [put]
+// @Router /api/v1/notifications/{id}/read [post]
 func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -207,9 +209,9 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body object{ids=[]string} true "通知ID列表"
-// @Success 200 {object} shared.APIResponse
-// @Router /api/v1/notifications/mark-read [put]
+// @Param request body dto.BatchMarkReadRequest true "批量标记已读请求"
+// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Router /api/v1/notifications/batch-read [post]
 func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -225,9 +227,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	}
 
 	// 解析请求
-	var req struct {
-		IDs []string `json:"ids" validate:"required,min=1"`
-	}
+	var req dto.BatchMarkReadRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
@@ -241,12 +241,25 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	}
 
 	// 调用服务
-	if err := api.notificationService.MarkMultipleAsRead(c.Request.Context(), req.IDs, userIDStr); err != nil {
+	succeeded, failed, err := api.notificationService.MarkMultipleAsReadWithResult(c.Request.Context(), req.NotificationIDs, userIDStr)
+	if err != nil {
 		shared.HandleServiceError(c, err)
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "批量标记成功"})
+	// 构建响应
+	resp := dto.BatchOperationResponse{
+		Success:   failed == 0,
+		Total:     len(req.NotificationIDs),
+		Succeeded: succeeded,
+		Failed:    failed,
+	}
+
+	if failed > 0 {
+		resp.Errors = []string{"部分通知标记失败"}
+	}
+
+	shared.SuccessData(c, resp)
 }
 
 // MarkAllAsRead 标记所有通知为已读
@@ -256,7 +269,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} shared.APIResponse
-// @Router /api/v1/notifications/read-all [put]
+// @Router /api/v1/notifications/read-all [post]
 func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -325,9 +338,9 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body object{ids=[]string} true "通知ID列表"
-// @Success 200 {object} shared.APIResponse
-// @Router /api/v1/notifications/batch-delete [delete]
+// @Param request body dto.BatchDeleteRequest true "批量删除请求"
+// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Router /api/v1/notifications/batch-delete [post]
 func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -343,9 +356,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	}
 
 	// 解析请求
-	var req struct {
-		IDs []string `json:"ids" validate:"required,min=1"`
-	}
+	var req dto.BatchDeleteRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
@@ -359,12 +370,25 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	}
 
 	// 调用服务
-	if err := api.notificationService.BatchDeleteNotifications(c.Request.Context(), req.IDs, userIDStr); err != nil {
+	succeeded, failed, err := api.notificationService.BatchDeleteNotificationsWithResult(c.Request.Context(), req.NotificationIDs, userIDStr)
+	if err != nil {
 		shared.HandleServiceError(c, err)
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "批量删除成功"})
+	// 构建响应
+	resp := dto.BatchOperationResponse{
+		Success:   failed == 0,
+		Total:     len(req.NotificationIDs),
+		Succeeded: succeeded,
+		Failed:    failed,
+	}
+
+	if failed > 0 {
+		resp.Errors = []string{"部分通知删除失败"}
+	}
+
+	shared.SuccessData(c, resp)
 }
 
 // DeleteAllNotifications 删除所有通知
@@ -831,3 +855,153 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 
 	shared.SuccessData(c, gin.H{"devices": devices})
 }
+
+// ClearReadNotifications 清除已读通知
+// @Summary 清除已读通知
+// @Description 删除用户所有已读的通知
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Router /api/v1/notifications/clear-read [post]
+func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		return
+	}
+
+	// 调用服务
+	affected, err := api.notificationService.ClearReadNotifications(c.Request.Context(), userIDStr)
+	if err != nil {
+		shared.HandleServiceError(c, err)
+		return
+	}
+
+	shared.SuccessData(c, dto.BatchOperationResponse{
+		Success:   true,
+		Total:     int(affected),
+		Succeeded: int(affected),
+		Failed:    0,
+	})
+}
+
+// ResendNotification 重新发送通知
+// @Summary 重新发送通知
+// @Description 重新发送通知（邮件/推送）
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "通知ID"
+// @Param request body object{method=string} true "重新发送请求"
+// @Success 200 {object} shared.APIResponse{data=dto.MarkAsReadResponse}
+// @Failure 400 {object} shared.APIResponse "参数错误"
+// @Failure 404 {object} shared.APIResponse "通知不存在"
+// @Router /api/v1/notifications/{id}/resend [post]
+func (api *NotificationAPI) ResendNotification(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		return
+	}
+
+	// 获取通知ID
+	id := c.Param("id")
+	if id == "" {
+		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		return
+	}
+
+	// 解析请求
+	var req struct {
+		Method string `json:"method" validate:"required,oneof=email push"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		return
+	}
+
+	// 验证请求
+	if err := shared.GetValidator().Struct(&req); err != nil {
+		shared.HandleValidationError(c, err)
+		return
+	}
+
+	// 调用服务
+	err := api.notificationService.ResendNotification(c.Request.Context(), id, userIDStr, req.Method)
+	if err != nil {
+		shared.HandleServiceError(c, err)
+		return
+	}
+
+	shared.SuccessData(c, dto.MarkAsReadResponse{
+		Success: true,
+		Message: "重新发送成功",
+	})
+}
+
+// GetWSEndpoint WebSocket端点
+// @Summary WebSocket端点
+// @Description 获取WebSocket连接地址，用于实时推送通知
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} shared.APIResponse{data=dto.WSEndpointResponse}
+// @Router /api/v1/notifications/ws-endpoint [get]
+func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	_, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		return
+	}
+
+	// 获取token
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "缺少认证令牌")
+		return
+	}
+
+	// 移除 "Bearer " 前缀
+	if len(token) > 7 && token[:7] == "Bearer " {
+		token = token[7:]
+	}
+
+	// 生成WebSocket连接URL
+	scheme := "ws"
+	if c.Request.TLS != nil {
+		scheme = "wss"
+	}
+
+	wsURL := fmt.Sprintf("%s://%s/ws/notifications?token=%s", scheme, c.Request.Host, token)
+
+	shared.SuccessData(c, dto.WSEndpointResponse{
+		URL:     wsURL,
+		Message: "WebSocket连接地址",
+	})
+}
+

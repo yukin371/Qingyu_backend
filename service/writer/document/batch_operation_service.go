@@ -1,462 +1,635 @@
 package document
 
 import (
+	"Qingyu_backend/models/writer"
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
-	"Qingyu_backend/models/writer"
-	writerInterface "Qingyu_backend/repository/interfaces/writer"
-	mongodbwriter "Qingyu_backend/repository/mongodb/writer"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	pkgErrors "Qingyu_backend/pkg/errors"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	serviceBase "Qingyu_backend/service/base"
 )
 
-var (
-	ErrBatchOperationNotRunning = errors.New("batch operation is not running")
-	ErrBatchOperationFailed     = errors.New("batch operation failed")
-)
-
-// BatchOperationService 批量操作服务接口
-type BatchOperationService interface {
-	// Submit 提交批量操作（含Preflight）
-	Submit(ctx context.Context, req *SubmitBatchOperationRequest) (*writer.BatchOperation, error)
-
-	// Execute 执行批量操作（异步）
-	Execute(ctx context.Context, batchID primitive.ObjectID) error
-
-	// Cancel 取消正在运行的操作
-	Cancel(ctx context.Context, batchID primitive.ObjectID, userID primitive.ObjectID) error
-
-	// Undo 撤销批量操作
-	Undo(ctx context.Context, batchID primitive.ObjectID, userID primitive.ObjectID) error
-
-	// GetProgress 获取操作进度
-	GetProgress(ctx context.Context, batchID primitive.ObjectID) (*BatchOperationProgress, error)
-}
-
-// SubmitBatchOperationRequest 提交批量操作请求
-type SubmitBatchOperationRequest struct {
-	ProjectID          primitive.ObjectID
-	Type               writer.BatchOperationType
-	TargetIDs          []string
-	Atomic             bool
-	Payload            map[string]interface{}
-	ConflictPolicy     writer.ConflictPolicy
-	ExpectedVersions   map[string]int
-	ClientRequestID    string
-	UserID             primitive.ObjectID
-	IncludeDescendants bool
-}
-
-// BatchOperationProgress 批量操作进度
-type BatchOperationProgress struct {
-	BatchID        primitive.ObjectID          `json:"batchId"`
-	Status         writer.BatchOperationStatus `json:"status"`
-	TotalItems     int                         `json:"totalItems"`
-	CompletedItems int                         `json:"completedItems"`
-	FailedItems    int                         `json:"failedItems"`
-	StartedAt      *time.Time                  `json:"startedAt,omitempty"`
-	FinishedAt     *time.Time                  `json:"finishedAt,omitempty"`
-}
-
-// BatchOperationServiceImpl 批量操作服务实现
-type BatchOperationServiceImpl struct {
-	batchOpRepo  *mongodbwriter.BatchOperationRepositoryImpl
-	opLogRepo    *mongodbwriter.OperationLogRepositoryImpl
-	docRepo      writerInterface.DocumentRepository
-	preflightSvc PreflightService
+// BatchOperationService 批量操作服务
+type BatchOperationService struct {
+	batchOpRepo writerRepo.BatchOperationRepository
+	docRepo     writerRepo.DocumentRepository
+	projectRepo writerRepo.ProjectRepository
+	retrySvc    *RetryService
+	eventBus    serviceBase.EventBus
+	serviceName string
+	version     string
 }
 
 // NewBatchOperationService 创建批量操作服务
 func NewBatchOperationService(
-	batchOpRepo *mongodbwriter.BatchOperationRepositoryImpl,
-	opLogRepo *mongodbwriter.OperationLogRepositoryImpl,
-	docRepo writerInterface.DocumentRepository,
-) BatchOperationService {
-	return &BatchOperationServiceImpl{
-		batchOpRepo:  batchOpRepo,
-		opLogRepo:    opLogRepo,
-		docRepo:      docRepo,
-		preflightSvc: NewPreflightService(docRepo),
+	batchOpRepo writerRepo.BatchOperationRepository,
+	docRepo writerRepo.DocumentRepository,
+	projectRepo writerRepo.ProjectRepository,
+	eventBus serviceBase.EventBus,
+) *BatchOperationService {
+	return &BatchOperationService{
+		batchOpRepo: batchOpRepo,
+		docRepo:     docRepo,
+		projectRepo: projectRepo,
+		retrySvc:    NewRetryService(),
+		eventBus:    eventBus,
+		serviceName: "BatchOperationService",
+		version:     "1.0.0",
 	}
 }
 
-// Submit 提交批量操作（含Preflight预检查）
-func (s *BatchOperationServiceImpl) Submit(ctx context.Context, req *SubmitBatchOperationRequest) (*writer.BatchOperation, error) {
-	// 1. 幂等性检查
+// Submit 提交批量操作
+func (s *BatchOperationService) Submit(ctx context.Context, req *SubmitBatchOperationRequest) (*writer.BatchOperation, error) {
+	// 1. 参数验证
+	if err := s.validateSubmitRequest(req); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
+	}
+
+	// 2. 幂等性检查（如果提供了clientRequestID）
 	if req.ClientRequestID != "" {
-		existing, err := s.batchOpRepo.GetByClientRequestID(ctx, req.ProjectID, req.ClientRequestID)
-		if err == nil && existing != nil {
-			// 返回已存在的操作
-			return existing, nil
+		existingOp, err := s.batchOpRepo.GetByClientRequestID(ctx, req.ClientRequestID)
+		if err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "检查幂等性失败", "", err)
+		}
+		if existingOp != nil {
+			// 已存在相同请求，返回现有操作
+			return existingOp, nil
 		}
 	}
 
-	// 2. Preflight预检查
-	summary, preflightResult, err := s.preflightSvc.ValidateBatchOperation(
-		ctx,
-		req.ProjectID,
-		req.Type,
-		req.TargetIDs,
-		&PreflightOptions{
-			ExpectedVersions:   req.ExpectedVersions,
-			ConflictPolicy:     req.ConflictPolicy,
-			IncludeDescendants: req.IncludeDescendants,
-			UserID:             req.UserID,
-		},
-	)
-	if err != nil && req.Atomic {
-		// 原子操作模式下，Preflight失败则拒绝
-		return nil, fmt.Errorf("preflight validation failed: %w", err)
-	}
-
-	// 3. 创建BatchOperation记录
-	batchOp := &writer.BatchOperation{
-		ProjectID:         req.ProjectID,
-		Type:              req.Type,
-		TargetIDs:         preflightResult.ValidIDs,
-		OriginalTargetIDs: req.TargetIDs,
-		Atomic:            req.Atomic,
-		Payload:           req.Payload,
-		ConflictPolicy:    req.ConflictPolicy,
-		ExpectedVersions:  req.ExpectedVersions,
-		ClientRequestID:   req.ClientRequestID,
-		Status:            writer.BatchOpStatusPending,
-		CreatedBy:         req.UserID,
-		PreflightSummary:  summary,
-	}
-
-	// 根据节点数量选择执行模式
-	if len(preflightResult.ValidIDs) <= 200 {
-		batchOp.ExecutionMode = writer.ExecutionModeStandardAtomic
-	} else {
-		batchOp.ExecutionMode = writer.ExecutionModeSagaAtomic
-	}
-
-	err = s.batchOpRepo.Create(ctx, batchOp)
+	// 3. 验证项目权限
+	project, err := s.projectRepo.GetByID(ctx, req.ProjectID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create batch operation: %w", err)
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
 
-	// 4. 创建BatchOperationItem记录（用于进度跟踪）
-	for _, id := range preflightResult.ValidIDs {
-		item := &writer.BatchOperationItem{
-			BatchID:         batchOp.ID,
-			TargetID:        id,
-			TargetStableRef: preflightResult.DocumentMap[id].StableRef,
-			Status:          writer.BatchItemStatusPending,
-		}
-		item.TouchForCreate()
-		// TODO: 创建item记录到数据库（需要BatchOperationItemRepository）
-		_ = item
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanEdit(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该项目", "", nil)
+	}
+
+	// 4. 转换ProjectID
+	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目ID", "", err)
+	}
+
+	// 5. 创建批量操作对象
+	retryConfigData := s.convertRetryConfigToMap(req.RetryConfig)
+	batchOp := &writer.BatchOperation{
+		ProjectID:       projectID,
+		Type:            req.Type,
+		TargetIDs:       req.TargetIDs,
+		Status:          writer.BatchOpStatusPending,
+		Payload:         req.Payload,
+		Atomic:          req.Atomic,
+		ConflictPolicy:  req.ConflictPolicy,
+		ClientRequestID: req.ClientRequestID,
+		RetryConfig:     retryConfigData,
+		CreatedBy:       userID,
+	}
+
+	// 初始化items
+	batchOp.TouchForCreate()
+
+	// 6. 预检查（Preflight）
+	preflightSummary, err := s.runPreflight(ctx, batchOp)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "预检查失败", "", err)
+	}
+	batchOp.PreflightSummary = preflightSummary
+
+	// 如果预检查发现所有项都无效，直接返回失败
+	if preflightSummary.ValidCount == 0 {
+		batchOp.Status = writer.BatchOpStatusFailed
+		batchOp.ErrorCode = "PREFLIGHT_FAILED"
+		batchOp.ErrorMessage = "没有有效的操作项"
+	}
+
+	// 7. 保存批量操作
+	if err := s.batchOpRepo.Create(ctx, batchOp); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建批量操作失败", "", err)
+	}
+
+	// 8. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: "batch_operation.created",
+			EventData: map[string]interface{}{
+				"operation_id": batchOp.ID.Hex(),
+				"project_id":   batchOp.ProjectID.Hex(),
+				"type":         string(batchOp.Type),
+				"target_count": len(batchOp.TargetIDs),
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
 	}
 
 	return batchOp, nil
 }
 
 // Execute 执行批量操作
-func (s *BatchOperationServiceImpl) Execute(ctx context.Context, batchID primitive.ObjectID) error {
-	// 1. 加载BatchOperation
-	batchOp, err := s.batchOpRepo.GetByID(ctx, batchID)
+func (s *BatchOperationService) Execute(ctx context.Context, operationID string) error {
+	// 1. 获取批量操作
+	batchOp, err := s.batchOpRepo.GetByID(ctx, operationID)
 	if err != nil {
-		return err
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询批量操作失败", "", err)
 	}
 
-	// 2. 更新状态为运行中
-	err = s.batchOpRepo.UpdateStatus(ctx, batchID, writer.BatchOpStatusRunning)
-	if err != nil {
-		return err
+	if batchOp == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "批量操作不存在", "", nil)
 	}
 
-	now := time.Now()
+	// 2. 检查状态
+	if batchOp.Status != writer.BatchOpStatusPending && batchOp.Status != writer.BatchOpStatusPreflight {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "批量操作状态不正确，无法执行", "", nil)
+	}
+
+	// 3. 更新状态为处理中
+	now := primitive.NewDateTimeFromTime(time.Now())
+	batchOp.Status = writer.BatchOpStatusProcessing
 	batchOp.StartedAt = &now
-
-	// 3. 选择执行策略
-	switch batchOp.ExecutionMode {
-	case writer.ExecutionModeStandardAtomic:
-		return s.executeStandardAtomic(ctx, batchOp)
-	case writer.ExecutionModeSagaAtomic:
-		return s.executeSagaAtomic(ctx, batchOp)
-	default:
-		return fmt.Errorf("unsupported execution mode: %s", batchOp.ExecutionMode)
+	if err := s.batchOpRepo.UpdateStatus(ctx, operationID, batchOp.Status); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新操作状态失败", "", err)
 	}
-}
 
-// executeStandardAtomic 标准原子执行（<=200节点，单事务）
-func (s *BatchOperationServiceImpl) executeStandardAtomic(ctx context.Context, batchOp *writer.BatchOperation) error {
-	// 注意：这里需要从docRepo获取MongoDB client来启动事务
-	// 由于接口限制，暂时使用非事务方式执行
-	// TODO: 在DocumentRepository接口中添加Client()方法获取MongoDB client
-
-	// 执行批量操作
-	var err error
+	// 4. 根据操作类型执行不同的逻辑
+	var executeErr error
 	switch batchOp.Type {
 	case writer.BatchOpTypeDelete:
-		err = s.executeBatchDelete(ctx, batchOp)
+		executeErr = s.executeDelete(ctx, batchOp)
 	case writer.BatchOpTypeMove:
-		err = s.executeBatchMove(ctx, batchOp)
+		executeErr = s.executeMove(ctx, batchOp)
+	case writer.BatchOpTypeExport:
+		executeErr = s.executeExport(ctx, batchOp)
+	case writer.BatchOpTypeCopy:
+		executeErr = s.executeCopy(ctx, batchOp)
+	case writer.BatchOpTypeApply:
+		executeErr = s.executeApplyTemplate(ctx, batchOp)
 	default:
-		err = fmt.Errorf("unsupported operation type: %s", batchOp.Type)
+		executeErr = fmt.Errorf("不支持的操作类型: %s", batchOp.Type)
 	}
 
-	if err != nil {
-		s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusFailed)
-		return fmt.Errorf("batch operation failed: %w", err)
-	}
+	// 5. 更新最终状态
+	completedAt := primitive.NewDateTimeFromTime(time.Now())
+	batchOp.CompletedAt = &completedAt
 
-	// 创建OperationLog
-	err = s.createOperationLog(ctx, batchOp)
-	if err != nil {
-		s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusFailed)
-		return fmt.Errorf("failed to create operation log: %w", err)
-	}
-
-	// 更新状态为完成
-	now := time.Now()
-	batchOp.FinishedAt = &now
-	s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusCompleted)
-
-	return nil
-}
-
-// executeSagaAtomic Saga原子执行（>200节点，补偿事务）
-func (s *BatchOperationServiceImpl) executeSagaAtomic(ctx context.Context, batchOp *writer.BatchOperation) error {
-	var inverseCommands []map[string]interface{}
-
-	// 逐个执行命令，收集inverseCommand
-	for i, targetID := range batchOp.TargetIDs {
-		itemErr := s.executeSingleItem(ctx, batchOp, targetID, i)
-		if itemErr != nil {
-			// 失败时执行补偿
-			for j := i - 1; j >= 0; j-- {
-				if j < len(inverseCommands) {
-					_ = s.executeInverse(ctx, inverseCommands[j])
+	if executeErr != nil {
+		if batchOp.Atomic {
+			// 原子操作：全部失败
+			batchOp.Status = writer.BatchOpStatusFailed
+			batchOp.ErrorCode = "EXECUTION_FAILED"
+			batchOp.ErrorMessage = executeErr.Error()
+		} else {
+			// 非原子操作：部分成功
+			successCount := 0
+			failedCount := 0
+			for _, item := range batchOp.Items {
+				if item.Status == writer.BatchItemStatusSucceeded {
+					successCount++
+				} else if item.Status == writer.BatchItemStatusFailed {
+					failedCount++
 				}
 			}
-			s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusFailed)
-			return fmt.Errorf("item %s failed, compensated: %w", targetID, itemErr)
-		}
 
-		// 收集逆命令
-		inverseCmd := s.buildInverseCommand(batchOp, targetID)
-		inverseCommands = append(inverseCommands, inverseCmd)
+			if successCount > 0 && failedCount > 0 {
+				batchOp.Status = writer.BatchOpStatusPartial
+			} else if successCount == 0 {
+				batchOp.Status = writer.BatchOpStatusFailed
+			} else {
+				batchOp.Status = writer.BatchOpStatusCompleted
+			}
+		}
+	} else {
+		// 全部成功
+		batchOp.Status = writer.BatchOpStatusCompleted
 	}
 
-	// 全部成功，创建OperationLog
-	err := s.createOperationLog(ctx, batchOp)
+	// 更新数据库
+	updates := map[string]interface{}{
+		"status":       batchOp.Status,
+		"completed_at": batchOp.CompletedAt,
+		"items":        batchOp.Items,
+	}
+	if batchOp.ErrorCode != "" {
+		updates["error_code"] = batchOp.ErrorCode
+		updates["error_message"] = batchOp.ErrorMessage
+	}
+	if batchOp.PreflightSummary != nil {
+		updates["preflight_summary"] = batchOp.PreflightSummary
+	}
+
+	if err := s.batchOpRepo.Update(ctx, operationID, updates); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新操作结果失败", "", err)
+	}
+
+	// 6. 发布完成事件
+	if s.eventBus != nil {
+		eventType := "batch_operation.completed"
+		if batchOp.Status == writer.BatchOpStatusFailed {
+			eventType = "batch_operation.failed"
+		} else if batchOp.Status == writer.BatchOpStatusPartial {
+			eventType = "batch_operation.partial"
+		}
+
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: eventType,
+			EventData: map[string]interface{}{
+				"operation_id": operationID,
+				"project_id":   batchOp.ProjectID.Hex(),
+				"type":         string(batchOp.Type),
+				"status":       string(batchOp.Status),
+				"summary":      batchOp.GetSummary(),
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return executeErr
+}
+
+// GetOperation 获取批量操作详情
+func (s *BatchOperationService) GetOperation(ctx context.Context, operationID string) (*writer.BatchOperation, error) {
+	// 1. 查询批量操作
+	batchOp, err := s.batchOpRepo.GetByID(ctx, operationID)
 	if err != nil {
-		s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusFailed)
-		return fmt.Errorf("failed to create operation log: %w", err)
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询批量操作失败", "", err)
 	}
 
-	// 更新状态为完成
-	now := time.Now()
-	batchOp.FinishedAt = &now
-	s.batchOpRepo.UpdateStatus(ctx, batchOp.ID, writer.BatchOpStatusCompleted)
+	if batchOp == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "批量操作不存在", "", nil)
+	}
+
+	// 2. 验证项目权限
+	project, err := s.projectRepo.GetByID(ctx, batchOp.ProjectID.Hex())
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanView(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限查看该操作", "", nil)
+	}
+
+	return batchOp, nil
+}
+
+// ListOperations 获取批量操作列表
+func (s *BatchOperationService) ListOperations(ctx context.Context, req *ListBatchOperationsRequest) (*ListBatchOperationsResponse, error) {
+	// 1. 验证项目权限
+	project, err := s.projectRepo.GetByID(ctx, req.ProjectID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanView(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限查看该项目", "", nil)
+	}
+
+	// 2. 查询批量操作列表
+	var operations []*writer.BatchOperation
+	if req.Status != "" {
+		operations, err = s.batchOpRepo.GetByProjectAndStatus(ctx, req.ProjectID, req.Status, req.Limit, req.Offset)
+	} else if req.Type != "" {
+		operations, err = s.batchOpRepo.GetByProjectAndType(ctx, req.ProjectID, req.Type, req.Limit, req.Offset)
+	} else {
+		operations, err = s.batchOpRepo.GetByProjectID(ctx, req.ProjectID, req.Limit, req.Offset)
+	}
+
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询批量操作列表失败", "", err)
+	}
+
+	return &ListBatchOperationsResponse{
+		Operations: operations,
+		Total:      len(operations),
+	}, nil
+}
+
+// Cancel 取消批量操作
+func (s *BatchOperationService) Cancel(ctx context.Context, operationID string) error {
+	// 1. 获取批量操作
+	batchOp, err := s.batchOpRepo.GetByID(ctx, operationID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询批量操作失败", "", err)
+	}
+
+	if batchOp == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "批量操作不存在", "", nil)
+	}
+
+	// 2. 检查状态
+	if batchOp.IsCompleted() {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "操作已完成，无法取消", "", nil)
+	}
+
+	// 3. 更新状态为已取消
+	if err := s.batchOpRepo.UpdateStatus(ctx, operationID, writer.BatchOpStatusCancelled); err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "取消操作失败", "", err)
+	}
+
+	// 4. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: "batch_operation.cancelled",
+			EventData: map[string]interface{}{
+				"operation_id": operationID,
+				"project_id":   batchOp.ProjectID.Hex(),
+				"type":         string(batchOp.Type),
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
 
 	return nil
 }
 
-// executeBatchDelete 执行批量删除
-func (s *BatchOperationServiceImpl) executeBatchDelete(ctx context.Context, batchOp *writer.BatchOperation) error {
-	for _, targetID := range batchOp.TargetIDs {
-		// 软删除文档
-		err := s.docRepo.SoftDelete(ctx, targetID, batchOp.CreatedBy.Hex())
-		if err != nil {
-			return fmt.Errorf("failed to delete document %s: %w", targetID, err)
-		}
-	}
-	return nil
-}
+// 私有方法
 
-// executeBatchMove 执行批量移动
-func (s *BatchOperationServiceImpl) executeBatchMove(ctx context.Context, batchOp *writer.BatchOperation) error {
-	// 从payload中提取移动参数
-	parentID, _ := batchOp.Payload["parent_id"].(string)
-	position, _ := batchOp.Payload["position"].(string)
-	referenceID, _ := batchOp.Payload["reference_id"].(string)
-
-	// TODO: 实现批量移动逻辑
-	// 这需要调用DocumentRepository的更新方法
-	_ = parentID
-	_ = position
-	_ = referenceID
-
-	return fmt.Errorf("batch move operation not yet implemented")
-}
-
-// executeSingleItem 执行单个项目（Saga模式）
-func (s *BatchOperationServiceImpl) executeSingleItem(ctx context.Context, batchOp *writer.BatchOperation, targetID string, index int) error {
-	switch batchOp.Type {
-	case writer.BatchOpTypeDelete:
-		return s.docRepo.SoftDelete(ctx, targetID, batchOp.CreatedBy.Hex())
-	case writer.BatchOpTypeMove:
-		// TODO: 实现单个文档移动
-		return fmt.Errorf("single item move not yet implemented")
-	default:
-		return fmt.Errorf("unsupported operation type: %s", batchOp.Type)
-	}
-}
-
-// executeInverse 执行逆操作（Saga补偿）
-func (s *BatchOperationServiceImpl) executeInverse(ctx context.Context, inverseCmd map[string]interface{}) error {
-	// TODO: 实现补偿逻辑
-	// 例如：如果是删除，则恢复文档
-	return nil
-}
-
-// buildInverseCommand 构建逆命令
-func (s *BatchOperationServiceImpl) buildInverseCommand(batchOp *writer.BatchOperation, targetID string) map[string]interface{} {
-	// 根据操作类型构建逆命令
-	switch batchOp.Type {
-	case writer.BatchOpTypeDelete:
-		// 删除的逆操作是恢复
-		return map[string]interface{}{
-			"type":      "restore",
-			"target_id": targetID,
-		}
-	case writer.BatchOpTypeMove:
-		// 移动的逆操作是移回原位置
-		return map[string]interface{}{
-			"type":      "move",
-			"target_id": targetID,
-			"parent_id": batchOp.Payload["original_parent_id"],
-			"position":  batchOp.Payload["original_position"],
-			"reference": batchOp.Payload["original_reference"],
-		}
-	default:
+// convertRetryConfigToMap 将RetryConfig转换为map
+func (s *BatchOperationService) convertRetryConfigToMap(config *RetryConfig) map[string]interface{} {
+	if config == nil {
 		return nil
 	}
-}
-
-// createOperationLog 创建操作日志
-func (s *BatchOperationServiceImpl) createOperationLog(ctx context.Context, batchOp *writer.BatchOperation) error {
-	log := &writer.OperationLog{
-		ProjectID:      batchOp.ProjectID,
-		UserID:         batchOp.CreatedBy,
-		BatchOpID:      &batchOp.ID,
-		ChainID:        batchOp.ID.Hex(), // 使用batchOp的ID作为chainID
-		CommandType:    s.mapBatchTypeToCommandType(batchOp.Type),
-		TargetIDs:      batchOp.TargetIDs,
-		CommandPayload: batchOp.Payload,
-		Status:         writer.OpLogStatusExecuted,
-		IsCommitted:    true,
-	}
-
-	return s.opLogRepo.Create(ctx, log)
-}
-
-// mapBatchTypeToCommandType 映射批量操作类型到命令类型
-func (s *BatchOperationServiceImpl) mapBatchTypeToCommandType(batchType writer.BatchOperationType) writer.DocumentCommandType {
-	switch batchType {
-	case writer.BatchOpTypeDelete:
-		return writer.CommandDelete
-	case writer.BatchOpTypeMove:
-		return writer.CommandMove
-	case writer.BatchOpTypeCopy:
-		return writer.CommandCopy
-	default:
-		return writer.CommandUpdate
+	return map[string]interface{}{
+		"maxRetries":      config.MaxRetries,
+		"retryDelay":      config.RetryDelay,
+		"retryableErrors": config.RetryableErrors,
 	}
 }
 
-// Cancel 取消正在运行的操作
-func (s *BatchOperationServiceImpl) Cancel(ctx context.Context, batchID primitive.ObjectID, userID primitive.ObjectID) error {
-	batchOp, err := s.batchOpRepo.GetByID(ctx, batchID)
+// convertMapToRetryConfig 将map转换为RetryConfig
+func (s *BatchOperationService) convertMapToRetryConfig(data map[string]interface{}) *RetryConfig {
+	if data == nil {
+		return nil
+	}
+
+	config := &RetryConfig{}
+	if maxRetries, ok := data["maxRetries"].(int); ok {
+		config.MaxRetries = maxRetries
+	}
+	if retryDelay, ok := data["retryDelay"].(int); ok {
+		config.RetryDelay = retryDelay
+	}
+	if retryableErrors, ok := data["retryableErrors"].([]string); ok {
+		config.RetryableErrors = retryableErrors
+	}
+
+	return config
+}
+
+// validateSubmitRequest 验证提交请求
+func (s *BatchOperationService) validateSubmitRequest(req *SubmitBatchOperationRequest) error {
+	if req.ProjectID == "" {
+		return fmt.Errorf("项目ID不能为空")
+	}
+	if req.Type == "" {
+		return fmt.Errorf("操作类型不能为空")
+	}
+	if len(req.TargetIDs) == 0 {
+		return fmt.Errorf("目标ID列表不能为空")
+	}
+	if len(req.TargetIDs) > 1000 {
+		return fmt.Errorf("目标ID列表不能超过1000个")
+	}
+	return nil
+}
+
+// runPreflight 运行预检查
+func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *writer.BatchOperation) (*writer.PreflightSummary, error) {
+	summary := &writer.PreflightSummary{
+		TotalCount:   len(batchOp.TargetIDs),
+		ValidCount:   0,
+		InvalidCount: 0,
+		SkippedCount: 0,
+	}
+
+	// 批量查询所有目标文档
+	docs, err := s.docRepo.GetByIDs(ctx, batchOp.TargetIDs)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("批量查询文档失败: %w", err)
 	}
 
-	if !batchOp.CanCancel() {
-		return ErrBatchOperationNotRunning
+	// 创建一个map来快速查找文档
+	docMap := make(map[string]*writer.Document)
+	for _, doc := range docs {
+		docMap[doc.ID.Hex()] = doc
 	}
 
-	// TODO: 实现取消逻辑（发送取消信号给执行中的goroutine）
-	// 当前仅更新状态
-	return s.batchOpRepo.UpdateStatus(ctx, batchID, writer.BatchOpStatusCancelled)
-}
-
-// Undo 撤销批量操作
-func (s *BatchOperationServiceImpl) Undo(ctx context.Context, batchID primitive.ObjectID, userID primitive.ObjectID) error {
-	// 1. 查询OperationLog
-	logs, err := s.opLogRepo.GetByChainID(ctx, batchID.Hex())
-	if err != nil {
-		return err
-	}
-
-	if len(logs) == 0 {
-		return errors.New("no operation logs found for this batch operation")
-	}
-
-	// 2. 按逆序执行撤销
-	for i := len(logs) - 1; i >= 0; i-- {
-		log := logs[i]
-		if !log.IsUndoable() {
+	// 验证每个目标ID
+	for _, targetID := range batchOp.TargetIDs {
+		doc, exists := docMap[targetID]
+		if !exists || doc == nil {
+			summary.InvalidCount++
+			summary.Errors = append(summary.Errors, fmt.Sprintf("目标 %s 不存在", targetID))
 			continue
 		}
 
-		err = s.executeInverseCommand(ctx, log.InverseCommand)
-		if err != nil {
-			return fmt.Errorf("failed to undo log %s: %w", log.ID.Hex(), err)
+		// 检查是否属于同一项目
+		if doc.ProjectID != batchOp.ProjectID {
+			summary.InvalidCount++
+			summary.Errors = append(summary.Errors, fmt.Sprintf("目标 %s 不属于该项目", targetID))
+			continue
 		}
 
-		_ = s.opLogRepo.UpdateStatus(ctx, log.ID, writer.OpLogStatusUndone)
+		summary.ValidCount++
+	}
+
+	return summary, nil
+}
+
+// executeDelete 执行批量删除
+func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// 转换RetryConfig，如果为nil则使用默认配置
+	retryConfig := s.convertMapToRetryConfig(batchOp.RetryConfig)
+	if retryConfig == nil {
+		retryConfig = DefaultRetryConfig()
+	}
+
+	for i := range batchOp.Items {
+		item := &batchOp.Items[i]
+
+		// 检查操作是否被取消或状态已改变（并发安全保护）
+		currentOp, err := s.batchOpRepo.GetByID(ctx, batchOp.ID.Hex())
+		if err != nil {
+			return fmt.Errorf("检查操作状态失败: %w", err)
+		}
+		if currentOp.Status == writer.BatchOpStatusCancelled {
+			return fmt.Errorf("操作已被取消")
+		}
+		if currentOp.Status != writer.BatchOpStatusProcessing {
+			return fmt.Errorf("操作状态已改变为: %s", currentOp.Status)
+		}
+
+		// 重试循环：从0到MaxRetries
+		for attempt := 0; attempt <= retryConfig.MaxRetries; attempt++ {
+			// 更新重试次数
+			item.RetryCount = attempt
+
+			// 更新状态为处理中
+			item.Status = writer.BatchItemStatusProcessing
+			s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+
+			// 执行删除
+			err := s.docRepo.SoftDelete(ctx, item.TargetID, batchOp.ProjectID.Hex())
+			if err == nil {
+				// 删除成功
+				item.Status = writer.BatchItemStatusSucceeded
+				item.Retryable = false
+				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+				break // 成功，跳出重试循环
+			}
+
+			// 删除失败，判断是否可重试
+			item.Retryable = s.retrySvc.ShouldRetry(err, retryConfig)
+
+			// 判断是否需要重试
+			if attempt < retryConfig.MaxRetries && item.Retryable {
+				// 可以重试，等待后继续
+				delay := s.retrySvc.GetRetryDelay(attempt, retryConfig)
+				select {
+				case <-ctx.Done():
+					// 上下文被取消，返回错误
+					item.Status = writer.BatchItemStatusFailed
+					item.ErrorCode = "CANCELLED"
+					item.ErrorMsg = "操作被取消"
+					s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+					if batchOp.Atomic {
+						return fmt.Errorf("删除目标 %s 被取消: %w", item.TargetID, ctx.Err())
+					}
+					break // 跳出重试循环，处理下一项
+				case <-time.After(delay):
+					// 等待完成，继续下一次重试
+					continue
+				}
+			} else {
+				// 不可重试或已达最大重试次数，标记为失败
+				item.Status = writer.BatchItemStatusFailed
+				item.ErrorCode = "DELETE_FAILED"
+				item.ErrorMsg = err.Error()
+				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+
+				if batchOp.Atomic {
+					// 原子操作：任何失败都返回错误
+					return fmt.Errorf("删除目标 %s 失败 (尝试%d次): %w", item.TargetID, attempt+1, err)
+				}
+				break // 跳出重试循环，处理下一项
+			}
+		}
+
+		// 如果是原子操作且上一项失败，已经在上面的if中返回了
+		// 如果是非原子操作，继续处理下一项（无论成功或失败）
 	}
 
 	return nil
 }
 
-// executeInverseCommand 执行逆命令
-func (s *BatchOperationServiceImpl) executeInverseCommand(ctx context.Context, inverseCmd map[string]interface{}) error {
-	if inverseCmd == nil {
-		return nil
-	}
-
-	cmdType, _ := inverseCmd["type"].(string)
-	targetID, _ := inverseCmd["target_id"].(string)
-
-	switch cmdType {
-	case "restore":
-		// 恢复文档（清除DeletedAt）
-		// TODO: 实现恢复逻辑
-		_ = targetID
-		return nil
-	case "move":
-		// 移回原位置
-		// TODO: 实现移回逻辑
-		return nil
-	default:
-		return fmt.Errorf("unknown inverse command type: %s", cmdType)
-	}
+// executeMove 执行批量移动
+func (s *BatchOperationService) executeMove(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// TODO: 实现批量移动逻辑
+	// 这将在Task 2.1中实现
+	return fmt.Errorf("批量移动功能尚未实现")
 }
 
-// GetProgress 获取操作进度
-func (s *BatchOperationServiceImpl) GetProgress(ctx context.Context, batchID primitive.ObjectID) (*BatchOperationProgress, error) {
-	batchOp, err := s.batchOpRepo.GetByID(ctx, batchID)
-	if err != nil {
-		return nil, err
-	}
+// executeExport 执行批量导出
+func (s *BatchOperationService) executeExport(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// TODO: 实现批量导出逻辑
+	// 这将在Task 3.x中实现
+	return fmt.Errorf("批量导出功能尚未实现")
+}
 
-	// TODO: 查询items表统计进度
-	// 当前简化实现：根据状态判断
-	progress := &BatchOperationProgress{
-		BatchID:    batchOp.ID,
-		Status:     batchOp.Status,
-		TotalItems: len(batchOp.TargetIDs),
-		StartedAt:  batchOp.StartedAt,
-		FinishedAt: batchOp.FinishedAt,
-	}
+// executeCopy 执行批量复制
+func (s *BatchOperationService) executeCopy(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// TODO: 实现批量复制逻辑
+	// 这将在Task 2.3中实现
+	return fmt.Errorf("批量复制功能尚未实现")
+}
 
-	if batchOp.Status == writer.BatchOpStatusCompleted {
-		progress.CompletedItems = progress.TotalItems
-	} else if batchOp.Status == writer.BatchOpStatusRunning {
-		// TODO: 从items表查询实际进度
-		progress.CompletedItems = 0
-	} else if batchOp.Status == writer.BatchOpStatusFailed {
-		progress.FailedItems = progress.TotalItems
-	}
+// executeApplyTemplate 执行批量应用模板
+func (s *BatchOperationService) executeApplyTemplate(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// TODO: 实现批量应用模板逻辑
+	// 这将在Task 3.x中实现
+	return fmt.Errorf("批量应用模板功能尚未实现")
+}
 
-	return progress, nil
+// BaseService接口实现
+func (s *BatchOperationService) Initialize(ctx context.Context) error {
+	return nil
+}
+
+func (s *BatchOperationService) Health(ctx context.Context) error {
+	return s.batchOpRepo.Health(ctx)
+}
+
+func (s *BatchOperationService) Close(ctx context.Context) error {
+	return nil
+}
+
+func (s *BatchOperationService) GetServiceName() string {
+	return s.serviceName
+}
+
+func (s *BatchOperationService) GetVersion() string {
+	return s.version
+}
+
+// 请求和响应DTO
+
+// SubmitBatchOperationRequest 提交批量操作请求
+type SubmitBatchOperationRequest struct {
+	ProjectID       string                      `json:"projectId" validate:"required"`
+	Type            writer.BatchOperationType   `json:"type" validate:"required"`
+	TargetIDs       []string                    `json:"targetIds" validate:"required,min=1,max=1000"`
+	Payload         map[string]interface{}      `json:"payload,omitempty"`
+	Atomic          bool                        `json:"atomic"`
+	ConflictPolicy  writer.ConflictPolicy       `json:"conflictPolicy,omitempty"`
+	ClientRequestID string                      `json:"clientRequestId,omitempty"`
+	RetryConfig     *RetryConfig                `json:"retryConfig,omitempty"`
+}
+
+// ListBatchOperationsRequest 获取批量操作列表请求
+type ListBatchOperationsRequest struct {
+	ProjectID string                        `json:"projectId" validate:"required"`
+	Type      writer.BatchOperationType     `json:"type,omitempty"`
+	Status    writer.BatchOperationStatus   `json:"status,omitempty"`
+	Limit     int64                         `json:"limit,omitempty"`
+	Offset    int64                         `json:"offset,omitempty"`
+}
+
+// ListBatchOperationsResponse 获取批量操作列表响应
+type ListBatchOperationsResponse struct {
+	Operations []*writer.BatchOperation `json:"operations"`
+	Total      int                     `json:"total"`
 }

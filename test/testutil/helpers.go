@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"Qingyu_backend/models/writer"
 	"context"
 	"os"
 	"testing"
@@ -10,6 +9,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
+	"Qingyu_backend/models/writer"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"

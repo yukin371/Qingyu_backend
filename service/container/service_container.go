@@ -28,6 +28,9 @@ import (
 	// Messaging service
 	messagingSvc "Qingyu_backend/service/messaging"
 
+	// WebSocket Hub
+	websocketHub "Qingyu_backend/realtime/websocket"
+
 	// Notification service
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
@@ -88,6 +91,7 @@ type ServiceContainer struct {
 	collectionService     *socialService.CollectionService
 	followService         *socialService.FollowService
 	readingHistoryService *readingService.ReadingHistoryService
+	bookmarkService       readingService.BookmarkService
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
@@ -113,6 +117,9 @@ type ServiceContainer struct {
 
 	// 审核服务
 	auditService *auditSvc.ContentAuditService
+
+	// WebSocket Hub
+	messagingWSHub *websocketHub.MessagingWSHub
 
 	// 存储相关具体实现（用于API层）
 	storageServiceImpl *storage.StorageServiceImpl
@@ -280,6 +287,14 @@ func (c *ServiceContainer) GetReadingStatsService() (*readingStatsService.Readin
 	return c.readingStatsService, nil
 }
 
+// GetBookmarkService 获取书签服务
+func (c *ServiceContainer) GetBookmarkService() (readingService.BookmarkService, error) {
+	if c.bookmarkService == nil {
+		return nil, fmt.Errorf("BookmarkService未初始化")
+	}
+	return c.bookmarkService, nil
+}
+
 // GetQuotaService 获取配额服务
 func (c *ServiceContainer) GetQuotaService() (*aiService.QuotaService, error) {
 	if c.quotaService == nil {
@@ -392,6 +407,14 @@ func (c *ServiceContainer) GetTemplateService() (notificationService.TemplateSer
 		return nil, fmt.Errorf("TemplateService未初始化")
 	}
 	return c.templateService, nil
+}
+
+// GetMessagingWSHub 获取消息WebSocket Hub
+func (c *ServiceContainer) GetMessagingWSHub() (*websocketHub.MessagingWSHub, error) {
+	if c.messagingWSHub == nil {
+		return nil, fmt.Errorf("MessagingWSHub未初始化")
+	}
+	return c.messagingWSHub, nil
 }
 
 // GetMembershipService 获取会员服务
@@ -717,7 +740,16 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	)
 	c.services["ReadingHistoryService"] = c.readingHistoryService
 
-	// ============ 4.8 创建阅读统计服务 ============
+	// ============ 4.9 创建书签服务 ============
+	// 书签服务暂时不需要 ChapterService（当前未使用）
+	bookmarkRepo := c.repositoryFactory.CreateBookmarkRepository()
+	c.bookmarkService = readingService.NewBookmarkService(
+		bookmarkRepo,
+		nil, // ChapterService 暂时传入 nil，因为书签服务当前未使用它
+	)
+	// 注意：BookmarkService 不实现 BaseService 接口，不注册到 services map
+
+	// ============ 4.10 创建阅读统计服务 ============
 	chapterStatsRepo := c.repositoryFactory.CreateChapterStatsRepository()
 	readerBehaviorRepo := c.repositoryFactory.CreateReaderBehaviorRepository()
 	bookStatsRepo := c.repositoryFactory.CreateBookStatsRepository()
@@ -959,11 +991,20 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	pushDeviceRepo := mongoNotification.NewPushDeviceRepository(c.mongoDB)
 	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
 
+	// 初始化通知WebSocket Hub（传入JWT服务）
+	notificationWSHub := websocketHub.NewWSHub(jwtService)
+
+	// TODO: 初始化EmailService
+	// 暂时传入nil，后续需要完善
+	var emailService notificationService.EmailService
+
 	notificationSvc := notificationService.NewNotificationService(
 		notificationRepo,
 		preferenceRepo,
 		pushDeviceRepo,
 		templateRepo,
+		emailService,
+		notificationWSHub,
 	)
 	c.notificationService = notificationSvc
 
@@ -981,6 +1022,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 	}
 	fmt.Println("  ✓ NotificationService初始化完成")
+
+	// 5.9.1 初始化消息WebSocket Hub（传入JWT服务）
+	c.messagingWSHub = websocketHub.NewMessagingWSHub(jwtService)
+	fmt.Println("  ✓ MessagingWSHub初始化完成")
 
 	// 5.10 Finance Services
 	membershipRepo := c.repositoryFactory.CreateMembershipRepository()

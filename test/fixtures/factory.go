@@ -1,12 +1,12 @@
 package fixtures
 
 import (
-	"Qingyu_backend/models/writer"
 	"fmt"
 	"time"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
+	"Qingyu_backend/models/writer"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

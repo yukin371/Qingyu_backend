@@ -382,12 +382,15 @@ func TestAnnotationsAPI_GetAnnotationsByChapter_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderServiceForAnnotations)
 	userID := primitive.NewObjectID().Hex()
+	userIDObj := primitive.NewObjectID()
 	bookID := primitive.NewObjectID().Hex()
+	bookIDObj := primitive.NewObjectID()
 	chapterID := primitive.NewObjectID().Hex()
+	chapterIDObj := primitive.NewObjectID()
 	router := setupAnnotationsTestRouter(mockService, userID)
 
 	expectedAnnotations := []*readerModels.Annotation{
-		{ID: primitive.NewObjectID().Hex(), UserID: userID, BookID: bookID, ChapterID: chapterID},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, BookID: bookIDObj, ChapterID: chapterIDObj},
 	}
 
 	mockService.On("GetAnnotationsByChapter", mock.Anything, userID, bookID, chapterID).
@@ -519,7 +522,7 @@ func TestAnnotationsAPI_GetLatestBookmark_Success(t *testing.T) {
 	bookID := primitive.NewObjectID().Hex()
 	router := setupAnnotationsTestRouter(mockService, userID)
 
-	expectedBookmark := &readerModels.Annotation{ID: primitive.NewObjectID().Hex()}
+	expectedBookmark := &readerModels.Annotation{ID: primitive.NewObjectID()}
 
 	mockService.On("GetLatestBookmark", mock.Anything, userID, bookID).Return(expectedBookmark, nil)
 

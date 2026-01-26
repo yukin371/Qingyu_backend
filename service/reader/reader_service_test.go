@@ -760,8 +760,8 @@ func TestReaderService_GetReadingProgress_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	progressID := primitive.NewObjectID()
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
@@ -791,8 +791,8 @@ func TestReaderService_GetReadingProgress_NotFound(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
 		Return(nil, nil)
@@ -803,9 +803,11 @@ func TestReaderService_GetReadingProgress_NotFound(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, progress)
-	assert.Equal(t, userID, progress.UserID)
-	assert.Equal(t, bookID, progress.BookID)
-	assert.Equal(t, 0.0, progress.Progress)
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
+	assert.Equal(t, userIDObj, progress.UserID)
+	assert.Equal(t, bookIDObj, progress.BookID)
+	assert.Equal(t, 0.0, float64(progress.Progress))
 	mockProgressRepo.AssertExpectations(t)
 }
 
@@ -814,8 +816,8 @@ func TestReaderService_GetReadingProgress_RepositoryError(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
 		Return(nil, errors.New("数据库连接失败"))
@@ -835,8 +837,8 @@ func TestReaderService_SaveReadingProgress_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	chapterID := "chapter123"
 	progress := 0.5
 
@@ -885,8 +887,8 @@ func TestReaderService_SaveReadingProgress_RepositoryError(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	chapterID := "chapter123"
 	progress := 0.5
 
@@ -907,8 +909,8 @@ func TestReaderService_UpdateReadingTime_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	duration := int64(3600) // 1小时
 
 	mockProgressRepo.On("UpdateReadingTime", ctx, userID, bookID, duration).
@@ -1116,12 +1118,14 @@ func TestReaderService_DeleteReadingProgress_Success(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, mockCacheService := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	existingProgress := &reader.ReadingProgress{
-		UserID: userID,
-		BookID: bookID,
+		UserID: userIDObj,
+		BookID: bookIDObj,
 	}
 	existingProgress.ID = primitive.NewObjectID()
 
@@ -1175,8 +1179,8 @@ func TestReaderService_DeleteReadingProgress_NotFound(t *testing.T) {
 	// Arrange
 	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
 		Return(nil, nil)
@@ -1200,9 +1204,9 @@ func TestReaderService_CreateAnnotation_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
 
-	userObjectID, _ := primitive.ObjectIDFromHex("user123")
-	bookObjectID, _ := primitive.ObjectIDFromHex("book123")
-	chapterObjectID, _ := primitive.ObjectIDFromHex("chapter123")
+	userObjectID := primitive.NewObjectID()
+	bookObjectID := primitive.NewObjectID()
+	chapterObjectID := primitive.NewObjectID()
 
 	annotation := &reader.Annotation{
 		UserID:    userObjectID,
@@ -1238,9 +1242,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空用户ID",
 			annotation: &reader.Annotation{
-				UserID:    "",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NilObjectID,
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "note",
 			},
 			wantErrSub: "用户ID不能为空",
@@ -1248,9 +1252,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空书籍ID",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NilObjectID,
+				ChapterID: primitive.NewObjectID(),
 				Type:      "note",
 			},
 			wantErrSub: "书籍ID不能为空",
@@ -1258,9 +1262,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空章节ID",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NilObjectID,
 				Type:      "note",
 			},
 			wantErrSub: "章节ID不能为空",
@@ -1268,9 +1272,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "空类型",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "",
 			},
 			wantErrSub: "标注类型不能为空",
@@ -1278,9 +1282,9 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 		{
 			name: "无效类型",
 			annotation: &reader.Annotation{
-				UserID:    "user123",
-				BookID:    "book123",
-				ChapterID: "chapter123",
+				UserID:    primitive.NewObjectID(),
+				BookID:    primitive.NewObjectID(),
+				ChapterID: primitive.NewObjectID(),
 				Type:      "invalid",
 			},
 			wantErrSub: "标注类型必须是bookmark(书签)、highlight(高亮)或note(笔记)",
@@ -1305,13 +1309,15 @@ func TestReaderService_GetAnnotationsByChapter_Success(t *testing.T) {
 	// Arrange
 	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	chapterID := "chapter123"
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	expectedAnnotations := []*reader.Annotation{
-		{ID: "annotation1", UserID: userID, BookID: bookID, ChapterID: chapterID},
-		{ID: "annotation2", UserID: userID, BookID: bookID, ChapterID: chapterID},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, BookID: bookIDObj, ChapterID: primitive.NewObjectID()},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, BookID: bookIDObj, ChapterID: primitive.NewObjectID()},
 	}
 
 	mockAnnotationRepo.On("GetByUserAndChapter", ctx, userID, bookID, chapterID).
@@ -1332,10 +1338,11 @@ func TestReaderService_SearchNotes_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
 	userID := "user123"
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 	keyword := "重要"
 
 	expectedNotes := []*reader.Annotation{
-		{ID: "note1", UserID: userID, Type: "note", Note: "重要内容"},
+		{ID: primitive.NewObjectID(), UserID: userIDObj, Type: "note", Note: "重要内容"},
 	}
 
 	mockAnnotationRepo.On("SearchNotes", ctx, userID, keyword).
@@ -1371,15 +1378,17 @@ func TestReaderService_GetLatestBookmark_Success(t *testing.T) {
 	// Arrange
 	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
+	userIDObj, _ := primitive.ObjectIDFromHex(userID)
+	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
 
 	expectedBookmark := &reader.Annotation{
-		ID:        "bookmark1",
-		UserID:    userID,
-		BookID:    bookID,
+		ID:        primitive.NewObjectID(),
+		UserID:    userIDObj,
+		BookID:    bookIDObj,
 		Type:      "bookmark",
-		ChapterID: "chapter123",
+		ChapterID: primitive.NewObjectID(),
 	}
 
 	mockAnnotationRepo.On("GetLatestBookmark", ctx, userID, bookID).
@@ -1399,14 +1408,14 @@ func TestReaderService_GetAnnotationStats_Success(t *testing.T) {
 	// Arrange
 	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
 	ctx := context.Background()
-	userID := "user123"
-	bookID := "book123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	expectedAnnotations := []*reader.Annotation{
-		{ID: "annotation1", Type: "bookmark"},
-		{ID: "annotation2", Type: "highlight"},
-		{ID: "annotation3", Type: "note"},
-		{ID: "annotation4", Type: "highlight"},
+		{ID: primitive.NewObjectID(), Type: "bookmark"},
+		{ID: primitive.NewObjectID(), Type: "highlight"},
+		{ID: primitive.NewObjectID(), Type: "note"},
+		{ID: primitive.NewObjectID(), Type: "highlight"},
 	}
 
 	mockAnnotationRepo.On("GetByUserAndBook", ctx, userID, bookID).
@@ -1634,9 +1643,14 @@ func TestReaderService_BatchCreateAnnotations_Success(t *testing.T) {
 	service, _, mockAnnotationRepo, _, _, mockEventBus, _ := setupReaderService()
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID1 := primitive.NewObjectID()
+	chapterID2 := primitive.NewObjectID()
+
 	annotations := []*reader.Annotation{
-		{UserID: "user123", BookID: "book123", ChapterID: "chapter123", Type: "note"},
-		{UserID: "user123", BookID: "book123", ChapterID: "chapter124", Type: "bookmark"},
+		{UserID: userID, BookID: bookID, ChapterID: chapterID1, Type: "note"},
+		{UserID: userID, BookID: bookID, ChapterID: chapterID2, Type: "bookmark"},
 	}
 
 	mockAnnotationRepo.On("Create", ctx, mock.AnythingOfType("*reader.Annotation")).
@@ -1659,11 +1673,14 @@ func TestReaderService_BatchCreateAnnotations_TooMany(t *testing.T) {
 	ctx := context.Background()
 
 	annotations := make([]*reader.Annotation, 51)
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
 	for i := range annotations {
 		annotations[i] = &reader.Annotation{
-			UserID:    "user123",
-			BookID:    "book123",
-			ChapterID: "chapter123",
+			UserID:    userID,
+			BookID:    bookID,
+			ChapterID: chapterID,
 			Type:      "note",
 		}
 	}

@@ -2,19 +2,20 @@ package writer
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/pkg/lock"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/interfaces"
-	searchService "Qingyu_backend/service/shared/search"
+	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
-func RegisterWriterRoutes(r *gin.RouterGroup) {
+func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
 	// 从服务容器获取依赖
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
@@ -49,10 +50,6 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 
 	// 创建VersionService（直接使用MongoDB数据库）
 	versionSvc := projectService.NewVersionService(mongoDB)
-
-	// 创建SearchService（用于文档搜索）
-	bookRepo := repositoryFactory.CreateBookRepository()
-	searchSvc := searchService.NewSearchService(bookRepo, documentRepo)
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口
@@ -90,6 +87,15 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 	// 创建批量操作服务
 	batchOpSvc = documentService.NewBatchOperationService(batchOpRepo, opLogRepo, documentRepo)
 
+	// 创建TemplateService（模板服务）
+	var templateSvc *documentService.TemplateService
+	templateRepo := repositoryFactory.CreateTemplateRepository()
+	if templateRepo != nil {
+		// 创建一个简单的logger
+		logger, _ := zap.NewDevelopment()
+		templateSvc = documentService.NewTemplateService(templateRepo, logger)
+	}
+
 	// 调用InitWriterRouter初始化所有写作路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, batchOpSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, batchOpSvc, templateSvc)
 }

@@ -1,8 +1,10 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
@@ -13,6 +15,7 @@ import (
 	readerRouter "Qingyu_backend/router/reader"
 	readingstatsRouter "Qingyu_backend/router/reading-stats"
 	recommendationRouter "Qingyu_backend/router/recommendation"
+	searchRouter "Qingyu_backend/api/v1/search"
 	sharedRouter "Qingyu_backend/router/shared"
 	socialRouter "Qingyu_backend/router/social"
 	systemRouter "Qingyu_backend/router/system"
@@ -21,10 +24,15 @@ import (
 
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service"
+	"Qingyu_backend/service/container"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
 	sharedService "Qingyu_backend/service/shared"
+	searchService "Qingyu_backend/service/search"
+	searchengine "Qingyu_backend/service/search/engine"
+	searchprovider "Qingyu_backend/service/search/provider"
 	statsService "Qingyu_backend/service/shared/stats"
 
 	financeApi "Qingyu_backend/api/v1/finance"
@@ -34,10 +42,14 @@ import (
 	socialApi "Qingyu_backend/api/v1/social"
 	syncService "Qingyu_backend/pkg/sync"
 	readerservice "Qingyu_backend/service/reader"
+	messagingService "Qingyu_backend/service/messaging"
+	modelsMessaging "Qingyu_backend/models/messaging"
 
 	"github.com/gin-gonic/gin"
+	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
 )
 
 // RegisterRoutes 注册所有路由
@@ -152,6 +164,10 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - ⚠️  旧路由 /api/v1/shared/wallet/* 继续保留以向后兼容")
 	}
 
+	// ============ 初始化搜索服务（需要在书店路由之前）============
+	// 创建 MongoEngine、BookProvider，并注册到 SearchService
+	searchSvc := initSearchService(serviceContainer, logger)
+
 	// ============ 注册书店路由 ============
 	bookstoreSvc, err := serviceContainer.GetBookstoreService()
 	if err != nil {
@@ -176,7 +192,8 @@ func RegisterRoutes(r *gin.Engine) {
 		//     chapterPurchaseSvc = svc
 		// }
 
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc)
+		// 注册书店路由，传入搜索服务
+		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")
@@ -236,11 +253,18 @@ func RegisterRoutes(r *gin.Engine) {
 			readingHistorySvc = nil
 		}
 
+		// 获取书签服务（如果可用）
+		var bookmarkSvc readerservice.BookmarkService
+		bookmarkSvc, bookmarkErr := serviceContainer.GetBookmarkService()
+		if bookmarkErr != nil {
+			logger.Warn("书签服务未配置", zap.Error(bookmarkErr))
+			bookmarkSvc = nil
+		} else {
+			logger.Info("✓ 书签服务已配置")
+		}
+
 		// 进度同步服务（TODO: 需要添加到服务容器）
 		var progressSyncSvc *syncService.ProgressSyncService = nil
-
-		// 书签服务（TODO: 需要添加到服务容器）
-		var bookmarkSvc readerservice.BookmarkService = nil
 
 		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc)
 
@@ -323,12 +347,42 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 新增社交 API（待实现）
 	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
+	var messageAPIV2 *socialApi.MessageAPIV2
 	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
 	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
 
+	// 初始化MessageAPIV2（消息服务V2）
+	messagingWSHub, wsHubErr := serviceContainer.GetMessagingWSHub()
+
+	if wsHubErr == nil && messagingWSHub != nil {
+		// 获取MongoDB数据库
+		mongoDB := serviceContainer.GetMongoDB()
+		if mongoDB != nil {
+			// 创建消息服务和会话服务（使用models/messaging中的Repository）
+			messageRepo := modelsMessaging.NewMongoMessageRepository(mongoDB)
+			conversationRepo := modelsMessaging.NewMongoConversationRepository(mongoDB)
+
+			// 先创建ConversationService
+			conversationSvc := messagingService.NewConversationService(conversationRepo, messageRepo)
+			// 再创建MessageService（需要ConversationService）
+			messageSvc := messagingService.NewMessageService(messageRepo, conversationSvc)
+
+			messageAPIV2 = socialApi.NewMessageAPIV2(messageSvc, conversationSvc, messagingWSHub)
+			logger.Info("✓ MessageAPIV2初始化完成")
+		}
+	} else {
+		logger.Warn("MessagingWSHub未配置", zap.Error(wsHubErr))
+	}
+
+	// 注册WebSocket路由
+	if messagingWSHub != nil {
+		r.GET("/ws/messages", messagingWSHub.HandleMessagingWebSocket)
+		logger.Info("✓ WebSocket路由已注册: /ws/messages")
+	}
+
 	// 注册统一社交路由
 	if commentAPI != nil || likeAPI != nil || collectionAPI != nil { //nolint:nilness // 待实现服务已排除
-		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, reviewAPI, booklistAPI)
+		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
 		if commentAPI != nil {
@@ -401,7 +455,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// ============ 注册写作端路由 ============
-	writerRouter.RegisterWriterRoutes(v1)
+	writerRouter.RegisterWriterRoutes(v1, searchSvc)
 	logger.Info("✓ 写作端路由已注册到: /api/v1/writer/")
 	logger.Info("  - /api/v1/writer/projects/* (项目管理)")
 	logger.Info("  - /api/v1/writer/documents/* (文档管理)")
@@ -443,6 +497,18 @@ func RegisterRoutes(r *gin.Engine) {
 		if phase3Client != nil {
 			logger.Info("  - /api/v1/ai/creative/* (Phase3创作工作流)")
 		}
+	}
+
+	// ============ 注册统一搜索路由 ============
+	if searchSvc != nil {
+		// 注册搜索路由
+		searchRouter.RegisterSearchRoutes(v1, searchSvc)
+		logger.Info("✓ 统一搜索路由已注册到: /api/v1/search/")
+		logger.Info("  - /api/v1/search/search (统一搜索)")
+		logger.Info("  - /api/v1/search/batch (批量搜索)")
+		logger.Info("  - /api/v1/search/health (健康检查)")
+	} else {
+		logger.Warn("⚠ 搜索服务初始化失败，搜索路由未注册")
 	}
 
 	// ============ 注册管理员路由 ============
@@ -525,21 +591,22 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 获取统计服务（用于用户统计功能）
 	var statsSvc statsService.PlatformStatsService
+	var userRepoInstance userRepo.UserRepository // 用于用户路由
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
-		userRepo := repositoryFactory.CreateUserRepository()
+		userRepoInstance = repositoryFactory.CreateUserRepository()
 		bookRepo := repositoryFactory.CreateBookRepository()
 		projectRepo := repositoryFactory.CreateProjectRepository()
 		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
 
-		if userRepo != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
-			statsSvc = statsService.NewPlatformStatsService(userRepo, bookRepo, projectRepo, chapterRepo)
+		if userRepoInstance != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
+			statsSvc = statsService.NewPlatformStatsService(userRepoInstance, bookRepo, projectRepo, chapterRepo)
 		}
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, bookstoreSvcInterface, statsSvc)
+	userRouter.RegisterUserRoutes(v1, userSvc, userRepoInstance, bookstoreSvcInterface, statsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")
@@ -572,6 +639,230 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("\n========================================")
 	logger.Info("✓ 所有路由注册完成!")
 	logger.Info("==========================================")
+}
+
+// initSearchService 初始化搜索服务
+// 创建 MongoEngine、BookProvider，并注册到 SearchService
+// 如果启用 Elasticsearch，则同时创建 ES 引擎并配置灰度
+func initSearchService(container *container.ServiceContainer, logger *zap.Logger) *searchService.SearchService {
+	// 获取 MongoDB 客户端和数据库
+	mongoClient := container.GetMongoClient()
+	mongoDB := container.GetMongoDB()
+
+	if mongoClient == nil || mongoDB == nil {
+		logger.Warn("MongoDB client 或 database 未初始化，无法创建搜索服务")
+		return nil
+	}
+
+	// 创建 MongoEngine
+	mongoEngine, err := searchengine.NewMongoEngine(mongoClient, mongoDB)
+	if err != nil {
+		logger.Error("创建 MongoEngine 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ MongoEngine 创建成功")
+
+	// 创建 BookProvider 配置
+	bookProviderConfig := &searchprovider.BookProviderConfig{
+		AllowedStatuses: []string{"ongoing", "completed"},
+		AllowedPrivacy:  []bool{false}, // 只允许公开书籍
+	}
+
+	// 创建 BookProvider
+	bookProvider, err := searchprovider.NewBookProvider(mongoEngine, bookProviderConfig)
+	if err != nil {
+		logger.Error("创建 BookProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ BookProvider 创建成功",
+		zap.Strings("allowed_statuses", bookProviderConfig.AllowedStatuses),
+	)
+
+	// 创建 UserProvider
+	userProviderConfig := &searchprovider.UserProviderConfig{}
+	userProvider, err := searchprovider.NewUserProvider(mongoEngine, userProviderConfig)
+	if err != nil {
+		logger.Error("创建 UserProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ UserProvider 创建成功")
+
+	// 创建 ProjectProvider
+	projectProviderConfig := &searchprovider.ProjectProviderConfig{}
+	projectProvider, err := searchprovider.NewProjectProvider(mongoEngine, projectProviderConfig)
+	if err != nil {
+		logger.Error("创建 ProjectProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ ProjectProvider 创建成功")
+
+	// 创建 DocumentProvider
+	documentProviderConfig := &searchprovider.DocumentProviderConfig{}
+	documentProvider, err := searchprovider.NewDocumentProvider(mongoEngine, documentProviderConfig)
+	if err != nil {
+		logger.Error("创建 DocumentProvider 失败", zap.Error(err))
+		return nil
+	}
+	logger.Info("✓ DocumentProvider 创建成功")
+
+	// 创建 SearchService 配置
+	searchConfig := &searchService.Config{
+		EnableCache:           true,
+		DefaultCacheTTL:       300, // 5分钟
+		MaxConcurrentSearches: 10,
+	}
+
+	// 尝试初始化 Elasticsearch，获取灰度配置
+	var grayscaleConfig *searchService.GrayScaleConfig
+	esConfig, esEngine := initElasticsearch(logger)
+	if esConfig != nil {
+		grayscaleConfig = &esConfig.ES.GrayScale
+	}
+
+	// 创建灰度决策器
+	var grayscaleDecision searchService.GrayScaleDecision
+	if grayscaleConfig != nil && grayscaleConfig.Enabled {
+		grayscaleDecision = searchService.NewGrayScaleDecision(grayscaleConfig, logger)
+		logger.Info("✓ 灰度决策器已创建",
+			zap.Int("percent", grayscaleConfig.Percent),
+		)
+	} else {
+		logger.Info("⚠ 灰度未启用，创建默认灰度决策器")
+		grayscaleDecision = searchService.NewGrayScaleDecision(nil, logger)
+	}
+
+	// 创建 SearchService（传入灰度决策器）
+	searchSvc := searchService.NewSearchService(log.Default(), searchConfig, grayscaleDecision)
+	logger.Info("✓ SearchService 创建成功（已集成灰度决策器）")
+
+	// 设置 MongoDB 引擎（作为 fallback）
+	searchSvc.SetMongoEngine(mongoEngine)
+	logger.Info("✓ MongoDB 引擎已设置到 SearchService")
+
+	// 注册 BookProvider 到 SearchService
+	searchSvc.RegisterProvider(bookProvider)
+	logger.Info("✓ BookProvider 已注册到 SearchService")
+
+	// 注册 UserProvider 到 SearchService
+	searchSvc.RegisterProvider(userProvider)
+	logger.Info("✓ UserProvider 已注册到 SearchService")
+
+	// 注册 ProjectProvider 到 SearchService
+	searchSvc.RegisterProvider(projectProvider)
+	logger.Info("✓ ProjectProvider 已注册到 SearchService")
+
+	// 注册 DocumentProvider 到 SearchService
+	searchSvc.RegisterProvider(documentProvider)
+	logger.Info("✓ DocumentProvider 已注册到 SearchService")
+
+	// 设置 ES 配置和引擎
+	if esEngine != nil {
+		searchSvc.SetESConfig(esConfig)
+		searchSvc.SetESEngine(esEngine)
+		logger.Info("✓ Elasticsearch 已集成到 SearchService")
+
+		// 记录灰度配置
+		if esConfig.ES.GrayScale.Enabled {
+			logger.Info("✓ ES 灰度模式已启用",
+				zap.Int("grayscale_percent", esConfig.ES.GrayScale.Percent),
+			)
+		} else {
+			logger.Info("✓ ES 全量模式已启用")
+		}
+	} else {
+		logger.Info("⚠ Elasticsearch 未配置或初始化失败，使用 MongoDB 搜索")
+	}
+
+	return searchSvc
+}
+
+// initElasticsearch 初始化 Elasticsearch 客户端和引擎
+func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searchengine.Engine) {
+	// 从环境变量读取 ES 配置
+	esURL := os.Getenv("ELASTICSEARCH_URL")
+	if esURL == "" {
+		esURL = "http://localhost:9200" // 默认地址
+	}
+
+	esEnabled := os.Getenv("ELASTICSEARCH_ENABLED")
+	if esEnabled == "" || esEnabled == "false" {
+		logger.Info("Elasticsearch 未启用")
+		return nil, nil
+	}
+
+	esIndexPrefix := os.Getenv("ELASTICSEARCH_INDEX_PREFIX")
+	if esIndexPrefix == "" {
+		esIndexPrefix = "qingyu" // 默认前缀
+	}
+
+	// 灰度配置
+	grayscaleEnabled := os.Getenv("ELASTICSEARCH_GRAYSCALE_ENABLED")
+	grayscalePercent := 0
+	if grayscaleEnabled == "true" {
+		percentStr := os.Getenv("ELASTICSEARCH_GRAYSCALE_PERCENT")
+		if percentStr != "" {
+			fmt.Sscanf(percentStr, "%d", &grayscalePercent)
+		}
+		if grayscalePercent == 0 {
+			grayscalePercent = 10 // 默认 10%
+		}
+		logger.Info("Elasticsearch 灰度模式配置",
+			zap.Int("percent", grayscalePercent),
+		)
+	}
+
+	// 创建 ES 客户端
+	esClient, err := initElasticsearchClient(esURL)
+	if err != nil {
+		logger.Error("创建 Elasticsearch 客户端失败", zap.Error(err))
+		return nil, nil
+	}
+	logger.Info("✓ Elasticsearch 客户端创建成功", zap.String("url", esURL))
+
+	// 创建 ElasticsearchEngine
+	esEngine, err := searchengine.NewElasticsearchEngine(esClient)
+	if err != nil {
+		logger.Error("创建 ElasticsearchEngine 失败", zap.Error(err))
+		return nil, nil
+	}
+
+	// 检查 ES 健康状态
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := esEngine.Health(ctx); err != nil {
+		logger.Warn("Elasticsearch 健康检查失败，将使用 MongoDB fallback", zap.Error(err))
+		return nil, nil
+	}
+	logger.Info("✓ Elasticsearch 健康检查通过")
+
+	// 构建 SearchConfig
+	searchConfig := &searchService.SearchConfig{
+		ES: searchService.ESConfig{
+			Enabled:    true,
+			URL:        esURL,
+			IndexPrefix: esIndexPrefix,
+			GrayScale: searchService.GrayScaleConfig{
+				Enabled: grayscaleEnabled == "true",
+				Percent: grayscalePercent,
+			},
+		},
+	}
+
+	return searchConfig, esEngine
+}
+
+// initElasticsearchClient 初始化 Elasticsearch 客户端
+func initElasticsearchClient(esURL string) (*elastic.Client, error) {
+	client, err := elastic.NewClient(
+		elastic.SetURL(esURL),
+		elastic.SetSniff(false),
+		elastic.SetHealthcheckInterval(10*time.Second),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create elasticsearch client: %w", err)
+	}
+
+	return client, nil
 }
 
 // initRouterLogger 初始化路由日志器

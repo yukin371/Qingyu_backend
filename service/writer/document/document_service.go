@@ -19,6 +19,7 @@ type DocumentService struct {
 	documentContentRepo writerRepo.DocumentContentRepository
 	projectRepo         writerRepo.ProjectRepository
 	eventBus            serviceBase.EventBus
+	duplicateService    *DuplicateService
 	serviceName         string
 	version             string
 }
@@ -30,11 +31,14 @@ func NewDocumentService(
 	projectRepo writerRepo.ProjectRepository,
 	eventBus serviceBase.EventBus,
 ) *DocumentService {
+	duplicateSvc := NewDuplicateService(documentRepo, documentContentRepo)
+
 	return &DocumentService{
 		documentRepo:        documentRepo,
 		documentContentRepo: documentContentRepo,
 		projectRepo:         projectRepo,
 		eventBus:            eventBus,
+		duplicateService:    duplicateSvc,
 		serviceName:         "DocumentService",
 		version:             "1.0.0",
 	}
@@ -1001,4 +1005,71 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 	}
 
 	return nil
+}
+
+// DuplicateDocument 复制文档
+func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID string, req *DuplicateRequest) (*DuplicateResponse, error) {
+	// 1. 参数验证
+	if documentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	if req == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "请求参数不能为空", "", nil)
+	}
+
+	// 2. 获取原文档并验证权限
+	sourceDoc, err := s.documentRepo.GetByID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档失败", "", err)
+	}
+
+	if sourceDoc == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
+	}
+
+	// 3. 验证项目权限
+	project, err := s.projectRepo.GetByID(ctx, sourceDoc.ProjectID.Hex())
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	userID, ok := ctx.Value("userID").(string)
+	if !ok || userID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
+	}
+
+	if !project.CanEdit(userID) {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该项目", "", nil)
+	}
+
+	// 4. 调用DuplicateService执行复制
+	newDoc, err := s.duplicateService.Duplicate(ctx, documentID, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. 更新项目统计（异步）
+	go s.updateProjectStatistics(context.Background(), sourceDoc.ProjectID.Hex())
+
+	// 6. 发布事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: "document.duplicated",
+			EventData: map[string]interface{}{
+				"source_document_id": documentID,
+				"new_document_id":    newDoc.ID.Hex(),
+				"project_id":         newDoc.ProjectID.Hex(),
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	// 7. 转换为响应
+	return s.duplicateService.ToResponse(newDoc), nil
 }

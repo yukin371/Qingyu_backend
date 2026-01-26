@@ -9,8 +9,8 @@ import (
 // AdminPermissionMiddleware 管理员权限验证中间件
 func AdminPermissionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从Context中获取用户角色（由JWTAuth中间件设置）
-		role, exists := c.Get("user_role")
+		// 从Context中获取用户角色数组（由JWTAuth中间件设置）
+		roles, exists := c.Get("userRoles")
 		if !exists {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    403,
@@ -20,8 +20,27 @@ func AdminPermissionMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// 转换为字符串切片
+		userRoles, ok := roles.([]string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    403,
+				"message": "权限不足：角色格式错误",
+			})
+			c.Abort()
+			return
+		}
+
 		// 检查是否为管理员
-		if role != "admin" && role != "super_admin" {
+		hasAdminRole := false
+		for _, role := range userRoles {
+			if role == "admin" || role == "super_admin" {
+				hasAdminRole = true
+				break
+			}
+		}
+
+		if !hasAdminRole {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    403,
 				"message": "权限不足：需要管理员权限",
@@ -37,7 +56,8 @@ func AdminPermissionMiddleware() gin.HandlerFunc {
 // SuperAdminPermissionMiddleware 超级管理员权限验证中间件
 func SuperAdminPermissionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, exists := c.Get("user_role")
+		// 从Context中获取用户角色数组（由JWTAuth中间件设置）
+		roles, exists := c.Get("userRoles")
 		if !exists {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    403,
@@ -47,8 +67,27 @@ func SuperAdminPermissionMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// 转换为字符串切片
+		userRoles, ok := roles.([]string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    403,
+				"message": "权限不足：角色格式错误",
+			})
+			c.Abort()
+			return
+		}
+
 		// 只允许超级管理员
-		if role != "super_admin" {
+		hasSuperAdminRole := false
+		for _, role := range userRoles {
+			if role == "super_admin" {
+				hasSuperAdminRole = true
+				break
+			}
+		}
+
+		if !hasSuperAdminRole {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    403,
 				"message": "权限不足：需要超级管理员权限",
