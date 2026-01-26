@@ -277,7 +277,7 @@ func TestProfileHandler_GetProfile(t *testing.T) {
 
 		mockService.On("GetUser", mock.Anything, mock.AnythingOfType("*user.GetUserRequest")).Return(
 			&userServiceInterface.GetUserResponse{User: expectedUser}, nil,
-		)
+		).Once()
 
 		req, _ := http.NewRequest("GET", "/profile", nil)
 		w := httptest.NewRecorder()
@@ -291,7 +291,7 @@ func TestProfileHandler_GetProfile(t *testing.T) {
 	t.Run("UserNotFound", func(t *testing.T) {
 		mockService.On("GetUser", mock.Anything, mock.AnythingOfType("*user.GetUserRequest")).Return(
 			nil, serviceInterfaces.NewServiceError("UserService", serviceInterfaces.ErrorTypeNotFound, "用户不存在", nil),
-		)
+		).Once()
 
 		req, _ := http.NewRequest("GET", "/profile", nil)
 		w := httptest.NewRecorder()
@@ -362,7 +362,7 @@ func TestProfileHandler_UpdatePassword(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockService.On("UpdatePassword", mock.Anything, mock.AnythingOfType("*user.UpdatePasswordRequest")).Return(
 			&userServiceInterface.UpdatePasswordResponse{Updated: true}, nil,
-		)
+		).Once()
 
 		body := map[string]string{
 			"old_password": "OldPass123",
@@ -383,7 +383,7 @@ func TestProfileHandler_UpdatePassword(t *testing.T) {
 	t.Run("OldPasswordMismatch", func(t *testing.T) {
 		mockService.On("UpdatePassword", mock.Anything, mock.AnythingOfType("*user.UpdatePasswordRequest")).Return(
 			nil, serviceInterfaces.NewServiceError("UserService", serviceInterfaces.ErrorTypeUnauthorized, "旧密码错误", nil),
-		)
+		).Once()
 
 		body := map[string]string{
 			"old_password": "WrongOldPass",
