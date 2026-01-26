@@ -159,7 +159,7 @@ func (r *BatchOperationRepositoryImpl) ListByProject(ctx context.Context, projec
 func (r *BatchOperationRepositoryImpl) GetRunningCount(ctx context.Context, projectID primitive.ObjectID) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{
 		"project_id": projectID,
-		"status":     writer.BatchOpStatusRunning,
+			"status":     writer.BatchOpStatusProcessing,
 	})
 	return count, err
 }

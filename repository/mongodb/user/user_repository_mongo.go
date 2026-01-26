@@ -624,6 +624,32 @@ func (r *MongoUserRepository) UpdatePassword(ctx context.Context, id string, has
 	return nil
 }
 
+// UpdatePasswordByEmail 根据邮箱更新密码
+func (r *MongoUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	now := time.Now()
+	filter := bson.M{"email": email, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{"$set": bson.M{"password": hashedPassword, "updated_at": now}}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"根据邮箱更新密码失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			fmt.Sprintf("邮箱 %s 不存在", email),
+			nil,
+		)
+	}
+
+	return nil
+}
+
 // GetActiveUsers 获取活跃用户列表
 func (r *MongoUserRepository) GetActiveUsers(ctx context.Context, limit int64) ([]*usersModel.User, error) {
 	// 构建查询条件：未删除且状态为活跃

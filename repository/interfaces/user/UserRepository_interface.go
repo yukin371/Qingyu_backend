@@ -94,6 +94,7 @@ type UserRepository interface {
 	// 用户状态管理
 	UpdateLastLogin(ctx context.Context, id string, ip string) error
 	UpdatePassword(ctx context.Context, id string, hashedPassword string) error
+	UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error
 	UpdateStatus(ctx context.Context, id string, status usersModel.UserStatus) error
 	GetActiveUsers(ctx context.Context, limit int64) ([]*usersModel.User, error)
 	GetUsersByRole(ctx context.Context, role string, limit int64) ([]*usersModel.User, error)

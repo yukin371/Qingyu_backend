@@ -51,6 +51,10 @@ type BookstoreService interface {
 	// 统计和计数
 	GetBookStats(ctx context.Context) (*bookstore2.BookStats, error)
 	IncrementBookView(ctx context.Context, bookID string) error
+
+	// 筛选相关方法
+	GetYears(ctx context.Context) ([]int, error)
+	GetTags(ctx context.Context, categoryID *string) ([]string, error)
 }
 
 // BookstoreServiceImpl 书城服务实现
@@ -684,4 +688,22 @@ func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType b
 // boolPtr 返回bool值的指针
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// GetYears 获取所有书籍的发布年份列表
+func (s *BookstoreServiceImpl) GetYears(ctx context.Context) ([]int, error) {
+	years, err := s.bookRepo.GetYears(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get years: %w", err)
+	}
+	return years, nil
+}
+
+// GetTags 获取所有标签列表
+func (s *BookstoreServiceImpl) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	tags, err := s.bookRepo.GetTags(ctx, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tags: %w", err)
+	}
+	return tags, nil
 }

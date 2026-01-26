@@ -16,10 +16,11 @@ import (
 
 // SearchService 统一搜索服务
 type SearchService struct {
-	providers map[search.SearchType]provider.Provider
-	cache     cache.Cache
-	logger    *log.Logger
-	config    *Config
+	providers          map[search.SearchType]provider.Provider
+	cache              cache.Cache
+	logger             *log.Logger
+	config             *Config
+	grayscaleDecision  GrayScaleDecision
 }
 
 // Config 搜索服务配置
@@ -33,7 +34,7 @@ type Config struct {
 }
 
 // NewSearchService 创建搜索服务实例
-func NewSearchService(logger *log.Logger, config *Config) *SearchService {
+func NewSearchService(logger *log.Logger, config *Config, grayscaleDecision GrayScaleDecision) *SearchService {
 	if config == nil {
 		config = &Config{
 			EnableCache:           true,
@@ -43,9 +44,10 @@ func NewSearchService(logger *log.Logger, config *Config) *SearchService {
 	}
 
 	return &SearchService{
-		providers: make(map[search.SearchType]provider.Provider),
-		logger:    logger,
-		config:    config,
+		providers:         make(map[search.SearchType]provider.Provider),
+		logger:            logger,
+		config:            config,
+		grayscaleDecision: grayscaleDecision,
 	}
 }
 
@@ -206,6 +208,12 @@ func (s *SearchService) ListProviders() []search.SearchType {
 	}
 	return types
 }
+
+// GetGrayscaleDecision 获取灰度决策器
+func (s *SearchService) GetGrayscaleDecision() GrayScaleDecision {
+	return s.grayscaleDecision
+}
+
 
 // validateRequest 验证请求参数
 func (s *SearchService) validateRequest(req *search.SearchRequest) error {
