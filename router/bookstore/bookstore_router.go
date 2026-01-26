@@ -107,12 +107,16 @@ func InitBookstoreRouter(
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
 			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags) // 新增：按标签筛选
 			public.GET("/books/status", bookstoreApiHandler.GetBooksByStatus) // 新增：按状态筛选
+			public.GET("/books/years", bookstoreApiHandler.GetYears)       // 新增：获取年份列表（必须在 /books/:id 之前）
 			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
 
 			// 分类 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/categories/tree", bookstoreApiHandler.GetCategoryTree)
 			public.GET("/categories/:id/books", bookstoreApiHandler.GetBooksByCategory)
 			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
+
+			// 元数据查询 - 用于筛选
+			public.GET("/tags", bookstoreApiHandler.GetTags) // 新增：获取标签列表
 
 			// Banner - 公开API
 			public.GET("/banners", bookstoreApiHandler.GetActiveBanners)
