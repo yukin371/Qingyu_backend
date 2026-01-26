@@ -4,10 +4,21 @@ import "time"
 
 // GetMessagesRequest 获取消息列表请求
 type GetMessagesRequest struct {
-	Page     int    `form:"page" binding:"omitempty,min=1,default=1"`
-	PageSize int    `form:"page_size" binding:"omitempty,min=1,max=100,default=20"`
+	Page     int    `form:"page" binding:"omitempty,min=1"`
+	PageSize int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 	Before   string `form:"before,omitempty"` // 获取此消息之前的消息（分页）
 	After    string `form:"after,omitempty"`  // 获取此消息之后的消息（分页）
+}
+
+// GetDefaults 返回默认值
+func (r *GetMessagesRequest) GetDefaults() *GetMessagesRequest {
+	if r.Page == 0 {
+		r.Page = 1
+	}
+	if r.PageSize == 0 {
+		r.PageSize = 20
+	}
+	return r
 }
 
 // GetMessagesResponse 获取消息列表响应

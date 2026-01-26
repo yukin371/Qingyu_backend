@@ -70,6 +70,7 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
 		return
 	}
+	req = *req.GetDefaults() // 应用默认值
 
 	// 验证用户是否是会话参与者
 	conv, err := api.conversationService.Get(c.Request.Context(), conversationID)
