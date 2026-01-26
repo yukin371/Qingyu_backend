@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -193,7 +192,7 @@ func (w *WorkerImpl) processEventWithRetry(ctx context.Context, event *search.Sy
 					zap.Int("worker_id", workerID),
 					zap.String("event_id", event.ID),
 					zap.String("type", string(event.Type)),
-					zap.String("collection", event.Collection),
+					zap.String("collection", event.Index),
 				)
 			}
 			return
@@ -215,7 +214,7 @@ func (w *WorkerImpl) processEventWithRetry(ctx context.Context, event *search.Sy
 
 	// 发送到死信队列
 	if w.dlq != nil {
-		w.dlq.Send(&event, lastErr)
+		w.dlq.Send(event, lastErr)
 	}
 }
 
@@ -227,8 +226,8 @@ func (w *WorkerImpl) ProcessEvent(ctx context.Context, event *search.SyncEvent) 
 		w.zapLogger.Info("Processing event",
 			zap.String("event_id", event.ID),
 			zap.String("type", string(event.Type)),
-			zap.String("collection", event.Collection),
-			zap.String("document_id", event.DocumentID),
+			zap.String("collection", event.Index),
+			zap.String("document_id", event.ID),
 		)
 	}
 
@@ -247,8 +246,8 @@ func (w *WorkerImpl) ProcessEvent(ctx context.Context, event *search.SyncEvent) 
 
 // handleInsert 处理插入事件
 func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) error {
-	collection := w.mongoDB.Collection(event.Collection)
-	objectID, err := primitive.ObjectIDFromHex(event.DocumentID)
+	collection := w.mongoDB.Collection(event.Index)
+	objectID, err := primitive.ObjectIDFromHex(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -259,7 +258,7 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 		if err == mongo.ErrNoDocuments {
 			if w.zapLogger != nil {
 				w.zapLogger.Warn("Document not found in MongoDB",
-					zap.String("document_id", event.DocumentID),
+					zap.String("document_id", event.ID),
 				)
 			}
 			return nil // 文档已被删除，忽略
@@ -267,9 +266,9 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 		return fmt.Errorf("failed to find document: %w", err)
 	}
 
-	// 转换为 Document
+	// 转换为 map
 	docMap := make(map[string]interface{})
-	if err := doc.Unmarshal(&docMap); err != nil {
+	if err := bson.Unmarshal(doc, &docMap); err != nil {
 		return fmt.Errorf("failed to unmarshal document: %w", err)
 	}
 
@@ -277,13 +276,13 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 	delete(docMap, "_id")
 
 	// 确定索引名称
-	indexName := w.getElasticsearchIndex(event.Collection)
+	indexName := w.getElasticsearchIndex(event.Index)
 
 	// 索引到 Elasticsearch
 	documents := []searchengine.Document{
 		{
-			ID:     event.DocumentID,
-			Fields: docMap,
+			ID:     event.ID,
+			Source: docMap,
 		},
 	}
 
@@ -293,7 +292,7 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 
 	if w.zapLogger != nil {
 		w.zapLogger.Info("Document indexed",
-			zap.String("document_id", event.DocumentID),
+			zap.String("document_id", event.ID),
 			zap.String("index", indexName),
 		)
 	}
@@ -303,8 +302,8 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 
 // handleUpdate 处理更新事件
 func (w *WorkerImpl) handleUpdate(ctx context.Context, event *search.SyncEvent) error {
-	collection := w.mongoDB.Collection(event.Collection)
-	objectID, err := primitive.ObjectIDFromHex(event.DocumentID)
+	collection := w.mongoDB.Collection(event.Index)
+	objectID, err := primitive.ObjectIDFromHex(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -320,27 +319,27 @@ func (w *WorkerImpl) handleUpdate(ctx context.Context, event *search.SyncEvent) 
 	}
 
 	docMap := make(map[string]interface{})
-	if err := doc.Unmarshal(&docMap); err != nil {
+	if err := bson.Unmarshal(doc, &docMap); err != nil {
 		return fmt.Errorf("failed to unmarshal document: %w", err)
 	}
 
 	delete(docMap, "_id")
 
-	indexName := w.getElasticsearchIndex(event.Collection)
+	indexName := w.getElasticsearchIndex(event.Index)
 
 	document := searchengine.Document{
-		ID:     event.DocumentID,
-		Fields: docMap,
+		ID:     event.ID,
+		Source: docMap,
 	}
 
-	if err := w.esEngine.Update(ctx, indexName, event.DocumentID, document); err != nil {
+	if err := w.esEngine.Update(ctx, indexName, event.ID, document); err != nil {
 		// 如果更新失败，尝试创建
 		return w.handleInsert(ctx, event)
 	}
 
 	if w.zapLogger != nil {
 		w.zapLogger.Info("Document updated",
-			zap.String("document_id", event.DocumentID),
+			zap.String("document_id", event.ID),
 			zap.String("index", indexName),
 		)
 	}
@@ -350,9 +349,9 @@ func (w *WorkerImpl) handleUpdate(ctx context.Context, event *search.SyncEvent) 
 
 // handleDelete 处理删除事件
 func (w *WorkerImpl) handleDelete(ctx context.Context, event *search.SyncEvent) error {
-	indexName := w.getElasticsearchIndex(event.Collection)
+	indexName := w.getElasticsearchIndex(event.Index)
 
-	if err := w.esEngine.Delete(ctx, indexName, event.DocumentID); err != nil {
+	if err := w.esEngine.Delete(ctx, indexName, event.ID); err != nil {
 		// 忽略文档不存在的错误
 		if err.Error() != "document not found" {
 			return fmt.Errorf("failed to delete document: %w", err)
@@ -361,7 +360,7 @@ func (w *WorkerImpl) handleDelete(ctx context.Context, event *search.SyncEvent) 
 
 	if w.zapLogger != nil {
 		w.zapLogger.Info("Document deleted",
-			zap.String("document_id", event.DocumentID),
+			zap.String("document_id", event.ID),
 			zap.String("index", indexName),
 		)
 	}
