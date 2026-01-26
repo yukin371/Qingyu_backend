@@ -36,6 +36,17 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 //	@Param		parentId	query	string	false	"父评论ID（空字符串表示顶级评论）"
 //	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/comments [get]
+// @Summary GetChapterComments 操作
+// @Description TODO: 补充详细描述
+// @Tags reader
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param chapterId path string true "ChapterId"
+// @Success 200 {object} response.APIResponse{data=TODO}
+// @Failure 400 {object} response.APIResponse
+// @Router /reader/{chapterId}/comments [get]
+
 func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {

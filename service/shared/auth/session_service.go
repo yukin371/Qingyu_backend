@@ -335,7 +335,7 @@ func (s *SessionServiceImpl) EnforceDeviceLimit(ctx context.Context, userID stri
 	}
 
 	// 3. 超限时，计算需要踢出的设备数量
-	numToKick := len(sessions) - maxDevices + 1 // +1 为新设备留位置
+	numToKick := len(sessions) - maxDevices
 
 	zap.L().Info("设备数量超限，准备踢出最老设备",
 		zap.String("user_id", userID),

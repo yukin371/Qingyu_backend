@@ -39,6 +39,18 @@ func NewChapterAPI(chapterService interfaces.ReaderChapterService) *ChapterAPI {
 //	@Failure		404			{object}	shared.APIResponse
 //	@Failure		500			{object}	shared.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/{chapterId} [get]
+// @Summary 获取章节内容
+// @Description TODO: 补充详细描述
+// @Tags reader
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param bookId path string true "BookId"
+// @Param chapterId path string true "ChapterId"
+// @Success 200 {object} response.APIResponse{data=TODO}
+// @Failure 400 {object} response.APIResponse
+// @Router /reader/books/{bookId}/chapters/{chapterId} [get]
+
 func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	bookID := c.Param("bookId")
 	chapterID := c.Param("chapterId")

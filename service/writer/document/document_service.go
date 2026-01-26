@@ -685,7 +685,11 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
 	}
 
-	if project == nil || !project.CanEdit(userID) {
+	if project == nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	if !project.CanEdit(userID) {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限编辑该文档", "", nil)
 	}
 
@@ -705,11 +709,12 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 		}
 		newContent := &writer.DocumentContent{
-			DocumentID: documentID,
-			Content:    req.Content,
-			Version:    1,
-			WordCount:  len([]rune(req.Content)),
-			CharCount:  len(req.Content),
+			DocumentID:  documentID,
+			Content:     req.Content,
+			ContentType: "markdown", // 默认使用markdown格式
+			Version:     1,
+			WordCount:   len([]rune(req.Content)),
+			CharCount:   len(req.Content),
 		}
 		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)
@@ -947,11 +952,12 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 		}
 		newContent := &writer.DocumentContent{
-			DocumentID: documentID,
-			Content:    req.Content,
-			Version:    1,
-			WordCount:  len([]rune(req.Content)),
-			CharCount:  len(req.Content),
+			DocumentID:  documentID,
+			Content:     req.Content,
+			ContentType: "markdown", // 默认使用markdown格式
+			Version:     1,
+			WordCount:   len([]rune(req.Content)),
+			CharCount:   len(req.Content),
 		}
 		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)

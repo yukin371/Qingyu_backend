@@ -75,8 +75,13 @@ func (r *MongoDocumentContentRepository) GetByID(ctx context.Context, id string)
 
 // GetByDocumentID 根据DocumentID获取文档内容
 func (r *MongoDocumentContentRepository) GetByDocumentID(ctx context.Context, documentID string) (*writer.DocumentContent, error) {
+	objectID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的DocumentID: %w", err)
+	}
+
 	var content writer.DocumentContent
-	err := r.collection.FindOne(ctx, bson.M{"document_id": documentID}).Decode(&content)
+	err = r.collection.FindOne(ctx, bson.M{"document_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -104,14 +109,25 @@ func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, 
 
 // UpdateWithVersion 带版本号的更新（乐观锁）
 func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
+	objectID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return fmt.Errorf("无效的DocumentID: %w", err)
+	}
+
 	filter := bson.M{
-		"document_id": documentID,
+		"document_id": objectID,
 		"version":     expectedVersion,
 	}
+
+	// 计算字数统计
+	wordCount := len([]rune(content))
+	charCount := len(content)
 
 	update := bson.M{
 		"$set": bson.M{
 			"content":    content,
+			"word_count": wordCount,
+			"char_count": charCount,
 			"updated_at": time.Now(),
 		},
 		"$inc": bson.M{
