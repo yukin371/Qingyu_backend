@@ -226,7 +226,7 @@ func (api *LikeAPI) UnlikeComment(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse{data=object{list=[]models.Like,total=int64,page=int,size=int}}
+// @Success 200 {object} shared.APIResponse{data=object{list=[]socialModels.Like,total=int64,page=int,size=int}}
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/reader/likes/books [get]
