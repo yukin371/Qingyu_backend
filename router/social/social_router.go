@@ -97,13 +97,13 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 
 			// 消息管理
 			socialGroup.POST("/messages", messageAPI.SendMessage)
-			socialGroup.PUT("/messages/:id/read", messageAPI.MarkMessageAsRead)
+			socialGroup.POST("/messages/:id/read", messageAPI.MarkMessageAsRead)
 			socialGroup.DELETE("/messages/:id", messageAPI.DeleteMessage)
 
 			// @提醒
 			socialGroup.POST("/mentions", messageAPI.CreateMention)
 			socialGroup.GET("/mentions", messageAPI.GetMentions)
-			socialGroup.PUT("/mentions/:id/read", messageAPI.MarkMentionAsRead)
+			socialGroup.POST("/mentions/:id/read", messageAPI.MarkMentionAsRead)
 		}
 
 		// ========== 新增：私信系统 V2（基于会话） ==========

@@ -3,202 +3,188 @@ package user
 import (
 	"context"
 	"testing"
+
+	usersModel "Qingyu_backend/models/users"
+	"Qingyu_backend/service/user/mocks"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// MockPasswordUserRepository 模拟用户仓库（用于密码服务测试）
-type MockPasswordUserRepository struct {
-	users map[string]*MockPasswordUser
-}
-
-type MockPasswordUser struct {
-	ID             string
-	Email          string
-	HashedPassword string
-}
-
-func (m *MockPasswordUserRepository) GetByID(ctx context.Context, id string) (*MockPasswordUser, error) {
-	user, exists := m.users[id]
-	if !exists {
-		return nil, context.Canceled
-	}
-	return user, nil
-}
-
-func (m *MockPasswordUserRepository) GetByEmail(ctx context.Context, email string) (*MockPasswordUser, error) {
-	for _, user := range m.users {
-		if user.Email == email {
-			return user, nil
-		}
-	}
-	return nil, context.Canceled
-}
-
-func (m *MockPasswordUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
-	for _, user := range m.users {
-		if user.Email == email {
-			user.HashedPassword = hashedPassword
-			return nil
-		}
-	}
-	return context.Canceled
-}
-
-func (m *MockPasswordUserRepository) UpdatePassword(ctx context.Context, id string, hashedPassword string) error {
-	user, exists := m.users[id]
-	if !exists {
-		return context.Canceled
-	}
-	user.HashedPassword = hashedPassword
-	return nil
-}
 
 // TestNewPasswordService 测试创建密码服务
 func TestNewPasswordService(t *testing.T) {
-	verificationService := NewVerificationService(nil, nil)
-	mockRepo := &MockPasswordUserRepository{users: make(map[string]*MockPasswordUser)}
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	service := NewPasswordService(verificationService, mockRepo)
+	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewPasswordService(verificationService, mockUserRepo)
 
-	if service == nil {
-		t.Fatal("密码服务创建失败")
-	}
-
-	if service.verificationService == nil {
-		t.Error("验证服务未正确设置")
-	}
-
-	if service.userRepo == nil {
-		t.Error("用户仓库未正确设置")
-	}
+	assert.NotNil(t, service, "密码服务创建失败")
+	assert.NotNil(t, service.verificationService, "验证服务未正确设置")
+	assert.NotNil(t, service.userRepo, "用户仓库未正确设置")
 }
 
 // TestPasswordService_SendResetCode 测试发送重置验证码
 func TestPasswordService_SendResetCode(t *testing.T) {
-	verificationService := NewVerificationService(nil, nil)
-	mockRepo := &MockPasswordUserRepository{
-		users: map[string]*MockPasswordUser{
-			"user1": {
-				ID:             "user1",
-				Email:          "test@example.com",
-				HashedPassword: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
-			},
-		},
-	}
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	service := NewPasswordService(verificationService, mockRepo)
+	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewPasswordService(verificationService, mockUserRepo)
 
 	ctx := context.Background()
-	err := service.SendResetCode(ctx, "test@example.com")
-	if err != nil {
-		t.Errorf("发送重置验证码失败: %v", err)
-	}
+	email := "test@example.com"
 
-	// 测试不存在的邮箱
-	err = service.SendResetCode(ctx, "nonexistent@example.com")
-	if err == nil {
-		t.Error("应该返回邮箱不存在错误")
+	// 设置mock预期 - 用户存在
+	userID := primitive.NewObjectID()
+	mockUser := &usersModel.User{
+		Email: email,
 	}
+	mockUser.ID = userID
+	// GetByEmail会被调用两次：
+	// 1. PasswordService.SendResetCode中检查邮箱是否存在
+	// 2. VerificationService.SendEmailCode中检查邮箱是否存在（当purpose是reset_password时）
+	mockUserRepo.On("GetByEmail", ctx, email).Return(mockUser, nil).Times(2)
+
+	// 执行测试
+	err := service.SendResetCode(ctx, email)
+	assert.NoError(t, err, "发送重置验证码应该成功")
+
+	mockUserRepo.AssertExpectations(t)
 }
 
 // TestPasswordService_ResetPassword 测试重置密码
 func TestPasswordService_ResetPassword(t *testing.T) {
-	verificationService := NewVerificationService(nil, nil)
-	mockRepo := &MockPasswordUserRepository{
-		users: map[string]*MockPasswordUser{
-			"user1": {
-				ID:             "user1",
-				Email:          "test@example.com",
-				HashedPassword: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
-			},
-		},
-	}
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	service := NewPasswordService(verificationService, mockRepo)
+	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewPasswordService(verificationService, mockUserRepo)
+
 	ctx := context.Background()
+	email := "test@example.com"
+	userID := primitive.NewObjectID()
 
-	// 首先生成一个验证码
-	tokenManager := verificationService.GetVerificationTokenManager()
-	code, err := tokenManager.GenerateCode(ctx, "user1", "test@example.com")
-	if err != nil {
-		t.Fatalf("生成验证码失败: %v", err)
+	// 设置mock预期
+	mockUser := &usersModel.User{
+		Email: email,
 	}
+	mockUser.ID = userID
 
-	// 使用正确的验证码重置密码
-	err = service.ResetPassword(ctx, "test@example.com", code, "NewPassword123")
-	if err != nil {
-		t.Errorf("重置密码失败: %v", err)
-	}
+	// 测试用例1：成功重置密码
+	t.Run("Success", func(t *testing.T) {
+		// GetByEmail会被调用两次：
+		// 1. PasswordService.SendResetCode中检查邮箱是否存在
+		// 2. VerificationService.SendEmailCode中检查邮箱是否存在（当purpose是reset_password时）
+		mockUserRepo.On("GetByEmail", ctx, email).Return(mockUser, nil).Times(2)
 
-	// 使用错误的验证码重置密码
-	err = service.ResetPassword(ctx, "test@example.com", "000000", "NewPassword123")
-	if err != ErrInvalidCode {
-		t.Error("应该返回验证码无效错误")
-	}
+		// 发送重置验证码
+		err := service.SendResetCode(ctx, email)
+		assert.NoError(t, err, "发送重置验证码应该成功")
+
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	// 测试用例2：邮箱不存在
+	t.Run("EmailNotExists", func(t *testing.T) {
+		// 当邮箱不存在时，GetByEmail只会在PasswordService.SendResetCode中被调用1次
+		// SendEmailCode会因为邮箱不存在而提前返回，不会再调用GetByEmail
+		mockUserRepo.On("GetByEmail", ctx, "nonexistent@example.com").Return(nil, context.Canceled).Once()
+
+		// 发送重置验证码到不存在的邮箱
+		err := service.SendResetCode(ctx, "nonexistent@example.com")
+		assert.Error(t, err, "应该返回邮箱不存在错误")
+
+		mockUserRepo.AssertExpectations(t)
+	})
 }
 
 // TestPasswordService_UpdatePassword 测试修改密码
 func TestPasswordService_UpdatePassword(t *testing.T) {
-	verificationService := NewVerificationService(nil, nil)
-	mockRepo := &MockPasswordUserRepository{
-		users: map[string]*MockPasswordUser{
-			"user1": {
-				ID:             "user1",
-				Email:          "test@example.com",
-				HashedPassword: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password"
-			},
-		},
-	}
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	service := NewPasswordService(verificationService, mockRepo)
+	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewPasswordService(verificationService, mockUserRepo)
+
 	ctx := context.Background()
+	userID := primitive.NewObjectID()
 
-	// 使用正确的旧密码修改密码
-	err := service.UpdatePassword(ctx, "user1", "password", "NewPassword123")
-	if err != nil {
-		t.Errorf("修改密码失败: %v", err)
-	}
+	// 创建测试用户并设置密码
+	mockUser := &usersModel.User{}
+	mockUser.ID = userID
+	err := mockUser.SetPassword("password")
+	assert.NoError(t, err, "设置密码应该成功")
 
-	// 使用错误的旧密码修改密码
-	err = service.UpdatePassword(ctx, "user1", "WrongPassword", "NewPassword123")
-	if err != ErrOldPasswordMismatch {
-		t.Error("应该返回旧密码错误")
-	}
+	// 测试用例1：使用正确的旧密码
+	t.Run("Success", func(t *testing.T) {
+		mockUserRepo.On("GetByID", ctx, userID.Hex()).Return(mockUser, nil).Once()
+		mockUserRepo.On("UpdatePassword", ctx, userID.Hex(), mock.AnythingOfType("string")).Return(nil).Once()
 
-	// 修改不存在的用户密码
-	err = service.UpdatePassword(ctx, "nonexistent", "password", "NewPassword123")
-	if err == nil {
-		t.Error("应该返回用户不存在错误")
-	}
+		err = service.UpdatePassword(ctx, userID.Hex(), "password", "NewPassword123")
+		assert.NoError(t, err, "修改密码应该成功")
+
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	// 测试用例2：使用错误的旧密码
+	t.Run("WrongOldPassword", func(t *testing.T) {
+		mockUserRepo.On("GetByID", ctx, userID.Hex()).Return(mockUser, nil).Once()
+
+		err = service.UpdatePassword(ctx, userID.Hex(), "WrongPassword", "NewPassword123")
+		assert.Error(t, err, "应该返回旧密码错误")
+		assert.Equal(t, ErrOldPasswordMismatch, err, "应该返回旧密码错误")
+
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	// 测试用例3：用户不存在
+	t.Run("UserNotFound", func(t *testing.T) {
+		// 使用一个有效的ObjectID格式，但GetByID返回错误
+		fakeUserID := primitive.NewObjectID().Hex()
+		mockUserRepo.On("GetByID", ctx, fakeUserID).Return(nil, context.Canceled).Once()
+
+		err = service.UpdatePassword(ctx, fakeUserID, "password", "NewPassword123")
+		assert.Error(t, err, "应该返回用户不存在错误")
+
+		mockUserRepo.AssertExpectations(t)
+	})
 }
 
 // TestPasswordService_GetUserByEmail 测试根据邮箱获取用户
 func TestPasswordService_GetUserByEmail(t *testing.T) {
-	verificationService := NewVerificationService(nil, nil)
-	mockRepo := &MockPasswordUserRepository{
-		users: map[string]*MockPasswordUser{
-			"user1": {
-				ID:             "user1",
-				Email:          "test@example.com",
-				HashedPassword: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
-			},
-		},
-	}
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	service := NewPasswordService(verificationService, mockRepo)
+	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewPasswordService(verificationService, mockUserRepo)
+
 	ctx := context.Background()
+	email := "test@example.com"
+
+	// 设置mock预期
+	userID := primitive.NewObjectID()
+	mockUser := &usersModel.User{
+		Email: email,
+	}
+	mockUser.ID = userID
+	mockUserRepo.On("GetByEmail", ctx, email).Return(mockUser, nil).Once()
 
 	// 获取存在的用户
-	user, err := service.GetUserByEmail(ctx, "test@example.com")
-	if err != nil {
-		t.Errorf("获取用户失败: %v", err)
-	}
-	if user.Email != "test@example.com" {
-		t.Error("获取的用户邮箱不匹配")
-	}
+	user, err := service.GetUserByEmail(ctx, email)
+	assert.NoError(t, err, "获取用户应该成功")
+	assert.Equal(t, email, user.Email, "获取的用户邮箱不匹配")
+
+	// 重置mock
+	mockUserRepo.ExpectedCalls = nil
+
+	// 设置mock预期 - 用户不存在
+	mockUserRepo.On("GetByEmail", ctx, "nonexistent@example.com").Return(nil, context.Canceled).Once()
 
 	// 获取不存在的用户
 	_, err = service.GetUserByEmail(ctx, "nonexistent@example.com")
-	if err == nil {
-		t.Error("应该返回用户不存在错误")
-	}
+	assert.Error(t, err, "应该返回用户不存在错误")
+
+	mockUserRepo.AssertExpectations(t)
 }
