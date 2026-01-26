@@ -1353,21 +1353,326 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 
 func TestE2E_UserJourney(t *testing.T) {
 	skipIfShort(t)
-	t.Skip("TODO: 端到端测试，待实现")
 
 	setupTestDB(t)
-	// ctx := context.Background()  // 待实现时使用
+	ctx := context.Background()
+
+	// 尝试初始化Redis连接
+	redisClient, err := createTestRedisClient(t)
+	if err != nil {
+		t.Skipf("无法连接到Redis，跳过端到端测试: %v", err)
+	}
+	defer redisClient.Close()
+
+	// 获取MongoDB连接
+	mongoDB, err := getMongoDB()
+	if err != nil {
+		t.Skipf("无法连接到MongoDB，跳过端到端测试: %v", err)
+	}
 
 	t.Run("CompleteUserJourney", func(t *testing.T) {
-		// TODO: 完整用户流程测试
-		// 1. 用户注册
-		// 2. 登录（创建Session）
-		// 3. 创建项目
-		// 4. 创建文档
-		// 5. 自动保存
-		// 6. 查看统计
-		// 7. 多端登录
-		// 8. 登出
+		t.Log("========================================")
+		t.Log("开始端到端测试：完整用户旅程")
+		t.Log("========================================")
+
+		// 准备测试数据
+		testUsername := fmt.Sprintf("e2e_user_%s", primitive.NewObjectID().Hex())
+		testEmail := fmt.Sprintf("%s@example.com", testUsername)
+		testPassword := "Test@123456"
+
+		// 创建Repository实例
+		userRepo := repository.NewMongoUserRepository(mongoDB)
+		projectRepo := repoWriter.NewMongoProjectRepository(mongoDB)
+		documentRepo := repoWriter.NewMongoDocumentRepository(mongoDB)
+		documentContentRepo := repoWriter.NewMongoDocumentContentRepository(mongoDB)
+
+		// 创建Service实例
+		cacheAdapter := authService.NewRedisAdapter(redisClient)
+		sessionService := authService.NewSessionService(cacheAdapter)
+		defer sessionService.(*authService.SessionServiceImpl).StopCleanupTask()
+
+		documentService := documentService.NewDocumentService(
+			documentRepo,
+			documentContentRepo,
+			projectRepo,
+			nil, // EventBus - E2E测试不需要事件
+		)
+
+		statsService := stats.NewPlatformStatsService(
+			userRepo,
+			nil, // bookRepo - 暂时为nil
+			projectRepo,
+			nil, // chapterRepo - 暂时为nil
+		)
+
+		var userID string
+		var projectID string
+		var documentID string
+		var session1ID string
+		var session2ID string
+
+		defer func() {
+			// 清理所有测试数据
+			if userID != "" {
+				cleanupP0TestData(t, userID)
+				cleanupTestUserData(t, redisClient, userID)
+			}
+		}()
+
+		// ========== 步骤1: 用户注册 ==========
+		t.Log("\n【步骤1】用户注册")
+		testUserObjID := primitive.NewObjectID()
+		testUser := &users.User{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: testUserObjID},
+			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now()},
+			Username:         testUsername,
+			Email:            testEmail,
+			Password:         testPassword, // 实际应该是hash，这里简化
+			Roles:            []string{"author"},
+			Status:           users.UserStatusActive,
+		}
+
+		err = userRepo.Create(ctx, testUser)
+		if err != nil {
+			t.Fatalf("创建用户失败: %v", err)
+		}
+		userID = testUserObjID.Hex()
+
+		t.Logf("✓ 用户注册成功")
+		t.Logf("  用户名: %s", testUsername)
+		t.Logf("  用户ID: %s", userID)
+
+		// ========== 步骤2: 用户登录 ==========
+		t.Log("\n【步骤2】用户登录（创建Session）")
+		session1, err := sessionService.CreateSession(ctx, userID)
+		if err != nil {
+			t.Fatalf("创建Session失败: %v", err)
+		}
+		session1ID = session1.ID
+
+		t.Logf("✓ 登录成功")
+		t.Logf("  Session ID: %s", session1ID)
+		t.Logf("  创建时间: %s", session1.CreatedAt.Format("15:04:05"))
+		t.Logf("  过期时间: %s", session1.ExpiresAt.Format("2006-01-02 15:04:05"))
+
+		// 验证Session存在
+		storedSession, err := sessionService.GetSession(ctx, session1ID)
+		if err != nil {
+			t.Fatalf("获取Session失败: %v", err)
+		}
+		if storedSession.ID != session1ID {
+			t.Errorf("Session ID不匹配")
+		}
+		t.Logf("✓ Session验证成功")
+
+		// ========== 步骤3: 创建项目 ==========
+		t.Log("\n【步骤3】创建项目")
+		testProjectObjID := primitive.NewObjectID()
+		testProject := &writer.Project{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: testProjectObjID},
+			OwnedEntity:      shared.OwnedEntity{AuthorID: userID},
+			TitledEntity:     shared.TitledEntity{Title: "我的第一本小说"},
+			Timestamps:       shared.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+			WritingType:      "novel",
+			Status:           writer.StatusDraft,
+			Visibility:       writer.VisibilityPrivate,
+			Statistics:       writer.ProjectStats{TotalWords: 0, ChapterCount: 0, DocumentCount: 0, LastUpdateAt: time.Now()},
+			Settings:         writer.ProjectSettings{AutoBackup: true, BackupInterval: 24},
+		}
+
+		err = projectRepo.Create(ctx, testProject)
+		if err != nil {
+			t.Fatalf("创建项目失败: %v", err)
+		}
+		projectID = testProjectObjID.Hex()
+
+		t.Logf("✓ 项目创建成功")
+		t.Logf("  项目ID: %s", projectID)
+		t.Logf("  项目名称: %s", testProject.Title)
+		t.Logf("  写作类型: %s", testProject.WritingType)
+
+		// ========== 步骤4: 创建文档 ==========
+		t.Log("\n【步骤4】创建文档")
+		testDocumentObjID := primitive.NewObjectID()
+		testDocument := &writer.Document{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: testDocumentObjID},
+			Timestamps:       shared.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+			ProjectID:        testProjectObjID,
+			Title:            "第一章",
+			StableRef:        primitive.NewObjectID().Hex(),
+			OrderKey:         "a0",
+			ParentID:         primitive.ObjectID{},
+			Type:             "chapter",
+			Level:            0,
+			Order:            0,
+			Status:           writer.DocumentStatusPlanned,
+			WordCount:        0,
+		}
+
+		err = documentRepo.Create(ctx, testDocument)
+		if err != nil {
+			t.Fatalf("创建文档失败: %v", err)
+		}
+		documentID = testDocumentObjID.Hex()
+
+		t.Logf("✓ 文档创建成功")
+		t.Logf("  文档ID: %s", documentID)
+		t.Logf("  文档标题: %s", testDocument.Title)
+		t.Logf("  文档类型: %s", testDocument.Type)
+
+		// ========== 步骤5: 自动保存 ==========
+		t.Log("\n【步骤5】自动保存")
+		ctx = context.WithValue(ctx, "userID", userID)
+
+		// 第一次保存
+		firstContent := "这是我的小说开头，主人公在一个雨夜遇到了神秘人物..."
+		autoSaveReq1 := &documentService.AutoSaveRequest{
+			DocumentID:     documentID,
+			Content:        firstContent,
+			CurrentVersion: 0,
+			SaveType:       "auto",
+		}
+
+		response1, err := documentService.AutoSaveDocument(ctx, autoSaveReq1)
+		if err != nil {
+			t.Fatalf("首次自动保存失败: %v", err)
+		}
+		if !response1.Saved {
+			t.Fatal("首次保存应该成功")
+		}
+		if response1.NewVersion != 1 {
+			t.Errorf("首次保存版本号应为1，实际为: %d", response1.NewVersion)
+		}
+
+		t.Logf("✓ 首次自动保存成功")
+		t.Logf("  版本号: %d", response1.NewVersion)
+		t.Logf("  字数: %d", response1.WordCount)
+
+		// 第二次保存（更新）
+		secondContent := firstContent + "\n\n那个神秘人物递给他一把古老的钥匙，说这将改变他的一生。"
+		autoSaveReq2 := &documentService.AutoSaveRequest{
+			DocumentID:     documentID,
+			Content:        secondContent,
+			CurrentVersion: 1,
+			SaveType:       "auto",
+		}
+
+		response2, err := documentService.AutoSaveDocument(ctx, autoSaveReq2)
+		if err != nil {
+			t.Fatalf("第二次自动保存失败: %v", err)
+		}
+		if !response2.Saved {
+			t.Fatal("第二次保存应该成功")
+		}
+		if response2.NewVersion != 2 {
+			t.Errorf("第二次保存版本号应为2，实际为: %d", response2.NewVersion)
+		}
+
+		t.Logf("✓ 第二次自动保存成功")
+		t.Logf("  版本号: %d -> %d", response1.NewVersion, response2.NewVersion)
+		t.Logf("  新增字数: %d", response2.WordCount-response1.WordCount)
+
+		// ========== 步骤6: 查看统计 ==========
+		t.Log("\n【步骤6】查看用户统计")
+		userStats, err := statsService.GetUserStats(ctx, userID)
+		if err != nil {
+			t.Fatalf("获取用户统计失败: %v", err)
+		}
+
+		t.Logf("✓ 用户统计获取成功")
+		t.Logf("  用户ID: %s", userStats.UserID)
+		t.Logf("  项目数: %d", userStats.TotalProjects)
+		t.Logf("  书籍数: %d", userStats.TotalBooks)
+		t.Logf("  总字数: %d", userStats.TotalWords)
+		t.Logf("  会员等级: %s", userStats.MemberLevel)
+
+		// 验证统计数据
+		if userStats.TotalProjects != 1 {
+			t.Errorf("项目数应为1，实际为: %d", userStats.TotalProjects)
+		}
+
+		// ========== 步骤7: 多端登录 ==========
+		t.Log("\n【步骤7】多端登录")
+		session2, err := sessionService.CreateSession(ctx, userID)
+		if err != nil {
+			t.Fatalf("创建第二个Session失败: %v", err)
+		}
+		session2ID = session2.ID
+
+		t.Logf("✓ 第二个设备登录成功")
+		t.Logf("  Session ID: %s", session2ID)
+
+		// 验证两个Session都存在
+		userSessions, err := sessionService.GetUserSessions(ctx, userID)
+		if err != nil {
+			t.Fatalf("获取用户Session列表失败: %v", err)
+		}
+
+		if len(userSessions) != 2 {
+			t.Errorf("应有两个Session，实际为: %d", len(userSessions))
+		}
+
+		t.Logf("✓ 多端登录验证成功")
+		t.Logf("  当前活跃Session数: %d", len(userSessions))
+
+		// 验证两个Session ID都存在
+		sessionIDs := make(map[string]bool)
+		for _, session := range userSessions {
+			sessionIDs[session.ID] = true
+		}
+		if !sessionIDs[session1ID] || !sessionIDs[session2ID] {
+			t.Error("两个Session ID都应该存在")
+		}
+		t.Logf("  Session1存在: %v", sessionIDs[session1ID])
+		t.Logf("  Session2存在: %v", sessionIDs[session2ID])
+
+		// ========== 步骤8: 登出 ==========
+		t.Log("\n【步骤8】登出")
+		err = sessionService.DeleteSession(ctx, session1ID)
+		if err != nil {
+			t.Fatalf("删除Session失败: %v", err)
+		}
+
+		t.Logf("✓ Session1已删除")
+
+		// 验证Session已被删除
+		_, err = sessionService.GetSession(ctx, session1ID)
+		if err == nil {
+			t.Error("Session1应该已被删除")
+		}
+		t.Logf("✓ Session1删除验证成功")
+
+		// 验证只剩一个Session
+		remainingSessions, err := sessionService.GetUserSessions(ctx, userID)
+		if err != nil {
+			t.Fatalf("获取剩余Session列表失败: %v", err)
+		}
+
+		if len(remainingSessions) != 1 {
+			t.Errorf("应剩下一个Session，实际为: %d", len(remainingSessions))
+		}
+
+		if len(remainingSessions) > 0 && remainingSessions[0].ID != session2ID {
+			t.Errorf("剩余的Session应该是Session2")
+		}
+
+		t.Logf("✓ 登出验证成功")
+		t.Logf("  剩余Session数: %d", len(remainingSessions))
+
+		// ========== 测试总结 ==========
+		t.Log("\n========================================")
+		t.Log("✅ 端到端测试通过：完整用户旅程")
+		t.Log("========================================")
+		t.Log("测试步骤执行情况：")
+		t.Log("  ✓ 步骤1: 用户注册")
+		t.Log("  ✓ 步骤2: 用户登录")
+		t.Log("  ✓ 步骤3: 创建项目")
+		t.Log("  ✓ 步骤4: 创建文档")
+		t.Log("  ✓ 步骤5: 自动保存（2次）")
+		t.Log("  ✓ 步骤6: 查看统计")
+		t.Log("  ✓ 步骤7: 多端登录")
+		t.Log("  ✓ 步骤8: 登出")
+		t.Log("========================================")
 	})
 }
 
