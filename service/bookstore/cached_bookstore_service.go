@@ -315,6 +315,16 @@ func (c *CachedBookstoreService) GetBookStats(ctx context.Context) (*bookstore2.
 	return c.service.GetBookStats(ctx)
 }
 
+// GetYears 获取所有书籍的发布年份列表（无缓存，直接查询）
+func (c *CachedBookstoreService) GetYears(ctx context.Context) ([]int, error) {
+	return c.service.GetYears(ctx)
+}
+
+// GetTags 获取所有标签列表（无缓存，直接查询）
+func (c *CachedBookstoreService) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	return c.service.GetTags(ctx, categoryID)
+}
+
 func (c *CachedBookstoreService) IncrementBookView(ctx context.Context, bookID string) error {
 	// 增加浏览量后，清除相关缓存
 	err := c.service.IncrementBookView(ctx, bookID)

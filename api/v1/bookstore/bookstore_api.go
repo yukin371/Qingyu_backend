@@ -991,6 +991,37 @@ func (api *BookstoreAPI) buildSearchSort(sortBy, sortOrder string) []searchModel
 }
 
 // convertSearchResponseToBooks 将搜索响应转换为 Book 切片
+
+// GetYears 获取所有书籍的发布年份列表
+func (api *BookstoreAPI) GetYears(c *gin.Context) {
+	years, err := api.service.GetYears(c.Request.Context())
+	if err != nil {
+		shared.InternalError(c, "获取年份列表失败", err)
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取年份列表成功", years)
+}
+
+// GetTags 获取所有标签列表
+// 可选参数：categoryId - 只获取该分类下的书籍标签
+func (api *BookstoreAPI) GetTags(c *gin.Context) {
+	categoryID := c.Query("categoryId")
+
+	var categoryIDPtr *string
+	if categoryID != "" {
+		categoryIDPtr = &categoryID
+	}
+
+	tags, err := api.service.GetTags(c.Request.Context(), categoryIDPtr)
+	if err != nil {
+		shared.InternalError(c, "获取标签列表失败", err)
+		return
+	}
+
+	shared.Success(c, http.StatusOK, "获取标签列表成功", tags)
+}
+
 func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2.Book {
 	books := make([]*bookstore2.Book, 0, len(items))
 
