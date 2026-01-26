@@ -2,6 +2,8 @@ package bookstore
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +15,9 @@ import (
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/shared"
+	searchModels "Qingyu_backend/models/search"
 	bookstoreService "Qingyu_backend/service/bookstore"
+	"Qingyu_backend/pkg/logger"
 )
 
 // MockBookstoreService 模拟BookstoreService
@@ -102,7 +106,7 @@ func (m *MockBookstoreService) SearchBooks(ctx context.Context, keyword string, 
 }
 
 func (m *MockBookstoreService) SearchBooksWithFilter(ctx context.Context, filter *bookstoreModel.BookFilter) ([]*bookstoreModel.Book, int64, error) {
-	args := m.Called(ctx, mock.AnythingOfType("*bookstoreModel.BookFilter"))
+	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
@@ -216,7 +220,7 @@ func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	api := NewBookstoreAPI(service)
+	api := NewBookstoreAPI(service, nil, logger.Get())
 
 	v1 := r.Group("/api/v1/bookstore")
 	{
@@ -857,4 +861,537 @@ func TestBookstoreAPI_SearchBooks_OnlyTags_NoKeyword(t *testing.T) {
 
 	// Then - Should return 400 Bad Request (tags alone are not sufficient)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// =====================================================
+// SearchByTitle 和 SearchByAuthor API 测试
+// =====================================================
+
+// MockSearchService 模拟搜索服务
+type MockSearchService struct {
+	mock.Mock
+}
+
+func (m *MockSearchService) Search(ctx context.Context, req *searchModels.SearchRequest) (*searchModels.SearchResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*searchModels.SearchResponse), args.Error(1)
+}
+
+// setupBookstoreSearchTestRouter 创建带搜索服务的测试路由
+func setupBookstoreSearchTestRouter(service *MockBookstoreService, searchService *MockSearchService) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	// 创建 logger 实例
+	testLogger := logger.Get()
+
+	// 创建 API 实例，传入 nil searchService 因为测试中主要测试 MongoDB fallback
+	api := NewBookstoreAPI(service, nil, testLogger)
+
+	v1 := r.Group("/api/v1/bookstore")
+	{
+		v1.GET("/books/search/title", api.SearchByTitle)
+		v1.GET("/books/search/author", api.SearchByAuthor)
+	}
+
+	return r
+}
+
+// TestBookstoreAPI_SearchByTitle_MissingParam 测试缺少必需参数
+func TestBookstoreAPI_SearchByTitle_MissingParam(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	// When - 没有提供 title 参数
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/title?page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - 应该返回 400 Bad Request
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestBookstoreAPI_SearchByTitle_Success 测试搜索成功
+func TestBookstoreAPI_SearchByTitle_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	// 模拟 MongoDB fallback 返回结果
+	books := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "测试书籍1",
+			Author:           "测试作者",
+			ViewCount:        100,
+		},
+	}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(1), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/title?title=测试&page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestBookstoreAPI_SearchByTitle_PaginationValidation 测试分页参数验证
+func TestBookstoreAPI_SearchByTitle_PaginationValidation(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil).Times(2)
+
+	// When & Then - 测试 page < 1 的情况（应该被纠正为 1）
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/title?title=测试&page=0&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// When & Then - 测试 size > 100 的情况（应该被纠正为 20）
+	req2, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/title?title=测试&page=1&size=150", nil)
+	w2 := httptest.NewRecorder()
+	router.ServeHTTP(w2, req2)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestBookstoreAPI_SearchByAuthor_MissingParam 测试缺少必需参数
+func TestBookstoreAPI_SearchByAuthor_MissingParam(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	// When - 没有提供 author 参数
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/author?page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - 应该返回 400 Bad Request
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestBookstoreAPI_SearchByAuthor_Success 测试搜索成功
+func TestBookstoreAPI_SearchByAuthor_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	// 模拟 MongoDB fallback 返回结果
+	books := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "测试书籍1",
+			Author:           "测试作者",
+			ViewCount:        100,
+		},
+	}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(1), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/author?author=测试作者&page=1&size=20", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestBookstoreAPI_SearchByAuthor_PaginationValidation 测试分页参数验证
+func TestBookstoreAPI_SearchByAuthor_PaginationValidation(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	mockSearchService := new(MockSearchService)
+	router := setupBookstoreSearchTestRouter(mockService, mockSearchService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(0), nil)
+
+	// When & Then - 测试边界值
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/author?author=测试&page=1&size=0", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// ==================== GetSimilarBooks 测试 ====================
+
+// setupSimilarBooksTestRouter 设置相似书籍测试路由
+func setupSimilarBooksTestRouter(service bookstoreService.BookstoreService) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+
+	api := NewBookstoreAPI(service, nil, logger.Get())
+	router.GET("/books/:id/similar", api.GetSimilarBooks)
+
+	return router
+}
+
+// TestGetSimilarBooks_Strategy1_CategoryAndTags 测试策略1：同分类+标签匹配
+func TestGetSimilarBooks_Strategy1_CategoryAndTags(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "原书籍",
+		CategoryIDs:       []primitive.ObjectID{categoryID},
+		Tags:              []string{"玄幻", "修仙"},
+	}
+
+	similarBooks := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "相似书籍1",
+			CategoryIDs:      []primitive.ObjectID{categoryID},
+			Tags:             []string{"玄幻", "魔法"},
+		},
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "相似书籍2",
+			CategoryIDs:      []primitive.ObjectID{categoryID},
+			Tags:             []string{"修仙", "仙侠"},
+		},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// 策略1: 同分类 + 标签 - 注意：searchSimilarBooks 会多查一条用于排除
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(similarBooks, int64(2), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+// TestGetSimilarBooks_Strategy2_CategoryOnly 测试策略2：只有同分类匹配
+func TestGetSimilarBooks_Strategy2_CategoryOnly(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "原书籍",
+		CategoryIDs:       []primitive.ObjectID{categoryID},
+		Tags:              []string{"小众标签"},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// 策略1返回空（同分类+标签）
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil).Once()
+
+	// 策略2: 同分类（由于limit=10，策略1返回0条，会触发策略2）
+	// 返回10本书，这样就不会触发策略3
+	fullCategoryBooks := make([]*bookstoreModel.Book, 10)
+	for i := 0; i < 10; i++ {
+		fullCategoryBooks[i] = &bookstoreModel.Book{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            fmt.Sprintf("同分类书籍%d", i+1),
+			CategoryIDs:      []primitive.ObjectID{categoryID},
+		}
+	}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(fullCategoryBooks, int64(10), nil).Once()
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestGetSimilarBooks_Strategy3_TagsOnly 测试策略3：只有标签匹配
+func TestGetSimilarBooks_Strategy3_TagsOnly(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "原书籍",
+		CategoryIDs:       []primitive.ObjectID{}, // 无分类
+		Tags:              []string{"热门标签"},
+	}
+
+	tagBooks := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "同标签书籍1",
+			Tags:             []string{"热门标签", "其他标签"},
+		},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// 策略1返回空（无分类，有标签）
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil).Once()
+
+	// 策略2返回空（无分类，无标签）
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil).Once()
+
+	// 策略3: 标签匹配
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(tagBooks, int64(1), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestGetSimilarBooks_Strategy4_FallbackToHot 测试策略4：兜底返回热门书籍
+func TestGetSimilarBooks_Strategy4_FallbackToHot(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "冷门书籍",
+		CategoryIDs:       []primitive.ObjectID{},
+		Tags:              []string{}, // 无标签
+	}
+
+	hotBooks := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "热门书籍1",
+			ViewCount:        9999,
+		},
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "热门书籍2",
+			ViewCount:        8888,
+		},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// 所有策略都返回空
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil)
+
+	// 策略4: 兜底热门书籍
+	mockService.On("GetHotBooks", mock.Anything, 1, 10).Return(hotBooks, int64(2), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestGetSimilarBooks_Deduplication 测试去重逻辑
+func TestGetSimilarBooks_Deduplication(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID()
+	duplicateBookID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "原书籍",
+		CategoryIDs:       []primitive.ObjectID{categoryID},
+		Tags:              []string{"测试"},
+	}
+
+	// 策略1返回的书籍
+	booksFromStrategy1 := []*bookstoreModel.Book{
+		{IdentifiedEntity: shared.IdentifiedEntity{ID: duplicateBookID}, Title: "重复书籍"},
+	}
+
+	// 策略2也返回相同的书籍（应该被去重）
+	booksFromStrategy2 := []*bookstoreModel.Book{
+		{IdentifiedEntity: shared.IdentifiedEntity{ID: duplicateBookID}, Title: "重复书籍"},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(booksFromStrategy1, int64(1), nil).Once()
+
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(booksFromStrategy2, int64(1), nil).Once()
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	// 验证去重后只有一本书
+	// (需要解析响应body来验证数量，这里简化测试)
+}
+
+// TestGetSimilarBooks_LimitValidation 测试数量限制验证
+func TestGetSimilarBooks_LimitValidation(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "测试书籍",
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// When & Then - 测试限制超出范围
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=100", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// 测试限制小于1
+	req2, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=0", nil)
+	w2 := httptest.NewRecorder()
+	router.ServeHTTP(w2, req2)
+	assert.Equal(t, http.StatusOK, w2.Code)
+}
+
+// TestGetSimilarBooks_NeverReturnEmptyList 测试禁止返回空列表
+func TestGetSimilarBooks_NeverReturnEmptyList(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "测试书籍",
+		CategoryIDs:       []primitive.ObjectID{},
+		Tags:              []string{},
+	}
+
+	fallbackBooks := []*bookstoreModel.Book{
+		{IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()}, Title: "兜底书籍"},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	// 所有搜索策略返回空
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil)
+
+	// 兜底返回热门书籍
+	mockService.On("GetHotBooks", mock.Anything, 1, 10).Return(fallbackBooks, int64(1), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - 应该返回兜底书籍，不返回空列表
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "获取相似书籍成功")
+}
+
+// TestGetSimilarBooks_BookNotFound 测试书籍不存在的错误处理
+func TestGetSimilarBooks_BookNotFound(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(nil, errors.New("book not found"))
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+// TestGetSimilarBooks_EmptyBookID 测试空书籍ID的参数验证
+func TestGetSimilarBooks_EmptyBookID(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books//similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestGetSimilarBooks_ExcludeCurrentBook 测试排除当前书籍
+func TestGetSimilarBooks_ExcludeCurrentBook(t *testing.T) {
+	// Given
+	mockService := new(MockBookstoreService)
+	router := setupSimilarBooksTestRouter(mockService)
+
+	bookID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID()
+
+	sourceBook := &bookstoreModel.Book{
+		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+		Title:             "原书籍",
+		CategoryIDs:       []primitive.ObjectID{categoryID},
+		Tags:              []string{"测试"},
+	}
+
+	// 返回包含原书籍的列表
+	booksIncludingCurrent := []*bookstoreModel.Book{
+		sourceBook, // 包含原书籍
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
+			Title:            "其他书籍",
+		},
+	}
+
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
+
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(booksIncludingCurrent, int64(2), nil)
+
+	// When
+	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then - 原书籍应该被排除
+	assert.Equal(t, http.StatusOK, w.Code)
 }

@@ -103,9 +103,14 @@ func InitBookstoreRouter(
 			// 书籍列表和搜索 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/books", bookstoreApiHandler.GetBooks) // 必须放在 /books/:id 之前
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
+			public.GET("/books/search/title", bookstoreApiHandler.SearchByTitle) // 新增：按标题搜索
+			public.GET("/books/search/author", bookstoreApiHandler.SearchByAuthor) // 新增：按作者搜索
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
+			public.GET("/books/tags", bookDetailApiHandler.GetBooksByTags)       // 新增：按标签筛选
+			public.GET("/books/status", bookDetailApiHandler.GetBooksByStatus)   // 新增：按状态筛选
 			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
+			public.GET("/books/:id/similar", bookstoreApiHandler.GetSimilarBooks) // 新增：相似书籍推荐（四层降级策略）
 
 			// 分类 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/categories/tree", bookstoreApiHandler.GetCategoryTree)
@@ -127,7 +132,7 @@ func InitBookstoreRouter(
 			// 书籍详情接口（当BookDetailAPI可用时）
 			if bookDetailApiHandler != nil {
 				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
-				public.GET("/books/:id/similar", bookDetailApiHandler.GetSimilarBooks)
+				// 注意：GetSimilarBooks 已移至 bookstoreApiHandler，符合 P1 设计文档
 				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
 			}
 
