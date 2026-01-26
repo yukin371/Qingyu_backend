@@ -37,7 +37,7 @@ func NewAnnouncementAPI(announcementService messagingService.AnnouncementService
 // @Param offset query int false "偏移量" default(0)
 // @Param sortBy query string false "排序字段(priority/created_at/view_count)" default(priority)
 // @Param sortOrder query string false "排序方向(asc/desc)" default(desc)
-// @Success 200 {object} shared.APIResponse{data=messaging.GetAnnouncementsResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements [get]
@@ -110,7 +110,7 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Success 200 {object} shared.APIResponse{data=messaging.Announcement}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -138,8 +138,8 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body messagingService.CreateAnnouncementRequest true "创建公告请求"
-// @Success 201 {object} shared.APIResponse{data=messaging.Announcement}
+// @Param request body object true "创建公告请求"
+// @Success 201 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -173,7 +173,7 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Param request body messagingService.UpdateAnnouncementRequest true "更新公告请求"
+// @Param request body object true "更新公告请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
@@ -237,7 +237,7 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body messagingService.BatchUpdateAnnouncementStatusRequest true "批量更新状态请求"
+// @Param request body object true "批量更新状态请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
