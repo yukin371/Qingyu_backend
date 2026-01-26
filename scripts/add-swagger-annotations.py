@@ -53,6 +53,57 @@ def main():
         process_module(module, args.dry_run, args.verbose)
 
 
+def parse_gin_routes(router_file: Path) -> List[Dict]:
+    """
+    解析 Gin 路由文件，提取路由信息
+
+    返回格式：
+    [
+        {
+            "method": "GET",
+            "path": "/books/:bookId",
+            "handler": "GetBooks",
+            "line": 42
+        },
+        ...
+    ]
+    """
+    routes = []
+    content = router_file.read_text(encoding="utf-8")
+
+    # 匹配路由定义，例如：
+    # readerGroup.GET("/books/:bookId", readerApiHandler.GetBooks)
+    pattern = re.compile(
+        r'(\w+)\.(GET|POST|PUT|DELETE|PATCH)\(["\']([^"\']+)["\'],\s*\w+\.(\w+)\)',
+        re.MULTILINE
+    )
+
+    for match in pattern.finditer(content):
+        group_name, method, path, handler_name = match.groups()
+        routes.append({
+            "group": group_name,
+            "method": method.upper(),
+            "path": path,
+            "handler": handler_name,
+            "line": content[:match.start()].count('\n') + 1
+        })
+
+    return routes
+
+
+def extract_path_params(path: str) -> List[str]:
+    """提取路径参数，例如 /books/:bookId -> ["bookId"]"""
+    return re.findall(r':(\w+)', path)
+
+
+def gin_to_openapi_path(path: str) -> str:
+    """
+    转换 Gin 风格路径为 OpenAPI 风格
+    例如：/books/:bookId -> /books/{bookId}
+    """
+    return re.sub(r':(\w+)', r'{\1}', path)
+
+
 def process_module(module_name: str, dry_run: bool, verbose: bool):
     """处理单个模块的路由"""
     print(f"\n{'='*60}")
@@ -65,8 +116,22 @@ def process_module(module_name: str, dry_run: bool, verbose: bool):
         print(f"❌ 路由文件不存在: {router_file}")
         return
 
-    # TODO: 实现路由解析和注释生成
-    print(f"✓ 找到路由文件: {router_file}")
+    routes = parse_gin_routes(router_file)
+
+    if not routes:
+        print(f"⚠️  未找到任何路由定义")
+        return
+
+    print(f"✓ 找到 {len(routes)} 个路由定义")
+
+    if verbose:
+        for route in routes:
+            path_params = extract_path_params(route["path"])
+            openapi_path = gin_to_openapi_path(route["path"])
+            print(f"  {route['method']:6} {route['path']:40} -> {route['handler']}")
+            if path_params:
+                print(f"         路径参数: {', '.join(path_params)}")
+                print(f"         OpenAPI:  {openapi_path}")
 
 
 if __name__ == "__main__":
