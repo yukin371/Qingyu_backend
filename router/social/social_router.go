@@ -16,7 +16,6 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 	collectionAPI *socialApi.CollectionAPI,
 	followAPI *socialApi.FollowAPI,
 	messageAPI *messagesApi.MessageAPI,
-	messageAPIV2 *socialApi.MessageAPIV2,
 	reviewAPI *socialApi.ReviewAPI,
 	bookListAPI *socialApi.BookListAPI) {
 
@@ -89,7 +88,7 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 			socialGroup.GET("/following/authors", followAPI.GetFollowingAuthors)
 		}
 
-		// ========== 新增：私信系统（原有） ==========
+		// ========== 新增：私信系统 ==========
 		if messageAPI != nil {
 			// 会话管理
 			socialGroup.GET("/messages/conversations", messageAPI.GetConversations)
@@ -97,24 +96,13 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 
 			// 消息管理
 			socialGroup.POST("/messages", messageAPI.SendMessage)
-			socialGroup.POST("/messages/:id/read", messageAPI.MarkMessageAsRead)
+			socialGroup.PUT("/messages/:id/read", messageAPI.MarkMessageAsRead)
 			socialGroup.DELETE("/messages/:id", messageAPI.DeleteMessage)
 
 			// @提醒
 			socialGroup.POST("/mentions", messageAPI.CreateMention)
 			socialGroup.GET("/mentions", messageAPI.GetMentions)
-			socialGroup.POST("/mentions/:id/read", messageAPI.MarkMentionAsRead)
-		}
-
-		// ========== 新增：私信系统 V2（基于会话） ==========
-		if messageAPIV2 != nil {
-			// 会话管理
-			socialGroup.POST("/messages/conversations", messageAPIV2.CreateConversation)
-
-			// 消息管理
-			socialGroup.GET("/messages/conversations/:conversationId/messages", messageAPIV2.GetMessages)
-			socialGroup.POST("/messages/conversations/:conversationId/messages", messageAPIV2.SendMessage)
-			socialGroup.POST("/messages/conversations/:conversationId/read", messageAPIV2.MarkConversationRead)
+			socialGroup.PUT("/mentions/:id/read", messageAPI.MarkMentionAsRead)
 		}
 
 		// ========== 新增：书评系统 ==========

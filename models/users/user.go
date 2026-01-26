@@ -38,12 +38,6 @@ type User struct {
 	Nickname string     `bson:"nickname,omitempty" json:"nickname,omitempty" validate:"max=50"`
 	Bio      string     `bson:"bio,omitempty" json:"bio,omitempty" validate:"max=500"`
 
-	// 个人资料扩展字段
-	Gender   string     `bson:"gender,omitempty" json:"gender,omitempty" validate:"omitempty,oneof=male female other"` // 性别
-	Birthday *time.Time `bson:"birthday,omitempty" json:"birthday,omitempty"`                                         // 生日
-	Location string     `bson:"location,omitempty" json:"location,omitempty" validate:"max=100"`                      // 位置
-	Website  string     `bson:"website,omitempty" json:"website,omitempty" validate:"omitempty,url"`                  // 个人网站
-
 	// 认证相关
 	EmailVerified bool      `bson:"email_verified" json:"emailVerified"`
 	PhoneVerified bool      `bson:"phone_verified" json:"phoneVerified"`

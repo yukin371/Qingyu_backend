@@ -39,12 +39,6 @@ func ToUserDTO(user *usersModel.User) *dto.UserDTO {
 		Nickname: user.Nickname,
 		Bio:      user.Bio,
 
-		// 个人资料扩展字段
-		Gender:   user.Gender,
-		Birthday: converter.TimeToISO8601PtrToString(user.Birthday),
-		Location: user.Location,
-		Website:  user.Website,
-
 		// 认证相关
 		EmailVerified: user.EmailVerified,
 		PhoneVerified: user.PhoneVerified,
@@ -109,11 +103,6 @@ func ToUser(dto *dto.UserDTO) (*usersModel.User, error) {
 		return nil, err
 	}
 
-	birthday, err := converter.StringToISO8601ToTimePtr(dto.Birthday)
-	if err != nil {
-		return nil, err
-	}
-
 	return &usersModel.User{
 		IdentifiedEntity: shared.IdentifiedEntity{ID: id},
 		BaseEntity:       shared.BaseEntity{CreatedAt: createdAt, UpdatedAt: updatedAt},
@@ -129,11 +118,6 @@ func ToUser(dto *dto.UserDTO) (*usersModel.User, error) {
 		Avatar:   dto.Avatar,
 		Nickname: dto.Nickname,
 		Bio:      dto.Bio,
-
-		Gender:   dto.Gender,
-		Birthday: birthday,
-		Location: dto.Location,
-		Website:  dto.Website,
 
 		EmailVerified: dto.EmailVerified,
 		PhoneVerified: dto.PhoneVerified,
@@ -166,12 +150,6 @@ func ToUserWithoutID(dto *dto.UserDTO) (*usersModel.User, error) {
 		lastLoginAt = time.Time{}
 	}
 
-	birthday, err := converter.StringToISO8601ToTimePtr(dto.Birthday)
-	if err != nil {
-		// 如果 Birthday 为空，使用nil
-		birthday = nil
-	}
-
 	return &usersModel.User{
 		IdentifiedEntity: shared.IdentifiedEntity{}, // ID 将由数据库生成
 		BaseEntity:       shared.BaseEntity{},        // 时间戳将由数据库设置
@@ -187,11 +165,6 @@ func ToUserWithoutID(dto *dto.UserDTO) (*usersModel.User, error) {
 		Avatar:   dto.Avatar,
 		Nickname: dto.Nickname,
 		Bio:      dto.Bio,
-
-		Gender:   dto.Gender,
-		Birthday: birthday,
-		Location: dto.Location,
-		Website:  dto.Website,
 
 		EmailVerified: dto.EmailVerified,
 		PhoneVerified: dto.PhoneVerified,

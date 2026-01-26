@@ -187,36 +187,3 @@ func (m *MockUserRepository) Health(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }
-
-// UnbindEmail 解绑邮箱
-func (m *MockUserRepository) UnbindEmail(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-// UnbindPhone 解绑手机
-func (m *MockUserRepository) UnbindPhone(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-// DeleteDevice 删除设备
-func (m *MockUserRepository) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
-	args := m.Called(ctx, userID, deviceID)
-	return args.Error(0)
-}
-
-// GetDevices 获取设备列表
-func (m *MockUserRepository) GetDevices(ctx context.Context, userID string) ([]interface{}, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]interface{}), args.Error(1)
-}
-
-// UpdatePasswordByEmail 根据邮箱更新密码
-func (m *MockUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
-	args := m.Called(ctx, email, hashedPassword)
-	return args.Error(0)
-}

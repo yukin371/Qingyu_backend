@@ -194,7 +194,6 @@ func CreateTestUsers() error {
 
 		now := time.Now()
 		// 创建用户对象
-		now := time.Now()
 		user := users.User{
 			IdentifiedEntity: shared.IdentifiedEntity{ID: primitive.NewObjectID()},
 			BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},

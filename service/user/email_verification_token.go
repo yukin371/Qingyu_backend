@@ -25,12 +25,9 @@ type VerificationTokenInfo struct {
 
 // NewEmailVerificationTokenManager 创建邮箱验证Token管理器
 func NewEmailVerificationTokenManager() *EmailVerificationTokenManager {
-	manager := &EmailVerificationTokenManager{
+	return &EmailVerificationTokenManager{
 		tokens: make(map[string]*VerificationTokenInfo),
 	}
-	// 启动定期清理过期token的goroutine
-	go manager.startCleanupRoutine()
-	return manager
 }
 
 // GenerateCode 生成6位数字验证码
@@ -55,7 +52,7 @@ func (m *EmailVerificationTokenManager) GenerateCode(ctx context.Context, userID
 		Code:      code,
 		Email:     email,
 		UserID:    userID,
-		ExpiresAt: time.Now().Add(VerificationCodeExpiryMin * time.Minute),
+		ExpiresAt: time.Now().Add(30 * time.Minute),
 		Used:      false,
 	}
 
@@ -116,15 +113,5 @@ func (m *EmailVerificationTokenManager) CleanExpiredCodes(ctx context.Context) {
 		if now.After(tokenInfo.ExpiresAt) {
 			delete(m.tokens, email)
 		}
-	}
-}
-
-// startCleanupRoutine 启动定期清理过期token的goroutine
-func (m *EmailVerificationTokenManager) startCleanupRoutine() {
-	ticker := time.NewTicker(5 * time.Minute) // 每5分钟清理一次
-	defer ticker.Stop()
-
-	for range ticker.C {
-		m.CleanExpiredCodes(context.Background())
 	}
 }

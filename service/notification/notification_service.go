@@ -23,11 +23,9 @@ type NotificationService interface {
 	// 通知状态操作
 	MarkAsRead(ctx context.Context, id string, userID string) error
 	MarkMultipleAsRead(ctx context.Context, ids []string, userID string) error
-	MarkMultipleAsReadWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error)
 	MarkAllAsRead(ctx context.Context, userID string) error
 	DeleteNotification(ctx context.Context, id string, userID string) error
 	BatchDeleteNotifications(ctx context.Context, ids []string, userID string) error
-	BatchDeleteNotificationsWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error)
 	DeleteAllNotifications(ctx context.Context, userID string) error
 
 	// 通知发送
@@ -57,10 +55,6 @@ type NotificationService interface {
 	// 定期清理
 	CleanupExpiredNotifications(ctx context.Context) (int64, error)
 	CleanupOldNotifications(ctx context.Context, days int) (int64, error)
-
-	// 重新发送和清除操作
-	ResendNotification(ctx context.Context, id string, userID string, method string) error
-	ClearReadNotifications(ctx context.Context, userID string) (int64, error)
 }
 
 // notificationServiceImpl 通知服务实现
@@ -69,18 +63,6 @@ type notificationServiceImpl struct {
 	preferenceRepo   repo.NotificationPreferenceRepository
 	pushDeviceRepo   repo.PushDeviceRepository
 	templateRepo     repo.NotificationTemplateRepository
-	emailService     EmailService
-	wsHub            WSHub
-}
-
-// EmailService 邮件服务接口（避免循环依赖）
-type EmailService interface {
-	SendEmail(ctx context.Context, to, subject, body string) error
-}
-
-// WSHub WebSocket Hub接口（避免循环依赖）
-type WSHub interface {
-	BroadcastNotification(userID string, notification interface{})
 }
 
 // NewNotificationService 创建通知服务实例
@@ -89,16 +71,12 @@ func NewNotificationService(
 	preferenceRepo repo.NotificationPreferenceRepository,
 	pushDeviceRepo repo.PushDeviceRepository,
 	templateRepo repo.NotificationTemplateRepository,
-	emailService EmailService,
-	wsHub WSHub,
 ) NotificationService {
 	return &notificationServiceImpl{
 		notificationRepo: notificationRepo,
 		preferenceRepo:   preferenceRepo,
 		pushDeviceRepo:   pushDeviceRepo,
 		templateRepo:     templateRepo,
-		emailService:     emailService,
-		wsHub:            wsHub,
 	}
 }
 
@@ -747,144 +725,3 @@ func (s *notificationServiceImpl) CleanupOldNotifications(ctx context.Context, d
 	}
 	return count, nil
 }
-
-// ResendNotification 重新发送通知
-func (s *notificationServiceImpl) ResendNotification(ctx context.Context, id string, userID string, method string) error {
-	// 检查通知是否存在
-	notif, err := s.notificationRepo.GetByID(ctx, id)
-	if err != nil {
-		return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_GET_FAILED", "获取通知失败", err)
-	}
-
-	if notif == nil {
-		return errors.BookstoreServiceFactory.NotFoundError("Notification", id)
-	}
-
-	// 验证权限
-	if notif.UserID != userID {
-		return errors.BookstoreServiceFactory.ForbiddenError("NO_PERMISSION", "无权操作此通知")
-	}
-
-	// 根据类型重新发送
-	switch method {
-	case "email":
-		return s.resendEmail(ctx, notif)
-	case "push":
-		return s.resendPush(ctx, notif)
-	default:
-		return errors.BookstoreServiceFactory.ValidationError("UNSUPPORTED_METHOD", "不支持的发送方式")
-	}
-}
-
-// resendEmail 通过邮件重新发送通知
-func (s *notificationServiceImpl) resendEmail(ctx context.Context, notif *notification.Notification) error {
-	// 检查是否有邮件服务
-	if s.emailService == nil {
-		return errors.BookstoreServiceFactory.InternalError("EMAIL_SERVICE_NOT_AVAILABLE", "邮件服务不可用", nil)
-	}
-
-	// 调用邮件服务发送通知
-	err := s.emailService.SendEmail(ctx, notif.UserID, notif.Title, notif.Content)
-	if err != nil {
-		return errors.BookstoreServiceFactory.InternalError("EMAIL_SEND_FAILED", "发送邮件失败", err)
-	}
-
-	return nil
-}
-
-// resendPush 通过推送重新发送通知
-func (s *notificationServiceImpl) resendPush(ctx context.Context, notif *notification.Notification) error {
-	// 检查是否有WebSocket Hub
-	if s.wsHub == nil {
-		return errors.BookstoreServiceFactory.InternalError("WS_HUB_NOT_AVAILABLE", "WebSocket服务不可用", nil)
-	}
-
-	// 通过WebSocket Hub推送通知
-	s.wsHub.BroadcastNotification(notif.UserID, notif)
-
-	return nil
-}
-
-
-// ClearReadNotifications 清除已读通知
-func (s *notificationServiceImpl) ClearReadNotifications(ctx context.Context, userID string) (int64, error) {
-	count, err := s.notificationRepo.DeleteReadForUser(ctx, userID)
-	if err != nil {
-		return 0, errors.BookstoreServiceFactory.InternalError("CLEAR_READ_FAILED", "清除已读通知失败", err)
-	}
-	return count, nil
-}
-
-// MarkMultipleAsReadWithResult 批量标记通知为已读（返回结果）
-func (s *notificationServiceImpl) MarkMultipleAsReadWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error) {
-	if len(ids) == 0 {
-		return 0, 0, nil
-	}
-
-	now := time.Now()
-	succeeded = 0
-	failed = 0
-
-	for _, id := range ids {
-		// 验证通知存在且属于该用户
-		notif, err := s.notificationRepo.GetByID(ctx, id)
-		if err != nil {
-			failed++
-			continue
-		}
-		if notif == nil || notif.UserID != userID {
-			failed++
-			continue
-		}
-
-		// 更新已读状态
-		updates := map[string]interface{}{
-			"read":     true,
-			"read_at":  &now,
-			"updated_at": &now,
-		}
-
-		if err := s.notificationRepo.Update(ctx, id, updates); err != nil {
-			failed++
-			continue
-		}
-
-		succeeded++
-	}
-
-	return succeeded, failed, nil
-}
-
-// BatchDeleteNotificationsWithResult 批量删除通知（返回结果）
-func (s *notificationServiceImpl) BatchDeleteNotificationsWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error) {
-	if len(ids) == 0 {
-		return 0, 0, nil
-	}
-
-	succeeded = 0
-	failed = 0
-
-	for _, id := range ids {
-		// 验证通知存在且属于该用户
-		notif, err := s.notificationRepo.GetByID(ctx, id)
-		if err != nil {
-			failed++
-			continue
-		}
-		if notif == nil || notif.UserID != userID {
-			failed++
-			continue
-		}
-
-		// 删除通知
-		if err := s.notificationRepo.Delete(ctx, id); err != nil {
-			failed++
-			continue
-		}
-
-		succeeded++
-	}
-
-	return succeeded, failed, nil
-}
-

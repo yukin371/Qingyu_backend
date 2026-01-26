@@ -8,14 +8,14 @@ import (
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/interfaces"
-	searchservice "Qingyu_backend/service/search"
+	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
-func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
+func RegisterWriterRoutes(r *gin.RouterGroup) {
 	// 从服务容器获取依赖
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
@@ -51,6 +51,10 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	// 创建VersionService（直接使用MongoDB数据库）
 	versionSvc := projectService.NewVersionService(mongoDB)
 
+	// 创建SearchService（用于文档搜索）
+	bookRepo := repositoryFactory.CreateBookRepository()
+	searchSvc := search_legacy.NewSearchService(bookRepo, documentRepo)
+
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口
 	// exportTaskRepo := repositoryFactory.CreateExportTaskRepository()
@@ -79,14 +83,6 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
 	commentSvc = writerservice.NewCommentService(commentRepo)
 
-	// 创建BatchOperationService（批量操作服务）
-	var batchOpSvc documentService.BatchOperationService
-	// 创建所需的repositories
-	batchOpRepo := writerrepo.NewBatchOperationRepository(mongoDB)
-	opLogRepo := writerrepo.NewOperationLogRepository(mongoDB)
-	// 创建批量操作服务
-	batchOpSvc = documentService.NewBatchOperationService(batchOpRepo, opLogRepo, documentRepo)
-
 	// 创建TemplateService（模板服务）
 	var templateSvc *documentService.TemplateService
 	templateRepo := repositoryFactory.CreateTemplateRepository()
@@ -97,5 +93,5 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	}
 
 	// 调用InitWriterRouter初始化所有写作路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, batchOpSvc, templateSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc)
 }

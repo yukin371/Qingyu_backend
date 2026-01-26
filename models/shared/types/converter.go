@@ -128,38 +128,6 @@ func (DTOConverter) TimeToISO8601(t time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
-// TimeToISO8601Ptr *time.Time → *ISO8601 字符串指针 (RFC3339)
-// 用于将 BaseEntity 的时间字段指针转换为 API 层的字符串格式指针
-func (DTOConverter) TimeToISO8601Ptr(t *time.Time) *string {
-	if t == nil || t.IsZero() {
-		return nil
-	}
-	result := t.Format(time.RFC3339)
-	return &result
-}
-
-// TimeToISO8601PtrToString *time.Time → string (RFC3339)
-// 用于将 *time.Time 转换为 string，如果为 nil 则返回空字符串
-func (DTOConverter) TimeToISO8601PtrToString(t *time.Time) string {
-	if t == nil || t.IsZero() {
-		return ""
-	}
-	return t.Format(time.RFC3339)
-}
-
-// StringToISO8601ToTimePtr string → *time.Time (RFC3339)
-// 用于将 string 转换为 *time.Time，如果为空字符串则返回 nil
-func (DTOConverter) StringToISO8601ToTimePtr(s string) (*time.Time, error) {
-	if s == "" {
-		return nil, nil
-	}
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
-
 // ISO8601ToTime ISO8601 字符串 → time.Time
 // 用于将 API 层的时间字符串转换为 Model 层的 time.Time
 func (DTOConverter) ISO8601ToTime(s string) (time.Time, error) {
@@ -167,19 +135,6 @@ func (DTOConverter) ISO8601ToTime(s string) (time.Time, error) {
 		return time.Time{}, nil
 	}
 	return time.Parse(time.RFC3339, s)
-}
-
-// ISO8601ToTimePtr *ISO8601 字符串指针 → *time.Time
-// 用于将 API 层的时间字符串指针转换为 Model 层的 time.Time 指针
-func (DTOConverter) ISO8601ToTimePtr(s *string) (*time.Time, error) {
-	if s == nil || *s == "" {
-		return nil, nil
-	}
-	t, err := time.Parse(time.RFC3339, *s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
 }
 
 // TimeToUnix time.Time → Unix 时间戳（秒）

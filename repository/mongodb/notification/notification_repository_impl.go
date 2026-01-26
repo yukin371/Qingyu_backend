@@ -436,20 +436,3 @@ func (r *NotificationRepositoryImpl) buildFilter(filter *notification.Notificati
 
 	return mongoFilter
 }
-
-// DeleteReadForUser 删除用户所有已读通知
-func (r *NotificationRepositoryImpl) DeleteReadForUser(ctx context.Context, userID string) (int64, error) {
-	filter := bson.M{
-		"user_id": userID,
-		"read":    true,
-	}
-
-	result, err := r.notificationCollection.DeleteMany(ctx, filter)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.DeletedCount, nil
-}
-
-

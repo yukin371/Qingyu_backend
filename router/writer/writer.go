@@ -7,7 +7,7 @@ import (
 	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/interfaces"
-	searchservice "Qingyu_backend/service/search"
+	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
@@ -19,12 +19,11 @@ func InitWriterRouter(
 	projectService *projectService.ProjectService,
 	documentService *document.DocumentService,
 	versionService *projectService.VersionService,
-	searchSvc *searchservice.SearchService,
+	searchSvc search_legacy.SearchService,
 	exportService interfaces.ExportService,
 	publishService interfaces.PublishService,
 	lockService lock.DocumentLockService,
 	commentService writerservice.CommentService,
-	batchOpService document.BatchOperationService,
 	templateService *document.TemplateService,
 ) {
 	// 创建API实例
@@ -43,12 +42,6 @@ func InitWriterRouter(
 	var commentApi *writer.CommentAPI
 	if commentService != nil {
 		commentApi = writer.NewCommentAPI(commentService)
-	}
-
-	// 批量操作API（如果可用）
-	var batchOpApi *writer.BatchOperationAPI
-	if batchOpService != nil {
-		batchOpApi = writer.NewBatchOperationAPI(batchOpService)
 	}
 
 	// 模板API
@@ -91,11 +84,6 @@ func InitWriterRouter(
 		// 批注路由
 		if commentApi != nil {
 			InitCommentRouter(writerGroup, commentApi)
-		}
-
-		// 批量操作路由
-		if batchOpApi != nil {
-			batchOpApi.RegisterRoutes(writerGroup)
 		}
 
 		// 模板路由
@@ -205,7 +193,7 @@ func InitEditorRouter(r *gin.RouterGroup, editorApi *writer.EditorApi) {
 }
 
 // InitSearchRouter 初始化搜索路由
-func InitSearchRouter(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
+func InitSearchRouter(r *gin.RouterGroup, searchSvc search_legacy.SearchService) {
 	// 创建搜索API实例
 	searchAPI := writer.NewSearchAPI(searchSvc)
 

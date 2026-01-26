@@ -119,7 +119,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 		progress := bson.M{
 			"user_id":    testUserID,
 			"book_id":    testBook.ID.Hex(),
-			"chapter_id": chapter.ID,
+			"chapter_id": chapter.ID.Hex(),
 			"position":   50, // 读到50%
 			"updated_at": time.Now(),
 		}
@@ -140,7 +140,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 			"_id":        "bookmark_" + time.Now().Format("20060102150405"),
 			"user_id":    testUserID,
 			"book_id":    testBook.ID.Hex(),
-			"chapter_id": chapter.ID,
+			"chapter_id": chapter.ID.Hex(),
 			"type":       "bookmark",
 			"range":      "100-150",
 			"text":       "重要情节",
@@ -157,7 +157,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 			"_id":        "note_" + time.Now().Format("20060102150405"),
 			"user_id":    testUserID,
 			"book_id":    testBook.ID.Hex(),
-			"chapter_id": chapter.ID,
+			"chapter_id": chapter.ID.Hex(),
 			"type":       "note",
 			"range":      "200-250",
 			"text":       "精彩描写",
@@ -197,7 +197,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 
 		require.NoError(t, err, "应该能获取到阅读进度")
 		assert.Equal(t, testBook.ID.Hex(), progress["book_id"], "书籍ID应该匹配")
-		assert.Equal(t, testChapters[0].ID, progress["chapter_id"], "章节ID应该匹配")
+		assert.Equal(t, testChapters[0].ID.Hex(), progress["chapter_id"], "章节ID应该匹配")
 		assert.Equal(t, int32(50), progress["position"], "阅读位置应该是50%")
 
 		t.Logf("✓ 成功获取阅读历史")
@@ -252,6 +252,7 @@ func createTestBook(t *testing.T, ctx context.Context) *bookModel.Book {
 		Status:       bookModel.BookStatusOngoing,
 		WordCount:    30000,
 		ChapterCount: 3,
+		CreatedAt:    now,
 		LastUpdateAt: &now,
 	}
 
@@ -264,10 +265,13 @@ func createTestBook(t *testing.T, ctx context.Context) *bookModel.Book {
 
 // createTestChapters 创建测试章节
 func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []bookModel.Chapter {
+	bookID, err := primitive.ObjectIDFromHex(bookIDHex)
+	require.NoError(t, err)
+
 	now := time.Now()
 	chapters := []bookModel.Chapter{
 		{
-			BookID:      bookIDHex,
+			BookID:      bookID,
 			Title:       "第一章",
 			ChapterNum:  1,
 			WordCount:   1000,
@@ -278,7 +282,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 			UpdatedAt:   now,
 		},
 		{
-			BookID:      bookIDHex,
+			BookID:      bookID,
 			Title:       "第二章",
 			ChapterNum:  2,
 			WordCount:   2000,
@@ -289,7 +293,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 			UpdatedAt:   now,
 		},
 		{
-			BookID:      bookIDHex,
+			BookID:      bookID,
 			Title:       "第三章",
 			ChapterNum:  3,
 			WordCount:   1500,
@@ -304,9 +308,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 	for i := range chapters {
 		result, err := global.DB.Collection("chapters").InsertOne(ctx, &chapters[i])
 		require.NoError(t, err)
-		// Chapter.ID 是 string 类型，从 InsertedID 获取
-		insertedID := result.InsertedID.(primitive.ObjectID)
-		chapters[i].ID = insertedID.Hex()
+		chapters[i].ID = result.InsertedID.(primitive.ObjectID)
 	}
 
 	return chapters

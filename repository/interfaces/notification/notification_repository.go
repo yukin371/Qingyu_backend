@@ -25,7 +25,6 @@ type NotificationRepository interface {
 	MarkAllAsReadForUser(ctx context.Context, userID string) error
 	BatchDelete(ctx context.Context, ids []string) error
 	DeleteAllForUser(ctx context.Context, userID string) error
-	DeleteReadForUser(ctx context.Context, userID string) (int64, error)
 
 	// 统计操作
 	CountUnread(ctx context.Context, userID string) (int64, error)
