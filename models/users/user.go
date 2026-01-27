@@ -243,3 +243,8 @@ func (u *User) UpdateLastLogin(ip string) {
 	u.LastLoginAt = time.Now()
 	u.LastLoginIP = ip
 }
+
+// GetID 实现Cacheable接口 - 返回字符串形式的ID（使用值接收者）
+func (u User) GetID() string {
+	return u.ID.Hex()
+}

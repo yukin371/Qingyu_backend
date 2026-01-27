@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -10,6 +11,9 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/sony/gobreaker"
 )
+
+// ErrNotFound 记录未找到错误
+var ErrNotFound = errors.New("record not found")
 
 // Cacheable 可缓存的数据接口
 type Cacheable interface {

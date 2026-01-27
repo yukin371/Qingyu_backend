@@ -91,11 +91,11 @@ func TestMigrator_Register(t *testing.T) {
 
 		// 测试各种无效格式
 		invalidNames := []string{
-			"test-migration",       // 缺少数字前缀
-			"001_test-migration",   // 包含连字符
-			"001TestMigration",     // 包含大写字母
-			"001 test migration",   // 包含空格
-			"1_test",               // 数字不足3位
+			"test-migration",     // 缺少数字前缀
+			"001_test-migration", // 包含连字符
+			"001TestMigration",   // 包含大写字母
+			"001 test migration", // 包含空格
+			"1_test",             // 数字不足3位
 			"001_测试",             // 包含非ASCII字符
 		}
 
