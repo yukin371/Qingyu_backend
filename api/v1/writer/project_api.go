@@ -30,8 +30,8 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 // @Tags 项目管理
 // @Accept json
 // @Produce json
-// @Param request body project.CreateProjectRequest true "创建项目请求"
-// @Success 201 {object} shared.APIResponse{data=project.CreateProjectResponse}
+// @Param request body object true "创建项目请求"
+// @Success 201 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 401 {object} shared.APIResponse
 // @Router /api/v1/projects [post]
@@ -64,7 +64,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse{data=documentModel.Project}
+// @Success 200 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/projects/{id} [get]
 func (api *ProjectApi) GetProject(c *gin.Context) {
@@ -89,7 +89,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 // @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "项目状态"
 // @Param category query string false "项目分类"
-// @Success 200 {object} shared.APIResponse{data=project.ListProjectsResponse}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/projects [get]
 func (api *ProjectApi) ListProjects(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -126,7 +126,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Param request body project.UpdateProjectRequest true "更新项目请求"
+// @Param request body object true "更新项目请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 403 {object} shared.APIResponse

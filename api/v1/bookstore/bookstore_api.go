@@ -197,7 +197,7 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 //
 //	@Summary		获取推荐书籍
 //	@Description	获取推荐书籍列表，支持分页
-//	@Tags			书籍
+//	@Tags			书籍推荐
 //	@Accept			json
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)
@@ -231,7 +231,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 //
 //	@Summary		获取精选书籍
 //	@Description	获取精选书籍列表，支持分页
-//	@Tags			书籍
+//	@Tags			书籍推荐
 //	@Accept			json
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)

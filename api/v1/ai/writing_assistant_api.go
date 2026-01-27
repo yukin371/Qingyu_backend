@@ -42,8 +42,8 @@ func NewWritingAssistantApi(
 // @Tags AI写作辅助
 // @Accept json
 // @Produce json
-// @Param request body dto.SummarizeRequest true "总结请求"
-// @Success 200 {object} shared.APIResponse{data=dto.SummarizeResponse}
+// @Param request body object true "总结请求"
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/ai/writing/summarize [post]
@@ -79,8 +79,8 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 // @Tags AI写作辅助
 // @Accept json
 // @Produce json
-// @Param request body dto.ChapterSummaryRequest true "章节总结请求"
-// @Success 200 {object} shared.APIResponse{data=dto.ChapterSummaryResponse}
+// @Param request body object true "章节总结请求"
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/ai/writing/summarize-chapter [post]
@@ -120,8 +120,8 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 // @Tags AI写作辅助
 // @Accept json
 // @Produce json
-// @Param request body dto.ProofreadRequest true "校对请求"
-// @Success 200 {object} shared.APIResponse{data=dto.ProofreadResponse}
+// @Param request body object true "校对请求"
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/ai/writing/proofread [post]
@@ -158,7 +158,7 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "建议ID"
-// @Success 200 {object} shared.APIResponse{data=dto.ProofreadSuggestion}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -190,8 +190,8 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 // @Tags AI内容审核
 // @Accept json
 // @Produce json
-// @Param request body dto.SensitiveWordsCheckRequest true "敏感词检测请求"
-// @Success 200 {object} shared.APIResponse{data=dto.SensitiveWordsCheckResponse}
+// @Param request body object true "敏感词检测请求"
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/ai/audit/sensitive-words [post]
@@ -230,7 +230,7 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "检测ID"
-// @Success 200 {object} shared.APIResponse{data=dto.SensitiveWordsDetail}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse

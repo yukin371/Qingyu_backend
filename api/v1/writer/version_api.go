@@ -31,7 +31,7 @@ func NewVersionApi(versionService *project.VersionService) *VersionApi {
 // @Param documentId path string true "文档ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse{data=project.VersionHistoryResponse}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{documentId}/versions [get]
 func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -55,7 +55,7 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 // @Produce json
 // @Param documentId path string true "文档ID"
 // @Param versionId path string true "版本ID"
-// @Success 200 {object} shared.APIResponse{data=project.VersionDetail}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/{versionId} [get]
 func (api *VersionApi) GetVersion(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -79,7 +79,7 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 // @Param documentId path string true "文档ID"
 // @Param fromVersion query string true "源版本ID"
 // @Param toVersion query string true "目标版本ID"
-// @Success 200 {object} shared.APIResponse{data=project.VersionDiff}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/compare [get]
 func (api *VersionApi) CompareVersions(c *gin.Context) {
 	documentID := c.Param("documentId")

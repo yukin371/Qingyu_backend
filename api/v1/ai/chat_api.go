@@ -44,7 +44,7 @@ type ChatRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body ChatRequest true "聊天请求"
-// @Success 200 {object} shared.APIResponse{data=aiService.ChatResponse}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/chat [post]
 func (api *ChatApi) Chat(c *gin.Context) {
 	var req ChatRequest
@@ -177,7 +177,7 @@ func (api *ChatApi) ChatStream(c *gin.Context) {
 // @Param projectId query string false "项目ID"
 // @Param limit query int false "每页数量" default(20)
 // @Param offset query int false "偏移量" default(0)
-// @Success 200 {object} shared.APIResponse{data=[]aiDto.ChatSessionDTO}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/chat/sessions [get]
 func (api *ChatApi) GetChatSessions(c *gin.Context) {
 	projectID := c.Query("projectId")
@@ -214,7 +214,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 // @Param sessionId path string true "会话ID"
 // @Param limit query int false "每页数量" default(50) minimum(1) maximum(100)
 // @Param offset query int false "偏移量" default(0) minimum(0)
-// @Success 200 {object} shared.APIResponse{data=aiDto.ChatHistoryDTO}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/chat/sessions/:sessionId [get]
 func (api *ChatApi) GetChatHistory(c *gin.Context) {
 	sessionID := c.Param("sessionId")

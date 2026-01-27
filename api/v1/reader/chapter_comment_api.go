@@ -43,7 +43,7 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 // @Produce json
 // @Security Bearer
 // @Param chapterId path string true "ChapterId"
-// @Success 200 {object} response.APIResponse{data=TODO}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /reader/{chapterId}/comments [get]
 
@@ -134,7 +134,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 //	@Summary	发表章节评论
 //	@Tags		阅读器-章节评论
 //	@Param		chapterId	path	string								true	"章节ID"
-//	@Param		request		body readerModels.CreateChapterCommentRequest	true	"评论内容"
+//	@Param		request		body object	true	"评论内容"
 //	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/comments [post]
 func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
@@ -247,7 +247,7 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 //	@Summary	更新章节评论
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string								true	"评论ID"
-//	@Param		request		body readerModels.UpdateChapterCommentRequest	true	"更新内容"
+//	@Param		request		body object	true	"更新内容"
 //	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [put]
 func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
@@ -425,7 +425,7 @@ func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 //	@Summary	发表段落级评论
 //	@Tags		阅读器-段落评论
 //	@Param		chapterId	path	string								true	"章节ID"
-//	@Param		request		body readerModels.CreateChapterCommentRequest	true	"评论内容"
+//	@Param		request		body object	true	"评论内容"
 //	@Success	200			{object}	shared.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraph-comments [post]
 func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {

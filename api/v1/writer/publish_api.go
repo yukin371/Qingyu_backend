@@ -29,8 +29,8 @@ func NewPublishApi(publishService interfaces.PublishService) *PublishApi {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Param request body interfaces.PublishProjectRequest true "发布请求"
-// @Success 202 {object} shared.APIResponse{data=interfaces.PublicationRecord}
+// @Param request body object true "发布请求"
+// @Success 202 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{id}/publish [post]
@@ -108,7 +108,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse{data=interfaces.PublicationStatus}
+// @Success 200 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{id}/publication-status [get]
 func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
@@ -136,8 +136,8 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param projectId query string true "项目ID"
-// @Param request body interfaces.PublishDocumentRequest true "发布请求"
-// @Success 202 {object} shared.APIResponse{data=interfaces.PublicationRecord}
+// @Param request body object true "发布请求"
+// @Success 202 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/documents/{id}/publish [post]
@@ -181,7 +181,7 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param projectId query string true "项目ID"
-// @Param request body interfaces.UpdateDocumentPublishStatusRequest true "更新请求"
+// @Param request body object true "更新请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
@@ -225,8 +225,8 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Param request body interfaces.BatchPublishDocumentsRequest true "批量发布请求"
-// @Success 202 {object} shared.APIResponse{data=interfaces.BatchPublishResult}
+// @Param request body object true "批量发布请求"
+// @Success 202 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/documents/batch-publish [post]
@@ -270,7 +270,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 // @Param projectId path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse{data=[]interfaces.PublicationRecord}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/publications [get]
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
@@ -300,7 +300,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "记录ID"
-// @Success 200 {object} shared.APIResponse{data=interfaces.PublicationRecord}
+// @Success 200 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/publications/{id} [get]
 func (api *PublishApi) GetPublicationRecord(c *gin.Context) {

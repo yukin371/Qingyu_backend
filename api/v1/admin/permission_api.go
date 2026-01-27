@@ -221,7 +221,7 @@ func (api *PermissionAPI) GetRole(c *gin.Context) {
 //	@Tags			Admin-Role
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.Role	true	"角色信息"
+//	@Param			request	body		object	true	"角色信息"
 //	@Success		201		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse
 //	@Failure		401		{object}	shared.APIResponse
@@ -250,7 +250,7 @@ func (api *PermissionAPI) CreateRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string		true	"角色ID"
-//	@Param			request	body		auth.Role	true	"角色信息"
+//	@Param			request	body		object	true	"角色信息"
 //	@Success		200		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse
 //	@Failure		404		{object}	shared.APIResponse

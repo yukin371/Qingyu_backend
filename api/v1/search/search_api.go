@@ -53,9 +53,9 @@ type BatchSearchRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		SearchRequest	true	"搜索请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	object
+//	@Failure		400		{object}	object
+//	@Failure		500		{object}	object
 //	@Router			/api/v1/search/search [post]
 func (api *SearchAPI) Search(c *gin.Context) {
 	startTime := time.Now()
@@ -228,9 +228,9 @@ func (api *SearchAPI) Search(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchSearchRequest	true	"批量搜索请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	object
+//	@Failure		400		{object}	object
+//	@Failure		500		{object}	object
 //	@Router			/api/v1/search/batch [post]
 func (api *SearchAPI) SearchBatch(c *gin.Context) {
 	startTime := time.Now()
@@ -403,7 +403,7 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 //	@Tags			搜索
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
+//	@Success		200	{object}	object
 //	@Router			/api/v1/search/health [get]
 func (api *SearchAPI) Health(c *gin.Context) {
 	// 获取请求ID

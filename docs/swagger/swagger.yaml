@@ -78,6 +78,14 @@ definitions:
     - new_password
     - old_password
     type: object
+  Qingyu_backend_api_v1_user_dto.DeleteDeviceRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
   Qingyu_backend_api_v1_user_dto.GetUserBooksResponse:
     properties:
       books: {}
@@ -153,6 +161,94 @@ definitions:
       username:
         type: string
     type: object
+  Qingyu_backend_api_v1_user_dto.ResetPasswordRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - code
+    - email
+    - new_password
+    type: object
+  Qingyu_backend_api_v1_user_dto.ResetPasswordResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  Qingyu_backend_api_v1_user_dto.SendCodeResponse:
+    properties:
+      expires_in:
+        description: 有效期（秒）
+        type: integer
+      message:
+        description: 额外信息
+        type: string
+    type: object
+  Qingyu_backend_api_v1_user_dto.SendEmailCodeRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
+  Qingyu_backend_api_v1_user_dto.SendPasswordResetRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
+  Qingyu_backend_api_v1_user_dto.SendPasswordResetResponse:
+    properties:
+      expires_in:
+        type: integer
+      message:
+        type: string
+    type: object
+  Qingyu_backend_api_v1_user_dto.SendPhoneCodeRequest:
+    properties:
+      phone:
+        example: "13800138000"
+        type: string
+    required:
+    - phone
+    type: object
+  Qingyu_backend_api_v1_user_dto.UnbindEmailRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
+  Qingyu_backend_api_v1_user_dto.UnbindPhoneRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
+  Qingyu_backend_api_v1_user_dto.UpdatePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   Qingyu_backend_api_v1_user_dto.UpdateProfileRequest:
     properties:
       avatar:
@@ -210,6 +306,25 @@ definitions:
       username:
         type: string
     type: object
+  Qingyu_backend_api_v1_user_dto.VerifyEmailRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      timestamp:
+        type: integer
+    required:
+    - code
+    - email
+    type: object
+  Qingyu_backend_api_v1_user_dto.VerifyEmailResponse:
+    properties:
+      message:
+        type: string
+      verified:
+        type: boolean
+    type: object
   Qingyu_backend_models_ai.GenerateOptions:
     properties:
       maxTokens:
@@ -222,138 +337,6 @@ definitions:
         type: number
       topP:
         type: number
-    type: object
-  Qingyu_backend_models_ai.QuotaMetadata:
-    properties:
-      averagePerDay:
-        description: 日均消费
-        type: number
-      customFields:
-        additionalProperties: true
-        description: 自定义字段
-        type: object
-      lastConsumedAt:
-        description: 最后消费时间
-        type: string
-      membershipLevel:
-        description: 会员等级
-        type: string
-      totalConsumptions:
-        description: 总消费次数
-        type: integer
-      userRole:
-        description: 用户角色（reader/writer）
-        type: string
-    type: object
-  Qingyu_backend_models_ai.QuotaStatus:
-    enum:
-    - active
-    - exhausted
-    - suspended
-    type: string
-    x-enum-comments:
-      QuotaStatusActive: 激活
-      QuotaStatusExhausted: 用尽
-      QuotaStatusSuspended: 暂停
-    x-enum-descriptions:
-    - 激活
-    - 用尽
-    - 暂停
-    x-enum-varnames:
-    - QuotaStatusActive
-    - QuotaStatusExhausted
-    - QuotaStatusSuspended
-  Qingyu_backend_models_ai.QuotaTransaction:
-    properties:
-      afterBalance:
-        description: 消费后余额
-        type: integer
-      amount:
-        description: 消费数量（可为负数表示恢复）
-        type: integer
-      beforeBalance:
-        description: 消费前余额
-        type: integer
-      description:
-        description: 描述
-        type: string
-      id:
-        type: string
-      model:
-        description: 使用的模型
-        type: string
-      quotaType:
-        $ref: '#/definitions/Qingyu_backend_models_ai.QuotaType'
-      requestId:
-        description: 请求ID
-        type: string
-      service:
-        description: 服务类型（text_generation/chat/image）
-        type: string
-      timestamp:
-        type: string
-      type:
-        description: consume/restore/reset
-        type: string
-      userId:
-        type: string
-    type: object
-  Qingyu_backend_models_ai.QuotaType:
-    enum:
-    - daily
-    - monthly
-    - total
-    type: string
-    x-enum-comments:
-      QuotaTypeDaily: 日配额
-      QuotaTypeMonthly: 月配额
-      QuotaTypeTotal: 总配额
-    x-enum-descriptions:
-    - 日配额
-    - 月配额
-    - 总配额
-    x-enum-varnames:
-    - QuotaTypeDaily
-    - QuotaTypeMonthly
-    - QuotaTypeTotal
-  Qingyu_backend_models_ai.UserQuota:
-    properties:
-      createdAt:
-        type: string
-      expiresAt:
-        description: 过期时间
-        type: string
-      id:
-        type: string
-      metadata:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_ai.QuotaMetadata'
-        description: 元数据
-      quotaType:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_ai.QuotaType'
-        description: 配额类型
-      remainingQuota:
-        description: 剩余配额
-        type: integer
-      resetAt:
-        description: 重置时间
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_ai.QuotaStatus'
-        description: 配额状态
-      totalQuota:
-        description: 总配额（Token数或次数）
-        type: integer
-      updatedAt:
-        type: string
-      usedQuota:
-        description: 已用配额
-        type: integer
-      userId:
-        description: 用户ID
-        type: string
     type: object
   Qingyu_backend_models_auth.Permission:
     properties:
@@ -374,77 +357,6 @@ definitions:
       resource:
         description: 资源类型：user, book, wallet
         type: string
-    type: object
-  Qingyu_backend_models_auth.Role:
-    properties:
-      $1$2:
-        type: string
-      description:
-        description: 角色描述
-        type: string
-      id:
-        type: string
-      name:
-        description: 角色名称：reader, author, admin
-        type: string
-      permissions:
-        description: 权限列表
-        items:
-          type: string
-        type: array
-    type: object
-  Qingyu_backend_models_bookstore.Banner:
-    properties:
-      clickCount:
-        description: 点击次数
-        type: integer
-      createdAt:
-        description: 创建时间
-        type: string
-      description:
-        description: 描述
-        maxLength: 200
-        type: string
-      endTime:
-        description: 结束时间
-        type: string
-      id:
-        type: string
-      image:
-        description: 图片URL
-        type: string
-      isActive:
-        description: 是否启用
-        type: boolean
-      sortOrder:
-        description: 排序权重
-        type: integer
-      startTime:
-        description: 开始时间
-        type: string
-      target:
-        description: 跳转目标
-        type: string
-      targetType:
-        description: 目标类型：book书籍 category分类 url外链
-        enum:
-        - book
-        - category
-        - url
-        type: string
-      title:
-        description: 标题
-        maxLength: 100
-        minLength: 1
-        type: string
-      updatedAt:
-        description: 更新时间
-        type: string
-    required:
-    - image
-    - target
-    - targetType
-    - title
     type: object
   Qingyu_backend_models_bookstore.BookDetail:
     properties:
@@ -564,24 +476,6 @@ definitions:
     - author
     - title
     type: object
-  Qingyu_backend_models_bookstore.BookRating:
-    properties:
-      $1$2:
-        type: string
-      comment:
-        type: string
-      id:
-        type: string
-      likes:
-        type: integer
-      rating:
-        description: 1-5星
-        type: integer
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
   Qingyu_backend_models_bookstore.BookStatus:
     enum:
     - draft
@@ -628,605 +522,66 @@ definitions:
       title:
         type: string
     type: object
-  Qingyu_backend_models_finance.WithdrawAccount:
-    properties:
-      $1$2:
-        description: 账号
-        type: string
-      bank_name:
-        description: 银行名称
-        type: string
-      branch_name:
-        description: 开户支行
-        type: string
-    type: object
-  Qingyu_backend_models_messaging.Announcement:
-    properties:
-      content:
-        description: 公告内容
-        minLength: 1
-        type: string
-      createdAt:
-        type: string
-      createdBy:
-        description: 创建者
-        type: string
-      deletedAt:
-        type: string
-      endTime:
-        description: 结束时间
-        type: string
-      expiresAt:
-        type: string
-      isActive:
-        description: 状态和目标
-        type: boolean
-      isPinned:
-        type: boolean
-      pinnedAt:
-        type: string
-      pinnedBy:
-        type: string
-      priority:
-        description: 优先级（数字越大优先级越高）
-        type: integer
-      startTime:
-        description: 有效期（使用Expirable混入的ExpiresAt字段，同时保留StartTime以支持延迟发布）
-        type: string
-      targetRole:
-        description: 目标用户：all所有 reader读者 writer作者 admin管理员
-        enum:
-        - all
-        - reader
-        - writer
-        - admin
-        type: string
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      type:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_messaging.AnnouncementType'
-        description: 分类和优先级
-        enum:
-        - info
-        - warning
-        - notice
-      updatedAt:
-        type: string
-      viewCount:
-        description: 统计数据
-        type: integer
-    required:
-    - content
-    - targetRole
-    - title
-    - type
-    type: object
-  Qingyu_backend_models_messaging.AnnouncementType:
+  Qingyu_backend_models_writer.BatchOperationStatus:
     enum:
-    - info
-    - warning
-    - notice
+    - pending
+    - preflight
+    - processing
+    - completed
+    - failed
+    - cancelled
+    - partial
     type: string
     x-enum-comments:
-      AnnouncementTypeInfo: 信息
-      AnnouncementTypeNotice: 通知
-      AnnouncementTypeWarning: 警告
+      BatchOpStatusCancelled: 已取消
+      BatchOpStatusCompleted: 已完成
+      BatchOpStatusFailed: 失败
+      BatchOpStatusPartial: 部分成功（atomic=false时）
+      BatchOpStatusPending: 待处理
+      BatchOpStatusPreflight: 预检查中
+      BatchOpStatusProcessing: 执行中
     x-enum-descriptions:
-    - 信息
-    - 警告
-    - 通知
+    - 待处理
+    - 预检查中
+    - 执行中
+    - 已完成
+    - 失败
+    - 已取消
+    - 部分成功（atomic=false时）
     x-enum-varnames:
-    - AnnouncementTypeInfo
-    - AnnouncementTypeWarning
-    - AnnouncementTypeNotice
-  Qingyu_backend_models_messaging.NotificationDelivery:
-    properties:
-      content:
-        type: string
-      createdAt:
-        type: string
-      id:
-        type: string
-      isRead:
-        type: boolean
-      metadata:
-        additionalProperties: true
-        type: object
-      readAt:
-        type: string
-      sentAt:
-        type: string
-      status:
-        description: sent, pending, failed
-        type: string
-      title:
-        type: string
-      type:
-        description: email, sms, push, system
-        type: string
-      userId:
-        type: string
-    type: object
-  Qingyu_backend_models_notification.EmailNotificationSettings:
-    properties:
-      enabled:
-        type: boolean
-      frequency:
-        description: immediate, hourly, daily
-        type: string
-      types:
-        description: 启用邮件通知的通知类型列表
-        items:
-          type: string
-        type: array
-    type: object
-  Qingyu_backend_models_notification.SMSNotificationSettings:
-    properties:
-      enabled:
-        type: boolean
-      types:
-        description: 启用短信通知的通知类型列表
-        items:
-          type: string
-        type: array
-    type: object
-  Qingyu_backend_models_reader.Annotation:
-    properties:
-      bookId:
-        description: 书籍ID
-        type: string
-      chapterId:
-        description: 章节ID
-        type: string
-      createdAt:
-        type: string
-      note:
-        description: 注释
-        type: string
-      range:
-        description: 标注范围：start-end
-        type: string
-      text:
-        description: 标注文本
-        type: string
-      type:
-        description: 标注类型 书签 | 划线
-        type: string
-      updatedAt:
-        type: string
-      userId:
-        description: 用户ID
-        type: string
-    type: object
-  Qingyu_backend_models_reader.CreateChapterCommentRequest:
-    properties:
-      bookId:
-        type: string
-      chapterId:
-        type: string
-      charEnd:
-        type: integer
-      charStart:
-        type: integer
-      content:
-        maxLength: 5000
-        minLength: 1
-        type: string
-      paragraphIndex:
-        type: integer
-      parentId:
-        type: string
-      rating:
-        maximum: 5
-        minimum: 0
-        type: integer
-    required:
-    - bookId
-    - chapterId
-    - content
-    type: object
-  Qingyu_backend_models_reader.CreateCustomFontRequest:
-    properties:
-      category:
-        enum:
-        - serif
-        - sans-serif
-        - monospace
-        type: string
-      description:
-        maxLength: 200
-        type: string
-      displayName:
-        maxLength: 50
-        minLength: 1
-        type: string
-      fontFamily:
-        type: string
-      fontUrl:
-        type: string
-      name:
-        maxLength: 50
-        minLength: 1
-        type: string
-      previewText:
-        type: string
-    required:
-    - category
-    - displayName
-    - fontFamily
-    - name
-    type: object
-  Qingyu_backend_models_reader.CreateCustomThemeRequest:
-    properties:
-      colors:
-        $ref: '#/definitions/Qingyu_backend_models_reader.ThemeColors'
-      description:
-        maxLength: 200
-        type: string
-      displayName:
-        maxLength: 50
-        minLength: 1
-        type: string
-      isPublic:
-        type: boolean
-      name:
-        maxLength: 50
-        minLength: 1
-        type: string
-    required:
-    - colors
-    - displayName
-    - name
-    type: object
-  Qingyu_backend_models_reader.FontPreference:
-    properties:
-      fontName:
-        description: 字体名称
-        type: string
-      fontSize:
-        description: 字号
-        type: integer
-      letterSpacing:
-        description: 字间距
-        type: number
-      lineHeight:
-        description: 行高
-        type: number
-      userId:
-        description: 用户ID
-        type: string
-    type: object
-  Qingyu_backend_models_reader.ReadingSettings:
-    properties:
-      autoScroll:
-        description: 自动滚动
-        type: boolean
-      background:
-        description: 背景色
-        type: string
-      createdAt:
-        type: string
-      fontFamily:
-        description: 字体
-        type: string
-      fontSize:
-        description: 字号
-        type: integer
-      id:
-        type: string
-      lineHeight:
-        description: 行高
-        type: number
-      pageMode:
-        description: 翻页模式：1-滑动，2-仿真
-        type: integer
-      scrollSpeed:
-        description: 滚动速度
-        type: integer
-      theme:
-        description: 主题
-        type: string
-      updatedAt:
-        type: string
-      userId:
-        description: 用户ID
-        type: string
-    type: object
-  Qingyu_backend_models_reader.ThemeColors:
-    properties:
-      accentColor:
-        description: 强调色
-        type: string
-      accentHover:
-        description: 强调色悬停
-        type: string
-      annotationColor:
-        description: 标注颜色
-        type: string
-      background:
-        description: 背景颜色
-        type: string
-      bookmarkColor:
-        description: 书签颜色
-        type: string
-      borderColor:
-        description: 边框和分隔线
-        type: string
-      dividerColor:
-        description: 分隔线颜色
-        type: string
-      highlightColor:
-        description: 特殊元素
-        type: string
-      linkColor:
-        description: 链接颜色
-        type: string
-      secondaryBackground:
-        description: 次背景色
-        type: string
-      shadowColor:
-        description: 阴影
-        type: string
-      textDisabled:
-        description: 禁用文字颜色
-        type: string
-      textPrimary:
-        description: 文字颜色
-        type: string
-      textSecondary:
-        description: 次要文字颜色
-        type: string
-    type: object
-  Qingyu_backend_models_reader.UpdateChapterCommentRequest:
-    properties:
-      content:
-        maxLength: 5000
-        minLength: 1
-        type: string
-      rating:
-        maximum: 5
-        minimum: 0
-        type: integer
-    type: object
-  Qingyu_backend_models_reader.UpdateFontRequest:
-    properties:
-      description:
-        maxLength: 200
-        type: string
-      displayName:
-        maxLength: 50
-        minLength: 1
-        type: string
-      isActive:
-        type: boolean
-    type: object
-  Qingyu_backend_models_reader.UpdateThemeRequest:
-    properties:
-      colors:
-        $ref: '#/definitions/Qingyu_backend_models_reader.ThemeColors'
-      description:
-        maxLength: 200
-        type: string
-      displayName:
-        maxLength: 50
-        minLength: 1
-        type: string
-      isPublic:
-        type: boolean
-    type: object
-  Qingyu_backend_models_social.Like:
-    properties:
-      createdAt:
-        type: string
-      id:
-        type: string
-      targetId:
-        type: string
-      targetType:
-        description: book, comment, chapter
-        type: string
-      userId:
-        type: string
-    required:
-    - targetId
-    - targetType
-    - userId
-    type: object
-  Qingyu_backend_models_stats.BookStats:
-    properties:
-      $1$2:
-        type: string
-      id:
-        type: string
-      title:
-        description: 基础信息
-        type: string
-    type: object
-  Qingyu_backend_models_stats.BookStatsDaily:
-    properties:
-      $1$2:
-        type: string
-      date:
-        description: 统计日期
-        type: string
-      id:
-        type: string
-    type: object
-  Qingyu_backend_models_stats.ChapterStats:
-    properties:
-      $1$2:
-        type: string
-      id:
-        type: string
-      revenue:
-        description: 收入（元）
-        type: number
-      title:
-        description: 章节标题
-        type: string
-    type: object
-  Qingyu_backend_models_stats.ChapterStatsAggregate:
-    properties:
-      $1$2:
-        type: number
-      revenue:
-        type: number
-      title:
-        type: string
-    type: object
-  Qingyu_backend_models_stats.HeatmapPoint:
-    properties:
-      $1$2:
-        description: 热度分数(0-100)
-        type: number
-    type: object
-  Qingyu_backend_models_stats.ReaderBehavior:
-    properties:
-      $1$2:
-        type: string
-      id:
-        type: string
-      progress:
-        description: 阅读进度(0-1)
-        type: number
-      referrer:
-        description: 引荐页面
-        type: string
-      source:
-        description: 来源信息
-        type: string
-    type: object
-  Qingyu_backend_models_stats.RevenueBreakdown:
-    properties:
-      $1$2:
-        type: string
-    type: object
-  Qingyu_backend_models_stats.TopChapters:
-    properties:
-      $1$2:
-        description: 跳出率最高
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_stats.ChapterStatsAggregate'
-        type: array
-    type: object
-  Qingyu_backend_models_writer.Character:
-    properties:
-      alias:
-        description: 基本信息（保持BSON字段名不变，确保数据库兼容）
-        items:
-          type: string
-        maxItems: 10
-        type: array
-      avatarUrl:
-        type: string
-      background:
-        maxLength: 2000
-        type: string
-      createdAt:
-        type: string
-      currentState:
-        description: 角色当前状态
-        maxLength: 200
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        maxLength: 100
-        minLength: 1
-        type: string
-      personalityPrompt:
-        description: AI相关字段
-        maxLength: 1000
-        type: string
-      projectId:
-        type: string
-      shortDescription:
-        description: 角色摘要
-        maxLength: 200
-        type: string
-      speechPattern:
-        description: 角色语音模式
-        maxLength: 500
-        type: string
-      summary:
-        maxLength: 500
-        type: string
-      traits:
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      updatedAt:
-        type: string
-    required:
-    - name
-    - projectId
-    type: object
-  Qingyu_backend_models_writer.CharacterRelation:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      fromId:
-        type: string
-      id:
-        type: string
-      notes:
-        maxLength: 500
-        type: string
-      projectId:
-        type: string
-      strength:
-        maximum: 100
-        minimum: 0
-        type: integer
-      toId:
-        type: string
-      type:
-        $ref: '#/definitions/Qingyu_backend_models_writer.RelationType'
-      updatedAt:
-        type: string
-    required:
-    - fromId
-    - projectId
-    - toId
-    - type
-    type: object
-  Qingyu_backend_models_writer.Collaborator:
-    properties:
-      acceptedAt:
-        type: string
-      invitedAt:
-        type: string
-      role:
-        $ref: '#/definitions/Qingyu_backend_models_writer.CollaboratorRole'
-      userId:
-        type: string
-    type: object
-  Qingyu_backend_models_writer.CollaboratorRole:
+    - BatchOpStatusPending
+    - BatchOpStatusPreflight
+    - BatchOpStatusProcessing
+    - BatchOpStatusCompleted
+    - BatchOpStatusFailed
+    - BatchOpStatusCancelled
+    - BatchOpStatusPartial
+  Qingyu_backend_models_writer.BatchOperationType:
     enum:
-    - owner
-    - editor
-    - viewer
+    - move
+    - delete
+    - export
+    - copy
+    - apply
     type: string
     x-enum-comments:
-      RoleEditor: 编辑者
-      RoleOwner: 所有者
-      RoleViewer: 查看者
+      BatchOpTypeApply: 批量应用模板
+      BatchOpTypeCopy: 批量复制
+      BatchOpTypeDelete: 批量删除
+      BatchOpTypeExport: 批量导出
+      BatchOpTypeMove: 批量移动
     x-enum-descriptions:
-    - 所有者
-    - 编辑者
-    - 查看者
+    - 批量移动
+    - 批量删除
+    - 批量导出
+    - 批量复制
+    - 批量应用模板
     x-enum-varnames:
-    - RoleOwner
-    - RoleEditor
-    - RoleViewer
+    - BatchOpTypeMove
+    - BatchOpTypeDelete
+    - BatchOpTypeExport
+    - BatchOpTypeCopy
+    - BatchOpTypeApply
   Qingyu_backend_models_writer.CommentMetadata:
     properties:
       attachments:
@@ -1264,221 +619,59 @@ definitions:
         description: 选中的文本
         type: string
     type: object
-  Qingyu_backend_models_writer.Document:
-    properties:
-      characterIds:
-        description: 关联信息（保持BSON字段名不变，确保数据库兼容）
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      keyPoints:
-        description: 关键点
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      level:
-        description: 层级深度
-        minimum: 0
-        type: integer
-      locationIds:
-        description: 关联地点
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      notes:
-        maxLength: 500
-        type: string
-      order:
-        description: 同级排序
-        minimum: 0
-        type: integer
-      parentId:
-        description: 层级结构（保持BSON字段名不变，确保数据库兼容）
-        type: string
-      plotThreads:
-        description: 写作辅助（AI上下文需要）
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      projectId:
-        description: 项目基础信息
-        type: string
-      status:
-        description: planned | writing | completed
-        type: string
-      tags:
-        description: 标签和备注
-        items:
-          type: string
-        maxItems: 10
-        type: array
-      timelineIds:
-        description: 关联时间线
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      title:
-        maxLength: 200
-        type: string
-      type:
-        description: 动态类型（如：volume, chapter, section, scene, article, act, beat等）
-        type: string
-      updatedAt:
-        type: string
-      wordCount:
-        description: 统计信息（从DocumentContent同步）
-        type: integer
-      writingHints:
-        description: 写作提示
-        items:
-          type: string
-        maxItems: 20
-        type: array
-    required:
-    - projectId
-    - title
-    - type
-    type: object
-  Qingyu_backend_models_writer.Project:
-    properties:
-      authorId:
-        type: string
-      category:
-        maxLength: 50
-        type: string
-      collaborators:
-        description: 协作信息
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Collaborator'
-        type: array
-      coverUrl:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      publishedAt:
-        description: 发布时间（项目特有字段）
-        type: string
-      settings:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_writer.ProjectSettings'
-        description: 设置信息
-      statistics:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_models_writer.ProjectStats'
-        description: 统计信息
-      status:
-        $ref: '#/definitions/Qingyu_backend_models_writer.ProjectStatus'
-      summary:
-        description: 详细信息（保持BSON字段名不变，确保数据库兼容）
-        maxLength: 500
-        type: string
-      tags:
-        items:
-          type: string
-        maxItems: 10
-        type: array
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      updatedAt:
-        type: string
-      visibility:
-        $ref: '#/definitions/Qingyu_backend_models_writer.Visibility'
-      writingType:
-        description: 写作类型（保持BSON字段名不变，确保数据库兼容）
-        type: string
-    required:
-    - authorId
-    - status
-    - title
-    - visibility
-    - writingType
-    type: object
-  Qingyu_backend_models_writer.ProjectSettings:
-    properties:
-      autoBackup:
-        description: 自动备份
-        type: boolean
-      backupInterval:
-        description: 备份间隔（小时）
-        type: integer
-      wordCountGoal:
-        description: 字数目标
-        type: integer
-    type: object
-  Qingyu_backend_models_writer.ProjectStats:
-    properties:
-      chapterCount:
-        description: 章节数
-        type: integer
-      documentCount:
-        description: 文档数
-        type: integer
-      lastUpdateAt:
-        description: 最后更新时间
-        type: string
-      totalWords:
-        description: 总字数
-        type: integer
-    type: object
-  Qingyu_backend_models_writer.ProjectStatus:
+  Qingyu_backend_models_writer.ConflictPolicy:
     enum:
-    - draft
-    - serializing
-    - completed
-    - suspended
-    - archived
+    - skip
+    - overwrite
+    - rename
+    - abort
     type: string
     x-enum-comments:
-      StatusArchived: 已归档
-      StatusCompleted: 已完结
-      StatusDraft: 草稿
-      StatusSerializing: 连载中
-      StatusSuspended: 暂停
+      ConflictPolicyAbort: 中止操作
+      ConflictPolicyOverwrite: 覆盖
+      ConflictPolicyRename: 重命名（自动添加后缀）
+      ConflictPolicySkip: 跳过冲突项
     x-enum-descriptions:
-    - 草稿
-    - 连载中
-    - 已完结
-    - 暂停
-    - 已归档
+    - 跳过冲突项
+    - 覆盖
+    - 重命名（自动添加后缀）
+    - 中止操作
     x-enum-varnames:
-    - StatusDraft
-    - StatusSerializing
-    - StatusCompleted
-    - StatusSuspended
-    - StatusArchived
-  Qingyu_backend_models_writer.RelationType:
-    enum:
-    - 朋友
-    - 家庭
-    - 敌人
-    - 恋人
-    - 盟友
-    - 其他
-    type: string
-    x-enum-varnames:
-    - RelationFriend
-    - RelationFamily
-    - RelationEnemy
-    - RelationRomance
-    - RelationAlly
-    - RelationOther
+    - ConflictPolicySkip
+    - ConflictPolicyOverwrite
+    - ConflictPolicyRename
+    - ConflictPolicyAbort
+  Qingyu_backend_models_writer.PreflightSummary:
+    properties:
+      errors:
+        description: 错误信息
+        items:
+          type: string
+        type: array
+      failedCount:
+        description: 失败项数（执行后更新）
+        type: integer
+      invalidCount:
+        description: 无效项数
+        type: integer
+      skippedCount:
+        description: 跳过项数
+        type: integer
+      successCount:
+        description: 成功项数（执行后更新）
+        type: integer
+      totalCount:
+        description: 总数
+        type: integer
+      validCount:
+        description: 有效项数
+        type: integer
+      warnings:
+        description: 警告信息
+        items:
+          type: string
+        type: array
+    type: object
   Qingyu_backend_models_writer.Shortcut:
     properties:
       action:
@@ -1496,1365 +689,6 @@ definitions:
       key:
         description: 按键组合 (e.g., "Ctrl+S")
         type: string
-    type: object
-  Qingyu_backend_models_writer.ShortcutCategory:
-    properties:
-      name:
-        type: string
-      shortcuts:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Shortcut'
-        type: array
-    type: object
-  Qingyu_backend_models_writer.ShortcutConfig:
-    properties:
-      createdAt:
-        type: string
-      id:
-        type: string
-      shortcuts:
-        additionalProperties:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Shortcut'
-        description: 快捷键映射
-        type: object
-      updatedAt:
-        type: string
-      userId:
-        description: 用户ID
-        type: string
-    type: object
-  Qingyu_backend_models_writer.Visibility:
-    enum:
-    - private
-    - public
-    type: string
-    x-enum-comments:
-      VisibilityPrivate: 私密
-      VisibilityPublic: 公开
-    x-enum-descriptions:
-    - 私密
-    - 公开
-    x-enum-varnames:
-    - VisibilityPrivate
-    - VisibilityPublic
-  Qingyu_backend_repository_interfaces_ai.QuotaStatistics:
-    properties:
-      dailyAverage:
-        description: 日均消费
-        type: number
-      quotaByService:
-        additionalProperties:
-          type: integer
-        description: 按服务统计
-        type: object
-      quotaByType:
-        additionalProperties:
-          type: integer
-        description: 按类型统计
-        type: object
-      remainingQuota:
-        description: 剩余配额
-        type: integer
-      totalQuota:
-        description: 总配额
-        type: integer
-      totalTransactions:
-        description: 总交易次数
-        type: integer
-      usagePercentage:
-        description: 使用百分比
-        type: number
-      usedQuota:
-        description: 已用配额
-        type: integer
-      userId:
-        type: string
-    type: object
-  Qingyu_backend_service_ai.ChatResponse:
-    properties:
-      contextUsed:
-        type: boolean
-      message:
-        $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChatMessageDTO'
-      model:
-        type: string
-      responseTime:
-        $ref: '#/definitions/time.Duration'
-      sessionId:
-        type: string
-      tokensUsed:
-        type: integer
-    type: object
-  Qingyu_backend_service_ai.GenerateContentResponse:
-    properties:
-      content:
-        type: string
-      finishReason:
-        type: string
-      model:
-        type: string
-      requestId:
-        type: string
-      tokensUsed:
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.ChapterSummaryRequest:
-    properties:
-      chapterId:
-        description: 章节ID
-        type: string
-      outlineLevel:
-        description: 大纲级别（可选）
-        type: integer
-      projectId:
-        description: 项目ID
-        type: string
-    required:
-    - chapterId
-    - projectId
-    type: object
-  Qingyu_backend_service_ai_dto.ChapterSummaryResponse:
-    properties:
-      chapterId:
-        description: 章节ID
-        type: string
-      chapterTitle:
-        description: 章节标题
-        type: string
-      characters:
-        description: 涉及角色
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.CharacterMention'
-        type: array
-      keyPoints:
-        description: 关键点列表
-        items:
-          type: string
-        type: array
-      plotOutline:
-        description: 情节大纲
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.OutlineItem'
-        type: array
-      processedAt:
-        description: 处理时间
-        type: string
-      summary:
-        description: 章节摘要
-        type: string
-      tokensUsed:
-        description: 使用的Token数
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.CharacterMention:
-    properties:
-      appearance:
-        description: 出现描述
-        type: string
-      name:
-        description: 角色名称
-        type: string
-      role:
-        description: 角色定位
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.ChatHistoryDTO:
-    properties:
-      messages:
-        $ref: '#/definitions/Qingyu_backend_service_ai_dto.PaginatedMessagesDTO'
-      session:
-        $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChatSessionDTO'
-    type: object
-  Qingyu_backend_service_ai_dto.ChatMessageDTO:
-    properties:
-      content:
-        type: string
-      id:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      role:
-        description: user, assistant, system
-        type: string
-      timestamp:
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.ChatSessionDTO:
-    properties:
-      createdAt:
-        type: string
-      id:
-        type: string
-      projectId:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.CheckSummary:
-    properties:
-      byCategory:
-        additionalProperties:
-          type: integer
-        description: 按分类统计
-        type: object
-      byLevel:
-        additionalProperties:
-          type: integer
-        description: 按级别统计
-        type: object
-      highRiskCount:
-        description: 高风险数量
-        type: integer
-      lowRiskCount:
-        description: 低风险数量
-        type: integer
-      mediumRiskCount:
-        description: 中风险数量
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.Issue:
-    properties:
-      category:
-        description: 问题分类
-        type: string
-      id:
-        description: 问题ID
-        type: string
-      message:
-        description: 问题描述
-        type: string
-      originalText:
-        description: 原文
-        type: string
-      position:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.TextPosition'
-        description: 位置信息
-      rule:
-        description: 违反的规则
-        type: string
-      severity:
-        description: '严重程度: error, warning, suggestion'
-        type: string
-      suggestions:
-        description: 修改建议
-        items:
-          type: string
-        type: array
-      type:
-        description: '问题类型: spelling, grammar, punctuation, style'
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.OutlineItem:
-    properties:
-      children:
-        description: 子项
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.OutlineItem'
-        type: array
-      description:
-        description: 描述
-        type: string
-      level:
-        description: 层级
-        type: integer
-      title:
-        description: 标题
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.PaginatedMessagesDTO:
-    properties:
-      limit:
-        type: integer
-      messages:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChatMessageDTO'
-        type: array
-      offset:
-        type: integer
-      total:
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.ProofreadRequest:
-    properties:
-      chapterId:
-        description: 章节ID（可选）
-        type: string
-      checkTypes:
-        description: '检查类型: spelling, grammar, punctuation, style'
-        items:
-          type: string
-        type: array
-      content:
-        description: 要校对的内容
-        type: string
-      language:
-        description: 语言（自动检测）
-        type: string
-      projectId:
-        description: 项目ID（可选）
-        type: string
-      suggestions:
-        description: 是否提供修改建议
-        type: boolean
-    required:
-    - content
-    type: object
-  Qingyu_backend_service_ai_dto.ProofreadResponse:
-    properties:
-      issues:
-        description: 问题列表
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.Issue'
-        type: array
-      model:
-        description: 使用的模型
-        type: string
-      originalContent:
-        description: 原始内容
-        type: string
-      processedAt:
-        description: 处理时间
-        type: string
-      score:
-        description: 整体评分 (0-100)
-        type: number
-      statistics:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.ProofreadStats'
-        description: 统计信息
-      tokensUsed:
-        description: 使用的Token数
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.ProofreadStats:
-    properties:
-      characterCount:
-        description: 字符数
-        type: integer
-      errorCount:
-        description: 错误数
-        type: integer
-      issuesByType:
-        additionalProperties:
-          type: integer
-        description: 按类型统计
-        type: object
-      suggestionCount:
-        description: 建议数
-        type: integer
-      totalIssues:
-        description: 总问题数
-        type: integer
-      warningCount:
-        description: 警告数
-        type: integer
-      wordCount:
-        description: 词数
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.ProofreadSuggestion:
-    properties:
-      examples:
-        description: 示例
-        items:
-          type: string
-        type: array
-      explanation:
-        description: 解释说明
-        type: string
-      issueId:
-        description: 问题ID
-        type: string
-      message:
-        description: 问题描述
-        type: string
-      originalText:
-        description: 原文
-        type: string
-      position:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.TextPosition'
-        description: 位置信息
-      suggestions:
-        description: 建议列表
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.SuggestionItem'
-        type: array
-      type:
-        description: 问题类型
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.SensitiveWordMatch:
-    properties:
-      category:
-        description: 分类
-        type: string
-      context:
-        description: 上下文（前后各50字符）
-        type: string
-      id:
-        description: 匹配ID
-        type: string
-      level:
-        description: '级别: high, medium, low'
-        type: string
-      position:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.TextPosition'
-        description: 位置信息
-      reason:
-        description: 原因说明
-        type: string
-      suggestion:
-        description: 建议修改
-        type: string
-      word:
-        description: 敏感词
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.SensitiveWordsCheckRequest:
-    properties:
-      category:
-        description: '检测分类: all, political, violence, adult, other'
-        type: string
-      chapterId:
-        description: 章节ID（可选）
-        type: string
-      content:
-        description: 要检测的内容
-        type: string
-      customWords:
-        description: 自定义敏感词
-        items:
-          type: string
-        type: array
-      projectId:
-        description: 项目ID（可选）
-        type: string
-    required:
-    - content
-    type: object
-  Qingyu_backend_service_ai_dto.SensitiveWordsCheckResponse:
-    properties:
-      checkId:
-        description: 检查ID
-        type: string
-      isSafe:
-        description: 是否安全
-        type: boolean
-      processedAt:
-        description: 处理时间
-        type: string
-      sensitiveWords:
-        description: 敏感词列表
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.SensitiveWordMatch'
-        type: array
-      summary:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.CheckSummary'
-        description: 检测摘要
-      tokensUsed:
-        description: 使用的Token数
-        type: integer
-      totalMatches:
-        description: 总匹配数
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.SensitiveWordsDetail:
-    properties:
-      checkId:
-        description: 检查ID
-        type: string
-      content:
-        description: 检测内容
-        type: string
-      createdAt:
-        description: 创建时间
-        type: string
-      customWords:
-        description: 自定义词库
-        items:
-          type: string
-        type: array
-      expiresAt:
-        description: 过期时间（30天后）
-        type: string
-      isSafe:
-        description: 是否安全
-        type: boolean
-      matches:
-        description: 匹配列表
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.SensitiveWordMatch'
-        type: array
-      summary:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_ai_dto.CheckSummary'
-        description: 检测摘要
-    type: object
-  Qingyu_backend_service_ai_dto.SuggestionItem:
-    properties:
-      confidence:
-        description: 置信度 (0-1)
-        type: number
-      reason:
-        description: 原因说明
-        type: string
-      text:
-        description: 建议文本
-        type: string
-    type: object
-  Qingyu_backend_service_ai_dto.SummarizeRequest:
-    properties:
-      chapterId:
-        description: 章节ID（可选）
-        type: string
-      content:
-        description: 要总结的内容
-        type: string
-      includeQuotes:
-        description: 是否包含关键引用
-        type: boolean
-      maxLength:
-        description: 摘要最大长度
-        type: integer
-      projectId:
-        description: 项目ID（可选，用于上下文）
-        type: string
-      summaryType:
-        description: '总结类型: brief, detailed, keypoints'
-        type: string
-    required:
-    - content
-    type: object
-  Qingyu_backend_service_ai_dto.SummarizeResponse:
-    properties:
-      compressionRate:
-        description: 压缩率
-        type: number
-      keyPoints:
-        description: 关键点列表
-        items:
-          type: string
-        type: array
-      model:
-        description: 使用的模型
-        type: string
-      originalLength:
-        description: 原文长度
-        type: integer
-      processedAt:
-        description: 处理时间
-        type: string
-      summary:
-        description: 摘要内容
-        type: string
-      summaryLength:
-        description: 摘要长度
-        type: integer
-      tokensUsed:
-        description: 使用的Token数
-        type: integer
-    type: object
-  Qingyu_backend_service_ai_dto.TextPosition:
-    properties:
-      column:
-        description: 列号（从1开始）
-        type: integer
-      end:
-        description: 字符结束位置
-        type: integer
-      length:
-        description: 长度
-        type: integer
-      line:
-        description: 行号（从1开始）
-        type: integer
-      start:
-        description: 字符开始位置
-        type: integer
-    type: object
-  Qingyu_backend_service_bookstore.BatchUpdateSortRequest:
-    properties:
-      items:
-        items:
-          properties:
-            id:
-              type: string
-            sortOrder:
-              type: integer
-          required:
-          - id
-          type: object
-        minItems: 1
-        type: array
-    required:
-    - items
-    type: object
-  Qingyu_backend_service_bookstore.BatchUpdateStatusRequest:
-    properties:
-      bannerIds:
-        items:
-          type: string
-        minItems: 1
-        type: array
-      isActive:
-        type: boolean
-    required:
-    - bannerIds
-    type: object
-  Qingyu_backend_service_bookstore.CreateBannerRequest:
-    properties:
-      description:
-        maxLength: 200
-        type: string
-      endTime:
-        type: string
-      image:
-        type: string
-      isActive:
-        type: boolean
-      sortOrder:
-        type: integer
-      startTime:
-        type: string
-      target:
-        type: string
-      targetType:
-        enum:
-        - book
-        - category
-        - url
-        type: string
-      title:
-        maxLength: 100
-        minLength: 1
-        type: string
-    required:
-    - image
-    - target
-    - targetType
-    - title
-    type: object
-  Qingyu_backend_service_bookstore.GetBannersResponse:
-    properties:
-      banners:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_bookstore.Banner'
-        type: array
-      total:
-        type: integer
-    type: object
-  Qingyu_backend_service_bookstore.UpdateBannerRequest:
-    properties:
-      description:
-        maxLength: 200
-        type: string
-      endTime:
-        type: string
-      image:
-        type: string
-      isActive:
-        type: boolean
-      sortOrder:
-        type: integer
-      startTime:
-        type: string
-      target:
-        type: string
-      targetType:
-        enum:
-        - book
-        - category
-        - url
-        type: string
-      title:
-        maxLength: 100
-        minLength: 1
-        type: string
-    type: object
-  Qingyu_backend_service_interfaces.BatchPublishDocumentsRequest:
-    properties:
-      autoNumbering:
-        description: 是否自动编号（从起始章节号开始）
-        type: boolean
-      documentIds:
-        description: 文档ID列表
-        items:
-          type: string
-        maxItems: 50
-        minItems: 1
-        type: array
-      isFree:
-        description: 是否全部免费
-        type: boolean
-      publishTime:
-        description: 发布时间
-        type: string
-      startNumber:
-        description: 起始章节号
-        minimum: 1
-        type: integer
-    required:
-    - documentIds
-    type: object
-  Qingyu_backend_service_interfaces.BatchPublishItem:
-    properties:
-      documentId:
-        type: string
-      error:
-        type: string
-      recordId:
-        type: string
-      success:
-        type: boolean
-    type: object
-  Qingyu_backend_service_interfaces.BatchPublishResult:
-    properties:
-      failCount:
-        type: integer
-      results:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.BatchPublishItem'
-        type: array
-      successCount:
-        type: integer
-    type: object
-  Qingyu_backend_service_interfaces.CharacterGraph:
-    properties:
-      edges:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.CharacterRelation'
-        type: array
-      nodes:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Character'
-        type: array
-    type: object
-  Qingyu_backend_service_interfaces.CreateCharacterRequest:
-    properties:
-      alias:
-        items:
-          type: string
-        type: array
-      avatarUrl:
-        type: string
-      background:
-        type: string
-      currentState:
-        type: string
-      name:
-        type: string
-      personalityPrompt:
-        type: string
-      speechPattern:
-        type: string
-      summary:
-        type: string
-      traits:
-        items:
-          type: string
-        type: array
-    required:
-    - name
-    type: object
-  Qingyu_backend_service_interfaces.CreateRelationRequest:
-    properties:
-      fromId:
-        type: string
-      notes:
-        type: string
-      strength:
-        type: integer
-      toId:
-        type: string
-      type:
-        type: string
-    required:
-    - fromId
-    - toId
-    - type
-    type: object
-  Qingyu_backend_service_interfaces.ExportDocumentRequest:
-    properties:
-      format:
-        description: 导出格式
-        enum:
-        - txt
-        - md
-        - docx
-        type: string
-      includeMeta:
-        description: 是否包含元数据
-        type: boolean
-      options:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportOptions'
-        description: 导出选项
-    required:
-    - format
-    type: object
-  Qingyu_backend_service_interfaces.ExportFile:
-    properties:
-      content:
-        items:
-          type: integer
-        type: array
-      fileSize:
-        type: integer
-      filename:
-        type: string
-      mimeType:
-        type: string
-      url:
-        type: string
-    type: object
-  Qingyu_backend_service_interfaces.ExportOptions:
-    properties:
-      excludeChapters:
-        description: 排除的章节ID
-        items:
-          type: string
-        type: array
-      fontSize:
-        description: 字号
-        type: integer
-      footer:
-        description: 页脚
-        type: string
-      header:
-        description: 页眉
-        type: string
-      includeNotes:
-        description: 是否包含注释
-        type: boolean
-      includeTags:
-        description: 是否包含标签
-        type: boolean
-      lineSpacing:
-        description: 行间距
-        type: number
-      pageNumbers:
-        description: 是否添加页码
-        type: boolean
-      toc:
-        description: 是否生成目录
-        type: boolean
-    type: object
-  Qingyu_backend_service_interfaces.ExportProjectRequest:
-    properties:
-      documentFormats:
-        description: 文档导出格式
-        enum:
-        - txt
-        - md
-        - docx
-        type: string
-      includeCharacters:
-        description: 是否包含角色
-        type: boolean
-      includeDocuments:
-        description: 是否包含文档
-        type: boolean
-      includeLocations:
-        description: 是否包含地点
-        type: boolean
-      includeTimeline:
-        description: 是否包含时间线
-        type: boolean
-      options:
-        $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportOptions'
-    type: object
-  Qingyu_backend_service_interfaces.ExportTask:
-    properties:
-      completedAt:
-        type: string
-      createdAt:
-        type: string
-      createdBy:
-        type: string
-      errorMsg:
-        type: string
-      expiresAt:
-        description: 文件过期时间
-        type: string
-      fileSize:
-        description: 文件大小（字节）
-        type: integer
-      fileUrl:
-        description: 下载链接
-        type: string
-      format:
-        type: string
-      id:
-        type: string
-      progress:
-        description: 0-100
-        type: integer
-      resourceId:
-        description: 文档ID或项目ID
-        type: string
-      resourceTitle:
-        type: string
-      status:
-        description: pending, processing, completed, failed, cancelled
-        type: string
-      type:
-        description: document, project
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  Qingyu_backend_service_interfaces.PublicationMetadata:
-    properties:
-      authorNote:
-        type: string
-      categoryId:
-        description: 项目发布元数据
-        type: string
-      chapterNumber:
-        type: integer
-      chapterTitle:
-        description: 文档发布元数据
-        type: string
-      coverImage:
-        type: string
-      description:
-        type: string
-      enableComment:
-        type: boolean
-      enableShare:
-        type: boolean
-      freeChapters:
-        type: integer
-      isFree:
-        type: boolean
-      price:
-        type: number
-      publishType:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  Qingyu_backend_service_interfaces.PublicationRecord:
-    properties:
-      bookstoreId:
-        type: string
-      bookstoreName:
-        type: string
-      createdAt:
-        type: string
-      createdBy:
-        type: string
-      id:
-        type: string
-      metadata:
-        allOf:
-        - $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationMetadata'
-        description: 发布元数据
-      publishTime:
-        description: 实际发布时间
-        type: string
-      resourceId:
-        description: 项目ID或文档ID
-        type: string
-      resourceTitle:
-        type: string
-      scheduledTime:
-        description: 计划发布时间
-        type: string
-      status:
-        description: pending, published, unpublished, failed
-        type: string
-      type:
-        description: project, document
-        type: string
-      unpublishReason:
-        description: 取消发布原因
-        type: string
-      unpublishTime:
-        description: 取消发布时间
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  Qingyu_backend_service_interfaces.PublicationStatistics:
-    properties:
-      lastSyncTime:
-        description: 最后同步时间
-        type: string
-      totalComments:
-        description: 总评论数
-        type: integer
-      totalFavorites:
-        description: 总收藏数
-        type: integer
-      totalLikes:
-        description: 总点赞数
-        type: integer
-      totalShares:
-        description: 总分享数
-        type: integer
-      totalViews:
-        description: 总阅读量
-        type: integer
-    type: object
-  Qingyu_backend_service_interfaces.PublicationStatus:
-    properties:
-      bookstoreId:
-        type: string
-      bookstoreName:
-        type: string
-      isPublished:
-        type: boolean
-      pendingChapters:
-        description: 待发布章节
-        type: integer
-      projectId:
-        type: string
-      projectTitle:
-        type: string
-      publishedAt:
-        type: string
-      publishedChapters:
-        type: integer
-      statistics:
-        $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationStatistics'
-      totalChapters:
-        type: integer
-      unpublishedChapters:
-        type: integer
-    type: object
-  Qingyu_backend_service_interfaces.PublishDocumentRequest:
-    properties:
-      authorNote:
-        description: 章节作者的话
-        maxLength: 500
-        type: string
-      chapterNumber:
-        description: 章节序号
-        minimum: 1
-        type: integer
-      chapterTitle:
-        description: 章节标题
-        type: string
-      isFree:
-        description: 是否免费
-        type: boolean
-      publishTime:
-        description: 定时发布时间（空则立即发布）
-        type: string
-    required:
-    - chapterNumber
-    - chapterTitle
-    type: object
-  Qingyu_backend_service_interfaces.PublishProjectRequest:
-    properties:
-      authorNote:
-        description: 作者的话
-        maxLength: 500
-        type: string
-      bookstoreId:
-        description: 书城ID
-        type: string
-      categoryId:
-        description: 分类ID
-        type: string
-      coverImage:
-        description: 封面图
-        type: string
-      description:
-        description: 作品简介
-        maxLength: 1000
-        type: string
-      enableComment:
-        description: 是否开启评论
-        type: boolean
-      enableShare:
-        description: 是否允许分享
-        type: boolean
-      freeChapters:
-        description: 免费章节数量
-        type: integer
-      price:
-        description: 定价（分）
-        type: number
-      publishTime:
-        description: 定时发布时间（空则立即发布）
-        type: string
-      publishType:
-        description: 发布方式：serial(连载) complete(完本)
-        enum:
-        - serial
-        - complete
-        type: string
-      tags:
-        description: 标签
-        items:
-          type: string
-        maxItems: 10
-        type: array
-    required:
-    - bookstoreId
-    - categoryId
-    - publishType
-    type: object
-  Qingyu_backend_service_interfaces.UpdateCharacterRequest:
-    properties:
-      alias:
-        items:
-          type: string
-        type: array
-      avatarUrl:
-        type: string
-      background:
-        type: string
-      currentState:
-        type: string
-      name:
-        type: string
-      personalityPrompt:
-        type: string
-      speechPattern:
-        type: string
-      summary:
-        type: string
-      traits:
-        items:
-          type: string
-        type: array
-    type: object
-  Qingyu_backend_service_interfaces.UpdateDocumentPublishStatusRequest:
-    properties:
-      chapterNumber:
-        description: 章节序号
-        type: integer
-      isFree:
-        description: 是否免费
-        type: boolean
-      isPublished:
-        description: 是否已发布
-        type: boolean
-      publishTime:
-        description: 发布时间
-        type: string
-      unpublishReason:
-        description: 取消发布原因
-        type: string
-    type: object
-  Qingyu_backend_service_interfaces_user.ConfirmPasswordResetRequest:
-    properties:
-      email:
-        type: string
-      password:
-        minLength: 6
-        type: string
-      token:
-        type: string
-    required:
-    - email
-    - password
-    - token
-    type: object
-  Qingyu_backend_service_interfaces_user.RequestPasswordResetRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  Qingyu_backend_service_interfaces_user.SendEmailVerificationRequest:
-    properties:
-      email:
-        type: string
-      user_id:
-        type: string
-    required:
-    - email
-    - user_id
-    type: object
-  Qingyu_backend_service_interfaces_user.VerifyEmailRequest:
-    properties:
-      code:
-        type: string
-      user_id:
-        type: string
-    required:
-    - code
-    - user_id
-    type: object
-  Qingyu_backend_service_messaging.BatchUpdateAnnouncementStatusRequest:
-    properties:
-      announcementIds:
-        items:
-          type: string
-        minItems: 1
-        type: array
-      isActive:
-        type: boolean
-    required:
-    - announcementIds
-    type: object
-  Qingyu_backend_service_messaging.CreateAnnouncementRequest:
-    properties:
-      content:
-        minLength: 1
-        type: string
-      createdBy:
-        type: string
-      endTime:
-        type: string
-      isActive:
-        type: boolean
-      priority:
-        type: integer
-      startTime:
-        type: string
-      targetRole:
-        enum:
-        - all
-        - reader
-        - writer
-        - admin
-        type: string
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      type:
-        enum:
-        - info
-        - warning
-        - notice
-        type: string
-    required:
-    - content
-    - targetRole
-    - title
-    - type
-    type: object
-  Qingyu_backend_service_messaging.GetAnnouncementsResponse:
-    properties:
-      announcements:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_messaging.Announcement'
-        type: array
-      total:
-        type: integer
-    type: object
-  Qingyu_backend_service_messaging.UpdateAnnouncementRequest:
-    properties:
-      content:
-        minLength: 1
-        type: string
-      endTime:
-        type: string
-      isActive:
-        type: boolean
-      priority:
-        type: integer
-      startTime:
-        type: string
-      targetRole:
-        enum:
-        - all
-        - reader
-        - writer
-        - admin
-        type: string
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      type:
-        enum:
-        - info
-        - warning
-        - notice
-        type: string
-    type: object
-  Qingyu_backend_service_notification.RegisterPushDeviceRequest:
-    properties:
-      deviceId:
-        type: string
-      deviceToken:
-        type: string
-      deviceType:
-        enum:
-        - ios
-        - android
-        - web
-        type: string
-      userId:
-        type: string
-    required:
-    - deviceId
-    - deviceToken
-    - deviceType
-    - userId
-    type: object
-  Qingyu_backend_service_notification.UpdateNotificationPreferenceRequest:
-    properties:
-      emailNotification:
-        $ref: '#/definitions/Qingyu_backend_models_notification.EmailNotificationSettings'
-      enableContent:
-        type: boolean
-      enableMembership:
-        type: boolean
-      enableMessage:
-        type: boolean
-      enableReward:
-        type: boolean
-      enableSocial:
-        type: boolean
-      enableSystem:
-        type: boolean
-      enableUpdate:
-        type: boolean
-      pushNotification:
-        type: boolean
-      quietHoursEnd:
-        type: string
-      quietHoursStart:
-        type: string
-      smsNotification:
-        $ref: '#/definitions/Qingyu_backend_models_notification.SMSNotificationSettings'
-    type: object
-  Qingyu_backend_service_shared.ConfigGroup:
-    properties:
-      description:
-        type: string
-      items:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_shared.ConfigItem'
-        type: array
-      name:
-        type: string
-    type: object
-  Qingyu_backend_service_shared.ConfigItem:
-    properties:
-      description:
-        description: 配置说明
-        type: string
-      editable:
-        description: 是否可编辑
-        type: boolean
-      key:
-        type: string
-      sensitive:
-        description: 是否敏感信息（如密码）
-        type: boolean
-      type:
-        description: string, number, boolean, object
-        type: string
-      value: {}
     type: object
   Qingyu_backend_service_shared_auth.LoginRequest:
     properties:
@@ -2882,28 +716,6 @@ definitions:
     - email
     - password
     - username
-    type: object
-  Qingyu_backend_service_shared_search.SearchResult:
-    properties:
-      items:
-        description: 搜索结果项
-        items: {}
-        type: array
-      keyword:
-        description: 搜索关键词
-        type: string
-      page:
-        description: 当前页
-        type: integer
-      page_size:
-        description: 每页数量
-        type: integer
-      total:
-        description: 总数
-        type: integer
-      total_pages:
-        description: 总页数
-        type: integer
     type: object
   Qingyu_backend_service_shared_stats.ActivityStats:
     properties:
@@ -3089,444 +901,6 @@ definitions:
     - file_size
     - uploaded_by
     type: object
-  Qingyu_backend_service_writer_document.AutoSaveRequest:
-    properties:
-      content:
-        type: string
-      currentVersion:
-        description: 客户端当前版本号
-        type: integer
-      documentId:
-        type: string
-      saveType:
-        description: auto|manual
-        type: string
-    required:
-    - content
-    - documentId
-    type: object
-  Qingyu_backend_service_writer_document.AutoSaveResponse:
-    properties:
-      hasConflict:
-        type: boolean
-      newVersion:
-        type: integer
-      saved:
-        type: boolean
-      savedAt:
-        type: string
-      wordCount:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_document.CreateDocumentRequest:
-    properties:
-      characterIds:
-        items:
-          type: string
-        type: array
-      locationIds:
-        items:
-          type: string
-        type: array
-      notes:
-        type: string
-      order:
-        type: integer
-      parentId:
-        type: string
-      projectId:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      timelineIds:
-        items:
-          type: string
-        type: array
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      type:
-        type: string
-    required:
-    - projectId
-    - title
-    - type
-    type: object
-  Qingyu_backend_service_writer_document.CreateDocumentResponse:
-    properties:
-      createdAt:
-        type: string
-      documentId:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_document.DocumentContentResponse:
-    properties:
-      content:
-        type: string
-      documentId:
-        type: string
-      updatedAt:
-        type: string
-      version:
-        type: integer
-      wordCount:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_document.DocumentTreeNode:
-    properties:
-      characterIds:
-        description: 关联信息（保持BSON字段名不变，确保数据库兼容）
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      children:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.DocumentTreeNode'
-        type: array
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      keyPoints:
-        description: 关键点
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      level:
-        description: 层级深度
-        minimum: 0
-        type: integer
-      locationIds:
-        description: 关联地点
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      notes:
-        maxLength: 500
-        type: string
-      order:
-        description: 同级排序
-        minimum: 0
-        type: integer
-      parentId:
-        description: 层级结构（保持BSON字段名不变，确保数据库兼容）
-        type: string
-      plotThreads:
-        description: 写作辅助（AI上下文需要）
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      projectId:
-        description: 项目基础信息
-        type: string
-      status:
-        description: planned | writing | completed
-        type: string
-      tags:
-        description: 标签和备注
-        items:
-          type: string
-        maxItems: 10
-        type: array
-      timelineIds:
-        description: 关联时间线
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      title:
-        maxLength: 200
-        type: string
-      type:
-        description: 动态类型（如：volume, chapter, section, scene, article, act, beat等）
-        type: string
-      updatedAt:
-        type: string
-      wordCount:
-        description: 统计信息（从DocumentContent同步）
-        type: integer
-      writingHints:
-        description: 写作提示
-        items:
-          type: string
-        maxItems: 20
-        type: array
-    required:
-    - projectId
-    - title
-    - type
-    type: object
-  Qingyu_backend_service_writer_document.DocumentTreeResponse:
-    properties:
-      documents:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.DocumentTreeNode'
-        type: array
-      projectId:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_document.ListDocumentsResponse:
-    properties:
-      documents:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Document'
-        type: array
-      page:
-        type: integer
-      pageSize:
-        type: integer
-      total:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_document.MoveDocumentRequest:
-    properties:
-      documentId:
-        type: string
-      newParentId:
-        type: string
-      order:
-        type: integer
-    required:
-    - documentId
-    type: object
-  Qingyu_backend_service_writer_document.ReorderDocumentsRequest:
-    properties:
-      orders:
-        additionalProperties:
-          type: integer
-        description: documentID -> order
-        type: object
-      parentId:
-        type: string
-      projectId:
-        type: string
-    required:
-    - orders
-    - projectId
-    type: object
-  Qingyu_backend_service_writer_document.SaveStatusResponse:
-    properties:
-      currentVersion:
-        type: integer
-      documentId:
-        type: string
-      isSaving:
-        type: boolean
-      lastSavedAt:
-        type: string
-      wordCount:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_document.UpdateContentRequest:
-    properties:
-      content:
-        type: string
-      documentId:
-        type: string
-      version:
-        description: 用于版本冲突检测
-        type: integer
-    required:
-    - content
-    - documentId
-    type: object
-  Qingyu_backend_service_writer_document.UpdateDocumentRequest:
-    properties:
-      characterIds:
-        items:
-          type: string
-        type: array
-      locationIds:
-        items:
-          type: string
-        type: array
-      notes:
-        type: string
-      status:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      timelineIds:
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_document.WordCountResult:
-    properties:
-      chineseCount:
-        description: 中文字数
-        type: integer
-      englishCount:
-        description: 英文单词数
-        type: integer
-      numberCount:
-        description: 数字个数
-        type: integer
-      paragraphCount:
-        description: 段落数
-        type: integer
-      readingTime:
-        description: 预计阅读时长（分钟）
-        type: integer
-      readingTimeText:
-        description: 阅读时长文本
-        type: string
-      sentenceCount:
-        description: 句子数
-        type: integer
-      totalCount:
-        description: 总字数
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_project.ChangeItem:
-    properties:
-      content:
-        type: string
-      line:
-        type: integer
-      type:
-        description: added, deleted, modified
-        type: string
-    type: object
-  Qingyu_backend_service_writer_project.CreateProjectRequest:
-    properties:
-      category:
-        type: string
-      coverUrl:
-        type: string
-      summary:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      title:
-        maxLength: 100
-        minLength: 1
-        type: string
-    required:
-    - title
-    type: object
-  Qingyu_backend_service_writer_project.CreateProjectResponse:
-    properties:
-      createdAt:
-        type: string
-      projectId:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_project.ListProjectsResponse:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-      projects:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_writer.Project'
-        type: array
-      total:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_project.UpdateProjectRequest:
-    properties:
-      category:
-        type: string
-      coverUrl:
-        type: string
-      status:
-        type: string
-      summary:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_project.VersionDetail:
-    properties:
-      content:
-        type: string
-      createdAt:
-        type: string
-      createdBy:
-        type: string
-      documentId:
-        type: string
-      message:
-        type: string
-      version:
-        type: integer
-      versionId:
-        type: string
-      wordCount:
-        type: integer
-    type: object
-  Qingyu_backend_service_writer_project.VersionDiff:
-    properties:
-      addedLines:
-        type: integer
-      changes:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_writer_project.ChangeItem'
-        type: array
-      deletedLines:
-        type: integer
-      fromVersion:
-        type: string
-      toVersion:
-        type: string
-    type: object
-  Qingyu_backend_service_writer_project.VersionHistoryResponse:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-      total:
-        type: integer
-      versions:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_writer_project.VersionInfo'
-        type: array
-    type: object
-  Qingyu_backend_service_writer_project.VersionInfo:
-    properties:
-      createdAt:
-        type: string
-      createdBy:
-        type: string
-      message:
-        type: string
-      version:
-        type: integer
-      versionId:
-        type: string
-      wordCount:
-        type: integer
-    type: object
   api_v1_admin.AssignRoleRequest:
     properties:
       role:
@@ -3574,20 +948,6 @@ definitions:
     required:
     - status
     - userIds
-    type: object
-  api_v1_admin.GetAllConfigsResponse:
-    properties:
-      groups:
-        items:
-          $ref: '#/definitions/Qingyu_backend_service_shared.ConfigGroup'
-        type: array
-    type: object
-  api_v1_admin.GetConfigBackupsResponse:
-    properties:
-      backups:
-        items:
-          type: string
-        type: array
     type: object
   api_v1_admin.ReviewAppealRequest:
     properties:
@@ -3836,31 +1196,6 @@ definitions:
     required:
     - message
     type: object
-  api_v1_ai.ConflictData:
-    properties:
-      conflict_id:
-        description: 冲突ID
-        type: string
-      description:
-        description: 描述
-        type: string
-      escalation_events:
-        description: 升级事件
-        items:
-          type: string
-        type: array
-      parties:
-        description: 对立方
-        items:
-          type: string
-        type: array
-      resolution_event:
-        description: 解决事件
-        type: string
-      type:
-        description: 类型
-        type: string
-    type: object
   api_v1_ai.ContinueWritingRequest:
     properties:
       chapterId:
@@ -3894,79 +1229,6 @@ definitions:
           type: string
         type: array
     type: object
-  api_v1_ai.DiagnosticIssue:
-    properties:
-      affected_entities:
-        description: 受影响的实体
-        items:
-          type: string
-        type: array
-      category:
-        description: 类别
-        type: string
-      description:
-        description: 描述
-        type: string
-      id:
-        description: 问题ID
-        type: string
-      impact:
-        description: 影响
-        type: string
-      root_cause:
-        description: 根本原因
-        type: string
-      severity:
-        description: 严重程度
-        type: string
-      sub_category:
-        description: 子类别
-        type: string
-      title:
-        description: 标题
-        type: string
-    type: object
-  api_v1_ai.DiagnosticReportData:
-    properties:
-      affected_agents:
-        description: 受影响的Agent
-        items:
-          type: string
-        type: array
-      correction_strategy:
-        description: 修正策略
-        type: string
-      issues:
-        description: 问题列表
-        items:
-          $ref: '#/definitions/api_v1_ai.DiagnosticIssue'
-        type: array
-      passed:
-        description: 是否通过
-        type: boolean
-      quality_score:
-        description: 质量分数
-        type: integer
-      reasoning_chain:
-        description: 推理链
-        items:
-          type: string
-        type: array
-    type: object
-  api_v1_ai.EventImpact:
-    properties:
-      emotional_impact:
-        description: 情感影响
-        type: string
-      on_characters:
-        additionalProperties:
-          type: string
-        description: 对角色的影响
-        type: object
-      on_plot:
-        description: 对情节的影响
-        type: string
-    type: object
   api_v1_ai.ExecuteCreativeWorkflowRequest:
     properties:
       enable_human_review:
@@ -3987,48 +1249,6 @@ definitions:
         type: object
     required:
     - task
-    type: object
-  api_v1_ai.ExecuteCreativeWorkflowResponse:
-    properties:
-      characters:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.CharactersData'
-        description: 角色
-      diagnostic_report:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.DiagnosticReportData'
-        description: 诊断报告
-      execution_id:
-        description: 执行ID
-        type: string
-      execution_times:
-        additionalProperties:
-          format: float32
-          type: number
-        description: 执行时间
-        type: object
-      outline:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.OutlineData'
-        description: 大纲
-      plot:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.PlotData'
-        description: 情节
-      reasoning:
-        description: 推理链
-        items:
-          type: string
-        type: array
-      reflection_count:
-        description: 反思次数
-        type: integer
-      review_passed:
-        description: 审核是否通过
-        type: boolean
-      tokens_used:
-        description: Token使用量
-        type: integer
     type: object
   api_v1_ai.GenerateCharactersRequest:
     properties:
@@ -4051,16 +1271,6 @@ definitions:
     required:
     - task
     type: object
-  api_v1_ai.GenerateCharactersResponse:
-    properties:
-      characters:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.CharactersData'
-        description: 角色数据
-      execution_time:
-        description: 执行时间
-        type: number
-    type: object
   api_v1_ai.GenerateOutlineRequest:
     properties:
       correction_prompt:
@@ -4079,16 +1289,6 @@ definitions:
         type: object
     required:
     - task
-    type: object
-  api_v1_ai.GenerateOutlineResponse:
-    properties:
-      execution_time:
-        description: 执行时间（秒）
-        type: number
-      outline:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.OutlineData'
-        description: 大纲数据
     type: object
   api_v1_ai.GeneratePlotRequest:
     properties:
@@ -4114,37 +1314,6 @@ definitions:
         type: object
     required:
     - task
-    type: object
-  api_v1_ai.GeneratePlotResponse:
-    properties:
-      execution_time:
-        description: 执行时间
-        type: number
-      plot:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.PlotData'
-        description: 情节数据
-    type: object
-  api_v1_ai.KeyPlotPoints:
-    properties:
-      climax:
-        description: 高潮
-        type: string
-      inciting_incident:
-        description: 触发事件
-        type: string
-      midpoint:
-        description: 中点
-        type: string
-      plot_point_1:
-        description: 第一转折点
-        type: string
-      plot_point_2:
-        description: 第二转折点
-        type: string
-      resolution:
-        description: 结局
-        type: string
     type: object
   api_v1_ai.MentorshipData:
     properties:
@@ -4205,62 +1374,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  api_v1_ai.PlotData:
-    properties:
-      conflicts:
-        description: 冲突
-        items:
-          $ref: '#/definitions/api_v1_ai.ConflictData'
-        type: array
-      key_plot_points:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.KeyPlotPoints'
-        description: 关键情节点
-      plot_threads:
-        description: 情节线索
-        items:
-          $ref: '#/definitions/api_v1_ai.PlotThreadData'
-        type: array
-      timeline_events:
-        description: 时间线事件
-        items:
-          $ref: '#/definitions/api_v1_ai.TimelineEventData'
-        type: array
-    type: object
-  api_v1_ai.PlotThreadData:
-    properties:
-      characters_involved:
-        description: 参与角色
-        items:
-          type: string
-        type: array
-      climax_event:
-        description: 高潮事件
-        type: string
-      description:
-        description: 描述
-        type: string
-      events:
-        description: 相关事件ID列表
-        items:
-          type: string
-        type: array
-      resolution_event:
-        description: 解决事件
-        type: string
-      starting_event:
-        description: 起始事件
-        type: string
-      thread_id:
-        description: 线索ID
-        type: string
-      title:
-        description: 标题
-        type: string
-      type:
-        description: 类型（主线/支线）
-        type: string
     type: object
   api_v1_ai.RechargeRequest:
     properties:
@@ -4359,49 +1472,6 @@ definitions:
         items:
           type: integer
         type: array
-    type: object
-  api_v1_ai.TimelineEventData:
-    properties:
-      causes:
-        description: 原因
-        items:
-          type: string
-        type: array
-      chapter_id:
-        description: 所属章节
-        type: integer
-      consequences:
-        description: 后果
-        items:
-          type: string
-        type: array
-      description:
-        description: 描述
-        type: string
-      event_id:
-        description: 事件ID
-        type: string
-      event_type:
-        description: 事件类型
-        type: string
-      impact:
-        allOf:
-        - $ref: '#/definitions/api_v1_ai.EventImpact'
-        description: 影响
-      location:
-        description: 地点
-        type: string
-      participants:
-        description: 参与者
-        items:
-          type: string
-        type: array
-      timestamp:
-        description: 时间戳
-        type: string
-      title:
-        description: 标题
-        type: string
     type: object
   api_v1_bookstore.APIResponse:
     properties:
@@ -4524,10 +1594,18 @@ definitions:
     type: object
   api_v1_finance.WithdrawRequest:
     properties:
-      account_info:
-        $ref: '#/definitions/Qingyu_backend_models_finance.WithdrawAccount'
+      account_name:
+        type: string
+      account_no:
+        type: string
+      account_type:
+        type: string
       amount:
         type: number
+      bank_name:
+        type: string
+      branch_name:
+        type: string
       method:
         enum:
         - alipay
@@ -4535,7 +1613,9 @@ definitions:
         - bank
         type: string
     required:
-    - account_info
+    - account_name
+    - account_no
+    - account_type
     - amount
     - method
     type: object
@@ -4683,11 +1763,6 @@ definitions:
     - chapterId
     - position
     type: object
-  api_v1_reader.HistoryListResponse:
-    properties:
-      histories: {}
-      pagination: {}
-    type: object
   api_v1_reader.MergeProgressRequest:
     properties:
       progresses:
@@ -4718,11 +1793,6 @@ definitions:
     - progress
     - timestamp
     type: object
-  api_v1_reader.ReadingStatsResponse:
-    properties:
-      daily_stats: {}
-      summary: {}
-    type: object
   api_v1_reader.RecordReadingRequest:
     properties:
       book_id:
@@ -4747,11 +1817,6 @@ definitions:
     - end_time
     - start_time
     type: object
-  api_v1_reader.RecordReadingResponse:
-    properties:
-      message:
-        type: string
-    type: object
   api_v1_reader.SaveProgressRequest:
     properties:
       bookId:
@@ -4766,20 +1831,6 @@ definitions:
     - bookId
     - chapterId
     - progress
-    type: object
-  api_v1_reader.SyncAnnotationsRequest:
-    properties:
-      bookId:
-        type: string
-      lastSyncTime:
-        description: Unix时间戳
-        type: integer
-      localAnnotations:
-        items:
-          $ref: '#/definitions/Qingyu_backend_models_reader.Annotation'
-        type: array
-    required:
-    - bookId
     type: object
   api_v1_reader.SyncProgressRequest:
     properties:
@@ -4864,6 +1915,70 @@ definitions:
         type: boolean
       textColor:
         type: string
+    type: object
+  api_v1_search.BatchSearchRequest:
+    properties:
+      queries:
+        description: 搜索查询列表
+        items:
+          $ref: '#/definitions/api_v1_search.SearchRequest'
+        minItems: 1
+        type: array
+    required:
+    - queries
+    type: object
+  api_v1_search.SearchRequest:
+    properties:
+      filter:
+        additionalProperties: true
+        description: 过滤条件
+        type: object
+      page:
+        description: 页码，默认 1
+        type: integer
+      page_size:
+        description: 每页数量，默认 20
+        type: integer
+      query:
+        description: 搜索关键词
+        type: string
+      sort:
+        description: 排序字段
+        items:
+          $ref: '#/definitions/api_v1_search.SortFieldRequest'
+        type: array
+      type:
+        description: 搜索类型：books, projects, documents, users
+        type: string
+    required:
+    - query
+    - type
+    type: object
+  api_v1_search.SortFieldRequest:
+    properties:
+      ascending:
+        description: 是否升序
+        type: boolean
+      field:
+        description: 排序字段名
+        type: string
+    type: object
+  api_v1_search.UpdateGrayscaleConfigRequest:
+    properties:
+      enabled:
+        description: 是否启用灰度
+        type: boolean
+      percent:
+        description: 灰度百分比(0-100)
+        maximum: 100
+        minimum: 0
+        type: integer
+      reason:
+        description: 更新原因
+        type: string
+    required:
+    - enabled
+    - percent
     type: object
   api_v1_shared.APIResponse:
     properties:
@@ -5208,14 +2323,15 @@ definitions:
         maxLength: 100
         type: string
     type: object
-  api_v1_writer.AuditDocumentRequest:
+  api_v1_writer.ApplyTemplateRequest:
     properties:
-      content:
-        type: string
       documentId:
         type: string
+      variables:
+        additionalProperties:
+          type: string
+        type: object
     required:
-    - content
     - documentId
     type: object
   api_v1_writer.BatchDeleteRequest:
@@ -5226,15 +2342,6 @@ definitions:
         type: array
     required:
     - commentIds
-    type: object
-  api_v1_writer.CheckContentRequest:
-    properties:
-      content:
-        maxLength: 100000
-        minLength: 1
-        type: string
-    required:
-    - content
     type: object
   api_v1_writer.CreateCommentRequest:
     properties:
@@ -5254,6 +2361,36 @@ definitions:
     - content
     - position
     type: object
+  api_v1_writer.CreateTemplateRequest:
+    properties:
+      category:
+        maxLength: 100
+        type: string
+      content:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      projectId:
+        type: string
+      type:
+        enum:
+        - chapter
+        - outline
+        - setting
+        type: string
+      variables:
+        items:
+          $ref: '#/definitions/api_v1_writer.TemplateVariableDTO'
+        type: array
+    required:
+    - content
+    - name
+    - type
+    type: object
   api_v1_writer.ExtendLockRequest:
     properties:
       ttl:
@@ -5272,6 +2409,13 @@ definitions:
         description: 锁定时长（秒），0表示默认30分钟
         type: integer
     type: object
+  api_v1_writer.OptionDTO:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
   api_v1_writer.ReplyCommentRequest:
     properties:
       content:
@@ -5279,30 +2423,78 @@ definitions:
     required:
     - content
     type: object
-  api_v1_writer.ReviewAppealRequest:
+  api_v1_writer.SubmitBatchOperationRequest:
     properties:
-      approved:
+      atomic:
         type: boolean
-      note:
-        maxLength: 500
+      clientRequestId:
         type: string
-    type: object
-  api_v1_writer.ReviewAuditRequest:
-    properties:
-      approved:
+      conflictPolicy:
+        $ref: '#/definitions/Qingyu_backend_models_writer.ConflictPolicy'
+      expectedVersions:
+        additionalProperties:
+          type: integer
+        type: object
+      includeDescendants:
         type: boolean
-      note:
-        maxLength: 500
+      payload:
+        additionalProperties: true
+        type: object
+      projectId:
         type: string
+      targetIds:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      type:
+        $ref: '#/definitions/Qingyu_backend_models_writer.BatchOperationType'
+    required:
+    - projectId
+    - targetIds
+    - type
     type: object
-  api_v1_writer.SubmitAppealRequest:
+  api_v1_writer.SubmitBatchOperationResponse:
     properties:
-      reason:
-        maxLength: 500
-        minLength: 10
+      batchId:
+        type: string
+      preflightSummary:
+        $ref: '#/definitions/Qingyu_backend_models_writer.PreflightSummary'
+      status:
+        $ref: '#/definitions/Qingyu_backend_models_writer.BatchOperationStatus'
+    type: object
+  api_v1_writer.TemplateVariableDTO:
+    properties:
+      defaultValue:
+        type: string
+      label:
+        maxLength: 100
+        type: string
+      name:
+        maxLength: 50
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/api_v1_writer.OptionDTO'
+        type: array
+      order:
+        type: integer
+      placeholder:
+        maxLength: 200
+        type: string
+      required:
+        type: boolean
+      type:
+        enum:
+        - text
+        - textarea
+        - select
+        - number
         type: string
     required:
-    - reason
+    - label
+    - name
+    - type
     type: object
   api_v1_writer.UpdateCommentRequest:
     properties:
@@ -5321,6 +2513,24 @@ definitions:
         type: object
     required:
     - shortcuts
+    type: object
+  api_v1_writer.UpdateTemplateRequest:
+    properties:
+      category:
+        maxLength: 100
+        type: string
+      content:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      variables:
+        items:
+          $ref: '#/definitions/api_v1_writer.TemplateVariableDTO'
+        type: array
     type: object
   api_v1_writer.WordCountRequest:
     properties:
@@ -5355,27 +2565,6 @@ definitions:
     - code
     - state
     type: object
-  time.Duration:
-    enum:
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    format: int64
-    type: integer
-    x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
 host: localhost:8080
 info:
   contact:
@@ -5524,12 +2713,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_messaging.Announcement'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -5562,7 +2746,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_messaging.UpdateAnnouncementRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -5638,7 +2822,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_messaging.BatchUpdateAnnouncementStatusRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -5679,7 +2863,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_writer.ReviewAppealRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -5706,7 +2890,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_writer.ReviewAuditRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -5833,12 +3017,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_bookstore.GetBannersResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
@@ -5862,19 +3041,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_bookstore.CreateBannerRequest'
+          type: object
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_bookstore.Banner'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -5947,12 +3121,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_bookstore.Banner'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -5985,7 +3154,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_bookstore.UpdateBannerRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -6025,7 +3194,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_bookstore.BatchUpdateSortRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -6061,7 +3230,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_bookstore.BatchUpdateStatusRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -6171,12 +3340,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_shared.ConfigItem'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6205,12 +3369,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_admin.GetConfigBackupsResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6410,8 +3569,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
@@ -6714,12 +3873,12 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_auth.Role'
+          type: object
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
@@ -6809,7 +3968,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_auth.Role'
+          type: object
       produces:
       - application/json
       responses:
@@ -7566,19 +4725,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.SensitiveWordsCheckRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.SensitiveWordsCheckResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -7607,12 +4761,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.SensitiveWordsDetail'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -7646,12 +4795,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai.ChatResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: AI聊天
       tags:
       - AI聊天
@@ -7681,14 +4825,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChatSessionDTO'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取聊天会话列表
       tags:
       - AI聊天
@@ -7742,12 +4879,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChatHistoryDTO'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取聊天历史
       tags:
       - AI聊天
@@ -7791,12 +4923,7 @@ paths:
         "200":
           description: 成功
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_ai.GenerateCharactersResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: 参数错误
           schema:
@@ -7817,13 +4944,7 @@ paths:
         "200":
           description: 成功
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "500":
           description: 服务器错误
           schema:
@@ -7849,12 +4970,7 @@ paths:
         "200":
           description: 成功
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_ai.GenerateOutlineResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: 参数错误
           schema:
@@ -7884,12 +5000,7 @@ paths:
         "200":
           description: 成功
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_ai.GeneratePlotResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: 参数错误
           schema:
@@ -7919,12 +5030,7 @@ paths:
         "200":
           description: 成功
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_ai.ExecuteCreativeWorkflowResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: 参数错误
           schema:
@@ -7997,12 +5103,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_ai.UserQuota'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取配额信息
       tags:
       - AI配额
@@ -8017,14 +5118,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_ai.UserQuota'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取所有配额
       tags:
       - AI配额
@@ -8061,12 +5155,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_repository_interfaces_ai.QuotaStatistics'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取配额统计
       tags:
       - AI配额
@@ -8092,14 +5181,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_ai.QuotaTransaction'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取配额事务历史
       tags:
       - AI配额
@@ -8121,12 +5203,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai.GenerateContentResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 智能续写
       tags:
       - AI写作
@@ -8163,19 +5240,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.ProofreadRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.ProofreadResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -8205,12 +5277,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai.GenerateContentResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 改写文本
       tags:
       - AI写作
@@ -8253,12 +5320,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.ProofreadSuggestion'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -8285,19 +5347,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.SummarizeRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.SummarizeResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -8320,19 +5377,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChapterSummaryRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_ai_dto.ChapterSummaryResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -8361,12 +5413,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_messaging.Announcement'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -8433,14 +5480,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_messaging.Announcement'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -8464,7 +5504,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_writer.SubmitAppealRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -8490,7 +5530,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_writer.CheckContentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -8982,9 +6022,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
+      security:
+      - BearerAuth: []
       summary: 增加书籍点赞数
       tags:
-      - 书籍详情
+      - 书籍交互
   /api/v1/books/{id}/similar:
     get:
       consumes:
@@ -9045,9 +6087,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
+      security:
+      - BearerAuth: []
       summary: 获取书籍统计信息
       tags:
-      - 书籍详情
+      - 书籍交互
   /api/v1/books/{id}/unlike:
     post:
       consumes:
@@ -9074,9 +6118,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
+      security:
+      - BearerAuth: []
       summary: 减少书籍点赞数
       tags:
-      - 书籍详情
+      - 书籍交互
   /api/v1/books/{id}/view:
     post:
       consumes:
@@ -9107,9 +6153,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
+      security:
+      - BearerAuth: []
       summary: 增加书籍浏览量
       tags:
-      - 书籍详情
+      - 书籍交互
   /api/v1/books/category:
     get:
       consumes:
@@ -9173,7 +6221,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取最新书籍
       tags:
-      - 书籍详情
+      - 书籍推荐
   /api/v1/books/popular:
     get:
       consumes:
@@ -9198,7 +6246,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取热门书籍
       tags:
-      - 书籍详情
+      - 书籍推荐
   /api/v1/books/recommended:
     get:
       consumes:
@@ -9611,6 +6659,44 @@ paths:
       summary: 获取单个章节信息
       tags:
       - 章节目录
+  /api/v1/bookstore/books/{id}/similar:
+    get:
+      consumes:
+      - application/json
+      description: 基于书籍分类、标签等推荐相似书籍，有四层降级策略
+      parameters:
+      - description: 书籍ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: 返回数量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_v1_bookstore.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api_v1_bookstore.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api_v1_bookstore.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api_v1_bookstore.APIResponse'
+      summary: 获取相似书籍推荐
+      tags:
+      - 书籍交互
   /api/v1/bookstore/books/{id}/trial-chapters:
     get:
       consumes:
@@ -9736,7 +6822,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取精选书籍
       tags:
-      - 书籍
+      - 书籍推荐
   /api/v1/bookstore/books/recommended:
     get:
       consumes:
@@ -9766,7 +6852,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取推荐书籍
       tags:
-      - 书籍
+      - 书籍推荐
   /api/v1/bookstore/books/search:
     get:
       consumes:
@@ -9841,6 +6927,166 @@ paths:
       summary: 搜索书籍
       tags:
       - 书籍
+  /api/v1/bookstore/books/search/author:
+    get:
+      consumes:
+      - application/json
+      description: 根据作者姓名进行模糊搜索，支持分页。优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
+      parameters:
+      - description: 作者姓名
+        in: query
+        name: author
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 按作者搜索书籍
+      tags:
+      - 书籍搜索
+  /api/v1/bookstore/books/search/title:
+    get:
+      consumes:
+      - application/json
+      description: 根据书籍标题进行模糊搜索，支持分页。优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
+      parameters:
+      - description: 标题关键词
+        in: query
+        name: title
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 按标题搜索书籍
+      tags:
+      - 书籍搜索
+  /api/v1/bookstore/books/status:
+    get:
+      consumes:
+      - application/json
+      description: 根据书籍连载状态筛选书籍，支持分页
+      parameters:
+      - description: 书籍状态
+        enum:
+        - ongoing
+        - completed
+        - paused
+        in: query
+        name: status
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 按状态筛选书籍
+      tags:
+      - 书籍筛选
+  /api/v1/bookstore/books/tags:
+    get:
+      consumes:
+      - application/json
+      description: 根据一个或多个标签筛选书籍，ANY语义（命中任一即可）
+      parameters:
+      - description: 标签列表（逗号分隔）
+        in: query
+        name: tags
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 按标签筛选书籍
+      tags:
+      - 书籍筛选
   /api/v1/bookstore/categories/{categoryId}/books:
     get:
       consumes:
@@ -10059,7 +7305,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 根据类型获取榜单
       tags:
-      - 榜单
+      - 书籍排行榜
   /api/v1/bookstore/rankings/monthly:
     get:
       consumes:
@@ -10088,7 +7334,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取月榜单
       tags:
-      - 榜单
+      - 书籍排行榜
   /api/v1/bookstore/rankings/newbie:
     get:
       consumes:
@@ -10117,7 +7363,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取新人榜单
       tags:
-      - 榜单
+      - 书籍排行榜
   /api/v1/bookstore/rankings/realtime:
     get:
       consumes:
@@ -10142,7 +7388,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取实时榜单
       tags:
-      - 榜单
+      - 书籍排行榜
   /api/v1/bookstore/rankings/weekly:
     get:
       consumes:
@@ -10171,7 +7417,7 @@ paths:
             $ref: '#/definitions/api_v1_bookstore.APIResponse'
       summary: 获取周榜单
       tags:
-      - 榜单
+      - 书籍排行榜
   /api/v1/chapters:
     post:
       consumes:
@@ -10498,12 +7744,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.Character'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -10531,19 +7772,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.UpdateCharacterRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.Character'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -10571,19 +7807,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.CreateRelationRequest'
+          type: object
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.CharacterRelation'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -10648,12 +7879,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_project.VersionHistoryResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取版本历史
       tags:
       - 版本控制
@@ -10679,12 +7905,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_project.VersionDetail'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取特定版本
       tags:
       - 版本控制
@@ -10741,12 +7962,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_project.VersionDiff'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 比较版本
       tags:
       - 版本控制
@@ -10787,12 +8003,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.Document'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取文档详情
       tags:
       - 文档管理
@@ -10811,7 +8022,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.UpdateDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -10838,7 +8049,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_writer.AuditDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -10899,19 +8110,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.AutoSaveRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.AutoSaveResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "409":
           description: 版本冲突
           schema:
@@ -10936,12 +8142,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.DocumentContentResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取文档内容
       tags:
       - 编辑器
@@ -10960,7 +8161,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.UpdateContentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -10987,7 +8188,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.MoveDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -11015,12 +8216,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.SaveStatusResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取保存状态
       tags:
       - 编辑器
@@ -11047,12 +8243,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.WordCountResult'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 计算字数
       tags:
       - 编辑器
@@ -12304,14 +9495,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/api_v1_shared.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_messaging.NotificationDelivery'
-                  type: array
-              type: object
+            $ref: '#/definitions/api_v1_shared.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -12540,7 +9724,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_notification.UpdateNotificationPreferenceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -12592,7 +9776,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_notification.RegisterPushDeviceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -12723,12 +9907,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_project.ListProjectsResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取项目列表
       tags:
       - 项目管理
@@ -12742,19 +9921,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_project.CreateProjectRequest'
+          type: object
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_project.CreateProjectResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -12807,12 +9981,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.Project'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -12835,7 +10004,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_project.UpdateProjectRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -12892,14 +10061,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_writer.Character'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取项目角色列表
       tags:
       - 角色管理
@@ -12918,19 +10080,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.CreateCharacterRequest'
+          type: object
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.Character'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -12959,12 +10116,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.CharacterGraph'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取角色关系图
       tags:
       - 角色管理
@@ -12989,14 +10141,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_writer.CharacterRelation'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取角色关系列表
       tags:
       - 角色管理
@@ -13027,12 +10172,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.ListDocumentsResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取文档列表
       tags:
       - 文档管理
@@ -13051,19 +10191,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.CreateDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.CreateDocumentResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -13087,7 +10222,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_writer_document.ReorderDocumentsRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -13115,12 +10250,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_writer_document.DocumentTreeResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取文档树
       tags:
       - 文档管理
@@ -13426,7 +10556,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_v1_reader.SyncAnnotationsRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -13443,10 +10573,10 @@ paths:
       parameters:
       - description: 读者行为数据
         in: body
-        name: behavior
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_stats.ReaderBehavior'
+          type: object
       produces:
       - application/json
       responses:
@@ -13801,8 +10931,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
@@ -13857,52 +10987,6 @@ paths:
           schema:
             $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取章节目录
-      tags:
-      - 阅读器-章节
-  /api/v1/reader/books/{bookId}/chapters/{chapterId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取章节内容，自动检查权限、保存阅读进度
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-      summary: 获取章节内容（阅读器专用）
       tags:
       - 阅读器-章节
   /api/v1/reader/books/{bookId}/chapters/{chapterId}/next:
@@ -14102,18 +11186,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  properties:
-                    is_liked:
-                      type: boolean
-                    like_count:
-                      format: int64
-                      type: integer
-                  type: object
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -14234,45 +11307,6 @@ paths:
       tags:
       - 阅读器-书架
   /api/v1/reader/chapters/{chapterId}/comments:
-    get:
-      parameters:
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
-      - default: created_at
-        description: 排序字段：created_at/like_count/rating
-        in: query
-        name: sortBy
-        type: string
-      - default: desc
-        description: 排序方向：asc/desc
-        in: query
-        name: sortOrder
-        type: string
-      - description: 父评论ID（空字符串表示顶级评论）
-        in: query
-        name: parentId
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-      summary: 获取章节评论列表
-      tags:
-      - 阅读器-章节评论
     post:
       parameters:
       - description: 章节ID
@@ -14285,7 +11319,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.CreateChapterCommentRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -14355,7 +11389,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.CreateChapterCommentRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -14835,7 +11869,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.UpdateChapterCommentRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -15105,7 +12139,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.CreateCustomFontRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -15142,7 +12176,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.UpdateFontRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -15188,24 +12222,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  properties:
-                    list:
-                      items:
-                        $ref: '#/definitions/Qingyu_backend_models_social.Like'
-                      type: array
-                    page:
-                      type: integer
-                    size:
-                      type: integer
-                    total:
-                      format: int64
-                      type: integer
-                  type: object
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
@@ -15229,16 +12246,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  properties:
-                    total_likes:
-                      format: int64
-                      type: integer
-                  type: object
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
@@ -15598,12 +12606,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_reader.HistoryListResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -15627,12 +12630,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_reader.RecordReadingResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -15680,12 +12678,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/api_v1_reader.ReadingStatsResponse'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -15710,7 +12703,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.ReadingSettings'
+          type: object
       responses:
         "200":
           description: OK
@@ -15743,7 +12736,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.FontPreference'
+          type: object
       responses:
         "200":
           description: OK
@@ -15778,7 +12771,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.CreateCustomThemeRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -15815,7 +12808,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_reader.UpdateThemeRequest'
+          type: object
       responses:
         "200":
           description: OK
@@ -16183,10 +13176,10 @@ paths:
       parameters:
       - description: 评分信息
         in: body
-        name: rating
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_bookstore.BookRating'
+          type: object
       produces:
       - application/json
       responses:
@@ -16282,10 +13275,10 @@ paths:
         type: string
       - description: 评分信息
         in: body
-        name: rating
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_bookstore.BookRating'
+          type: object
       produces:
       - application/json
       responses:
@@ -16903,6 +13896,184 @@ paths:
       summary: 获取相似物品推荐
       tags:
       - 推荐系统
+  /api/v1/search/batch:
+    post:
+      consumes:
+      - application/json
+      description: 一次请求执行多个搜索查询，并发执行
+      parameters:
+      - description: 批量搜索请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_search.BatchSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 批量搜索
+      tags:
+      - 搜索
+  /api/v1/search/grayscale/config:
+    post:
+      consumes:
+      - application/json
+      description: 更新灰度配置，支持运行时热更新，无需重启服务
+      parameters:
+      - description: 灰度配置更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_search.UpdateGrayscaleConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 更新灰度配置
+      tags:
+      - 搜索-灰度
+  /api/v1/search/grayscale/metrics:
+    get:
+      consumes:
+      - application/json
+      description: 获取完整的灰度监控指标数据，包括配置、使用统计、流量分配、性能指标等
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 获取灰度指标
+      tags:
+      - 搜索-灰度
+  /api/v1/search/grayscale/status:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前灰度配置状态和流量分配统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 获取灰度状态
+      tags:
+      - 搜索-灰度
+  /api/v1/search/grayscale/traffic:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前流量分配比例数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 获取流量分配
+      tags:
+      - 搜索-灰度
+  /api/v1/search/health:
+    get:
+      consumes:
+      - application/json
+      description: 检查搜索服务及其各组件的健康状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: 搜索服务健康检查
+      tags:
+      - 搜索
+  /api/v1/search/search:
+    post:
+      consumes:
+      - application/json
+      description: 根据类型和关键词进行统一搜索，支持书籍、项目、文档、用户等多种类型
+      parameters:
+      - description: 搜索请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_search.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: 统一搜索
+      tags:
+      - 搜索
   /api/v1/search/suggest:
     get:
       consumes:
@@ -18102,6 +15273,159 @@ paths:
       summary: 获取会话列表
       tags:
       - 社交-私信
+    post:
+      consumes:
+      - application/json
+      description: 创建新的私信会话，支持一对一私聊
+      parameters:
+      - description: 创建会话请求
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建会话
+      tags:
+      - Social Messages
+  /api/v1/social/messages/conversations/{conversationId}/messages:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取会话的消息列表，支持向上/向下翻页
+      parameters:
+      - description: 会话ID
+        in: path
+        name: conversationId
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 获取此消息之前的消息
+        in: query
+        name: before
+        type: string
+      - description: 获取此消息之后的消息
+        in: query
+        name: after
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "403":
+          description: 无权访问
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: 会话不存在
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取消息列表
+      tags:
+      - Social Messages
+    post:
+      consumes:
+      - application/json
+      description: 向会话发送新消息，支持文本、图片、文件等类型
+      parameters:
+      - description: 会话ID
+        in: path
+        name: conversationId
+        required: true
+        type: string
+      - description: 发送消息请求
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "403":
+          description: 无权访问
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: 会话不存在
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 发送消息
+      tags:
+      - Social Messages
+  /api/v1/social/messages/conversations/{conversationId}/read:
+    post:
+      consumes:
+      - application/json
+      description: 标记会话的所有消息为已读状态
+      parameters:
+      - description: 会话ID
+        in: path
+        name: conversationId
+        required: true
+        type: string
+      - description: 标记已读请求
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 标记会话已读
+      tags:
+      - Social Messages
   /api/v1/social/reviews:
     get:
       consumes:
@@ -18441,7 +15765,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_notification.EmailNotificationSettings'
+          type: object
       produces:
       - application/json
       responses:
@@ -18477,7 +15801,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_models_notification.SMSNotificationSettings'
+          type: object
       produces:
       - application/json
       responses:
@@ -18573,7 +15897,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces_user.SendEmailVerificationRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -18607,7 +15931,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces_user.VerifyEmailRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -18677,7 +16001,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces_user.ConfirmPasswordResetRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -18711,7 +16035,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces_user.RequestPasswordResetRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -18810,12 +16134,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_writer.ShortcutConfig'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取用户快捷键配置
       tags:
       - 编辑器
@@ -18851,14 +16170,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_writer.ShortcutCategory'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
       summary: 获取快捷键帮助
       tags:
       - 编辑器
@@ -19164,6 +16476,373 @@ paths:
       summary: 获取用户违规记录
       tags:
       - 审核
+  /api/v1/users/devices/{deviceId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除用户的登录设备
+      parameters:
+      - description: 设备ID
+        in: path
+        name: deviceId
+        required: true
+        type: string
+      - description: 删除设备请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.DeleteDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: 密码错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: 设备不存在
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 删除设备
+      tags:
+      - User Profile
+  /api/v1/users/email/unbind:
+    delete:
+      consumes:
+      - application/json
+      description: 解除用户邮箱绑定，需要验证密码
+      parameters:
+      - description: 解绑邮箱请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.UnbindEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: 密码错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 解绑邮箱
+      tags:
+      - User Profile
+  /api/v1/users/email/verify:
+    post:
+      consumes:
+      - application/json
+      description: 验证用户邮箱，验证成功后标记邮箱已验证
+      parameters:
+      - description: 验证邮箱请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.VerifyEmailResponse'
+              type: object
+        "400":
+          description: 验证码无效或过期
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 验证邮箱
+      tags:
+      - User Verification
+  /api/v1/users/password:
+    put:
+      consumes:
+      - application/json
+      description: 修改当前用户密码（需要验证旧密码）
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: 旧密码错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 修改密码
+      tags:
+      - User Password
+  /api/v1/users/password/reset/send:
+    post:
+      consumes:
+      - application/json
+      description: 向用户邮箱发送密码重置验证码
+      parameters:
+      - description: 发送重置验证码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendPasswordResetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendPasswordResetResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 发送密码重置验证码
+      tags:
+      - User Password
+  /api/v1/users/password/reset/verify:
+    post:
+      consumes:
+      - application/json
+      description: 验证重置码并重置用户密码
+      parameters:
+      - description: 重置密码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.ResetPasswordResponse'
+              type: object
+        "400":
+          description: 验证码无效
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 重置密码
+      tags:
+      - User Password
+  /api/v1/users/phone/unbind:
+    delete:
+      consumes:
+      - application/json
+      description: 解除用户手机绑定（模拟实现，直接返回成功）
+      parameters:
+      - description: 解绑手机请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.UnbindPhoneRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 解绑手机
+      tags:
+      - User Profile
+  /api/v1/users/verify/email/send:
+    post:
+      consumes:
+      - application/json
+      description: 向用户邮箱发送6位数字验证码，有效期5分钟
+      parameters:
+      - description: 发送验证码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendEmailCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendCodeResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "429":
+          description: 发送过于频繁
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 发送邮箱验证码
+      tags:
+      - User Verification
+  /api/v1/users/verify/phone/send:
+    post:
+      consumes:
+      - application/json
+      description: 向用户手机发送6位数字验证码（模拟实现：控制台打印）
+      parameters:
+      - description: 发送验证码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendPhoneCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Qingyu_backend_api_v1_user_dto.SendCodeResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 发送手机验证码
+      tags:
+      - User Verification
+  /api/v1/writer/batch-operations:
+    post:
+      consumes:
+      - application/json
+      description: 提交批量删除/移动/复制等操作，包含Preflight预检查
+      parameters:
+      - description: 批量操作请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_writer.SubmitBatchOperationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_v1_writer.SubmitBatchOperationResponse'
+      summary: 提交批量操作
+      tags:
+      - batch-operations
+  /api/v1/writer/batch-operations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 查询批量操作的执行状态和进度
+      parameters:
+      - description: 批量操作ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: 获取批量操作状态
+      tags:
+      - batch-operations
+  /api/v1/writer/batch-operations/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 取消正在运行的批量操作
+      parameters:
+      - description: 批量操作ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: 取消批量操作
+      tags:
+      - batch-operations
+  /api/v1/writer/batch-operations/{id}/undo:
+    post:
+      consumes:
+      - application/json
+      description: 撤销已完成的批量操作
+      parameters:
+      - description: 批量操作ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: 撤销批量操作
+      tags:
+      - batch-operations
   /api/v1/writer/books/{book_id}/daily-stats:
     get:
       consumes:
@@ -19186,14 +16865,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_stats.BookStatsDaily'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19222,14 +16894,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_stats.ChapterStatsAggregate'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19258,14 +16923,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_models_stats.HeatmapPoint'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19299,15 +16957,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  additionalProperties:
-                    format: float64
-                    type: number
-                  type: object
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19344,12 +16994,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_stats.RevenueBreakdown'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19378,12 +17023,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_stats.BookStats'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19412,12 +17052,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_stats.TopChapters'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19446,12 +17081,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_models_stats.ChapterStats'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -19880,6 +17510,49 @@ paths:
       summary: 批注统计
       tags:
       - Writer-Comment
+  /api/v1/writer/documents/{id}/duplicate:
+    post:
+      consumes:
+      - application/json
+      description: 复制文档到指定位置，可选择是否复制内容
+      parameters:
+      - description: 文档ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 复制文档请求
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 复制文档
+      tags:
+      - 文档管理
   /api/v1/writer/documents/{id}/export:
     post:
       consumes:
@@ -19901,19 +17574,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
         "202":
           description: Accepted
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportTask'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20139,19 +17807,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.PublishDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
         "202":
           description: Accepted
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationRecord'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20184,7 +17847,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.UpdateDocumentPublishStatusRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -20244,12 +17907,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportTask'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -20303,12 +17961,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportFile'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -20332,19 +17985,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportProjectRequest'
+          type: object
       produces:
       - application/json
       responses:
         "202":
           description: Accepted
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportTask'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20373,12 +18021,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationStatus'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -20402,19 +18045,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.PublishProjectRequest'
+          type: object
       produces:
       - application/json
       responses:
         "202":
           description: Accepted
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationRecord'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20471,19 +18109,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/Qingyu_backend_service_interfaces.BatchPublishDocumentsRequest'
+          type: object
       produces:
       - application/json
       responses:
         "202":
           description: Accepted
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.BatchPublishResult'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20522,14 +18155,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_service_interfaces.ExportTask'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20564,14 +18190,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationRecord'
-                  type: array
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20596,12 +18215,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_interfaces.PublicationRecord'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "404":
           description: Not Found
           schema:
@@ -20640,12 +18254,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/Qingyu_backend_service_shared_search.SearchResult'
-              type: object
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -20663,6 +18272,265 @@ paths:
       summary: 搜索文档
       tags:
       - 写作端-搜索
+  /api/v1/writer/templates:
+    get:
+      consumes:
+      - application/json
+      description: 获取模板列表（支持分页和过滤）
+      parameters:
+      - description: 项目ID（为空则查询全局模板）
+        in: query
+        name: projectId
+        type: string
+      - description: 模板类型 (chapter/outline/setting)
+        in: query
+        name: type
+        type: string
+      - description: 模板状态 (active/deprecated)
+        in: query
+        name: status
+        type: string
+      - description: 模板分类
+        in: query
+        name: category
+        type: string
+      - description: 关键词搜索
+        in: query
+        name: keyword
+        type: string
+      - description: 是否为系统模板
+        in: query
+        name: isSystem
+        type: boolean
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - default: created_at
+        description: 排序字段
+        in: query
+        name: sortBy
+        type: string
+      - default: -1
+        description: 排序方向 (1=升序, -1=降序)
+        in: query
+        name: sortOrder
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 列出模板
+      tags:
+      - 模板管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的文档模板
+      parameters:
+      - description: 创建模板请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_writer.CreateTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 创建模板
+      tags:
+      - 模板管理
+  /api/v1/writer/templates/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除模板（软删除）
+      parameters:
+      - description: 模板ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 删除模板
+      tags:
+      - 模板管理
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取模板详细信息
+      parameters:
+      - description: 模板ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 获取模板详情
+      tags:
+      - 模板管理
+    put:
+      consumes:
+      - application/json
+      description: 更新模板信息
+      parameters:
+      - description: 模板ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新模板请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_writer.UpdateTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 更新模板
+      tags:
+      - 模板管理
+  /api/v1/writer/templates/{id}/apply:
+    post:
+      consumes:
+      - application/json
+      description: 渲染模板并应用到文档
+      parameters:
+      - description: 模板ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 应用模板请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1_writer.ApplyTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Qingyu_backend_api_v1_shared.APIResponse'
+      summary: 应用模板
+      tags:
+      - 模板管理
   /system/health:
     get:
       consumes:
@@ -20759,6 +18627,32 @@ paths:
       summary: 获取特定服务指标
       tags:
       - 系统监控
+  /ws/messages:
+    get:
+      description: 实时接收会话消息，需要在URL中传递token参数
+      parameters:
+      - description: JWT认证token
+        in: query
+        name: token
+        required: true
+        type: string
+      responses: {}
+      summary: WebSocket消息端点
+      tags:
+      - Social Messages
+  /ws/notifications:
+    get:
+      description: 实时接收用户通知，需要在URL中传递token参数
+      parameters:
+      - description: JWT认证token
+        in: query
+        name: token
+        required: true
+        type: string
+      responses: {}
+      summary: WebSocket通知端点
+      tags:
+      - Notifications
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.

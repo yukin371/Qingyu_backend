@@ -33,8 +33,8 @@ func NewEditorApi(documentService *document.DocumentService) *EditorApi {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Param request body document.AutoSaveRequest true "自动保存请求"
-// @Success 200 {object} shared.APIResponse{data=document.AutoSaveResponse}
+// @Param request body object true "自动保存请求"
+// @Success 200 {object} shared.APIResponse
 // @Failure 409 {object} shared.APIResponse "版本冲突"
 // @Router /api/v1/documents/{id}/autosave [post]
 func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
@@ -69,7 +69,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse{data=document.SaveStatusResponse}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/save-status [get]
 func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 	documentID := c.Param("id")
@@ -90,7 +90,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse{data=document.DocumentContentResponse}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/content [get]
 func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
@@ -111,7 +111,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Param request body document.UpdateContentRequest true "更新内容请求"
+// @Param request body object true "更新内容请求"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/content [put]
 func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
@@ -141,7 +141,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body WordCountRequest true "字数统计请求"
-// @Success 200 {object} shared.APIResponse{data=document.WordCountResult}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/word-count [post]
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
@@ -166,7 +166,7 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=documentModel.ShortcutConfig}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/user/shortcuts [get]
 func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 	userID, exists := c.Get("userID")
@@ -243,7 +243,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=[]documentModel.ShortcutCategory}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/user/shortcuts/help [get]
 func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 	userID, exists := c.Get("userID")

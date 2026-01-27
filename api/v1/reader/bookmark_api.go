@@ -32,7 +32,7 @@ func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 //	@Tags			Reader-Bookmark
 //	@Accept			json
 //	@Produce		json
-//	@Param			bookId		path	string				true	"书籍ID"
+//	@Param		bookId	path	string	true	"书籍ID"
 //	@Param			request	body	CreateBookmarkRequest	true	"书签信息"
 //	@Success		201		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse

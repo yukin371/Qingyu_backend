@@ -306,7 +306,7 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 // @Tags 图书评分
 // @Accept json
 // @Produce json
-// @Param rating body bookstore.BookRating true "评分信息"
+// @Param request body object true "评分信息"
 // @Success 201 {object} APIResponse "创建成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
@@ -345,7 +345,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评分ID"
-// @Param rating body bookstore.BookRating true "评分信息"
+// @Param request body object true "评分信息"
 // @Success 200 {object} APIResponse "更新成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"

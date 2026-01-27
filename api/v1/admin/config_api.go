@@ -33,7 +33,7 @@ type GetAllConfigsResponse struct {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} shared.APIResponse{data=GetAllConfigsResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/config [get]
@@ -62,7 +62,7 @@ type GetConfigByKeyRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param key path string true "配置键（如 server.port）"
-// @Success 200 {object} shared.APIResponse{data=sharedService.ConfigItem}
+// @Success 200 {object} shared.APIResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -211,7 +211,7 @@ type GetConfigBackupsResponse struct {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} shared.APIResponse{data=GetConfigBackupsResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/config/backups [get]

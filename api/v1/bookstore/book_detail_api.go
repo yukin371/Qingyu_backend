@@ -393,7 +393,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 //
 //	@Summary		获取热门书籍
 //	@Description	获取热门书籍列表
-//	@Tags			书籍详情
+//	@Tags			书籍推荐
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(10)
@@ -419,7 +419,7 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 //
 //	@Summary		获取最新书籍
 //	@Description	获取最新发布的书籍列表
-//	@Tags			书籍详情
+//	@Tags			书籍推荐
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(10)
@@ -445,9 +445,10 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 //
 //	@Summary		获取书籍统计信息
 //	@Description	获取书籍的浏览量、收藏量等统计信息
-//	@Tags			书籍详情
+//	@Tags			书籍交互
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"书籍ID"
 //	@Success		200	{object}	APIResponse
 //	@Failure		400	{object}	APIResponse
@@ -598,9 +599,10 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 //
 //	@Summary		增加书籍浏览量
 //	@Description	记录用户浏览书籍详情，增加浏览量统计
-//	@Tags			书籍详情
+//	@Tags			书籍交互
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"书籍ID"
 //	@Success		200	{object}	APIResponse
 //	@Failure		400	{object}	APIResponse
@@ -633,9 +635,10 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 //
 //	@Summary		增加书籍点赞数
 //	@Description	用户点赞书籍，增加点赞数统计
-//	@Tags			书籍详情
+//	@Tags			书籍交互
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"书籍ID"
 //	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse
@@ -667,9 +670,10 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 //
 //	@Summary		减少书籍点赞数
 //	@Description	用户取消点赞书籍，减少点赞数统计
-//	@Tags			书籍详情
+//	@Tags			书籍交互
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"书籍ID"
 //	@Success 200 {object} APIResponse
 //	@Failure		400	{object}	APIResponse

@@ -36,7 +36,7 @@ func NewBannerAPI(bannerService bookstore.BannerService) *BannerAPI {
 // @Param offset query int false "偏移量" default(0)
 // @Param sortBy query string false "排序字段(sort_order/click_count/created_at)" default(sort_order)
 // @Param sortOrder query string false "排序方向(asc/desc)" default(asc)
-// @Success 200 {object} shared.APIResponse{data=bookstore.GetBannersResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/banners [get]
@@ -104,7 +104,7 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "Banner ID"
-// @Success 200 {object} shared.APIResponse{data=bookstoreModel.Banner}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 404 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -132,8 +132,8 @@ func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body bookstore.CreateBannerRequest true "创建Banner请求"
-// @Success 201 {object} shared.APIResponse{data=bookstoreModel.Banner}
+// @Param request body object true "创建Banner请求"
+// @Success 201 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
 // @Failure 500 {object} shared.ErrorResponse
@@ -162,7 +162,7 @@ func (api *BannerAPI) CreateBanner(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "Banner ID"
-// @Param request body bookstore.UpdateBannerRequest true "更新Banner请求"
+// @Param request body object true "更新Banner请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
@@ -226,7 +226,7 @@ func (api *BannerAPI) DeleteBanner(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body bookstore.BatchUpdateStatusRequest true "批量更新状态请求"
+// @Param request body object true "批量更新状态请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
@@ -254,7 +254,7 @@ func (api *BannerAPI) BatchUpdateStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body bookstore.BatchUpdateSortRequest true "批量更新排序请求"
+// @Param request body object true "批量更新排序请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse

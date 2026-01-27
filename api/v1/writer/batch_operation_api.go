@@ -107,7 +107,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "批量操作ID"
-// @Success 200 {object} document.BatchOperationProgress
+// @Success 200 {object} object
 // @Router /api/v1/writer/batch-operations/{id} [get]
 func (api *BatchOperationAPI) GetBatchOperationStatus(c *gin.Context) {
 	id := c.Param("id")

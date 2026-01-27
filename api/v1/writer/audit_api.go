@@ -28,7 +28,7 @@ func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 // @Tags 审核
 // @Accept json
 // @Produce json
-// @Param request body writer.CheckContentRequest true "检测请求"
+// @Param request body object true "检测请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/audit/check [post]
@@ -55,7 +55,7 @@ func (api *AuditApi) CheckContent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Param request body writer.AuditDocumentRequest true "审核请求"
+// @Param request body object true "审核请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/documents/{id}/audit [post]
@@ -122,7 +122,7 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "审核记录ID"
-// @Param request body writer.SubmitAppealRequest true "申诉请求"
+// @Param request body object true "申诉请求"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/audit/{id}/appeal [post]
@@ -189,7 +189,7 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "审核记录ID"
-// @Param request body writer.ReviewAuditRequest true "复核请求"
+// @Param request body object true "复核请求"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/admin/audit/{id}/review [post]
 func (api *AuditApi) ReviewAudit(c *gin.Context) {
@@ -224,7 +224,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "审核记录ID"
-// @Param request body writer.ReviewAppealRequest true "复核申诉请求"
+// @Param request body object true "复核申诉请求"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/admin/audit/{id}/appeal/review [post]
 func (api *AuditApi) ReviewAppeal(c *gin.Context) {

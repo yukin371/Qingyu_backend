@@ -308,7 +308,7 @@ func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) 
 //
 //	@Summary	同步注记
 //	@Tags		阅读器
-//	@Param		request	body		SyncAnnotationsRequest	true	"同步注记请求"
+//	@Param		request	body		object	true	"同步注记请求"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {

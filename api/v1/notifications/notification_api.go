@@ -500,7 +500,7 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body notifService.UpdateNotificationPreferenceRequest true "偏好设置"
+// @Param request body object true "偏好设置"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/notifications/preferences [put]
 func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
@@ -608,7 +608,7 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body notification.EmailNotificationSettings true "邮件通知设置"
+// @Param request body object true "邮件通知设置"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/user-management/email-notifications [put]
 func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
@@ -679,7 +679,7 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body notification.SMSNotificationSettings true "短信通知设置"
+// @Param request body object true "短信通知设置"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/user-management/sms-notifications [put]
 func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
@@ -718,7 +718,7 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Param request body notifService.RegisterPushDeviceRequest true "设备信息"
+// @Param request body object true "设备信息"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/notifications/push/register [post]
 func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {

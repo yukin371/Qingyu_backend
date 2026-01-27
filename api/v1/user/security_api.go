@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	sharedApi "Qingyu_backend/api/v1/shared"
+	shared "Qingyu_backend/api/v1/shared"
 	user2 "Qingyu_backend/service/interfaces/user"
 )
 
@@ -30,28 +30,28 @@ func NewSecurityAPI(userService user2.UserService) *SecurityAPI {
 //	@Tags			用户安全
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		user2.SendEmailVerificationRequest	true	"发送验证码请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse
-//	@Failure		404		{object}	sharedApi.APIResponse
-//	@Failure		500		{object}	sharedApi.APIResponse
+//	@Param			request	body		object	true	"发送验证码请求"
+//	@Success 200 {object} shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		404		{object}	shared.APIResponse
+//	@Failure		500		{object}	shared.APIResponse
 //	@Router			/api/v1/user/email/send-code [post]
 func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 	var req user2.SendEmailVerificationRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
 	resp, err := api.userService.SendEmailVerification(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.APIResponse{
+		c.JSON(http.StatusInternalServerError, shared.APIResponse{
 			Code:    500,
 			Message: "发送验证码失败: " + err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    0,
 		Message: resp.Message,
 		Data:    resp,
@@ -65,28 +65,28 @@ func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 //	@Tags			用户安全
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		user2.VerifyEmailRequest	true	"验证邮箱请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse
-//	@Failure		404		{object}	sharedApi.APIResponse
-//	@Failure		500		{object}	sharedApi.APIResponse
+//	@Param			request	body		object	true	"验证邮箱请求"
+//	@Success 200 {object} shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		404		{object}	shared.APIResponse
+//	@Failure		500		{object}	shared.APIResponse
 //	@Router			/api/v1/user/email/verify [post]
 func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 	var req user2.VerifyEmailRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
 	resp, err := api.userService.VerifyEmail(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, sharedApi.APIResponse{
+		c.JSON(http.StatusBadRequest, shared.APIResponse{
 			Code:    400,
 			Message: "验证失败: " + err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    0,
 		Message: resp.Message,
 		Data:    resp,
@@ -102,27 +102,27 @@ func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 //	@Tags			用户安全
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		user2.RequestPasswordResetRequest	true	"请求重置密码"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse
-//	@Failure		500		{object}	sharedApi.APIResponse
+//	@Param			request	body		object	true	"请求重置密码"
+//	@Success 200 {object} shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		500		{object}	shared.APIResponse
 //	@Router			/api/v1/user/password/reset-request [post]
 func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 	var req user2.RequestPasswordResetRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
 	resp, err := api.userService.RequestPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.APIResponse{
+		c.JSON(http.StatusInternalServerError, shared.APIResponse{
 			Code:    500,
 			Message: "请求重置失败: " + err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    0,
 		Message: resp.Message,
 		Data:    resp,
@@ -136,28 +136,28 @@ func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 //	@Tags			用户安全
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		user2.ConfirmPasswordResetRequest	true	"确认重置密码"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse
-//	@Failure		404		{object}	sharedApi.APIResponse
-//	@Failure		500		{object}	sharedApi.APIResponse
+//	@Param			request	body		object	true	"确认重置密码"
+//	@Success 200 {object} shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		404		{object}	shared.APIResponse
+//	@Failure		500		{object}	shared.APIResponse
 //	@Router			/api/v1/user/password/reset [post]
 func (api *SecurityAPI) ConfirmPasswordReset(c *gin.Context) {
 	var req user2.ConfirmPasswordResetRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
 	resp, err := api.userService.ConfirmPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, sharedApi.APIResponse{
+		c.JSON(http.StatusBadRequest, shared.APIResponse{
 			Code:    400,
 			Message: "重置失败: " + err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.APIResponse{
+	c.JSON(http.StatusOK, shared.APIResponse{
 		Code:    0,
 		Message: resp.Message,
 		Data:    resp,

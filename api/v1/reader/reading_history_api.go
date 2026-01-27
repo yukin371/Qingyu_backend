@@ -28,7 +28,7 @@ func NewReadingHistoryAPI(historyService interfaces.ReadingHistoryService) *Read
 // @Accept json
 // @Produce json
 // @Param body body RecordReadingRequest true "阅读记录参数"
-// @Success 200 {object} shared.APIResponse{data=RecordReadingResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history [post]
 func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
@@ -73,7 +73,7 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
 // @Param book_id query string false "书籍ID"
-// @Success 200 {object} shared.APIResponse{data=HistoryListResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history [get]
 func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
@@ -128,7 +128,7 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "统计天数" default(30)
-// @Success 200 {object} shared.APIResponse{data=ReadingStatsResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/reader/reading-history/stats [get]
 func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {

@@ -30,8 +30,8 @@ func NewExportApi(exportService interfaces.ExportService) *ExportApi {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param projectId query string true "项目ID"
-// @Param request body interfaces.ExportDocumentRequest true "导出请求"
-// @Success 202 {object} shared.APIResponse{data=interfaces.ExportTask}
+// @Param request body object true "导出请求"
+// @Success 202 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/documents/{id}/export [post]
@@ -74,8 +74,8 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Param request body interfaces.ExportProjectRequest true "导出请求"
-// @Success 202 {object} shared.APIResponse{data=interfaces.ExportTask}
+// @Param request body object true "导出请求"
+// @Success 202 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{id}/export [post]
@@ -117,7 +117,7 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "任务ID"
-// @Success 200 {object} shared.APIResponse{data=interfaces.ExportTask}
+// @Success 200 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/exports/{id} [get]
 func (api *ExportApi) GetExportTask(c *gin.Context) {
@@ -144,7 +144,7 @@ func (api *ExportApi) GetExportTask(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "任务ID"
-// @Success 200 {object} shared.APIResponse{data=interfaces.ExportFile}
+// @Success 200 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Router /api/v1/writer/exports/{id}/download [get]
 func (api *ExportApi) DownloadExportFile(c *gin.Context) {
@@ -173,7 +173,7 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 // @Param projectId path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse{data=[]interfaces.ExportTask}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/exports [get]
 func (api *ExportApi) ListExportTasks(c *gin.Context) {

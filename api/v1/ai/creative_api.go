@@ -29,7 +29,7 @@ func NewCreativeAPI(phase3Client *ai.Phase3Client) *CreativeAPI {
 // @Accept json
 // @Produce json
 // @Param request body GenerateOutlineRequest true "大纲生成请求"
-// @Success 200 {object} shared.APIResponse{data=GenerateOutlineResponse} "成功"
+// @Success 200 {object} shared.APIResponse "成功"
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 500 {object} shared.APIResponse "服务器错误"
 // @Router /api/v1/ai/creative/outline [post]
@@ -76,7 +76,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body GenerateCharactersRequest true "角色生成请求"
-// @Success 200 {object} shared.APIResponse{data=GenerateCharactersResponse} "成功"
+// @Success 200 {object} shared.APIResponse "成功"
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 500 {object} shared.APIResponse "服务器错误"
 // @Router /api/v1/ai/creative/characters [post]
@@ -127,7 +127,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body GeneratePlotRequest true "情节生成请求"
-// @Success 200 {object} shared.APIResponse{data=GeneratePlotResponse} "成功"
+// @Success 200 {object} shared.APIResponse "成功"
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 500 {object} shared.APIResponse "服务器错误"
 // @Router /api/v1/ai/creative/plot [post]
@@ -184,7 +184,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body ExecuteCreativeWorkflowRequest true "工作流执行请求"
-// @Success 200 {object} shared.APIResponse{data=ExecuteCreativeWorkflowResponse} "成功"
+// @Success 200 {object} shared.APIResponse "成功"
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 500 {object} shared.APIResponse "服务器错误"
 // @Router /api/v1/ai/creative/workflow [post]
@@ -241,7 +241,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 // @Description 检查Phase3 AI服务的健康状态
 // @Tags Phase3-创作
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=map[string]interface{}} "成功"
+// @Success 200 {object} shared.APIResponse "成功"
 // @Failure 500 {object} shared.APIResponse "服务器错误"
 // @Router /api/v1/ai/creative/health [get]
 func (a *CreativeAPI) HealthCheck(c *gin.Context) {

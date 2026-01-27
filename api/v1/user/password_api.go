@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	sharedApi "Qingyu_backend/api/v1/shared"
+	shared "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
 	userService "Qingyu_backend/service/user"
 )
@@ -32,19 +32,19 @@ func NewPasswordAPI(
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SendPasswordResetRequest	true	"发送重置验证码请求"
-//	@Success 200 {object} sharedApi.APIResponse{data=dto.SendPasswordResetResponse}
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Success 200 {object} shared.APIResponse{data=dto.SendPasswordResetResponse}
+//	@Failure		400		{object}	shared.APIResponse	"参数错误"
 //	@Router			/api/v1/users/password/reset/send [post]
 func (api *PasswordAPI) SendPasswordResetCode(c *gin.Context) {
 	var req dto.SendPasswordResetRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 发送重置验证码
 	err := api.passwordService.SendResetCode(c.Request.Context(), req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
 			500,
 			"发送失败",
 			err,
@@ -52,7 +52,7 @@ func (api *PasswordAPI) SendPasswordResetCode(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
+	c.JSON(http.StatusOK, shared.SuccessResponse(
 		dto.SendPasswordResetResponse{
 			ExpiresIn: 300,
 			Message:   "重置验证码已发送到您的邮箱",
@@ -69,13 +69,13 @@ func (api *PasswordAPI) SendPasswordResetCode(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.ResetPasswordRequest	true	"重置密码请求"
-//	@Success 200 {object} sharedApi.APIResponse{data=dto.ResetPasswordResponse}
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		400		{object}	sharedApi.APIResponse	"验证码无效"
+//	@Success 200 {object} shared.APIResponse{data=dto.ResetPasswordResponse}
+//	@Failure		400		{object}	shared.APIResponse	"参数错误"
+//	@Failure		400		{object}	shared.APIResponse	"验证码无效"
 //	@Router			/api/v1/users/password/reset/verify [post]
 func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 	var req dto.ResetPasswordRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
@@ -88,13 +88,13 @@ func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 	)
 	if err != nil {
 		if err == userService.ErrInvalidCode {
-			c.JSON(http.StatusBadRequest, sharedApi.ErrorResponseWithCode(
+			c.JSON(http.StatusBadRequest, shared.ErrorResponseWithCode(
 				400,
 				"验证码无效或已过期",
 				err,
 			))
 		} else {
-			c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
+			c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
 				500,
 				"重置失败",
 				err,
@@ -103,7 +103,7 @@ func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
+	c.JSON(http.StatusOK, shared.SuccessResponse(
 		dto.ResetPasswordResponse{
 			Success: true,
 			Message:  "密码重置成功",
@@ -121,15 +121,15 @@ func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			request	body		dto.UpdatePasswordRequest	true	"修改密码请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		401		{object}	sharedApi.APIResponse	"旧密码错误"
+//	@Success 200 {object} shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse	"参数错误"
+//	@Failure		401		{object}	shared.APIResponse	"旧密码错误"
 //	@Router			/api/v1/users/password [put]
 func (api *PasswordAPI) UpdatePassword(c *gin.Context) {
 	userID := c.GetString("userID")
 
 	var req dto.UpdatePasswordRequest
-	if !sharedApi.ValidateRequest(c, &req) {
+	if !shared.ValidateRequest(c, &req) {
 		return
 	}
 
@@ -142,13 +142,13 @@ func (api *PasswordAPI) UpdatePassword(c *gin.Context) {
 	)
 	if err != nil {
 		if err == userService.ErrOldPasswordMismatch {
-			c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
+			c.JSON(http.StatusUnauthorized, shared.ErrorResponseWithCode(
 				401,
 				"旧密码错误",
 				err,
 			))
 		} else {
-			c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
+			c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
 				500,
 				"修改失败",
 				err,
@@ -157,5 +157,5 @@ func (api *PasswordAPI) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
+	c.JSON(http.StatusOK, shared.SuccessResponse(nil, "success"))
 }

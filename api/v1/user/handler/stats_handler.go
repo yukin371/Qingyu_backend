@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	sharedPkg "Qingyu_backend/api/v1/shared"
+	shared "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/shared/stats"
 )
 
@@ -30,15 +30,15 @@ func NewStatsHandler(statsService stats.PlatformStatsService) *StatsHandler {
 //	@Tags			用户管理-统计
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	sharedPkg.APIResponse{data=stats.UserStats}
-//	@Failure		401	{object}	sharedPkg.ErrorResponse
-//	@Failure		500	{object}	sharedPkg.ErrorResponse
+//	@Success		200	{object}	shared.APIResponse{data=stats.UserStats}
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/stats/my [get]
 func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
 	if !exists {
-		sharedPkg.Unauthorized(c, "未登录")
+		shared.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -46,12 +46,12 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 2. 获取统计数据
 	statsData, err := h.statsService.GetUserStats(c.Request.Context(), userID)
 	if err != nil {
-		sharedPkg.Error(c, http.StatusInternalServerError, "获取统计失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "获取统计失败", err.Error())
 		return
 	}
 
 	// 3. 返回结果
-	sharedPkg.Success(c, http.StatusOK, "获取成功", statsData)
+	shared.Success(c, http.StatusOK, "获取成功", statsData)
 }
 
 // GetMyContentStats 获取我的内容统计
@@ -61,15 +61,15 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 //	@Tags			用户管理-统计
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	sharedPkg.APIResponse{data=stats.ContentStats}
-//	@Failure		401	{object}	sharedPkg.ErrorResponse
-//	@Failure		500	{object}	sharedPkg.ErrorResponse
+//	@Success		200	{object}	shared.APIResponse{data=stats.ContentStats}
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/stats/my/content [get]
 func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
 	if !exists {
-		sharedPkg.Unauthorized(c, "未登录")
+		shared.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -77,12 +77,12 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 2. 获取内容统计
 	contentStats, err := h.statsService.GetContentStats(c.Request.Context(), userID)
 	if err != nil {
-		sharedPkg.Error(c, http.StatusInternalServerError, "获取内容统计失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "获取内容统计失败", err.Error())
 		return
 	}
 
 	// 3. 返回结果
-	sharedPkg.Success(c, http.StatusOK, "获取成功", contentStats)
+	shared.Success(c, http.StatusOK, "获取成功", contentStats)
 }
 
 // GetMyActivityStats 获取我的活跃度统计
@@ -93,15 +93,15 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			days	query		int	false	"统计天数（默认7）"
-//	@Success		200	{object}	sharedPkg.APIResponse{data=stats.ActivityStats}
-//	@Failure		401	{object}	sharedPkg.ErrorResponse
-//	@Failure		500	{object}	sharedPkg.ErrorResponse
+//	@Success		200	{object}	shared.APIResponse{data=stats.ActivityStats}
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/stats/my/activity [get]
 func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
 	if !exists {
-		sharedPkg.Unauthorized(c, "未登录")
+		shared.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -117,12 +117,12 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 3. 获取活跃度统计
 	activityStats, err := h.statsService.GetUserActivityStats(c.Request.Context(), userID, days)
 	if err != nil {
-		sharedPkg.Error(c, http.StatusInternalServerError, "获取活跃度统计失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "获取活跃度统计失败", err.Error())
 		return
 	}
 
 	// 4. 返回结果
-	sharedPkg.Success(c, http.StatusOK, "获取成功", activityStats)
+	shared.Success(c, http.StatusOK, "获取成功", activityStats)
 }
 
 // GetMyRevenueStats 获取我的收益统计
@@ -134,15 +134,15 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 //	@Produce		json
 //	@Param			start_date	query		string	false	"开始日期（YYYY-MM-DD）"
 //	@Param			end_date	query		string	false	"结束日期（YYYY-MM-DD）"
-//	@Success		200			{object}	sharedPkg.APIResponse{data=stats.RevenueStats}
-//	@Failure		401			{object}	sharedPkg.ErrorResponse
-//	@Failure		500			{object}	sharedPkg.ErrorResponse
+//	@Success		200			{object}	shared.APIResponse{data=stats.RevenueStats}
+//	@Failure		401			{object}	shared.ErrorResponse
+//	@Failure		500			{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/stats/my/revenue [get]
 func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("userId")
 	if !exists {
-		sharedPkg.Unauthorized(c, "未登录")
+		shared.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -168,10 +168,10 @@ func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 3. 获取收益统计
 	revenueStats, err := h.statsService.GetRevenueStats(c.Request.Context(), userID, startDate, endDate)
 	if err != nil {
-		sharedPkg.Error(c, http.StatusInternalServerError, "获取收益统计失败", err.Error())
+		shared.Error(c, http.StatusInternalServerError, "获取收益统计失败", err.Error())
 		return
 	}
 
 	// 4. 返回结果
-	sharedPkg.Success(c, http.StatusOK, "获取成功", revenueStats)
+	shared.Success(c, http.StatusOK, "获取成功", revenueStats)
 }

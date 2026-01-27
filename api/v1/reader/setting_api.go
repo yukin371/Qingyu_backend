@@ -74,7 +74,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 //
 //	@Summary	保存阅读设置
 //	@Tags		阅读器
-//	@Param		request	body readerModels.ReadingSettings	true	"阅读设置"
+//	@Param		request	body object	true	"阅读设置"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/settings [post]
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {

@@ -47,7 +47,7 @@ func NewChapterAPI(chapterService interfaces.ReaderChapterService) *ChapterAPI {
 // @Security Bearer
 // @Param bookId path string true "BookId"
 // @Param chapterId path string true "ChapterId"
-// @Success 200 {object} response.APIResponse{data=TODO}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /reader/books/{bookId}/chapters/{chapterId} [get]
 

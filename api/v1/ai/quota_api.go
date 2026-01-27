@@ -30,7 +30,7 @@ func NewQuotaApi(quotaService *aiService.QuotaService) *QuotaApi {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=aiModel.UserQuota}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota [get]
 func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 	userID, exists := c.Get("userId")
@@ -54,7 +54,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=[]aiModel.UserQuota}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/all [get]
 func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 	userID, exists := c.Get("userId")
@@ -78,7 +78,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse{data=aiInterfaces.QuotaStatistics}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/statistics [get]
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 	userID, exists := c.Get("userId")
@@ -104,7 +104,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 // @Produce json
 // @Param limit query int false "每页数量" default(20)
 // @Param offset query int false "偏移量" default(0)
-// @Success 200 {object} shared.APIResponse{data=[]aiModel.QuotaTransaction}
+// @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/transactions [get]
 func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 	userID, exists := c.Get("userId")

@@ -164,9 +164,13 @@ func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 
 // WithdrawRequest 提现申请请求
 type WithdrawRequest struct {
-	Amount      float64                      `json:"amount" binding:"required,gt=0"`
-	Method      string                       `json:"method" binding:"required,oneof=alipay wechat bank"`
-	AccountInfo financeModel.WithdrawAccount `json:"account_info" binding:"required"`
+	Amount      float64 `json:"amount" binding:"required,gt=0"`
+	Method      string  `json:"method" binding:"required,oneof=alipay wechat bank"`
+	AccountType string  `json:"account_type" binding:"required"`
+	AccountName string  `json:"account_name" binding:"required"`
+	AccountNo   string  `json:"account_no" binding:"required"`
+	BankName    string  `json:"bank_name,omitempty"`
+	BranchName  string  `json:"branch_name,omitempty"`
 }
 
 // Withdraw 申请提现
@@ -199,12 +203,19 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 		return
 	}
 
+	accountInfo := financeModel.WithdrawAccount{
+		AccountType: req.AccountType,
+		AccountName: req.AccountName,
+		AccountNo:   req.AccountNo,
+		BankName:    req.BankName,
+		BranchName:  req.BranchName,
+	}
 	withdrawal, err := api.revenueService.CreateWithdrawalRequest(
 		c.Request.Context(),
 		userID.(string),
 		req.Amount,
 		req.Method,
-		req.AccountInfo,
+		accountInfo,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, sharedApi.APIResponse{

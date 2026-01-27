@@ -83,7 +83,7 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //
 //	@Summary	创建自定义主题
 //	@Tags		阅读器-主题
-//	@Param		request	body readerModels.CreateCustomThemeRequest	true	"创建主题请求"
+//	@Param		request	body object	true	"创建主题请求"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
@@ -127,7 +127,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Summary	更新自定义主题
 //	@Tags		阅读器-主题
 //	@Param		id		path	string						true	"主题ID"
-//	@Param		request	body readerModels.UpdateThemeRequest	true	"更新主题请求"
+//	@Param		request	body object	true	"更新主题请求"
 //	@Success	200		{object}	shared.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {

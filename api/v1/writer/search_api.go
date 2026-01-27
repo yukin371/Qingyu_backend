@@ -34,7 +34,7 @@ func NewSearchAPI(searchService search_legacy.SearchService) *SearchAPI {
 //	@Param			project_id	query		string	false	"项目ID过滤"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse{data=search.SearchResult}
+//	@Success		200			{object}	shared.APIResponse
 //	@Failure		400			{object}	shared.APIResponse
 //	@Failure		401			{object}	shared.APIResponse
 //	@Failure		500			{object}	shared.APIResponse

@@ -35,7 +35,7 @@ func NewTemplateAPI(service *document.TemplateService, logger *zap.Logger) *Temp
 // @Accept json
 // @Produce json
 // @Param request body CreateTemplateRequest true "创建模板请求"
-// @Success 201 {object} shared.APIResponse{data=writer.Template}
+// @Success 201 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 401 {object} shared.APIResponse
 // @Failure 500 {object} shared.APIResponse
@@ -187,7 +187,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "模板ID"
-// @Success 200 {object} shared.APIResponse{data=writer.Template}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Failure 500 {object} shared.APIResponse
@@ -218,7 +218,7 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param request body UpdateTemplateRequest true "更新模板请求"
-// @Success 200 {object} shared.APIResponse{data=writer.Template}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 403 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
@@ -337,7 +337,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param request body ApplyTemplateRequest true "应用模板请求"
-// @Success 200 {object} shared.APIResponse{data=ApplyTemplateResponse}
+// @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
 // @Failure 404 {object} shared.APIResponse
 // @Failure 500 {object} shared.APIResponse
