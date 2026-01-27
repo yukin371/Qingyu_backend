@@ -318,6 +318,9 @@ func setDefaults() {
 	v.SetDefault("database.primary.mongodb.min_pool_size", 5)
 	v.SetDefault("database.primary.mongodb.connect_timeout", 10*time.Second)
 	v.SetDefault("database.primary.mongodb.server_timeout", 30*time.Second)
+	v.SetDefault("database.primary.mongodb.profiling_level", 1)
+	v.SetDefault("database.primary.mongodb.slow_ms", 100)
+	v.SetDefault("database.primary.mongodb.profiler_size_mb", 100)
 
 	// 索引配置
 	v.SetDefault("database.indexing.auto_create", true)

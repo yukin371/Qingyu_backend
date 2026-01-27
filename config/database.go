@@ -38,12 +38,15 @@ type DatabaseConnection struct {
 
 // MongoDBConfig MongoDB配置
 type MongoDBConfig struct {
-	URI            string        `yaml:"uri" json:"uri" mapstructure:"uri"`
-	Database       string        `yaml:"database" json:"database" mapstructure:"database"`
-	MaxPoolSize    uint64        `yaml:"max_pool_size" json:"max_pool_size" mapstructure:"max_pool_size"`
-	MinPoolSize    uint64        `yaml:"min_pool_size" json:"min_pool_size" mapstructure:"min_pool_size"`
-	ConnectTimeout time.Duration `yaml:"connect_timeout" json:"connect_timeout" mapstructure:"connect_timeout"`
-	ServerTimeout  time.Duration `yaml:"server_timeout" json:"server_timeout" mapstructure:"server_timeout"`
+	URI             string        `yaml:"uri" json:"uri" mapstructure:"uri"`
+	Database        string        `yaml:"database" json:"database" mapstructure:"database"`
+	MaxPoolSize     uint64        `yaml:"max_pool_size" json:"max_pool_size" mapstructure:"max_pool_size"`
+	MinPoolSize     uint64        `yaml:"min_pool_size" json:"min_pool_size" mapstructure:"min_pool_size"`
+	ConnectTimeout  time.Duration `yaml:"connect_timeout" json:"connect_timeout" mapstructure:"connect_timeout"`
+	ServerTimeout   time.Duration `yaml:"server_timeout" json:"server_timeout" mapstructure:"server_timeout"`
+	ProfilingLevel  int           `yaml:"profiling_level" json:"profiling_level" mapstructure:"profiling_level"`   // 0=off, 1=slow only, 2=all
+	SlowMS          int64         `yaml:"slow_ms" json:"slow_ms" mapstructure:"slow_ms"`                           // 慢查询阈值（毫秒）
+	ProfilerSizeMB  int64         `yaml:"profiler_size_mb" json:"profiler_size_mb" mapstructure:"profiler_size_mb"` // Profiler存储大小限制（MB）
 }
 
 // PostgreSQLConfig PostgreSQL配置
@@ -131,12 +134,15 @@ func getDefaultDatabaseConfig() *DatabaseConfig {
 		Primary: DatabaseConnection{
 			Type: DatabaseTypeMongoDB,
 			MongoDB: &MongoDBConfig{
-				URI:            getEnvOrDefault("MONGODB_URI", "mongodb://localhost:27017"),
-				Database:       getEnvOrDefault("MONGODB_DATABASE", "qingyu"),
-				MaxPoolSize:    100,
-				MinPoolSize:    5,
-				ConnectTimeout: 10 * time.Second,
-				ServerTimeout:  30 * time.Second,
+				URI:             getEnvOrDefault("MONGODB_URI", "mongodb://localhost:27017"),
+				Database:        getEnvOrDefault("MONGODB_DATABASE", "qingyu"),
+				MaxPoolSize:     100,
+				MinPoolSize:     5,
+				ConnectTimeout:  10 * time.Second,
+				ServerTimeout:   30 * time.Second,
+				ProfilingLevel:  getEnvIntOrDefault("MONGODB_PROFILING_LEVEL", 1),
+				SlowMS:          getEnvInt64OrDefault("MONGODB_SLOW_MS", 100),
+				ProfilerSizeMB:  getEnvInt64OrDefault("MONGODB_PROFILER_SIZE_MB", 100),
 			},
 		},
 		Replicas: []DatabaseConnection{},
@@ -168,6 +174,23 @@ func applyEnvironmentOverrides(config *DatabaseConfig) error {
 		if poolSize := os.Getenv("MONGODB_MAX_POOL_SIZE"); poolSize != "" {
 			if size, err := strconv.ParseUint(poolSize, 10, 64); err == nil {
 				config.Primary.MongoDB.MaxPoolSize = size
+			}
+		}
+
+		// Profiling配置环境变量覆盖
+		if profilingLevel := os.Getenv("MONGODB_PROFILING_LEVEL"); profilingLevel != "" {
+			if level, err := strconv.Atoi(profilingLevel); err == nil && level >= 0 && level <= 2 {
+				config.Primary.MongoDB.ProfilingLevel = level
+			}
+		}
+		if slowMS := os.Getenv("MONGODB_SLOW_MS"); slowMS != "" {
+			if ms, err := strconv.ParseInt(slowMS, 10, 64); err == nil && ms >= 0 {
+				config.Primary.MongoDB.SlowMS = ms
+			}
+		}
+		if profilerSizeMB := os.Getenv("MONGODB_PROFILER_SIZE_MB"); profilerSizeMB != "" {
+			if size, err := strconv.ParseInt(profilerSizeMB, 10, 64); err == nil && size >= 1 {
+				config.Primary.MongoDB.ProfilerSizeMB = size
 			}
 		}
 	}
@@ -256,6 +279,18 @@ func (c *MongoDBConfig) Validate() error {
 	if c.ServerTimeout == 0 {
 		c.ServerTimeout = 30 * time.Second
 	}
+
+	// 验证Profiling配置
+	if c.ProfilingLevel < 0 || c.ProfilingLevel > 2 {
+		return fmt.Errorf("ProfilingLevel必须在0-2之间, 当前值: %d", c.ProfilingLevel)
+	}
+	if c.SlowMS < 0 {
+		return fmt.Errorf("SlowMS不能为负数, 当前值: %d", c.SlowMS)
+	}
+	if c.ProfilerSizeMB < 1 {
+		return fmt.Errorf("ProfilerSizeMB必须至少为1MB, 当前值: %d", c.ProfilerSizeMB)
+	}
+
 	return nil
 }
 
@@ -321,13 +356,16 @@ func (c *MySQLConfig) Validate() error {
 // ToRepositoryConfig 转换为仓储配置 - 返回通用配置接口
 func (c *MongoDBConfig) ToRepositoryConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"type":            "mongodb",
-		"uri":             c.URI,
-		"database":        c.Database,
-		"max_pool_size":   c.MaxPoolSize,
-		"min_pool_size":   c.MinPoolSize,
-		"connect_timeout": c.ConnectTimeout,
-		"server_timeout":  c.ServerTimeout,
+		"type":              "mongodb",
+		"uri":               c.URI,
+		"database":          c.Database,
+		"max_pool_size":     c.MaxPoolSize,
+		"min_pool_size":     c.MinPoolSize,
+		"connect_timeout":   c.ConnectTimeout,
+		"server_timeout":    c.ServerTimeout,
+		"profiling_level":   c.ProfilingLevel,
+		"slow_ms":           c.SlowMS,
+		"profiler_size_mb":  c.ProfilerSizeMB,
 	}
 }
 
@@ -351,6 +389,26 @@ func (c *PostgreSQLConfig) ToRepositoryConfig() map[string]interface{} {
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+// getEnvIntOrDefault 获取环境变量整数或默认值
+func getEnvIntOrDefault(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
+	}
+	return defaultValue
+}
+
+// getEnvInt64OrDefault 获取环境变量int64或默认值
+func getEnvInt64OrDefault(key string, defaultValue int64) int64 {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.ParseInt(value, 10, 64); err == nil {
+			return intVal
+		}
 	}
 	return defaultValue
 }
