@@ -78,7 +78,7 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Success 200 {object} APIResponse
-//	@Router			/api/v1/finance/author/earnings/:bookId [get]
+//	@Router			/api/v1/finance/author/earnings/{bookId} [get]
 func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -367,7 +367,7 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"结算ID"
 //	@Success 200 {object} APIResponse
-//	@Router			/api/v1/finance/author/settlements/:id [get]
+//	@Router			/api/v1/finance/author/settlements/{id} [get]
 func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 	settlementID := c.Param("id")
 	if settlementID == "" {

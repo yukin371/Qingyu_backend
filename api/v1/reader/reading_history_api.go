@@ -177,7 +177,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 // @Param id path string true "历史记录ID"
 // @Success 200 {object} shared.APIResponse
 // @Failure 400 {object} shared.APIResponse
-// @Router /api/v1/reader/reading-history/:id [delete]
+// @Router /api/v1/reader/reading-history/{id} [delete]
 func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")

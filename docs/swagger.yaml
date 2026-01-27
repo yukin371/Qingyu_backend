@@ -4677,7 +4677,7 @@ paths:
       summary: 获取聊天会话列表
       tags:
       - AI聊天
-  /api/v1/ai/chat/sessions/:sessionId:
+  /api/v1/ai/chat/sessions/{sessionId}:
     delete:
       consumes:
       - application/json
@@ -8631,7 +8631,7 @@ paths:
       summary: 获取作者收入列表
       tags:
       - 作者收入
-  /api/v1/finance/author/earnings/:bookId:
+  /api/v1/finance/author/earnings/{bookId}:
     get:
       consumes:
       - application/json
@@ -8746,7 +8746,7 @@ paths:
       summary: 获取结算记录
       tags:
       - 作者收入
-  /api/v1/finance/author/settlements/:id:
+  /api/v1/finance/author/settlements/{id}:
     get:
       consumes:
       - application/json
@@ -12487,7 +12487,7 @@ paths:
       summary: 记录阅读历史
       tags:
       - 阅读历史
-  /api/v1/reader/reading-history/:id:
+  /api/v1/reader/reading-history/{id}:
     delete:
       consumes:
       - application/json

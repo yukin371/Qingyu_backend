@@ -3486,7 +3486,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/ai/chat/sessions/:sessionId": {
+        "/api/v1/ai/chat/sessions/{sessionId}": {
             "get": {
                 "description": "获取指定会话的聊天历史，支持分页",
                 "consumes": [
@@ -9479,7 +9479,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/finance/author/earnings/:bookId": {
+        "/api/v1/finance/author/earnings/{bookId}": {
             "get": {
                 "security": [
                     {
@@ -9659,7 +9659,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/finance/author/settlements/:id": {
+        "/api/v1/finance/author/settlements/{id}": {
             "get": {
                 "security": [
                     {
@@ -15455,43 +15455,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/reader/reading-history/:id": {
-            "delete": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "阅读历史"
-                ],
-                "summary": "删除历史记录",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "历史记录ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/reader/reading-history/stats": {
             "get": {
                 "consumes": [
@@ -15511,6 +15474,43 @@ const docTemplate = `{
                         "description": "统计天数",
                         "name": "days",
                         "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reader/reading-history/{id}": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "阅读历史"
+                ],
+                "summary": "删除历史记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "历史记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
