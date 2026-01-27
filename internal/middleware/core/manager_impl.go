@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -148,4 +149,49 @@ func getMiddlewareNames(middlewares []Middleware) []string {
 		names = append(names, mw.Name())
 	}
 	return names
+}
+
+// Validate 验证中间件配置
+func (m *managerImpl) Validate() error {
+	return m.registry.Validate()
+}
+
+// GetExecutionOrder 获取执行顺序
+func (m *managerImpl) GetExecutionOrder() []string {
+	sorted := m.registry.Sorted()
+	order := make([]string, 0, len(sorted))
+
+	for _, mw := range sorted {
+		order = append(order, mw.Name())
+	}
+
+	return order
+}
+
+// GenerateOrderReport 生成顺序报告
+func (m *managerImpl) GenerateOrderReport() string {
+	sorted := m.registry.Sorted()
+
+	var report strings.Builder
+	report.WriteString("========== Middleware Execution Order ==========\n")
+	report.WriteString(fmt.Sprintf("Total: %d middlewares\n\n", len(sorted)))
+
+	for i, mw := range sorted {
+		name := mw.Name()
+		priority := m.registry.GetEffectivePriority(name)
+
+		// 判断是否有优先级覆盖
+		defaultPriority := mw.Priority()
+		overrideStatus := ""
+		if priority != defaultPriority {
+			overrideStatus = fmt.Sprintf(" (overridden from %d)", defaultPriority)
+		}
+
+		report.WriteString(fmt.Sprintf("%2d. %-20s Priority: %2d%s\n",
+			i+1, name, priority, overrideStatus))
+	}
+
+	report.WriteString("\n========== End of Report ==========\n")
+
+	return report.String()
 }

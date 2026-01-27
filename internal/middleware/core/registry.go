@@ -127,6 +127,29 @@ func (r *Registry) SetPriorityOverride(name string, priority int) {
 		zap.Int("override_priority", priority))
 }
 
+// GetEffectivePriority 获取中间件的有效优先级
+//
+// 考虑优先级覆盖配置，返回最终使用的优先级值。
+// 如果中间件不存在，返回 -1。
+func (r *Registry) GetEffectivePriority(name string) int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	// 检查中间件是否存在
+	mw, exists := r.middlewares[name]
+	if !exists {
+		return -1
+	}
+
+	// 检查是否有优先级覆盖
+	if override, exists := r.priorities[name]; exists {
+		return override
+	}
+
+	// 返回默认优先级
+	return mw.Priority()
+}
+
 // getPriority 获取中间件的优先级（考虑覆盖）
 func (r *Registry) getPriority(mw Middleware) int {
 	name := mw.Name()

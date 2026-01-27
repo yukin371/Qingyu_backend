@@ -42,6 +42,22 @@ type Manager interface {
 	// 将中间件应用到Gin引擎。
 	// globalMiddlewares指定要应用的全局中间件名称（为空则应用所有）。
 	ApplyToRouter(router *gin.Engine, globalMiddlewares ...string) error
+
+	// Validate 验证中间件配置
+	//
+	// 检查配置冲突、优先级范围等。
+	// 验证失败返回错误。
+	Validate() error
+
+	// GetExecutionOrder 获取执行顺序
+	//
+	// 返回按优先级排序的中间件名称列表。
+	GetExecutionOrder() []string
+
+	// GenerateOrderReport 生成顺序报告
+	//
+	// 生成包含中间件执行顺序的详细报告。
+	GenerateOrderReport() string
 }
 
 // RegisterOption 中间件注册选项

@@ -78,5 +78,35 @@ middleware:
 # ========== 优先级覆盖（可选） ==========
 # 仅覆盖需要调整的中间件，未列出的使用默认Priority()值
 priority_overrides:
+  # 示例：调整限流中间件优先级
   # rate_limit: 7  # 在认证之后执行（原8）
+
+  # 示例：调整监控中间件优先级
   # metrics: 6     # 在日志之前执行（原7）
+
+# ========== 路由组配置（可选） ==========
+# 为不同路由组配置特定的中间件和优先级
+middleware_groups:
+  # 示例：API路由组配置
+  # api_group:
+  #   # 使用的中间件列表（按名称）
+  #   middlewares:
+  #     - request_id
+  #     - recovery
+  #     - cors
+  #     - auth
+  #     - permission
+  #     - logger
+  #   # 路由组特定的优先级覆盖
+  #   priority_overrides:
+  #     auth: 8       # API组认证优先级为8
+  #     permission: 9 # API组权限检查优先级为9
+
+  # 示例：WebSocket路由组配置
+  # websocket_group:
+  #   middlewares:
+  #     - request_id
+  #     - recovery
+  #     - auth
+  #   priority_overrides:
+  #     logger: 100   # WebSocket组不使用日志
