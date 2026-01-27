@@ -44,6 +44,11 @@ type MongoDBConfig struct {
 	MinPoolSize    uint64        `yaml:"min_pool_size" json:"min_pool_size" mapstructure:"min_pool_size"`
 	ConnectTimeout time.Duration `yaml:"connect_timeout" json:"connect_timeout" mapstructure:"connect_timeout"`
 	ServerTimeout  time.Duration `yaml:"server_timeout" json:"server_timeout" mapstructure:"server_timeout"`
+
+	// Profiling配置
+	ProfilingLevel int   `yaml:"profiling_level" json:"profiling_level" mapstructure:"profiling_level"`
+	SlowMS         int64 `yaml:"slow_ms" json:"slow_ms" mapstructure:"slow_ms"`
+	ProfilerSizeMB int64 `yaml:"profiler_size_mb" json:"profiler_size_mb" mapstructure:"profiler_size_mb"`
 }
 
 // PostgreSQLConfig PostgreSQL配置
@@ -137,6 +142,9 @@ func getDefaultDatabaseConfig() *DatabaseConfig {
 				MinPoolSize:    5,
 				ConnectTimeout: 10 * time.Second,
 				ServerTimeout:  30 * time.Second,
+				ProfilingLevel: 1,
+				SlowMS:         100,
+				ProfilerSizeMB: 100,
 			},
 		},
 		Replicas: []DatabaseConnection{},
@@ -243,6 +251,15 @@ func (c *MongoDBConfig) Validate() error {
 	}
 	if c.Database == "" {
 		return fmt.Errorf("数据库名称不能为空")
+	}
+	if c.ProfilingLevel < 0 || c.ProfilingLevel > 2 {
+		return fmt.Errorf("ProfilingLevel必须在0-2之间")
+	}
+	if c.SlowMS < 0 {
+		return fmt.Errorf("SlowMS必须非负")
+	}
+	if c.ProfilerSizeMB < 1 {
+		return fmt.Errorf("ProfilerSizeMB必须至少为1MB")
 	}
 	if c.MaxPoolSize == 0 {
 		c.MaxPoolSize = 100
