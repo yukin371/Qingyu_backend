@@ -1,0 +1,82 @@
+# 中间件配置文件
+# Qingyu Backend Middleware Configuration
+
+middleware:
+  # ========== 静态配置中间件 ==========
+  # 这些中间件在启动时加载，修改后需要重启服务
+
+  # 请求ID配置
+  request_id:
+    header_name: "X-Request-ID"
+    force_gen: false
+
+  # 异常恢复配置
+  recovery:
+    stack_size: 4096
+    disable_print: true
+
+  # 安全头配置
+  security:
+    enable_x_frame_options: true
+    x_frame_options: "DENY"
+    enable_hsts: true
+    enable_csp: false
+
+  # 日志配置
+  logger:
+    skip_paths:
+      - "/health"
+      - "/metrics"
+
+  # 压缩配置
+  compression:
+    enabled: true
+    level: 5
+    types:
+      - "application/json"
+      - "text/html"
+      - "text/plain"
+      - "text/css"
+      - "application/javascript"
+
+  # ========== 动态配置中间件 ==========
+  # 这些中间件支持热更新（未来实现）
+
+  # 限流配置
+  rate_limit:
+    enabled: ${RATE_LIMIT_ENABLED:false}
+    strategy: "token_bucket"  # token_bucket | sliding_window | redis
+    rate: 100
+    burst: 200
+    window_size: 60  # 秒
+    redis:
+      addr: ${REDIS_ADDR:localhost:6379}
+      password: ${REDIS_PASSWORD:""}
+      db: 0
+      prefix: "ratelimit:"
+
+  # 认证配置
+  auth:
+    enabled: true
+    secret: ${JWT_SECRET}  # 从环境变量读取
+    skip_paths:
+      - "/health"
+      - "/metrics"
+      - "/api/v1/auth/login"
+      - "/api/v1/auth/register"
+
+  # 权限配置
+  permission:
+    enabled: true
+    strategy: "rbac"  # rbac | casbin
+    config_path: "configs/permissions.yaml"
+    skip_paths:
+      - "/health"
+      - "/metrics"
+    session_timeout: 30m  # 30分钟
+
+# ========== 优先级覆盖（可选） ==========
+# 仅覆盖需要调整的中间件，未列出的使用默认Priority()值
+priority_overrides:
+  # rate_limit: 7  # 在认证之后执行（原8）
+  # metrics: 6     # 在日志之前执行（原7）
