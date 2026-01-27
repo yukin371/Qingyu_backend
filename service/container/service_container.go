@@ -473,6 +473,12 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		}
 	}
 
+	// 6. 预热缓存（非阻塞）
+	if err := c.warmUpCache(ctx); err != nil {
+		// 缓存预热失败不阻塞应用启动
+		fmt.Printf("警告: 缓存预热失败: %v\n", err)
+	}
+
 	c.initialized = true
 	return nil
 }
@@ -1389,3 +1395,40 @@ func (c *ServiceContainer) GetAllServicesHealth(ctx context.Context) map[string]
 
 	return result
 }
+
+// ============ 缓存预热功能 ============
+
+// warmUpCache 预热缓存
+func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
+	// 检查缓存是否启用
+	cacheCfg := config.GetCacheConfig()
+	if !cacheCfg.Enabled {
+		fmt.Println("缓存未启用，跳过缓存预热")
+		return nil
+	}
+
+	// 检查Redis是否可用
+	if c.redisClient == nil {
+		fmt.Println("Redis客户端未初始化，跳过缓存预热")
+		return nil
+	}
+
+	// 获取原始Redis客户端
+	rawClient := c.redisClient.GetClient()
+	redisClient, ok := rawClient.(*redis.Client)
+	if !ok {
+		fmt.Println("Redis客户端类型转换失败，跳过缓存预热")
+		return nil
+	}
+
+	// 获取Repository
+	bookRepo := c.repositoryFactory.CreateBookRepository()
+	userRepo := c.repositoryFactory.CreateUserRepository()
+
+	// 创建缓存预热器
+	warmer := cache.NewCacheWarmer(bookRepo, userRepo, redisClient)
+
+	// 执行预热
+	return warmer.WarmUpCache(ctx)
+}
+
