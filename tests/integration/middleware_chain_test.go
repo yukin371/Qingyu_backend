@@ -75,8 +75,8 @@ func TestMiddlewareChain_FullChain(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 验证请求ID存在
-	requestID := w.Header().Get("X-Request-ID")
-	assert.NotEmpty(t, requestID)
+	responseRequestID := w.Header().Get("X-Request-ID")
+	assert.NotEmpty(t, responseRequestID)
 
 	// 验证安全头存在
 	assert.Equal(t, "DENY", w.Header().Get("X-Frame-Options"))
@@ -156,23 +156,20 @@ func TestMiddlewareChain_PriorityOverride(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	manager := core.NewManager(logger)
 
-	// 注册中间件并设置优先级覆盖
+	// 注册多个中间件
+	manager.Register(builtin.NewRequestIDMiddleware())       // priority 1
+	manager.Register(builtin.NewRecoveryMiddleware(logger))   // priority 2
+	manager.Register(builtin.NewSecurityMiddleware())         // priority 4
 	cors := builtin.NewCORSMiddleware()
-	manager.Register(cors, core.WithPriorityOverride(10)) // 覆盖为10
+	manager.Register(cors, core.WithPriority(10)) // 覆盖为10（原priority 5）
+	manager.Register(builtin.NewLoggerMiddleware(logger))     // priority 7
 
 	// 获取执行顺序
 	order := manager.GetExecutionOrder()
 
-	// 验证CORS不在前4位（因为被覆盖为10）
-	corsIndex := -1
-	for i, name := range order {
-		if name == "cors" {
-			corsIndex = i
-			break
-		}
-	}
-
-	assert.True(t, corsIndex >= 4, "CORS应该在索引4之后")
+	// 验证执行顺序：request_id(1), recovery(2), security(4), logger(7), cors(10)
+	expectedOrder := []string{"request_id", "recovery", "security", "logger", "cors"}
+	assert.Equal(t, expectedOrder, order)
 }
 
 // TestMiddlewareChain_CompressionAndSecurity 测试压缩和安全头组合
@@ -256,14 +253,14 @@ func TestMiddlewareChain_RequestIDPropagation(t *testing.T) {
 // TestMiddlewareChain_SlowRequest 测试慢请求处理
 func TestMiddlewareChain_SlowRequest(t *testing.T) {
 	// 创建测试观察器
-	observedZapCore, logs := observer.New(zap.WarnLevel)
+	observedZapCore, _ := observer.New(zap.WarnLevel)
 	logger := zap.New(observedZapCore)
 
 	manager := core.NewManager(logger)
 
 	// 注册中间件
 	loggerMW := builtin.NewLoggerMiddleware(logger)
-	loggerMW.config.SlowRequestThreshold = 1 // 设置很低的阈值
+	loggerMW.SetSlowRequestThreshold(1) // 设置很低的阈值
 
 	manager.Register(builtin.NewRequestIDMiddleware())
 	manager.Register(loggerMW)

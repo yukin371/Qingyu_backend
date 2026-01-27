@@ -126,9 +126,9 @@ func (m *SecurityMiddleware) Name() string {
 
 // Priority 返回执行优先级
 //
-// 返回3，确保安全头在基础设施层设置（在CORS之后）
+// 返回4，确保安全头在基础设施层设置（在ErrorHandler之后）
 func (m *SecurityMiddleware) Priority() int {
-	return 3
+	return 4
 }
 
 // Handler 返回Gin处理函数

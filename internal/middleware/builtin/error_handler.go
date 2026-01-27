@@ -40,9 +40,10 @@ func (m *ErrorHandlerMiddleware) Name() string {
 
 // Priority 返回执行优先级
 //
-// 返回2，确保错误处理在最内层执行（在所有其他中间件之后）
+// 返回3，确保错误处理在recovery之后执行
+// Recovery(2) -> ErrorHandler(3) -> Security(4) -> ...
 func (m *ErrorHandlerMiddleware) Priority() int {
-	return 2
+	return 3
 }
 
 // Handler 返回Gin处理函数

@@ -72,9 +72,9 @@ func (m *CORSMiddleware) Name() string {
 
 // Priority 返回执行优先级
 //
-// 返回4，确保CORS在所有业务中间件之前执行（最外层基础设施）
+// 返回5，确保CORS在所有业务中间件之前执行（最外层基础设施）
 func (m *CORSMiddleware) Priority() int {
-	return 4
+	return 5
 }
 
 // Handler 返回Gin处理函数

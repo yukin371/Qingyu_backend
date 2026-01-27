@@ -366,6 +366,26 @@ func (m *LoggerMiddleware) ValidateConfig() error {
 	return nil
 }
 
+// SetSlowRequestThreshold 设置慢请求阈值
+//
+// 方便在测试中修改配置
+func (m *LoggerMiddleware) SetSlowRequestThreshold(threshold int) {
+	if m.config == nil {
+		m.config = DefaultLoggerConfig()
+	}
+	m.config.SlowRequestThreshold = threshold
+}
+
+// GetConfig 获取当前配置（只读）
+//
+// 返回配置的副本，防止外部修改
+func (m *LoggerMiddleware) GetConfig() LoggerConfig {
+	if m.config == nil {
+		return *DefaultLoggerConfig()
+	}
+	return *m.config
+}
+
 // responseWriter 响应写入器包装器
 // 用于捕获响应体内容
 type responseWriter struct {
