@@ -67,18 +67,33 @@ middleware:
   # ========== 动态配置中间件 ==========
   # 这些中间件支持热更新（未来实现）
 
-  # 限流配置
+  # 限流配置（支持热更新）
   rate_limit:
     enabled: ${RATE_LIMIT_ENABLED:false}
     strategy: "token_bucket"  # token_bucket | sliding_window | redis
     rate: 100
     burst: 200
     window_size: 60  # 秒
+    key_func: "ip"  # ip | user | path | ip_path | user_path
+    skip_paths:
+      - "/health"
+      - "/metrics"
+    skip_successful: false
+    skip_failed_request: false
+    message: "请求过于频繁，请稍后再试"
+    status_code: 429
+    cleanup_interval: 300  # 秒
     redis:
       addr: ${REDIS_ADDR:localhost:6379}
       password: ${REDIS_PASSWORD:""}
       db: 0
       prefix: "ratelimit:"
+      pool_size: 10
+      min_idle_conns: 2
+      max_retries: 3
+      dial_timeout: 5s
+      read_timeout: 3s
+      write_timeout: 3s
 
   # 认证配置
   auth:
