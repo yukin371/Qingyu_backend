@@ -9,8 +9,29 @@ from pathlib import Path
 
 def load_result(filename):
     """加载测试结果"""
-    with open(filename, 'r') as f:
-        return json.load(f)
+    filepath = Path(filename)
+
+    # 检查文件是否存在
+    if not filepath.exists():
+        print(f"[ERROR] 文件不存在: {filename}", file=sys.stderr)
+        sys.exit(1)
+
+    # 检查文件是否可读
+    if not filepath.is_file():
+        print(f"[ERROR] 路径不是文件: {filename}", file=sys.stderr)
+        sys.exit(1)
+
+    # 尝试加载JSON
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] JSON解析失败 ({filename}): {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"[ERROR] 读取文件失败 ({filename}): {e}", file=sys.stderr)
+        sys.exit(1)
 
 def calculate_improvement(before, after):
     """计算改善百分比（对于延迟，越小越好；对于吞吐量，越大越好）"""
