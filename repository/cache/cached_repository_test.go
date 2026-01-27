@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -11,9 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// 定义错误
-var ErrNotFound = errors.New("not found")
 
 // 测试用的Cacheable实现
 type TestBook struct {
