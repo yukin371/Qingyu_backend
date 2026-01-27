@@ -101,5 +101,12 @@ tmp/
 # 其他
 *.bak
 *.backup
-scripts/
+
+# scripts目录中的临时文件和日志（但保留有用脚本）
+scripts/*.log
+scripts/*.tmp
+scripts/temp/
+scripts/logs/
+
+# Serena配置
 .serena/
