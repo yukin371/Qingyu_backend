@@ -626,6 +626,17 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 1. 创建用户服务 ============
 	userRepo := c.repositoryFactory.CreateUserRepository()
 	authRepo := c.repositoryFactory.CreateAuthRepository()
+
+	// 缓存装饰器集成
+	// 注意：当前缓存装饰器只实现了核心CRUD方法，完整接口兼容性待完善
+	// TODO: 完善缓存装饰器以实现完整的Repository接口
+	if config.GetCacheConfig().Enabled && c.redisClient != nil {
+		fmt.Println("缓存配置已启用，但缓存装饰器暂未完全集成（接口兼容性问题待解决）")
+		fmt.Println("建议：手动在需要的地方应用缓存装饰器")
+	} else if config.GetCacheConfig().Enabled && c.redisClient == nil {
+		fmt.Println("缓存配置已启用，但Redis客户端未初始化")
+	}
+
 	c.userService = userService.NewUserService(userRepo, authRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
@@ -633,7 +644,6 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	// ============ 2. 创建书城服务 ============
-	// RepositoryFactory已返回具体类型，无需类型断言
 	bookRepo := c.repositoryFactory.CreateBookRepository()
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()

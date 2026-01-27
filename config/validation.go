@@ -129,6 +129,12 @@ func setConfigDefaults(cfg *Config) {
 		SetRedisConfig(cfg.Redis)
 	}
 
+	// Cache默认值
+	if cfg.Cache == nil {
+		cfg.Cache = DefaultCacheConfig()
+	}
+	SetCacheConfig(cfg.Cache)
+
 	// 服务器默认值
 	if cfg.Server == nil {
 		cfg.Server = &ServerConfig{}

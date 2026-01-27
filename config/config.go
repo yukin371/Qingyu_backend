@@ -16,6 +16,7 @@ import (
 type Config struct {
 	Database *DatabaseConfig                   `mapstructure:"database"`
 	Redis    *RedisConfig                      `mapstructure:"redis"`
+	Cache    *CacheConfig                      `mapstructure:"cache"`
 	Server   *ServerConfig                     `mapstructure:"server"`
 	Log      *LogConfig                        `mapstructure:"log"`
 	JWT      *JWTConfig                        `mapstructure:"jwt"`
@@ -408,6 +409,16 @@ func setDefaults() {
 	// 微信支付默认配置
 	v.SetDefault("payment.wechat.enabled", false)
 	v.SetDefault("payment.wechat.sandbox", true)
+
+	// 缓存默认配置
+	v.SetDefault("cache.enabled", false)
+	v.SetDefault("cache.double_delete_delay", 1*time.Second)
+	v.SetDefault("cache.null_cache_ttl", 30*time.Second)
+	v.SetDefault("cache.null_cache_prefix", "@@NULL@@")
+	v.SetDefault("cache.breaker_max_requests", 3)
+	v.SetDefault("cache.breaker_interval", 10*time.Second)
+	v.SetDefault("cache.breaker_timeout", 30*time.Second)
+	v.SetDefault("cache.breaker_threshold", 0.6)
 }
 
 // WatchConfig 启用配置热重载
