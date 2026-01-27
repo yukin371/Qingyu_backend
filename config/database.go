@@ -100,20 +100,21 @@ type SynchronizationConfig struct {
 
 // LoadDatabaseConfig 加载数据库配置
 func LoadDatabaseConfig(configPath string) (*DatabaseConfig, error) {
+	var config DatabaseConfig
+
 	// 如果没有指定配置文件路径，使用默认配置
 	if configPath == "" {
-		return getDefaultDatabaseConfig(), nil
-	}
+		config = *getDefaultDatabaseConfig()
+	} else {
+		// 读取配置文件
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			return nil, fmt.Errorf("读取配置文件失败: %w", err)
+		}
 
-	// 读取配置文件
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("读取配置文件失败: %w", err)
-	}
-
-	var config DatabaseConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("解析配置文件失败: %w", err)
+		if err := yaml.Unmarshal(data, &config); err != nil {
+			return nil, fmt.Errorf("解析配置文件失败: %w", err)
+		}
 	}
 
 	// 应用环境变量覆盖
@@ -176,6 +177,23 @@ func applyEnvironmentOverrides(config *DatabaseConfig) error {
 		if poolSize := os.Getenv("MONGODB_MAX_POOL_SIZE"); poolSize != "" {
 			if size, err := strconv.ParseUint(poolSize, 10, 64); err == nil {
 				config.Primary.MongoDB.MaxPoolSize = size
+			}
+		}
+
+		// MongoDB Profiling环境变量覆盖
+		if level := os.Getenv("MONGODB_PROFILING_LEVEL"); level != "" {
+			if l, err := strconv.Atoi(level); err == nil && l >= 0 && l <= 2 {
+				config.Primary.MongoDB.ProfilingLevel = l
+			}
+		}
+		if slowMS := os.Getenv("MONGODB_SLOW_MS"); slowMS != "" {
+			if ms, err := strconv.ParseInt(slowMS, 10, 64); err == nil && ms >= 0 {
+				config.Primary.MongoDB.SlowMS = ms
+			}
+		}
+		if sizeMB := os.Getenv("MONGODB_PROFILER_SIZE_MB"); sizeMB != "" {
+			if mb, err := strconv.ParseInt(sizeMB, 10, 64); err == nil && mb >= 1 {
+				config.Primary.MongoDB.ProfilerSizeMB = mb
 			}
 		}
 	}
@@ -338,13 +356,16 @@ func (c *MySQLConfig) Validate() error {
 // ToRepositoryConfig 转换为仓储配置 - 返回通用配置接口
 func (c *MongoDBConfig) ToRepositoryConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"type":            "mongodb",
-		"uri":             c.URI,
-		"database":        c.Database,
-		"max_pool_size":   c.MaxPoolSize,
-		"min_pool_size":   c.MinPoolSize,
-		"connect_timeout": c.ConnectTimeout,
-		"server_timeout":  c.ServerTimeout,
+		"type":             "mongodb",
+		"uri":              c.URI,
+		"database":         c.Database,
+		"max_pool_size":    c.MaxPoolSize,
+		"min_pool_size":    c.MinPoolSize,
+		"connect_timeout":  c.ConnectTimeout,
+		"server_timeout":   c.ServerTimeout,
+		"profiling_level":  c.ProfilingLevel,
+		"slow_ms":          c.SlowMS,
+		"profiler_size_mb": c.ProfilerSizeMB,
 	}
 }
 

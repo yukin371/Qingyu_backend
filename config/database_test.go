@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -213,10 +214,63 @@ func TestMongoDBConfigToRepositoryConfig(t *testing.T) {
 		t.Errorf("Expected database=testdb, got %v", repoConfig["database"])
 	}
 
-	// 注意: ToRepositoryConfig方法目前不包含Profiling字段
-	// 如果需要添加Profiling支持，应该在这里断言
-	// 例如：
-	// if repoConfig["profiling_level"] != 2 {
-	//     t.Errorf("Expected profiling_level=2, got %v", repoConfig["profiling_level"])
-	// }
+	// 验证Profiling配置正确传递
+	if repoConfig["profiling_level"] != 2 {
+		t.Errorf("Expected profiling_level=2, got %v", repoConfig["profiling_level"])
+	}
+	if repoConfig["slow_ms"] != int64(200) {
+		t.Errorf("Expected slow_ms=200, got %v", repoConfig["slow_ms"])
+	}
+	if repoConfig["profiler_size_mb"] != int64(200) {
+		t.Errorf("Expected profiler_size_mb=200, got %v", repoConfig["profiler_size_mb"])
+	}
+}
+
+// TestMongoDBProfilingEnvOverrides 测试MongoDB Profiling环境变量覆盖
+func TestMongoDBProfilingEnvOverrides(t *testing.T) {
+	// 保存原始环境变量
+	originalLevel := os.Getenv("MONGODB_PROFILING_LEVEL")
+	originalSlowMS := os.Getenv("MONGODB_SLOW_MS")
+	originalSizeMB := os.Getenv("MONGODB_PROFILER_SIZE_MB")
+
+	defer func() {
+		// 恢复原始值
+		if originalLevel != "" {
+			os.Setenv("MONGODB_PROFILING_LEVEL", originalLevel)
+		} else {
+			os.Unsetenv("MONGODB_PROFILING_LEVEL")
+		}
+		if originalSlowMS != "" {
+			os.Setenv("MONGODB_SLOW_MS", originalSlowMS)
+		} else {
+			os.Unsetenv("MONGODB_SLOW_MS")
+		}
+		if originalSizeMB != "" {
+			os.Setenv("MONGODB_PROFILER_SIZE_MB", originalSizeMB)
+		} else {
+			os.Unsetenv("MONGODB_PROFILER_SIZE_MB")
+		}
+	}()
+
+	// 设置测试环境变量
+	os.Setenv("MONGODB_PROFILING_LEVEL", "2")
+	os.Setenv("MONGODB_SLOW_MS", "200")
+	os.Setenv("MONGODB_PROFILER_SIZE_MB", "200")
+
+	// 加载配置
+	config, err := LoadDatabaseConfig("")
+	if err != nil {
+		t.Fatalf("LoadDatabaseConfig failed: %v", err)
+	}
+
+	// 验证环境变量覆盖默认值
+	if config.Primary.MongoDB.ProfilingLevel != 2 {
+		t.Errorf("Expected ProfilingLevel=2 from env, got %d", config.Primary.MongoDB.ProfilingLevel)
+	}
+	if config.Primary.MongoDB.SlowMS != 200 {
+		t.Errorf("Expected SlowMS=200 from env, got %d", config.Primary.MongoDB.SlowMS)
+	}
+	if config.Primary.MongoDB.ProfilerSizeMB != 200 {
+		t.Errorf("Expected ProfilerSizeMB=200 from env, got %d", config.Primary.MongoDB.ProfilerSizeMB)
+	}
 }
