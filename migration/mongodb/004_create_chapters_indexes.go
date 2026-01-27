@@ -19,10 +19,10 @@ func (m *CreateChaptersIndexes) Up(ctx context.Context, db *mongo.Database) erro
 		{
 			Keys: bson.D{
 				{Key: "book_id", Value: 1},
-				{Key: "chapter_number", Value: 1},
+				{Key: "chapter_num", Value: 1},
 			},
 			Options: options.Index().
-				SetName("book_id_1_chapter_number_1").
+				SetName("book_id_1_chapter_num_1").
 				SetBackground(true).
 				SetUnique(true),
 		},
@@ -30,10 +30,10 @@ func (m *CreateChaptersIndexes) Up(ctx context.Context, db *mongo.Database) erro
 			Keys: bson.D{
 				{Key: "book_id", Value: 1},
 				{Key: "status", Value: 1},
-				{Key: "chapter_number", Value: 1},
+				{Key: "chapter_num", Value: 1},
 			},
 			Options: options.Index().
-				SetName("book_id_1_status_1_chapter_number_1").
+				SetName("book_id_1_status_1_chapter_num_1").
 				SetBackground(true),
 		},
 	}
@@ -50,8 +50,8 @@ func (m *CreateChaptersIndexes) Up(ctx context.Context, db *mongo.Database) erro
 func (m *CreateChaptersIndexes) Down(ctx context.Context, db *mongo.Database) error {
 	col := db.Collection("chapters")
 	indexNames := []string{
-		"book_id_1_chapter_number_1",
-		"book_id_1_status_1_chapter_number_1",
+		"book_id_1_chapter_num_1",
+		"book_id_1_status_1_chapter_num_1",
 	}
 
 	for _, idxName := range indexNames {

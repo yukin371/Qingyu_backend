@@ -19,10 +19,20 @@ func (m *CreateReadingProgressIndexes) Up(ctx context.Context, db *mongo.Databas
 		{
 			Keys: bson.D{
 				{Key: "user_id", Value: 1},
-				{Key: "updated_at", Value: -1},
+				{Key: "book_id", Value: 1},
 			},
 			Options: options.Index().
-				SetName("user_id_1_updated_at_-1").
+				SetName("user_id_1_book_id_1").
+				SetBackground(true).
+				SetUnique(true),
+		},
+		{
+			Keys: bson.D{
+				{Key: "user_id", Value: 1},
+				{Key: "last_read_at", Value: -1},
+			},
+			Options: options.Index().
+				SetName("user_id_1_last_read_at_-1").
 				SetBackground(true),
 		},
 		{
@@ -45,7 +55,8 @@ func (m *CreateReadingProgressIndexes) Up(ctx context.Context, db *mongo.Databas
 func (m *CreateReadingProgressIndexes) Down(ctx context.Context, db *mongo.Database) error {
 	col := db.Collection("reading_progress")
 	indexNames := []string{
-		"user_id_1_updated_at_-1",
+		"user_id_1_book_id_1",
+		"user_id_1_last_read_at_-1",
 		"book_id_1",
 	}
 
