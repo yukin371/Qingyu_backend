@@ -16,7 +16,7 @@ services:
     image: mongo:7
     container_name: qingyu-mongodb-test
     ports:
-      - "27017:27017"
+      - "27018:27017"
     environment:
       MONGO_INITDB_DATABASE: qingyu_permission_test
       MONGO_INITDB_ROOT_USERNAME: ""
@@ -38,7 +38,7 @@ services:
     image: redis:7-alpine
     container_name: qingyu-redis-test
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_test_data:/data

@@ -830,7 +830,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	if !ok {
 		return fmt.Errorf("redisAdapter does not implement CacheClient")
 	}
-	permissionService := auth.NewPermissionService(authRepo, cacheClient)
+
+	// 注意：这里传递nil作为logger，ServiceContainer没有logger字段
+	// 实际使用中可以通过依赖注入的方式传递logger
+	permissionService := auth.NewPermissionService(authRepo, cacheClient, nil)
 	sessionService := auth.NewSessionService(cacheClient)
 
 	// 创建AuthService
