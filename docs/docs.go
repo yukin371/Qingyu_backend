@@ -3036,7 +3036,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "用户ID",
-                        "name": "_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -12806,9 +12806,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "书籍ID（可选，获取某本书的书签）",
+                        "description": "书籍ID",
                         "name": "bookId",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -24740,7 +24741,14 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
         "/ws/notifications": {
@@ -24759,7 +24767,14 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         }
     },

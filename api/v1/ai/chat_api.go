@@ -215,7 +215,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 // @Param limit query int false "每页数量" default(50) minimum(1) maximum(100)
 // @Param offset query int false "偏移量" default(0) minimum(0)
 // @Success 200 {object} shared.APIResponse
-// @Router /api/v1/ai/chat/sessions/:sessionId [get]
+// @Router /api/v1/ai/chat/sessions/{sessionId} [get]
 func (api *ChatApi) GetChatHistory(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
@@ -260,7 +260,7 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 // @Produce json
 // @Param sessionId path string true "会话ID"
 // @Success 200 {object} shared.APIResponse
-// @Router /api/v1/ai/chat/sessions/:sessionId [delete]
+// @Router /api/v1/ai/chat/sessions/{sessionId} [delete]
 func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {

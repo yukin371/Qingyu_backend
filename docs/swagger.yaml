@@ -4252,7 +4252,7 @@ paths:
       parameters:
       - description: 用户ID
         in: path
-        name: _id
+        name: id
         required: true
         type: string
       - description: 状态信息
@@ -10720,9 +10720,10 @@ paths:
       - application/json
       description: 获取用户的书签列表，支持筛选和分页
       parameters:
-      - description: 书籍ID（可选，获取某本书的书签）
+      - description: 书籍ID
         in: path
         name: bookId
+        required: true
         type: string
       - description: 颜色筛选
         in: query
@@ -18484,7 +18485,11 @@ paths:
         name: token
         required: true
         type: string
-      responses: {}
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
       summary: WebSocket消息端点
       tags:
       - Social Messages
@@ -18497,7 +18502,11 @@ paths:
         name: token
         required: true
         type: string
-      responses: {}
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
       summary: WebSocket通知端点
       tags:
       - Notifications

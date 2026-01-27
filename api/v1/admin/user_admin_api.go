@@ -111,7 +111,7 @@ func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 //	@Tags			Admin-User
 //	@Accept			json
 //	@Produce		json
-//	@Param			_id		path		string					true	"用户ID"
+//	@Param			id		path		string	true	"用户ID"
 //	@Param			request	body		UpdateUserStatusRequest	true	"状态信息"
 //	@Success		200		{object}	shared.APIResponse
 //	@Failure		400		{object}	shared.APIResponse

@@ -74,6 +74,7 @@ func NewWSHub(jwtService auth.JWTService) *WSHub {
 // @Description 实时接收用户通知，需要在URL中传递token参数
 // @Tags Notifications
 // @Param token query string true "JWT认证token"
+// @Success 101 {string} string "Switching Protocols"
 // @Router /ws/notifications [get]
 func (h *WSHub) HandleWebSocket(c *gin.Context) {
 	// 从query参数获取token

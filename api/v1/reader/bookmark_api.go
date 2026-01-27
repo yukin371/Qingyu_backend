@@ -80,7 +80,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 //	@Tags			Reader-Bookmark
 //	@Accept			json
 //	@Produce		json
-//	@Param			bookId		path	string	false	"书籍ID（可选，获取某本书的书签）"
+//	@Param		bookId	path	string	true	"书籍ID"
 //	@Param			color		query	string	false	"颜色筛选"
 //	@Param			tag			query	string	false	"标签筛选"
 //	@Param			isPublic	query	bool	false	"是否公开"
