@@ -112,18 +112,25 @@ func (r *CachedRepository[T]) GetByID(ctx context.Context, id string) (T, error)
 
 // getFromCacheOrDB 从缓存或数据库获取数据（核心逻辑）
 func (r *CachedRepository[T]) getFromCacheOrDB(ctx context.Context, id string) (T, error) {
+	startTime := time.Now()
 	key := r.cacheKey(id)
 	cached, err := r.client.Get(ctx, key).Result()
 
 	if err == nil {
 		// 检查空值缓存
 		if cached == r.config.NullCachePrefix {
+			// 记录缓存命中（空值缓存也是命中）
+			RecordCacheHit(r.prefix)
+			RecordCacheOperation(r.prefix, "get_null_cache", time.Since(startTime).Seconds())
 			var zero T
 			return zero, ErrNotFound
 		}
 
 		var entity T
 		if err := json.Unmarshal([]byte(cached), &entity); err == nil {
+			// 记录缓存命中
+			RecordCacheHit(r.prefix)
+			RecordCacheOperation(r.prefix, "get_from_cache", time.Since(startTime).Seconds())
 			return entity, nil
 		}
 	}
@@ -133,11 +140,16 @@ func (r *CachedRepository[T]) getFromCacheOrDB(ctx context.Context, id string) (
 		log.Printf("缓存读取失败(降级): %v", err)
 	}
 
+	// 记录缓存未命中
+	RecordCacheMiss(r.prefix)
+
 	// 查询数据库
 	entity, err := r.base.GetByID(ctx, id)
 	if err != nil {
 		if err == ErrNotFound {
 			// 缓存空值防止穿透
+			// 记录缓存穿透
+			RecordCachePenetration(r.prefix)
 			go func() {
 				nullKey := r.cacheKey(id)
 				r.client.Set(context.Background(), nullKey, r.config.NullCachePrefix, r.config.NullCacheTTL)
@@ -151,8 +163,10 @@ func (r *CachedRepository[T]) getFromCacheOrDB(ctx context.Context, id string) (
 	go func() {
 		data, _ := json.Marshal(entity)
 		r.client.Set(context.Background(), key, data, r.ttl)
+		RecordCacheOperation(r.prefix, "set_to_cache", 0)
 	}()
 
+	RecordCacheOperation(r.prefix, "get_from_db", time.Since(startTime).Seconds())
 	return entity, nil
 }
 
@@ -163,16 +177,21 @@ func (r *CachedRepository[T]) cacheKey(id string) string {
 
 // Create 创建实体（不缓存）
 func (r *CachedRepository[T]) Create(ctx context.Context, entity T) error {
+	startTime := time.Now()
+
 	if err := r.base.Create(ctx, entity); err != nil {
 		return err
 	}
 
+	RecordCacheOperation(r.prefix, "create", time.Since(startTime).Seconds())
 	// 缓存由异步预热填充
 	return nil
 }
 
 // Update 更新实体（删除缓存）
 func (r *CachedRepository[T]) Update(ctx context.Context, entity T) error {
+	startTime := time.Now()
+
 	if err := r.base.Update(ctx, entity); err != nil {
 		return err
 	}
@@ -184,13 +203,17 @@ func (r *CachedRepository[T]) Update(ctx context.Context, entity T) error {
 	go func() {
 		time.Sleep(r.config.DoubleDeleteDelay)
 		r.client.Del(context.Background(), key)
+		RecordCacheOperation(r.prefix, "double_delete", 0)
 	}()
 
+	RecordCacheOperation(r.prefix, "update", time.Since(startTime).Seconds())
 	return nil
 }
 
 // Delete 删除实体（删除缓存）
 func (r *CachedRepository[T]) Delete(ctx context.Context, id string) error {
+	startTime := time.Now()
+
 	if err := r.base.Delete(ctx, id); err != nil {
 		return err
 	}
@@ -202,8 +225,10 @@ func (r *CachedRepository[T]) Delete(ctx context.Context, id string) error {
 	go func() {
 		time.Sleep(r.config.DoubleDeleteDelay)
 		r.client.Del(context.Background(), key)
+		RecordCacheOperation(r.prefix, "double_delete", 0)
 	}()
 
+	RecordCacheOperation(r.prefix, "delete", time.Since(startTime).Seconds())
 	return nil
 }
 
