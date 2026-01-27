@@ -41,13 +41,16 @@ func BenchmarkBookQuery_WithoutIndex(b *testing.B) {
 
 	// 插入1000条测试数据（无索引）
 	books := make([]interface{}, 1000)
+	now := time.Now()
 	for i := 0; i < 1000; i++ {
-		books[i] = bookstore.Book{
+		book := bookstore.Book{
 			Title:     "测试书籍",
 			Author:    "测试作者",
 			Status:    bookstore.BookStatusOngoing,
-			CreatedAt: time.Now(),
 		}
+		// 使用 BaseEntity 的方法设置时间戳
+		book.TouchForCreate()
+		books[i] = book
 	}
 	collection.InsertMany(ctx, books)
 
@@ -88,12 +91,13 @@ func BenchmarkBookQuery_WithIndex(b *testing.B) {
 	// 插入1000条测试数据
 	books := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
-		books[i] = bookstore.Book{
+		book := bookstore.Book{
 			Title:     "测试书籍",
 			Author:    "测试作者",
 			Status:    bookstore.BookStatusOngoing,
-			CreatedAt: time.Now(),
 		}
+		book.TouchForCreate()
+		books[i] = book
 	}
 	collection.InsertMany(ctx, books)
 
@@ -137,13 +141,15 @@ func BenchmarkBookQuery_CompoundIndex(b *testing.B) {
 	// 插入1000条测试数据
 	books := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
-		books[i] = bookstore.Book{
+		book := bookstore.Book{
 			Title:      "测试书籍",
 			Author:     "测试作者",
 			Status:     bookstore.BookStatusOngoing,
-			CreatedAt:  time.Now().Add(-time.Duration(i) * time.Hour),
-			UpdatedAt:  time.Now(),
 		}
+		// 设置不同的创建时间以便测试排序
+		book.TouchForCreate()
+		book.CreatedAt = time.Now().Add(-time.Duration(i) * time.Hour)
+		books[i] = book
 	}
 	collection.InsertMany(ctx, books)
 
@@ -194,8 +200,8 @@ func BenchmarkBookRepository_GetByStatus_WithIndex(b *testing.B) {
 			Title:     "测试书籍",
 			Author:    "测试作者",
 			Status:    bookstore.BookStatusOngoing,
-			CreatedAt: time.Now(),
 		}
+		book.TouchForCreate()
 		repo.Create(ctx, book)
 	}
 
