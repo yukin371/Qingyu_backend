@@ -39,6 +39,31 @@ middleware:
       - "text/css"
       - "application/javascript"
 
+  # CORS配置
+  cors:
+    allowed_origins:
+      - "*"  # 生产环境应该配置具体域名
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Origin"
+      - "Content-Type"
+      - "Content-Length"
+      - "Accept-Encoding"
+      - "Authorization"
+      - "X-Request-ID"
+    exposed_headers:
+      - "Content-Length"
+      - "X-Request-ID"
+      - "X-Response-Time"
+    allow_credentials: true  # 注意: 当设置为true时，allowed_origins不能使用"*"
+    max_age: 86400  # 24小时（秒）
+
   # ========== 动态配置中间件 ==========
   # 这些中间件支持热更新（未来实现）
 
@@ -78,6 +103,9 @@ middleware:
 # ========== 优先级覆盖（可选） ==========
 # 仅覆盖需要调整的中间件，未列出的使用默认Priority()值
 priority_overrides:
+  # CORS中间件优先级固定为4（最外层基础设施）
+  cors: 4
+
   # 示例：调整限流中间件优先级
   # rate_limit: 7  # 在认证之后执行（原8）
 
