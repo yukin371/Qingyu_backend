@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -29,12 +30,19 @@ func NewMigrator(db *mongo.Database) *Migrator {
 }
 
 // Register 注册迁移
-func (m *Migrator) Register(name string, migration SimpleMigration) {
-	if m.migrations == nil {
-		m.migrations = make(map[string]SimpleMigration)
+func (m *Migrator) Register(name string, migration SimpleMigration) error {
+	// 验证名称格式：数字_字母下划线（例如: 001_create_users_indexes）
+	matched, err := regexp.MatchString(`^\d{3}_[a-z_]+$`, name)
+	if err != nil {
+		return fmt.Errorf("迁移名称验证失败: %w", err)
 	}
+	if !matched {
+		return fmt.Errorf("无效的迁移名称格式: %s (期望格式: 001_description)", name)
+	}
+
 	m.migrations[name] = migration
 	log.Printf("✅ 已注册迁移: %s", name)
+	return nil
 }
 
 // Up 执行迁移

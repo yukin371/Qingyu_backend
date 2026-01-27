@@ -20,6 +20,7 @@ func main() {
 	command := flag.String("command", "", "迁移命令: up 或 down")
 	name := flag.String("name", "", "迁移名称")
 	env := flag.String("env", "dev", "环境: dev, staging, production")
+	force := flag.Bool("force", false, "强制执行生产环境迁移")
 	flag.Parse()
 
 	// 验证命令
@@ -49,8 +50,23 @@ func main() {
 	switch *env {
 	case "production":
 		dbName = "qingyu"
-	default:
+	case "staging":
 		dbName = "qingyu_staging"
+	case "dev":
+		dbName = "qingyu_dev"
+	default:
+		log.Fatalf("❌ 无效的环境: %s", *env)
+	}
+
+	// 生产环境保护
+	if *env == "production" && !*force {
+		fmt.Println("⚠️  警告：即将在生产环境执行迁移！")
+		fmt.Print("请输入 'yes' 确认: ")
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm != "yes" {
+			log.Fatal("❌ 操作已取消")
+		}
 	}
 
 	// 连接MongoDB
@@ -79,10 +95,23 @@ func main() {
 	migrator := migrationpkg.NewMigrator(db)
 
 	// 注册所有索引迁移
-	migrator.Register("002_create_users_indexes", &mongodbpkg.CreateUsersIndexes{})
-	migrator.Register("003_create_books_indexes_p0", &mongodbpkg.CreateBooksIndexesP0{})
-	migrator.Register("004_create_chapters_indexes", &mongodbpkg.CreateChaptersIndexes{})
-	migrator.Register("005_create_reading_progress_indexes", &mongodbpkg.CreateReadingProgressIndexes{})
+	// 注意：这里采用显式注册的方式，保持简单和可控
+	// 未来如果迁移数量增加，可以考虑自动发现机制
+	migrations := []struct {
+		name      string
+		migration migrationpkg.SimpleMigration
+	}{
+		{"002_create_users_indexes", &mongodbpkg.CreateUsersIndexes{}},
+		{"003_create_books_indexes_p0", &mongodbpkg.CreateBooksIndexesP0{}},
+		{"004_create_chapters_indexes", &mongodbpkg.CreateChaptersIndexes{}},
+		{"005_create_reading_progress_indexes", &mongodbpkg.CreateReadingProgressIndexes{}},
+	}
+
+	for _, m := range migrations {
+		if err := migrator.Register(m.name, m.migration); err != nil {
+			log.Fatalf("❌ 注册迁移失败 %s: %v", m.name, err)
+		}
+	}
 
 	// 执行命令
 	switch *command {

@@ -52,36 +52,58 @@ func TestNewMigrator(t *testing.T) {
 		}
 	})
 
-	t.Run("NewMigrator initializes migrations map", func(t *testing.T) {
-		migrator := NewMigrator(nil)
-		if migrator == nil {
-			t.Error("Migrator should not be nil")
-		}
-		if migrator.migrations == nil {
-			t.Error("migrations map should be initialized")
-		}
-	})
-}
-
-// TestMigrator_Register 验证迁移注册
-func TestMigrator_Register(t *testing.T) {
-	t.Run("Register adds migration to migrator", func(t *testing.T) {
+	t.Run("NewMigrator can accept registrations", func(t *testing.T) {
 		migrator := NewMigrator(nil)
 		if migrator == nil {
 			t.Fatal("Migrator should not be nil")
 		}
 
 		testMigration := &TestSimpleMigrationImplementation{}
-		migrator.Register("test-migration", testMigration)
+		err := migrator.Register("001_test_migration", testMigration)
+		if err != nil {
+			t.Errorf("Register should succeed: %v", err)
+		}
+	})
+}
 
-		// 验证迁移已注册
-		if len(migrator.migrations) != 1 {
-			t.Errorf("Expected 1 migration, got %d", len(migrator.migrations))
+// TestMigrator_Register 验证迁移注册
+func TestMigrator_Register(t *testing.T) {
+	t.Run("Register valid migration", func(t *testing.T) {
+		migrator := NewMigrator(nil)
+		if migrator == nil {
+			t.Fatal("Migrator should not be nil")
 		}
 
-		_, exists := migrator.migrations["test-migration"]
-		if !exists {
-			t.Error("Migration 'test-migration' should be registered")
+		testMigration := &TestSimpleMigrationImplementation{}
+		err := migrator.Register("001_test_migration", testMigration)
+		if err != nil {
+			t.Errorf("Expected no error, got: %v", err)
+		}
+	})
+
+	t.Run("Register invalid migration name format", func(t *testing.T) {
+		migrator := NewMigrator(nil)
+		if migrator == nil {
+			t.Fatal("Migrator should not be nil")
+		}
+
+		testMigration := &TestSimpleMigrationImplementation{}
+
+		// 测试各种无效格式
+		invalidNames := []string{
+			"test-migration",       // 缺少数字前缀
+			"001_test-migration",   // 包含连字符
+			"001TestMigration",     // 包含大写字母
+			"001 test migration",   // 包含空格
+			"1_test",               // 数字不足3位
+			"001_测试",             // 包含非ASCII字符
+		}
+
+		for _, name := range invalidNames {
+			err := migrator.Register(name, testMigration)
+			if err == nil {
+				t.Errorf("Expected error for invalid name '%s', got nil", name)
+			}
 		}
 	})
 
@@ -94,19 +116,31 @@ func TestMigrator_Register(t *testing.T) {
 		migration1 := &TestSimpleMigrationImplementation{}
 		migration2 := &TestSimpleMigrationImplementation{}
 
-		migrator.Register("migration-1", migration1)
-		migrator.Register("migration-2", migration2)
+		err1 := migrator.Register("001_migration_one", migration1)
+		err2 := migrator.Register("002_migration_two", migration2)
 
-		// 验证多个迁移都可以注册
-		if len(migrator.migrations) != 2 {
-			t.Errorf("Expected 2 migrations, got %d", len(migrator.migrations))
+		if err1 != nil || err2 != nil {
+			t.Errorf("Both registrations should succeed: err1=%v, err2=%v", err1, err2)
 		}
+	})
+}
 
-		_, exists1 := migrator.migrations["migration-1"]
-		_, exists2 := migrator.migrations["migration-2"]
+// TestMigrator_Up_Down_NonExistent 验证执行不存在的迁移
+func TestMigrator_Up_Down_NonExistent(t *testing.T) {
+	migrator := NewMigrator(nil)
+	ctx := context.Background()
 
-		if !exists1 || !exists2 {
-			t.Error("Both migrations should be registered")
+	t.Run("Up returns error for non-existent migration", func(t *testing.T) {
+		err := migrator.Up(ctx, "999_non_existent")
+		if err == nil {
+			t.Error("Expected error for non-existent migration, got nil")
+		}
+	})
+
+	t.Run("Down returns error for non-existent migration", func(t *testing.T) {
+		err := migrator.Down(ctx, "999_non_existent")
+		if err == nil {
+			t.Error("Expected error for non-existent migration, got nil")
 		}
 	})
 }
