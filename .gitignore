@@ -101,5 +101,5 @@ tmp/
 # 其他
 *.bak
 *.backup
-scripts/
+# scripts/ # 数据库脚本需要提交，不忽略
 .serena/
