@@ -1,0 +1,129 @@
+# 权限配置文件
+# Qingyu Backend Permission Configuration
+
+permissions:
+  # ========== 角色定义 ==========
+  roles:
+    admin:
+      name: "管理员"
+      description: "系统管理员，拥有所有权限"
+
+    editor:
+      name: "编辑"
+      description: "内容编辑者，可以创建和编辑内容"
+
+    viewer:
+      name: "访客"
+      description: "只读访问权限"
+
+    author:
+      name: "作者"
+      description: "内容创作者，可以管理自己的作品"
+
+    reader:
+      name: "读者"
+      description: "普通读者，可以阅读内容"
+
+  # ========== 角色权限映射 ==========
+  role_permissions:
+    # 管理员拥有所有权限
+    admin:
+      - "*:*"
+
+    # 编辑权限
+    editor:
+      - "project:read"
+      - "project:write"
+      - "project:create"
+      - "document:read"
+      - "document:write"
+      - "document:create"
+      - "ai:generate"
+      - "book:read"
+      - "book:write"
+      - "book:create"
+      - "chapter:read"
+      - "chapter:write"
+      - "chapter:create"
+
+    # 访客权限（只读）
+    viewer:
+      - "project:read"
+      - "document:read"
+      - "book:read"
+      - "chapter:read"
+
+    # 作者权限
+    author:
+      - "book:read"
+      - "book:create"
+      - "book:update"
+      - "book:delete"
+      - "chapter:read"
+      - "chapter:create"
+      - "chapter:update"
+      - "chapter:delete"
+      - "ai:generate"
+      - "ai:chat"
+      - "document:read"
+      - "document:create"
+
+    # 读者权限
+    reader:
+      - "book:read"
+      - "chapter:read"
+      - "document:read"
+
+  # ========== 用户角色映射 ==========
+  # 示例配置，实际应用中应该从数据库读取
+  user_roles:
+    # 系统管理员
+    "admin_001": ["admin"]
+
+    # 示例用户
+    "user_001": ["editor"]
+    "user_002": ["viewer"]
+    "user_003": ["author"]
+    "user_004": ["reader"]
+
+  # ========== 资源级权限示例 ==========
+  # 细粒度权限控制（可选）
+  resource_permissions:
+    # 作者只能删除自己的书籍
+    "book:delete":
+      check_ownership: true
+      owner_field: "author_id"
+
+    # 作者只能更新自己的章节
+    "chapter:update":
+      check_ownership: true
+      owner_field: "author_id"
+
+  # ========== 跳过权限检查的路径 ==========
+  skip_paths:
+    - "/health"
+    - "/metrics"
+    - "/api/v1/auth/login"
+    - "/api/v1/auth/register"
+    - "/api/v1/auth/logout"
+    - "/api/v1/auth/refresh"
+    - "/public"
+
+  # ========== 角色层次定义（可选） ==========
+  # 定义角色之间的继承关系
+  role_hierarchy:
+    # admin 继承 editor 和 viewer 的权限
+    admin:
+      inherits:
+        - editor
+        - viewer
+
+    # editor 继承 viewer 的权限
+    editor:
+      inherits:
+        - viewer
+
+    # author 继承 reader 的权限
+    author:
+      inherits:
+        - reader
