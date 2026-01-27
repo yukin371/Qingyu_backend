@@ -107,13 +107,48 @@ middleware:
 
   # 权限配置
   permission:
-    enabled: true
-    strategy: "rbac"  # rbac | casbin
+    enabled: ${PERMISSION_ENABLED:true}
+    strategy: "rbac"  # rbac | casbin | noop
+
+    # 权限配置文件路径
     config_path: "configs/permissions.yaml"
+
+    # 跳过权限检查的路径
     skip_paths:
       - "/health"
       - "/metrics"
+      - "/api/v1/auth/login"
+      - "/api/v1/auth/register"
+      - "/api/v1/public"
+
+    # 权限不足时的响应配置
+    message: "权限不足，无法访问该资源"
+    status_code: 403  # HTTP状态码
+    error_code: 40301  # 业务错误码
+
+    # RBAC特定配置
+    rbac:
+      # 是否从数据库加载权限
+      load_from_db: ${PERMISSION_LOAD_FROM_DB:true}
+
+      # 数据库权限缓存配置
+      cache:
+        enabled: ${PERMISSION_CACHE_ENABLED:true}
+        ttl: 5m  # 缓存过期时间
+        refresh_interval: 1m  # 自动刷新间隔
+
+      # 权限格式转换（.到:）
+      format_conversion:
+        enabled: true  # user.read -> user:read
+
+    # 权限检查会话超时
     session_timeout: 30m  # 30分钟
+
+    # 热更新配置
+    hot_reload:
+      enabled: ${PERMISSION_HOT_RELOAD:false}
+      watch_config: true  # 监视配置文件变化
+      watch_db: true  # 监视数据库变化
 
 # ========== 优先级覆盖（可选） ==========
 # 仅覆盖需要调整的中间件，未列出的使用默认Priority()值
