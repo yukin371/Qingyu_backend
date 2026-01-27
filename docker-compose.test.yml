@@ -1,0 +1,95 @@
+# ============================================
+# Qingyu Backend - 权限系统测试环境 Docker Compose
+# ============================================
+#
+# 使用方法:
+#   docker-compose -f docker-compose.test.yml up -d
+#   docker-compose -f docker-compose.test.yml down
+#
+# ============================================
+
+version: '3.8'
+
+services:
+  # MongoDB测试数据库
+  mongodb-test:
+    image: mongo:7
+    container_name: qingyu-mongodb-test
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: qingyu_permission_test
+      MONGO_INITDB_ROOT_USERNAME: ""
+      MONGO_INITDB_ROOT_PASSWORD: ""
+    volumes:
+      - mongodb_test_data:/data/db
+      - mongodb_test_config:/data/configdb
+    command: mongod --quiet --logpath /dev/null
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qingyu-test
+
+  # Redis测试缓存
+  redis-test:
+    image: redis:7-alpine
+    container_name: qingyu-redis-test
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qingyu-test
+
+  # Mongo Express (可选 - MongoDB管理界面)
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: qingyu-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb-test:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      - mongodb-test
+    networks:
+      - qingyu-test
+    profiles:
+      - admin
+
+  # Redis Commander (可选 - Redis管理界面)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: qingyu-redis-commander
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:redis-test:6379
+    depends_on:
+      - redis-test
+    networks:
+      - qingyu-test
+    profiles:
+      - admin
+
+volumes:
+  mongodb_test_data:
+    driver: local
+  mongodb_test_config:
+    driver: local
+  redis_test_data:
+    driver: local
+
+networks:
+  qingyu-test:
+    driver: bridge
