@@ -1042,7 +1042,7 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 //
 //	@Summary		获取实时榜单
 //	@Description	获取当日实时榜单数据
-//	@Tags			榜单
+//	@Tags			书籍排行榜
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"限制数量"	default(20)
@@ -1068,7 +1068,7 @@ func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
 //
 //	@Summary		获取周榜单
 //	@Description	获取指定周期的周榜单数据
-//	@Tags			榜单
+//	@Tags			书籍排行榜
 //	@Accept			json
 //	@Produce		json
 //	@Param			period	query		string	false	"周期 (格式: 2024-W01)"
@@ -1096,7 +1096,7 @@ func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
 //
 //	@Summary		获取月榜单
 //	@Description	获取指定月份的月榜单数据
-//	@Tags			榜单
+//	@Tags			书籍排行榜
 //	@Accept			json
 //	@Produce		json
 //	@Param			period	query		string	false	"月份 (格式: 2024-01)"
@@ -1124,7 +1124,7 @@ func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
 //
 //	@Summary		获取新人榜单
 //	@Description	获取指定月份的新人榜单数据
-//	@Tags			榜单
+//	@Tags			书籍排行榜
 //	@Accept			json
 //	@Produce		json
 //	@Param			period	query		string	false	"月份 (格式: 2024-01)"
@@ -1152,7 +1152,7 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 //
 //	@Summary		根据类型获取榜单
 //	@Description	根据榜单类型获取指定周期的榜单数据
-//	@Tags			榜单
+//	@Tags			书籍排行榜
 //	@Accept			json
 //	@Produce		json
 //	@Param			type	path		string	true	"榜单类型"	Enums(realtime,weekly,monthly,newbie)
