@@ -86,6 +86,13 @@ type PermissionService interface {
 	GetUserPermissions(ctx context.Context, userID string) ([]string, error)
 	GetRolePermissions(ctx context.Context, roleID string) ([]string, error)
 	HasRole(ctx context.Context, userID, role string) (bool, error)
+
+	// RBAC集成方法
+	InvalidateUserPermissionsCache(ctx context.Context, userID string) error
+	SetChecker(checker interface{}) // 使用interface{}避免循环依赖
+	LoadPermissionsToChecker(ctx context.Context) error
+	LoadUserRolesToChecker(ctx context.Context, userID string) error
+	ReloadAllFromDatabase(ctx context.Context) error
 }
 
 // SessionService 会话服务接口
