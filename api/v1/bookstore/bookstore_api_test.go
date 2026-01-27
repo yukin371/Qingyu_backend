@@ -216,6 +216,22 @@ func (m *MockBookstoreService) IncrementBookView(ctx context.Context, bookID str
 	return args.Error(0)
 }
 
+func (m *MockBookstoreService) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	args := m.Called(ctx, categoryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetYears(ctx context.Context) ([]int, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
+}
+
 func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -1221,37 +1237,35 @@ func TestGetSimilarBooks_Deduplication(t *testing.T) {
 	mockService := new(MockBookstoreService)
 	router := setupSimilarBooksTestRouter(mockService)
 
-	bookID := primitive.NewObjectID()
-	categoryID := primitive.NewObjectID()
-	duplicateBookID := primitive.NewObjectID()
+	// 使用固定的测试ID
+	bookID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 
 	sourceBook := &bookstoreModel.Book{
 		IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
 		Title:             "原书籍",
-		CategoryIDs:       []primitive.ObjectID{categoryID},
-		Tags:              []string{"测试"},
+		CategoryIDs:       []primitive.ObjectID{primitive.NewObjectID()}, // 使用实际ID
+		Tags:              []string{"玄幻"},
 	}
 
-	// 策略1返回的书籍
-	booksFromStrategy1 := []*bookstoreModel.Book{
-		{IdentifiedEntity: shared.IdentifiedEntity{ID: duplicateBookID}, Title: "重复书籍"},
+	// 策略1: 同分类+标签，返回10本书，其中包含当前书籍（用于测试去重）
+	booksFromStrategy1 := make([]*bookstoreModel.Book, 10)
+	for i := 0; i < 10; i++ {
+		bookID_i := primitive.NewObjectID()
+		booksFromStrategy1[i] = &bookstoreModel.Book{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: bookID_i},
+			Title:            fmt.Sprintf("相似书籍%d", i+1),
+		}
 	}
+	// 第5本书设置为当前书籍（测试去重）
+	booksFromStrategy1[4] = sourceBook
 
-	// 策略2也返回相同的书籍（应该被去重）
-	booksFromStrategy2 := []*bookstoreModel.Book{
-		{IdentifiedEntity: shared.IdentifiedEntity{ID: duplicateBookID}, Title: "重复书籍"},
-	}
+	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil).Once()
 
-	mockService.On("GetBookByID", mock.Anything, bookID.Hex()).Return(sourceBook, nil)
-
-	// 策略1: 同分类+标签，返回1本
-	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(booksFromStrategy1, int64(1), nil).Once()
-
-	// 策略2: 只有分类，返回1本（重复的）
-	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(booksFromStrategy2, int64(1), nil).Once()
-
-	// 策略3: 由于前两个策略返回总数 < limit(10)，会触发策略3（标签搜索）
-	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return([]*bookstoreModel.Book{}, int64(0), nil).Once()
+	// 策略1: 同分类+标签，返回10本（已达到limit，不触发后续策略）
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.MatchedBy(func(filter *bookstoreModel.BookFilter) bool {
+		// 验证是策略1：有分类ID，有标签
+		return filter.CategoryID != nil && len(filter.Tags) > 0
+	})).Return(booksFromStrategy1, int64(10), nil).Once()
 
 	// When
 	req, _ := http.NewRequest("GET", "/books/"+bookID.Hex()+"/similar?limit=10", nil)
@@ -1260,8 +1274,11 @@ func TestGetSimilarBooks_Deduplication(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
-	// 验证去重后只有一本书
-	// (需要解析响应body来验证数量，这里简化测试)
+	mockService.AssertExpectations(t) // 验证所有Mock期望都被满足
+
+	// 验证响应中不包含当前书籍ID
+	assert.NotContains(t, w.Body.String(), bookID.Hex())
+	assert.Contains(t, w.Body.String(), "获取相似书籍成功")
 }
 
 // TestGetSimilarBooks_LimitValidation 测试数量限制验证
