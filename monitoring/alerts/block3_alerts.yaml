@@ -1,0 +1,36 @@
+groups:
+  - name: block3_mongodb_rules
+    interval: 30s
+    rules:
+      # 慢查询频率过高告警
+      - alert: HighSlowQueryRate
+        expr: rate(mongodb_slow_queries_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "慢查询频率过高"
+          description: "慢查询频率: {{ $value }} 次/秒"
+
+      # 查询延迟过高告警
+      - alert: HighQueryLatency
+        expr: histogram_quantile(0.95, mongodb_query_duration_seconds_bucket) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "查询延迟过高"
+          description: "P95延迟: {{ $value }}秒"
+
+      # 索引使用率低告警
+      - alert: LowIndexUsage
+        expr: mongodb_index_usage_ratio < 0.7
+        for: 10m
+        labels:
+          severity: info
+          category: optimization
+        annotations:
+          summary: "索引使用率低"
+          description: "索引使用率: {{ $value | humanizePercentage }}"
