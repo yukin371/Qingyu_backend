@@ -62,25 +62,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -117,31 +117,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -172,7 +172,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.BatchDeleteRequest"
+                            "$ref": "#/definitions/api_v1_admin.BatchDeleteRequest"
                         }
                     }
                 ],
@@ -180,25 +180,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -237,25 +237,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -292,25 +292,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -354,31 +354,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -413,31 +413,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -476,7 +476,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -508,7 +508,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -536,25 +536,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -595,7 +595,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -636,7 +636,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -706,19 +706,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -755,25 +755,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -812,25 +812,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -869,25 +869,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -924,25 +924,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -986,31 +986,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1045,31 +1045,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1097,25 +1097,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1144,7 +1144,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.SystemConfigRequest"
+                            "$ref": "#/definitions/api_v1_admin.SystemConfigRequest"
                         }
                     }
                 ],
@@ -1152,31 +1152,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1204,19 +1204,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1247,7 +1247,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.BatchUpdateConfigRequest"
+                            "$ref": "#/definitions/api_v1_admin.BatchUpdateConfigRequest"
                         }
                     }
                 ],
@@ -1255,31 +1255,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1307,25 +1307,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1356,7 +1356,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.ValidateConfigRequest"
+                            "$ref": "#/definitions/api_v1_admin.ValidateConfigRequest"
                         }
                     }
                 ],
@@ -1364,19 +1364,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1413,25 +1413,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1487,25 +1487,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1528,19 +1528,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -1564,7 +1564,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.Permission"
+                            "$ref": "#/definitions/Qingyu_backend_models_auth.Permission"
                         }
                     }
                 ],
@@ -1572,25 +1572,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -1622,19 +1622,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -1665,7 +1665,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.Permission"
+                            "$ref": "#/definitions/Qingyu_backend_models_auth.Permission"
                         }
                     }
                 ],
@@ -1673,19 +1673,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -1715,19 +1715,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -1764,31 +1764,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1824,7 +1824,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.UpdateQuotaRequest"
+                            "$ref": "#/definitions/api_v1_admin.UpdateQuotaRequest"
                         }
                     }
                 ],
@@ -1832,31 +1832,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1893,31 +1893,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -1954,31 +1954,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -2001,19 +2001,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2045,25 +2045,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2095,19 +2095,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2146,19 +2146,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2188,19 +2188,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2232,19 +2232,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2283,19 +2283,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2332,19 +2332,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2374,13 +2374,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.SystemStatsResponse"
+                                            "$ref": "#/definitions/api_v1_admin.SystemStatsResponse"
                                         }
                                     }
                                 }
@@ -2390,19 +2390,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -2459,25 +2459,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2503,7 +2503,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.BatchDeleteUsersRequest"
+                            "$ref": "#/definitions/api_v1_admin.BatchDeleteUsersRequest"
                         }
                     }
                 ],
@@ -2511,25 +2511,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2555,7 +2555,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.BatchUpdateStatusRequest"
+                            "$ref": "#/definitions/api_v1_admin.BatchUpdateStatusRequest"
                         }
                     }
                 ],
@@ -2563,25 +2563,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2604,13 +2604,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2656,19 +2656,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2700,31 +2700,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2754,31 +2754,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2824,25 +2824,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2874,31 +2874,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2931,7 +2931,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.UpdateUserRoleRequest"
+                            "$ref": "#/definitions/api_v1_admin.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -2939,31 +2939,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -2995,25 +2995,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3046,7 +3046,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.UpdateUserStatusRequest"
+                            "$ref": "#/definitions/api_v1_admin.UpdateUserStatusRequest"
                         }
                     }
                 ],
@@ -3054,31 +3054,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3110,13 +3110,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3148,13 +3148,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3185,7 +3185,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.AssignRoleRequest"
+                            "$ref": "#/definitions/api_v1_admin.AssignRoleRequest"
                         }
                     }
                 ],
@@ -3193,13 +3193,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3236,13 +3236,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3273,7 +3273,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.ReviewWithdrawRequest"
+                            "$ref": "#/definitions/api_v1_admin.ReviewWithdrawRequest"
                         }
                     }
                 ],
@@ -3281,31 +3281,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -3339,19 +3339,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -3383,25 +3383,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -3435,7 +3435,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3480,7 +3480,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3529,7 +3529,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3559,7 +3559,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3619,7 +3619,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.GenerateCharactersRequest"
+                            "$ref": "#/definitions/api_v1_ai.GenerateCharactersRequest"
                         }
                     }
                 ],
@@ -3627,19 +3627,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3659,13 +3659,13 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3699,19 +3699,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3737,7 +3737,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.GeneratePlotRequest"
+                            "$ref": "#/definitions/api_v1_ai.GeneratePlotRequest"
                         }
                     }
                 ],
@@ -3745,19 +3745,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3783,7 +3783,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.ExecuteCreativeWorkflowRequest"
+                            "$ref": "#/definitions/api_v1_ai.ExecuteCreativeWorkflowRequest"
                         }
                     }
                 ],
@@ -3791,19 +3791,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3826,7 +3826,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3857,7 +3857,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3880,7 +3880,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3903,7 +3903,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3926,7 +3926,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3952,7 +3952,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.RechargeRequest"
+                            "$ref": "#/definitions/api_v1_ai.RechargeRequest"
                         }
                     }
                 ],
@@ -3960,7 +3960,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -3983,7 +3983,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4022,7 +4022,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4056,7 +4056,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4124,19 +4124,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4162,7 +4162,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.RewriteTextRequest"
+                            "$ref": "#/definitions/api_v1_ai.RewriteTextRequest"
                         }
                     }
                 ],
@@ -4170,7 +4170,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4196,7 +4196,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ai.RewriteTextRequest"
+                            "$ref": "#/definitions/api_v1_ai.RewriteTextRequest"
                         }
                     }
                 ],
@@ -4236,25 +4236,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4288,19 +4288,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4334,19 +4334,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4385,13 +4385,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4423,25 +4423,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4473,19 +4473,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -4519,13 +4519,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4566,13 +4566,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -4604,25 +4604,156 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/books": {
+        "/api/v1/bookstore/banners": {
+            "get": {
+                "description": "获取当前激活的Banner列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Banner"
+                ],
+                "summary": "获取激活的Banner列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "数量限制",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/banners/{id}/click": {
+            "post": {
+                "description": "记录用户点击Banner，增加点击次数统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Banner"
+                ],
+                "summary": "增加Banner点击次数",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Banner ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books": {
+            "get": {
+                "description": "获取所有书籍列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍"
+                ],
+                "summary": "获取书籍列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "创建新的书籍详情信息",
                 "consumes": [
@@ -4642,7 +4773,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/bookstore.BookDetail"
+                            "$ref": "#/definitions/Qingyu_backend_models_bookstore.BookDetail"
                         }
                     }
                 ],
@@ -4650,25 +4781,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/books/category": {
+        "/api/v1/bookstore/books/category": {
             "get": {
                 "description": "根据分类获取书籍列表",
                 "consumes": [
@@ -4708,1397 +4839,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/latest": {
-            "get": {
-                "description": "获取最新发布的书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍推荐"
-                ],
-                "summary": "获取最新书籍",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/popular": {
-            "get": {
-                "description": "获取热门书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍推荐"
-                ],
-                "summary": "获取热门书籍",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/recommended": {
-            "get": {
-                "description": "获取推荐书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "获取推荐书籍",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/search": {
-            "get": {
-                "description": "根据关键词搜索书籍",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "搜索书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "搜索关键词",
-                        "name": "keyword",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/search/author": {
-            "get": {
-                "description": "根据作者名称搜索书籍",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "根据作者搜索书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "作者名称",
-                        "name": "author",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/search/title": {
-            "get": {
-                "description": "根据书籍标题进行模糊搜索",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "根据标题搜索书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍标题",
-                        "name": "title",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/status": {
-            "get": {
-                "description": "根据书籍状态获取书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "根据状态获取书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍状态(serializing/completed/paused)",
-                        "name": "status",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/tags": {
-            "get": {
-                "description": "根据标签获取书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "根据标签获取书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "标签列表(逗号分隔)",
-                        "name": "tags",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters": {
-            "get": {
-                "description": "根据书籍ID获取所有章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "根据书籍ID获取章节列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/first": {
-            "get": {
-                "description": "根据书籍ID获取第一章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取第一章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/free": {
-            "get": {
-                "description": "根据书籍ID获取免费章节列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取免费章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/last": {
-            "get": {
-                "description": "根据书籍ID获取最后章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取最后章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/paid": {
-            "get": {
-                "description": "根据书籍ID获取付费章节列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取付费章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/published": {
-            "get": {
-                "description": "根据书籍ID获取已发布章节列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取已发布章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/statistics": {
-            "get": {
-                "description": "获取书籍的章节统计信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取章节统计信息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{book_id}/chapters/{chapter_num}": {
-            "get": {
-                "description": "根据书籍ID和章节号获取特定章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "根据书籍ID和章节号获取章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "章节号",
-                        "name": "chapter_num",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}": {
-            "get": {
-                "description": "根据书籍ID获取详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "获取书籍详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新书籍详情信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "更新书籍详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "书籍详情信息",
-                        "name": "book",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.BookDetail"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "删除书籍详情信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "删除书籍详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}/like": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "用户点赞书籍，增加点赞数统计",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍交互"
-                ],
-                "summary": "增加书籍点赞数",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}/similar": {
-            "get": {
-                "description": "根据书籍ID获取相似书籍",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍详情"
-                ],
-                "summary": "获取相似书籍",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}/statistics": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "获取书籍的浏览量、收藏量等统计信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍交互"
-                ],
-                "summary": "获取书籍统计信息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}/unlike": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "用户取消点赞书籍，减少点赞数统计",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍交互"
-                ],
-                "summary": "减少书籍点赞数",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/books/{id}/view": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "记录用户浏览书籍详情，增加浏览量统计",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍交互"
-                ],
-                "summary": "增加书籍浏览量",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/bookstore/banners": {
-            "get": {
-                "description": "获取当前激活的Banner列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Banner"
-                ],
-                "summary": "获取激活的Banner列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 5,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/bookstore/banners/{id}/click": {
-            "post": {
-                "description": "记录用户点击Banner，增加点击次数统计",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Banner"
-                ],
-                "summary": "增加Banner点击次数",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Banner ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/bookstore/books": {
-            "get": {
-                "description": "获取所有书籍列表，支持分页",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍"
-                ],
-                "summary": "获取书籍列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.PaginatedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
@@ -6137,13 +4890,89 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/latest": {
+            "get": {
+                "description": "获取最新发布的书籍列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍推荐"
+                ],
+                "summary": "获取最新书籍",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "数量限制",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/popular": {
+            "get": {
+                "description": "获取热门书籍列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍推荐"
+                ],
+                "summary": "获取热门书籍",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "数量限制",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
@@ -6182,13 +5011,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6284,19 +5113,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6342,19 +5171,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.PaginatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6400,19 +5229,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.PaginatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6463,19 +5292,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.PaginatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6521,19 +5350,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.PaginatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6565,25 +5394,174 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新书籍详情信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍详情"
+                ],
+                "summary": "更新书籍详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "书籍详情信息",
+                        "name": "book",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_models_bookstore.BookDetail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除书籍详情信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍详情"
+                ],
+                "summary": "删除书籍详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/average-rating": {
+            "get": {
+                "description": "根据图书ID获取该图书的平均评分",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "获取图书平均评分",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "图书ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6615,25 +5593,343 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/first": {
+            "get": {
+                "description": "根据书籍ID获取第一章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取第一章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/free": {
+            "get": {
+                "description": "根据书籍ID获取免费章节列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取免费章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/last": {
+            "get": {
+                "description": "根据书籍ID获取最后章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取最后章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/paid": {
+            "get": {
+                "description": "根据书籍ID获取付费章节列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取付费章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/published": {
+            "get": {
+                "description": "根据书籍ID获取已发布章节列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取已发布章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/statistics": {
+            "get": {
+                "description": "获取书籍的章节统计信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取章节统计信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
@@ -6672,25 +5968,482 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/chapters/{chapter_num}": {
+            "get": {
+                "description": "根据书籍ID和章节号获取特定章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "根据书籍ID和章节号获取章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "章节号",
+                        "name": "chapter_num",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/detail": {
+            "get": {
+                "description": "根据书籍ID获取详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍详情"
+                ],
+                "summary": "获取书籍详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/like": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "用户点赞书籍，增加点赞数统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍交互"
+                ],
+                "summary": "增加书籍点赞数",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/rating": {
+            "get": {
+                "description": "根据评分ID获取评分详情信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "获取评分详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "评分ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "评分不存在",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定ID的评分信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "更新评分",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "评分ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "评分信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "评分不存在",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为图书创建新的评分",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "创建评分",
+                "parameters": [
+                    {
+                        "description": "评分信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定ID的评分",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "删除评分",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "评分ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "评分不存在",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/rating-distribution": {
+            "get": {
+                "description": "根据图书ID获取该图书的评分分布统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "获取图书评分分布",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "图书ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/ratings": {
+            "get": {
+                "description": "根据图书ID获取该图书的所有评分列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "图书评分"
+                ],
+                "summary": "获取图书的所有评分",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "图书ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6729,25 +6482,74 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取书籍的浏览量、收藏量等统计信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍交互"
+                ],
+                "summary": "获取书籍统计信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
@@ -6786,19 +6588,68 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/books/{id}/unlike": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "用户取消点赞书籍，减少点赞数统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍交互"
+                ],
+                "summary": "减少书籍点赞数",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "书籍ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
                         }
                     }
                 }
@@ -6830,25 +6681,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6880,19 +6731,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -6915,71 +6766,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/bookstore/categories/{categoryId}/books": {
-            "get": {
-                "description": "根据分类ID获取该分类下的书籍列表，支持分页",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "书籍"
-                ],
-                "summary": "根据分类获取书籍列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "分类ID",
-                        "name": "categoryId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7011,31 +6804,354 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/bookstore/chapters/{chapterId}/access": {
+        "/api/v1/bookstore/categories/{id}/books": {
+            "get": {
+                "description": "根据分类ID获取该分类下的书籍列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "书籍"
+                ],
+                "summary": "根据分类获取书籍列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "分类ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters": {
+            "post": {
+                "description": "创建新的章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "创建章节",
+                "parameters": [
+                    {
+                        "description": "章节信息",
+                        "name": "chapter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_models_bookstore.Chapter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/search": {
+            "get": {
+                "description": "根据关键词搜索章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "搜索章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "书籍ID(可选)",
+                        "name": "book_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/{id}": {
+            "get": {
+                "description": "根据章节ID获取章节详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取章节详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新章节信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "更新章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "章节信息",
+                        "name": "chapter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_models_bookstore.Chapter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "删除章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/{id}/access": {
             "get": {
                 "description": "检查用户对指定章节的访问权限",
                 "consumes": [
@@ -7052,7 +7168,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "章节ID",
-                        "name": "chapterId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -7061,31 +7177,181 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/bookstore/chapters/{chapterId}/price": {
+        "/api/v1/bookstore/chapters/{id}/content": {
+            "get": {
+                "description": "根据章节ID获取章节内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取章节内容",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/{id}/next": {
+            "get": {
+                "description": "根据当前章节ID获取下一章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取下一章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "当前章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/{id}/previous": {
+            "get": {
+                "description": "根据当前章节ID获取上一章节",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "章节"
+                ],
+                "summary": "获取上一章节",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "当前章节ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_pkg_response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookstore/chapters/{id}/price": {
             "get": {
                 "description": "获取指定章节的价格信息",
                 "consumes": [
@@ -7102,7 +7368,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "章节ID",
-                        "name": "chapterId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -7111,25 +7377,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7152,13 +7418,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7196,13 +7462,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7240,13 +7506,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7278,13 +7544,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7322,13 +7588,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7379,73 +7645,27 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/chapters": {
-            "post": {
-                "description": "创建新的章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "创建章节",
-                "parameters": [
-                    {
-                        "description": "章节信息",
-                        "name": "chapter",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.Chapter"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/chapters/search": {
+        "/api/v1/bookstore/ratings/user/{id}": {
             "get": {
-                "description": "根据关键词搜索章节",
+                "description": "根据用户ID获取该用户的所有评分列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -7453,22 +7673,16 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "章节"
+                    "图书评分"
                 ],
-                "summary": "搜索章节",
+                "summary": "获取用户的所有评分",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "搜索关键词",
-                        "name": "keyword",
-                        "in": "query",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "书籍ID(可选)",
-                        "name": "book_id",
-                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -7479,334 +7693,29 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 20,
+                        "default": 10,
                         "description": "每页数量",
-                        "name": "size",
+                        "name": "limit",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/chapters/{id}": {
-            "get": {
-                "description": "根据章节ID获取章节详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取章节详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新章节信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "更新章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "章节信息",
-                        "name": "chapter",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.Chapter"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "删除章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "删除章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/chapters/{id}/content": {
-            "get": {
-                "description": "根据章节ID获取章节内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取章节内容",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/chapters/{id}/next": {
-            "get": {
-                "description": "根据当前章节ID获取下一章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取下一章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "当前章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/chapters/{id}/previous": {
-            "get": {
-                "description": "根据当前章节ID获取上一章节",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "章节"
-                ],
-                "summary": "获取上一章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "当前章节ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -7847,13 +7756,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -7892,13 +7801,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -7937,13 +7846,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -7989,19 +7898,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8038,13 +7947,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8090,7 +7999,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8136,7 +8045,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8175,7 +8084,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8214,7 +8123,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8246,7 +8155,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8285,7 +8194,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8315,7 +8224,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8356,13 +8265,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8401,13 +8310,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8448,13 +8357,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "409": {
                         "description": "版本冲突",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8486,7 +8395,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8525,7 +8434,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8566,7 +8475,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8598,7 +8507,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8631,7 +8540,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.WordCountRequest"
+                            "$ref": "#/definitions/api_v1_writer.WordCountRequest"
                         }
                     }
                 ],
@@ -8639,7 +8548,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -8686,19 +8595,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_shared.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -8735,19 +8644,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -8778,7 +8687,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/storage.CompleteMultipartUploadRequest"
+                            "$ref": "#/definitions/Qingyu_backend_service_shared_storage.CompleteMultipartUploadRequest"
                         }
                     }
                 ],
@@ -8786,19 +8695,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -8829,7 +8738,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/storage.InitiateMultipartUploadRequest"
+                            "$ref": "#/definitions/Qingyu_backend_service_shared_storage.InitiateMultipartUploadRequest"
                         }
                     }
                 ],
@@ -8837,25 +8746,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -8889,19 +8798,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -8952,19 +8861,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9015,25 +8924,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9084,25 +8993,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9149,19 +9058,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9203,19 +9112,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9249,25 +9158,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9299,31 +9208,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9358,25 +9267,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9417,19 +9326,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -9473,7 +9382,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9524,7 +9433,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9568,7 +9477,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9609,7 +9518,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9653,7 +9562,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9690,7 +9599,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9718,7 +9627,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9747,7 +9656,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.UpdateTaxInfoRequest"
+                            "$ref": "#/definitions/api_v1_finance.UpdateTaxInfoRequest"
                         }
                     }
                 ],
@@ -9755,7 +9664,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9794,7 +9703,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9838,7 +9747,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9874,7 +9783,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9902,7 +9811,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9952,7 +9861,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -9983,7 +9892,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.ActivateCardRequest"
+                            "$ref": "#/definitions/api_v1_finance.ActivateCardRequest"
                         }
                     }
                 ],
@@ -9991,7 +9900,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10014,7 +9923,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10042,7 +9951,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10070,7 +9979,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10101,7 +10010,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.SubscribeRequest"
+                            "$ref": "#/definitions/api_v1_finance.SubscribeRequest"
                         }
                     }
                 ],
@@ -10109,7 +10018,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10137,7 +10046,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10165,19 +10074,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10205,19 +10114,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10248,7 +10157,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.ConsumeRequest"
+                            "$ref": "#/definitions/api_v1_finance.ConsumeRequest"
                         }
                     }
                 ],
@@ -10256,25 +10165,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10305,7 +10214,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.RechargeRequest"
+                            "$ref": "#/definitions/api_v1_finance.RechargeRequest"
                         }
                     }
                 ],
@@ -10313,25 +10222,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10381,19 +10290,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10424,7 +10333,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/finance.TransferRequest"
+                            "$ref": "#/definitions/api_v1_finance.TransferRequest"
                         }
                     }
                 ],
@@ -10432,25 +10341,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10489,25 +10398,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10556,19 +10465,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/finance.APIResponse"
+                            "$ref": "#/definitions/api_v1_finance.APIResponse"
                         }
                     }
                 }
@@ -10611,19 +10520,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/api_v1_shared.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -10647,7 +10556,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.CreateNotificationRequest"
+                            "$ref": "#/definitions/api_v1_shared.CreateNotificationRequest"
                         }
                     }
                 ],
@@ -10655,31 +10564,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -10721,7 +10630,30 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/clear-read": {
+            "post": {
+                "description": "清除当前用户的所有已读通知",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "清除已读通知",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10744,7 +10676,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10786,7 +10718,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10809,7 +10741,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10841,7 +10773,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10864,7 +10796,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10887,7 +10819,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10921,7 +10853,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10953,7 +10885,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -10976,19 +10908,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -11011,7 +10943,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11036,7 +10968,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -11056,13 +10988,36 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/ws-endpoint": {
+            "get": {
+                "description": "获取通知WebSocket连接的端点信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "获取WebSocket端点",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11094,7 +11049,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11124,25 +11079,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -11174,25 +11129,71 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/{id}/resend": {
+            "post": {
+                "description": "重新发送指定的通知给用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "重发通知",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通知ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "重发方式 (email, push, sms)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "method": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11243,7 +11244,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11275,19 +11276,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11319,13 +11320,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11364,19 +11365,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11406,13 +11407,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11444,7 +11445,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11476,7 +11477,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11515,19 +11516,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11559,7 +11560,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11597,7 +11598,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11643,7 +11644,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11682,13 +11683,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11729,7 +11730,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11761,7 +11762,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11780,7 +11781,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.CreateAnnotationRequest"
+                            "$ref": "#/definitions/api_v1_reader.CreateAnnotationRequest"
                         }
                     }
                 ],
@@ -11788,7 +11789,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11807,7 +11808,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.BatchUpdateAnnotationsRequest"
+                            "$ref": "#/definitions/api_v1_reader.BatchUpdateAnnotationsRequest"
                         }
                     }
                 ],
@@ -11815,7 +11816,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11832,7 +11833,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.BatchCreateAnnotationsRequest"
+                            "$ref": "#/definitions/api_v1_reader.BatchCreateAnnotationsRequest"
                         }
                     }
                 ],
@@ -11840,7 +11841,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11857,7 +11858,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.BatchDeleteAnnotationsRequest"
+                            "$ref": "#/definitions/api_v1_reader.BatchDeleteAnnotationsRequest"
                         }
                     }
                 ],
@@ -11865,7 +11866,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11890,7 +11891,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11915,7 +11916,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11940,7 +11941,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -11972,7 +11973,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12004,7 +12005,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12029,7 +12030,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12054,7 +12055,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12079,7 +12080,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12111,7 +12112,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12136,7 +12137,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12161,7 +12162,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12188,7 +12189,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12214,7 +12215,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.UpdateAnnotationRequest"
+                            "$ref": "#/definitions/api_v1_reader.UpdateAnnotationRequest"
                         }
                     }
                 ],
@@ -12222,7 +12223,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12245,7 +12246,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12279,19 +12280,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12348,13 +12349,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12396,7 +12397,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12442,13 +12443,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12471,13 +12472,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12509,19 +12510,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12552,7 +12553,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.UpdateBookmarkRequest"
+                            "$ref": "#/definitions/api_v1_reader.UpdateBookmarkRequest"
                         }
                     }
                 ],
@@ -12560,25 +12561,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12608,19 +12609,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12652,7 +12653,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12671,7 +12672,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.BatchUpdateBookStatusRequest"
+                            "$ref": "#/definitions/api_v1_reader.BatchUpdateBookStatusRequest"
                         }
                     }
                 ],
@@ -12679,7 +12680,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12695,7 +12696,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12720,7 +12721,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12736,7 +12737,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12761,7 +12762,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12784,7 +12785,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12848,13 +12849,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12885,7 +12886,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.CreateBookmarkRequest"
+                            "$ref": "#/definitions/api_v1_reader.CreateBookmarkRequest"
                         }
                     }
                 ],
@@ -12893,25 +12894,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "409": {
                         "description": "书签已存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -12957,19 +12958,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13008,25 +13009,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13065,25 +13066,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13122,25 +13123,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13176,25 +13177,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -13228,25 +13229,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -13277,19 +13278,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -13315,7 +13316,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.UpdateBookStatusRequest"
+                            "$ref": "#/definitions/api_v1_reader.UpdateBookStatusRequest"
                         }
                     }
                 ],
@@ -13323,7 +13324,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13355,25 +13356,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -13407,7 +13408,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13439,25 +13440,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13482,7 +13483,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13514,7 +13515,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13546,13 +13547,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/reader/chapters/{chapterId}/purchase": {
+        "/api/v1/reader/chapters/{id}/purchase": {
             "post": {
                 "description": "购买单个付费章节",
                 "consumes": [
@@ -13569,7 +13570,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "章节ID",
-                        "name": "chapterId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -13578,25 +13579,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -13645,7 +13646,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13673,7 +13674,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.AddCollectionRequest"
+                            "$ref": "#/definitions/api_v1_social.AddCollectionRequest"
                         }
                     }
                 ],
@@ -13681,7 +13682,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13717,7 +13718,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13744,7 +13745,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13772,7 +13773,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.CreateFolderRequest"
+                            "$ref": "#/definitions/api_v1_social.CreateFolderRequest"
                         }
                     }
                 ],
@@ -13780,7 +13781,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13817,7 +13818,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.UpdateFolderRequest"
+                            "$ref": "#/definitions/api_v1_social.UpdateFolderRequest"
                         }
                     }
                 ],
@@ -13825,7 +13826,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13859,7 +13860,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13897,7 +13898,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13924,7 +13925,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -13974,7 +13975,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14011,7 +14012,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.UpdateCollectionRequest"
+                            "$ref": "#/definitions/api_v1_social.UpdateCollectionRequest"
                         }
                     }
                 ],
@@ -14019,7 +14020,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14053,7 +14054,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14089,7 +14090,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14123,7 +14124,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14169,7 +14170,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14186,7 +14187,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.CreateCommentRequest"
+                            "$ref": "#/definitions/api_v1_social.CreateCommentRequest"
                         }
                     }
                 ],
@@ -14194,7 +14195,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14226,7 +14227,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14251,7 +14252,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14283,7 +14284,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14306,7 +14307,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14331,7 +14332,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14354,7 +14355,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14379,7 +14380,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14403,7 +14404,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.UpdateCommentRequest"
+                            "$ref": "#/definitions/api_v1_social.UpdateCommentRequest"
                         }
                     }
                 ],
@@ -14411,7 +14412,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14434,7 +14435,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14470,25 +14471,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -14522,25 +14523,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -14579,7 +14580,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14605,7 +14606,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.ReplyCommentRequest"
+                            "$ref": "#/definitions/api_v1_social.ReplyCommentRequest"
                         }
                     }
                 ],
@@ -14613,7 +14614,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14638,7 +14639,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14668,7 +14669,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14693,7 +14694,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14727,7 +14728,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14750,7 +14751,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14775,7 +14776,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14818,19 +14819,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -14857,19 +14858,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -14888,7 +14889,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.SaveProgressRequest"
+                            "$ref": "#/definitions/api_v1_reader.SaveProgressRequest"
                         }
                     }
                 ],
@@ -14896,7 +14897,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14912,7 +14913,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14944,7 +14945,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -14970,7 +14971,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.MergeProgressRequest"
+                            "$ref": "#/definitions/api_v1_reader.MergeProgressRequest"
                         }
                     }
                 ],
@@ -14978,19 +14979,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15009,7 +15010,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.UpdateReadingTimeRequest"
+                            "$ref": "#/definitions/api_v1_reader.UpdateReadingTimeRequest"
                         }
                     }
                 ],
@@ -15017,7 +15018,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15042,7 +15043,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15067,7 +15068,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15093,7 +15094,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.SyncProgressRequest"
+                            "$ref": "#/definitions/api_v1_reader.SyncProgressRequest"
                         }
                     }
                 ],
@@ -15101,19 +15102,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15136,13 +15137,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15158,7 +15159,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15196,13 +15197,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15227,7 +15228,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15266,19 +15267,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -15324,19 +15325,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -15380,13 +15381,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15409,7 +15410,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.RecordReadingRequest"
+                            "$ref": "#/definitions/api_v1_reader.RecordReadingRequest"
                         }
                     }
                 ],
@@ -15417,13 +15418,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15443,13 +15444,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15480,13 +15481,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15517,13 +15518,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15539,7 +15540,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15556,7 +15557,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/reader.UpdateSettingsRequest"
+                            "$ref": "#/definitions/api_v1_reader.UpdateSettingsRequest"
                         }
                     }
                 ],
@@ -15564,7 +15565,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15589,7 +15590,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15616,7 +15617,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15646,7 +15647,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15671,7 +15672,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15705,7 +15706,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15728,7 +15729,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15753,7 +15754,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15778,7 +15779,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15814,7 +15815,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15850,7 +15851,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15886,7 +15887,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15922,7 +15923,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15949,7 +15950,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -15992,51 +15993,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/books/{book_id}/average-rating": {
-            "get": {
-                "description": "根据图书ID获取该图书的平均评分",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "获取图书平均评分",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "图书ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -16068,121 +16025,19 @@ const docTemplate = `{
                     "200": {
                         "description": "增加成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/books/{book_id}/rating-distribution": {
-            "get": {
-                "description": "根据图书ID获取该图书的评分分布统计",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "获取图书评分分布",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "图书ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/books/{book_id}/ratings": {
-            "get": {
-                "description": "根据图书ID获取该图书的所有评分列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "获取图书的所有评分",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "图书ID",
-                        "name": "book_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16214,25 +16069,25 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "404": {
                         "description": "统计信息不存在",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16264,65 +16119,19 @@ const docTemplate = `{
                     "200": {
                         "description": "增加成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/ratings": {
-            "post": {
-                "description": "为图书创建新的评分",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "创建评分",
-                "parameters": [
-                    {
-                        "description": "评分信息",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "创建成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16368,174 +16177,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/ratings/{id}": {
-            "get": {
-                "description": "根据评分ID获取评分详情信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "获取评分详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "评分ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "评分不存在",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新指定ID的评分信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "更新评分",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "评分ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "评分信息",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "评分不存在",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "删除指定ID的评分",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "删除评分",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "评分ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "评分不存在",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16567,19 +16221,19 @@ const docTemplate = `{
                     "200": {
                         "description": "点赞成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16611,19 +16265,19 @@ const docTemplate = `{
                     "200": {
                         "description": "取消点赞成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16646,13 +16300,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16685,19 +16339,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16729,19 +16383,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16780,19 +16434,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16838,19 +16492,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16905,19 +16559,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16949,19 +16603,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -16993,19 +16647,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -17037,19 +16691,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -17081,19 +16735,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -17132,77 +16786,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/reading/users/{user_id}/ratings": {
-            "get": {
-                "description": "根据用户ID获取该用户的所有评分列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "图书评分"
-                ],
-                "summary": "获取用户的所有评分",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "用户ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/bookstore.APIResponse"
+                            "$ref": "#/definitions/api_v1_bookstore.APIResponse"
                         }
                     }
                 }
@@ -17229,7 +16825,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17261,7 +16857,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17286,7 +16882,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17318,7 +16914,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17343,7 +16939,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17375,7 +16971,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17401,7 +16997,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/search.BatchSearchRequest"
+                            "$ref": "#/definitions/api_v1_search.BatchSearchRequest"
                         }
                     }
                 ],
@@ -17447,7 +17043,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/search.UpdateGrayscaleConfigRequest"
+                            "$ref": "#/definitions/api_v1_search.UpdateGrayscaleConfigRequest"
                         }
                     }
                 ],
@@ -17688,7 +17284,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -17707,13 +17303,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -17739,7 +17335,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginRequest"
+                            "$ref": "#/definitions/Qingyu_backend_service_shared_auth.LoginRequest"
                         }
                     }
                 ],
@@ -17747,25 +17343,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17793,19 +17389,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17833,19 +17429,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17873,19 +17469,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17911,7 +17507,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterRequest"
+                            "$ref": "#/definitions/Qingyu_backend_service_shared_auth.RegisterRequest"
                         }
                     }
                 ],
@@ -17919,19 +17515,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17959,19 +17555,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -17999,19 +17595,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18048,25 +17644,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18103,25 +17699,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18154,7 +17750,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.OAuthAuthorizeRequest"
+                            "$ref": "#/definitions/api_v1_shared.OAuthAuthorizeRequest"
                         }
                     }
                 ],
@@ -18162,19 +17758,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18207,7 +17803,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.OAuthCallbackRequest"
+                            "$ref": "#/definitions/api_v1_shared.OAuthCallbackRequest"
                         }
                     }
                 ],
@@ -18215,25 +17811,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18261,19 +17857,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18301,19 +17897,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18344,7 +17940,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.ConsumeRequest"
+                            "$ref": "#/definitions/api_v1_shared.ConsumeRequest"
                         }
                     }
                 ],
@@ -18352,25 +17948,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18401,7 +17997,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.RechargeRequest"
+                            "$ref": "#/definitions/api_v1_shared.RechargeRequest"
                         }
                     }
                 ],
@@ -18409,25 +18005,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18477,19 +18073,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18520,7 +18116,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.TransferRequest"
+                            "$ref": "#/definitions/api_v1_shared.TransferRequest"
                         }
                     }
                 ],
@@ -18528,25 +18124,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18577,7 +18173,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/shared.WithdrawRequest"
+                            "$ref": "#/definitions/api_v1_shared.WithdrawRequest"
                         }
                     }
                 ],
@@ -18585,25 +18181,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18653,19 +18249,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18702,7 +18298,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.FollowAuthorRequest"
+                            "$ref": "#/definitions/api_v1_social.FollowAuthorRequest"
                         }
                     }
                 ],
@@ -18710,7 +18306,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18746,7 +18342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18784,7 +18380,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18812,7 +18408,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.CreateBookListRequest"
+                            "$ref": "#/definitions/api_v1_social.CreateBookListRequest"
                         }
                     }
                 ],
@@ -18820,7 +18416,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18851,7 +18447,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18886,7 +18482,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.UpdateBookListRequest"
+                            "$ref": "#/definitions/api_v1_social.UpdateBookListRequest"
                         }
                     }
                 ],
@@ -18894,7 +18490,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18928,7 +18524,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18959,7 +18555,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -18995,7 +18591,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19031,7 +18627,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19063,25 +18659,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -19111,25 +18707,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -19161,25 +18757,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -19222,7 +18818,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19265,7 +18861,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19293,7 +18889,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/messages.CreateMentionRequest"
+                            "$ref": "#/definitions/api_v1_messages.CreateMentionRequest"
                         }
                     }
                 ],
@@ -19301,7 +18897,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19337,7 +18933,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19367,7 +18963,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/messages.SendMessageRequest"
+                            "$ref": "#/definitions/api_v1_messages.SendMessageRequest"
                         }
                     }
                 ],
@@ -19375,7 +18971,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19418,7 +19014,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19455,13 +19051,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19524,25 +19120,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "无权访问",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "会话不存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19586,25 +19182,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "无权访问",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "会话不存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19650,13 +19246,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19706,7 +19302,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19742,7 +19338,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19778,7 +19374,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19822,7 +19418,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19850,7 +19446,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.CreateReviewRequest"
+                            "$ref": "#/definitions/api_v1_social.CreateReviewRequest"
                         }
                     }
                 ],
@@ -19858,7 +19454,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19889,7 +19485,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19924,7 +19520,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/social.UpdateReviewRequest"
+                            "$ref": "#/definitions/api_v1_social.UpdateReviewRequest"
                         }
                     }
                 ],
@@ -19932,7 +19528,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -19966,7 +19562,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20002,7 +19598,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20038,7 +19634,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20070,19 +19666,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20118,7 +19714,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20164,19 +19760,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20222,19 +19818,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20270,7 +19866,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20293,7 +19889,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20325,7 +19921,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20348,7 +19944,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20380,7 +19976,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20406,7 +20002,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.LoginRequest"
                         }
                     }
                 ],
@@ -20416,13 +20012,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.LoginResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.LoginResponse"
                                         }
                                     }
                                 }
@@ -20432,19 +20028,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20470,7 +20066,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.RegisterRequest"
                         }
                     }
                 ],
@@ -20480,13 +20076,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.RegisterResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.RegisterResponse"
                                         }
                                     }
                                 }
@@ -20496,13 +20092,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20536,25 +20132,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20588,25 +20184,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20637,7 +20233,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ChangePasswordRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -20645,25 +20241,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20697,25 +20293,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20749,19 +20345,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20791,13 +20387,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.UserProfileResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UserProfileResponse"
                                         }
                                     }
                                 }
@@ -20807,19 +20403,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20848,7 +20444,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateProfileRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -20856,25 +20452,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -20897,7 +20493,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20921,7 +20517,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.UpdateShortcutsRequest"
+                            "$ref": "#/definitions/api_v1_writer.UpdateShortcutsRequest"
                         }
                     }
                 ],
@@ -20929,7 +20525,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20952,7 +20548,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -20975,7 +20571,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21000,13 +20596,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.UserStats"
+                                            "$ref": "#/definitions/Qingyu_backend_service_shared_stats.UserStats"
                                         }
                                     }
                                 }
@@ -21016,13 +20612,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21055,13 +20651,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.ActivityStats"
+                                            "$ref": "#/definitions/Qingyu_backend_service_shared_stats.ActivityStats"
                                         }
                                     }
                                 }
@@ -21071,13 +20667,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21102,13 +20698,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.ContentStats"
+                                            "$ref": "#/definitions/Qingyu_backend_service_shared_stats.ContentStats"
                                         }
                                     }
                                 }
@@ -21118,13 +20714,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21163,13 +20759,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.RevenueStats"
+                                            "$ref": "#/definitions/Qingyu_backend_service_shared_stats.RevenueStats"
                                         }
                                     }
                                 }
@@ -21179,13 +20775,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21219,13 +20815,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.UserProfileResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UserProfileResponse"
                                         }
                                     }
                                 }
@@ -21235,13 +20831,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21299,13 +20895,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.GetUserBooksResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.GetUserBooksResponse"
                                         }
                                     }
                                 }
@@ -21315,13 +20911,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21355,13 +20951,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.PublicUserProfileResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.PublicUserProfileResponse"
                                         }
                                     }
                                 }
@@ -21371,13 +20967,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -21410,7 +21006,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.DeleteDeviceRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.DeleteDeviceRequest"
                         }
                     }
                 ],
@@ -21418,25 +21014,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "密码错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "设备不存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21462,7 +21058,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UnbindEmailRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UnbindEmailRequest"
                         }
                     }
                 ],
@@ -21470,19 +21066,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "密码错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21508,7 +21104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.VerifyEmailRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.VerifyEmailRequest"
                         }
                     }
                 ],
@@ -21518,13 +21114,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.VerifyEmailResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.VerifyEmailResponse"
                                         }
                                     }
                                 }
@@ -21534,7 +21130,7 @@ const docTemplate = `{
                     "400": {
                         "description": "验证码无效或过期",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21565,7 +21161,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePasswordRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UpdatePasswordRequest"
                         }
                     }
                 ],
@@ -21573,19 +21169,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "旧密码错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21611,7 +21207,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendPasswordResetRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendPasswordResetRequest"
                         }
                     }
                 ],
@@ -21621,13 +21217,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.SendPasswordResetResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendPasswordResetResponse"
                                         }
                                     }
                                 }
@@ -21637,7 +21233,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21663,7 +21259,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ResetPasswordRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -21673,13 +21269,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.ResetPasswordResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.ResetPasswordResponse"
                                         }
                                     }
                                 }
@@ -21689,7 +21285,7 @@ const docTemplate = `{
                     "400": {
                         "description": "验证码无效",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21715,7 +21311,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UnbindPhoneRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UnbindPhoneRequest"
                         }
                     }
                 ],
@@ -21723,13 +21319,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21755,7 +21351,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendEmailCodeRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendEmailCodeRequest"
                         }
                     }
                 ],
@@ -21765,13 +21361,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.SendCodeResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendCodeResponse"
                                         }
                                     }
                                 }
@@ -21781,13 +21377,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "429": {
                         "description": "发送过于频繁",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21813,7 +21409,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendPhoneCodeRequest"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendPhoneCodeRequest"
                         }
                     }
                 ],
@@ -21823,13 +21419,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/shared.APIResponse"
+                                    "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.SendCodeResponse"
+                                            "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.SendCodeResponse"
                                         }
                                     }
                                 }
@@ -21839,7 +21435,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21871,7 +21467,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21903,7 +21499,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -21929,7 +21525,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.SubmitBatchOperationRequest"
+                            "$ref": "#/definitions/api_v1_writer.SubmitBatchOperationRequest"
                         }
                     }
                 ],
@@ -21937,7 +21533,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/writer.SubmitBatchOperationResponse"
+                            "$ref": "#/definitions/api_v1_writer.SubmitBatchOperationResponse"
                         }
                     }
                 }
@@ -22066,19 +21662,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22110,19 +21706,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22154,19 +21750,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22205,19 +21801,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22261,19 +21857,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22305,19 +21901,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22349,19 +21945,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22393,19 +21989,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22431,7 +22027,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.BatchDeleteRequest"
+                            "$ref": "#/definitions/api_v1_writer.BatchDeleteRequest"
                         }
                     }
                 ],
@@ -22439,19 +22035,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22483,25 +22079,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22533,19 +22129,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22576,7 +22172,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.UpdateCommentRequest"
+                            "$ref": "#/definitions/api_v1_writer.UpdateCommentRequest"
                         }
                     }
                 ],
@@ -22584,25 +22180,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22632,19 +22228,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22677,7 +22273,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.ReplyCommentRequest"
+                            "$ref": "#/definitions/api_v1_writer.ReplyCommentRequest"
                         }
                     }
                 ],
@@ -22685,25 +22281,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22735,25 +22331,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22785,25 +22381,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22861,19 +22457,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22904,7 +22500,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.CreateCommentRequest"
+                            "$ref": "#/definitions/api_v1_writer.CreateCommentRequest"
                         }
                     }
                 ],
@@ -22912,19 +22508,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -22977,19 +22573,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23021,19 +22617,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23074,31 +22670,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23146,19 +22742,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23191,7 +22787,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.LockDocumentRequest"
+                            "$ref": "#/definitions/api_v1_writer.LockDocumentRequest"
                         }
                     }
                 ],
@@ -23199,25 +22795,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "409": {
                         "description": "文档已被锁定",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23247,25 +22843,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "无权解锁",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23298,7 +22894,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.ExtendLockRequest"
+                            "$ref": "#/definitions/api_v1_writer.ExtendLockRequest"
                         }
                     }
                 ],
@@ -23306,19 +22902,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23350,25 +22946,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "需要管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23400,19 +22996,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23444,13 +23040,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23498,19 +23094,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23558,19 +23154,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23602,13 +23198,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23638,13 +23234,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23676,19 +23272,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23720,13 +23316,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23767,19 +23363,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23811,13 +23407,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23858,19 +23454,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23902,19 +23498,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -23955,19 +23551,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24013,13 +23609,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24065,13 +23661,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24103,13 +23699,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24166,25 +23762,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24273,25 +23869,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.PaginatedResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.PaginatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24315,7 +23911,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.CreateTemplateRequest"
+                            "$ref": "#/definitions/api_v1_writer.CreateTemplateRequest"
                         }
                     }
                 ],
@@ -24323,25 +23919,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24373,25 +23969,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24422,7 +24018,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.UpdateTemplateRequest"
+                            "$ref": "#/definitions/api_v1_writer.UpdateTemplateRequest"
                         }
                     }
                 ],
@@ -24430,31 +24026,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24484,37 +24080,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24547,7 +24143,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/writer.ApplyTemplateRequest"
+                            "$ref": "#/definitions/api_v1_writer.ApplyTemplateRequest"
                         }
                     }
                 ],
@@ -24555,25 +24151,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     }
                 }
@@ -24596,13 +24192,13 @@ const docTemplate = `{
                     "200": {
                         "description": "健康",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "不健康",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -24634,19 +24230,19 @@ const docTemplate = `{
                     "200": {
                         "description": "健康",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "服务不存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "不健康",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -24669,13 +24265,13 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "失败",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -24707,19 +24303,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/shared.APIResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.APIResponse"
                         }
                     },
                     "404": {
                         "description": "服务不存在",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "失败",
                         "schema": {
-                            "$ref": "#/definitions/shared.ErrorResponse"
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.ErrorResponse"
                         }
                     }
                 }
@@ -24779,511 +24375,492 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "admin.AssignRoleRequest": {
+        "Qingyu_backend_api_v1_shared.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "description": "请求ID（用于追踪）",
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "响应时间戳",
+                    "type": "integer"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_shared.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "debug": {
+                    "description": "调试信息，仅开发环境使用",
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_shared.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "description": "分页信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_shared.Pagination"
+                        }
+                    ]
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_shared.Pagination": {
+            "type": "object",
+            "properties": {
+                "has_next": {
+                    "description": "是否有下一页",
+                    "type": "boolean"
+                },
+                "has_previous": {
+                    "description": "是否有上一页",
+                    "type": "boolean"
+                },
+                "page": {
+                    "description": "当前页码",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "description": "每页大小",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总记录数",
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "description": "总页数",
+                    "type": "integer"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.ChangePasswordRequest": {
             "type": "object",
             "required": [
-                "role"
+                "new_password",
+                "old_password"
             ],
             "properties": {
-                "role": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "old_password": {
                     "type": "string"
                 }
             }
         },
-        "admin.BatchDeleteRequest": {
+        "Qingyu_backend_api_v1_user_dto.DeleteDeviceRequest": {
             "type": "object",
             "required": [
-                "ids"
+                "password"
             ],
             "properties": {
-                "ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
+                "password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },
-        "admin.BatchDeleteUsersRequest": {
+        "Qingyu_backend_api_v1_user_dto.GetUserBooksResponse": {
             "type": "object",
-            "required": [
-                "userIds"
-            ],
             "properties": {
-                "userIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "books": {},
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
-        "admin.BatchUpdateConfigRequest": {
+        "Qingyu_backend_api_v1_user_dto.LoginRequest": {
             "type": "object",
             "required": [
-                "updates"
+                "password",
+                "username"
             ],
             "properties": {
-                "updates": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/admin.UpdateConfigRequest"
-                    }
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
-        "admin.BatchUpdateStatusRequest": {
+        "Qingyu_backend_api_v1_user_dto.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/Qingyu_backend_api_v1_user_dto.UserBasicInfo"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.PublicUserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.RegisterRequest": {
             "type": "object",
             "required": [
-                "status",
-                "userIds"
+                "email",
+                "password",
+                "username"
             ],
             "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
-                "userIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "token": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
-        "admin.ReviewAppealRequest": {
+        "Qingyu_backend_api_v1_user_dto.ResetPasswordRequest": {
             "type": "object",
             "required": [
-                "action"
+                "code",
+                "email",
+                "new_password"
             ],
             "properties": {
-                "action": {
-                    "type": "string",
-                    "enum": [
-                        "approve",
-                        "reject"
-                    ]
+                "code": {
+                    "type": "string"
                 },
-                "review_note": {
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.ResetPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.SendCodeResponse": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "description": "有效期（秒）",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "额外信息",
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.SendEmailCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.SendPasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.SendPasswordResetResponse": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.SendPhoneCodeRequest": {
+            "type": "object",
+            "required": [
+                "phone"
+            ],
+            "properties": {
+                "phone": {
+                    "type": "string",
+                    "example": "13800138000"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.UnbindEmailRequest": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.UnbindPhoneRequest": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_api_v1_user_dto.UpdateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "bio": {
                     "type": "string",
                     "maxLength": 500
-                }
-            }
-        },
-        "admin.ReviewAuditRequest": {
-            "type": "object",
-            "required": [
-                "action"
-            ],
-            "properties": {
-                "action": {
+                },
+                "nickname": {
                     "type": "string",
-                    "enum": [
-                        "approve",
-                        "reject"
-                    ]
+                    "maxLength": 50
                 },
-                "penalty_type": {
-                    "type": "string",
-                    "enum": [
-                        "warning",
-                        "ban"
-                    ]
-                },
-                "review_note": {
-                    "type": "string",
-                    "maxLength": 500
-                }
-            }
-        },
-        "admin.ReviewWithdrawRequest": {
-            "type": "object",
-            "required": [
-                "withdraw_id"
-            ],
-            "properties": {
-                "approved": {
-                    "type": "boolean"
-                },
-                "reason": {
-                    "type": "string"
-                },
-                "withdraw_id": {
+                "phone": {
                     "type": "string"
                 }
             }
         },
-        "admin.SystemConfigRequest": {
+        "Qingyu_backend_api_v1_user_dto.UserBasicInfo": {
             "type": "object",
             "properties": {
-                "allowRegistration": {
-                    "type": "boolean"
-                },
-                "enableAudit": {
-                    "type": "boolean"
-                },
-                "maxUploadSize": {
-                    "type": "integer"
-                },
-                "requireEmailVerification": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "admin.SystemStatsResponse": {
-            "type": "object",
-            "properties": {
-                "activeUsers": {
-                    "type": "integer"
-                },
-                "pendingAudits": {
-                    "type": "integer"
-                },
-                "totalBooks": {
-                    "type": "integer"
-                },
-                "totalRevenue": {
-                    "type": "number"
-                },
-                "totalUsers": {
-                    "type": "integer"
-                }
-            }
-        },
-        "admin.UpdateConfigRequest": {
-            "type": "object",
-            "required": [
-                "key",
-                "value"
-            ],
-            "properties": {
-                "key": {
+                "email": {
                     "type": "string"
                 },
-                "value": {}
-            }
-        },
-        "admin.UpdateQuotaRequest": {
-            "type": "object",
-            "required": [
-                "quotaType",
-                "totalQuota"
-            ],
-            "properties": {
-                "quotaType": {
-                    "type": "string",
-                    "enum": [
-                        "daily",
-                        "monthly",
-                        "total"
-                    ]
-                },
-                "totalQuota": {
-                    "type": "integer",
-                    "minimum": 0
-                }
-            }
-        },
-        "admin.UpdateUserRoleRequest": {
-            "type": "object",
-            "required": [
-                "role"
-            ],
-            "properties": {
                 "role": {
                     "type": "string"
-                }
-            }
-        },
-        "admin.UpdateUserStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
         },
-        "admin.ValidateConfigRequest": {
-            "type": "object",
-            "required": [
-                "yaml_content"
-            ],
-            "properties": {
-                "yaml_content": {
-                    "type": "string"
-                }
-            }
-        },
-        "ai.BackgroundData": {
+        "Qingyu_backend_api_v1_user_dto.UserProfileResponse": {
             "type": "object",
             "properties": {
-                "education": {
-                    "description": "教育",
+                "avatar": {
                     "type": "string"
                 },
-                "family": {
-                    "description": "家庭",
+                "bio": {
                     "type": "string"
                 },
-                "key_experiences": {
-                    "description": "关键经历",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "summary": {
-                    "description": "背景概要",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.ChapterData": {
-            "type": "object",
-            "properties": {
-                "chapter_goal": {
-                    "description": "章节目标",
+                "created_at": {
                     "type": "string"
                 },
-                "chapter_id": {
-                    "description": "章节ID",
-                    "type": "integer"
-                },
-                "characters_involved": {
-                    "description": "参与角色",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "cliffhanger": {
-                    "description": "悬念",
+                "email": {
                     "type": "string"
                 },
-                "conflict_type": {
-                    "description": "冲突类型",
-                    "type": "string"
-                },
-                "emotional_tone": {
-                    "description": "情感基调",
-                    "type": "string"
-                },
-                "estimated_word_count": {
-                    "description": "预估字数",
-                    "type": "integer"
-                },
-                "key_events": {
-                    "description": "关键事件",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "summary": {
-                    "description": "概要",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "标题",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.CharacterData": {
-            "type": "object",
-            "properties": {
-                "age": {
-                    "description": "年龄",
-                    "type": "integer"
-                },
-                "appearance": {
-                    "description": "外貌",
-                    "type": "string"
-                },
-                "background": {
-                    "description": "背景",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.BackgroundData"
-                        }
-                    ]
-                },
-                "chapters_involved": {
-                    "description": "参与章节",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "character_id": {
-                    "description": "角色ID",
-                    "type": "string"
-                },
-                "development_arc": {
-                    "description": "发展弧线",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.DevelopmentArc"
-                        }
-                    ]
-                },
-                "first_appearance": {
-                    "description": "首次出场章节",
-                    "type": "integer"
-                },
-                "gender": {
-                    "description": "性别",
-                    "type": "string"
-                },
-                "importance": {
-                    "description": "重要性",
-                    "type": "string"
-                },
-                "motivation": {
-                    "description": "动机",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "姓名",
-                    "type": "string"
-                },
-                "personality": {
-                    "description": "性格",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.PersonalityData"
-                        }
-                    ]
-                },
-                "relationships": {
-                    "description": "关系",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ai.RelationshipData"
-                    }
-                },
-                "role_in_story": {
-                    "description": "在故事中的作用",
-                    "type": "string"
-                },
-                "role_type": {
-                    "description": "角色类型",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.CharactersData": {
-            "type": "object",
-            "properties": {
-                "characters": {
-                    "description": "角色列表",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ai.CharacterData"
-                    }
-                },
-                "relationship_network": {
-                    "description": "关系网络",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.RelationshipNetwork"
-                        }
-                    ]
-                }
-            }
-        },
-        "ai.DevelopmentArc": {
-            "type": "object",
-            "properties": {
-                "ending_point": {
-                    "description": "终点",
-                    "type": "string"
-                },
-                "growth_theme": {
-                    "description": "成长主题",
-                    "type": "string"
-                },
-                "starting_point": {
-                    "description": "起点",
-                    "type": "string"
-                },
-                "turning_points": {
-                    "description": "转折点",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "ai.ExecuteCreativeWorkflowRequest": {
-            "type": "object",
-            "required": [
-                "task"
-            ],
-            "properties": {
-                "enable_human_review": {
-                    "description": "是否启用人工审核",
+                "email_verified": {
                     "type": "boolean"
                 },
-                "max_reflections": {
-                    "description": "最大反思次数（默认3）",
-                    "type": "integer"
-                },
-                "project_id": {
-                    "description": "项目ID",
+                "last_login_at": {
                     "type": "string"
                 },
-                "task": {
-                    "description": "创作任务描述",
+                "last_login_ip": {
                     "type": "string"
                 },
-                "workspace_context": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "nickname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "phone_verified": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
-        "ai.GenerateCharactersRequest": {
+        "Qingyu_backend_api_v1_user_dto.VerifyEmailRequest": {
             "type": "object",
             "required": [
-                "task"
+                "code",
+                "email"
             ],
             "properties": {
-                "correction_prompt": {
+                "code": {
                     "type": "string"
                 },
-                "outline": {
-                    "description": "大纲数据（可选，建议提供）",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.OutlineData"
-                        }
-                    ]
-                },
-                "project_id": {
-                    "description": "项目ID",
+                "email": {
                     "type": "string"
                 },
-                "task": {
-                    "description": "创作任务描述",
-                    "type": "string"
-                },
-                "workspace_context": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "timestamp": {
+                    "type": "integer"
                 }
             }
         },
-        "ai.GenerateOptions": {
+        "Qingyu_backend_api_v1_user_dto.VerifyEmailResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "verified": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "Qingyu_backend_models_ai.GenerateOptions": {
             "type": "object",
             "properties": {
                 "maxTokens": {
@@ -25303,473 +24880,7 @@ const docTemplate = `{
                 }
             }
         },
-        "ai.GeneratePlotRequest": {
-            "type": "object",
-            "required": [
-                "task"
-            ],
-            "properties": {
-                "characters": {
-                    "description": "角色数据（建议提供）",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.CharactersData"
-                        }
-                    ]
-                },
-                "correction_prompt": {
-                    "type": "string"
-                },
-                "outline": {
-                    "description": "大纲数据（建议提供）",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.OutlineData"
-                        }
-                    ]
-                },
-                "project_id": {
-                    "description": "项目ID",
-                    "type": "string"
-                },
-                "task": {
-                    "description": "创作任务描述",
-                    "type": "string"
-                },
-                "workspace_context": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "ai.MentorshipData": {
-            "type": "object",
-            "properties": {
-                "mentor": {
-                    "description": "导师",
-                    "type": "string"
-                },
-                "student": {
-                    "description": "学生",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.OutlineData": {
-            "type": "object",
-            "properties": {
-                "chapters": {
-                    "description": "章节列表",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ai.ChapterData"
-                    }
-                },
-                "core_theme": {
-                    "description": "核心主题",
-                    "type": "string"
-                },
-                "estimated_total_words": {
-                    "description": "预估总字数",
-                    "type": "integer"
-                },
-                "genre": {
-                    "description": "类型",
-                    "type": "string"
-                },
-                "story_arc": {
-                    "description": "故事结构",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ai.StoryArc"
-                        }
-                    ]
-                },
-                "target_audience": {
-                    "description": "目标受众",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "标题",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.PersonalityData": {
-            "type": "object",
-            "properties": {
-                "core_values": {
-                    "description": "核心价值观",
-                    "type": "string"
-                },
-                "fears": {
-                    "description": "恐惧",
-                    "type": "string"
-                },
-                "strengths": {
-                    "description": "优点",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "traits": {
-                    "description": "性格特质",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "weaknesses": {
-                    "description": "缺点",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "ai.RechargeRequest": {
-            "type": "object",
-            "required": [
-                "amount"
-            ],
-            "properties": {
-                "amount": {
-                    "description": "充值数量（必须 \u003e 0）",
-                    "type": "integer"
-                },
-                "reason": {
-                    "description": "充值原因",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.RelationshipData": {
-            "type": "object",
-            "properties": {
-                "character": {
-                    "description": "关联角色",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "描述",
-                    "type": "string"
-                },
-                "dynamics": {
-                    "description": "互动动态",
-                    "type": "string"
-                },
-                "relation_type": {
-                    "description": "关系类型",
-                    "type": "string"
-                }
-            }
-        },
-        "ai.RelationshipNetwork": {
-            "type": "object",
-            "properties": {
-                "alliances": {
-                    "description": "联盟（成员列表）",
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "conflicts": {
-                    "description": "冲突（对立方列表）",
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "mentorships": {
-                    "description": "师徒关系",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ai.MentorshipData"
-                    }
-                }
-            }
-        },
-        "ai.RewriteTextRequest": {
-            "type": "object",
-            "required": [
-                "originalText",
-                "rewriteMode"
-            ],
-            "properties": {
-                "chapterId": {
-                    "type": "string"
-                },
-                "instructions": {
-                    "type": "string"
-                },
-                "options": {
-                    "$ref": "#/definitions/ai.GenerateOptions"
-                },
-                "originalText": {
-                    "type": "string"
-                },
-                "projectId": {
-                    "type": "string"
-                },
-                "rewriteMode": {
-                    "type": "string",
-                    "enum": [
-                        "expand",
-                        "shorten",
-                        "polish"
-                    ]
-                }
-            }
-        },
-        "ai.StoryArc": {
-            "type": "object",
-            "properties": {
-                "climax": {
-                    "description": "转",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "falling_action": {
-                    "description": "合",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "resolution": {
-                    "description": "结局",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "rising_action": {
-                    "description": "承",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "setup": {
-                    "description": "起（章节ID列表）",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "api_v1_ai.ChatRequest": {
-            "type": "object",
-            "required": [
-                "message"
-            ],
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "options": {
-                    "$ref": "#/definitions/ai.GenerateOptions"
-                },
-                "projectId": {
-                    "type": "string"
-                },
-                "sessionId": {
-                    "type": "string"
-                },
-                "useContext": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api_v1_ai.ContinueWritingRequest": {
-            "type": "object",
-            "required": [
-                "currentText",
-                "projectId"
-            ],
-            "properties": {
-                "chapterId": {
-                    "type": "string"
-                },
-                "continueLength": {
-                    "type": "integer"
-                },
-                "currentText": {
-                    "type": "string"
-                },
-                "options": {
-                    "$ref": "#/definitions/ai.GenerateOptions"
-                },
-                "projectId": {
-                    "type": "string"
-                }
-            }
-        },
-        "api_v1_ai.GenerateOutlineRequest": {
-            "type": "object",
-            "required": [
-                "task"
-            ],
-            "properties": {
-                "correction_prompt": {
-                    "description": "修正提示",
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "项目ID（可选）",
-                    "type": "string"
-                },
-                "task": {
-                    "description": "创作任务描述",
-                    "type": "string"
-                },
-                "workspace_context": {
-                    "description": "工作区上下文",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "api_v1_finance.WithdrawRequest": {
-            "type": "object",
-            "required": [
-                "account_name",
-                "account_no",
-                "account_type",
-                "amount",
-                "method"
-            ],
-            "properties": {
-                "account_name": {
-                    "type": "string"
-                },
-                "account_no": {
-                    "type": "string"
-                },
-                "account_type": {
-                    "type": "string"
-                },
-                "amount": {
-                    "type": "number"
-                },
-                "bank_name": {
-                    "type": "string"
-                },
-                "branch_name": {
-                    "type": "string"
-                },
-                "method": {
-                    "type": "string",
-                    "enum": [
-                        "alipay",
-                        "wechat",
-                        "bank"
-                    ]
-                }
-            }
-        },
-        "api_v1_search.SearchRequest": {
-            "type": "object",
-            "required": [
-                "query",
-                "type"
-            ],
-            "properties": {
-                "filter": {
-                    "description": "过滤条件",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "page": {
-                    "description": "页码，默认 1",
-                    "type": "integer"
-                },
-                "page_size": {
-                    "description": "每页数量，默认 20",
-                    "type": "integer"
-                },
-                "query": {
-                    "description": "搜索关键词",
-                    "type": "string"
-                },
-                "sort": {
-                    "description": "排序字段",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/search.SortFieldRequest"
-                    }
-                },
-                "type": {
-                    "description": "搜索类型：books, projects, documents, users",
-                    "type": "string"
-                }
-            }
-        },
-        "auth.LoginRequest": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.OAuthAuthorizeRequest": {
-            "type": "object",
-            "required": [
-                "redirect_uri"
-            ],
-            "properties": {
-                "redirect_uri": {
-                    "description": "回调地址",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数，用于防止CSRF攻击",
-                    "type": "string"
-                }
-            }
-        },
-        "auth.OAuthCallbackRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "state"
-            ],
-            "properties": {
-                "code": {
-                    "description": "授权码",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数",
-                    "type": "string"
-                }
-            }
-        },
-        "auth.Permission": {
+        "Qingyu_backend_models_auth.Permission": {
             "type": "object",
             "properties": {
                 "$1$2": {
@@ -25797,43 +24908,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6
-                },
-                "role": {
-                    "description": "可选，默认为 \"reader\"",
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "bookstore.APIResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "bookstore.BookDetail": {
+        "Qingyu_backend_models_bookstore.BookDetail": {
             "type": "object",
             "required": [
                 "author",
@@ -25951,7 +25026,7 @@ const docTemplate = `{
                     "description": "状态",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/bookstore.BookStatus"
+                            "$ref": "#/definitions/Qingyu_backend_models_bookstore.BookStatus"
                         }
                     ]
                 },
@@ -25989,7 +25064,7 @@ const docTemplate = `{
                 }
             }
         },
-        "bookstore.BookStatus": {
+        "Qingyu_backend_models_bookstore.BookStatus": {
             "type": "string",
             "enum": [
                 "draft",
@@ -26016,7 +25091,7 @@ const docTemplate = `{
                 "BookStatusPaused"
             ]
         },
-        "bookstore.Chapter": {
+        "Qingyu_backend_models_bookstore.Chapter": {
             "type": "object",
             "properties": {
                 "$1$2": {
@@ -26050,75 +25125,242 @@ const docTemplate = `{
                 }
             }
         },
-        "bookstore.PaginatedResponse": {
+        "Qingyu_backend_models_writer.BatchOperationStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "preflight",
+                "processing",
+                "completed",
+                "failed",
+                "cancelled",
+                "partial"
+            ],
+            "x-enum-comments": {
+                "BatchOpStatusCancelled": "已取消",
+                "BatchOpStatusCompleted": "已完成",
+                "BatchOpStatusFailed": "失败",
+                "BatchOpStatusPartial": "部分成功（atomic=false时）",
+                "BatchOpStatusPending": "待处理",
+                "BatchOpStatusPreflight": "预检查中",
+                "BatchOpStatusProcessing": "执行中"
+            },
+            "x-enum-descriptions": [
+                "待处理",
+                "预检查中",
+                "执行中",
+                "已完成",
+                "失败",
+                "已取消",
+                "部分成功（atomic=false时）"
+            ],
+            "x-enum-varnames": [
+                "BatchOpStatusPending",
+                "BatchOpStatusPreflight",
+                "BatchOpStatusProcessing",
+                "BatchOpStatusCompleted",
+                "BatchOpStatusFailed",
+                "BatchOpStatusCancelled",
+                "BatchOpStatusPartial"
+            ]
+        },
+        "Qingyu_backend_models_writer.BatchOperationType": {
+            "type": "string",
+            "enum": [
+                "move",
+                "delete",
+                "export",
+                "copy",
+                "apply"
+            ],
+            "x-enum-comments": {
+                "BatchOpTypeApply": "批量应用模板",
+                "BatchOpTypeCopy": "批量复制",
+                "BatchOpTypeDelete": "批量删除",
+                "BatchOpTypeExport": "批量导出",
+                "BatchOpTypeMove": "批量移动"
+            },
+            "x-enum-descriptions": [
+                "批量移动",
+                "批量删除",
+                "批量导出",
+                "批量复制",
+                "批量应用模板"
+            ],
+            "x-enum-varnames": [
+                "BatchOpTypeMove",
+                "BatchOpTypeDelete",
+                "BatchOpTypeExport",
+                "BatchOpTypeCopy",
+                "BatchOpTypeApply"
+            ]
+        },
+        "Qingyu_backend_models_writer.CommentMetadata": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "description": "附件ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "labels": {
+                    "description": "标签",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "priority": {
+                    "description": "优先级：low/medium/high",
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_models_writer.CommentPosition": {
+            "type": "object",
+            "properties": {
+                "chapterId": {
+                    "description": "章节ID",
+                    "type": "string"
+                },
+                "length": {
+                    "description": "选中长度",
+                    "type": "integer"
+                },
+                "line": {
+                    "description": "行号（可选）",
+                    "type": "integer"
+                },
+                "offset": {
+                    "description": "字符偏移（从段落开始）",
+                    "type": "integer"
+                },
+                "paragraph": {
+                    "description": "段落索引（从0开始）",
+                    "type": "integer"
+                },
+                "selectedText": {
+                    "description": "选中的文本",
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_models_writer.ConflictPolicy": {
+            "type": "string",
+            "enum": [
+                "skip",
+                "overwrite",
+                "rename",
+                "abort"
+            ],
+            "x-enum-comments": {
+                "ConflictPolicyAbort": "中止操作",
+                "ConflictPolicyOverwrite": "覆盖",
+                "ConflictPolicyRename": "重命名（自动添加后缀）",
+                "ConflictPolicySkip": "跳过冲突项"
+            },
+            "x-enum-descriptions": [
+                "跳过冲突项",
+                "覆盖",
+                "重命名（自动添加后缀）",
+                "中止操作"
+            ],
+            "x-enum-varnames": [
+                "ConflictPolicySkip",
+                "ConflictPolicyOverwrite",
+                "ConflictPolicyRename",
+                "ConflictPolicyAbort"
+            ]
+        },
+        "Qingyu_backend_models_writer.PreflightSummary": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "description": "错误信息",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failedCount": {
+                    "description": "失败项数（执行后更新）",
+                    "type": "integer"
+                },
+                "invalidCount": {
+                    "description": "无效项数",
+                    "type": "integer"
+                },
+                "skippedCount": {
+                    "description": "跳过项数",
+                    "type": "integer"
+                },
+                "successCount": {
+                    "description": "成功项数（执行后更新）",
+                    "type": "integer"
+                },
+                "totalCount": {
+                    "description": "总数",
+                    "type": "integer"
+                },
+                "validCount": {
+                    "description": "有效项数",
+                    "type": "integer"
+                },
+                "warnings": {
+                    "description": "警告信息",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Qingyu_backend_models_writer.Shortcut": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "操作名称",
+                    "type": "string"
+                },
+                "category": {
+                    "description": "分类",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "描述",
+                    "type": "string"
+                },
+                "isCustom": {
+                    "description": "是否自定义",
+                    "type": "boolean"
+                },
+                "key": {
+                    "description": "按键组合 (e.g., \"Ctrl+S\")",
+                    "type": "string"
+                }
+            }
+        },
+        "Qingyu_backend_pkg_response.APIResponse": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {},
-                "limit": {
-                    "description": "添加Limit字段",
-                    "type": "integer"
-                },
                 "message": {
                     "type": "string"
                 },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 6
-                },
-                "old_password": {
+                "request_id": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.DeleteDeviceRequest": {
-            "type": "object",
-            "required": [
-                "password"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "dto.GetUserBooksResponse": {
-            "type": "object",
-            "properties": {
-                "books": {},
-                "page": {
-                    "type": "integer"
                 },
-                "size": {
-                    "type": "integer"
-                },
-                "total": {
+                "timestamp": {
                     "type": "integer"
                 }
             }
         },
-        "dto.LoginRequest": {
+        "Qingyu_backend_service_shared_auth.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -26133,44 +25375,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserBasicInfo"
-                }
-            }
-        },
-        "dto.PublicUserProfileResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RegisterRequest": {
+        "Qingyu_backend_service_shared_auth.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -26185,29 +25390,8 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 6
                 },
-                "username": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3
-                }
-            }
-        },
-        "dto.RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
                 "role": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "user_id": {
+                    "description": "可选，默认为 \"reader\"",
                     "type": "string"
                 },
                 "username": {
@@ -26215,1363 +25399,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "email",
-                "new_password"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "dto.ResetPasswordResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "dto.SendCodeResponse": {
-            "type": "object",
-            "properties": {
-                "expires_in": {
-                    "description": "有效期（秒）",
-                    "type": "integer"
-                },
-                "message": {
-                    "description": "额外信息",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendEmailCodeRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                }
-            }
-        },
-        "dto.SendPasswordResetRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                }
-            }
-        },
-        "dto.SendPasswordResetResponse": {
-            "type": "object",
-            "properties": {
-                "expires_in": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendPhoneCodeRequest": {
-            "type": "object",
-            "required": [
-                "phone"
-            ],
-            "properties": {
-                "phone": {
-                    "type": "string",
-                    "example": "13800138000"
-                }
-            }
-        },
-        "dto.UnbindEmailRequest": {
-            "type": "object",
-            "required": [
-                "password"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "dto.UnbindPhoneRequest": {
-            "type": "object",
-            "required": [
-                "password"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "dto.UpdatePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "old_password": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateProfileRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "nickname": {
-                    "type": "string",
-                    "maxLength": 50
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserBasicInfo": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserProfileResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "email_verified": {
-                    "type": "boolean"
-                },
-                "last_login_at": {
-                    "type": "string"
-                },
-                "last_login_ip": {
-                    "type": "string"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "phone_verified": {
-                    "type": "boolean"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.VerifyEmailRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "email"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.VerifyEmailResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "verified": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "finance.APIResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "finance.ActivateCardRequest": {
-            "type": "object",
-            "required": [
-                "code"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                }
-            }
-        },
-        "finance.ConsumeRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "reason"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "reason": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
-                }
-            }
-        },
-        "finance.RechargeRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "method"
-            ],
-            "properties": {
-                "amount": {
-                    "description": "单位：元",
-                    "type": "number"
-                },
-                "method": {
-                    "type": "string",
-                    "enum": [
-                        "alipay",
-                        "wechat",
-                        "bank"
-                    ]
-                }
-            }
-        },
-        "finance.SubscribeRequest": {
-            "type": "object",
-            "required": [
-                "payment_method",
-                "plan_id"
-            ],
-            "properties": {
-                "payment_method": {
-                    "type": "string",
-                    "enum": [
-                        "alipay",
-                        "wechat",
-                        "bank",
-                        "wallet"
-                    ]
-                },
-                "plan_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "finance.TransferRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "to_user_id"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "reason": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "to_user_id": {
-                    "type": "string",
-                    "minLength": 1
-                }
-            }
-        },
-        "finance.UpdateTaxInfoRequest": {
-            "type": "object",
-            "required": [
-                "id_number",
-                "id_type",
-                "name",
-                "tax_type"
-            ],
-            "properties": {
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "type": "string",
-                    "enum": [
-                        "id_card",
-                        "passport",
-                        "other"
-                    ]
-                },
-                "name": {
-                    "type": "string"
-                },
-                "tax_type": {
-                    "type": "string",
-                    "enum": [
-                        "individual",
-                        "company"
-                    ]
-                }
-            }
-        },
-        "messages.CreateMentionRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "content_id",
-                "content_type",
-                "user_id"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "content_id": {
-                    "type": "string"
-                },
-                "content_type": {
-                    "type": "string",
-                    "enum": [
-                        "comment",
-                        "review",
-                        "message"
-                    ]
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "messages.SendMessageRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "message_type",
-                "receiver_id"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000
-                },
-                "message_type": {
-                    "type": "string",
-                    "enum": [
-                        "text",
-                        "image",
-                        "system"
-                    ]
-                },
-                "receiver_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "reader.AnnotationUpdate": {
-            "type": "object",
-            "required": [
-                "id"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "updates": {
-                    "$ref": "#/definitions/reader.UpdateAnnotationRequest"
-                }
-            }
-        },
-        "reader.BatchCreateAnnotationsRequest": {
-            "type": "object",
-            "required": [
-                "annotations"
-            ],
-            "properties": {
-                "annotations": {
-                    "type": "array",
-                    "maxItems": 50,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/reader.CreateAnnotationRequest"
-                    }
-                }
-            }
-        },
-        "reader.BatchDeleteAnnotationsRequest": {
-            "type": "object",
-            "required": [
-                "ids"
-            ],
-            "properties": {
-                "ids": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "reader.BatchUpdateAnnotationsRequest": {
-            "type": "object",
-            "required": [
-                "updates"
-            ],
-            "properties": {
-                "updates": {
-                    "type": "array",
-                    "maxItems": 50,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/reader.AnnotationUpdate"
-                    }
-                }
-            }
-        },
-        "reader.BatchUpdateBookStatusRequest": {
-            "type": "object",
-            "required": [
-                "bookIds",
-                "status"
-            ],
-            "properties": {
-                "bookIds": {
-                    "description": "书籍ID列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "status": {
-                    "description": "reading(在读), want_read(想读), finished(读完)",
-                    "type": "string"
-                }
-            }
-        },
-        "reader.CreateAnnotationRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "type"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "note": {
-                    "description": "注释内容",
-                    "type": "string"
-                },
-                "range": {
-                    "description": "标注范围：start-end",
-                    "type": "string"
-                },
-                "text": {
-                    "description": "标注文本",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "bookmark(书签) | highlight(高亮) | note(笔记)",
-                    "type": "string"
-                }
-            }
-        },
-        "reader.CreateBookmarkRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "position"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "isPublic": {
-                    "type": "boolean"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "position": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "quote": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "reader.MergeProgressRequest": {
-            "type": "object",
-            "required": [
-                "progresses"
-            ],
-            "properties": {
-                "progresses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/reader.OfflineProgressItem"
-                    }
-                }
-            }
-        },
-        "reader.OfflineProgressItem": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "deviceId",
-                "progress",
-                "timestamp"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "deviceId": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "number",
-                    "maximum": 1,
-                    "minimum": 0
-                },
-                "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "reader.RecordReadingRequest": {
-            "type": "object",
-            "required": [
-                "book_id",
-                "chapter_id",
-                "end_time",
-                "start_time"
-            ],
-            "properties": {
-                "book_id": {
-                    "type": "string"
-                },
-                "chapter_id": {
-                    "type": "string"
-                },
-                "device_id": {
-                    "type": "string"
-                },
-                "device_type": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "number",
-                    "maximum": 100,
-                    "minimum": 0
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "reader.SaveProgressRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "progress"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "number",
-                    "maximum": 1,
-                    "minimum": 0
-                }
-            }
-        },
-        "reader.SyncProgressRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "deviceId",
-                "progress"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "deviceId": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "number",
-                    "maximum": 1,
-                    "minimum": 0
-                }
-            }
-        },
-        "reader.UpdateAnnotationRequest": {
-            "type": "object",
-            "properties": {
-                "note": {
-                    "description": "注释内容",
-                    "type": "string"
-                },
-                "range": {
-                    "description": "标注范围",
-                    "type": "string"
-                },
-                "text": {
-                    "description": "标注文本",
-                    "type": "string"
-                }
-            }
-        },
-        "reader.UpdateBookStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
-                    "description": "reading(在读), want_read(想读), finished(读完)",
-                    "type": "string"
-                }
-            }
-        },
-        "reader.UpdateBookmarkRequest": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "isPublic": {
-                    "type": "boolean"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "quote": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "reader.UpdateReadingTimeRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "duration"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
-        "reader.UpdateSettingsRequest": {
-            "type": "object",
-            "properties": {
-                "autoSave": {
-                    "type": "boolean"
-                },
-                "backgroundColor": {
-                    "type": "string"
-                },
-                "fontFamily": {
-                    "type": "string"
-                },
-                "fontSize": {
-                    "type": "integer"
-                },
-                "lineHeight": {
-                    "type": "number"
-                },
-                "pageMode": {
-                    "description": "scroll, paginate",
-                    "type": "string"
-                },
-                "showProgress": {
-                    "type": "boolean"
-                },
-                "textColor": {
-                    "type": "string"
-                }
-            }
-        },
-        "search.BatchSearchRequest": {
-            "type": "object",
-            "required": [
-                "queries"
-            ],
-            "properties": {
-                "queries": {
-                    "description": "搜索查询列表",
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/api_v1_search.SearchRequest"
-                    }
-                }
-            }
-        },
-        "search.SortFieldRequest": {
-            "type": "object",
-            "properties": {
-                "ascending": {
-                    "description": "是否升序",
-                    "type": "boolean"
-                },
-                "field": {
-                    "description": "排序字段名",
-                    "type": "string"
-                }
-            }
-        },
-        "search.UpdateGrayscaleConfigRequest": {
-            "type": "object",
-            "required": [
-                "enabled",
-                "percent"
-            ],
-            "properties": {
-                "enabled": {
-                    "description": "是否启用灰度",
-                    "type": "boolean"
-                },
-                "percent": {
-                    "description": "灰度百分比(0-100)",
-                    "type": "integer",
-                    "maximum": 100,
-                    "minimum": 0
-                },
-                "reason": {
-                    "description": "更新原因",
-                    "type": "string"
-                }
-            }
-        },
-        "shared.APIResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "request_id": {
-                    "description": "请求ID（用于追踪）",
-                    "type": "string"
-                },
-                "timestamp": {
-                    "description": "响应时间戳",
-                    "type": "integer"
-                }
-            }
-        },
-        "shared.ConsumeRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "reason"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "reason": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
-                }
-            }
-        },
-        "shared.CreateNotificationRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "title",
-                "type",
-                "user_id"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "shared.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "debug": {
-                    "description": "调试信息，仅开发环境使用",
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "request_id": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
-        "shared.OAuthAuthorizeRequest": {
-            "type": "object",
-            "required": [
-                "redirect_uri"
-            ],
-            "properties": {
-                "redirect_uri": {
-                    "description": "回调地址",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数，用于防止CSRF攻击",
-                    "type": "string"
-                }
-            }
-        },
-        "shared.OAuthCallbackRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "state"
-            ],
-            "properties": {
-                "code": {
-                    "description": "授权码",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数",
-                    "type": "string"
-                }
-            }
-        },
-        "shared.PaginatedResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "pagination": {
-                    "description": "分页信息",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/shared.Pagination"
-                        }
-                    ]
-                },
-                "request_id": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
-        "shared.Pagination": {
-            "type": "object",
-            "properties": {
-                "has_next": {
-                    "description": "是否有下一页",
-                    "type": "boolean"
-                },
-                "has_previous": {
-                    "description": "是否有上一页",
-                    "type": "boolean"
-                },
-                "page": {
-                    "description": "当前页码",
-                    "type": "integer"
-                },
-                "page_size": {
-                    "description": "每页大小",
-                    "type": "integer"
-                },
-                "total": {
-                    "description": "总记录数",
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "description": "总页数",
-                    "type": "integer"
-                }
-            }
-        },
-        "shared.RechargeRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "method"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "method": {
-                    "type": "string",
-                    "enum": [
-                        "alipay",
-                        "wechat",
-                        "bank"
-                    ]
-                }
-            }
-        },
-        "shared.TransferRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "to_user_id"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "reason": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "to_user_id": {
-                    "type": "string",
-                    "minLength": 1
-                }
-            }
-        },
-        "shared.WithdrawRequest": {
-            "type": "object",
-            "required": [
-                "account",
-                "amount"
-            ],
-            "properties": {
-                "account": {
-                    "type": "string"
-                },
-                "amount": {
-                    "type": "number"
-                }
-            }
-        },
-        "social.AddCollectionRequest": {
-            "type": "object",
-            "required": [
-                "book_id"
-            ],
-            "properties": {
-                "book_id": {
-                    "type": "string"
-                },
-                "folder_id": {
-                    "type": "string"
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "note": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "social.CreateBookListRequest": {
-            "type": "object",
-            "required": [
-                "title"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "cover": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 100
-                }
-            }
-        },
-        "social.CreateCommentRequest": {
-            "type": "object",
-            "required": [
-                "book_id",
-                "content"
-            ],
-            "properties": {
-                "book_id": {
-                    "type": "string"
-                },
-                "chapter_id": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 10
-                },
-                "rating": {
-                    "type": "integer",
-                    "maximum": 5,
-                    "minimum": 0
-                }
-            }
-        },
-        "social.CreateFolderRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 1
-                }
-            }
-        },
-        "social.CreateReviewRequest": {
-            "type": "object",
-            "required": [
-                "book_id",
-                "content",
-                "rating",
-                "title"
-            ],
-            "properties": {
-                "book_id": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "is_spoiler": {
-                    "type": "boolean"
-                },
-                "rating": {
-                    "type": "integer",
-                    "maximum": 5,
-                    "minimum": 1
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 100
-                }
-            }
-        },
-        "social.FollowAuthorRequest": {
-            "type": "object",
-            "required": [
-                "author_name"
-            ],
-            "properties": {
-                "author_avatar": {
-                    "type": "string"
-                },
-                "author_name": {
-                    "type": "string"
-                },
-                "notify_new_book": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "social.ReplyCommentRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 10
-                }
-            }
-        },
-        "social.UpdateBookListRequest": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "cover": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 100
-                }
-            }
-        },
-        "social.UpdateCollectionRequest": {
-            "type": "object",
-            "properties": {
-                "folder_id": {
-                    "type": "string"
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "note": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "social.UpdateCommentRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 10
-                }
-            }
-        },
-        "social.UpdateFolderRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 1
-                }
-            }
-        },
-        "social.UpdateReviewRequest": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000
-                },
-                "is_public": {
-                    "type": "boolean"
-                },
-                "is_spoiler": {
-                    "type": "boolean"
-                },
-                "rating": {
-                    "type": "integer",
-                    "maximum": 5,
-                    "minimum": 1
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 100
-                }
-            }
-        },
-        "stats.ActivityStats": {
+        "Qingyu_backend_service_shared_stats.ActivityStats": {
             "type": "object",
             "properties": {
                 "action_types": {
@@ -27593,7 +25421,7 @@ const docTemplate = `{
                     "description": "每日操作",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/stats.DailyAction"
+                        "$ref": "#/definitions/Qingyu_backend_service_shared_stats.DailyAction"
                     }
                 },
                 "days": {
@@ -27609,7 +25437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.ContentStats": {
+        "Qingyu_backend_service_shared_stats.ContentStats": {
             "type": "object",
             "properties": {
                 "average_rating": {
@@ -27653,7 +25481,7 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.DailyAction": {
+        "Qingyu_backend_service_shared_stats.DailyAction": {
             "type": "object",
             "properties": {
                 "actions": {
@@ -27670,7 +25498,7 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.DailyRevenue": {
+        "Qingyu_backend_service_shared_stats.DailyRevenue": {
             "type": "object",
             "properties": {
                 "date": {
@@ -27683,14 +25511,14 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.RevenueStats": {
+        "Qingyu_backend_service_shared_stats.RevenueStats": {
             "type": "object",
             "properties": {
                 "daily_revenue": {
                     "description": "每日收益",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/stats.DailyRevenue"
+                        "$ref": "#/definitions/Qingyu_backend_service_shared_stats.DailyRevenue"
                     }
                 },
                 "period_revenue": {
@@ -27722,7 +25550,7 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.UserStats": {
+        "Qingyu_backend_service_shared_stats.UserStats": {
             "type": "object",
             "properties": {
                 "active_days": {
@@ -27774,7 +25602,7 @@ const docTemplate = `{
                 }
             }
         },
-        "storage.CompleteMultipartUploadRequest": {
+        "Qingyu_backend_service_shared_storage.CompleteMultipartUploadRequest": {
             "type": "object",
             "required": [
                 "upload_id"
@@ -27785,7 +25613,7 @@ const docTemplate = `{
                 }
             }
         },
-        "storage.InitiateMultipartUploadRequest": {
+        "Qingyu_backend_service_shared_storage.InitiateMultipartUploadRequest": {
             "type": "object",
             "required": [
                 "file_name",
@@ -27830,7 +25658,2076 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.ApplyTemplateRequest": {
+        "api_v1_admin.AssignRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_admin.BatchDeleteRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_admin.BatchDeleteUsersRequest": {
+            "type": "object",
+            "required": [
+                "userIds"
+            ],
+            "properties": {
+                "userIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_admin.BatchUpdateConfigRequest": {
+            "type": "object",
+            "required": [
+                "updates"
+            ],
+            "properties": {
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/api_v1_admin.UpdateConfigRequest"
+                    }
+                }
+            }
+        },
+        "api_v1_admin.BatchUpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "status",
+                "userIds"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "userIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_admin.ReviewAppealRequest": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "approve",
+                        "reject"
+                    ]
+                },
+                "review_note": {
+                    "type": "string",
+                    "maxLength": 500
+                }
+            }
+        },
+        "api_v1_admin.ReviewAuditRequest": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "approve",
+                        "reject"
+                    ]
+                },
+                "penalty_type": {
+                    "type": "string",
+                    "enum": [
+                        "warning",
+                        "ban"
+                    ]
+                },
+                "review_note": {
+                    "type": "string",
+                    "maxLength": 500
+                }
+            }
+        },
+        "api_v1_admin.ReviewWithdrawRequest": {
+            "type": "object",
+            "required": [
+                "withdraw_id"
+            ],
+            "properties": {
+                "approved": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "withdraw_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_admin.SystemConfigRequest": {
+            "type": "object",
+            "properties": {
+                "allowRegistration": {
+                    "type": "boolean"
+                },
+                "enableAudit": {
+                    "type": "boolean"
+                },
+                "maxUploadSize": {
+                    "type": "integer"
+                },
+                "requireEmailVerification": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api_v1_admin.SystemStatsResponse": {
+            "type": "object",
+            "properties": {
+                "activeUsers": {
+                    "type": "integer"
+                },
+                "pendingAudits": {
+                    "type": "integer"
+                },
+                "totalBooks": {
+                    "type": "integer"
+                },
+                "totalRevenue": {
+                    "type": "number"
+                },
+                "totalUsers": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_admin.UpdateConfigRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "value"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "api_v1_admin.UpdateQuotaRequest": {
+            "type": "object",
+            "required": [
+                "quotaType",
+                "totalQuota"
+            ],
+            "properties": {
+                "quotaType": {
+                    "type": "string",
+                    "enum": [
+                        "daily",
+                        "monthly",
+                        "total"
+                    ]
+                },
+                "totalQuota": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "api_v1_admin.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_admin.UpdateUserStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_admin.ValidateConfigRequest": {
+            "type": "object",
+            "required": [
+                "yaml_content"
+            ],
+            "properties": {
+                "yaml_content": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.BackgroundData": {
+            "type": "object",
+            "properties": {
+                "education": {
+                    "description": "教育",
+                    "type": "string"
+                },
+                "family": {
+                    "description": "家庭",
+                    "type": "string"
+                },
+                "key_experiences": {
+                    "description": "关键经历",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "summary": {
+                    "description": "背景概要",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.ChapterData": {
+            "type": "object",
+            "properties": {
+                "chapter_goal": {
+                    "description": "章节目标",
+                    "type": "string"
+                },
+                "chapter_id": {
+                    "description": "章节ID",
+                    "type": "integer"
+                },
+                "characters_involved": {
+                    "description": "参与角色",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cliffhanger": {
+                    "description": "悬念",
+                    "type": "string"
+                },
+                "conflict_type": {
+                    "description": "冲突类型",
+                    "type": "string"
+                },
+                "emotional_tone": {
+                    "description": "情感基调",
+                    "type": "string"
+                },
+                "estimated_word_count": {
+                    "description": "预估字数",
+                    "type": "integer"
+                },
+                "key_events": {
+                    "description": "关键事件",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "summary": {
+                    "description": "概要",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "标题",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.CharacterData": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "description": "年龄",
+                    "type": "integer"
+                },
+                "appearance": {
+                    "description": "外貌",
+                    "type": "string"
+                },
+                "background": {
+                    "description": "背景",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.BackgroundData"
+                        }
+                    ]
+                },
+                "chapters_involved": {
+                    "description": "参与章节",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "character_id": {
+                    "description": "角色ID",
+                    "type": "string"
+                },
+                "development_arc": {
+                    "description": "发展弧线",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.DevelopmentArc"
+                        }
+                    ]
+                },
+                "first_appearance": {
+                    "description": "首次出场章节",
+                    "type": "integer"
+                },
+                "gender": {
+                    "description": "性别",
+                    "type": "string"
+                },
+                "importance": {
+                    "description": "重要性",
+                    "type": "string"
+                },
+                "motivation": {
+                    "description": "动机",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "姓名",
+                    "type": "string"
+                },
+                "personality": {
+                    "description": "性格",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.PersonalityData"
+                        }
+                    ]
+                },
+                "relationships": {
+                    "description": "关系",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_ai.RelationshipData"
+                    }
+                },
+                "role_in_story": {
+                    "description": "在故事中的作用",
+                    "type": "string"
+                },
+                "role_type": {
+                    "description": "角色类型",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.CharactersData": {
+            "type": "object",
+            "properties": {
+                "characters": {
+                    "description": "角色列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_ai.CharacterData"
+                    }
+                },
+                "relationship_network": {
+                    "description": "关系网络",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.RelationshipNetwork"
+                        }
+                    ]
+                }
+            }
+        },
+        "api_v1_ai.ChatRequest": {
+            "type": "object",
+            "required": [
+                "message"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "options": {
+                    "$ref": "#/definitions/Qingyu_backend_models_ai.GenerateOptions"
+                },
+                "projectId": {
+                    "type": "string"
+                },
+                "sessionId": {
+                    "type": "string"
+                },
+                "useContext": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api_v1_ai.ContinueWritingRequest": {
+            "type": "object",
+            "required": [
+                "currentText",
+                "projectId"
+            ],
+            "properties": {
+                "chapterId": {
+                    "type": "string"
+                },
+                "continueLength": {
+                    "type": "integer"
+                },
+                "currentText": {
+                    "type": "string"
+                },
+                "options": {
+                    "$ref": "#/definitions/Qingyu_backend_models_ai.GenerateOptions"
+                },
+                "projectId": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.DevelopmentArc": {
+            "type": "object",
+            "properties": {
+                "ending_point": {
+                    "description": "终点",
+                    "type": "string"
+                },
+                "growth_theme": {
+                    "description": "成长主题",
+                    "type": "string"
+                },
+                "starting_point": {
+                    "description": "起点",
+                    "type": "string"
+                },
+                "turning_points": {
+                    "description": "转折点",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.ExecuteCreativeWorkflowRequest": {
+            "type": "object",
+            "required": [
+                "task"
+            ],
+            "properties": {
+                "enable_human_review": {
+                    "description": "是否启用人工审核",
+                    "type": "boolean"
+                },
+                "max_reflections": {
+                    "description": "最大反思次数（默认3）",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "项目ID",
+                    "type": "string"
+                },
+                "task": {
+                    "description": "创作任务描述",
+                    "type": "string"
+                },
+                "workspace_context": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.GenerateCharactersRequest": {
+            "type": "object",
+            "required": [
+                "task"
+            ],
+            "properties": {
+                "correction_prompt": {
+                    "type": "string"
+                },
+                "outline": {
+                    "description": "大纲数据（可选，建议提供）",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.OutlineData"
+                        }
+                    ]
+                },
+                "project_id": {
+                    "description": "项目ID",
+                    "type": "string"
+                },
+                "task": {
+                    "description": "创作任务描述",
+                    "type": "string"
+                },
+                "workspace_context": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.GenerateOutlineRequest": {
+            "type": "object",
+            "required": [
+                "task"
+            ],
+            "properties": {
+                "correction_prompt": {
+                    "description": "修正提示",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目ID（可选）",
+                    "type": "string"
+                },
+                "task": {
+                    "description": "创作任务描述",
+                    "type": "string"
+                },
+                "workspace_context": {
+                    "description": "工作区上下文",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.GeneratePlotRequest": {
+            "type": "object",
+            "required": [
+                "task"
+            ],
+            "properties": {
+                "characters": {
+                    "description": "角色数据（建议提供）",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.CharactersData"
+                        }
+                    ]
+                },
+                "correction_prompt": {
+                    "type": "string"
+                },
+                "outline": {
+                    "description": "大纲数据（建议提供）",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.OutlineData"
+                        }
+                    ]
+                },
+                "project_id": {
+                    "description": "项目ID",
+                    "type": "string"
+                },
+                "task": {
+                    "description": "创作任务描述",
+                    "type": "string"
+                },
+                "workspace_context": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.MentorshipData": {
+            "type": "object",
+            "properties": {
+                "mentor": {
+                    "description": "导师",
+                    "type": "string"
+                },
+                "student": {
+                    "description": "学生",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.OutlineData": {
+            "type": "object",
+            "properties": {
+                "chapters": {
+                    "description": "章节列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_ai.ChapterData"
+                    }
+                },
+                "core_theme": {
+                    "description": "核心主题",
+                    "type": "string"
+                },
+                "estimated_total_words": {
+                    "description": "预估总字数",
+                    "type": "integer"
+                },
+                "genre": {
+                    "description": "类型",
+                    "type": "string"
+                },
+                "story_arc": {
+                    "description": "故事结构",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_ai.StoryArc"
+                        }
+                    ]
+                },
+                "target_audience": {
+                    "description": "目标受众",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "标题",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.PersonalityData": {
+            "type": "object",
+            "properties": {
+                "core_values": {
+                    "description": "核心价值观",
+                    "type": "string"
+                },
+                "fears": {
+                    "description": "恐惧",
+                    "type": "string"
+                },
+                "strengths": {
+                    "description": "优点",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "traits": {
+                    "description": "性格特质",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "weaknesses": {
+                    "description": "缺点",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.RechargeRequest": {
+            "type": "object",
+            "required": [
+                "amount"
+            ],
+            "properties": {
+                "amount": {
+                    "description": "充值数量（必须 \u003e 0）",
+                    "type": "integer"
+                },
+                "reason": {
+                    "description": "充值原因",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.RelationshipData": {
+            "type": "object",
+            "properties": {
+                "character": {
+                    "description": "关联角色",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "描述",
+                    "type": "string"
+                },
+                "dynamics": {
+                    "description": "互动动态",
+                    "type": "string"
+                },
+                "relation_type": {
+                    "description": "关系类型",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_ai.RelationshipNetwork": {
+            "type": "object",
+            "properties": {
+                "alliances": {
+                    "description": "联盟（成员列表）",
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "conflicts": {
+                    "description": "冲突（对立方列表）",
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "mentorships": {
+                    "description": "师徒关系",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_ai.MentorshipData"
+                    }
+                }
+            }
+        },
+        "api_v1_ai.RewriteTextRequest": {
+            "type": "object",
+            "required": [
+                "originalText",
+                "rewriteMode"
+            ],
+            "properties": {
+                "chapterId": {
+                    "type": "string"
+                },
+                "instructions": {
+                    "type": "string"
+                },
+                "options": {
+                    "$ref": "#/definitions/Qingyu_backend_models_ai.GenerateOptions"
+                },
+                "originalText": {
+                    "type": "string"
+                },
+                "projectId": {
+                    "type": "string"
+                },
+                "rewriteMode": {
+                    "type": "string",
+                    "enum": [
+                        "expand",
+                        "shorten",
+                        "polish"
+                    ]
+                }
+            }
+        },
+        "api_v1_ai.StoryArc": {
+            "type": "object",
+            "properties": {
+                "climax": {
+                    "description": "转",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "falling_action": {
+                    "description": "合",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "resolution": {
+                    "description": "结局",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "rising_action": {
+                    "description": "承",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "setup": {
+                    "description": "起（章节ID列表）",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api_v1_bookstore.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_bookstore.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "limit": {
+                    "description": "添加Limit字段",
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_finance.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_finance.ActivateCardRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_finance.ConsumeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "reason"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_finance.RechargeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "method"
+            ],
+            "properties": {
+                "amount": {
+                    "description": "单位：元",
+                    "type": "number"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "alipay",
+                        "wechat",
+                        "bank"
+                    ]
+                }
+            }
+        },
+        "api_v1_finance.SubscribeRequest": {
+            "type": "object",
+            "required": [
+                "payment_method",
+                "plan_id"
+            ],
+            "properties": {
+                "payment_method": {
+                    "type": "string",
+                    "enum": [
+                        "alipay",
+                        "wechat",
+                        "bank",
+                        "wallet"
+                    ]
+                },
+                "plan_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_finance.TransferRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "to_user_id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "to_user_id": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_finance.UpdateTaxInfoRequest": {
+            "type": "object",
+            "required": [
+                "id_number",
+                "id_type",
+                "name",
+                "tax_type"
+            ],
+            "properties": {
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "id_card",
+                        "passport",
+                        "other"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tax_type": {
+                    "type": "string",
+                    "enum": [
+                        "individual",
+                        "company"
+                    ]
+                }
+            }
+        },
+        "api_v1_finance.WithdrawRequest": {
+            "type": "object",
+            "required": [
+                "account_name",
+                "account_no",
+                "account_type",
+                "amount",
+                "method"
+            ],
+            "properties": {
+                "account_name": {
+                    "type": "string"
+                },
+                "account_no": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "alipay",
+                        "wechat",
+                        "bank"
+                    ]
+                }
+            }
+        },
+        "api_v1_messages.CreateMentionRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "content_id",
+                "content_type",
+                "user_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "content_id": {
+                    "type": "string"
+                },
+                "content_type": {
+                    "type": "string",
+                    "enum": [
+                        "comment",
+                        "review",
+                        "message"
+                    ]
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_messages.SendMessageRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "message_type",
+                "receiver_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "message_type": {
+                    "type": "string",
+                    "enum": [
+                        "text",
+                        "image",
+                        "system"
+                    ]
+                },
+                "receiver_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.AnnotationUpdate": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "updates": {
+                    "$ref": "#/definitions/api_v1_reader.UpdateAnnotationRequest"
+                }
+            }
+        },
+        "api_v1_reader.BatchCreateAnnotationsRequest": {
+            "type": "object",
+            "required": [
+                "annotations"
+            ],
+            "properties": {
+                "annotations": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/api_v1_reader.CreateAnnotationRequest"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.BatchDeleteAnnotationsRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.BatchUpdateAnnotationsRequest": {
+            "type": "object",
+            "required": [
+                "updates"
+            ],
+            "properties": {
+                "updates": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/api_v1_reader.AnnotationUpdate"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.BatchUpdateBookStatusRequest": {
+            "type": "object",
+            "required": [
+                "bookIds",
+                "status"
+            ],
+            "properties": {
+                "bookIds": {
+                    "description": "书籍ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "description": "reading(在读), want_read(想读), finished(读完)",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.CreateAnnotationRequest": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "chapterId",
+                "type"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "note": {
+                    "description": "注释内容",
+                    "type": "string"
+                },
+                "range": {
+                    "description": "标注范围：start-end",
+                    "type": "string"
+                },
+                "text": {
+                    "description": "标注文本",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "bookmark(书签) | highlight(高亮) | note(笔记)",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.CreateBookmarkRequest": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "chapterId",
+                "position"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.MergeProgressRequest": {
+            "type": "object",
+            "required": [
+                "progresses"
+            ],
+            "properties": {
+                "progresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_reader.OfflineProgressItem"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.OfflineProgressItem": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "chapterId",
+                "deviceId",
+                "progress",
+                "timestamp"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "deviceId": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number",
+                    "maximum": 1,
+                    "minimum": 0
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.RecordReadingRequest": {
+            "type": "object",
+            "required": [
+                "book_id",
+                "chapter_id",
+                "end_time",
+                "start_time"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "chapter_id": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
+                "device_type": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.SaveProgressRequest": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "chapterId",
+                "progress"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number",
+                    "maximum": 1,
+                    "minimum": 0
+                }
+            }
+        },
+        "api_v1_reader.SyncProgressRequest": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "chapterId",
+                "deviceId",
+                "progress"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "deviceId": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number",
+                    "maximum": 1,
+                    "minimum": 0
+                }
+            }
+        },
+        "api_v1_reader.UpdateAnnotationRequest": {
+            "type": "object",
+            "properties": {
+                "note": {
+                    "description": "注释内容",
+                    "type": "string"
+                },
+                "range": {
+                    "description": "标注范围",
+                    "type": "string"
+                },
+                "text": {
+                    "description": "标注文本",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.UpdateBookStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "description": "reading(在读), want_read(想读), finished(读完)",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_reader.UpdateBookmarkRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_reader.UpdateReadingTimeRequest": {
+            "type": "object",
+            "required": [
+                "bookId",
+                "duration"
+            ],
+            "properties": {
+                "bookId": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "api_v1_reader.UpdateSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "autoSave": {
+                    "type": "boolean"
+                },
+                "backgroundColor": {
+                    "type": "string"
+                },
+                "fontFamily": {
+                    "type": "string"
+                },
+                "fontSize": {
+                    "type": "integer"
+                },
+                "lineHeight": {
+                    "type": "number"
+                },
+                "pageMode": {
+                    "description": "scroll, paginate",
+                    "type": "string"
+                },
+                "showProgress": {
+                    "type": "boolean"
+                },
+                "textColor": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_search.BatchSearchRequest": {
+            "type": "object",
+            "required": [
+                "queries"
+            ],
+            "properties": {
+                "queries": {
+                    "description": "搜索查询列表",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/api_v1_search.SearchRequest"
+                    }
+                }
+            }
+        },
+        "api_v1_search.SearchRequest": {
+            "type": "object",
+            "required": [
+                "query",
+                "type"
+            ],
+            "properties": {
+                "filter": {
+                    "description": "过滤条件",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "page": {
+                    "description": "页码，默认 1",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "description": "每页数量，默认 20",
+                    "type": "integer"
+                },
+                "query": {
+                    "description": "搜索关键词",
+                    "type": "string"
+                },
+                "sort": {
+                    "description": "排序字段",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_v1_search.SortFieldRequest"
+                    }
+                },
+                "type": {
+                    "description": "搜索类型：books, projects, documents, users",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_search.SortFieldRequest": {
+            "type": "object",
+            "properties": {
+                "ascending": {
+                    "description": "是否升序",
+                    "type": "boolean"
+                },
+                "field": {
+                    "description": "排序字段名",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_search.UpdateGrayscaleConfigRequest": {
+            "type": "object",
+            "required": [
+                "enabled",
+                "percent"
+            ],
+            "properties": {
+                "enabled": {
+                    "description": "是否启用灰度",
+                    "type": "boolean"
+                },
+                "percent": {
+                    "description": "灰度百分比(0-100)",
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "reason": {
+                    "description": "更新原因",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_shared.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "description": "请求ID（用于追踪）",
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "响应时间戳",
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_shared.ConsumeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "reason"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_shared.CreateNotificationRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "title",
+                "type",
+                "user_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_shared.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "debug": {
+                    "description": "调试信息，仅开发环境使用",
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_shared.OAuthAuthorizeRequest": {
+            "type": "object",
+            "required": [
+                "redirect_uri"
+            ],
+            "properties": {
+                "redirect_uri": {
+                    "description": "回调地址",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "状态参数，用于防止CSRF攻击",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_shared.OAuthCallbackRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "state"
+            ],
+            "properties": {
+                "code": {
+                    "description": "授权码",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "状态参数",
+                    "type": "string"
+                }
+            }
+        },
+        "api_v1_shared.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "description": "分页信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_v1_shared.Pagination"
+                        }
+                    ]
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_shared.Pagination": {
+            "type": "object",
+            "properties": {
+                "has_next": {
+                    "description": "是否有下一页",
+                    "type": "boolean"
+                },
+                "has_previous": {
+                    "description": "是否有上一页",
+                    "type": "boolean"
+                },
+                "page": {
+                    "description": "当前页码",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "description": "每页大小",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总记录数",
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "description": "总页数",
+                    "type": "integer"
+                }
+            }
+        },
+        "api_v1_shared.RechargeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "method"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "alipay",
+                        "wechat",
+                        "bank"
+                    ]
+                }
+            }
+        },
+        "api_v1_shared.TransferRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "to_user_id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "to_user_id": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_shared.WithdrawRequest": {
+            "type": "object",
+            "required": [
+                "account",
+                "amount"
+            ],
+            "properties": {
+                "account": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "api_v1_social.AddCollectionRequest": {
+            "type": "object",
+            "required": [
+                "book_id"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "folder_id": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_social.CreateBookListRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "api_v1_social.CreateCommentRequest": {
+            "type": "object",
+            "required": [
+                "book_id",
+                "content"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "chapter_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 10
+                },
+                "rating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 0
+                }
+            }
+        },
+        "api_v1_social.CreateFolderRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_social.CreateReviewRequest": {
+            "type": "object",
+            "required": [
+                "book_id",
+                "content",
+                "rating",
+                "title"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "is_spoiler": {
+                    "type": "boolean"
+                },
+                "rating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "api_v1_social.FollowAuthorRequest": {
+            "type": "object",
+            "required": [
+                "author_name"
+            ],
+            "properties": {
+                "author_avatar": {
+                    "type": "string"
+                },
+                "author_name": {
+                    "type": "string"
+                },
+                "notify_new_book": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api_v1_social.ReplyCommentRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 10
+                }
+            }
+        },
+        "api_v1_social.UpdateBookListRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "api_v1_social.UpdateCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "folder_id": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api_v1_social.UpdateCommentRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 10
+                }
+            }
+        },
+        "api_v1_social.UpdateFolderRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                }
+            }
+        },
+        "api_v1_social.UpdateReviewRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "is_spoiler": {
+                    "type": "boolean"
+                },
+                "rating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "api_v1_writer.ApplyTemplateRequest": {
             "type": "object",
             "required": [
                 "documentId"
@@ -27847,7 +27744,7 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.BatchDeleteRequest": {
+        "api_v1_writer.BatchDeleteRequest": {
             "type": "object",
             "required": [
                 "commentIds"
@@ -27861,107 +27758,34 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.BatchOperationStatus": {
-            "type": "string",
-            "enum": [
-                "pending",
-                "preflight",
-                "processing",
-                "completed",
-                "failed",
-                "cancelled",
-                "partial"
+        "api_v1_writer.CreateCommentRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "position"
             ],
-            "x-enum-comments": {
-                "BatchOpStatusCancelled": "已取消",
-                "BatchOpStatusCompleted": "已完成",
-                "BatchOpStatusFailed": "失败",
-                "BatchOpStatusPartial": "部分成功（atomic=false时）",
-                "BatchOpStatusPending": "待处理",
-                "BatchOpStatusPreflight": "预检查中",
-                "BatchOpStatusProcessing": "执行中"
-            },
-            "x-enum-descriptions": [
-                "待处理",
-                "预检查中",
-                "执行中",
-                "已完成",
-                "失败",
-                "已取消",
-                "部分成功（atomic=false时）"
-            ],
-            "x-enum-varnames": [
-                "BatchOpStatusPending",
-                "BatchOpStatusPreflight",
-                "BatchOpStatusProcessing",
-                "BatchOpStatusCompleted",
-                "BatchOpStatusFailed",
-                "BatchOpStatusCancelled",
-                "BatchOpStatusPartial"
-            ]
+            "properties": {
+                "chapterId": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.CommentMetadata"
+                },
+                "parentId": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.CommentPosition"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
         },
-        "writer.BatchOperationType": {
-            "type": "string",
-            "enum": [
-                "move",
-                "delete",
-                "export",
-                "copy",
-                "apply"
-            ],
-            "x-enum-comments": {
-                "BatchOpTypeApply": "批量应用模板",
-                "BatchOpTypeCopy": "批量复制",
-                "BatchOpTypeDelete": "批量删除",
-                "BatchOpTypeExport": "批量导出",
-                "BatchOpTypeMove": "批量移动"
-            },
-            "x-enum-descriptions": [
-                "批量移动",
-                "批量删除",
-                "批量导出",
-                "批量复制",
-                "批量应用模板"
-            ],
-            "x-enum-varnames": [
-                "BatchOpTypeMove",
-                "BatchOpTypeDelete",
-                "BatchOpTypeExport",
-                "BatchOpTypeCopy",
-                "BatchOpTypeApply"
-            ]
-        },
-        "writer.ConflictPolicy": {
-            "type": "string",
-            "enum": [
-                "skip",
-                "overwrite",
-                "rename",
-                "abort"
-            ],
-            "x-enum-comments": {
-                "ConflictPolicyAbort": "中止操作",
-                "ConflictPolicyOverwrite": "覆盖",
-                "ConflictPolicyRename": "重命名（自动添加后缀）",
-                "ConflictPolicySkip": "跳过冲突项"
-            },
-            "x-enum-descriptions": [
-                "跳过冲突项",
-                "覆盖",
-                "重命名（自动添加后缀）",
-                "中止操作"
-            ],
-            "x-enum-varnames": [
-                "ConflictPolicySkip",
-                "ConflictPolicyOverwrite",
-                "ConflictPolicyRename",
-                "ConflictPolicyAbort"
-            ]
-        },
-        "writer.CreateCommentRequest": {
-            "type": "object"
-        },
-        "writer.CreateTemplateRequest": {
+        "api_v1_writer.CreateTemplateRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -27998,12 +27822,12 @@ const docTemplate = `{
                 "variables": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/writer.TemplateVariableDTO"
+                        "$ref": "#/definitions/api_v1_writer.TemplateVariableDTO"
                     }
                 }
             }
         },
-        "writer.ExtendLockRequest": {
+        "api_v1_writer.ExtendLockRequest": {
             "type": "object",
             "required": [
                 "ttl"
@@ -28016,7 +27840,7 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.LockDocumentRequest": {
+        "api_v1_writer.LockDocumentRequest": {
             "type": "object",
             "properties": {
                 "autoExtend": {
@@ -28029,7 +27853,7 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.OptionDTO": {
+        "api_v1_writer.OptionDTO": {
             "type": "object",
             "properties": {
                 "label": {
@@ -28040,50 +27864,7 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.PreflightSummary": {
-            "type": "object",
-            "properties": {
-                "errors": {
-                    "description": "错误信息",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "failedCount": {
-                    "description": "失败项数（执行后更新）",
-                    "type": "integer"
-                },
-                "invalidCount": {
-                    "description": "无效项数",
-                    "type": "integer"
-                },
-                "skippedCount": {
-                    "description": "跳过项数",
-                    "type": "integer"
-                },
-                "successCount": {
-                    "description": "成功项数（执行后更新）",
-                    "type": "integer"
-                },
-                "totalCount": {
-                    "description": "总数",
-                    "type": "integer"
-                },
-                "validCount": {
-                    "description": "有效项数",
-                    "type": "integer"
-                },
-                "warnings": {
-                    "description": "警告信息",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "writer.ReplyCommentRequest": {
+        "api_v1_writer.ReplyCommentRequest": {
             "type": "object",
             "required": [
                 "content"
@@ -28094,7 +27875,7 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.SubmitBatchOperationRequest": {
+        "api_v1_writer.SubmitBatchOperationRequest": {
             "type": "object",
             "required": [
                 "projectId",
@@ -28109,7 +27890,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "conflictPolicy": {
-                    "$ref": "#/definitions/writer.ConflictPolicy"
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.ConflictPolicy"
                 },
                 "expectedVersions": {
                     "type": "object",
@@ -28135,25 +27916,25 @@ const docTemplate = `{
                     }
                 },
                 "type": {
-                    "$ref": "#/definitions/writer.BatchOperationType"
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.BatchOperationType"
                 }
             }
         },
-        "writer.SubmitBatchOperationResponse": {
+        "api_v1_writer.SubmitBatchOperationResponse": {
             "type": "object",
             "properties": {
                 "batchId": {
                     "type": "string"
                 },
                 "preflightSummary": {
-                    "$ref": "#/definitions/writer.PreflightSummary"
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.PreflightSummary"
                 },
                 "status": {
-                    "$ref": "#/definitions/writer.BatchOperationStatus"
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.BatchOperationStatus"
                 }
             }
         },
-        "writer.TemplateVariableDTO": {
+        "api_v1_writer.TemplateVariableDTO": {
             "type": "object",
             "required": [
                 "label",
@@ -28175,7 +27956,7 @@ const docTemplate = `{
                 "options": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/writer.OptionDTO"
+                        "$ref": "#/definitions/api_v1_writer.OptionDTO"
                     }
                 },
                 "order": {
@@ -28199,13 +27980,35 @@ const docTemplate = `{
                 }
             }
         },
-        "writer.UpdateCommentRequest": {
-            "type": "object"
+        "api_v1_writer.UpdateCommentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/Qingyu_backend_models_writer.CommentMetadata"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
         },
-        "writer.UpdateShortcutsRequest": {
-            "type": "object"
+        "api_v1_writer.UpdateShortcutsRequest": {
+            "type": "object",
+            "required": [
+                "shortcuts"
+            ],
+            "properties": {
+                "shortcuts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/Qingyu_backend_models_writer.Shortcut"
+                    }
+                }
+            }
         },
-        "writer.UpdateTemplateRequest": {
+        "api_v1_writer.UpdateTemplateRequest": {
             "type": "object",
             "properties": {
                 "category": {
@@ -28226,12 +28029,12 @@ const docTemplate = `{
                 "variables": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/writer.TemplateVariableDTO"
+                        "$ref": "#/definitions/api_v1_writer.TemplateVariableDTO"
                     }
                 }
             }
         },
-        "writer.WordCountRequest": {
+        "api_v1_writer.WordCountRequest": {
             "type": "object",
             "required": [
                 "content"
@@ -28243,6 +28046,39 @@ const docTemplate = `{
                 "filterMarkdown": {
                     "description": "是否过滤Markdown语法",
                     "type": "boolean"
+                }
+            }
+        },
+        "auth.OAuthAuthorizeRequest": {
+            "type": "object",
+            "required": [
+                "redirect_uri"
+            ],
+            "properties": {
+                "redirect_uri": {
+                    "description": "回调地址",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "状态参数，用于防止CSRF攻击",
+                    "type": "string"
+                }
+            }
+        },
+        "auth.OAuthCallbackRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "state"
+            ],
+            "properties": {
+                "code": {
+                    "description": "授权码",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "状态参数",
+                    "type": "string"
                 }
             }
         }
