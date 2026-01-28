@@ -8,6 +8,7 @@ import (
 	"Qingyu_backend/service/interfaces"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // BooksAPI 书架API
@@ -55,7 +56,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取阅读历史（作为书架）
 	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID.(string), page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书架失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -86,14 +87,14 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 通过保存初始进度来"添加到书架"
 	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID.(string), bookID, "", 0)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "添加到书架失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -117,14 +118,14 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 调用Service删除阅读进度
 	err := api.readerService.DeleteReadingProgress(c.Request.Context(), userID.(string), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "移除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -156,7 +157,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 
 	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取最近阅读失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -181,7 +182,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取未读完书籍失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -206,7 +207,7 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取已读完书籍失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -238,21 +239,21 @@ func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 解析请求参数
 	var req UpdateBookStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "请求参数格式错误")
+		response.BadRequest(c,  "参数错误", "请求参数格式错误")
 		return
 	}
 
 	// 调用服务层更新状态
 	err := api.readerService.UpdateBookStatus(c.Request.Context(), userID.(string), bookID, req.Status)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新书籍状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -283,25 +284,25 @@ func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 解析请求参数
 	var req BatchUpdateBookStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "请求参数格式错误")
+		response.BadRequest(c,  "参数错误", "请求参数格式错误")
 		return
 	}
 
 	// 验证书籍ID列表
 	if len(req.BookIDs) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID列表不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID列表不能为空")
 		return
 	}
 
 	if len(req.BookIDs) > 50 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批量更新数量不能超过50个")
+		response.BadRequest(c,  "参数错误", "批量更新数量不能超过50个")
 		return
 	}
 
 	// 调用服务层批量更新状态
 	err := api.readerService.BatchUpdateBookStatus(c.Request.Context(), userID.(string), req.BookIDs, req.Status)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量更新书籍状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

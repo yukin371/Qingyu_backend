@@ -54,11 +54,6 @@ type UserService interface {
 	RemoveRole(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
 	GetUserRoles(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
 	GetUserPermissions(ctx context.Context, req *GetUserPermissionsRequest) (*GetUserPermissionsResponse, error)
-
-	// 用户账户管理
-	UnbindEmail(ctx context.Context, userID string) error
-	UnbindPhone(ctx context.Context, userID string) error
-	DeleteDevice(ctx context.Context, userID string, deviceID string) error
 }
 
 // 请求和响应结构体定义

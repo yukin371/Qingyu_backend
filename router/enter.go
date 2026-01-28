@@ -714,11 +714,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 
 	// 尝试初始化 Elasticsearch，获取灰度配置
 	var grayscaleConfig *searchService.GrayScaleConfig
-<<<<<<< HEAD
-	esConfig, _ := initElasticsearch(logger)
-=======
 	esConfig, esEngine := initElasticsearch(logger)
->>>>>>> origin/ai-migration-only
 	if esConfig != nil {
 		grayscaleConfig = &esConfig.ES.GrayScale
 	}

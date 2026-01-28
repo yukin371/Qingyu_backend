@@ -59,10 +59,6 @@ type NotificationService interface {
 	// 定期清理
 	CleanupExpiredNotifications(ctx context.Context) (int64, error)
 	CleanupOldNotifications(ctx context.Context, days int) (int64, error)
-
-	// 重新发送和清除操作
-	ResendNotification(ctx context.Context, id string, userID string, method string) error
-	ClearReadNotifications(ctx context.Context, userID string) (int64, error)
 }
 
 // notificationServiceImpl 通知服务实现
@@ -405,18 +401,70 @@ func (s *notificationServiceImpl) DeleteAllNotifications(ctx context.Context, us
 
 // ClearReadNotifications 清除已读通知
 func (s *notificationServiceImpl) ClearReadNotifications(ctx context.Context, userID string) (int64, error) {
-	// TODO: 实现清除已读通知的逻辑
-	// 需要在repository层添加DeleteReadForUser方法
-	// 暂时返回成功，count为0
-	return 0, nil
+	count, err := s.notificationRepo.DeleteReadForUser(ctx, userID)
+	if err != nil {
+		return 0, errors.BookstoreServiceFactory.InternalError("CLEAR_READ_FAILED", "清除已读通知失败", err)
+	}
+	return count, nil
 }
 
 // ResendNotification 重新发送通知
 func (s *notificationServiceImpl) ResendNotification(ctx context.Context, id string, userID string, method string) error {
-	// TODO: 实现重发通知的逻辑
-	// 需要根据method类型（email/push/sms）调用相应的发送服务
-	return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_RESEND_NOT_IMPLEMENTED", "重发通知功能暂未实现", nil)
+	// 检查通知是否存在
+	notif, err := s.notificationRepo.GetByID(ctx, id)
+	if err != nil {
+		return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_GET_FAILED", "获取通知失败", err)
+	}
+
+	if notif == nil {
+		return errors.BookstoreServiceFactory.NotFoundError("Notification", id)
+	}
+
+	// 验证权限
+	if notif.UserID != userID {
+		return errors.BookstoreServiceFactory.ForbiddenError("NO_PERMISSION", "无权操作此通知")
+	}
+
+	// 根据类型重新发送
+	switch method {
+	case "email":
+		return s.resendEmail(ctx, notif)
+	case "push":
+		return s.resendPush(ctx, notif)
+	default:
+		return errors.BookstoreServiceFactory.ValidationError("UNSUPPORTED_METHOD", "不支持的发送方式")
+	}
 }
+
+// resendEmail 通过邮件重新发送通知
+func (s *notificationServiceImpl) resendEmail(ctx context.Context, notif *notification.Notification) error {
+	// 检查是否有邮件服务
+	if s.emailService == nil {
+		return errors.BookstoreServiceFactory.InternalError("EMAIL_SERVICE_NOT_AVAILABLE", "邮件服务不可用", nil)
+	}
+
+	// 调用邮件服务发送通知
+	err := s.emailService.SendEmail(ctx, notif.UserID, notif.Title, notif.Content)
+	if err != nil {
+		return errors.BookstoreServiceFactory.InternalError("EMAIL_SEND_FAILED", "发送邮件失败", err)
+	}
+
+	return nil
+}
+
+// resendPush 通过推送重新发送通知
+func (s *notificationServiceImpl) resendPush(ctx context.Context, notif *notification.Notification) error {
+	// 检查是否有WebSocket Hub
+	if s.wsHub == nil {
+		return errors.BookstoreServiceFactory.InternalError("WS_HUB_NOT_AVAILABLE", "WebSocket服务不可用", nil)
+	}
+
+	// 通过WebSocket Hub推送通知
+	s.wsHub.BroadcastNotification(notif.UserID, notif)
+
+	return nil
+}
+
 
 // SendNotification 发送通知
 func (s *notificationServiceImpl) SendNotification(ctx context.Context, userID string, notificationType notification.NotificationType, title, content string, data map[string]interface{}) error {
@@ -764,74 +812,6 @@ func (s *notificationServiceImpl) CleanupOldNotifications(ctx context.Context, d
 	}
 	return count, nil
 }
-
-// ResendNotification 重新发送通知
-func (s *notificationServiceImpl) ResendNotification(ctx context.Context, id string, userID string, method string) error {
-	// 检查通知是否存在
-	notif, err := s.notificationRepo.GetByID(ctx, id)
-	if err != nil {
-		return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_GET_FAILED", "获取通知失败", err)
-	}
-
-	if notif == nil {
-		return errors.BookstoreServiceFactory.NotFoundError("Notification", id)
-	}
-
-	// 验证权限
-	if notif.UserID != userID {
-		return errors.BookstoreServiceFactory.ForbiddenError("NO_PERMISSION", "无权操作此通知")
-	}
-
-	// 根据类型重新发送
-	switch method {
-	case "email":
-		return s.resendEmail(ctx, notif)
-	case "push":
-		return s.resendPush(ctx, notif)
-	default:
-		return errors.BookstoreServiceFactory.ValidationError("UNSUPPORTED_METHOD", "不支持的发送方式")
-	}
-}
-
-// resendEmail 通过邮件重新发送通知
-func (s *notificationServiceImpl) resendEmail(ctx context.Context, notif *notification.Notification) error {
-	// 检查是否有邮件服务
-	if s.emailService == nil {
-		return errors.BookstoreServiceFactory.InternalError("EMAIL_SERVICE_NOT_AVAILABLE", "邮件服务不可用", nil)
-	}
-
-	// 调用邮件服务发送通知
-	err := s.emailService.SendEmail(ctx, notif.UserID, notif.Title, notif.Content)
-	if err != nil {
-		return errors.BookstoreServiceFactory.InternalError("EMAIL_SEND_FAILED", "发送邮件失败", err)
-	}
-
-	return nil
-}
-
-// resendPush 通过推送重新发送通知
-func (s *notificationServiceImpl) resendPush(ctx context.Context, notif *notification.Notification) error {
-	// 检查是否有WebSocket Hub
-	if s.wsHub == nil {
-		return errors.BookstoreServiceFactory.InternalError("WS_HUB_NOT_AVAILABLE", "WebSocket服务不可用", nil)
-	}
-
-	// 通过WebSocket Hub推送通知
-	s.wsHub.BroadcastNotification(notif.UserID, notif)
-
-	return nil
-}
-
-
-// ClearReadNotifications 清除已读通知
-func (s *notificationServiceImpl) ClearReadNotifications(ctx context.Context, userID string) (int64, error) {
-	count, err := s.notificationRepo.DeleteReadForUser(ctx, userID)
-	if err != nil {
-		return 0, errors.BookstoreServiceFactory.InternalError("CLEAR_READ_FAILED", "清除已读通知失败", err)
-	}
-	return count, nil
-}
-
 // MarkMultipleAsReadWithResult 批量标记通知为已读（返回结果）
 func (s *notificationServiceImpl) MarkMultipleAsReadWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error) {
 	if len(ids) == 0 {

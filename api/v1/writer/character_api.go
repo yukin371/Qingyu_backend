@@ -8,6 +8,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // CharacterApi 角色API处理器
@@ -37,13 +38,13 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -57,7 +58,7 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 
 	character, err := api.characterService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建角色失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -80,7 +81,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
@@ -105,13 +106,13 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	characters, err := api.characterService.List(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取角色列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -136,19 +137,19 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	character, err := api.characterService.Update(c.Request.Context(), characterID, projectID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新角色失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -171,13 +172,13 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
 	err := api.characterService.Delete(c.Request.Context(), characterID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除角色失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -198,19 +199,19 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateRelationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	relation, err := api.characterService.CreateRelation(c.Request.Context(), projectID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建关系失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -230,7 +231,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
@@ -242,7 +243,7 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 
 	relations, err := api.characterService.ListRelations(c.Request.Context(), projectID, charIDPtr)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取关系列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -265,13 +266,13 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if relationID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "relationId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "relationId和projectId不能为空")
 		return
 	}
 
 	err := api.characterService.DeleteRelation(c.Request.Context(), relationID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除关系失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -290,13 +291,13 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	graph, err := api.characterService.GetCharacterGraph(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取关系图失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

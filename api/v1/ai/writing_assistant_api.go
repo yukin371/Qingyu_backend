@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"Qingyu_backend/pkg/response"
 )
 
 // WritingAssistantApi 写作辅助API
@@ -50,7 +51,7 @@ func NewWritingAssistantApi(
 func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	var req dto.SummarizeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -62,7 +63,7 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	// 调用服务
 	result, err := api.summarizeService.SummarizeContent(c.Request.Context(), &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "总结失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -87,7 +88,7 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	var req dto.ChapterSummaryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -99,7 +100,7 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	// 调用服务
 	result, err := api.summarizeService.SummarizeChapter(c.Request.Context(), &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "章节总结失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -128,7 +129,7 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	var req dto.ProofreadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -140,7 +141,7 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	// 调用服务
 	result, err := api.proofreadService.ProofreadContent(c.Request.Context(), &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "校对失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -166,14 +167,14 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 	suggestionID := c.Param("id")
 	if suggestionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "建议ID不能为空")
+		response.BadRequest(c,  "参数错误", "建议ID不能为空")
 		return
 	}
 
 	// 调用服务
 	result, err := api.proofreadService.GetProofreadSuggestion(c.Request.Context(), suggestionID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取建议失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -198,7 +199,7 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 	var req dto.SensitiveWordsCheckRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -210,7 +211,7 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 	// 调用服务
 	result, err := api.sensitiveWordsService.CheckSensitiveWords(c.Request.Context(), &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "敏感词检测失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -238,14 +239,14 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 func (api *WritingAssistantApi) GetSensitiveWordsDetail(c *gin.Context) {
 	checkID := c.Param("id")
 	if checkID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "检测ID不能为空")
+		response.BadRequest(c,  "参数错误", "检测ID不能为空")
 		return
 	}
 
 	// 调用服务
 	result, err := api.sensitiveWordsService.GetSensitiveWordsDetail(c.Request.Context(), checkID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取检测结果失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

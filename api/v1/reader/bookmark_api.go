@@ -11,6 +11,7 @@ import (
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
+	"Qingyu_backend/pkg/response"
 )
 
 // BookmarkAPI 书签API
@@ -42,7 +43,7 @@ func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	var req CreateBookmarkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -56,7 +57,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	// 解析ID
 	bookmark, err := req.ToBookmark(userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -66,7 +67,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 			shared.Error(c, http.StatusConflict, "书签已存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -131,7 +132,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	}
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -159,7 +160,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -185,7 +186,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 
 	var req UpdateBookmarkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -202,7 +203,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -229,7 +230,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -258,7 +259,7 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	format := c.DefaultQuery("format", "json")
 	data, contentType, err := api.bookmarkService.ExportBookmarks(c.Request.Context(), userID.(string), format)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "导出失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -288,7 +289,7 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 
 	stats, err := api.bookmarkService.GetBookmarkStats(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -318,7 +319,7 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "关键词不能为空")
+		response.BadRequest(c,  "参数错误", "关键词不能为空")
 		return
 	}
 
@@ -327,7 +328,7 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 
 	result, err := api.bookmarkService.SearchBookmarks(c.Request.Context(), userID.(string), keyword, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "搜索失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

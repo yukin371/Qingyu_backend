@@ -8,6 +8,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/document"
+	"Qingyu_backend/pkg/response"
 )
 
 // EditorApi 编辑器API
@@ -42,7 +43,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 
 	var req document.AutoSaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -55,7 +56,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 			shared.Error(c, http.StatusConflict, "版本冲突", "文档已被其他用户修改，请刷新后重试")
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "自动保存失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -76,7 +77,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 
 	status, err := api.documentService.GetSaveStatus(c.Request.Context(), documentID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询保存状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -97,7 +98,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 
 	content, err := api.documentService.GetDocumentContent(c.Request.Context(), documentID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取文档内容失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -119,14 +120,14 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 
 	var req document.UpdateContentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	req.DocumentID = documentID
 
 	if err := api.documentService.UpdateDocumentContent(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新内容失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -146,7 +147,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -177,7 +178,7 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 
 	config, err := api.shortcutService.GetUserShortcuts(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取快捷键配置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -202,12 +203,12 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 
 	var req UpdateShortcutsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	if err := api.shortcutService.UpdateUserShortcuts(c.Request.Context(), userID.(string), req.Shortcuts); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新快捷键配置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -230,7 +231,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 	}
 
 	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID.(string)); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "重置快捷键配置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -254,7 +255,7 @@ func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 
 	help, err := api.shortcutService.GetShortcutHelp(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取快捷键帮助失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

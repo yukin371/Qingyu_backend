@@ -8,6 +8,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/project"
+	"Qingyu_backend/pkg/response"
 )
 
 // VersionApi 版本API
@@ -40,7 +41,7 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 
 	versions, err := api.versionService.GetVersionHistory(c.Request.Context(), documentID, page, pageSize)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询版本历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -63,7 +64,7 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 
 	version, err := api.versionService.GetVersion(c.Request.Context(), documentID, versionID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询版本失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -87,13 +88,13 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 	toVersion := c.Query("toVersion")
 
 	if fromVersion == "" || toVersion == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "fromVersion和toVersion不能为空")
+		response.BadRequest(c,  "参数错误", "fromVersion和toVersion不能为空")
 		return
 	}
 
 	diff, err := api.versionService.CompareVersions(c.Request.Context(), documentID, fromVersion, toVersion)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "比较版本失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -115,7 +116,7 @@ func (api *VersionApi) RestoreVersion(c *gin.Context) {
 	versionID := c.Param("versionId")
 
 	if err := api.versionService.RestoreVersion(c.Request.Context(), documentID, versionID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "恢复版本失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 	"Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // CreativeAPI Phase3创作API处理器
@@ -56,7 +57,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "大纲生成失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -108,7 +109,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "角色生成失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -165,7 +166,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "情节生成失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -216,7 +217,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "工作流执行失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -250,7 +251,7 @@ func (a *CreativeAPI) HealthCheck(c *gin.Context) {
 
 	resp, err := a.phase3Client.HealthCheck(ctx)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "健康检查失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

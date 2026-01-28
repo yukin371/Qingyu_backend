@@ -239,7 +239,6 @@ func (c *IndexConfig) BuildIndexMapping(globalSettings SettingsConfig) map[strin
 		},
 		"mappings": c.Mapping,
 	}
->>>>>>> origin/ai-migration-only
 }
 
 // CacheConfig 缓存配置

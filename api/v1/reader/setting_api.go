@@ -8,6 +8,8 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // SettingAPI 设置API
@@ -43,7 +45,7 @@ type UpdateSettingsRequest struct {
 func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -57,13 +59,13 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
 	settings, err := api.readerService.GetReadingSettings(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -80,7 +82,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -94,7 +96,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -108,7 +110,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 
 	err := api.readerService.SaveReadingSettings(c.Request.Context(), &settings)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "保存阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -125,7 +127,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -139,7 +141,7 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -177,7 +179,7 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 
 	err := api.readerService.UpdateReadingSettings(c.Request.Context(), userIDStr, updates)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -1155,114 +1155,7 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 
 // GetBooksByTags 按标签筛选书籍
 //
-//	@Summary     按标签筛选书籍
-//	@Description 根据一个或多个标签筛选书籍，ANY语义（命中任一即可）
-//	@Tags        书籍
-//	@Accept      json
-//	@Produce     json
-//	@Param       tags query string true "标签列表（逗号分隔）"
-//	@Param       page query int false "页码" default(1)
-//	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
-//	@Router      /api/v1/bookstore/books/tags [get]
-func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
-	tagsStr := c.Query("tags")
-	if tagsStr == "" {
-		shared.BadRequest(c, "参数错误", "标签不能为空")
-		return
-	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	// 解析标签（逗号分隔）
-	tags := strings.Split(tagsStr, ",")
-	for i, tag := range tags {
-		tags[i] = strings.TrimSpace(tag)
-	}
-
-	filter := &bookstore2.BookFilter{
-		Tags:      tags, // ANY语义：Service层实现
-		SortBy:    "view_count", // 按浏览量降序
-		SortOrder: "desc",
-		Limit:     size,
-		Offset:    (page - 1) * size,
-	}
-
-	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
-	if err != nil {
-		shared.InternalError(c, "获取书籍列表失败", err)
-		return
-	}
-
-	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	shared.Paginated(c, bookDTOs, total, page, size, "获取书籍列表成功")
-}
-
-// GetBooksByStatus 按状态筛选书籍
-//
-//	@Summary     按状态筛选书籍
-//	@Description 根据书籍连载状态筛选书籍，支持分页
-//	@Tags        书籍
-//	@Accept      json
-//	@Produce     json
-//	@Param       status query string true "书籍状态" Enums(ongoing,completed,paused)
-//	@Param       page query int false "页码" default(1)
-//	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
-//	@Router      /api/v1/bookstore/books/status [get]
-func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
-	status := c.Query("status")
-	if status == "" {
-		shared.BadRequest(c, "参数错误", "状态不能为空")
-		return
-	}
-
-	// 验证状态值
-	if status != "ongoing" && status != "completed" && status != "paused" {
-		shared.BadRequest(c, "参数错误", "无效的状态值")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	bookStatus := bookstore2.BookStatus(status)
-	filter := &bookstore2.BookFilter{
-		Status:    &bookStatus,
-		SortBy:    "updated_at", // 状态筛选按更新时间排序（注意与tags不同）
-		SortOrder: "desc",
-		Limit:     size,
-		Offset:    (page - 1) * size,
-	}
-
-	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
-	if err != nil {
-		shared.InternalError(c, "获取书籍列表失败", err)
-		return
-	}
-
-	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	shared.Paginated(c, bookDTOs, total, page, size, "获取书籍列表成功")
-}
 
 // buildSearchFilter 构建搜索过滤条件
 func (api *BookstoreAPI) buildSearchFilter(categoryID, author, status string, tags []string) map[string]interface{} {
@@ -1318,11 +1211,11 @@ func (api *BookstoreAPI) buildSearchSort(sortBy, sortOrder string) []searchModel
 func (api *BookstoreAPI) GetYears(c *gin.Context) {
 	years, err := api.service.GetYears(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取年份列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取年份列表成功", years)
+	response.Success(c, years)
 }
 
 // GetTags 获取所有标签列表
@@ -1337,11 +1230,11 @@ func (api *BookstoreAPI) GetTags(c *gin.Context) {
 
 	tags, err := api.service.GetTags(c.Request.Context(), categoryIDPtr)
 	if err != nil {
-		shared.InternalError(c, "获取标签列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取标签列表成功", tags)
+	response.Success(c, tags)
 }
 
 func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2.Book {

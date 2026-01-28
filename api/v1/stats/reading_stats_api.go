@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	readingStatsService "Qingyu_backend/service/reader/stats"
+	"Qingyu_backend/pkg/response"
 )
 
 // ReadingStatsAPI 阅读统计API处理器
@@ -46,7 +47,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 	// 获取时间范围统计
 	stats, err := api.statsService.GetTimeRangeStats(c.Request.Context(), "", startDate, endDate)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -78,7 +79,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 	// 获取每日统计
 	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), "", days)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取每日统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -9,6 +9,8 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/document"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // DocumentApi 文档API
@@ -37,7 +39,7 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 func (api *DocumentApi) CreateDocument(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.documentService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "文档服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 文档服务未正确初始化"))
 		return
 	}
 
@@ -45,7 +47,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	// 验证项目ID
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -58,7 +60,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -67,7 +69,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	var req document.CreateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -75,7 +77,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	resp, err := api.documentService.CreateDocument(ctx, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -96,7 +98,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 
 	doc, err := api.documentService.GetDocument(c.Request.Context(), documentID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -117,7 +119,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 
 	resp, err := api.documentService.GetDocumentTree(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -139,12 +141,12 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 
 	var req document.UpdateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	if err := api.documentService.UpdateDocument(c.Request.Context(), documentID, &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -164,7 +166,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	if err := api.documentService.DeleteDocument(c.Request.Context(), documentID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -196,7 +198,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 
 	resp, err := api.documentService.ListDocuments(c.Request.Context(), req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -218,14 +220,14 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 
 	var req document.MoveDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	req.DocumentID = documentID
 
 	if err := api.documentService.MoveDocument(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "移动失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -247,14 +249,14 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 
 	var req document.ReorderDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	req.ProjectID = projectID
 
 	if err := api.documentService.ReorderDocuments(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "排序失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -287,7 +289,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -296,7 +298,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	var req document.DuplicateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 

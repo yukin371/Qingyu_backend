@@ -9,6 +9,8 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/search"
 	searchservice "Qingyu_backend/service/search"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // SearchAPI 搜索API处理器（写作端）
@@ -79,13 +81,13 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 4. 执行搜索
 	resp, err := api.searchService.Search(c.Request.Context(), req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "搜索失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
 	// 5. 检查响应
 	if !resp.Success {
-		shared.Error(c, http.StatusInternalServerError, "搜索失败", resp.Error.Message)
+		response.InternalError(c, errors.New(resp.Error.Message))
 		return
 	}
 

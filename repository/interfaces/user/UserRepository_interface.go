@@ -109,9 +109,6 @@ type UserRepository interface {
 	DeleteDevice(ctx context.Context, userID string, deviceID string) error
 	GetDevices(ctx context.Context, userID string) ([]interface{}, error)
 
-	// 密码管理
-	UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error
-
 	// 批量操作
 	BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error
 	BatchDelete(ctx context.Context, ids []string) error

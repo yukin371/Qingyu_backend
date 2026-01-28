@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 const (
@@ -61,7 +62,7 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 
 	progress, err := api.readerService.GetReadingProgress(c.Request.Context(), userID.(string), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取阅读进度失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -93,7 +94,7 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 
 	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID.(string), req.BookID, req.ChapterID, req.Progress)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "保存阅读进度失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -123,7 +124,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 
 	err := api.readerService.UpdateReadingTime(c.Request.Context(), userID.(string), req.BookID, req.Duration)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新阅读时长失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -149,7 +150,7 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 
 	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取最近阅读记录失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -177,7 +178,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 
 	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID.(string), page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取阅读历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -237,7 +238,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	}
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取阅读统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -276,7 +277,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取未读完书籍失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -299,7 +300,7 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取已读完书籍失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

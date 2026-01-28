@@ -1468,34 +1468,3 @@ func (r *MongoUserRepository) GetDevices(ctx context.Context, userID string) ([]
 	// 暂时返回空列表
 	return []interface{}{}, nil
 }
-
-// UpdatePasswordByEmail 根据邮箱更新密码
-func (r *MongoUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
-	now := time.Now()
-	filter := bson.M{"email": email, "deleted_at": bson.M{"$exists": false}}
-	update := bson.M{
-		"$set": bson.M{
-			"password":   hashedPassword,
-			"updated_at": now,
-		},
-	}
-
-	result, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeInternal,
-			"更新密码失败",
-			err,
-		)
-	}
-
-	if result.MatchedCount == 0 {
-		return UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeNotFound,
-			"用户不存在",
-			nil,
-		)
-	}
-
-	return nil
-}

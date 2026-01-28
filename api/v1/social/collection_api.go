@@ -1,12 +1,11 @@
 package social
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -47,13 +46,13 @@ type AddCollectionRequest struct {
 func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	var req AddCollectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -71,16 +70,16 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 		errMsg := err.Error()
 		// 根据错误类型返回具体的错误信息
 		if strings.Contains(errMsg, "已经收藏") || strings.Contains(errMsg, "already") {
-			shared.Error(c, http.StatusBadRequest, "该书籍已经收藏", errMsg)
+			response.BadRequest(c, "该书籍已经收藏", errMsg)
 		} else if strings.Contains(errMsg, "不存在") || strings.Contains(errMsg, "not found") {
-			shared.Error(c, http.StatusNotFound, "书籍不存在", errMsg)
+			response.NotFound(c, "书籍不存在")
 		} else {
-			shared.Error(c, http.StatusBadRequest, "添加收藏失败", errMsg)
+			response.BadRequest(c, "添加收藏失败", errMsg)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "添加收藏成功", collection)
+	response.Created(c, collection)
 }
 
 // GetCollections 获取收藏列表
@@ -97,7 +96,7 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 func (api *CollectionAPI) GetCollections(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -111,7 +110,7 @@ func (api *CollectionAPI) GetCollections(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -124,11 +123,11 @@ func (api *CollectionAPI) GetCollections(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取收藏列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取收藏列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  collections,
 		"total": total,
 		"page":  params.Page,
@@ -157,19 +156,19 @@ type UpdateCollectionRequest struct {
 func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 	collectionID := c.Param("id")
 	if collectionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateCollectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -189,7 +188,7 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "没有要更新的字段")
+		response.BadRequest(c, "参数错误", "没有要更新的字段")
 		return
 	}
 
@@ -201,11 +200,11 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "更新收藏失败", err.Error())
+		response.BadRequest(c, "更新收藏失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新收藏成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteCollection 删除收藏
@@ -220,13 +219,13 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
 	collectionID := c.Param("id")
 	if collectionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -237,11 +236,11 @@ func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "删除收藏失败", err.Error())
+		response.BadRequest(c, "删除收藏失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除收藏成功", nil)
+	response.Success(c, nil)
 }
 
 // CheckCollected 检查是否已收藏
@@ -256,13 +255,13 @@ func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
 func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -273,11 +272,11 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "检查收藏状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "检查收藏状态成功", gin.H{
+	response.Success(c, gin.H{
 		"is_collected": isCollected,
 	})
 }
@@ -296,13 +295,13 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 	tag := c.Param("tag")
 	if tag == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "标签不能为空")
+		response.BadRequest(c, "参数错误", "标签不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -314,7 +313,7 @@ func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -327,11 +326,11 @@ func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取收藏列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取收藏列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  collections,
 		"total": total,
 		"page":  params.Page,
@@ -362,13 +361,13 @@ type CreateFolderRequest struct {
 func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 	var req CreateFolderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -381,11 +380,11 @@ func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "创建收藏夹失败", err.Error())
+		response.BadRequest(c, "创建收藏夹失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建收藏夹成功", folder)
+	response.Created(c, folder)
 }
 
 // GetFolders 获取收藏夹列表
@@ -399,7 +398,7 @@ func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 func (api *CollectionAPI) GetFolders(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -409,11 +408,11 @@ func (api *CollectionAPI) GetFolders(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取收藏夹列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取收藏夹列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list": folders,
 	})
 }
@@ -438,19 +437,19 @@ type UpdateFolderRequest struct {
 func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 	folderID := c.Param("id")
 	if folderID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏夹ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏夹ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateFolderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -467,7 +466,7 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "没有要更新的字段")
+		response.BadRequest(c, "参数错误", "没有要更新的字段")
 		return
 	}
 
@@ -479,11 +478,11 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "更新收藏夹失败", err.Error())
+		response.BadRequest(c, "更新收藏夹失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新收藏夹成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteFolder 删除收藏夹
@@ -498,13 +497,13 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
 	folderID := c.Param("id")
 	if folderID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏夹ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏夹ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -515,11 +514,11 @@ func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "删除收藏夹失败", err.Error())
+		response.BadRequest(c, "删除收藏夹失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除收藏夹成功", nil)
+	response.Success(c, nil)
 }
 
 // =========================
@@ -538,13 +537,13 @@ func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
 func (api *CollectionAPI) ShareCollection(c *gin.Context) {
 	collectionID := c.Param("id")
 	if collectionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -555,11 +554,11 @@ func (api *CollectionAPI) ShareCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "分享收藏失败", err.Error())
+		response.BadRequest(c, "分享收藏失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "分享收藏成功", nil)
+	response.Success(c, nil)
 }
 
 // UnshareCollection 取消分享收藏
@@ -574,13 +573,13 @@ func (api *CollectionAPI) ShareCollection(c *gin.Context) {
 func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
 	collectionID := c.Param("id")
 	if collectionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "收藏ID不能为空")
+		response.BadRequest(c, "参数错误", "收藏ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -591,11 +590,11 @@ func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "取消分享失败", err.Error())
+		response.BadRequest(c, "取消分享失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消分享成功", nil)
+	response.Success(c, nil)
 }
 
 // GetPublicCollections 获取公开收藏列表
@@ -616,7 +615,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -627,11 +626,11 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取公开收藏列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取公开收藏列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  collections,
 		"total": total,
 		"page":  params.Page,
@@ -654,7 +653,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 func (api *CollectionAPI) GetCollectionStats(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -664,9 +663,9 @@ func (api *CollectionAPI) GetCollectionStats(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取收藏统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取收藏统计成功", stats)
+	response.Success(c, stats)
 }

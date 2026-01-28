@@ -8,6 +8,7 @@ import (
 	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // ThemeAPI 主题API
@@ -64,7 +65,7 @@ func (api *ThemeAPI) GetThemes(c *gin.Context) {
 func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题名称不能为空")
+		response.BadRequest(c,  "参数错误", "主题名称不能为空")
 		return
 	}
 
@@ -139,7 +140,7 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 
 	themeID := c.Param("id")
 	if themeID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题ID不能为空")
+		response.BadRequest(c,  "参数错误", "主题ID不能为空")
 		return
 	}
 
@@ -178,7 +179,7 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 
 	themeID := c.Param("id")
 	if themeID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题ID不能为空")
+		response.BadRequest(c,  "参数错误", "主题ID不能为空")
 		return
 	}
 
@@ -210,7 +211,7 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 
 	themeName := c.Param("name")
 	if themeName == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题名称不能为空")
+		response.BadRequest(c,  "参数错误", "主题名称不能为空")
 		return
 	}
 

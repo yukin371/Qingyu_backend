@@ -11,6 +11,8 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/notification"
 	notifService "Qingyu_backend/service/notification"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // NotificationAPI 通知API
@@ -51,7 +53,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -60,7 +62,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	if typeStr := c.Query("type"); typeStr != "" {
 		t := notification.NotificationType(typeStr)
 		if !t.IsValid() {
-			shared.Error(c, http.StatusBadRequest, "INVALID_TYPE", "无效的通知类型")
+			response.BadRequest(c,  "INVALID_TYPE", "无效的通知类型")
 			return
 		}
 		notifType = &t
@@ -111,7 +113,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	// 调用服务
 	result, err := api.notificationService.GetNotifications(c.Request.Context(), req)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -137,21 +139,21 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
 	// 调用服务
 	notif, err := api.notificationService.GetNotification(c.Request.Context(), id)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -183,20 +185,20 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.MarkAsRead(c.Request.Context(), id, userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -222,7 +224,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -230,7 +232,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	var req dto.BatchMarkReadRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -243,7 +245,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	// 调用服务
 	succeeded, failed, err := api.notificationService.MarkMultipleAsReadWithResult(c.Request.Context(), req.NotificationIDs, userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -280,13 +282,13 @@ func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.MarkAllAsRead(c.Request.Context(), userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -312,20 +314,20 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.DeleteNotification(c.Request.Context(), id, userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -351,7 +353,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -359,7 +361,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -372,7 +374,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	// 调用服务
 	succeeded, failed, err := api.notificationService.BatchDeleteNotificationsWithResult(c.Request.Context(), req.NotificationIDs, userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -409,13 +411,13 @@ func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.DeleteAllNotifications(c.Request.Context(), userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -440,14 +442,14 @@ func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	count, err := api.notificationService.GetUnreadCount(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -472,14 +474,14 @@ func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	stats, err := api.notificationService.GetNotificationStats(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -504,14 +506,14 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	preference, err := api.notificationService.GetNotificationPreference(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -537,14 +539,14 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 解析请求
 	var req notifService.UpdateNotificationPreferenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -556,7 +558,7 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 
 	// 调用服务
 	if err := api.notificationService.UpdateNotificationPreference(c.Request.Context(), userIDStr, &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -581,13 +583,13 @@ func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.ResetNotificationPreference(c.Request.Context(), userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -612,14 +614,14 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	settings, err := api.notificationService.GetEmailNotificationSettings(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -645,20 +647,20 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 解析请求
 	var settings notification.EmailNotificationSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.UpdateEmailNotificationSettings(c.Request.Context(), userIDStr, &settings); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -683,14 +685,14 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	settings, err := api.notificationService.GetSMSNotificationSettings(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -716,20 +718,20 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 解析请求
 	var settings notification.SMSNotificationSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.UpdateSMSNotificationSettings(c.Request.Context(), userIDStr, &settings); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -755,14 +757,14 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 解析请求
 	var req notifService.RegisterPushDeviceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -778,7 +780,7 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 	// 调用服务
 	device, err := api.notificationService.RegisterPushDevice(c.Request.Context(), &req)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -804,20 +806,20 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 获取设备ID
 	deviceID := c.Param("deviceId")
 	if deviceID == "" {
-		shared.Error(c, http.StatusBadRequest, "INVALID_DEVICE_ID", "设备ID不能为空")
+		response.BadRequest(c,  "INVALID_DEVICE_ID", "设备ID不能为空")
 		return
 	}
 
 	// 调用服务
 	if err := api.notificationService.UnregisterPushDevice(c.Request.Context(), deviceID, userIDStr); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -842,14 +844,14 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	devices, err := api.notificationService.GetUserPushDevices(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -875,14 +877,14 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 调用服务
 	affected, err := api.notificationService.ClearReadNotifications(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -917,14 +919,14 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
@@ -933,7 +935,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 		Method string `json:"method" validate:"required,oneof=email push sms"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -946,7 +948,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 	// 调用服务
 	err := api.notificationService.ResendNotification(c.Request.Context(), id, userIDStr, req.Method)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -975,7 +977,7 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 
 	_, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		response.InternalError(c, errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	aiModels "Qingyu_backend/models/ai"
 	ai "Qingyu_backend/service/ai"
+	"Qingyu_backend/pkg/response"
 )
 
 // QuotaAdminAPI AI配额管理API处理器（管理员）
@@ -41,13 +42,13 @@ func NewQuotaAdminAPI(quotaService *ai.QuotaService) *QuotaAdminAPI {
 func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c,  "参数错误", "用户ID不能为空")
 		return
 	}
 
 	var req UpdateQuotaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -61,13 +62,13 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 	case "total":
 		quotaType = aiModels.QuotaTypeTotal
 	default:
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的配额类型")
+		response.BadRequest(c,  "参数错误", "无效的配额类型")
 		return
 	}
 
 	err := api.quotaService.UpdateUserQuota(c.Request.Context(), targetUserID, quotaType, req.TotalQuota)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新配额失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -92,13 +93,13 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c,  "参数错误", "用户ID不能为空")
 		return
 	}
 
 	err := api.quotaService.SuspendUserQuota(c.Request.Context(), targetUserID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "暂停配额失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -123,13 +124,13 @@ func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c,  "参数错误", "用户ID不能为空")
 		return
 	}
 
 	err := api.quotaService.ActivateUserQuota(c.Request.Context(), targetUserID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "激活配额失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -154,14 +155,14 @@ func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c,  "参数错误", "用户ID不能为空")
 		return
 	}
 
 	// 获取所有类型的配额
 	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), targetUserID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取配额失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

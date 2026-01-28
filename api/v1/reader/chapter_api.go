@@ -9,6 +9,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
+	"Qingyu_backend/pkg/response"
 )
 
 // ChapterAPI 阅读器章节API
@@ -56,7 +57,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 
 	if bookID == "" || chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID和章节ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
 		return
 	}
 
@@ -81,7 +82,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 			shared.Success(c, http.StatusForbidden, "无权访问", content)
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取章节内容失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -108,7 +109,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 
 	chapterNum, err := strconv.Atoi(chapterNumStr)
 	if err != nil || chapterNum <= 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的章节号")
+		response.BadRequest(c,  "参数错误", "无效的章节号")
 		return
 	}
 
@@ -128,7 +129,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 			shared.Success(c, http.StatusForbidden, "无权访问", content)
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取章节内容失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -154,7 +155,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 
 	if bookID == "" || chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID和章节ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
 		return
 	}
 
@@ -166,7 +167,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 
 	nextChapter, err := api.chapterService.GetNextChapter(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取下一章失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -197,7 +198,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 
 	if bookID == "" || chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID和章节ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
 		return
 	}
 
@@ -209,7 +210,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 
 	prevChapter, err := api.chapterService.GetPreviousChapter(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取上一章失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -239,7 +240,7 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 	bookID := c.Param("bookId")
 
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -261,7 +262,7 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 
 	chapterList, err := api.chapterService.GetChapterList(c.Request.Context(), userID, bookID, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取章节目录失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -285,7 +286,7 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		response.BadRequest(c,  "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -301,7 +302,7 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取章节信息失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
