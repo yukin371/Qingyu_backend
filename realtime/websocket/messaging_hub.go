@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -283,7 +284,8 @@ func randomString(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[len(letters)%n]
+		// 使用rand.Intn生成0到len(letters)-1的随机索引
+		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
 }
