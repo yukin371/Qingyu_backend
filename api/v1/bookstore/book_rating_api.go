@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -39,39 +40,23 @@ func NewBookRatingAPI(bookRatingService bookstoreService.BookRatingService) *Boo
 func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "评分ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "评分ID不能为空", nil)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的评分ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的评分ID格式", nil)
 		return
 	}
 
 	rating, err := api.BookRatingService.GetRatingByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, APIResponse{
-			Code:    404,
-			Message: "评分不存在",
-			Data:    nil,
-		})
+		response.NotFound(c, "评分不存在")
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    rating,
-	})
+	response.SuccessWithMessage(c, "获取成功", rating)
 }
 
 // GetRatingsByBookID 获取图书的所有评分
@@ -90,21 +75,13 @@ func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "图书ID不能为空", nil)
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的图书ID格式", nil)
 		return
 	}
 
@@ -120,22 +97,11 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 
 	ratings, total, err := api.BookRatingService.GetRatingsByBookID(c.Request.Context(), bookID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取评分列表失败",
-			Data:    nil,
-		})
+		response.InternalError(c, errors.New("获取评分列表失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    ratings,
-		Total:   total,
-		Page:    page,
-		Limit:   limit,
-	})
+	response.Paginated(c, ratings, total, page, limit, "获取成功")
 }
 
 // GetRatingsByUserID 获取用户的所有评分
@@ -154,21 +120,13 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 	userIDStr := c.Param("user_id")
 	if userIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "用户ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "用户ID不能为空", nil)
 		return
 	}
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的用户ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的用户ID格式", nil)
 		return
 	}
 
@@ -184,22 +142,11 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 
 	ratings, total, err := api.BookRatingService.GetRatingsByUserID(c.Request.Context(), userID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取评分列表失败",
-			Data:    nil,
-		})
+		response.InternalError(c, errors.New("获取评分列表失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    ratings,
-		Total:   total,
-		Page:    page,
-		Limit:   limit,
-	})
+	response.Paginated(c, ratings, total, page, limit, "获取成功")
 }
 
 // GetAverageRating 获取图书平均评分
@@ -216,39 +163,23 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "图书ID不能为空", nil)
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的图书ID格式", nil)
 		return
 	}
 
 	avgRating, err := api.BookRatingService.GetAverageRating(c.Request.Context(), bookID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取平均评分失败",
-			Data:    nil,
-		})
+		response.InternalError(c, errors.New("获取平均评分失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    avgRating,
-	})
+	response.SuccessWithMessage(c, "获取成功", avgRating)
 }
 
 // GetRatingDistribution 获取图书评分分布
@@ -265,39 +196,23 @@ func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "图书ID不能为空", nil)
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的图书ID格式", nil)
 		return
 	}
 
 	distribution, err := api.BookRatingService.GetRatingDistribution(c.Request.Context(), bookID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取评分分布失败",
-			Data:    nil,
-		})
+		response.InternalError(c, errors.New("获取评分分布失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    distribution,
-	})
+	response.SuccessWithMessage(c, "获取成功", distribution)
 }
 
 // CreateRating 创建评分
@@ -314,11 +229,7 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	var rating bookstore.BookRating
 	if err := c.ShouldBindJSON(&rating); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数格式错误",
-			Data:    nil,
-		})
+		response.BadRequest(c, "请求参数格式错误", nil)
 		return
 	}
 
@@ -331,11 +242,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, APIResponse{
-		Code:    201,
-		Message: "创建成功",
-		Data:    rating,
-	})
+	response.Created(c, rating)
 }
 
 // UpdateRating 更新评分
@@ -354,31 +261,19 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "评分ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "评分ID不能为空", nil)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的评分ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的评分ID格式", nil)
 		return
 	}
 
 	var rating bookstore.BookRating
 	if err := c.ShouldBindJSON(&rating); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "请求参数格式错误",
-			Data:    nil,
-		})
+		response.BadRequest(c, "请求参数格式错误", nil)
 		return
 	}
 
@@ -393,11 +288,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "更新成功",
-		Data:    rating,
-	})
+	response.SuccessWithMessage(c, "更新成功", rating)
 }
 
 // DeleteRating 删除评分
@@ -415,21 +306,13 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "评分ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "评分ID不能为空", nil)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的评分ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的评分ID格式", nil)
 		return
 	}
 
@@ -443,7 +326,7 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.SuccessWithMessage(c, "删除成功", nil)
 }
 
 // LikeRating 点赞评分
@@ -460,32 +343,20 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "评分ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "评分ID不能为空", nil)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的评分ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的评分ID格式", nil)
 		return
 	}
 
 	// 从上下文获取用户ID（假设已在中间件中设置）
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "用户未登录",
-			Data:    nil,
-		})
+		response.Unauthorized(c, "用户未登录")
 		return
 	}
 
@@ -494,20 +365,12 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 		// 尝试从string转换
 		userIDStr, ok := userID.(string)
 		if !ok {
-			c.JSON(http.StatusInternalServerError, APIResponse{
-				Code:    500,
-				Message: "用户ID格式错误",
-				Data:    nil,
-			})
+			response.InternalError(c, errors.New("用户ID格式错误"))
 			return
 		}
 		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, APIResponse{
-				Code:    500,
-				Message: "用户ID格式错误",
-				Data:    nil,
-			})
+			response.InternalError(c, errors.New("用户ID格式错误"))
 			return
 		}
 	}
@@ -522,7 +385,7 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", nil)
+	response.SuccessWithMessage(c, "点赞成功", nil)
 }
 
 // UnlikeRating 取消点赞评分
@@ -539,32 +402,20 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "评分ID不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "评分ID不能为空", nil)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的评分ID格式",
-			Data:    nil,
-		})
+		response.BadRequest(c, "无效的评分ID格式", nil)
 		return
 	}
 
 	// 从上下文获取用户ID（假设已在中间件中设置）
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "用户未登录",
-			Data:    nil,
-		})
+		response.Unauthorized(c, "用户未登录")
 		return
 	}
 
@@ -573,20 +424,12 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 		// 尝试从string转换
 		userIDStr, ok := userID.(string)
 		if !ok {
-			c.JSON(http.StatusInternalServerError, APIResponse{
-				Code:    500,
-				Message: "用户ID格式错误",
-				Data:    nil,
-			})
+			response.InternalError(c, errors.New("用户ID格式错误"))
 			return
 		}
 		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, APIResponse{
-				Code:    500,
-				Message: "用户ID格式错误",
-				Data:    nil,
-			})
+			response.InternalError(c, errors.New("用户ID格式错误"))
 			return
 		}
 	}
@@ -601,7 +444,7 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消点赞成功", nil)
+	response.SuccessWithMessage(c, "取消点赞成功", nil)
 }
 
 // SearchRatings 搜索评分
@@ -620,11 +463,7 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 func (api *BookRatingAPI) SearchRatings(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "搜索关键词不能为空",
-			Data:    nil,
-		})
+		response.BadRequest(c, "搜索关键词不能为空", nil)
 		return
 	}
 

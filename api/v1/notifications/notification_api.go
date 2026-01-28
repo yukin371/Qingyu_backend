@@ -932,8 +932,8 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/notifications/ws-endpoint [get]
 func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
-	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
+	// 验证用户是否登录
+	_, exists := c.Get("user_id")
 	if !exists {
 		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
 		return

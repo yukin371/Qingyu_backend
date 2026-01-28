@@ -5,7 +5,6 @@ import (
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/models/shared/types"
 	"context"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -132,17 +131,17 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 	if err != nil {
 		if err.Error() == "book not found" || err.Error() == "book not available" {
 			// 按需返回空数据而非404，便于前端容错显示
-			response.SuccessWithMessage(c, http.StatusOK, "书籍不存在或不可用", nil)
+			response.SuccessWithMessage(c, "书籍不存在或不可用", nil)
 			return
 		}
 
-		response.InternalError(c, "获取书籍详情失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	// 转换为 DTO
 	bookDTO := ToBookDTO(book)
-	response.SuccessWithMessage(c, http.StatusOK, "获取书籍详情成功", bookDTO)
+	response.SuccessWithMessage(c, "获取书籍详情成功", bookDTO)
 }
 
 // GetBooksByCategory 根据分类获取书籍列表
@@ -184,7 +183,7 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 
 	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), categoryID, page, size)
 	if err != nil {
-		response.InternalError(c, "获取分类书籍失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -218,7 +217,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 
 	books, total, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		response.InternalError(c, "获取推荐书籍失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -252,7 +251,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 
 	books, total, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		response.InternalError(c, "获取精选书籍失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -390,12 +389,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 				"total": newResp.Data.Total,
 			}
 
-			c.JSON(http.StatusOK, shared.APIResponse{
-				Code:      http.StatusOK,
-				Message:   "搜索书籍成功",
-				Data:      responseData,
-				Timestamp: 0,
-			})
+			response.SuccessWithMessage(c, "搜索书籍成功", responseData)
 			return
 		}
 
@@ -489,7 +483,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("duration", duration),
 		)
-		response.InternalError(c, "搜索书籍失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -523,13 +517,8 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 		"total": total,
 	}
 
-	// 使用shared包的分页响应，带上额外数据
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:      http.StatusOK,
-		Message:   "搜索书籍成功",
-		Data:      responseData,
-		Timestamp: 0, // shared.Success会设置这个
-	})
+	// 使用response包的响应函数
+	response.SuccessWithMessage(c, "搜索书籍成功", responseData)
 }
 
 // SearchByTitle 按标题搜索书籍
@@ -542,9 +531,9 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 //	@Param       title query string true "标题关键词"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
+//	@Success     200 {object} PaginatedResponse
+//	@Failure     400 {object} APIResponse
+//	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/title [get]
 func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 	// 构建日志记录器
@@ -628,12 +617,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 				"total": resp.Data.Total,
 			}
 
-			c.JSON(http.StatusOK, shared.APIResponse{
-				Code:      http.StatusOK,
-				Message:   "搜索成功",
-				Data:      responseData,
-				Timestamp: 0,
-			})
+			response.SuccessWithMessage(c, "搜索成功", responseData)
 			return
 		}
 
@@ -678,7 +662,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("duration", duration),
 		)
-		response.InternalError(c, "搜索失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -700,12 +684,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 		"total": total,
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:      http.StatusOK,
-		Message:   "搜索成功",
-		Data:      responseData,
-		Timestamp: 0,
-	})
+	response.SuccessWithMessage(c, "搜索成功", responseData)
 }
 
 // SearchByAuthor 按作者搜索书籍
@@ -718,9 +697,9 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 //	@Param       author query string true "作者姓名"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
+//	@Success     200 {object} PaginatedResponse
+//	@Failure     400 {object} APIResponse
+//	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/author [get]
 func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 	// 构建日志记录器
@@ -804,12 +783,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 				"total": resp.Data.Total,
 			}
 
-			c.JSON(http.StatusOK, shared.APIResponse{
-				Code:      http.StatusOK,
-				Message:   "搜索成功",
-				Data:      responseData,
-				Timestamp: 0,
-			})
+			response.SuccessWithMessage(c, "搜索成功", responseData)
 			return
 		}
 
@@ -854,7 +828,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("duration", duration),
 		)
-		response.InternalError(c, "搜索失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -876,12 +850,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 		"total": total,
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:      http.StatusOK,
-		Message:   "搜索成功",
-		Data:      responseData,
-		Timestamp: 0,
-	})
+	response.SuccessWithMessage(c, "搜索成功", responseData)
 }
 
 // GetCategoryTree 获取分类树
@@ -897,7 +866,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 	tree, err := api.service.GetCategoryTree(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, "获取分类树失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -906,7 +875,7 @@ func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 		tree = []*bookstore2.CategoryTree{}
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取分类树成功", tree)
+	response.SuccessWithMessage(c, "获取分类树成功", tree)
 }
 
 // GetCategoryByID 根据ID获取分类详情
@@ -936,11 +905,11 @@ func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 			return
 		}
 
-		response.InternalError(c, "获取分类详情失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取分类详情成功", category)
+	response.SuccessWithMessage(c, "获取分类详情成功", category)
 }
 
 // GetActiveBanners 获取激活的Banner列表
@@ -962,11 +931,11 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 
 	banners, err := api.service.GetActiveBanners(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, "获取Banner列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取Banner列表成功", banners)
+	response.SuccessWithMessage(c, "获取Banner列表成功", banners)
 }
 
 // IncrementBookView 增加书籍浏览量
@@ -997,11 +966,11 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 
 	err = api.service.IncrementBookView(c.Request.Context(), id.Hex())
 	if err != nil {
-		response.InternalError(c, "增加浏览量失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "浏览量增加成功", nil)
+	response.SuccessWithMessage(c, "浏览量增加成功", nil)
 }
 
 // IncrementBannerClick 增加Banner点击次数
@@ -1031,11 +1000,11 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 			return
 		}
 
-		response.InternalError(c, "增加点击次数失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "点击次数增加成功", nil)
+	response.SuccessWithMessage(c, "点击次数增加成功", nil)
 }
 
 // GetRealtimeRanking 获取实时榜
@@ -1057,11 +1026,11 @@ func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetRealtimeRanking(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, "获取实时榜失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取实时榜成功", rankings)
+	response.SuccessWithMessage(c, "获取实时榜成功", rankings)
 }
 
 // GetWeeklyRanking 获取周榜
@@ -1085,11 +1054,11 @@ func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetWeeklyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, "获取周榜失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取周榜成功", rankings)
+	response.SuccessWithMessage(c, "获取周榜成功", rankings)
 }
 
 // GetMonthlyRanking 获取月榜
@@ -1113,11 +1082,11 @@ func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetMonthlyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, "获取月榜失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取月榜成功", rankings)
+	response.SuccessWithMessage(c, "获取月榜成功", rankings)
 }
 
 // GetNewbieRanking 获取新人榜
@@ -1141,11 +1110,11 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetNewbieRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, "获取新人榜失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取新人榜成功", rankings)
+	response.SuccessWithMessage(c, "获取新人榜成功", rankings)
 }
 
 // GetRankingByType 根据类型获取榜单
@@ -1177,11 +1146,11 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 
 	rankings, err := api.service.GetRankingByType(c.Request.Context(), bookstore2.RankingType(rankingType), period, limit)
 	if err != nil {
-		response.InternalError(c, "获取榜单失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, http.StatusOK, "获取榜单成功", rankings)
+	response.SuccessWithMessage(c, "获取榜单成功", rankings)
 }
 
 // buildSearchFilter 构建搜索过滤条件
@@ -1286,9 +1255,9 @@ func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.Searc
 //	@Param       tags query string true "标签列表（逗号分隔）"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
+//	@Success     200 {object} PaginatedResponse
+//	@Failure     400 {object} APIResponse
+//	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/tags [get]
 func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
 	// 构建日志记录器
@@ -1350,7 +1319,7 @@ func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
 			zap.Error(err),
 			zap.Strings("tags", tags),
 		)
-		response.InternalError(c, "获取书籍列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -1377,9 +1346,9 @@ func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
 //	@Param       status query string true "书籍状态" Enums(ongoing,completed,paused)
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} shared.PaginatedResponse
-//	@Failure     400 {object} shared.APIResponse
-//	@Failure     500 {object} shared.APIResponse
+//	@Success     200 {object} PaginatedResponse
+//	@Failure     400 {object} APIResponse
+//	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/status [get]
 func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 	// 构建日志记录器
@@ -1441,7 +1410,7 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 			zap.Error(err),
 			zap.String("status", status),
 		)
-		response.InternalError(c, "获取书籍列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -1491,7 +1460,7 @@ func (api *BookstoreAPI) GetSimilarBooks(c *gin.Context) {
 			response.NotFound(c, "书籍不存在")
 			return
 		}
-		response.InternalError(c, "获取书籍信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -1530,12 +1499,12 @@ func (api *BookstoreAPI) GetSimilarBooks(c *gin.Context) {
 
 	// 确保不返回空列表
 	if len(uniqueResult) == 0 {
-		response.SuccessWithMessage(c, http.StatusOK, "暂无相似书籍", []*bookstore2.Book{})
+		response.SuccessWithMessage(c, "暂无相似书籍", []*bookstore2.Book{})
 		return
 	}
 
 	bookDTOs := ToBookDTOsFromPtrSlice(uniqueResult)
-	response.SuccessWithMessage(c, http.StatusOK, "获取相似书籍成功", bookDTOs)
+	response.SuccessWithMessage(c, "获取相似书籍成功", bookDTOs)
 }
 
 // searchSimilarBooks 辅助函数：搜索相似书籍

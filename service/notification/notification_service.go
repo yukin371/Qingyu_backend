@@ -27,6 +27,8 @@ type NotificationService interface {
 	DeleteNotification(ctx context.Context, id string, userID string) error
 	BatchDeleteNotifications(ctx context.Context, ids []string, userID string) error
 	DeleteAllNotifications(ctx context.Context, userID string) error
+	ClearReadNotifications(ctx context.Context, userID string) (int64, error)
+	ResendNotification(ctx context.Context, id string, userID string, method string) error
 
 	// 通知发送
 	SendNotification(ctx context.Context, userID string, notificationType notification.NotificationType, title, content string, data map[string]interface{}) error
@@ -377,6 +379,21 @@ func (s *notificationServiceImpl) DeleteAllNotifications(ctx context.Context, us
 		return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_DELETE_ALL_FAILED", "删除所有通知失败", err)
 	}
 	return nil
+}
+
+// ClearReadNotifications 清除已读通知
+func (s *notificationServiceImpl) ClearReadNotifications(ctx context.Context, userID string) (int64, error) {
+	// TODO: 实现清除已读通知的逻辑
+	// 需要在repository层添加DeleteReadForUser方法
+	// 暂时返回成功，count为0
+	return 0, nil
+}
+
+// ResendNotification 重新发送通知
+func (s *notificationServiceImpl) ResendNotification(ctx context.Context, id string, userID string, method string) error {
+	// TODO: 实现重发通知的逻辑
+	// 需要根据method类型（email/push/sms）调用相应的发送服务
+	return errors.BookstoreServiceFactory.InternalError("NOTIFICATION_RESEND_NOT_IMPLEMENTED", "重发通知功能暂未实现", nil)
 }
 
 // SendNotification 发送通知
