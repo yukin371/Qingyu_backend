@@ -12,6 +12,6 @@ type AuthRepository = authInterface.RoleRepository
 
 // NewAuthRepository 创建AuthRepository (兼容函数)
 // Deprecated: 使用 NewRoleRepository 替代
-func NewAuthRepository(db *mongo.Database, logger interface{}) AuthRepository {
+func NewAuthRepository(db *mongo.Database) AuthRepository {
 	return NewRoleRepository(db)
 }

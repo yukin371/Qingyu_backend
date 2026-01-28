@@ -48,7 +48,7 @@ func TestPermissionDatabaseIntegration(t *testing.T) {
 	logger := zap.NewNop()
 
 	// 2. 创建Repository和Service
-	repository := auth.NewAuthRepository(db, logger)
+	repository := auth.NewAuthRepository(db)
 	service := permService.NewPermissionService(repository, nil, logger)
 
 	// 3. 创建RBACChecker
@@ -187,7 +187,7 @@ func TestPermissionFormatConversion(t *testing.T) {
 	db := client.Database(dbName)
 	logger := zap.NewNop()
 
-	repository := auth.NewAuthRepository(db, logger)
+	repository := auth.NewAuthRepository(db)
 	service := permService.NewPermissionService(repository, nil, logger)
 
 	checker, err := middlewareAuth.NewRBACChecker(nil)
@@ -232,7 +232,7 @@ func TestWildcardPermissionMatching(t *testing.T) {
 	db := client.Database(dbName)
 	logger := zap.NewNop()
 
-	repository := auth.NewAuthRepository(db, logger)
+	repository := auth.NewAuthRepository(db)
 	service := permService.NewPermissionService(repository, nil, logger)
 
 	checker, err := middlewareAuth.NewRBACChecker(nil)
