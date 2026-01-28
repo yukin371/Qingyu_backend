@@ -102,6 +102,15 @@ type UserRepository interface {
 	// 验证状态管理
 	SetEmailVerified(ctx context.Context, id string, verified bool) error
 	SetPhoneVerified(ctx context.Context, id string, verified bool) error
+	UnbindEmail(ctx context.Context, id string) error
+	UnbindPhone(ctx context.Context, id string) error
+
+	// 设备管理
+	DeleteDevice(ctx context.Context, userID string, deviceID string) error
+	GetDevices(ctx context.Context, userID string) ([]interface{}, error)
+
+	// 密码管理
+	UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error
 
 	// 批量操作
 	BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error

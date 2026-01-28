@@ -34,6 +34,17 @@ type UserService interface {
 	SendEmailVerification(ctx context.Context, req *SendEmailVerificationRequest) (*SendEmailVerificationResponse, error)
 	VerifyEmail(ctx context.Context, req *VerifyEmailRequest) (*VerifyEmailResponse, error)
 
+	// 邮箱/手机管理
+	UnbindEmail(ctx context.Context, userID string) error
+	UnbindPhone(ctx context.Context, userID string) error
+
+	// 设备管理
+	DeleteDevice(ctx context.Context, userID string, deviceID string) error
+
+	// 密码验证
+	VerifyPassword(ctx context.Context, userID string, password string) error
+	EmailExists(ctx context.Context, email string) (bool, error)
+
 	// 完整密码重置流程
 	RequestPasswordReset(ctx context.Context, req *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	ConfirmPasswordReset(ctx context.Context, req *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)

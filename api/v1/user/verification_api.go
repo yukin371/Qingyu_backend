@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	shared "Qingyu_backend/api/v1/shared"
+	sharedApi "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
 	userService "Qingyu_backend/service/user"
 	userConstants "Qingyu_backend/service/user"
@@ -38,13 +38,13 @@ func NewVerificationAPI(
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SendEmailCodeRequest	true	"发送验证码请求"
-//	@Success 200 {object} shared.APIResponse{data=dto.SendCodeResponse}
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
-//	@Failure		429		{object}	shared.APIResponse	"发送过于频繁"
+//	@Success 200 {object} sharedApi.APIResponse{data=dto.SendCodeResponse}
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Failure		429		{object}	sharedApi.APIResponse	"发送过于频繁"
 //	@Router			/api/v1/users/verify/email/send [post]
 func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	var req dto.SendEmailCodeRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
@@ -57,7 +57,7 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	// 发送验证码
 	err = api.verificationService.SendEmailCode(c.Request.Context(), req.Email, "verify_email")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 			500,
 			"发送失败",
 			err,
@@ -65,7 +65,7 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.SuccessResponse(
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
 		dto.SendCodeResponse{
 			ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
 			Message:   "验证码已发送到您的邮箱",
@@ -82,19 +82,19 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SendPhoneCodeRequest	true	"发送验证码请求"
-//	@Success 200 {object} shared.APIResponse{data=dto.SendCodeResponse}
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
+//	@Success 200 {object} sharedApi.APIResponse{data=dto.SendCodeResponse}
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
 //	@Router			/api/v1/users/verify/phone/send [post]
 func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 	var req dto.SendPhoneCodeRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 模拟实现：发送手机验证码
 	err := api.verificationService.SendPhoneCode(c.Request.Context(), req.Phone, "verify_phone")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 			500,
 			"发送失败",
 			err,
@@ -102,7 +102,7 @@ func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.SuccessResponse(
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
 		dto.SendCodeResponse{
 			ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
 			Message:   "验证码已发送（模拟实现：请查看控制台）",
@@ -119,20 +119,20 @@ func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.VerifyEmailRequest	true	"验证邮箱请求"
-//	@Success 200 {object} shared.APIResponse{data=dto.VerifyEmailResponse}
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
-//	@Failure		400		{object}	shared.APIResponse	"验证码无效或过期"
+//	@Success 200 {object} sharedApi.APIResponse{data=dto.VerifyEmailResponse}
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Failure		400		{object}	sharedApi.APIResponse	"验证码无效或过期"
 //	@Router			/api/v1/users/email/verify [post]
 func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	var req dto.VerifyEmailRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 验证验证码
 	err := api.verificationService.VerifyCode(c.Request.Context(), req.Email, req.Code, "verify_email")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusBadRequest, sharedApi.ErrorResponseWithCode(
 			400,
 			"验证码无效或已过期",
 			err,
@@ -143,7 +143,7 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	// ✅ 添加：标记验证码为已使用（防止重复使用）
 	err = api.verificationService.MarkCodeAsUsed(c.Request.Context(), req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 			500,
 			"标记验证码失败",
 			err,
@@ -155,7 +155,7 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	userID := c.GetString("userID")
 	err = api.verificationService.SetEmailVerified(c.Request.Context(), userID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 			500,
 			"更新失败",
 			err,
@@ -163,7 +163,7 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.SuccessResponse(
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
 		dto.VerifyEmailResponse{
 			Verified: true,
 			Message:  "邮箱验证成功",
@@ -180,22 +180,22 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UnbindEmailRequest	true	"解绑邮箱请求"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
-//	@Failure		401		{object}	shared.APIResponse	"密码错误"
+//	@Success 200 {object} sharedApi.APIResponse
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Failure		401		{object}	sharedApi.APIResponse	"密码错误"
 //	@Router			/api/v1/users/email/unbind [delete]
 func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 	userID := c.GetString("userID")
 
 	var req dto.UnbindEmailRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
 			401,
 			"密码错误",
 			err,
@@ -206,7 +206,7 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 	// 解绑邮箱
 	err = api.userService.UnbindEmail(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 			500,
 			"解绑失败",
 			err,
@@ -214,7 +214,7 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.SuccessResponse(nil, "success"))
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
 }
 
 // UnbindPhone 解绑手机（模拟实现）
@@ -225,21 +225,21 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UnbindPhoneRequest	true	"解绑手机请求"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
+//	@Success 200 {object} sharedApi.APIResponse
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
 //	@Router			/api/v1/users/phone/unbind [delete]
 func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 	userID := c.GetString("userID")
 
 	var req dto.UnbindPhoneRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
 			401,
 			"密码错误",
 			err,
@@ -253,7 +253,7 @@ func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 	if err != nil {
 		// 暂时忽略错误，因为这是模拟实现
 	}
-	c.JSON(http.StatusOK, shared.SuccessResponse(nil, "success"))
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
 }
 
 // DeleteDevice 删除设备
@@ -265,24 +265,24 @@ func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 //	@Produce		json
 //	@Param			deviceId	path		string	true	"设备ID"
 //	@Param			request	body		dto.DeleteDeviceRequest	true	"删除设备请求"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse	"参数错误"
-//	@Failure		401		{object}	shared.APIResponse	"密码错误"
-//	@Failure		404		{object}	shared.APIResponse	"设备不存在"
+//	@Success 200 {object} sharedApi.APIResponse
+//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Failure		401		{object}	sharedApi.APIResponse	"密码错误"
+//	@Failure		404		{object}	sharedApi.APIResponse	"设备不存在"
 //	@Router			/api/v1/users/devices/{deviceId} [delete]
 func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 	userID := c.GetString("userID")
 	deviceID := c.Param("deviceId")
 
 	var req dto.DeleteDeviceRequest
-	if !shared.ValidateRequest(c, &req) {
+	if !sharedApi.ValidateRequest(c, &req) {
 		return
 	}
 
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, shared.ErrorResponseWithCode(
+		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
 			401,
 			"密码错误",
 			err,
@@ -295,13 +295,13 @@ func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 	if err != nil {
 		// 使用错误类型判断而不是字符串比较
 		if serviceInterfaces.IsNotFoundError(err) {
-			c.JSON(http.StatusNotFound, shared.ErrorResponseWithCode(
+			c.JSON(http.StatusNotFound, sharedApi.ErrorResponseWithCode(
 				404,
 				"设备不存在",
 				err,
 			))
 		} else {
-			c.JSON(http.StatusInternalServerError, shared.ErrorResponseWithCode(
+			c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
 				500,
 				"删除失败",
 				err,
@@ -310,5 +310,5 @@ func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.SuccessResponse(nil, "success"))
+	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
 }

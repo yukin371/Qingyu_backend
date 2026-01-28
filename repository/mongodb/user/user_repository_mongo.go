@@ -1382,3 +1382,120 @@ func (r *MongoUserRepository) CountByStatus(ctx context.Context, status usersMod
 
 	return count, nil
 }
+
+// ==================== 新增方法：邮箱/手机/设备管理 ====================
+
+// UnbindEmail 解绑邮箱（清空邮箱并标记为未验证）
+func (r *MongoUserRepository) UnbindEmail(ctx context.Context, id string) error {
+	now := time.Now()
+	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"email":          "",
+			"email_verified": false,
+			"updated_at":     now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"解绑邮箱失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
+}
+
+// UnbindPhone 解绑手机（清空手机号并标记为未验证）
+func (r *MongoUserRepository) UnbindPhone(ctx context.Context, id string) error {
+	now := time.Now()
+	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"phone":          "",
+			"phone_verified": false,
+			"updated_at":     now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"解绑手机失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
+}
+
+// DeleteDevice 删除设备
+func (r *MongoUserRepository) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
+	// TODO: 实现设备删除逻辑
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回"设备不存在"错误
+	return UserInterface.NewUserRepositoryError(
+		UserInterface.ErrorTypeNotFound,
+		"设备不存在或已删除",
+		nil,
+	)
+}
+
+// GetDevices 获取用户设备列表
+func (r *MongoUserRepository) GetDevices(ctx context.Context, userID string) ([]interface{}, error) {
+	// TODO: 实现获取设备列表逻辑
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回空列表
+	return []interface{}{}, nil
+}
+
+// UpdatePasswordByEmail 根据邮箱更新密码
+func (r *MongoUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	now := time.Now()
+	filter := bson.M{"email": email, "deleted_at": bson.M{"$exists": false}}
+	update := bson.M{
+		"$set": bson.M{
+			"password":   hashedPassword,
+			"updated_at": now,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeInternal,
+			"更新密码失败",
+			err,
+		)
+	}
+
+	if result.MatchedCount == 0 {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeNotFound,
+			"用户不存在",
+			nil,
+		)
+	}
+
+	return nil
+}

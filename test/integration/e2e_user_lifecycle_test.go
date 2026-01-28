@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/service/admin"
 	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/shared/auth"
@@ -87,7 +88,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	assert.NoError(t, err, "创建钱包应该成功")
 	assert.Equal(t, user.User.ID, userWallet.UserID)
 	assert.Equal(t, 0.0, userWallet.Balance, "新钱包余额应为0")
-	t.Logf("✓ 钱包创建成功: ID=%s, 余额=%.2f", userWallet.ID, userWallet.Balance)
+	t.Logf("✓ 钱包创建成功: ID=%s, 余额=%.2f", userWallet.ID, float64(userWallet.Balance)/100)
 
 	// ========== 阶段3：用户登录 ==========
 	t.Log("阶段3: 用户登录")
@@ -154,7 +155,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", rechargeTxn.Status)
 	assert.Equal(t, 500.0, rechargeTxn.Balance, "充值后余额应为500")
-	t.Logf("✓ 充值成功: 金额=%.2f, 余额=%.2f", rechargeTxn.Amount, rechargeTxn.Balance)
+	t.Logf("✓ 充值成功: 金额=%.2f, 余额=%.2f", float64(rechargeTxn.Amount)/100, float64(rechargeTxn.Balance)/100)
 
 	// ========== 阶段5：消费 ==========
 	t.Log("阶段5: 用户消费")
@@ -178,7 +179,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", consumeTxn1.Status)
 	assert.Equal(t, 350.0, consumeTxn1.Balance, "消费后余额应为350")
-	t.Logf("✓ 第1次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", -consumeTxn1.Amount, consumeTxn1.Balance, consumeTxn1.Reason)
+	t.Logf("✓ 第1次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn1.Amount)/100, float64(consumeTxn1.Balance)/100, consumeTxn1.Reason)
 
 	// 第二次消费
 	consume2Transaction := &wallet.Transaction{
@@ -198,7 +199,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	consumeTxn2, err := walletService.Consume(ctx, user.User.ID, 50.0, "购买书籍")
 	assert.NoError(t, err)
 	assert.Equal(t, 300.0, consumeTxn2.Balance, "消费后余额应为300")
-	t.Logf("✓ 第2次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", -consumeTxn2.Amount, consumeTxn2.Balance, consumeTxn2.Reason)
+	t.Logf("✓ 第2次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn2.Amount)/100, float64(consumeTxn2.Balance)/100, consumeTxn2.Reason)
 
 	// ========== 阶段6：申请提现 ==========
 	t.Log("阶段6: 申请提现")
@@ -219,7 +220,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "pending", withdrawReq.Status)
 	assert.Equal(t, 100.0, withdrawReq.Amount)
-	t.Logf("✓ 提现申请已提交: ID=%s, 金额=%.2f, 状态=%s", withdrawReq.ID, withdrawReq.Amount, withdrawReq.Status)
+	t.Logf("✓ 提现申请已提交: ID=%s, 金额=%.2f, 状态=%s", withdrawReq.ID, float64(withdrawReq.Amount)/100, withdrawReq.Status)
 
 	// ========== 阶段7：登出 ==========
 	t.Log("阶段7: 用户登出")
@@ -233,11 +234,11 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	// ========== 总结 ==========
 	t.Log("\n========== 用户生命周期测试完成 ==========")
 	t.Logf("用户: %s (ID: %s)", user.User.Username, user.User.ID)
-	t.Logf("最终余额: %.2f", consumeTxn2.Balance)
+	t.Logf("最终余额: %.2f", float64(consumeTxn2.Balance)/100)
 	t.Logf("交易记录: 充值1次, 消费2次, 提现申请1次")
-	t.Logf("总充值: %.2f", rechargeTxn.Amount)
-	t.Logf("总消费: %.2f", -consumeTxn1.Amount-consumeTxn2.Amount)
-	t.Logf("待提现: %.2f", withdrawReq.Amount)
+	t.Logf("总充值: %.2f", float64(rechargeTxn.Amount)/100)
+	t.Logf("总消费: %.2f", float64(-consumeTxn1.Amount-consumeTxn2.Amount)/100)
+	t.Logf("待提现: %.2f", float64(withdrawReq.Amount)/100)
 
 	// 验证所有Mock调用
 	authService.AssertExpectations(t)
@@ -572,8 +573,8 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 		ID:              "txn_transfer_001",
 		UserID:          userA.User.ID,
 		Type:            "transfer_out",
-		Amount:          -transferAmount,
-		Balance:         400.0, // 假设转账前余额是500
+		Amount:          -int64(types.NewMoneyFromYuan(transferAmount)),
+		Balance:         int64(types.NewMoneyFromYuan(400.0)), // 假设转账前余额是500
 		RelatedUserID:   userB.User.ID,
 		Reason:          transferReason,
 		Status:          "success",
@@ -592,10 +593,10 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", txn.Status)
 	assert.Equal(t, "transfer_out", txn.Type)
-	assert.Equal(t, -transferAmount, txn.Amount)
+	assert.Equal(t, -types.NewMoneyFromYuan(transferAmount), txn.Amount)
 	t.Logf("✓ 转账成功: %s -> %s, 金额=%.2f, 原因=%s",
 		userA.User.Username, userB.User.Username, transferAmount, transferReason)
-	t.Logf("  用户A余额: %.2f", txn.Balance)
+	t.Logf("  用户A余额: %.2f", float64(txn.Balance)/100)
 
 	// ========== 总结 ==========
 	t.Log("\n========== 转账流程完成 ==========")

@@ -151,6 +151,16 @@ func (m *MockUserRepository) SetPhoneVerified(ctx context.Context, id string, ve
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UnbindEmail(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) UnbindPhone(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error {
 	args := m.Called(ctx, ids, status)
 	return args.Error(0)
@@ -194,6 +204,24 @@ func (m *MockUserRepository) Transaction(ctx context.Context, user *usersModel.U
 
 func (m *MockUserRepository) Health(ctx context.Context) error {
 	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
+	args := m.Called(ctx, userID, deviceID)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) GetDevices(ctx context.Context, userID string) ([]interface{}, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]interface{}), args.Error(1)
+}
+
+func (m *MockUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	args := m.Called(ctx, email, hashedPassword)
 	return args.Error(0)
 }
 

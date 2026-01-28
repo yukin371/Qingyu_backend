@@ -47,7 +47,7 @@ func NewMessageAPIV2(
 // @Param page_size query int false "每页数量" default(20)
 // @Param before query string false "获取此消息之前的消息"
 // @Param after query string false "获取此消息之后的消息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} shared.APIResponse{data=dto.GetMessagesResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 403 {object} shared.APIResponse "无权访问"
 // @Failure 404 {object} shared.APIResponse "会话不存在"
@@ -147,8 +147,8 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param conversationId path string true "会话ID"
-// @Param request body object true "发送消息请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.SendMessageRequest true "发送消息请求"
+// @Success 200 {object} shared.APIResponse{data=dto.SendMessageResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 403 {object} shared.APIResponse "无权访问"
 // @Failure 404 {object} shared.APIResponse "会话不存在"
@@ -262,8 +262,8 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param request body object true "创建会话请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.CreateConversationRequest true "创建会话请求"
+// @Success 200 {object} shared.APIResponse{data=dto.CreateConversationResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Router /api/v1/social/messages/conversations [post]
 func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
@@ -311,8 +311,8 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param conversationId path string true "会话ID"
-// @Param request body object true "标记已读请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.MarkConversationReadRequest true "标记已读请求"
+// @Success 200 {object} shared.APIResponse{data=dto.MarkAsReadResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Router /api/v1/social/messages/conversations/{conversationId}/read [post]
 func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {

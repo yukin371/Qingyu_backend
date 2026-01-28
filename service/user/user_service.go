@@ -1050,6 +1050,7 @@ func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.C
 	}, nil
 }
 
+<<<<<<< HEAD
 // UnbindEmail 解绑邮箱
 func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error {
 	// 1. 检查用户是否存在
@@ -1062,10 +1063,29 @@ func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error 
 	}
 
 	// 2. 检查用户是否有邮箱
+=======
+// ==================== 新增方法：邮箱/手机/设备管理 ====================
+
+// EmailExists 检查邮箱是否存在
+func (s *UserServiceImpl) EmailExists(ctx context.Context, email string) (bool, error) {
+	return s.userRepo.ExistsByEmail(ctx, email)
+}
+
+// UnbindEmail 解绑邮箱
+func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 检查是否有邮箱
+>>>>>>> origin/ai-migration-only
 	if user.Email == "" {
 		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户未绑定邮箱", nil)
 	}
 
+<<<<<<< HEAD
 	// 3. 清除邮箱
 	updates := map[string]interface{}{
 		"email":      "",
@@ -1078,10 +1098,16 @@ func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error 
 	}
 
 	return nil
+=======
+	// TODO: 清空邮箱字段（需要在User模型和Repository中添加UpdateEmail方法）
+	// 暂时只标记为未验证状态
+	return s.userRepo.SetEmailVerified(ctx, userID, false)
+>>>>>>> origin/ai-migration-only
 }
 
 // UnbindPhone 解绑手机
 func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error {
+<<<<<<< HEAD
 	// 1. 检查用户是否存在
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -1092,10 +1118,20 @@ func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error 
 	}
 
 	// 2. 检查用户是否有手机号
+=======
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 检查是否有手机号
+>>>>>>> origin/ai-migration-only
 	if user.Phone == "" {
 		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户未绑定手机", nil)
 	}
 
+<<<<<<< HEAD
 	// 3. 清除手机号
 	updates := map[string]interface{}{
 		"phone":       "",
@@ -1108,15 +1144,42 @@ func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error 
 	}
 
 	return nil
+=======
+	// TODO: 清空手机号字段（需要在User模型和Repository中添加UpdatePhone方法）
+	// 暂时只标记为未验证状态
+	return s.userRepo.SetPhoneVerified(ctx, userID, false)
+>>>>>>> origin/ai-migration-only
 }
 
 // DeleteDevice 删除设备
 func (s *UserServiceImpl) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
 	// TODO: 实现设备删除逻辑
+<<<<<<< HEAD
 	// 当前 User 模型不支持设备管理，这是一个占位实现
 	// 实际实现需要：
 	// 1. 检查用户是否存在
 	// 2. 检查设备是否存在
 	// 3. 删除设备
 	return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "设备管理功能尚未实现", nil)
+=======
+	// 需要创建DeviceRepository和Device模型
+	// 暂时返回"设备不存在"错误，因为这是模拟实现
+	return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "设备不存在或已删除", nil)
+}
+
+// VerifyPassword 验证密码
+func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, password string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 验证密码
+	if !user.ValidatePassword(password) {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "密码错误", nil)
+	}
+
+	return nil
+>>>>>>> origin/ai-migration-only
 }

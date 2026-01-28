@@ -959,6 +959,118 @@ func (r *MongoBookRepository) IncrementViewCount(ctx context.Context, bookID str
 	return err
 }
 
+// GetYears 获取所有书籍的发布年份列表（去重，倒序）
+func (r *MongoBookRepository) GetYears(ctx context.Context) ([]int, error) {
+	// 使用聚合管道提取年份并去重
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"published_at": bson.M{"$ne": nil}, // 只查询有发布时间的书籍
+			},
+		},
+		{
+			"$project": bson.M{
+				"year": bson.M{"$year": "$published_at"}, // 提取年份
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": "$year", // 按年份分组去重
+			},
+		},
+		{
+			"$sort": bson.M{
+				"_id": -1, // 按年份倒序
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	type YearResult struct {
+		Year int `bson:"_id"`
+	}
+
+	var results []YearResult
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	years := make([]int, 0, len(results))
+	for _, result := range results {
+		years = append(years, result.Year)
+	}
+
+	return years, nil
+}
+
+// GetTags 获取所有标签列表（去重，排序）
+// 如果提供了 categoryID，则只返回该分类下的书籍标签
+func (r *MongoBookRepository) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	// 构建聚合管道
+	pipeline := []bson.M{}
+
+	// 如果提供了分类ID，先过滤书籍
+	if categoryID != nil && *categoryID != "" {
+		objectID, err := primitive.ObjectIDFromHex(*categoryID)
+		if err != nil {
+			return nil, err
+		}
+		pipeline = append(pipeline, bson.M{
+			"$match": bson.M{
+				"category_ids": objectID,
+			},
+		})
+	}
+
+	// 展开标签数组
+	pipeline = append(pipeline, bson.M{
+		"$unwind": "$tags",
+	})
+
+	// 按标签分组去重
+	pipeline = append(pipeline, bson.M{
+		"$group": bson.M{
+			"_id": "$tags",
+		},
+	})
+
+	// 按标签名排序
+	pipeline = append(pipeline, bson.M{
+		"$sort": bson.M{
+			"_id": 1, // 按标签名升序
+		},
+	})
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	type TagResult struct {
+		Tag string `bson:"_id"`
+	}
+
+	var results []TagResult
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	tags := make([]string, 0, len(results))
+	for _, result := range results {
+		if result.Tag != "" { // 过滤空标签
+			tags = append(tags, result.Tag)
+		}
+	}
+
+	return tags, nil
+}
+
 // escapeRegex 转义正则表达式特殊字符，避免中文编码问题
 func escapeRegex(s string) string {
 	// 特殊字符转义

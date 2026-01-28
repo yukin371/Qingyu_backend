@@ -144,7 +144,6 @@ func (h *MessagingWSHub) SendMessage(conversationID string, message interface{},
 // @Description 实时接收会话消息，需要在URL中传递token参数
 // @Tags Social Messages
 // @Param token query string true "JWT认证token"
-// @Success 101 {string} string "Switching Protocols"
 // @Router /ws/messages [get]
 func (h *MessagingWSHub) HandleMessagingWebSocket(c *gin.Context) {
 	token := c.Query("token")
