@@ -24,7 +24,7 @@ func TestSuccess(t *testing.T) {
 	Success(c, data)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":200`)
+	assert.Contains(t, w.Body.String(), `"code":0`)
 	assert.Contains(t, w.Body.String(), `"message":"操作成功"`)
 	assert.Contains(t, w.Body.String(), `"data":`)
 	assert.Contains(t, w.Body.String(), `"timestamp":`)
@@ -37,7 +37,7 @@ func TestCreated(t *testing.T) {
 	Created(c, data)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":201`)
+	assert.Contains(t, w.Body.String(), `"code":0`)
 	assert.Contains(t, w.Body.String(), `"message":"创建成功"`)
 	assert.Contains(t, w.Body.String(), `"data":`)
 }
@@ -61,7 +61,7 @@ func TestBadRequest(t *testing.T) {
 	BadRequest(c, "参数错误", nil)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":400`)
+	assert.Contains(t, w.Body.String(), `"code":100001`)
 	assert.Contains(t, w.Body.String(), `"message":"参数错误"`)
 }
 
@@ -81,7 +81,7 @@ func TestUnauthorized(t *testing.T) {
 	Unauthorized(c, "未授权")
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":401`)
+	assert.Contains(t, w.Body.String(), `"code":100601`)
 	assert.Contains(t, w.Body.String(), `"message":"未授权"`)
 }
 
@@ -91,7 +91,7 @@ func TestForbidden(t *testing.T) {
 	Forbidden(c, "禁止访问")
 
 	assert.Equal(t, http.StatusForbidden, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":403`)
+	assert.Contains(t, w.Body.String(), `"code":100403`)
 	assert.Contains(t, w.Body.String(), `"message":"禁止访问"`)
 }
 
@@ -101,7 +101,7 @@ func TestNotFound(t *testing.T) {
 	NotFound(c, "资源不存在")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":404`)
+	assert.Contains(t, w.Body.String(), `"code":100404`)
 	assert.Contains(t, w.Body.String(), `"message":"资源不存在"`)
 }
 
@@ -111,7 +111,7 @@ func TestConflict(t *testing.T) {
 	Conflict(c, "资源冲突", nil)
 
 	assert.Equal(t, http.StatusConflict, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":409`)
+	assert.Contains(t, w.Body.String(), `"code":100409`)
 	assert.Contains(t, w.Body.String(), `"message":"资源冲突"`)
 }
 
@@ -132,7 +132,7 @@ func TestInternalError(t *testing.T) {
 	InternalError(c, err)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":500`)
+	assert.Contains(t, w.Body.String(), `"code":100500`)
 	assert.Contains(t, w.Body.String(), `"message":"服务器内部错误"`)
 	assert.Contains(t, w.Body.String(), `"error":"database error"`)
 }
@@ -143,7 +143,7 @@ func TestInternalErrorNil(t *testing.T) {
 	InternalError(c, nil)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":500`)
+	assert.Contains(t, w.Body.String(), `"code":100500`)
 	assert.Contains(t, w.Body.String(), `"message":"服务器内部错误"`)
 }
 
@@ -154,7 +154,7 @@ func TestPaginated(t *testing.T) {
 	Paginated(c, data, 100, 2, 10, "获取成功")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":200`)
+	assert.Contains(t, w.Body.String(), `"code":0`)
 	assert.Contains(t, w.Body.String(), `"message":"获取成功"`)
 	assert.Contains(t, w.Body.String(), `"pagination":`)
 	assert.Contains(t, w.Body.String(), `"total":100`)
@@ -194,7 +194,7 @@ func TestSuccessWithMessage(t *testing.T) {
 	SuccessWithMessage(c, "自定义消息", data)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":200`)
+	assert.Contains(t, w.Body.String(), `"code":0`)
 	assert.Contains(t, w.Body.String(), `"message":"自定义消息"`)
 	assert.Contains(t, w.Body.String(), `"data":`)
 }
