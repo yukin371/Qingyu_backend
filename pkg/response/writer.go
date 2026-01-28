@@ -90,7 +90,7 @@ func NoContent(c *gin.Context) {
 // BadRequest 返回错误请求响应（400 Bad Request）
 func BadRequest(c *gin.Context, message string, details interface{}) {
 	response := APIResponse{
-		Code:      100001, // InvalidParams错误码
+		Code:      CodeParamError, // 参数错误
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
@@ -106,7 +106,7 @@ func BadRequest(c *gin.Context, message string, details interface{}) {
 // Unauthorized 返回未授权响应（401 Unauthorized）
 func Unauthorized(c *gin.Context, message string) {
 	c.JSON(http.StatusUnauthorized, APIResponse{
-		Code:      100601, // Unauthorized错误码
+		Code:      CodeUnauthorized, // 未授权
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
@@ -116,7 +116,7 @@ func Unauthorized(c *gin.Context, message string) {
 // Forbidden 返回禁止访问响应（403 Forbidden）
 func Forbidden(c *gin.Context, message string) {
 	c.JSON(http.StatusForbidden, APIResponse{
-		Code:      100403, // Forbidden错误码
+		Code:      CodeForbidden, // 禁止访问
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
@@ -126,7 +126,7 @@ func Forbidden(c *gin.Context, message string) {
 // NotFound 返回资源不存在响应（404 Not Found）
 func NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, APIResponse{
-		Code:      100404, // NotFound错误码
+		Code:      CodeNotFound, // 资源不存在
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
@@ -136,7 +136,7 @@ func NotFound(c *gin.Context, message string) {
 // Conflict 返回冲突响应（409 Conflict）
 func Conflict(c *gin.Context, message string, details interface{}) {
 	response := APIResponse{
-		Code:      100202, // Conflict错误码（与errors.Conflict一致）
+		Code:      CodeConflict, // 资源冲突
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
@@ -157,7 +157,7 @@ func InternalError(c *gin.Context, err error) {
 		errorDetail = err.Error()
 	}
 	c.JSON(http.StatusInternalServerError, APIResponse{
-		Code:      100500, // InternalError错误码
+		Code:      CodeInternalError, // 内部错误
 		Message:   message,
 		Data: map[string]interface{}{
 			"error": errorDetail,
