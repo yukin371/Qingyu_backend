@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/models/bookstore"
 	searchengine "Qingyu_backend/service/search/engine"
@@ -100,7 +101,16 @@ func setupTestAPI() (*SearchAPI, *gin.Engine) {
 
 	// 创建标准日志记录器
 	stdLogger := log.Default()
-	searchSvc := searchService.NewSearchService(stdLogger, searchConfig)
+	zapLogger := zap.NewNop() // 测试时使用无输出日志
+
+	// 创建灰度决策器（测试环境禁用灰度）
+	grayScaleConfig := &searchService.GrayScaleConfig{
+		Enabled: false, // 测试环境禁用灰度
+		Percent: 0,
+	}
+	grayScaleDecision := searchService.NewGrayScaleDecision(grayScaleConfig, zapLogger)
+
+	searchSvc := searchService.NewSearchService(stdLogger, searchConfig, grayScaleDecision)
 
 	// 注册 BookProvider
 	searchSvc.RegisterProvider(bookProvider)
