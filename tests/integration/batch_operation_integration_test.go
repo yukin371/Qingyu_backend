@@ -7,6 +7,7 @@ import (
 	writerModel "Qingyu_backend/models/writer"
 	"Qingyu_backend/repository/mongodb/writer"
 	writerRepo "Qingyu_backend/repository/mongodb/writer"
+	serviceBase "Qingyu_backend/service/base"
 	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/test/testutil"
 
@@ -24,7 +25,6 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	defer cleanup()
 
 	// 初始化repositories
-	batchOpRepo := writerRepo.NewBatchOperationRepository(db)
 	opLogRepo := writerRepo.NewOperationLogRepository(db)
 	docRepo := writerRepo.NewMongoDocumentRepository(db)
 
@@ -57,15 +57,15 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 		docs[i] = doc
 	}
 
-	// 3. 提交批量删除操作
-	// TODO: 添加EventBus参数
-	// batchOpSvc := document.NewBatchOperationService(
-	// 	batchOpRepo.(*writerRepo.BatchOperationRepositoryImpl),
-	// 	opLogRepo.(*writerRepo.OperationLogRepositoryImpl),
-	// 	docRepo,
-	// 	nil, // EventBus
-	// )
-	t.Skip("批量操作服务需要EventBus参数，暂时跳过")
+	// 3. 创建EventBus和BatchOperationService
+	eventBus := serviceBase.NewSimpleEventBus()
+	batchOpRepo := writerRepo.NewBatchOperationRepository(db)
+	batchOpSvc := document.NewBatchOperationService(
+		batchOpRepo.(*writerRepo.BatchOperationRepositoryImpl),
+		opLogRepo.(*writerRepo.OperationLogRepositoryImpl),
+		docRepo,
+		eventBus,
+	)
 
 	req := &document.SubmitBatchOperationRequest{
 		ProjectID: project.ID.Hex(),
@@ -137,7 +137,6 @@ func TestBatchOperation_Undo(t *testing.T) {
 	defer cleanup()
 
 	// 初始化repositories
-	batchOpRepo := writerRepo.NewBatchOperationRepository(db)
 	opLogRepo := writerRepo.NewOperationLogRepository(db)
 	docRepo := writerRepo.NewMongoDocumentRepository(db)
 
@@ -170,10 +169,14 @@ func TestBatchOperation_Undo(t *testing.T) {
 		docs[i] = doc
 	}
 
+	// 创建EventBus和BatchOperationService
+	eventBus := serviceBase.NewSimpleEventBus()
+	batchOpRepo := writerRepo.NewBatchOperationRepository(db)
 	batchOpSvc := document.NewBatchOperationService(
 		batchOpRepo.(*writerRepo.BatchOperationRepositoryImpl),
 		opLogRepo.(*writerRepo.OperationLogRepositoryImpl),
 		docRepo,
+		eventBus,
 	)
 
 	// 执行批量删除
