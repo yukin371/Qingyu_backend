@@ -1,12 +1,10 @@
 package reader
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
 	"Qingyu_backend/pkg/response"
@@ -70,23 +68,23 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
 		if err == readerservice.ErrChapterNotFound {
-			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
+			response.NotFound(c, "章节不存在")
 			return
 		}
 		if err == readerservice.ErrChapterNotPublished {
-			shared.Error(c, http.StatusForbidden, "章节未发布", err.Error())
+			response.Forbidden(c, "章节未发布")
 			return
 		}
 		if err == readerservice.ErrAccessDenied && content != nil {
-			// 返回带访问拒绝信息的响应
-			shared.Success(c, http.StatusForbidden, "无权访问", content)
+			// 返回访问拒绝响应
+			response.Forbidden(c, "无权访问")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", content)
+	response.Success(c, content)
 }
 
 // GetChapterByNumber 根据章节号获取内容
@@ -122,18 +120,18 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, bookID, chapterNum)
 	if err != nil {
 		if err == readerservice.ErrChapterNotFound {
-			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
+			response.NotFound(c, "章节不存在")
 			return
 		}
 		if err == readerservice.ErrAccessDenied && content != nil {
-			shared.Success(c, http.StatusForbidden, "无权访问", content)
+			response.Forbidden(c, "无权访问")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", content)
+	response.Success(c, content)
 }
 
 // GetNextChapter 获取下一章
@@ -172,11 +170,11 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	}
 
 	if nextChapter == nil {
-		shared.Success(c, http.StatusOK, "已经是最后一章", nil)
+		response.Success(c, nil)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", nextChapter)
+	response.Success(c, nextChapter)
 }
 
 // GetPreviousChapter 获取上一章
@@ -215,11 +213,11 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	}
 
 	if prevChapter == nil {
-		shared.Success(c, http.StatusOK, "已经是第一章", nil)
+		response.Success(c, nil)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", prevChapter)
+	response.Success(c, prevChapter)
 }
 
 // GetChapterList 获取章节目录
@@ -266,7 +264,7 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", chapterList)
+	response.Success(c, chapterList)
 }
 
 // GetChapterInfo 获取章节信息
@@ -299,12 +297,12 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, chapterID)
 	if err != nil {
 		if err == readerservice.ErrChapterNotFound {
-			shared.Error(c, http.StatusNotFound, "章节不存在", err.Error())
+			response.NotFound(c, "章节不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", chapterInfo)
+	response.Success(c, chapterInfo)
 }
