@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
@@ -43,35 +42,35 @@ func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	var req CreateBookmarkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 解析ID
 	bookmark, err := req.ToBookmark(userID.(string))
 	if err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 创建书签
 	if err := api.bookmarkService.CreateBookmark(c.Request.Context(), bookmark); err != nil {
 		if err == readerservice.ErrBookmarkAlreadyExists {
-			shared.Error(c, http.StatusConflict, "书签已存在", err.Error())
+			response.Conflict(c, "书签已存在", err.Error())
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", bookmark)
+	response.Created(c, bookmark)
 }
 
 // GetBookmarks 获取书签列表
@@ -95,7 +94,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -136,7 +135,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }
 
 // GetBookmark 获取书签详情
@@ -157,14 +156,14 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 	bookmark, err := api.bookmarkService.GetBookmark(c.Request.Context(), bookmarkID)
 	if err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
-			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
+			response.NotFound(c, "书签不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookmark)
+	response.Success(c, bookmark)
 }
 
 // UpdateBookmark 更新书签
@@ -186,7 +185,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 
 	var req UpdateBookmarkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -200,14 +199,14 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 
 	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), bookmarkID, bookmark); err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
-			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
+			response.NotFound(c, "书签不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteBookmark 删除书签
@@ -227,14 +226,14 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 
 	if err := api.bookmarkService.DeleteBookmark(c.Request.Context(), bookmarkID); err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
-			shared.Error(c, http.StatusNotFound, "书签不存在", err.Error())
+			response.NotFound(c, "书签不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ExportBookmarks 导出书签
@@ -252,7 +251,7 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -283,7 +282,7 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -293,7 +292,7 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // SearchBookmarks 搜索书签
@@ -313,13 +312,13 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		response.BadRequest(c,  "参数错误", "关键词不能为空")
+		response.BadRequest(c, "参数错误", "关键词不能为空")
 		return
 	}
 
@@ -332,7 +331,7 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", result)
+	response.Success(c, result)
 }
 
 // CreateBookmarkRequest 创建书签请求

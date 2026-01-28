@@ -136,7 +136,7 @@ func NotFound(c *gin.Context, message string) {
 // Conflict 返回冲突响应（409 Conflict）
 func Conflict(c *gin.Context, message string, details interface{}) {
 	response := APIResponse{
-		Code:      100409, // Conflict错误码
+		Code:      100202, // Conflict错误码（与errors.Conflict一致）
 		Message:   message,
 		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),

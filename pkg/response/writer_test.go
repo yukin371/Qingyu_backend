@@ -111,7 +111,7 @@ func TestConflict(t *testing.T) {
 	Conflict(c, "资源冲突", nil)
 
 	assert.Equal(t, http.StatusConflict, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":100409`)
+	assert.Contains(t, w.Body.String(), `"code":100202`)
 	assert.Contains(t, w.Body.String(), `"message":"资源冲突"`)
 }
 
