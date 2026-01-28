@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/logger"
+	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/search"
 )
@@ -67,11 +67,11 @@ type PaginatedResponse struct {
 func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 	data, err := api.service.GetHomepageData(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取首页数据失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取首页数据成功", data)
+	response.SuccessWithMessage(c, "获取首页数据成功", data)
 }
 
 // GetBooks 获取书籍列表

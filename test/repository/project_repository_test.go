@@ -8,12 +8,34 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
 	writing "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
 )
+
+// isReplicaSet 检测MongoDB是否为副本集
+func isReplicaSet(db interface{}) bool {
+	// 尝试执行replSetGetStatus命令
+	// 如果成功，说明是副本集；如果失败，说明是单节点
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// 使用类型断言获取*mongo.Database
+	mongoDB, ok := db.(*testutil.TestDB)
+	if !ok {
+		return false
+	}
+
+	result := mongoDB.RunCommand(ctx, bson.D{{Key: "replSetGetStatus", Value: 1}})
+	if result.Err() != nil {
+		return false
+	}
+
+	return true
+}
 
 // newTestProject 创建测试项目的辅助函数
 func newTestProject(authorID, title string) *writer.Project {
@@ -424,6 +446,11 @@ func TestProjectRepository_Count(t *testing.T) {
 func TestProjectRepository_Transaction(t *testing.T) {
 	db, cleanup := testutil.SetupTestDB(t)
 	defer cleanup()
+
+	// 检测是否为副本集，如果不是则跳过事务测试
+	if !isReplicaSet(db) {
+		t.Skip("跳过事务测试：需要MongoDB副本集支持")
+	}
 
 	repo := writing.NewMongoProjectRepository(db)
 	ctx := context.Background()

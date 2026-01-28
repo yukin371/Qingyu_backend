@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/models/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -61,7 +61,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", book)
+	response.Success(c, book)
 }
 
 // GetBooksByTitle 根据标题搜索书籍
