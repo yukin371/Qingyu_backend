@@ -218,3 +218,36 @@ func NewPagination(total int64, page, pageSize int) *Pagination {
 		HasPrevious: page > 1,
 	}
 }
+
+// HandleServiceError 根据 ServiceError 类型返回对应的 HTTP 响应
+// 支持 ServiceError 类型和其他 error 类型
+func HandleServiceError(c *gin.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	// 尝试类型断言为 ServiceError
+	type ServiceErrorInterface interface {
+		Error() string
+		Type() string
+	}
+
+	if se, ok := err.(ServiceErrorInterface); ok {
+		switch se.Type() {
+		case "VALIDATION":
+			BadRequest(c, "参数验证失败", se.Error())
+		case "NOT_FOUND":
+			NotFound(c, se.Error())
+		case "UNAUTHORIZED":
+			Unauthorized(c, se.Error())
+		case "FORBIDDEN":
+			Forbidden(c, se.Error())
+		default:
+			InternalError(c, se)
+		}
+		return
+	}
+
+	// 普通错误，返回 500
+	InternalError(c, err)
+}

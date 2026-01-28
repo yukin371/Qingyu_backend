@@ -992,19 +992,13 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 		return
 	}
 
-	// 获取token
-	token := c.GetHeader("Authorization")
-	if token == "" {
+	// 验证 Authorization Header 存在
+	if c.GetHeader("Authorization") == "" {
 		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "缺少认证令牌")
 		return
 	}
 
-	// 移除 "Bearer " 前缀
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-	}
-
-	// 生成WebSocket连接URL（不再在URL中包含token）
+	// 生成WebSocket连接URL（token 通过 Authorization Header 传递）
 	scheme := "ws"
 	if c.Request.TLS != nil {
 		scheme = "wss"

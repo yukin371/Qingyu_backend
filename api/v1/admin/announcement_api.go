@@ -123,7 +123,7 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 
 	announcement, err := api.announcementService.GetAnnouncementByID(c.Request.Context(), id)
 	if err != nil {
-		response.InternalError(c, err)
+		response.HandleServiceError(c, err)
 		return
 	}
 

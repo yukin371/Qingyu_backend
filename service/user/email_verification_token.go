@@ -8,6 +8,24 @@ import (
 	"time"
 )
 
+var (
+	// 全局单例 TokenManager
+	globalTokenManager     *EmailVerificationTokenManager
+	globalTokenManagerOnce sync.Once
+)
+
+// GetGlobalTokenManager 获取全局单例 TokenManager
+func GetGlobalTokenManager() *EmailVerificationTokenManager {
+	globalTokenManagerOnce.Do(func() {
+		globalTokenManager = &EmailVerificationTokenManager{
+			tokens: make(map[string]*VerificationTokenInfo),
+		}
+		// 只启动一次清理 goroutine
+		go globalTokenManager.startCleanupRoutine()
+	})
+	return globalTokenManager
+}
+
 // EmailVerificationTokenManager 邮箱验证Token管理器
 type EmailVerificationTokenManager struct {
 	tokens map[string]*VerificationTokenInfo // email -> token info
@@ -24,13 +42,9 @@ type VerificationTokenInfo struct {
 }
 
 // NewEmailVerificationTokenManager 创建邮箱验证Token管理器
+// 注意: 已弃用，请使用 GetGlobalTokenManager() 获取单例
 func NewEmailVerificationTokenManager() *EmailVerificationTokenManager {
-	manager := &EmailVerificationTokenManager{
-		tokens: make(map[string]*VerificationTokenInfo),
-	}
-	// 启动定期清理过期token的goroutine
-	go manager.startCleanupRoutine()
-	return manager
+	return GetGlobalTokenManager()
 }
 
 // GenerateCode 生成6位数字验证码
