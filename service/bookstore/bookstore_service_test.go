@@ -175,6 +175,23 @@ func (m *MockBookRepositoryForService) GetByPriceRange(ctx context.Context, minP
 	return args.Get(0).([]*bookstoreModel.Book), args.Error(1)
 }
 
+// 筛选相关方法
+func (m *MockBookRepositoryForService) GetYears(ctx context.Context) ([]int, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
+}
+
+func (m *MockBookRepositoryForService) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	args := m.Called(ctx, categoryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 // 搜索方法
 func (m *MockBookRepositoryForService) Search(ctx context.Context, keyword string, limit, offset int) ([]*bookstoreModel.Book, error) {
 	args := m.Called(ctx, keyword, limit, offset)
