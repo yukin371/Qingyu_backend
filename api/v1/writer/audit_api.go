@@ -109,9 +109,9 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 		return
 	}
 
-	response := convertAuditRecordToResponse(record)
+	auditResp := convertAuditRecordToResponse(record)
 
-	response.Success(c, response)
+	response.Success(c, auditResp)
 }
 
 // SubmitAppeal 提交申诉
@@ -248,11 +248,6 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 		return
 	}
 
-	status := "驳回"
-	if req.Approved {
-		status = "通过"
-	}
-
 	response.Success(c, nil)
 }
 
@@ -332,9 +327,9 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 		return
 	}
 
-	response := convertUserViolationSummaryToResponse(summary)
+	summaryResp := convertUserViolationSummaryToResponse(summary)
 
-	response.Success(c, response)
+	response.Success(c, summaryResp)
 }
 
 // GetHighRiskAudits 获取高风险审核记录

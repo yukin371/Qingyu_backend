@@ -1,14 +1,11 @@
 package writer
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // CharacterApi 角色API处理器
@@ -31,9 +28,9 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body object true "创建角色请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 401 {object} shared.APIResponse
+// @Success 201 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
 // @Router /api/v1/projects/{projectId}/characters [post]
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -62,7 +59,7 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", character)
+	response.Created(c, character)
 }
 
 // GetCharacter 获取角色详情
@@ -73,8 +70,8 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 // @Produce json
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.Response
+// @Failure 404 {object} response.Response
 // @Router /api/v1/characters/{characterId} [get]
 func (api *CharacterApi) GetCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -87,11 +84,11 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 
 	character, err := api.characterService.GetByID(c.Request.Context(), characterID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "角色不存在", err.Error())
+		response.NotFound(c, "角色不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", character)
+	response.Success(c, character)
 }
 
 // ListCharacters 获取项目角色列表
@@ -101,7 +98,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.Response
 // @Router /api/v1/projects/{projectId}/characters [get]
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -116,7 +113,7 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", characters)
+	response.Success(c, characters)
 }
 
 // UpdateCharacter 更新角色
@@ -128,9 +125,9 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
 // @Param request body object true "更新角色请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 404 {object} response.Response
 // @Router /api/v1/characters/{characterId} [put]
 func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -153,7 +150,7 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", character)
+	response.Success(c, character)
 }
 
 // DeleteCharacter 删除角色
@@ -164,8 +161,8 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 // @Produce json
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.Response
+// @Failure 404 {object} response.Response
 // @Router /api/v1/characters/{characterId} [delete]
 func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -182,7 +179,7 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // CreateCharacterRelation 创建角色关系
@@ -193,8 +190,8 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 // @Produce json
 // @Param projectId query string true "项目ID"
 // @Param request body object true "创建关系请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 201 {object} response.Response
+// @Failure 400 {object} response.Response
 // @Router /api/v1/characters/relations [post]
 func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
@@ -215,7 +212,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", relation)
+	response.Created(c, relation)
 }
 
 // ListCharacterRelations 获取角色关系列表
@@ -226,7 +223,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param characterId query string false "角色ID（可选，不传则返回项目所有关系）"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.Response
 // @Router /api/v1/projects/{projectId}/characters/relations [get]
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -247,7 +244,7 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", relations)
+	response.Success(c, relations)
 }
 
 // DeleteCharacterRelation 删除角色关系
@@ -258,8 +255,8 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 // @Produce json
 // @Param relationId path string true "关系ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.Response
+// @Failure 404 {object} response.Response
 // @Router /api/v1/characters/relations/{relationId} [delete]
 func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 	relationID := c.Param("relationId")
@@ -276,7 +273,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetCharacterGraph 获取角色关系图
@@ -286,7 +283,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.Response
 // @Router /api/v1/projects/{projectId}/characters/graph [get]
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -301,7 +298,7 @@ func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", graph)
+	response.Success(c, graph)
 }
 
 var _ = writerModels.Character{}

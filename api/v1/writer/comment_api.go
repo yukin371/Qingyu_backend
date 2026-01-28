@@ -1,13 +1,11 @@
 package writer
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	writermodels "Qingyu_backend/models/writer"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/pkg/response"
@@ -54,7 +52,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
@@ -77,7 +75,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "创建成功", created)
+	response.Success(c, created)
 }
 
 // GetComments 获取批注列表
@@ -139,7 +137,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 		"size":     size,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }
 
 // GetComment 获取批注详情
@@ -164,14 +162,14 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 	comment, err := api.commentService.GetComment(c.Request.Context(), commentID)
 	if err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", comment)
+	response.Success(c, comment)
 }
 
 // UpdateComment 更新批注
@@ -209,14 +207,14 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 
 	if err := api.commentService.UpdateComment(c.Request.Context(), commentID, comment); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteComment 删除批注
@@ -240,14 +238,14 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 
 	if err := api.commentService.DeleteComment(c.Request.Context(), commentID); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ResolveComment 标记批注为已解决
@@ -272,13 +270,13 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
 	if err := api.commentService.ResolveComment(c.Request.Context(), commentID, userID.(string)); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		if err == writerservice.ErrCommentAlreadyResolved {
@@ -289,7 +287,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记成功", nil)
+	response.Success(c, nil)
 }
 
 // UnresolveComment 标记批注为未解决
@@ -314,14 +312,14 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 
 	if err := api.commentService.UnresolveComment(c.Request.Context(), commentID); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记成功", nil)
+	response.Success(c, nil)
 }
 
 // ReplyComment 回复批注
@@ -353,7 +351,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
@@ -368,7 +366,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "回复成功", reply)
+	response.Success(c, reply)
 }
 
 // GetCommentThread 获取批注线程
@@ -397,7 +395,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", thread)
+	response.Success(c, thread)
 }
 
 // GetCommentStats 获取批注统计
@@ -425,7 +423,7 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // SearchComments 搜索批注
@@ -473,7 +471,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 		"keyword":  keyword,
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", result)
+	response.Success(c, result)
 }
 
 // BatchDeleteComments 批量删除批注
@@ -505,7 +503,7 @@ func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ============ 请求体结构 ============
