@@ -8,6 +8,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/recommendation"
+	"Qingyu_backend/pkg/response"
 )
 
 // RecommendationAPI 推荐API
@@ -48,7 +49,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取推荐
 	recommendations, err := api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取推荐失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -69,7 +70,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	itemID := c.Query("itemId")
 	if itemID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "itemId参数不能为空")
+		response.BadRequest(c,  "参数错误", "itemId参数不能为空")
 		return
 	}
 
@@ -84,7 +85,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	// 获取相似物品
 	similarItems, err := api.recoService.GetSimilarItems(c.Request.Context(), itemID, limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取推荐失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -119,7 +120,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -141,7 +142,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 记录行为
 	err := api.recoService.RecordUserBehavior(c.Request.Context(), behaviorReq)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "记录行为失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -183,7 +184,7 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 	if userIDStr == "" || err != nil {
 		recommendations, err = api.recoService.GetHotItems(c.Request.Context(), "book", limit)
 		if err != nil {
-			shared.Error(c, http.StatusInternalServerError, "获取首页推荐失败", err.Error())
+			response.InternalError(c, err)
 			return
 		}
 	}
@@ -217,7 +218,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 	// 获取热门推荐
 	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), itemType, limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取热门推荐失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -238,7 +239,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	category := c.Query("category")
 	if category == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "category参数不能为空")
+		response.BadRequest(c,  "参数错误", "category参数不能为空")
 		return
 	}
 
@@ -254,7 +255,7 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	// TODO: 后续可以基于category参数实现真正的分类推荐
 	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), "book", limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取分类推荐失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -2,13 +2,12 @@ package social
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/api/v1/social/dto"
 	modelsMessaging "Qingyu_backend/models/messaging"
 	serviceMessaging "Qingyu_backend/service/messaging"
@@ -47,7 +46,7 @@ func NewMessageAPIV2(
 // @Param page_size query int false "每页数量" default(20)
 // @Param before query string false "获取此消息之前的消息"
 // @Param after query string false "获取此消息之后的消息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} shared.APIResponse{data=dto.GetMessagesResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 403 {object} shared.APIResponse "无权访问"
 // @Failure 404 {object} shared.APIResponse "会话不存在"
@@ -55,19 +54,19 @@ func NewMessageAPIV2(
 func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 	userID := c.GetString("userID")
 	if userID == "" {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
+		response.BadRequest(c,  "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.GetMessagesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 	req = *req.GetDefaults() // 应用默认值
@@ -76,15 +75,15 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 	conv, err := api.conversationService.Get(c.Request.Context(), conversationID)
 	if err != nil {
 		if err == modelsMessaging.ErrConversationNotFound {
-			shared.NotFound(c, "会话不存在")
+			response.NotFound(c, "会话不存在")
 		} else {
-			shared.InternalError(c, "获取失败", err)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
 	if !conv.HasParticipant(userID) {
-		shared.Forbidden(c, "无权访问")
+		response.Forbidden(c, "无权访问")
 		return
 	}
 
@@ -107,7 +106,7 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 		after,
 	)
 	if err != nil {
-		shared.InternalError(c, "获取失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -130,7 +129,7 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 
 	hasMore := len(messages) == req.PageSize
 
-	shared.Success(c, http.StatusOK, "获取成功", dto.GetMessagesResponse{
+	response.Success(c, dto.GetMessagesResponse{
 		Messages: messageItems,
 		Total:    total,
 		Page:     req.Page,
@@ -147,8 +146,8 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param conversationId path string true "会话ID"
-// @Param request body object true "发送消息请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.SendMessageRequest true "发送消息请求"
+// @Success 200 {object} shared.APIResponse{data=dto.SendMessageResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Failure 403 {object} shared.APIResponse "无权访问"
 // @Failure 404 {object} shared.APIResponse "会话不存在"
@@ -156,19 +155,19 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 	userID := c.GetString("userID")
 	if userID == "" {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
+		response.BadRequest(c,  "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.SendMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -176,15 +175,15 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 	conv, err := api.conversationService.Get(c.Request.Context(), conversationID)
 	if err != nil {
 		if err == modelsMessaging.ErrConversationNotFound {
-			shared.NotFound(c, "会话不存在")
+			response.NotFound(c, "会话不存在")
 		} else {
-			shared.InternalError(c, "获取失败", err)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
 	if !conv.HasParticipant(userID) {
-		shared.Forbidden(c, "无权访问")
+		response.Forbidden(c, "无权访问")
 		return
 	}
 
@@ -219,7 +218,7 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 	// 保存消息
 	savedMessage, err := api.messageService.Create(c.Request.Context(), message)
 	if err != nil {
-		shared.InternalError(c, "发送失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -248,7 +247,7 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 		receiverID,
 	)
 
-	shared.Success(c, http.StatusOK, "发送成功", dto.SendMessageResponse{
+	response.Success(c, dto.SendMessageResponse{
 		MessageID:   savedMessage.ID.Hex(),
 		SentAt:      savedMessage.CreatedAt,
 		UnreadCount: unreadCount,
@@ -262,26 +261,26 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param request body object true "创建会话请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.CreateConversationRequest true "创建会话请求"
+// @Success 200 {object} shared.APIResponse{data=dto.CreateConversationResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Router /api/v1/social/messages/conversations [post]
 func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 	userID := c.GetString("userID")
 	if userID == "" {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req dto.CreateConversationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 验证参与者
 	if !contains(req.ParticipantIDs, userID) {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "必须包含当前用户")
+		response.BadRequest(c,  "参数错误", "必须包含当前用户")
 		return
 	}
 
@@ -292,11 +291,11 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 		userID,
 	)
 	if err != nil {
-		shared.InternalError(c, "创建失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", dto.CreateConversationResponse{
+	response.Created(c, dto.CreateConversationResponse{
 		ConversationID: conv.ID.Hex(),
 		Participants:   conv.ParticipantIDs,
 		CreatedAt:      conv.CreatedAt,
@@ -311,26 +310,26 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param conversationId path string true "会话ID"
-// @Param request body object true "标记已读请求"
-// @Success 200 {object} shared.APIResponse
+// @Param request body dto.MarkConversationReadRequest true "标记已读请求"
+// @Success 200 {object} shared.APIResponse{data=dto.MarkAsReadResponse}
 // @Failure 400 {object} shared.APIResponse "参数错误"
 // @Router /api/v1/social/messages/conversations/{conversationId}/read [post]
 func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {
 	userID := c.GetString("userID")
 	if userID == "" {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
+		response.BadRequest(c,  "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.MarkConversationReadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -343,11 +342,11 @@ func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {
 		readAt,
 	)
 	if err != nil {
-		shared.InternalError(c, "标记失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记成功", dto.MarkAsReadResponse{
+	response.Success(c, dto.MarkAsReadResponse{
 		Success: true,
 		Message: fmt.Sprintf("已标记%d条消息为已读", affected),
 	})

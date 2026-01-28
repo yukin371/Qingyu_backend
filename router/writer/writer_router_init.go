@@ -8,14 +8,14 @@ import (
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/interfaces"
-	search_legacy "Qingyu_backend/service/shared/search_legacy"
+	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
-func RegisterWriterRoutes(r *gin.RouterGroup) {
+func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
 	// 从服务容器获取依赖
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
@@ -50,10 +50,6 @@ func RegisterWriterRoutes(r *gin.RouterGroup) {
 
 	// 创建VersionService（直接使用MongoDB数据库）
 	versionSvc := projectService.NewVersionService(mongoDB)
-
-	// 创建SearchService（用于文档搜索）
-	bookRepo := repositoryFactory.CreateBookRepository()
-	searchSvc := search_legacy.NewSearchService(bookRepo, documentRepo)
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口

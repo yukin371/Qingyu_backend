@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"Qingyu_backend/pkg/response"
 )
 
 // WritingApi AI写作API
@@ -48,7 +49,7 @@ type ContinueWritingRequest struct {
 func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -69,7 +70,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	// 调用服务
 	result, err := api.aiService.ContinueWriting(c.Request.Context(), serviceReq)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "续写失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -92,7 +93,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -204,7 +205,7 @@ type RewriteTextRequest struct {
 func (api *WritingApi) RewriteText(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -239,7 +240,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 	// 调用服务
 	result, err := api.aiService.OptimizeText(c.Request.Context(), serviceReq)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "改写失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -262,7 +263,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 

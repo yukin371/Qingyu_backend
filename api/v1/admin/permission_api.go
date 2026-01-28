@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/models/auth"
 	sharedService "Qingyu_backend/service/shared"
 )
@@ -38,11 +39,11 @@ func NewPermissionAPI(permissionService sharedService.PermissionService) *Permis
 func (api *PermissionAPI) GetAllPermissions(c *gin.Context) {
 	permissions, err := api.permissionService.GetAllPermissions(c.Request.Context())
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", permissions)
+	response.Success(c, permissions)
 }
 
 // GetPermission 获取权限详情
@@ -60,17 +61,17 @@ func (api *PermissionAPI) GetAllPermissions(c *gin.Context) {
 func (api *PermissionAPI) GetPermission(c *gin.Context) {
 	code := c.Param("code")
 	if code == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "权限代码不能为空")
+		response.BadRequest(c, "参数错误", "权限代码不能为空")
 		return
 	}
 
 	permission, err := api.permissionService.GetPermissionByCode(c.Request.Context(), code)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "权限不存在", err.Error())
+		response.NotFound(c, "权限不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", permission)
+	response.Success(c, permission)
 }
 
 // CreatePermission 创建权限
@@ -89,16 +90,16 @@ func (api *PermissionAPI) GetPermission(c *gin.Context) {
 func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 	var req auth.Permission
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.permissionService.CreatePermission(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", nil)
+	response.Created(c, nil)
 }
 
 // UpdatePermission 更新权限
@@ -117,23 +118,23 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 	code := c.Param("code")
 	if code == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "权限代码不能为空")
+		response.BadRequest(c, "参数错误", "权限代码不能为空")
 		return
 	}
 
 	var req auth.Permission
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	req.Code = code
 	if err := api.permissionService.UpdatePermission(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeletePermission 删除权限
@@ -151,16 +152,16 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 	code := c.Param("code")
 	if code == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "权限代码不能为空")
+		response.BadRequest(c, "参数错误", "权限代码不能为空")
 		return
 	}
 
 	if err := api.permissionService.DeletePermission(c.Request.Context(), code); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ==================== 角色管理 ====================
@@ -179,11 +180,11 @@ func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 func (api *PermissionAPI) GetAllRoles(c *gin.Context) {
 	roles, err := api.permissionService.GetAllRoles(c.Request.Context())
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", roles)
+	response.Success(c, roles)
 }
 
 // GetRole 获取角色详情
@@ -207,11 +208,11 @@ func (api *PermissionAPI) GetRole(c *gin.Context) {
 
 	role, err := api.permissionService.GetRoleByID(c.Request.Context(), roleID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "角色不存在", err.Error())
+		response.NotFound(c, "角色不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", role)
+	response.Success(c, role)
 }
 
 // CreateRole 创建角色
@@ -230,16 +231,16 @@ func (api *PermissionAPI) GetRole(c *gin.Context) {
 func (api *PermissionAPI) CreateRole(c *gin.Context) {
 	var req auth.Role
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.permissionService.CreateRole(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", nil)
+	response.Created(c, nil)
 }
 
 // UpdateRole 更新角色
@@ -264,17 +265,17 @@ func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 
 	var req auth.Role
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	req.ID = roleID
 	if err := api.permissionService.UpdateRole(c.Request.Context(), &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteRole 删除角色
@@ -297,11 +298,11 @@ func (api *PermissionAPI) DeleteRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.DeleteRole(c.Request.Context(), roleID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // AssignPermissionToRole 为角色分配权限
@@ -327,11 +328,11 @@ func (api *PermissionAPI) AssignPermissionToRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.AssignPermissionToRole(c.Request.Context(), roleID, permissionCode); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "分配失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "分配成功", nil)
+	response.Success(c, nil)
 }
 
 // RemovePermissionFromRole 移除角色权限
@@ -357,11 +358,11 @@ func (api *PermissionAPI) RemovePermissionFromRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.RemovePermissionFromRole(c.Request.Context(), roleID, permissionCode); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "移除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "移除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetRolePermissions 获取角色的所有权限
@@ -385,11 +386,11 @@ func (api *PermissionAPI) GetRolePermissions(c *gin.Context) {
 
 	permissions, err := api.permissionService.GetRolePermissions(c.Request.Context(), roleID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", permissions)
+	response.Success(c, permissions)
 }
 
 // ==================== 用户角色管理 ====================
@@ -414,11 +415,11 @@ func (api *PermissionAPI) GetUserRoles(c *gin.Context) {
 
 	roles, err := api.permissionService.GetUserRoles(c.Request.Context(), userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", roles)
+	response.Success(c, roles)
 }
 
 // AssignRoleToUser 为用户分配角色
@@ -442,16 +443,16 @@ func (api *PermissionAPI) AssignRoleToUser(c *gin.Context) {
 
 	var req AssignRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.permissionService.AssignRoleToUser(c.Request.Context(), userID, req.Role); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "分配失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "分配成功", nil)
+	response.Success(c, nil)
 }
 
 // RemoveRoleFromUser 移除用户角色
@@ -476,11 +477,11 @@ func (api *PermissionAPI) RemoveRoleFromUser(c *gin.Context) {
 	}
 
 	if err := api.permissionService.RemoveRoleFromUser(c.Request.Context(), userID, role); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "移除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "移除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetUserPermissions 获取用户的所有权限
@@ -503,11 +504,11 @@ func (api *PermissionAPI) GetUserPermissions(c *gin.Context) {
 
 	permissions, err := api.permissionService.GetUserPermissions(c.Request.Context(), userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", permissions)
+	response.Success(c, permissions)
 }
 
 // ==================== 请求体结构 ====================

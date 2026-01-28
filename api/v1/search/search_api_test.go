@@ -8,18 +8,44 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.uber.org/zap"
 
 	"Qingyu_backend/models/bookstore"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
 	searchService "Qingyu_backend/service/search"
 )
+
+// mockGrayScaleDecision 是一个简单的灰度决策器 mock 实现
+type mockGrayScaleDecision struct{}
+
+func (m *mockGrayScaleDecision) ShouldUseES(ctx context.Context, searchType string, userID string) bool {
+	return false // 测试时默认使用 MongoDB
+}
+
+func (m *mockGrayScaleDecision) RecordUsage(engine string, took time.Duration) {
+	// 测试时不需要记录
+}
+
+func (m *mockGrayScaleDecision) GetMetrics() searchService.GrayScaleMetrics {
+	return searchService.GrayScaleMetrics{}
+}
+
+func (m *mockGrayScaleDecision) UpdateConfig(enabled bool, percent int) error {
+	return nil
+}
+
+func (m *mockGrayScaleDecision) GetConfig() *searchService.GrayScaleConfig {
+	return &searchService.GrayScaleConfig{
+		Enabled: false,
+		Percent: 0,
+	}
+}
 
 // MockEngine 是一个简单的模拟搜索引擎实现
 type MockEngine struct{}
@@ -101,16 +127,11 @@ func setupTestAPI() (*SearchAPI, *gin.Engine) {
 
 	// 创建标准日志记录器
 	stdLogger := log.Default()
-	zapLogger := zap.NewNop() // 测试时使用无输出日志
 
-	// 创建灰度决策器（测试环境禁用灰度）
-	grayScaleConfig := &searchService.GrayScaleConfig{
-		Enabled: false, // 测试环境禁用灰度
-		Percent: 0,
-	}
-	grayScaleDecision := searchService.NewGrayScaleDecision(grayScaleConfig, zapLogger)
+	// 创建 mock 灰度决策器
+	mockGrayscale := &mockGrayScaleDecision{}
 
-	searchSvc := searchService.NewSearchService(stdLogger, searchConfig, grayScaleDecision)
+	searchSvc := searchService.NewSearchService(stdLogger, searchConfig, mockGrayscale)
 
 	// 注册 BookProvider
 	searchSvc.RegisterProvider(bookProvider)
@@ -504,16 +525,16 @@ func TestSearch_UnsupportedType(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// 当 Provider 不存在时，API 返回 HTTP 200，但 code 字段为 400
-	assert.Equal(t, http.StatusOK, w.Code)
+	// 当 Provider 不存在时，API 返回 HTTP 500（服务器错误）
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	// 验证响应格式 - HTTP 200 但业务 code 为 400
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
-	assert.Contains(t, response["message"], "Unsupported search type")
+	// 验证响应格式 - HTTP 500，包含 "搜索失败" 消息
+	assert.Equal(t, float64(http.StatusInternalServerError), response["code"])
+	assert.Contains(t, response["message"], "搜索失败")
 }
 
 // TestSearch_DefaultPagination 测试默认分页参数

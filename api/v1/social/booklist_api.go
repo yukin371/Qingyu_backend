@@ -1,11 +1,10 @@
 package social
 
 import (
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -43,13 +42,13 @@ type CreateBookListRequest struct {
 func (api *BookListAPI) CreateBookList(c *gin.Context) {
 	var req CreateBookListRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -74,11 +73,11 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建书单失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建书单成功", bookList)
+	response.Created(c, bookList)
 }
 
 // GetBookLists 获取书单列表
@@ -99,7 +98,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -110,11 +109,11 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书单列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书单列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  bookLists,
 		"total": total,
 		"page":  params.Page,
@@ -133,17 +132,17 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 func (api *BookListAPI) GetBookListDetail(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	bookList, err := api.bookListService.GetBookListByID(c.Request.Context(), bookListID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书单详情失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书单详情成功", bookList)
+	response.Success(c, bookList)
 }
 
 // UpdateBookListRequest 更新书单请求
@@ -169,19 +168,19 @@ type UpdateBookListRequest struct {
 func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateBookListRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -206,17 +205,17 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "没有要更新的字段")
+		response.BadRequest(c, "参数错误", "没有要更新的字段")
 		return
 	}
 
 	err := api.bookListService.UpdateBookList(c.Request.Context(), userID.(string), bookListID, updates)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新书单失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新书单成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteBookList 删除书单
@@ -231,23 +230,23 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 func (api *BookListAPI) DeleteBookList(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	err := api.bookListService.DeleteBookList(c.Request.Context(), userID.(string), bookListID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除书单失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除书单成功", nil)
+	response.Success(c, nil)
 }
 
 // LikeBookList 点赞书单
@@ -262,13 +261,13 @@ func (api *BookListAPI) DeleteBookList(c *gin.Context) {
 func (api *BookListAPI) LikeBookList(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -276,14 +275,14 @@ func (api *BookListAPI) LikeBookList(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经点赞过该书单" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "点赞失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", nil)
+	response.Success(c, nil)
 }
 
 // ForkBookList 复制书单
@@ -298,23 +297,23 @@ func (api *BookListAPI) LikeBookList(c *gin.Context) {
 func (api *BookListAPI) ForkBookList(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	bookList, err := api.bookListService.ForkBookList(c.Request.Context(), userID.(string), bookListID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "复制书单失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "复制书单成功", bookList)
+	response.Created(c, bookList)
 }
 
 // GetBooksInList 获取书单中的书籍
@@ -328,17 +327,17 @@ func (api *BookListAPI) ForkBookList(c *gin.Context) {
 func (api *BookListAPI) GetBooksInList(c *gin.Context) {
 	bookListID := c.Param("id")
 	if bookListID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书单ID不能为空")
+		response.BadRequest(c, "参数错误", "书单ID不能为空")
 		return
 	}
 
 	books, err := api.bookListService.GetBooksInList(c.Request.Context(), bookListID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书单书籍失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书单书籍成功", gin.H{
+	response.Success(c, gin.H{
 		"list": books,
 	})
 }

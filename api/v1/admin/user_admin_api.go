@@ -1,12 +1,11 @@
 package admin
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	adminservice "Qingyu_backend/service/admin"
@@ -56,7 +55,7 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 
 	usersList, total, err := api.userAdminService.GetUserList(c.Request.Context(), filter, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 		"size":  size,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }
 
 // GetUserDetail 获取用户详情
@@ -87,21 +86,21 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	user, err := api.userAdminService.GetUserDetail(c.Request.Context(), userID)
 	if err != nil {
 		if err == adminservice.ErrUserNotFound {
-			shared.Error(c, http.StatusNotFound, "用户不存在", err.Error())
+			response.NotFound(c, "用户不存在")
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", user)
+	response.Success(c, user)
 }
 
 // UpdateUserStatus 更新用户状态
@@ -122,31 +121,31 @@ func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	var req UpdateUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	status := users.UserStatus(req.Status)
 	if err := api.userAdminService.UpdateUserStatus(c.Request.Context(), userID, status); err != nil {
 		if err == adminservice.ErrUserNotFound {
-			shared.Error(c, http.StatusNotFound, "用户不存在", err.Error())
+			response.NotFound(c, "用户不存在")
 			return
 		}
 		if err == adminservice.ErrCannotModifySuperAdmin {
-			shared.Error(c, http.StatusForbidden, "权限不足", err.Error())
+			response.Forbidden(c, "权限不足")
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // UpdateUserRole 更新用户角色
@@ -167,34 +166,34 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 func (api *UserAdminAPI) UpdateUserRole(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	var req UpdateUserRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.userAdminService.UpdateUserRole(c.Request.Context(), userID, req.Role); err != nil {
 		if err == adminservice.ErrUserNotFound {
-			shared.Error(c, http.StatusNotFound, "用户不存在", err.Error())
+			response.NotFound(c, "用户不存在")
 			return
 		}
 		if err == adminservice.ErrCannotModifySuperAdmin {
-			shared.Error(c, http.StatusForbidden, "权限不足", err.Error())
+			response.Forbidden(c, "权限不足")
 			return
 		}
 		if err == adminservice.ErrInvalidRole {
-			shared.Error(c, http.StatusBadRequest, "无效的角色", err.Error())
+			response.BadRequest(c, "无效的角色", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteUser 删除用户
@@ -214,24 +213,24 @@ func (api *UserAdminAPI) UpdateUserRole(c *gin.Context) {
 func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	if err := api.userAdminService.DeleteUser(c.Request.Context(), userID); err != nil {
 		if err == adminservice.ErrUserNotFound {
-			shared.Error(c, http.StatusNotFound, "用户不存在", err.Error())
+			response.NotFound(c, "用户不存在")
 			return
 		}
 		if err == adminservice.ErrCannotModifySuperAdmin {
-			shared.Error(c, http.StatusForbidden, "权限不足", err.Error())
+			response.Forbidden(c, "权限不足")
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetUserActivities 获取用户活动记录
@@ -252,7 +251,7 @@ func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -262,10 +261,10 @@ func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 	activities, total, err := api.userAdminService.GetUserActivities(c.Request.Context(), userID, page, size)
 	if err != nil {
 		if err == adminservice.ErrInvalidUserID {
-			shared.Error(c, http.StatusBadRequest, "无效的用户ID", err.Error())
+			response.BadRequest(c, "无效的用户ID", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -276,7 +275,7 @@ func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 		"size":       size,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }
 
 // GetUserStatistics 获取用户统计信息
@@ -295,21 +294,21 @@ func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 func (api *UserAdminAPI) GetUserStatistics(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	stats, err := api.userAdminService.GetUserStatistics(c.Request.Context(), userID)
 	if err != nil {
 		if err == adminservice.ErrInvalidUserID {
-			shared.Error(c, http.StatusBadRequest, "无效的用户ID", err.Error())
+			response.BadRequest(c, "无效的用户ID", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // ResetUserPassword 重置用户密码
@@ -329,17 +328,17 @@ func (api *UserAdminAPI) GetUserStatistics(c *gin.Context) {
 func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	newPassword, err := api.userAdminService.ResetUserPassword(c.Request.Context(), userID)
 	if err != nil {
 		if err == adminservice.ErrUserNotFound {
-			shared.Error(c, http.StatusNotFound, "用户不存在", err.Error())
+			response.NotFound(c, "用户不存在")
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "重置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -348,7 +347,7 @@ func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 		"message":     "请将新密码安全地发送给用户",
 	}
 
-	shared.Success(c, http.StatusOK, "重置成功", result)
+	response.Success(c, result)
 }
 
 // BatchUpdateStatus 批量更新用户状态
@@ -367,22 +366,22 @@ func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 func (api *UserAdminAPI) BatchUpdateStatus(c *gin.Context) {
 	var req BatchUpdateStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if len(req.UserIds) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID列表不能为空")
+		response.BadRequest(c, "参数错误", "用户ID列表不能为空")
 		return
 	}
 
 	status := users.UserStatus(req.Status)
 	if err := api.userAdminService.BatchUpdateStatus(c.Request.Context(), req.UserIds, status); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchDeleteUsers 批量删除用户
@@ -401,21 +400,21 @@ func (api *UserAdminAPI) BatchUpdateStatus(c *gin.Context) {
 func (api *UserAdminAPI) BatchDeleteUsers(c *gin.Context) {
 	var req BatchDeleteUsersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if len(req.UserIds) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID列表不能为空")
+		response.BadRequest(c, "参数错误", "用户ID列表不能为空")
 		return
 	}
 
 	if err := api.userAdminService.BatchDeleteUsers(c.Request.Context(), req.UserIds); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量删除成功", nil)
+	response.Success(c, nil)
 }
 
 // SearchUsers 搜索用户
@@ -435,7 +434,7 @@ func (api *UserAdminAPI) BatchDeleteUsers(c *gin.Context) {
 func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "关键词不能为空")
+		response.BadRequest(c, "参数错误", "关键词不能为空")
 		return
 	}
 
@@ -444,7 +443,7 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 
 	usersList, total, err := api.userAdminService.SearchUsers(c.Request.Context(), keyword, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "搜索失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -455,7 +454,7 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 		"size":  size,
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", result)
+	response.Success(c, result)
 }
 
 // CountByStatus 按状态统计用户数量
@@ -471,11 +470,11 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 func (api *UserAdminAPI) CountByStatus(c *gin.Context) {
 	counts, err := api.userAdminService.CountByStatus(c.Request.Context())
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "统计成功", counts)
+	response.Success(c, counts)
 }
 
 // ============ 请求体结构 ============

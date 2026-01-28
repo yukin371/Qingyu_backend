@@ -8,6 +8,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // PublishApi 发布管理API处理器
@@ -38,13 +39,13 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req interfaces.PublishProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -58,7 +59,7 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 
 	record, err := api.publishService.PublishProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "发布项目失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -80,7 +81,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -94,7 +95,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 
 	err := api.publishService.UnpublishProject(c.Request.Context(), projectID, userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "取消发布失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -115,13 +116,13 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
 	status, err := api.publishService.GetProjectPublicationStatus(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取发布状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -146,13 +147,13 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if documentID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "documentId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "documentId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.PublishDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -166,7 +167,7 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 
 	record, err := api.publishService.PublishDocument(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "发布文档失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -191,13 +192,13 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if documentID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "documentId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "documentId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateDocumentPublishStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -211,7 +212,7 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 
 	err := api.publishService.UpdateDocumentPublishStatus(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新发布状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -234,13 +235,13 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req interfaces.BatchPublishDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -254,7 +255,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 
 	result, err := api.publishService.BatchPublishDocuments(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量发布失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -276,7 +277,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -286,7 +287,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 
 	records, total, err := api.publishService.GetPublicationRecords(c.Request.Context(), projectID, page, pageSize)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取发布记录失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -307,7 +308,7 @@ func (api *PublishApi) GetPublicationRecord(c *gin.Context) {
 	recordID := c.Param("id")
 
 	if recordID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "记录ID不能为空")
+		response.BadRequest(c,  "参数错误", "记录ID不能为空")
 		return
 	}
 

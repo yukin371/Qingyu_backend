@@ -1,10 +1,9 @@
 package admin
 
 import (
-	"net/http"
 	"strconv"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	bookstoreModel "Qingyu_backend/models/bookstore" // Imported for Swagger annotations
 	"Qingyu_backend/service/bookstore"
 
@@ -89,11 +88,11 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 	// 调用Service层
 	resp, err := api.bannerService.GetBanners(c.Request.Context(), req)
 	if err != nil {
-		shared.InternalError(c, "获取Banner列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取Banner列表成功", resp)
+	response.Success(c, resp)
 }
 
 // GetBannerByID 获取Banner详情
@@ -112,17 +111,17 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "Banner ID不能为空", "")
+		response.BadRequest(c, "Banner ID不能为空", "")
 		return
 	}
 
 	banner, err := api.bannerService.GetBannerByID(c.Request.Context(), id)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取Banner成功", banner)
+	response.Success(c, banner)
 }
 
 // CreateBanner 创建Banner
@@ -141,17 +140,17 @@ func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 func (api *BannerAPI) CreateBanner(c *gin.Context) {
 	var req bookstore.CreateBannerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	banner, err := api.bannerService.CreateBanner(c.Request.Context(), &req)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建Banner成功", banner)
+	response.Created(c, banner)
 }
 
 // UpdateBanner 更新Banner
@@ -172,22 +171,22 @@ func (api *BannerAPI) CreateBanner(c *gin.Context) {
 func (api *BannerAPI) UpdateBanner(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "Banner ID不能为空", "")
+		response.BadRequest(c, "Banner ID不能为空", "")
 		return
 	}
 
 	var req bookstore.UpdateBannerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.bannerService.UpdateBanner(c.Request.Context(), id, &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新Banner成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteBanner 删除Banner
@@ -207,16 +206,16 @@ func (api *BannerAPI) UpdateBanner(c *gin.Context) {
 func (api *BannerAPI) DeleteBanner(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "Banner ID不能为空", "")
+		response.BadRequest(c, "Banner ID不能为空", "")
 		return
 	}
 
 	if err := api.bannerService.DeleteBanner(c.Request.Context(), id); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除Banner成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchUpdateStatus 批量更新状态
@@ -235,16 +234,16 @@ func (api *BannerAPI) DeleteBanner(c *gin.Context) {
 func (api *BannerAPI) BatchUpdateStatus(c *gin.Context) {
 	var req bookstore.BatchUpdateStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.bannerService.BatchUpdateStatus(c.Request.Context(), &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新状态成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchUpdateSort 批量更新排序
@@ -263,16 +262,16 @@ func (api *BannerAPI) BatchUpdateStatus(c *gin.Context) {
 func (api *BannerAPI) BatchUpdateSort(c *gin.Context) {
 	var req bookstore.BatchUpdateSortRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.bannerService.BatchUpdateSort(c.Request.Context(), &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新排序成功", nil)
+	response.Success(c, nil)
 }
 
 // IncrementClickCount 增加点击次数
@@ -289,16 +288,16 @@ func (api *BannerAPI) BatchUpdateSort(c *gin.Context) {
 func (api *BannerAPI) IncrementClickCount(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "Banner ID不能为空", "")
+		response.BadRequest(c, "Banner ID不能为空", "")
 		return
 	}
 
 	if err := api.bannerService.IncrementClickCount(c.Request.Context(), id); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "记录成功", nil)
+	response.Success(c, nil)
 }
 
 var _ = bookstoreModel.Banner{}

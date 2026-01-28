@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"Qingyu_backend/pkg/response"
 )
 
 // ChatApi AI聊天API
@@ -49,7 +50,7 @@ type ChatRequest struct {
 func (api *ChatApi) Chat(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -65,7 +66,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 	// 调用聊天服务
 	result, err := api.chatService.StartChat(c.Request.Context(), serviceReq)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "聊天失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -90,7 +91,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 func (api *ChatApi) ChatStream(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -198,7 +199,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 
 	sessions, err := api.chatService.ListChatSessions(c.Request.Context(), projectID, limit, offset)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取会话列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -219,7 +220,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 func (api *ChatApi) GetChatHistory(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
+		response.BadRequest(c,  "参数错误", "会话ID不能为空")
 		return
 	}
 
@@ -245,7 +246,7 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 
 	session, err := api.chatService.GetChatHistory(c.Request.Context(), sessionID, limit, offset)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取聊天历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -264,13 +265,13 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "会话ID不能为空")
+		response.BadRequest(c,  "参数错误", "会话ID不能为空")
 		return
 	}
 
 	err := api.chatService.DeleteChatSession(c.Request.Context(), sessionID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除会话失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

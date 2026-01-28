@@ -10,6 +10,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	documentModel "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/service/writer/project"
+	"Qingyu_backend/pkg/response"
 )
 
 // ProjectApi 项目API
@@ -38,7 +39,7 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 func (api *ProjectApi) CreateProject(c *gin.Context) {
 	var req project.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -50,7 +51,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 
 	resp, err := api.projectService.CreateProject(ctx, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -72,7 +73,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 
 	project, err := api.projectService.GetProject(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -112,7 +113,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 
 	resp, err := api.projectService.ListMyProjects(ctx, req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -136,7 +137,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 
 	var req project.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -147,7 +148,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	}
 
 	if err := api.projectService.UpdateProject(ctx, projectID, &req); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -174,7 +175,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	}
 
 	if err := api.projectService.DeleteProject(ctx, projectID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -201,7 +202,7 @@ func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 
 	// 调用Service计算并更新统计信息
 	if err := api.projectService.RecalculateProjectStatistics(ctx, projectID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

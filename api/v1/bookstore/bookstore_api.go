@@ -1153,6 +1153,10 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 	response.SuccessWithMessage(c, "获取榜单成功", rankings)
 }
 
+// GetBooksByTags 按标签筛选书籍
+//
+
+
 // buildSearchFilter 构建搜索过滤条件
 func (api *BookstoreAPI) buildSearchFilter(categoryID, author, status string, tags []string) map[string]interface{} {
 	filter := make(map[string]interface{})
@@ -1202,6 +1206,37 @@ func (api *BookstoreAPI) buildSearchSort(sortBy, sortOrder string) []searchModel
 }
 
 // convertSearchResponseToBooks 将搜索响应转换为 Book 切片
+
+// GetYears 获取所有书籍的发布年份列表
+func (api *BookstoreAPI) GetYears(c *gin.Context) {
+	years, err := api.service.GetYears(c.Request.Context())
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+
+	response.Success(c, years)
+}
+
+// GetTags 获取所有标签列表
+// 可选参数：categoryId - 只获取该分类下的书籍标签
+func (api *BookstoreAPI) GetTags(c *gin.Context) {
+	categoryID := c.Query("categoryId")
+
+	var categoryIDPtr *string
+	if categoryID != "" {
+		categoryIDPtr = &categoryID
+	}
+
+	tags, err := api.service.GetTags(c.Request.Context(), categoryIDPtr)
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+
+	response.Success(c, tags)
+}
+
 func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2.Book {
 	books := make([]*bookstore2.Book, 0, len(items))
 

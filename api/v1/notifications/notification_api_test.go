@@ -415,14 +415,13 @@ func TestNotificationAPI_BatchMarkRead_Success(t *testing.T) {
 	router := setupNotificationTestRouter(mockService, userID)
 
 	notificationIDs := []string{primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex()}
-	body := struct {
-		IDs []string `json:"ids"`
-	}{
-		IDs: notificationIDs,
+	body := dto.BatchMarkReadRequest{
+		NotificationIDs: notificationIDs,
+		ReadAt:          time.Now().Unix(),
 	}
 	bodyBytes, _ := json.Marshal(body)
 
-	mockService.On("MarkMultipleAsRead", mock.Anything, notificationIDs, userID).Return(nil)
+	mockService.On("MarkMultipleAsReadWithResult", mock.Anything, notificationIDs, userID).Return(2, 0, nil)
 
 	req, _ := http.NewRequest("POST", "/api/v1/notifications/batch-read", bytes.NewBuffer(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
@@ -590,14 +589,12 @@ func TestNotificationAPI_BatchDeleteNotifications_Success(t *testing.T) {
 	router := setupNotificationTestRouter(mockService, userID)
 
 	notificationIDs := []string{primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex()}
-	body := struct {
-		IDs []string `json:"ids"`
-	}{
-		IDs: notificationIDs,
+	body := dto.BatchDeleteRequest{
+		NotificationIDs: notificationIDs,
 	}
 	bodyBytes, _ := json.Marshal(body)
 
-	mockService.On("BatchDeleteNotifications", mock.Anything, notificationIDs, userID).Return(nil)
+	mockService.On("BatchDeleteNotificationsWithResult", mock.Anything, notificationIDs, userID).Return(2, 0, nil)
 
 	req, _ := http.NewRequest("POST", "/api/v1/notifications/batch-delete", bytes.NewBuffer(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")

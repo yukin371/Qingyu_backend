@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/lock"
+	"Qingyu_backend/pkg/response"
 )
 
 // LockAPI 文档锁定API
@@ -40,13 +41,13 @@ func NewLockAPI(lockService lock.DocumentLockService) *LockAPI {
 func (api *LockAPI) LockDocument(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req LockDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -80,7 +81,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 			shared.Error(c, http.StatusConflict, "文档已被锁定", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "锁定失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -103,7 +104,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -120,7 +121,7 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 			shared.Error(c, http.StatusForbidden, "无权操作", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "解锁失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -142,7 +143,7 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 func (api *LockAPI) RefreshLock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -157,7 +158,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 	ttl := 30 * time.Minute
 
 	if err := api.lockService.RefreshLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "刷新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -178,7 +179,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 func (api *LockAPI) GetLockStatus(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -190,7 +191,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 
 	status, err := api.lockService.GetLockStatus(c.Request.Context(), documentID, userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -213,7 +214,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 func (api *LockAPI) ForceUnlock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -230,7 +231,7 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 
 	// 强制解锁
 	if err := api.lockService.ForceUnlock(c.Request.Context(), documentID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "强制解锁失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -253,13 +254,13 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 func (api *LockAPI) ExtendLock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req ExtendLockRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -277,7 +278,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 	}
 
 	if err := api.lockService.ExtendLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "延长失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -11,6 +11,7 @@ import (
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // SyncAPI 阅读进度同步API
@@ -65,7 +66,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 升级到WebSocket
 	conn, err := WebSocketUpgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "WebSocket升级失败", err.Error())
+		response.BadRequest(c,  "WebSocket升级失败", err.Error())
 		return
 	}
 
@@ -102,7 +103,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	var req SyncProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -117,7 +118,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 
 	// 同步进度
 	if err := api.syncService.SyncProgress(c.Request.Context(), userIDStr, req.BookID, req.ChapterID, req.DeviceID, req.Progress); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "同步失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -139,7 +140,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	var req MergeProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -158,7 +159,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 		// 解析时间戳
 		timestamp, err := time.Parse(time.RFC3339, p.Timestamp)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "时间戳格式错误", err.Error())
+			response.BadRequest(c,  "时间戳格式错误", err.Error())
 			return
 		}
 
@@ -174,7 +175,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 
 	// 合并进度
 	if err := api.syncService.MergeOfflineProgresses(c.Request.Context(), userIDStr, progresses); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "合并失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -1,12 +1,11 @@
 package admin
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/admin"
 )
 
@@ -40,30 +39,25 @@ func NewSystemAdminAPI(adminSvc admin.AdminService) *SystemAdminAPI {
 func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	var req ReviewWithdrawRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从context获取管理员ID
 	adminID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 调用Service层
 	err := api.admin.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID.(string), req.Approved, req.Reason)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "审核提现失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	message := "拒绝提现成功"
-	if req.Approved {
-		message = "批准提现成功"
-	}
-
-	shared.Success(c, http.StatusOK, message, nil)
+	response.Success(c, nil)
 }
 
 // GetUserStatistics 获取用户统计（管理员）
@@ -84,18 +78,18 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "缺少用户ID")
+		response.BadRequest(c, "参数错误", "缺少用户ID")
 		return
 	}
 
 	// 调用Service层
 	stats, err := api.admin.GetUserStatistics(c.Request.Context(), userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取用户统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取用户统计成功", stats)
+	response.Success(c, stats)
 }
 
 // GetOperationLogs 获取操作日志（管理员）
@@ -133,11 +127,11 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 	// 调用Service层
 	logs, err := api.admin.GetOperationLogs(c.Request.Context(), req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取操作日志失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, logs, int64(len(logs)), page, pageSize, "获取操作日志成功")
+	response.Paginated(c, logs, int64(len(logs)), page, pageSize, "获取操作日志成功")
 }
 
 // GetSystemStats 获取系统统计（管理员）
@@ -159,11 +153,11 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 	// 调用AdminService获取系统统计
 	stats, err := api.admin.GetSystemStats(ctx)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取系统统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // GetSystemConfig 获取系统配置（管理员）
@@ -185,11 +179,11 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 	// 调用AdminService获取系统配置
 	configs, err := api.admin.GetSystemConfig(ctx)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取系统配置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", configs)
+	response.Success(c, configs)
 }
 
 // UpdateSystemConfig 更新系统配置（管理员）
@@ -210,7 +204,7 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	var req SystemConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -219,11 +213,11 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	// 调用AdminService更新系统配置
 	err := api.admin.UpdateSystemConfig(ctx, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新系统配置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // CreateAnnouncement 发布公告（管理员）
@@ -250,14 +244,14 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从context获取管理员ID
 	adminID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -266,11 +260,11 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	// 调用AdminService创建公告
 	announcement, err := api.admin.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "发布公告失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "公告发布成功", announcement)
+	response.Created(c, announcement)
 }
 
 // GetAnnouncements 获取公告列表（管理员）
@@ -297,9 +291,9 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	// 调用AdminService获取公告列表
 	announcements, total, err := api.admin.GetAnnouncements(ctx, page, pageSize)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取公告列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, announcements, total, page, pageSize, "获取成功")
+	response.Paginated(c, announcements, total, page, pageSize, "获取成功")
 }

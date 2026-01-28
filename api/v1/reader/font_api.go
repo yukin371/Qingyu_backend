@@ -7,6 +7,7 @@ import (
 	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // FontAPI 字体API
@@ -73,7 +74,7 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 func (api *FontAPI) GetFontByName(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体名称不能为空")
+		response.BadRequest(c,  "参数错误", "字体名称不能为空")
 		return
 	}
 
@@ -150,7 +151,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 
 	fontID := c.Param("id")
 	if fontID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体ID不能为空")
+		response.BadRequest(c,  "参数错误", "字体ID不能为空")
 		return
 	}
 
@@ -188,7 +189,7 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 
 	fontID := c.Param("id")
 	if fontID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体ID不能为空")
+		response.BadRequest(c,  "参数错误", "字体ID不能为空")
 		return
 	}
 

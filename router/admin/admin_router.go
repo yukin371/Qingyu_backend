@@ -150,7 +150,7 @@ func RegisterAdminRoutes(
 				announcementsGroup.POST("", announcementAdminAPI.CreateAnnouncement)            // 创建公告
 				announcementsGroup.PUT("/:id", announcementAdminAPI.UpdateAnnouncement)         // 更新公告
 				announcementsGroup.DELETE("/:id", announcementAdminAPI.DeleteAnnouncement)      // 删除公告
-				announcementsGroup.PUT("/batch-status", announcementAdminAPI.BatchUpdateStatus) // 批量更新状态
+				announcementsGroup.POST("/batch-status", announcementAdminAPI.BatchUpdateStatus) // 批量更新状态
 				announcementsGroup.DELETE("/batch-delete", announcementAdminAPI.BatchDelete)    // 批量删除
 			}
 		}

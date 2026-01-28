@@ -1,12 +1,11 @@
 package writer
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -40,13 +39,13 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if documentID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "documentId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "documentId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.ExportDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -60,11 +59,11 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 
 	task, err := api.exportService.ExportDocument(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建导出任务失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusAccepted, "导出任务已创建", task)
+	response.Success(c, task)
 }
 
 // ExportProject 导出项目
@@ -83,13 +82,13 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req interfaces.ExportProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -103,11 +102,11 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 
 	task, err := api.exportService.ExportProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建导出任务失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusAccepted, "导出任务已创建", task)
+	response.Success(c, task)
 }
 
 // GetExportTask 获取导出任务状态
@@ -124,17 +123,17 @@ func (api *ExportApi) GetExportTask(c *gin.Context) {
 	taskID := c.Param("id")
 
 	if taskID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "任务ID不能为空")
+		response.BadRequest(c, "参数错误", "任务ID不能为空")
 		return
 	}
 
 	task, err := api.exportService.GetExportTask(c.Request.Context(), taskID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "导出任务不存在", err.Error())
+		response.NotFound(c, "导出任务不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", task)
+	response.Success(c, task)
 }
 
 // DownloadExportFile 下载导出文件
@@ -151,17 +150,17 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 	taskID := c.Param("id")
 
 	if taskID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "任务ID不能为空")
+		response.BadRequest(c, "参数错误", "任务ID不能为空")
 		return
 	}
 
 	file, err := api.exportService.DownloadExportFile(c.Request.Context(), taskID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取下载链接失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", file)
+	response.Success(c, file)
 }
 
 // ListExportTasks 获取项目的导出任务列表
@@ -179,7 +178,7 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 func (api *ExportApi) ListExportTasks(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -189,11 +188,11 @@ func (api *ExportApi) ListExportTasks(c *gin.Context) {
 
 	tasks, total, err := api.exportService.ListExportTasks(c.Request.Context(), projectID, page, pageSize)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取导出任务列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, tasks, total, page, pageSize, "获取成功")
+	response.Paginated(c, tasks, total, page, pageSize, "获取成功")
 }
 
 // DeleteExportTask 删除导出任务
@@ -210,7 +209,7 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 	taskID := c.Param("id")
 
 	if taskID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "任务ID不能为空")
+		response.BadRequest(c, "参数错误", "任务ID不能为空")
 		return
 	}
 
@@ -224,11 +223,11 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 
 	err := api.exportService.DeleteExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除导出任务失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // CancelExportTask 取消导出任务
@@ -246,7 +245,7 @@ func (api *ExportApi) CancelExportTask(c *gin.Context) {
 	taskID := c.Param("id")
 
 	if taskID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "任务ID不能为空")
+		response.BadRequest(c, "参数错误", "任务ID不能为空")
 		return
 	}
 
@@ -260,9 +259,9 @@ func (api *ExportApi) CancelExportTask(c *gin.Context) {
 
 	err := api.exportService.CancelExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "取消导出任务失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消成功", nil)
+	response.Success(c, nil)
 }

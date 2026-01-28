@@ -1,11 +1,10 @@
 package social
 
 import (
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	socialModels "Qingyu_backend/models/social" // Import for Swagger annotations
 	"Qingyu_backend/service/interfaces"
 )
@@ -41,24 +40,24 @@ func NewLikeAPI(likeService interfaces.LikeService) *LikeAPI {
 func (api *LikeAPI) LikeBook(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 点赞
 	if err := api.likeService.LikeBook(c.Request.Context(), userID.(string), bookID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "点赞失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"book_id": bookID,
 	})
 }
@@ -78,23 +77,23 @@ func (api *LikeAPI) LikeBook(c *gin.Context) {
 func (api *LikeAPI) UnlikeBook(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 取消点赞
 	if err := api.likeService.UnlikeBook(c.Request.Context(), userID.(string), bookID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "取消点赞失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"book_id": bookID,
 	})
 }
@@ -112,14 +111,14 @@ func (api *LikeAPI) UnlikeBook(c *gin.Context) {
 func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 获取点赞数
 	likeCount, err := api.likeService.GetBookLikeCount(c.Request.Context(), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取点赞数失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -136,7 +135,7 @@ func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 		}
 	}
 
-	shared.Success(c, http.StatusOK, "获取点赞信息成功", result)
+	response.Success(c, result)
 }
 
 // =========================
@@ -158,23 +157,23 @@ func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 func (api *LikeAPI) LikeComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c,  "参数错误", "评论ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 点赞
 	if err := api.likeService.LikeComment(c.Request.Context(), userID.(string), commentID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "点赞失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"comment_id": commentID,
 	})
 }
@@ -194,23 +193,23 @@ func (api *LikeAPI) LikeComment(c *gin.Context) {
 func (api *LikeAPI) UnlikeComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c,  "参数错误", "评论ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 取消点赞
 	if err := api.likeService.UnlikeComment(c.Request.Context(), userID.(string), commentID); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "取消点赞失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"comment_id": commentID,
 	})
 }
@@ -234,7 +233,7 @@ func (api *LikeAPI) UnlikeComment(c *gin.Context) {
 func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -247,18 +246,18 @@ func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 查询
 	likes, total, err := api.likeService.GetUserLikedBooks(c.Request.Context(), userID.(string), params.Page, params.Size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取点赞列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取点赞列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  likes,
 		"total": total,
 		"page":  params.Page,
@@ -279,17 +278,17 @@ func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
 func (api *LikeAPI) GetUserLikeStats(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	stats, err := api.likeService.GetUserLikeStats(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取点赞统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取点赞统计成功", stats)
+	response.Success(c, stats)
 }
 
 var _ = socialModels.Like{}

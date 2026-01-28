@@ -12,6 +12,8 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/service/writer/document"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // TemplateAPI 模板API
@@ -43,7 +45,7 @@ func NewTemplateAPI(service *document.TemplateService, logger *zap.Logger) *Temp
 func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.service == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "模板服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 模板服务未正确初始化"))
 		return
 	}
 
@@ -56,7 +58,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -65,7 +67,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 
 	var req CreateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -84,7 +86,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	if req.ProjectID != "" {
 		projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "参数错误", "无效的项目ID")
+			response.BadRequest(c,  "参数错误", "无效的项目ID")
 			return
 		}
 		serviceReq.ProjectID = &projectID
@@ -93,7 +95,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	// 调用service创建模板
 	template, err := api.service.CreateTemplate(ctx, serviceReq)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -129,7 +131,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	if projectID := c.Query("projectId"); projectID != "" {
 		id, err := primitive.ObjectIDFromHex(projectID)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "参数错误", "无效的项目ID")
+			response.BadRequest(c,  "参数错误", "无效的项目ID")
 			return
 		}
 		req.ProjectID = &id
@@ -173,7 +175,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	// 调用service查询
 	templates, total, err := api.service.ListTemplates(c.Request.Context(), req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -197,13 +199,13 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的模板ID")
+		response.BadRequest(c,  "参数错误", "无效的模板ID")
 		return
 	}
 
 	template, err := api.service.GetTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -229,13 +231,13 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的模板ID")
+		response.BadRequest(c,  "参数错误", "无效的模板ID")
 		return
 	}
 
 	var req UpdateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -267,7 +269,7 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 			shared.Error(c, http.StatusForbidden, "禁止操作", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -293,7 +295,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的模板ID")
+		response.BadRequest(c,  "参数错误", "无效的模板ID")
 		return
 	}
 
@@ -306,7 +308,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c,  "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -322,7 +324,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 			shared.Error(c, http.StatusForbidden, "权限不足", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -347,13 +349,13 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的模板ID")
+		response.BadRequest(c,  "参数错误", "无效的模板ID")
 		return
 	}
 
 	var req ApplyTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -370,7 +372,7 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	// 渲染模板
 	renderedContent, err := renderer.Render(template.Content, req.Variables)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "渲染失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"Qingyu_backend/pkg/response"
 )
 
 // ChapterCommentAPI 章节评论API
@@ -50,13 +51,13 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
+		response.BadRequest(c,  "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	// 验证章节ID格式
 	if _, err := primitive.ObjectIDFromHex(chapterID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "章节ID格式无效", "章节ID格式无效")
+		response.BadRequest(c,  "章节ID格式无效", "章节ID格式无效")
 		return
 	}
 
@@ -147,13 +148,13 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
+		response.BadRequest(c,  "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	// 验证章节ID格式
 	if _, err := primitive.ObjectIDFromHex(chapterID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "章节ID格式无效", "章节ID格式无效")
+		response.BadRequest(c,  "章节ID格式无效", "章节ID格式无效")
 		return
 	}
 
@@ -168,7 +169,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	// 验证评分
 	if req.Rating < 0 || req.Rating > 5 {
-		shared.Error(c, http.StatusBadRequest, "评分必须在0-5之间", "评分必须在0-5之间")
+		response.BadRequest(c,  "评分必须在0-5之间", "评分必须在0-5之间")
 		return
 	}
 
@@ -176,7 +177,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 	if req.ParentID != nil && *req.ParentID != "" {
 		// 验证父评论ID格式
 		if _, err := primitive.ObjectIDFromHex(*req.ParentID); err != nil {
-			shared.Error(c, http.StatusBadRequest, "父评论ID格式无效", "父评论ID格式无效")
+			response.BadRequest(c,  "父评论ID格式无效", "父评论ID格式无效")
 			return
 		}
 		// 实际应用中应该查询数据库验证父评论存在
@@ -228,13 +229,13 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
+		response.BadRequest(c,  "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
 	// 验证评论ID格式
 	if _, err := primitive.ObjectIDFromHex(commentID); err != nil {
-		shared.Error(c, http.StatusBadRequest, "评论ID格式无效", "评论ID格式无效")
+		response.BadRequest(c,  "评论ID格式无效", "评论ID格式无效")
 		return
 	}
 
@@ -259,7 +260,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
+		response.BadRequest(c,  "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -271,7 +272,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 
 	// 验证评分
 	if req.Rating != nil && (*req.Rating < 0 || *req.Rating > 5) {
-		shared.Error(c, http.StatusBadRequest, "评分必须在0-5之间", "评分必须在0-5之间")
+		response.BadRequest(c,  "评分必须在0-5之间", "评分必须在0-5之间")
 		return
 	}
 
@@ -305,7 +306,7 @@ func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
+		response.BadRequest(c,  "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -339,7 +340,7 @@ func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
+		response.BadRequest(c,  "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -371,7 +372,7 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 
 	commentID := c.Param("commentId")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "评论ID不能为空", "评论ID不能为空")
+		response.BadRequest(c,  "评论ID不能为空", "评论ID不能为空")
 		return
 	}
 
@@ -393,19 +394,19 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
+		response.BadRequest(c,  "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
 	paragraphIndexStr := c.Param("paragraphIndex")
 	if paragraphIndexStr == "" {
-		shared.Error(c, http.StatusBadRequest, "段落索引不能为空", "段落索引不能为空")
+		response.BadRequest(c,  "段落索引不能为空", "段落索引不能为空")
 		return
 	}
 
 	paragraphIndex, err := strconv.Atoi(paragraphIndexStr)
 	if err != nil || paragraphIndex < 0 {
-		shared.Error(c, http.StatusBadRequest, "段落索引格式无效", "段落索引格式无效")
+		response.BadRequest(c,  "段落索引格式无效", "段落索引格式无效")
 		return
 	}
 
@@ -437,7 +438,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
+		response.BadRequest(c,  "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 
@@ -449,7 +450,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	// 段落级评论必须指定段落索引
 	if req.ParagraphIndex == nil {
-		shared.Error(c, http.StatusBadRequest, "段落索引不能为空", "段落索引不能为空")
+		response.BadRequest(c,  "段落索引不能为空", "段落索引不能为空")
 		return
 	}
 
@@ -489,7 +490,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 func (api *ChapterCommentAPI) GetChapterParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "章节ID不能为空", "章节ID不能为空")
+		response.BadRequest(c,  "章节ID不能为空", "章节ID不能为空")
 		return
 	}
 

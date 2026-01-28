@@ -1,11 +1,10 @@
 package social
 
 import (
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -37,13 +36,13 @@ func NewFollowAPI(followService interfaces.FollowService) *FollowAPI {
 func (api *FollowAPI) FollowUser(c *gin.Context) {
 	userID := c.Param("userId")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -51,16 +50,16 @@ func (api *FollowAPI) FollowUser(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "不能关注自己" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else if errMsg == "已经关注过该用户" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "关注失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "关注成功", nil)
+	response.Success(c, nil)
 }
 
 // UnfollowUser 取消关注用户
@@ -75,13 +74,13 @@ func (api *FollowAPI) FollowUser(c *gin.Context) {
 func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 	userID := c.Param("userId")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -89,14 +88,14 @@ func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "未关注该用户" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "取消关注失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消关注成功", nil)
+	response.Success(c, nil)
 }
 
 // GetFollowers 获取粉丝列表
@@ -113,7 +112,7 @@ func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 func (api *FollowAPI) GetFollowers(c *gin.Context) {
 	userID := c.Param("userId")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -125,7 +124,7 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -137,11 +136,11 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取粉丝列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取粉丝列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  followers,
 		"total": total,
 		"page":  params.Page,
@@ -163,7 +162,7 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 func (api *FollowAPI) GetFollowing(c *gin.Context) {
 	userID := c.Param("userId")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -175,7 +174,7 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -187,11 +186,11 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取关注列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取关注列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  following,
 		"total": total,
 		"page":  params.Page,
@@ -211,13 +210,13 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 func (api *FollowAPI) CheckFollowStatus(c *gin.Context) {
 	userID := c.Param("userId")
 	if userID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -228,11 +227,11 @@ func (api *FollowAPI) CheckFollowStatus(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "检查关注状态失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "检查关注状态成功", gin.H{
+	response.Success(c, gin.H{
 		"is_following": isFollowing,
 	})
 }
@@ -261,19 +260,19 @@ type FollowAuthorRequest struct {
 func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 	authorID := c.Param("authorId")
 	if authorID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作者ID不能为空")
+		response.BadRequest(c, "参数错误", "作者ID不能为空")
 		return
 	}
 
 	var req FollowAuthorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -289,14 +288,14 @@ func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经关注过该作者" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "关注作者失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "关注作者成功", nil)
+	response.Success(c, nil)
 }
 
 // UnfollowAuthor 取消关注作者
@@ -311,13 +310,13 @@ func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 	authorID := c.Param("authorId")
 	if authorID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作者ID不能为空")
+		response.BadRequest(c, "参数错误", "作者ID不能为空")
 		return
 	}
 
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -330,14 +329,14 @@ func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "未关注该作者" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "取消关注失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消关注成功", nil)
+	response.Success(c, nil)
 }
 
 // GetFollowingAuthors 获取关注的作者列表
@@ -353,7 +352,7 @@ func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
 	currentUserID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -365,7 +364,7 @@ func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -377,11 +376,11 @@ func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取关注作者列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取关注作者列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  authors,
 		"total": total,
 		"page":  params.Page,

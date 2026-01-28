@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -144,7 +145,6 @@ func (h *MessagingWSHub) SendMessage(conversationID string, message interface{},
 // @Description 实时接收会话消息，需要在URL中传递token参数
 // @Tags Social Messages
 // @Param token query string true "JWT认证token"
-// @Success 101 {string} string "Switching Protocols"
 // @Router /ws/messages [get]
 func (h *MessagingWSHub) HandleMessagingWebSocket(c *gin.Context) {
 	token := c.Query("token")
@@ -284,7 +284,8 @@ func randomString(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[len(letters)%n]
+		// 使用rand.Intn生成0到len(letters)-1的随机索引
+		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
 }

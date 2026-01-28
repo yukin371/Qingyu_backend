@@ -20,13 +20,22 @@ func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.Notifi
 	notificationGroup.GET("/:id", notificationAPI.GetNotification)
 
 	// 标记已读
-	notificationGroup.PUT("/:id/read", notificationAPI.MarkAsRead)
-	notificationGroup.PUT("/mark-read", notificationAPI.MarkMultipleAsRead)
-	notificationGroup.PUT("/read-all", notificationAPI.MarkAllAsRead)
+	notificationGroup.POST("/:id/read", notificationAPI.MarkAsRead)
+	notificationGroup.POST("/batch-read", notificationAPI.MarkMultipleAsRead)
+	notificationGroup.POST("/read-all", notificationAPI.MarkAllAsRead)
+
+	// 清除已读通知
+	notificationGroup.POST("/clear-read", notificationAPI.ClearReadNotifications)
+
+	// 重新发送通知
+	notificationGroup.POST("/:id/resend", notificationAPI.ResendNotification)
+
+	// WebSocket端点
+	notificationGroup.GET("/ws-endpoint", notificationAPI.GetWSEndpoint)
 
 	// 删除通知
 	notificationGroup.DELETE("/:id", notificationAPI.DeleteNotification)
-	notificationGroup.DELETE("/batch-delete", notificationAPI.BatchDeleteNotifications)
+	notificationGroup.POST("/batch-delete", notificationAPI.BatchDeleteNotifications)
 	notificationGroup.DELETE("/delete-all", notificationAPI.DeleteAllNotifications)
 
 	// 通知偏好设置

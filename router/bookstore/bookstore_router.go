@@ -107,8 +107,9 @@ func InitBookstoreRouter(
 			public.GET("/books/search/author", bookstoreApiHandler.SearchByAuthor) // 新增：按作者搜索
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
-			public.GET("/books/tags", bookDetailApiHandler.GetBooksByTags)       // 新增：按标签筛选
-			public.GET("/books/status", bookDetailApiHandler.GetBooksByStatus)   // 新增：按状态筛选
+			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags) // 新增：按标签筛选
+			public.GET("/books/status", bookstoreApiHandler.GetBooksByStatus) // 新增：按状态筛选
+			public.GET("/books/years", bookstoreApiHandler.GetYears) // 新增：获取年份列表（必须在 /books/:id 之前）
 			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
 			public.GET("/books/:id/similar", bookstoreApiHandler.GetSimilarBooks) // 新增：相似书籍推荐（四层降级策略）
 
@@ -116,6 +117,9 @@ func InitBookstoreRouter(
 			public.GET("/categories/tree", bookstoreApiHandler.GetCategoryTree)
 			public.GET("/categories/:id/books", bookstoreApiHandler.GetBooksByCategory)
 			public.GET("/categories/:id", bookstoreApiHandler.GetCategoryByID)
+
+			// 元数据查询 - 用于筛选
+			public.GET("/tags", bookstoreApiHandler.GetTags) // 新增：获取标签列表
 
 			// Banner - 公开API
 			public.GET("/banners", bookstoreApiHandler.GetActiveBanners)

@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -101,6 +102,12 @@ func (m *MockNotificationRepository) DeleteOldNotifications(ctx context.Context,
 	args := m.Called(ctx, beforeDate)
 	return args.Get(0).(int64), args.Error(1)
 }
+
+func (m *MockNotificationRepository) DeleteReadForUser(ctx context.Context, userID string) (int64, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 
 func (m *MockNotificationRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
@@ -306,10 +313,11 @@ func setupNotificationService() (*notificationServiceImpl, *MockNotificationRepo
 	mockDeviceRepo := new(MockPushDeviceRepository)
 	mockTemplateRepo := new(MockNotificationTemplateRepository)
 
-	service := NewNotificationService(mockNotifRepo, mockPrefRepo, mockDeviceRepo, mockTemplateRepo)
+	service := NewNotificationService(mockNotifRepo, mockPrefRepo, mockDeviceRepo, mockTemplateRepo, nil, nil)
 
 	return service.(*notificationServiceImpl), mockNotifRepo, mockPrefRepo, mockDeviceRepo, mockTemplateRepo
 }
+
 
 // =========================
 // 创建通知相关测试
@@ -1251,3 +1259,194 @@ func TestNotificationService_CleanupOldNotifications_InvalidDays(t *testing.T) {
 func boolPtr(b bool) *bool {
 	return &b
 }
+
+// =========================
+// 新增测试：清除已读和重新发送
+// =========================
+
+// TestNotificationService_ClearReadNotifications_Success 测试清除已读通知成功
+func TestNotificationService_ClearReadNotifications_Success(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+
+	mockRepo.On("DeleteReadForUser", ctx, userID).Return(int64(5), nil)
+
+	// Act
+	count, err := service.ClearReadNotifications(ctx, userID)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, int64(5), count)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ClearReadNotifications_Error 测试清除已读通知失败
+func TestNotificationService_ClearReadNotifications_Error(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+
+	mockRepo.On("DeleteReadForUser", ctx, userID).Return(int64(0), fmt.Errorf("database error"))
+
+	// Act
+	count, err := service.ClearReadNotifications(ctx, userID)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, int64(0), count)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ResendNotification_EmailServiceUnavailable 测试重新发送通知-邮件服务不可用
+func TestNotificationService_ResendNotification_EmailServiceUnavailable(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+	notificationID := "notif123"
+
+	testNotif := &notifModel.Notification{
+		ID:      notificationID,
+		UserID:  userID,
+		Title:   "Test Notification",
+		Content: "Test Content",
+		Read:    false,
+	}
+
+	mockRepo.On("GetByID", ctx, notificationID).Return(testNotif, nil)
+
+	// Act
+	err := service.ResendNotification(ctx, notificationID, userID, "email")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "邮件服务不可用")
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ResendNotification_PushServiceUnavailable 测试重新发送通知-推送服务不可用
+func TestNotificationService_ResendNotification_PushServiceUnavailable(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+	notificationID := "notif123"
+
+	testNotif := &notifModel.Notification{
+		ID:      notificationID,
+		UserID:  userID,
+		Title:   "Test Notification",
+		Content: "Test Content",
+		Read:    false,
+	}
+
+	mockRepo.On("GetByID", ctx, notificationID).Return(testNotif, nil)
+
+	// Act
+	err := service.ResendNotification(ctx, notificationID, userID, "push")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "WebSocket服务不可用")
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ResendNotification_UnsupportedMethod 测试重新发送通知-不支持的发送方式
+func TestNotificationService_ResendNotification_UnsupportedMethod(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+	notificationID := "notif123"
+
+	testNotif := &notifModel.Notification{
+		ID:      notificationID,
+		UserID:  userID,
+		Title:   "Test Notification",
+		Content: "Test Content",
+		Read:    false,
+	}
+
+	mockRepo.On("GetByID", ctx, notificationID).Return(testNotif, nil)
+
+	// Act
+	err := service.ResendNotification(ctx, notificationID, userID, "sms")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "不支持的发送方式")
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ResendNotification_NotFound 测试重新发送通知-通知不存在
+func TestNotificationService_ResendNotification_NotFound(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+	notificationID := "nonexistent"
+
+	mockRepo.On("GetByID", ctx, notificationID).Return(nil, nil)
+
+	// Act
+	err := service.ResendNotification(ctx, notificationID, userID, "email")
+
+	// Assert
+	assert.Error(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+// TestNotificationService_ResendNotification_NoPermission 测试重新发送通知-无权限
+func TestNotificationService_ResendNotification_NoPermission(t *testing.T) {
+	// Arrange
+	_, mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo := setupNotificationService()
+	service := setupNotificationServiceWithMocks(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo)
+
+	ctx := context.Background()
+	userID := "user123"
+	notificationID := "notif123"
+
+	testNotif := &notifModel.Notification{
+		ID:      notificationID,
+		UserID:  "other_user",
+		Title:   "Test Notification",
+		Content: "Test Content",
+		Read:    false,
+	}
+
+	mockRepo.On("GetByID", ctx, notificationID).Return(testNotif, nil)
+
+	// Act
+	err := service.ResendNotification(ctx, notificationID, userID, "email")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "无权操作")
+	mockRepo.AssertExpectations(t)
+}
+
+// setupNotificationServiceWithMocks 辅助函数：使用Mock创建服务实例
+func setupNotificationServiceWithMocks(
+	mockRepo *MockNotificationRepository,
+	mockPrefRepo *MockNotificationPreferenceRepository,
+	mockPushRepo *MockPushDeviceRepository,
+	mockTemplateRepo *MockNotificationTemplateRepository,
+) NotificationService {
+	return NewNotificationService(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo, nil, nil)
+}
+

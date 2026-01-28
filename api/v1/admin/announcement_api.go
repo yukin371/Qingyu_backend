@@ -1,10 +1,9 @@
 package admin
 
 import (
-	"net/http"
 	"strconv"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
 	messagingService "Qingyu_backend/service/messaging"
 
@@ -95,11 +94,11 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 	// 调用Service层
 	resp, err := api.announcementService.GetAnnouncements(c.Request.Context(), req)
 	if err != nil {
-		shared.InternalError(c, "获取公告列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取公告列表成功", resp)
+	response.Success(c, resp)
 }
 
 // GetAnnouncementByID 获取公告详情
@@ -118,17 +117,17 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "公告ID不能为空", "")
+		response.BadRequest(c, "公告ID不能为空", "")
 		return
 	}
 
 	announcement, err := api.announcementService.GetAnnouncementByID(c.Request.Context(), id)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取公告成功", announcement)
+	response.Success(c, announcement)
 }
 
 // CreateAnnouncement 创建公告
@@ -147,7 +146,7 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 	var req messagingService.CreateAnnouncementRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -158,11 +157,11 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 
 	announcement, err := api.announcementService.CreateAnnouncement(c.Request.Context(), &req)
 	if err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建公告成功", announcement)
+	response.Created(c, announcement)
 }
 
 // UpdateAnnouncement 更新公告
@@ -183,22 +182,22 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "公告ID不能为空", "")
+		response.BadRequest(c, "公告ID不能为空", "")
 		return
 	}
 
 	var req messagingService.UpdateAnnouncementRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.announcementService.UpdateAnnouncement(c.Request.Context(), id, &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新公告成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteAnnouncement 删除公告
@@ -218,16 +217,16 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "公告ID不能为空", "")
+		response.BadRequest(c, "公告ID不能为空", "")
 		return
 	}
 
 	if err := api.announcementService.DeleteAnnouncement(c.Request.Context(), id); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除公告成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchUpdateStatus 批量更新状态
@@ -246,16 +245,16 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
 	var req messagingService.BatchUpdateAnnouncementStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.announcementService.BatchUpdateStatus(c.Request.Context(), &req); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新状态成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchDeleteRequest 批量删除请求
@@ -279,16 +278,16 @@ type BatchDeleteRequest struct {
 func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 	var req BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.announcementService.BatchDelete(c.Request.Context(), req.IDs); err != nil {
-		shared.HandleServiceError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量删除成功", nil)
+	response.Success(c, nil)
 }
 
 // 这个变量用于避免 "imported and not used" 错误
