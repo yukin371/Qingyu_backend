@@ -2,13 +2,11 @@ package writer
 
 import (
 	"Qingyu_backend/service/interfaces/audit"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	auditDTO "Qingyu_backend/service/audit"
 	"Qingyu_backend/pkg/response"
-	shared "Qingyu_backend/api/v1/shared"
 )
 
 // AuditApi 审核API
@@ -85,9 +83,9 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 	}
 
 	// 转换为响应DTO
-	response := convertAuditRecordToResponse(record)
+	resp := convertAuditRecordToResponse(record)
 
-	shared.Success(c, http.StatusOK, "审核完成", response)
+	response.Success(c, resp)
 }
 
 // GetAuditResult 获取审核结果
@@ -107,13 +105,13 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 
 	record, err := api.auditService.GetAuditResult(c.Request.Context(), targetType, documentID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "未找到审核记录", err.Error())
+			response.NotFound(c, err.Error())
 		return
 	}
 
 	response := convertAuditRecordToResponse(record)
 
-	shared.Success(c, http.StatusOK, "获取成功", response)
+	response.Success(c, response)
 }
 
 // SubmitAppeal 提交申诉
@@ -149,7 +147,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "申诉已提交，等待复核", nil)
+	response.Success(c, nil)
 }
 
 // GetPendingReviews 获取待复核列表
@@ -180,7 +178,7 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 		responses[i] = convertAuditRecordToResponse(record)
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", responses)
+	response.Success(c, responses)
 }
 
 // ReviewAudit 复核审核结果
@@ -205,7 +203,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	// 从context获取管理员ID
 	reviewerID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "无法获取管理员信息")
 		return
 	}
 
@@ -215,7 +213,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "复核完成", nil)
+	response.Success(c, nil)
 }
 
 // ReviewAppeal 复核申诉
@@ -240,7 +238,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	// 从context获取管理员ID
 	reviewerID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "无法获取管理员信息")
 		return
 	}
 
@@ -255,7 +253,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 		status = "通过"
 	}
 
-	shared.Success(c, http.StatusOK, "申诉已"+status, nil)
+	response.Success(c, nil)
 }
 
 // GetUserViolations 获取用户违规记录
@@ -282,7 +280,7 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 	isAdmin := roleExists && currentRole.(string) == "admin"
 
 	if !isAdmin && currentUserID.(string) != userID {
-		shared.Error(c, http.StatusForbidden, "无权限", "只能查看自己的违规记录")
+		response.Forbidden(c, "只能查看自己的违规记录")
 		return
 	}
 
@@ -297,7 +295,7 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 		responses[i] = convertViolationRecordToResponse(v)
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", responses)
+	response.Success(c, responses)
 }
 
 // GetUserViolationSummary 获取用户违规统计
@@ -324,7 +322,7 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 	isAdmin := roleExists && currentRole.(string) == "admin"
 
 	if !isAdmin && currentUserID.(string) != userID {
-		shared.Error(c, http.StatusForbidden, "无权限", "只能查看自己的违规统计")
+		response.Forbidden(c, "只能查看自己的违规统计")
 		return
 	}
 
@@ -336,7 +334,7 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 
 	response := convertUserViolationSummaryToResponse(summary)
 
-	shared.Success(c, http.StatusOK, "获取成功", response)
+	response.Success(c, response)
 }
 
 // GetHighRiskAudits 获取高风险审核记录
@@ -376,7 +374,7 @@ func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 		responses[i] = convertAuditRecordToResponse(record)
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", responses)
+	response.Success(c, responses)
 }
 
 // 辅助转换函数
