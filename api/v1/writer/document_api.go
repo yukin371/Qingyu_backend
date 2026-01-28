@@ -2,11 +2,9 @@ package writer
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/document"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
@@ -54,7 +52,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -81,7 +79,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", resp)
+	response.Created(c, resp)
 }
 
 // GetDocument 获取文档详情
@@ -102,7 +100,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", doc)
+	response.Success(c, doc)
 }
 
 // GetDocumentTree 获取文档树
@@ -123,7 +121,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", resp)
+	response.Success(c, resp)
 }
 
 // UpdateDocument 更新文档
@@ -150,7 +148,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteDocument 删除文档
@@ -170,7 +168,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ListDocuments 获取文档列表
@@ -202,7 +200,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", resp)
+	response.Success(c, resp)
 }
 
 // MoveDocument 移动文档
@@ -231,7 +229,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "移动成功", nil)
+	response.Success(c, nil)
 }
 
 // ReorderDocuments 重新排序文档
@@ -260,7 +258,7 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "排序成功", nil)
+	response.Success(c, nil)
 }
 
 // DuplicateDocument 复制文档
@@ -283,7 +281,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -304,11 +302,11 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	resp, err := api.documentService.DuplicateDocument(ctx, documentID, &req)
 	if err != nil {
-		shared.HandleError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "复制成功", resp)
+	response.Success(c, resp)
 }
 
 var _ = writerModels.Document{}
