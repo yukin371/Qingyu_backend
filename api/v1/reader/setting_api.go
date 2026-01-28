@@ -2,11 +2,9 @@ package reader
 
 import (
 	readerModels "Qingyu_backend/models/reader"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
 	"errors"
@@ -52,14 +50,14 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -69,7 +67,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", settings)
+	response.Success(c, settings)
 }
 
 // SaveReadingSettings 保存阅读设置
@@ -89,20 +87,20 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
 	var settings readerModels.ReadingSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -114,7 +112,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "保存成功", nil)
+	response.Success(c, nil)
 }
 
 // UpdateReadingSettings 更新阅读设置
@@ -134,20 +132,20 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
 	var req UpdateSettingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -183,5 +181,5 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
