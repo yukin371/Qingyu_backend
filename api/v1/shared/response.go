@@ -284,7 +284,26 @@ func ValidationError(c *gin.Context, err error) {
 // Paginated 返回分页响应
 // 统一的分页响应格式
 func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int, message string) {
-	c.JSON(http.StatusOK, PaginatedResponseHelper(data, total, page, pageSize, message))
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	c.JSON(http.StatusOK, PaginatedResponse{
+		Code:      200,
+		Message:   message,
+		Data:      data,
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
+		Pagination: &Pagination{
+			Total:       total,
+			Page:        page,
+			PageSize:    pageSize,
+			TotalPages:  totalPages,
+			HasNext:     page < totalPages,
+			HasPrevious: page > 1,
+		},
+	})
 }
 
 // SuccessWithRequestID 返回带RequestID的成功响应
