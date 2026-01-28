@@ -23,7 +23,7 @@ const (
 	Forbidden    ErrorCode = 100603 // 禁止访问
 
 	// 客户端错误 - 资源相关 (10xxxx)
-	NotFound      ErrorCode = 100401 // 资源不存在
+	NotFound      ErrorCode = 100404 // 资源不存在 (HTTP 404)
 	AlreadyExists ErrorCode = 100201 // 资源已存在
 	Conflict      ErrorCode = 100202 // 冲突
 
