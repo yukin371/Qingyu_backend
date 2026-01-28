@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +34,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -62,7 +61,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 
 	// 转换为 DTO
 	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"books": progressDTOs,
 		"total": total,
 		"page":  page,
@@ -81,13 +80,13 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -98,7 +97,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "添加成功", nil)
+	response.Success(c, nil)
 }
 
 // RemoveFromBookshelf 从书架移除
@@ -112,13 +111,13 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -129,7 +128,7 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "移除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetRecentReading 获取最近阅读
@@ -143,7 +142,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -163,7 +162,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 
 	// 转换为 DTO
 	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
-	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
+	response.Success(c, progressDTOs)
 }
 
 // GetUnfinishedBooks 获取未读完的书
@@ -176,7 +175,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -188,7 +187,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	// 转换为 DTO
 	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
-	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
+	response.Success(c, progressDTOs)
 }
 
 // GetFinishedBooks 获取已读完的书
@@ -201,7 +200,7 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -213,7 +212,7 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 
 	// 转换为 DTO
 	progressDTOs := ToReadingProgressDTOsFromPtrSlice(progresses)
-	shared.Success(c, http.StatusOK, "获取成功", progressDTOs)
+	response.Success(c, progressDTOs)
 }
 
 // UpdateBookStatusRequest 更新书籍状态请求
@@ -233,20 +232,20 @@ func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 解析请求参数
 	var req UpdateBookStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", "请求参数格式错误")
+		response.BadRequest(c, "参数错误", "请求参数格式错误")
 		return
 	}
 
@@ -257,7 +256,7 @@ func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchUpdateBookStatusRequest 批量更新书籍状态请求
@@ -277,25 +276,25 @@ func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 解析请求参数
 	var req BatchUpdateBookStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", "请求参数格式错误")
+		response.BadRequest(c, "参数错误", "请求参数格式错误")
 		return
 	}
 
 	// 验证书籍ID列表
 	if len(req.BookIDs) == 0 {
-		response.BadRequest(c,  "参数错误", "书籍ID列表不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID列表不能为空")
 		return
 	}
 
 	if len(req.BookIDs) > 50 {
-		response.BadRequest(c,  "参数错误", "批量更新数量不能超过50个")
+		response.BadRequest(c, "参数错误", "批量更新数量不能超过50个")
 		return
 	}
 
@@ -306,7 +305,7 @@ func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新成功", gin.H{
+	response.Success(c, gin.H{
 		"count": len(req.BookIDs),
 	})
 }
