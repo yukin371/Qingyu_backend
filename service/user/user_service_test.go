@@ -97,6 +97,11 @@ func (m *MockUserRepository) UpdatePassword(ctx context.Context, id string, hash
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
+	args := m.Called(ctx, email, hashedPassword)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, id string, ip string) error {
 	args := m.Called(ctx, id, ip)
 	return args.Error(0)
