@@ -1,17 +1,15 @@
 package reader
 
 import (
-	"net/http"
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
-	"errors"
 )
 
 // AnnotationsAPI 标注API
@@ -53,20 +51,20 @@ type UpdateAnnotationRequest struct {
 func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	var req CreateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数验证失败", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -90,7 +88,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", annotation)
+	response.Created(c, annotation)
 }
 
 // UpdateAnnotation 更新标注
@@ -106,7 +104,7 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 
 	var req UpdateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数验证失败", err.Error())
 		return
 	}
 
@@ -127,7 +125,7 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteAnnotation 删除标注
@@ -146,7 +144,7 @@ func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetAnnotationsByChapter 获取章节标注
@@ -161,13 +159,13 @@ func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -185,7 +183,7 @@ func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetAnnotationsByBook 获取书籍标注
@@ -199,13 +197,13 @@ func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -221,7 +219,7 @@ func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetNotes 获取笔记
@@ -235,13 +233,13 @@ func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -257,7 +255,7 @@ func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", notes)
+	response.Success(c, notes)
 }
 
 // SearchNotes 搜索笔记
@@ -271,13 +269,13 @@ func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -293,7 +291,7 @@ func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", notes)
+	response.Success(c, notes)
 }
 
 // GetBookmarks 获取书签
@@ -307,13 +305,13 @@ func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -329,7 +327,7 @@ func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookmarks)
+	response.Success(c, bookmarks)
 }
 
 // GetLatestBookmark 获取最新书签
@@ -343,13 +341,13 @@ func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -365,7 +363,7 @@ func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookmark)
+	response.Success(c, bookmark)
 }
 
 // GetHighlights 获取高亮
@@ -379,13 +377,13 @@ func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -401,7 +399,7 @@ func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", highlights)
+	response.Success(c, highlights)
 }
 
 // GetRecentAnnotations 获取最近标注
@@ -415,13 +413,13 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -433,7 +431,7 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetPublicAnnotations 获取公开标注
@@ -459,5 +457,5 @@ func (api *AnnotationsAPI) GetPublicAnnotations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
