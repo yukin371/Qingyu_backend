@@ -1,0 +1,393 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+// MigrationConfig 迁移配置
+type MigrationConfig struct {
+	MongoURI      string
+	DatabaseName  string
+	BatchSize     int
+	DryRun        bool
+	BackupBefore bool
+}
+
+// MigrateNotificationsToInbox 将 notifications 集合迁移到 inbox_notifications
+func MigrateNotificationsToInbox(ctx context.Context, client *mongo.Client, config *MigrationConfig) error {
+	db := client.Database(config.DatabaseName)
+	notificationsColl := db.Collection("notifications")
+	inboxColl := db.Collection("inbox_notifications")
+
+	log.Println("=== 开始迁移 notifications → inbox_notifications ===")
+	log.Printf("配置: BatchSize=%d, DryRun=%v, BackupBefore=%v\n", config.BatchSize, config.DryRun, config.BackupBefore)
+
+	// 1. 备份原集合（如果需要）
+	if config.BackupBefore && !config.DryRun {
+		log.Println("正在备份 notifications 集合...")
+		if err := backupCollection(ctx, db, "notifications", fmt.Sprintf("notifications_backup_%s", time.Now().Format("20060102_150405"))); err != nil {
+			return fmt.Errorf("备份失败: %w", err)
+		}
+		log.Println("备份完成")
+	}
+
+	// 2. 检查源集合是否存在
+	count, err := notificationsColl.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("检查源集合失败: %w", err)
+	}
+	if count == 0 {
+		log.Println("源集合为空，无需迁移")
+		return nil
+	}
+	log.Printf("源集合共有 %d 条通知\n", count)
+
+	// 3. 如果是 DryRun，只统计不执行
+	if config.DryRun {
+		log.Println("=== DryRun 模式，仅统计不执行迁移 ===")
+		return analyzeSourceData(ctx, notificationsColl)
+	}
+
+	// 4. 检查目标集合是否已存在数据
+	targetCount, _ := inboxColl.CountDocuments(ctx, bson.M{})
+	if targetCount > 0 {
+		log.Printf("警告: 目标集合已存在 %d 条数据\n", targetCount)
+		log.Println("建议: 先清空目标集合或使用不同的集合名称")
+		return fmt.Errorf("目标集合不为空")
+	}
+
+	// 5. 分批迁移数据
+	skip := int64(0)
+	batchNum := 1
+	totalMigrated := int64(0)
+
+	for {
+		log.Printf("正在处理第 %d 批数据...\n", batchNum)
+
+		// 查询一批数据
+		cursor, err := notificationsColl.Find(ctx, bson.M{},
+			options.Find().SetSkip(skip).SetLimit(int64(config.BatchSize)).SetSort(bson.M{"_id": 1}))
+		if err != nil {
+			return fmt.Errorf("查询通知失败: %w", err)
+		}
+
+		var docs []bson.M
+		if err = cursor.All(ctx, &docs); err != nil {
+			return fmt.Errorf("解析通知失败: %w", err)
+		}
+
+		if len(docs) == 0 {
+			break // 没有更多数据
+		}
+
+		log.Printf("第 %d 批: 读取到 %d 条通知\n", batchNum, len(docs))
+
+		// 转换并插入
+		var inboxDocs []interface{}
+		successCount := 0
+		errorCount := 0
+
+		for _, doc := range docs {
+			inboxDoc, err := convertNotificationToInbox(doc)
+			if err != nil {
+				log.Printf("  转换失败 [ID: %v]: %v\n", doc["_id"], err)
+				errorCount++
+				continue
+			}
+
+			inboxDocs = append(inboxDocs, inboxDoc)
+			successCount++
+		}
+
+		// 批量插入
+		if len(inboxDocs) > 0 {
+			_, err = inboxColl.InsertMany(ctx, inboxDocs)
+			if err != nil {
+				return fmt.Errorf("插入站内通知失败: %w", err)
+			}
+		}
+
+		totalMigrated += int64(successCount)
+		log.Printf("第 %d 批完成: 成功 %d 条, 失败 %d 条, 累计 %d/%d\n",
+			batchNum, successCount, errorCount, totalMigrated, count)
+
+		skip += int64(config.BatchSize)
+		batchNum++
+
+		// 如果这批数据少于 batchSize，说明是最后一批
+		if len(docs) < config.BatchSize {
+			break
+		}
+	}
+
+	// 6. 创建索引
+	log.Println("正在创建索引...")
+	if err := createIndexes(ctx, inboxColl); err != nil {
+		return fmt.Errorf("创建索引失败: %w", err)
+	}
+
+	// 7. 验证迁移结果
+	log.Println("正在验证迁移结果...")
+	if err := validateMigration(ctx, notificationsColl, inboxColl); err != nil {
+		return fmt.Errorf("迁移验证失败: %w", err)
+	}
+
+	log.Println("=== 迁移完成 ===")
+	log.Printf("总计迁移: %d 条通知\n", totalMigrated)
+
+	return nil
+}
+
+// convertNotificationToInbox 将 notification.Notification 转换为 InboxNotification
+func convertNotificationToInbox(notif bson.M) (bson.M, error) {
+	// 基础字段映射
+	inbox := bson.M{
+		"_id":         notif["_id"],
+		"receiver_id": notif["user_id"],
+		"type":        convertNotificationType(notif["type"]),
+		"priority":    notif["priority"],
+		"title":       notif["title"],
+		"content":     notif["content"],
+		"is_read":     notif["read"],
+		"read_at":     notif["read_at"],
+		"created_at":  notif["created_at"],
+		"updated_at":  notif["created_at"], // updated_at 使用 created_at
+		"expires_at":  notif["expires_at"],
+		"is_deleted":  false,
+		"is_pinned":   false,
+	}
+
+	// SenderID: 默认为 system
+	if _, ok := notif["sender_id"]; ok {
+		inbox["sender_id"] = notif["sender_id"]
+	} else {
+		inbox["sender_id"] = "system"
+	}
+
+	// Data 字段：保留原 data 字段
+	if data, ok := notif["data"].(bson.M); ok && data != nil {
+		inbox["data"] = data
+	} else {
+		inbox["data"] = bson.M{}
+	}
+
+	// TargetType 和 TargetID: 从 data 中提取
+	if data, ok := notif["data"].(bson.M); ok {
+		if targetType, ok := data["target_type"].(string); ok {
+			inbox["target_type"] = targetType
+		}
+		if targetID, ok := data["target_id"].(string); ok {
+			inbox["target_id"] = targetID
+		}
+	}
+
+	return inbox, nil
+}
+
+// convertNotificationType 转换通知类型
+func convertNotificationType(t interface{}) string {
+	typeStr, _ := t.(string)
+	switch typeStr {
+	case "system":
+		return "system"
+	case "social":
+		return "social" // 保持原样
+	case "content":
+		return "content"
+	case "reward":
+		return "reward"
+	case "message":
+		return "message"
+	case "update":
+		return "update"
+	case "membership":
+		return "membership"
+	default:
+		return "system" // 默认为系统通知
+	}
+}
+
+// createIndexes 创建索引
+func createIndexes(ctx context.Context, coll *mongo.Collection) error {
+	indexes := []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "receiver_id", Value: 1},
+				{Key: "is_read", Value: 1},
+				{Key: "created_at", Value: -1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "receiver_id", Value: 1},
+				{Key: "is_pinned", Value: -1},
+				{Key: "created_at", Value: -1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "receiver_id", Value: 1},
+				{Key: "expires_at", Value: 1},
+			},
+			Options: options.Index().SetExpireAfterSeconds(0),
+		},
+	}
+
+	_, err := coll.Indexes().CreateMany(ctx, indexes)
+	return err
+}
+
+// backupCollection 备份集合
+func backupCollection(ctx context.Context, db *mongo.Database, sourceName, targetName string) error {
+	sourceColl := db.Collection(sourceName)
+	targetColl := db.Collection(targetName)
+
+	// 检查目标集合是否已存在
+	count, _ := targetColl.CountDocuments(ctx, bson.M{})
+	if count > 0 {
+		return fmt.Errorf("备份集合 %s 已存在", targetName)
+	}
+
+	// 复制所有数据
+	cursor, err := sourceColl.Find(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("查询源集合失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var docs []bson.M
+	if err = cursor.All(ctx, &docs); err != nil {
+		return fmt.Errorf("解析文档失败: %w", err)
+	}
+
+	if len(docs) > 0 {
+		var interfaceDocs []interface{}
+		for _, doc := range docs {
+			interfaceDocs = append(interfaceDocs, doc)
+		}
+		_, err = targetColl.InsertMany(ctx, interfaceDocs)
+		if err != nil {
+			return fmt.Errorf("插入备份失败: %w", err)
+		}
+	}
+
+	// 复制索引
+	indexes, err := sourceColl.Indexes().CreateSpecifications(ctx)
+	if err == nil && len(indexes) > 0 {
+		_, err = targetColl.Indexes().CreateMany(ctx, indexes)
+		if err != nil {
+			return fmt.Errorf("创建备份索引失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// analyzeSourceData 分析源数据（DryRun 模式）
+func analyzeSourceData(ctx context.Context, coll *mongo.Collection) error {
+	log.Println("=== 分析源数据 ===")
+
+	// 统计总数
+	total, _ := coll.CountDocuments(ctx, bson.M{})
+	log.Printf("总记录数: %d\n", total)
+
+	// 按类型统计
+	typePipeline := []bson.M{
+		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
+	}
+	cursor, _ := coll.Aggregate(ctx, typePipeline)
+	var typeResults []bson.M
+	cursor.All(ctx, &typeResults)
+	log.Println("按类型统计:")
+	for _, r := range typeResults {
+		log.Printf("  %s: %d\n", r["_id"], r["count"])
+	}
+
+	// 按已读状态统计
+	readPipeline := []bson.M{
+		{"$group": bson.M{"_id": "$read", "count": bson.M{"$sum": 1}}},
+	}
+	cursor, _ = coll.Aggregate(ctx, readPipeline)
+	var readResults []bson.M
+	cursor.All(ctx, &readResults)
+	log.Println("按已读状态统计:")
+	for _, r := range readResults {
+		status := "未读"
+		if r["_id"].(bool) {
+			status = "已读"
+		}
+		log.Printf("  %s: %d\n", status, r["count"])
+	}
+
+	return nil
+}
+
+// validateMigration 验证迁移结果
+func validateMigration(ctx context.Context, sourceColl, targetColl *mongo.Collection) error {
+	sourceCount, _ := sourceColl.CountDocuments(ctx, bson.M{})
+	targetCount, _ := targetColl.CountDocuments(ctx, bson.M{})
+
+	if sourceCount != targetCount {
+		return fmt.Errorf("数量不匹配: 源=%d, 目标=%d", sourceCount, targetCount)
+	}
+
+	// 抽样验证
+	cursor, err := sourceColl.Find(ctx, bson.M{}, options.Find().SetLimit(10))
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	var sourceDocs []bson.M
+	cursor.All(ctx, &sourceDocs)
+
+	for _, doc := range sourceDocs {
+		id := doc["_id"]
+		var targetDoc bson.M
+		err := targetColl.FindOne(ctx, bson.M{"_id": id}).Decode(&targetDoc)
+		if err != nil {
+			return fmt.Errorf("验证失败: ID %v 不存在于目标集合", id)
+		}
+
+		// 验证关键字段
+		if targetDoc["receiver_id"] != doc["user_id"] {
+			return fmt.Errorf("验证失败: ID %v 的 receiver_id 不匹配", id)
+		}
+	}
+
+	return nil
+}
+
+// main 主函数（示例）
+func main() {
+	config := &MigrationConfig{
+		MongoURI:      "mongodb://localhost:27017",
+		DatabaseName:  "qingyu",
+		BatchSize:     1000,
+		DryRun:        false,  // 设置为 true 只分析不迁移
+		BackupBefore:  true,   // 迁移前先备份
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		log.Fatalf("连接数据库失败: %v", err)
+	}
+	defer client.Disconnect(ctx)
+
+	if err := MigrateNotificationsToInbox(ctx, client, config); err != nil {
+		log.Fatalf("迁移失败: %v", err)
+	}
+
+	log.Println("迁移成功完成")
+}

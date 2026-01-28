@@ -1,0 +1,316 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+// RollbackConfig 回滚配置
+type RollbackConfig struct {
+	MongoURI        string
+	DatabaseName    string
+	BackupName      string // 备份集合名称（如果为空，使用默认命名）
+	RequireConfirm  bool   // 是否需要确认
+}
+
+// RollbackInboxToNotifications 回滚 inbox_notifications 到 notifications
+func RollbackInboxToNotifications(ctx context.Context, client *mongo.Client, config *RollbackConfig) error {
+	db := client.Database(config.DatabaseName)
+	notificationsColl := db.Collection("notifications")
+	inboxColl := db.Collection("inbox_notifications")
+
+	log.Println("=== 开始回滚 inbox_notifications → notifications ===")
+	log.Printf("配置: BackupName=%s, RequireConfirm=%v\n", config.BackupName, config.RequireConfirm)
+
+	// 1. 确认操作
+	if config.RequireConfirm {
+		log.Println("警告: 此操作将删除 inbox_notifications 集合并从备份恢复 notifications 集合")
+		log.Println("请输入 'YES' 确认继续:")
+
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm != "YES" {
+			log.Println("操作已取消")
+			return nil
+		}
+	}
+
+	// 2. 检查 inbox_notifications 集合是否存在
+	inboxCount, err := inboxColl.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("检查 inbox_notifications 集合失败: %w", err)
+	}
+	if inboxCount == 0 {
+		log.Println("inbox_notifications 集合为空或不存在，无需回滚")
+		return nil
+	}
+	log.Printf("inbox_notifications 集合共有 %d 条记录\n", inboxCount)
+
+	// 3. 确定备份集合名称
+	backupName := config.BackupName
+	if backupName == "" {
+		// 查找最新的备份集合
+		collections, err := db.ListCollectionNames(ctx, bson.M{"name": bson.M{"$regex": "^notifications_backup_"}})
+		if err != nil {
+			return fmt.Errorf("查找备份集合失败: %w", err)
+		}
+
+		if len(collections) == 0 {
+			return fmt.Errorf("未找到备份集合，无法回滚")
+		}
+
+		// 使用最新的备份（按名称排序，时间戳最新的在最后）
+		backupName = collections[len(collections)-1]
+	}
+	log.Printf("使用备份集合: %s\n", backupName)
+
+	// 4. 验证备份集合存在
+	backupColl := db.Collection(backupName)
+	backupCount, err := backupColl.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("检查备份集合失败: %w", err)
+	}
+	if backupCount == 0 {
+		return fmt.Errorf("备份集合为空，无法回滚")
+	}
+	log.Printf("备份集合共有 %d 条记录\n", backupCount)
+
+	// 5. 备份当前的 notifications 集合（以防万一）
+	timestamp := time.Now().Format("20060102_150405")
+	currentBackupName := fmt.Sprintf("notifications_before_rollback_%s", timestamp)
+	log.Printf("正在备份当前的 notifications 集合到 %s...\n", currentBackupName)
+
+	if err := backupCollection(ctx, db, "notifications", currentBackupName); err != nil {
+		return fmt.Errorf("备份当前集合失败: %w", err)
+	}
+	log.Println("当前集合备份完成")
+
+	// 6. 删除当前的 notifications 集合
+	log.Println("正在删除当前的 notifications 集合...")
+	if err := notificationsColl.Drop(ctx); err != nil {
+		return fmt.Errorf("删除 notifications 集合失败: %w", err)
+	}
+	log.Println("删除完成")
+
+	// 7. 从备份恢复 notifications 集合
+	log.Printf("正在从 %s 恢复 notifications 集合...\n", backupName)
+	if err := restoreCollection(ctx, db, backupName, "notifications"); err != nil {
+		return fmt.Errorf("恢复集合失败: %w", err)
+	}
+	log.Println("恢复完成")
+
+	// 8. 验证恢复结果
+	log.Println("正在验证恢复结果...")
+	restoredCount, _ := notificationsColl.CountDocuments(ctx, bson.M{})
+	if restoredCount != backupCount {
+		return fmt.Errorf("验证失败: 恢复后的数量不匹配，期望=%d, 实际=%d", backupCount, restoredCount)
+	}
+	log.Printf("验证通过: 恢复了 %d 条记录\n", restoredCount)
+
+	// 9. （可选）删除 inbox_notifications 集合
+	log.Println("是否删除 inbox_notifications 集合？")
+	log.Println("建议: 先验证数据正确性，确认无误后再删除")
+	log.Println("如需删除，请运行: db.inbox_notifications.drop()")
+
+	log.Println("=== 回滚完成 ===")
+	return nil
+}
+
+// backupCollection 备份集合
+func backupCollection(ctx context.Context, db *mongo.Database, sourceName, targetName string) error {
+	sourceColl := db.Collection(sourceName)
+	targetColl := db.Collection(targetName)
+
+	// 检查目标集合是否已存在
+	count, _ := targetColl.CountDocuments(ctx, bson.M{})
+	if count > 0 {
+		return fmt.Errorf("备份集合 %s 已存在", targetName)
+	}
+
+	// 复制所有数据
+	cursor, err := sourceColl.Find(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("查询源集合失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var docs []bson.M
+	if err = cursor.All(ctx, &docs); err != nil {
+		return fmt.Errorf("解析文档失败: %w", err)
+	}
+
+	if len(docs) > 0 {
+		batchSize := 1000
+		for i := 0; i < len(docs); i += batchSize {
+			end := i + batchSize
+			if end > len(docs) {
+				end = len(docs)
+			}
+
+			var batchDocs []interface{}
+			for _, doc := range docs[i:end] {
+				batchDocs = append(batchDocs, doc)
+			}
+
+			_, err = targetColl.InsertMany(ctx, batchDocs)
+			if err != nil {
+				return fmt.Errorf("插入备份失败: %w", err)
+			}
+
+			log.Printf("  备份进度: %d/%d\n", end, len(docs))
+		}
+	}
+
+	// 复制索引
+	indexes, err := sourceColl.Indexes().CreateSpecifications(ctx)
+	if err == nil && len(indexes) > 0 {
+		_, err = targetColl.Indexes().CreateMany(ctx, indexes)
+		if err != nil {
+			return fmt.Errorf("创建备份索引失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// restoreCollection 恢复集合
+func restoreCollection(ctx context.Context, db *mongo.Database, sourceName, targetName string) error {
+	sourceColl := db.Collection(sourceName)
+	targetColl := db.Collection(targetName)
+
+	// 复制所有数据（分批处理）
+	cursor, err := sourceColl.Find(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("查询源集合失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var docs []bson.M
+	if err = cursor.All(ctx, &docs); err != nil {
+		return fmt.Errorf("解析文档失败: %w", err)
+	}
+
+	if len(docs) > 0 {
+		batchSize := 1000
+		for i := 0; i < len(docs); i += batchSize {
+			end := i + batchSize
+			if end > len(docs) {
+				end = len(docs)
+			}
+
+			var batchDocs []interface{}
+			for _, doc := range docs[i:end] {
+				batchDocs = append(batchDocs, doc)
+			}
+
+			_, err = targetColl.InsertMany(ctx, batchDocs)
+			if err != nil {
+				return fmt.Errorf("插入数据失败: %w", err)
+			}
+
+			log.Printf("  恢复进度: %d/%d\n", end, len(docs))
+		}
+	}
+
+	// 复制索引
+	indexes, err := sourceColl.Indexes().CreateSpecifications(ctx)
+	if err == nil && len(indexes) > 0 {
+		_, err = targetColl.Indexes().CreateMany(ctx, indexes)
+		if err != nil {
+			return fmt.Errorf("创建索引失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// ListBackups 列出所有备份集合
+func ListBackups(ctx context.Context, client *mongo.Client, dbName string) error {
+	db := client.Database(dbName)
+
+	collections, err := db.ListCollectionNames(ctx, bson.M{"name": bson.M{"$regex": "^notifications_backup_"}})
+	if err != nil {
+		return fmt.Errorf("查找备份集合失败: %w", err)
+	}
+
+	if len(collections) == 0 {
+		log.Println("未找到备份集合")
+		return nil
+	}
+
+	log.Println("=== 可用的备份集合 ===")
+	for _, collName := range collections {
+		coll := db.Collection(collName)
+		count, _ := coll.CountDocuments(ctx, bson.M{})
+		log.Printf("%s: %d 条记录\n", collName, count)
+	}
+
+	return nil
+}
+
+// DeleteInboxNotifications 删除 inbox_notifications 集合
+func DeleteInboxNotifications(ctx context.Context, client *mongo.Client, dbName string) error {
+	db := client.Database(dbName)
+	inboxColl := db.Collection("inbox_notifications")
+
+	log.Println("警告: 即将删除 inbox_notifications 集合")
+	log.Println("请输入 'DELETE' 确认:")
+
+	var confirm string
+	fmt.Scanln(&confirm)
+	if confirm != "DELETE" {
+		log.Println("操作已取消")
+		return nil
+	}
+
+	log.Println("正在删除 inbox_notifications 集合...")
+	if err := inboxColl.Drop(ctx); err != nil {
+		return fmt.Errorf("删除集合失败: %w", err)
+	}
+
+	log.Println("删除完成")
+	return nil
+}
+
+// main 主函数（示例）
+func main() {
+	config := &RollbackConfig{
+		MongoURI:       "mongodb://localhost:27017",
+		DatabaseName:   "qingyu",
+		BackupName:     "",      // 留空自动查找最新备份
+		RequireConfirm: true,    // 需要确认
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		log.Fatalf("连接数据库失败: %v", err)
+	}
+	defer client.Disconnect(ctx)
+
+	// 先列出可用的备份
+	if err := ListBackups(ctx, client, config.DatabaseName); err != nil {
+		log.Fatalf("列出备份失败: %v", err)
+	}
+
+	// 执行回滚
+	if err := RollbackInboxToNotifications(ctx, client, config); err != nil {
+		log.Fatalf("回滚失败: %v", err)
+	}
+
+	log.Println("回滚成功完成")
+
+	// 提示：是否删除 inbox_notifications 集合
+	log.Println("\n是否现在删除 inbox_notifications 集合？")
+	log.Println("建议: 先验证数据正确性后再删除")
+	log.Println("如需删除，请单独运行删除功能")
+}
