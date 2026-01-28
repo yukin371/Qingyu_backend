@@ -91,6 +91,17 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	sortBy := c.DefaultQuery("sortBy", "created_at")
 	sortDesc, _ := strconv.ParseBool(c.DefaultQuery("sortDesc", "true"))
 
+	// 添加输入验证，防止DoS攻击
+	if limit > 100 {
+		limit = 100
+	}
+	if limit < 0 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	// 构建请求
 	req := &notifService.GetNotificationsRequest{
 		UserID:   userIDStr,
@@ -993,16 +1004,16 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 		token = token[7:]
 	}
 
-	// 生成WebSocket连接URL
+	// 生成WebSocket连接URL（不再在URL中包含token）
 	scheme := "ws"
 	if c.Request.TLS != nil {
 		scheme = "wss"
 	}
 
-	wsURL := fmt.Sprintf("%s://%s/ws/notifications?token=%s", scheme, c.Request.Host, token)
+	wsURL := fmt.Sprintf("%s://%s/ws/notifications", scheme, c.Request.Host)
 
 	shared.SuccessData(c, dto.WSEndpointResponse{
 		URL:     wsURL,
-		Message: "WebSocket连接地址",
+		Message: "请使用Authorization Header或子协议传递token",
 	})
 }
