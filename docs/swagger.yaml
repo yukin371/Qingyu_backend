@@ -5814,7 +5814,7 @@ paths:
       parameters:
       - description: 图书ID
         in: path
-        name: book_id
+        name: id
         required: true
         type: string
       produces:
@@ -5876,7 +5876,7 @@ paths:
       parameters:
       - description: 书籍ID
         in: path
-        name: book_id
+        name: id
         required: true
         type: string
       - description: 章节号
@@ -6290,6 +6290,11 @@ paths:
       - application/json
       description: 为图书创建新的评分
       parameters:
+      - description: 图书ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: 评分信息
         in: body
         name: request
@@ -6360,7 +6365,7 @@ paths:
       parameters:
       - description: 图书ID
         in: path
-        name: book_id
+        name: id
         required: true
         type: string
       produces:
@@ -6389,7 +6394,7 @@ paths:
       parameters:
       - description: 图书ID
         in: path
-        name: book_id
+        name: id
         required: true
         type: string
       - default: 1
@@ -7613,7 +7618,7 @@ paths:
       parameters:
       - description: 用户ID
         in: path
-        name: user_id
+        name: id
         required: true
         type: string
       - default: 1
@@ -11419,7 +11424,7 @@ paths:
         required: true
         type: string
       - description: 段落索引
-        in: query
+        in: path
         name: paragraphIndex
         required: true
         type: integer
@@ -12545,7 +12550,7 @@ paths:
       parameters:
       - description: 书籍ID
         in: path
-        name: id
+        name: bookId
         required: true
         type: string
       - default: 1
