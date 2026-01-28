@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// TestMongoDBConfigProfilingDefaults 测试MongoDB配置的profiling默认值
-func TestMongoDBConfigProfilingDefaults(t *testing.T) {
+// TestMongoDBConfigProfilingDefaults_FromBlock3 测试MongoDB配置的profiling默认值(Block 3版本)
+func TestMongoDBConfigProfilingDefaults_FromBlock3(t *testing.T) {
 	config := getDefaultDatabaseConfig()
 
 	if config.Primary.MongoDB == nil {
