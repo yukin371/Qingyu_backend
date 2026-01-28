@@ -25,6 +25,7 @@ type Config struct {
 	AIQuota  *AIQuotaConfig                    `mapstructure:"ai_quota"`
 	Email    *EmailConfig                      `mapstructure:"email"`
 	Payment  *PaymentConfig                    `mapstructure:"payment"`
+	RateLimit *RateLimitConfig                 `mapstructure:"rate_limit"`
 	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
 }
 
@@ -150,6 +151,14 @@ type PaymentConfig struct {
 	ReturnURL       string           `mapstructure:"return_url"`
 }
 
+// RateLimitConfig 速率限制配置
+type RateLimitConfig struct {
+	Enabled        bool     `mapstructure:"enabled" json:"enabled"`
+	RequestsPerSec float64  `mapstructure:"requests_per_sec" json:"requests_per_sec"`
+	Burst          int      `mapstructure:"burst" json:"burst"`
+	SkipPaths      []string `mapstructure:"skip_paths" json:"skip_paths"`
+}
+
 // AlipayConfig 支付宝配置
 type AlipayConfig struct {
 	Enabled         bool   `mapstructure:"enabled"`
@@ -204,6 +213,16 @@ func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
 
 	// 最后的默认值
 	return 5
+}
+
+// DefaultRateLimitConfig 返回默认速率限制配置
+func DefaultRateLimitConfig() *RateLimitConfig {
+	return &RateLimitConfig{
+		Enabled:        true,
+		RequestsPerSec: 100,
+		Burst:          200,
+		SkipPaths:      []string{"/health", "/metrics"},
+	}
 }
 
 var (
@@ -419,6 +438,12 @@ func setDefaults() {
 	v.SetDefault("cache.breaker_interval", 10*time.Second)
 	v.SetDefault("cache.breaker_timeout", 30*time.Second)
 	v.SetDefault("cache.breaker_threshold", 0.6)
+
+	// 速率限制默认配置
+	v.SetDefault("rate_limit.enabled", true)
+	v.SetDefault("rate_limit.requests_per_sec", 100)
+	v.SetDefault("rate_limit.burst", 200)
+	v.SetDefault("rate_limit.skip_paths", []string{"/health", "/metrics"})
 }
 
 // WatchConfig 启用配置热重载

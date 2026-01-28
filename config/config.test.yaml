@@ -4,10 +4,20 @@ server:
   mode: debug  # 测试环境使用debug模式
   timeout: 30s
 
-mongodb:
-  uri: "mongodb://admin:password@localhost:27017/qingyu?authSource=admin"
-  database: "qingyu"
-  timeout: 30
+database:
+  type: mongodb
+  primary:
+    type: mongodb
+    mongodb:
+      uri: "mongodb://admin:password@localhost:27017/qingyu?authSource=admin"
+      database: "qingyu"
+      max_pool_size: 100
+      min_pool_size: 10
+      connect_timeout: 30s
+      server_timeout: 30s
+      profiling_level: 2
+      slow_ms: 100
+      profiler_size_mb: 100
 
 redis:
   addr: "localhost:6379"
@@ -101,3 +111,14 @@ ai_quota:
   # 是否允许超额使用（测试环境允许）
   allow_overdraft: true
   overdraft_limit: 1000   # 超额限制（仅测试环境）
+
+# 速率限制配置（测试环境禁用）
+rate_limit:
+  enabled: false  # 测试环境禁用速率限制
+  requests_per_sec: 10000
+  burst: 20000
+  skip_paths:
+    - "/health"
+    - "/metrics"
+    - "/swagger"
+    - "/api/v1/reader"
