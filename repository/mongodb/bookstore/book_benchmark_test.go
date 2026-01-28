@@ -41,7 +41,6 @@ func BenchmarkBookQuery_WithoutIndex(b *testing.B) {
 
 	// 插入1000条测试数据（无索引）
 	books := make([]interface{}, 1000)
-	now := time.Now()
 	for i := 0; i < 1000; i++ {
 		book := bookstore.Book{
 			Title:     "测试书籍",
