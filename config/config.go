@@ -159,6 +159,25 @@ type RateLimitConfig struct {
 	SkipPaths      []string `mapstructure:"skip_paths" json:"skip_paths"`
 }
 
+// Validate validates the rate limit configuration
+func (c *RateLimitConfig) Validate() error {
+	// Skip validation if disabled
+	if !c.Enabled {
+		return nil
+	}
+
+	if c.RequestsPerSec <= 0 {
+		return fmt.Errorf("rate_limit.requests_per_sec must be positive, got %f", c.RequestsPerSec)
+	}
+	if c.Burst < 0 {
+		return fmt.Errorf("rate_limit.burst cannot be negative, got %d", c.Burst)
+	}
+	if c.Burst > 10000 {
+		return fmt.Errorf("rate_limit.burst too large (%d), maximum is 10000", c.Burst)
+	}
+	return nil
+}
+
 // AlipayConfig 支付宝配置
 type AlipayConfig struct {
 	Enabled         bool   `mapstructure:"enabled"`
@@ -215,13 +234,12 @@ func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
 	return 5
 }
 
-// DefaultRateLimitConfig 返回默认速率限制配置
+// DefaultRateLimitConfig returns a default rate limit configuration
+// Note: Actual defaults are set in setDefaults() for Viper
 func DefaultRateLimitConfig() *RateLimitConfig {
 	return &RateLimitConfig{
-		Enabled:        true,
-		RequestsPerSec: 100,
-		Burst:          200,
-		SkipPaths:      []string{"/health", "/metrics"},
+		Enabled: true,
+		// Other fields will be populated by Viper defaults
 	}
 }
 

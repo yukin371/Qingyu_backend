@@ -85,15 +85,30 @@ func InitServer() (*gin.Engine, error) {
 
 	// RateLimitMiddleware - API限流（支持配置化启用/禁用）
 	if config.GlobalConfig.RateLimit != nil && config.GlobalConfig.RateLimit.Enabled {
+		// Create a wrapper that checks skip paths
+		skipPaths := config.GlobalConfig.RateLimit.SkipPaths
 		rateLimitConfig := &pkgmiddleware.RateLimiterConfig{
 			Rate:    config.GlobalConfig.RateLimit.RequestsPerSec,
 			Burst:   config.GlobalConfig.RateLimit.Burst,
 			KeyFunc: pkgmiddleware.DefaultKeyFunc,
 		}
-		r.Use(pkgmiddleware.RateLimitMiddleware(rateLimitConfig))
+
+		// Wrap the middleware to handle skip paths
+		r.Use(func(c *gin.Context) {
+			path := c.Request.URL.Path
+			for _, skipPath := range skipPaths {
+				if path == skipPath {
+					c.Next()
+					return
+				}
+			}
+			pkgmiddleware.RateLimitMiddleware(rateLimitConfig)(c)
+		})
+
 		logger.Info("Rate limit middleware enabled",
 			zap.Float64("rate", rateLimitConfig.Rate),
-			zap.Int("burst", rateLimitConfig.Burst))
+			zap.Int("burst", rateLimitConfig.Burst),
+			zap.Strings("skip_paths", skipPaths))
 	} else {
 		logger.Info("Rate limit middleware disabled")
 	}
