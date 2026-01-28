@@ -82,6 +82,30 @@ func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writ
 	return &doc, nil
 }
 
+// GetByIDUnscoped 根据ID获取文档（包括已删除的）
+func (r *MongoDocumentRepository) GetByIDUnscoped(ctx context.Context, id string) (*writer.Document, error) {
+	var doc writer.Document
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的文档ID: %w", err)
+	}
+
+	filter := bson.M{
+		"_id": objID,
+	}
+
+	err = r.collection.FindOne(ctx, filter).Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("查询文档失败: %w", err)
+	}
+
+	return &doc, nil
+}
+
 // GetByIDs 根据ID列表批量获取文档
 func (r *MongoDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([]*writer.Document, error) {
 	if len(ids) == 0 {
@@ -404,17 +428,23 @@ func (r *MongoDocumentRepository) SoftDelete(ctx context.Context, documentID, pr
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
 
+	projectObjID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		return fmt.Errorf("无效的项目ID: %w", err)
+	}
+
 	now := time.Now()
+	dateTime := primitive.NewDateTimeFromTime(now)
 
 	filter := bson.M{
 		"_id":        objID,
-		"project_id": projectID,
+		"project_id": projectObjID,
 		"deleted_at": nil,
 	}
 	update := bson.M{
 		"$set": bson.M{
-			"deleted_at": now,
-			"updated_at": now,
+			"deleted_at": dateTime,
+			"updated_at": dateTime,
 		},
 	}
 

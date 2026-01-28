@@ -153,7 +153,19 @@ func (s *BatchOperationService) Execute(ctx context.Context, operationID string)
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "批量操作不存在", "", nil)
 	}
 
-	// 2. 检查状态
+	// 2. 如果Items为空，从TargetIDs重新初始化（处理数据库未存储Items的情况）
+	if len(batchOp.Items) == 0 && len(batchOp.TargetIDs) > 0 {
+		batchOp.Items = make([]writer.BatchOperationItem, len(batchOp.TargetIDs))
+		for i, targetID := range batchOp.TargetIDs {
+			batchOp.Items[i] = writer.BatchOperationItem{
+				TargetID:  targetID,
+				Status:    writer.BatchItemStatusPending,
+				Retryable: true,
+			}
+		}
+	}
+
+	// 3. 检查状态
 	if batchOp.Status != writer.BatchOpStatusPending && batchOp.Status != writer.BatchOpStatusPreflight {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "批量操作状态不正确，无法执行", "", nil)
 	}

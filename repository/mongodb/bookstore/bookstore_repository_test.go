@@ -67,7 +67,7 @@ func TestMongoBookRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	result, err := repo.GetByID(ctx, book.ID)
+	result, err := repo.GetByID(ctx, book.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestMongoBookRepository_GetByID_NotFound(t *testing.T) {
 	repo := mongodb.NewMongoBookRepository(db.Client(), db.Name())
 	ctx := context.Background()
 
-	fakeID := primitive.NewObjectID()
+	fakeID := primitive.NewObjectID().Hex()
 
 	// Act
 	result, err := repo.GetByID(ctx, fakeID)
@@ -120,13 +120,13 @@ func TestMongoBookRepository_Update(t *testing.T) {
 		"introduction": "更新后的简介",
 		"status":       bookstore.BookStatusOngoing,
 	}
-	err = repo.Update(ctx, book.ID, updates)
+	err = repo.Update(ctx, book.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	result, err := repo.GetByID(ctx, book.ID)
+	result, err := repo.GetByID(ctx, book.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "更新后的标题", result.Title)
 	assert.Equal(t, "更新后的简介", result.Introduction)
@@ -151,13 +151,13 @@ func TestMongoBookRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除书籍
-	err = repo.Delete(ctx, book.ID)
+	err = repo.Delete(ctx, book.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	result, err := repo.GetByID(ctx, book.ID)
+	result, err := repo.GetByID(ctx, book.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, result)
 }
@@ -246,7 +246,7 @@ func TestMongoBookRepository_Search(t *testing.T) {
 	// 验证搜索结果包含关键词
 	found := false
 	for _, b := range result {
-		if b.ID == book.ID {
+		if b.ID.Hex() == book.ID.Hex() {
 			found = true
 			break
 		}
@@ -273,13 +273,13 @@ func TestMongoBookRepository_IncrementViewCount(t *testing.T) {
 	repo.Create(ctx, book)
 
 	// Act
-	err := repo.IncrementViewCount(ctx, book.ID)
+	err := repo.IncrementViewCount(ctx, book.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证浏览次数增加
-	result, err := repo.GetByID(ctx, book.ID)
+	result, err := repo.GetByID(ctx, book.ID.Hex())
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, result.ViewCount, int64(100))
 }
@@ -329,7 +329,7 @@ func TestMongoBookRepository_BatchUpdateStatus(t *testing.T) {
 	repo.Create(ctx, book3)
 
 	// Act - 批量更新状态
-	bookIDs := []primitive.ObjectID{book1.ID, book2.ID, book3.ID}
+	bookIDs := []string{book1.ID.Hex(), book2.ID.Hex(), book3.ID.Hex()}
 	err := repo.BatchUpdateStatus(ctx, bookIDs, bookstore.BookStatusOngoing)
 
 	// Assert
@@ -366,15 +366,15 @@ func TestMongoBookRepository_BatchUpdateRecommended(t *testing.T) {
 	repo.Create(ctx, book2)
 
 	// Act - 批量设置为推荐
-	bookIDs := []primitive.ObjectID{book1.ID, book2.ID}
+	bookIDs := []string{book1.ID.Hex(), book2.ID.Hex()}
 	err := repo.BatchUpdateRecommended(ctx, bookIDs, true)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证推荐设置
-	result1, _ := repo.GetByID(ctx, book1.ID)
-	result2, _ := repo.GetByID(ctx, book2.ID)
+	result1, _ := repo.GetByID(ctx, book1.ID.Hex())
+	result2, _ := repo.GetByID(ctx, book2.ID.Hex())
 	assert.True(t, result1.IsRecommended)
 	assert.True(t, result2.IsRecommended)
 }

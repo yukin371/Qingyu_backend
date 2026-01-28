@@ -48,6 +48,9 @@ func (b *BaseEntity) SoftDelete() {
 
 // IsDeleted 判断是否已删除
 func (b *BaseEntity) IsDeleted() bool {
+	if b.DeletedAt == nil {
+		return false
+	}
 	return !b.DeletedAt.IsZero()
 }
 

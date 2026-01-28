@@ -13,6 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// withUserID 将用户ID添加到context中
+func withUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, "userID", userID)
+}
+
 // TestBatchOperation_DeleteDocuments 测试批量删除文档
 func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	if testing.Short() {
@@ -26,16 +31,18 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	// 初始化repositories
 	docRepo := writer.NewMongoDocumentRepository(db)
 
-	// 1. 创建测试项目
-	project := testutil.CreateTestProject(primitive.NewObjectID().Hex())
+	// 1. 创建测试用户和项目
+	userID := primitive.NewObjectID()
+	ctx = withUserID(ctx, userID.Hex())
+
+	project := testutil.CreateTestProject(userID.Hex())
+	project.GenerateID()
 	project.TouchForCreate()
 	projectRepo := writer.NewMongoProjectRepository(db)
 	err := projectRepo.Create(ctx, project)
 	if err != nil {
 		t.Fatalf("Failed to create test project: %v", err)
 	}
-
-	userID := primitive.NewObjectID()
 
 	// 2. 创建测试文档
 	docs := make([]*writerModel.Document, 5)
@@ -94,9 +101,14 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 
 	// 6. 验证文档已软删除
 	for i := 0; i < 2; i++ {
-		doc, err := docRepo.GetByID(ctx, docs[i].ID.Hex())
+		doc, err := docRepo.GetByIDUnscoped(ctx, docs[i].ID.Hex())
 		if err != nil {
-			t.Errorf("Document %s should be retrievable (soft delete)", docs[i].ID.Hex())
+			t.Errorf("Document %s should be retrievable (soft delete): %v", docs[i].ID.Hex(), err)
+			continue
+		}
+		if doc == nil {
+			t.Errorf("Document %s should exist", docs[i].ID.Hex())
+			continue
 		}
 		if !doc.IsDeleted() {
 			t.Errorf("Document %s should be deleted", docs[i].ID.Hex())
@@ -107,7 +119,12 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	for i := 2; i < 5; i++ {
 		doc, err := docRepo.GetByID(ctx, docs[i].ID.Hex())
 		if err != nil {
-			t.Errorf("Document %s should not be deleted", docs[i].ID.Hex())
+			t.Errorf("Document %s should not be deleted: %v", docs[i].ID.Hex(), err)
+			continue
+		}
+		if doc == nil {
+			t.Errorf("Document %s should exist", docs[i].ID.Hex())
+			continue
 		}
 		if doc.IsDeleted() {
 			t.Errorf("Document %s should not be deleted", docs[i].ID.Hex())
@@ -137,16 +154,18 @@ func TestBatchOperation_Undo(t *testing.T) {
 	// 初始化repositories
 	docRepo := writer.NewMongoDocumentRepository(db)
 
-	// 创建测试项目
-	project := testutil.CreateTestProject(primitive.NewObjectID().Hex())
+	// 创建测试用户和项目
+	userID := primitive.NewObjectID()
+	ctx = withUserID(ctx, userID.Hex())
+
+	project := testutil.CreateTestProject(userID.Hex())
+	project.GenerateID()
 	project.TouchForCreate()
 	projectRepo := writer.NewMongoProjectRepository(db)
 	err := projectRepo.Create(ctx, project)
 	if err != nil {
 		t.Fatalf("Failed to create test project: %v", err)
 	}
-
-	userID := primitive.NewObjectID()
 
 	// 创建测试文档
 	docs := make([]*writerModel.Document, 3)
@@ -197,7 +216,11 @@ func TestBatchOperation_Undo(t *testing.T) {
 
 	// 验证文档已删除
 	for i := 0; i < 2; i++ {
-		doc, _ := docRepo.GetByID(ctx, docs[i].ID.Hex())
+		doc, _ := docRepo.GetByIDUnscoped(ctx, docs[i].ID.Hex())
+		if doc == nil {
+			t.Errorf("Document %s should exist before undo", docs[i].ID.Hex())
+			continue
+		}
 		if !doc.IsDeleted() {
 			t.Errorf("Document %s should be deleted before undo", docs[i].ID.Hex())
 		}
@@ -213,7 +236,12 @@ func TestBatchOperation_Undo(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		doc, err := docRepo.GetByID(ctx, docs[i].ID.Hex())
 		if err != nil {
-			t.Errorf("Document %s should be restored after undo", docs[i].ID.Hex())
+			t.Errorf("Document %s should be restored after undo: %v", docs[i].ID.Hex(), err)
+			continue
+		}
+		if doc == nil {
+			t.Errorf("Document %s should exist after undo", docs[i].ID.Hex())
+			continue
 		}
 		if doc.IsDeleted() {
 			t.Errorf("Document %s should not be deleted after undo", docs[i].ID.Hex())
@@ -222,7 +250,9 @@ func TestBatchOperation_Undo(t *testing.T) {
 
 	// 验证第三个文档未被影响
 	doc3, _ := docRepo.GetByID(ctx, docs[2].ID.Hex())
-	if doc3.IsDeleted() {
+	if doc3 == nil {
+		t.Errorf("Document %s should exist and not be affected by undo", docs[2].ID.Hex())
+	} else if doc3.IsDeleted() {
 		t.Errorf("Document %s should not be affected by undo", docs[2].ID.Hex())
 	}
 }

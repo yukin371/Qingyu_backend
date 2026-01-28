@@ -92,6 +92,9 @@ type DocumentRepository interface {
 	SoftDelete(ctx context.Context, documentID, projectID string) error
 	HardDelete(ctx context.Context, documentID string) error
 
+	// 获取已删除的文档
+	GetByIDUnscoped(ctx context.Context, id string) (*writer.Document, error)
+
 	// 统计方法
 	CountByProject(ctx context.Context, projectID string) (int64, error)
 
