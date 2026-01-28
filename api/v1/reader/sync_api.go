@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	gorilla_websocket "github.com/gorilla/websocket"
 
-	"Qingyu_backend/api/v1/shared"
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
 	"Qingyu_backend/service/interfaces"
@@ -51,7 +50,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -110,7 +109,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -122,7 +121,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "同步成功", nil)
+	response.Success(c, nil)
 }
 
 // MergeOfflineProgresses 合并离线进度
@@ -147,7 +146,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -179,7 +178,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "合并成功", nil)
+	response.Success(c, nil)
 }
 
 // GetSyncStatus 获取同步状态
@@ -196,7 +195,7 @@ func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -205,7 +204,7 @@ func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取同步状态
 	status := api.syncService.GetSyncStatus(userIDStr)
 
-	shared.Success(c, http.StatusOK, "获取成功", status)
+	response.Success(c, status)
 }
 
 // SyncProgressRequest 同步进度请求
