@@ -22,4 +22,10 @@ type TestResult struct {
 	P99Latency    time.Duration
 	Throughput    float64 // req/s
 	Duration      time.Duration
+
+	// 缓存指标
+	CacheHits    int     `json:"cache_hits"`
+	CacheMisses  int     `json:"cache_misses"`
+	CacheHitRate float64 `json:"cache_hit_rate"`
+	DBQueries    int     `json:"db_queries"`
 }

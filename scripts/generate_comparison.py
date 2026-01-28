@@ -45,6 +45,21 @@ def calculate_throughput_improvement(before, after):
         return 0.0
     return ((after - before) / before) * 100
 
+def print_cache_metrics(result):
+    """打印缓存指标"""
+    if 'cache_hits' in result:
+        hits = result.get('cache_hits', 0)
+        misses = result.get('cache_misses', 0)
+        hit_rate = result.get('cache_hit_rate', 0)
+
+        print(f"\n### 缓存指标")
+        print(f"- 缓存命中: {hits}")
+        print(f"- 缓存未命中: {misses}")
+        print(f"- 缓存命中率: {hit_rate:.2%}")
+
+        return hit_rate
+    return 0.0
+
 def duration_to_ms(duration_str):
     """将duration字符串转换为毫秒数"""
     # 格式: "100ms" 或 "1s500ms" 或 "2s" 或纯数字
@@ -117,9 +132,29 @@ def generate_markdown_report(with_cache, without_cache, output_file):
 |------|--------|--------|
 | 成功率 | {success_rate_without:.2f}% | {success_rate_with:.2f}% |
 
-## 结论
-
 """
+
+    # 添加缓存效果分析部分
+    if 'cache_hits' in with_cache:
+        hit_rate = with_cache.get('cache_hit_rate', 0)
+        cache_hits = with_cache.get('cache_hits', 0)
+        cache_misses = with_cache.get('cache_misses', 0)
+
+        report += "## 缓存效果分析\n\n"
+        report += f"- 缓存命中: {cache_hits}\n"
+        report += f"- 缓存未命中: {cache_misses}\n"
+        report += f"- 缓存命中率: **{hit_rate:.2%}**\n\n"
+
+        if hit_rate > 0.8:
+            report += "- 评估: ✅ 缓存效果优秀\n"
+        elif hit_rate > 0.5:
+            report += "- 评估: ⚠️ 缓存效果良好, 可优化\n"
+        else:
+            report += "- 评估: ❌ 缓存效果不佳, 需要检查配置\n"
+
+        report += "\n"
+
+    report += "## 结论\n\n"
 
     if latency_improvement >= 30:
         report += f"[PASS] 响应时间改善达标 ({latency_improvement:.2f}% >= 30%)\\n"

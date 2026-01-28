@@ -18,6 +18,7 @@ cd "$PROJECT_DIR" || exit 1
 BASE_URL=${BASE_URL:-"http://localhost:8080"}
 OUTPUT_DIR=${OUTPUT_DIR:-"test_results"}
 BOOK_ID=${BOOK_ID:-"507f1f77bcf86cd799439011"}
+PROMETHEUS_URL=${PROMETHEUS_URL:-"http://localhost:9090"}
 
 # 错误日志函数
 log_error() {
@@ -147,6 +148,7 @@ main() {
             ;;
         "compare")
             log_info "开始性能对比测试..."
+            log_info "收集Prometheus指标从: $PROMETHEUS_URL"
 
             # 测试1: 无缓存
             clear_cache

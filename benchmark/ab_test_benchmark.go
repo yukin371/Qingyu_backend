@@ -134,3 +134,51 @@ func (r *TestResult) calculateStatistics(latencies []time.Duration) {
 	// 计算吞吐量
 	r.Throughput = float64(r.TotalRequests) / r.Duration.Seconds()
 }
+
+// RunABTestWithMetrics 执行A/B测试(增强版, 带指标收集)
+func (b *ABTestBenchmark) RunABTestWithMetrics(
+	ctx context.Context,
+	scenario TestScenario,
+	withCache bool,
+	metricsCollector *MetricsCollector,
+) (*TestResult, error) {
+	// 收集开始指标
+	var startSnapshot, endSnapshot map[string]float64
+	if metricsCollector != nil {
+		var err error
+		startSnapshot, err = metricsCollector.CollectSnapshot()
+		if err != nil {
+			// 记录警告但不中断测试
+			fmt.Printf("Warning: failed to collect start metrics: %v\n", err)
+		}
+	}
+
+	// 执行原始测试逻辑
+	result, err := b.RunABTest(ctx, scenario, withCache)
+	if err != nil {
+		return nil, err
+	}
+
+	// 收集结束指标
+	if metricsCollector != nil && startSnapshot != nil {
+		var err error
+		endSnapshot, err = metricsCollector.CollectSnapshot()
+		if err != nil {
+			fmt.Printf("Warning: failed to collect end metrics: %v\n", err)
+		} else {
+			// 计算差值
+			result.CacheHits = int(endSnapshot["cache_hits"] - startSnapshot["cache_hits"])
+			result.CacheMisses = int(endSnapshot["cache_misses"] - startSnapshot["cache_misses"])
+
+			total := result.CacheHits + result.CacheMisses
+			if total > 0 {
+				result.CacheHitRate = float64(result.CacheHits) / float64(total)
+			}
+
+			// DB查询数等于缓存未命中数
+			result.DBQueries = result.CacheMisses
+		}
+	}
+
+	return result, nil
+}
