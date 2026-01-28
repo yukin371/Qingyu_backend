@@ -46,7 +46,7 @@ func main() {
 		Name:       config.Name,
 		Requests:   config.Requests,
 		Concurrent: config.Concurrent,
-		Endpoints:  []string{"/api/v1/books/507f1f77bcf86cd799439011"},
+		Endpoints:  []string{"/api/v1/bookstore/homepage"},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)

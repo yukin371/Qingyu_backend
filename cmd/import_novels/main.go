@@ -27,8 +27,14 @@ func main() {
 		log.Fatalf("❌ 加载配置失败: %v\n", err)
 	}
 	fmt.Printf("✓ 配置加载成功\n")
-	fmt.Printf("  数据库: %s\n", cfg.Database.Primary.MongoDB.URI)
-	fmt.Printf("  数据库名: %s\n", cfg.Database.Primary.MongoDB.Database)
+
+	// 使用GetMongoConfig获取MongoDB配置
+	mongoConfig, err := cfg.Database.GetMongoConfig()
+	if err != nil {
+		log.Fatalf("❌ 获取MongoDB配置失败: %v\n", err)
+	}
+	fmt.Printf("  数据库: %s\n", mongoConfig.URI)
+	fmt.Printf("  数据库名: %s\n", mongoConfig.Database)
 	fmt.Println()
 
 	// 初始化服务（包括数据库连接）

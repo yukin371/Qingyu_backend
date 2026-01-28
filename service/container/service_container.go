@@ -486,11 +486,14 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 // initMongoDB 初始化MongoDB客户端
 func (c *ServiceContainer) initMongoDB() error {
 	cfg := config.GlobalConfig.Database
-	if cfg == nil || cfg.Primary.MongoDB == nil {
-		return fmt.Errorf("MongoDB配置未找到")
+	if cfg == nil {
+		return fmt.Errorf("数据库配置未找到")
 	}
 
-	mongoCfg := cfg.Primary.MongoDB
+	mongoCfg, err := cfg.GetMongoConfig()
+	if err != nil {
+		return fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
 
 	clientOptions := options.Client().
 		ApplyURI(mongoCfg.URI).

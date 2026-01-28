@@ -162,6 +162,16 @@ func (m *ViperConfigManager) applyDatabaseEnvOverrides(config *DatabaseConfig) e
 		if poolSize := m.viper.GetUint64("QINGYU_DATABASE_PRIMARY_MONGODB_MAX_POOL_SIZE"); poolSize > 0 {
 			config.Primary.MongoDB.MaxPoolSize = poolSize
 		}
+		// 添加profiling环境变量覆盖
+		if level := m.viper.GetInt("QINGYU_DATABASE_PRIMARY_MONGODB_PROFILING_LEVEL"); level >= 0 && level <= 2 {
+			config.Primary.MongoDB.ProfilingLevel = level
+		}
+		if slowMS := m.viper.GetInt64("QINGYU_DATABASE_PRIMARY_MONGODB_SLOW_MS"); slowMS >= 0 {
+			config.Primary.MongoDB.SlowMS = slowMS
+		}
+		if sizeMB := m.viper.GetInt64("QINGYU_DATABASE_PRIMARY_MONGODB_PROFILER_SIZE_MB"); sizeMB >= 1 {
+			config.Primary.MongoDB.ProfilerSizeMB = sizeMB
+		}
 	}
 
 	// PostgreSQL环境变量覆盖

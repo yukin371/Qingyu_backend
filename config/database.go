@@ -18,7 +18,7 @@ const (
 	DatabaseTypeMySQL      DatabaseType = "mysql"
 )
 
-// DatabaseConfig 数据库配置
+// DatabaseConfig 数据库配置（支持新旧两种格式）
 type DatabaseConfig struct {
 	Type       string                `yaml:"type" json:"type" mapstructure:"type"`
 	Primary    DatabaseConnection    `yaml:"primary" json:"primary" mapstructure:"primary"`
@@ -26,6 +26,17 @@ type DatabaseConfig struct {
 	Indexing   IndexingConfig        `yaml:"indexing" json:"indexing" mapstructure:"indexing"`
 	Validation ValidationConfig      `yaml:"validation" json:"validation" mapstructure:"validation"`
 	Sync       SynchronizationConfig `yaml:"sync" json:"sync" mapstructure:"sync"`
+
+	// 旧格式（扁平）- 原始版本兼容
+	URI             string        `yaml:"uri,omitempty" json:"uri,omitempty" mapstructure:"uri,omitempty"`
+	Name            string        `yaml:"name,omitempty" json:"name,omitempty" mapstructure:"name,omitempty"`
+	ConnectTimeout  time.Duration `yaml:"connect_timeout,omitempty" json:"connect_timeout,omitempty" mapstructure:"connect_timeout,omitempty"`
+	MaxPoolSize     int           `yaml:"max_pool_size,omitempty" json:"max_pool_size,omitempty" mapstructure:"max_pool_size,omitempty"`
+	MinPoolSize     int           `yaml:"min_pool_size,omitempty" json:"min_pool_size,omitempty" mapstructure:"min_pool_size,omitempty"`
+
+	// 配置解析后使用的实际配置
+	resolved     bool
+	mongoConfig  *MongoDBConfig
 }
 
 // DatabaseConnection 数据库连接配置
@@ -96,6 +107,66 @@ type ValidationConfig struct {
 type SynchronizationConfig struct {
 	Enabled  bool          `yaml:"enabled" json:"enabled" mapstructure:"enabled"`
 	Interval time.Duration `yaml:"interval" json:"interval" mapstructure:"interval"`
+}
+
+// normalizeConfig 规范化配置，支持新旧两种格式
+func (c *DatabaseConfig) normalizeConfig() error {
+	if c.resolved {
+		return nil
+	}
+
+	// 优先使用新格式（嵌套）
+	if c.Primary.Type == DatabaseTypeMongoDB && c.Primary.MongoDB != nil {
+		c.mongoConfig = c.Primary.MongoDB
+		c.resolved = true
+		return nil
+	}
+
+	// 回退到旧格式（扁平）
+	if c.URI != "" {
+		c.mongoConfig = &MongoDBConfig{
+			URI:         c.URI,
+			Database:    c.Name,
+			MaxPoolSize: uint64(c.MaxPoolSize),
+			MinPoolSize: uint64(c.MinPoolSize),
+		}
+
+		// 设置默认值
+		if c.mongoConfig.MaxPoolSize == 0 {
+			c.mongoConfig.MaxPoolSize = 100
+		}
+		if c.mongoConfig.MinPoolSize == 0 {
+			c.mongoConfig.MinPoolSize = 10
+		}
+		if c.mongoConfig.ConnectTimeout == 0 {
+			c.mongoConfig.ConnectTimeout = 10 * time.Second
+		}
+		if c.mongoConfig.ServerTimeout == 0 {
+			c.mongoConfig.ServerTimeout = 30 * time.Second
+		}
+		if c.mongoConfig.ProfilingLevel == 0 {
+			c.mongoConfig.ProfilingLevel = 1
+		}
+		if c.mongoConfig.SlowMS == 0 {
+			c.mongoConfig.SlowMS = 100
+		}
+		if c.mongoConfig.ProfilerSizeMB == 0 {
+			c.mongoConfig.ProfilerSizeMB = 100
+		}
+
+		c.resolved = true
+		return nil
+	}
+
+	return fmt.Errorf("invalid database configuration: neither primary.mongodb nor uri provided")
+}
+
+// GetMongoConfig 获取MongoDB配置（规范化后）
+func (c *DatabaseConfig) GetMongoConfig() (*MongoDBConfig, error) {
+	if err := c.normalizeConfig(); err != nil {
+		return nil, err
+	}
+	return c.mongoConfig, nil
 }
 
 // LoadDatabaseConfig 加载数据库配置
@@ -224,7 +295,22 @@ func applyEnvironmentOverrides(config *DatabaseConfig) error {
 
 // Validate 验证配置
 func (c *DatabaseConfig) Validate() error {
-	// 验证主数据库配置
+	// 检查是否有新格式（嵌套）配置
+	hasNewFormat := c.Primary.Type != "" && c.Primary.MongoDB != nil
+
+	// 如果没有新格式，检查旧格式
+	if !hasNewFormat {
+		// 检查是否有任何旧格式字段
+		if c.URI != "" || c.Name != "" || c.MaxPoolSize != 0 || c.MinPoolSize != 0 {
+			mongoConfig, err := c.GetMongoConfig()
+			if err != nil {
+				return err
+			}
+			return mongoConfig.Validate()
+		}
+	}
+
+	// 新格式：验证主数据库配置
 	if err := c.Primary.Validate(); err != nil {
 		return fmt.Errorf("主数据库配置无效: %w", err)
 	}
@@ -241,6 +327,12 @@ func (c *DatabaseConfig) Validate() error {
 
 // Validate 验证数据库实例配置
 func (c *DatabaseConnection) Validate() error {
+	// 如果类型为空，说明可能使用的是旧格式，跳过验证
+	// 旧格式的验证会在 DatabaseConfig.Validate 中处理
+	if c.Type == "" {
+		return nil
+	}
+
 	switch c.Type {
 	case DatabaseTypeMongoDB:
 		if c.MongoDB == nil {

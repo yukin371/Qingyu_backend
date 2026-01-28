@@ -250,11 +250,14 @@ func containsRole(roles []string, role string) bool {
 // connectDB 连接数据库
 func connectDB() (*mongo.Database, error) {
 	cfg := config.GlobalConfig.Database
-	if cfg == nil || cfg.Primary.MongoDB == nil {
+	if cfg == nil {
 		return nil, fmt.Errorf("数据库配置缺失")
 	}
 
-	mongoCfg := cfg.Primary.MongoDB
+	mongoCfg, err := cfg.GetMongoConfig()
+	if err != nil {
+		return nil, fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
 
 	clientOptions := options.Client().
 		ApplyURI(mongoCfg.URI).
