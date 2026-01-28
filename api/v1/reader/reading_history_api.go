@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -28,20 +28,20 @@ func NewReadingHistoryAPI(historyService interfaces.ReadingHistoryService) *Read
 // @Accept json
 // @Produce json
 // @Param body body RecordReadingRequest true "阅读记录参数"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} pkg.Response
+// @Failure 400 {object} pkg.Response
 // @Router /api/v1/reader/reading-history [post]
 func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 	var req RecordReadingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, 401, "未认证", "用户未登录")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -58,11 +58,11 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 		req.DeviceID,
 	)
 	if err != nil {
-		shared.Error(c, 500, "记录阅读历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 201, "记录成功", gin.H{})
+	response.Created(c, gin.H{})
 }
 
 // GetReadingHistories 获取阅读历史列表
@@ -73,14 +73,14 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
 // @Param book_id query string false "书籍ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} pkg.Response
+// @Failure 400 {object} pkg.Response
 // @Router /api/v1/reader/reading-history [get]
 func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, 401, "未认证", "用户未登录")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -112,11 +112,11 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	}
 
 	if err != nil {
-		shared.Error(c, 500, "查询阅读历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"histories":  histories,
 		"pagination": pagination,
 	})
@@ -128,14 +128,14 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "统计天数" default(30)
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} pkg.Response
+// @Failure 400 {object} pkg.Response
 // @Router /api/v1/reader/reading-history/stats [get]
 func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, 401, "未认证", "用户未登录")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 		userID.(string),
 	)
 	if err != nil {
-		shared.Error(c, 500, "查询阅读统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -159,11 +159,11 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 		days,
 	)
 	if err != nil {
-		shared.Error(c, 500, "查询每日统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"summary":     stats,
 		"daily_stats": dailyStats,
 	})
@@ -175,20 +175,20 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "历史记录ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} pkg.Response
+// @Failure 400 {object} pkg.Response
 // @Router /api/v1/reader/reading-history/{id} [delete]
 func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, 401, "未认证", "用户未登录")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	historyID := c.Param("id")
 	if historyID == "" {
-		shared.Error(c, 400, "参数错误", "历史记录ID不能为空")
+		response.BadRequest(c, "参数错误", "历史记录ID不能为空")
 		return
 	}
 
@@ -199,11 +199,11 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 		historyID,
 	)
 	if err != nil {
-		shared.Error(c, 500, "删除历史记录失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "删除成功", gin.H{})
+	response.Success(c, gin.H{})
 }
 
 // ClearHistories 清空历史记录
@@ -211,14 +211,14 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 // @Tags 阅读历史
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} pkg.Response
+// @Failure 400 {object} pkg.Response
 // @Router /api/v1/reader/reading-history [delete]
 func (api *ReadingHistoryAPI) ClearHistories(c *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, 401, "未认证", "用户未登录")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -228,11 +228,11 @@ func (api *ReadingHistoryAPI) ClearHistories(c *gin.Context) {
 		userID.(string),
 	)
 	if err != nil {
-		shared.Error(c, 500, "清空历史记录失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "已清空所有历史记录", gin.H{})
+	response.Success(c, gin.H{})
 }
 
 // =======================
