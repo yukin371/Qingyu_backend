@@ -3,11 +3,9 @@ package reader
 import (
 	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 	"time"
 
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +33,7 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 //	@Param		sortBy		query	string	false	"排序字段：created_at/like_count/rating"	default(created_at)
 //	@Param		sortOrder	query	string	false	"排序方向：asc/desc"	default(desc)
 //	@Param		parentId	query	string	false	"父评论ID（空字符串表示顶级评论）"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/comments [get]
 // @Summary GetChapterComments 操作
 // @Description TODO: 补充详细描述
@@ -44,7 +42,7 @@ func NewChapterCommentAPI() *ChapterCommentAPI {
 // @Produce json
 // @Security Bearer
 // @Param chapterId path string true "ChapterId"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /reader/{chapterId}/comments [get]
 
@@ -119,7 +117,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	avgRating := 0.0
 	ratingCount := 0
 
-	shared.Success(c, http.StatusOK, "获取成功", readerModels.ChapterCommentListResponse{
+	response.Success(c, readerModels.ChapterCommentListResponse{
 		Comments:    comments,
 		Total:       total,
 		Page:        page,
@@ -136,13 +134,13 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 //	@Tags		阅读器-章节评论
 //	@Param		chapterId	path	string								true	"章节ID"
 //	@Param		request		body object	true	"评论内容"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/comments [post]
 func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -160,7 +158,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 
 	var req readerModels.CreateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -213,7 +211,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 	// 3. 如果是顶级评论且有评分，更新书籍/章节的评分统计
 	// 4. 发布评论创建事件
 
-	shared.Success(c, http.StatusCreated, "评论成功", gin.H{
+	response.Created(c, gin.H{
 		"comment": comment,
 		"message": "评论发表成功",
 	})
@@ -224,7 +222,7 @@ func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 //	@Summary	获取单条评论详情
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string	true	"评论ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [get]
 func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 	commentID := c.Param("commentId")
@@ -240,7 +238,7 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 	}
 
 	// 实际应用中应该从数据库查询
-	shared.Error(c, http.StatusNotFound, "评论不存在", "未找到指定评论")
+	response.NotFound(c, "评论不存在")
 }
 
 // UpdateChapterComment 更新章节评论
@@ -249,12 +247,12 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string								true	"评论ID"
 //	@Param		request		body object	true	"更新内容"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [put]
 func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -266,7 +264,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 
 	var req readerModels.UpdateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -283,7 +281,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 	// 4. 更新评论内容
 	// 5. 如果评分改变，更新章节/书籍评分统计
 
-	shared.Success(c, http.StatusOK, "更新成功", gin.H{
+	response.Success(c, gin.H{
 		"message":   "评论更新成功",
 		"commentId": commentID,
 		"userId":    userID,
@@ -295,12 +293,12 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 //	@Summary	删除章节评论
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string	true	"评论ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [delete]
 func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -317,7 +315,7 @@ func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 	// 4. 如果有评分，更新章节/书籍评分统计
 	// 5. 如果是回复，减少父评论的reply_count
 
-	shared.Success(c, http.StatusOK, "删除成功", gin.H{
+	response.Success(c, gin.H{
 		"message":   "评论删除成功",
 		"commentId": commentID,
 		"userId":    userID,
@@ -329,12 +327,12 @@ func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 //	@Summary	点赞章节评论
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string	true	"评论ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId}/like [post]
 func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -349,7 +347,7 @@ func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 	// 2. 如果未点赞，创建点赞记录并增加评论的like_count
 	// 3. 如果已点赞，取消点赞并减少like_count
 
-	shared.Success(c, http.StatusOK, "点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"message":   "评论点赞成功",
 		"commentId": commentID,
 		"userId":    userID,
@@ -361,12 +359,12 @@ func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 //	@Summary	取消点赞章节评论
 //	@Tags		阅读器-章节评论
 //	@Param		commentId	path	string	true	"评论ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId}/like [delete]
 func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -376,7 +374,7 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消点赞成功", gin.H{
+	response.Success(c, gin.H{
 		"message":   "取消点赞成功",
 		"commentId": commentID,
 		"userId":    userID,
@@ -389,7 +387,7 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 //	@Tags		阅读器-段落评论
 //	@Param		chapterId		path	string	true	"章节ID"
 //	@Param		paragraphIndex	query	int		true	"段落索引"
-//	@Success	200				{object}	shared.APIResponse
+//	@Success	200				{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraphs/{paragraphIndex}/comments [get]
 func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
@@ -413,7 +411,7 @@ func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 	// 实际应用中应该从数据库查询
 	comments := make([]*readerModels.ChapterComment, 0)
 
-	shared.Success(c, http.StatusOK, "获取成功", readerModels.ParagraphCommentResponse{
+	response.Success(c, readerModels.ParagraphCommentResponse{
 		ParagraphIndex: paragraphIndex,
 		ParagraphText:  "", // 应该从章节内容中获取
 		CommentCount:   len(comments),
@@ -427,12 +425,12 @@ func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 //	@Tags		阅读器-段落评论
 //	@Param		chapterId	path	string								true	"章节ID"
 //	@Param		request		body object	true	"评论内容"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraph-comments [post]
 func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -444,7 +442,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 
 	var req readerModels.CreateChapterCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -474,7 +472,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 	}
 
 	// 实际应用中应该保存到数据库
-	shared.Success(c, http.StatusCreated, "评论成功", gin.H{
+	response.Created(c, gin.H{
 		"comment": comment,
 		"message": fmt.Sprintf("段落 %d 评论发表成功", *req.ParagraphIndex),
 	})
@@ -485,7 +483,7 @@ func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
 //	@Summary	获取章节所有段落评论概览
 //	@Tags		阅读器-段落评论
 //	@Param		chapterId	path	string	true	"章节ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraph-comments [get]
 func (api *ChapterCommentAPI) GetChapterParagraphComments(c *gin.Context) {
 	chapterID := c.Param("chapterId")
@@ -501,7 +499,7 @@ func (api *ChapterCommentAPI) GetChapterParagraphComments(c *gin.Context) {
 
 	result := make(map[int]int)
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"chapterId":      chapterID,
 		"paragraphStats": result,
 	})
