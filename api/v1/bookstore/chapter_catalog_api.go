@@ -221,12 +221,12 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 //	@Tags			章节购买
 //	@Accept			json
 //	@Produce		json
-//	@Param			chapterId	path		string	true	"章节ID"
+//	@Param			id	path		string	true	"章节ID"
 //	@Success		200			{object}	APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
-//	@Router			/api/v1/bookstore/chapters/{chapterId}/price [get]
+//	@Router			/api/v1/bookstore/chapters/{id}/price [get]
 func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
@@ -267,12 +267,12 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 //	@Tags			章节购买
 //	@Accept			json
 //	@Produce		json
-//	@Param			chapterId	path		string	true	"章节ID"
+//	@Param			id	path		string	true	"章节ID"
 //	@Success		200			{object}	APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		403			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
-//	@Router			/api/v1/reader/chapters/{chapterId}/purchase [post]
+//	@Router			/api/v1/reader/chapters/{id}/purchase [post]
 func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
@@ -570,12 +570,12 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 //	@Tags			章节购买
 //	@Accept			json
 //	@Produce		json
-//	@Param			chapterId	path		string	true	"章节ID"
+//	@Param			id	path		string	true	"章节ID"
 //	@Success		200			{object}	APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
-//	@Router			/api/v1/bookstore/chapters/{chapterId}/access [get]
+//	@Router			/api/v1/bookstore/chapters/{id}/access [get]
 func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {

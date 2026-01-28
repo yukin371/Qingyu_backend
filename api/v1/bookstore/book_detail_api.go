@@ -36,7 +36,7 @@ func NewBookDetailAPI(service bookstoreService.BookDetailService) *BookDetailAPI
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		404	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id} [get]
+//	@Router			/api/v1/bookstore/books/{id}/detail [get]
 func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -76,7 +76,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/books/search/title [get]
+//	@Router			/api/v1/bookstore/books/search/title [get]
 func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 	title := c.Query("title")
 	if title == "" {
@@ -116,7 +116,7 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/search/author [get]
+//	@Router			/api/v1/bookstore/books/search/author [get]
 func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 	author := c.Query("author")
 	if author == "" {
@@ -156,7 +156,7 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	response.APIResponse
 //	@Failure		500			{object}	response.APIResponse
-//	@Router			/api/v1/books/category [get]
+//	@Router			/api/v1/bookstore/books/category [get]
 func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 	category := c.Query("category")
 	if category == "" {
@@ -196,7 +196,7 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/status [get]
+//	@Router			/api/v1/bookstore/books/status [get]
 func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 	status := c.Query("status")
 	if status == "" {
@@ -250,7 +250,7 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/books/tags [get]
+//	@Router			/api/v1/bookstore/books/tags [get]
 func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 	tagsStr := c.Query("tags")
 	if tagsStr == "" {
@@ -295,7 +295,7 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/search [get]
+//	@Router			/api/v1/bookstore/books/search [get]
 func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
@@ -332,7 +332,7 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 //	@Param			limit	query		int	false	"数量限制"	default(10)
 //	@Success 200 {object} response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/recommended [get]
+//	@Router			/api/v1/bookstore/books/recommended [get]
 func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -360,7 +360,7 @@ func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id}/similar [get]
+//	@Router			/api/v1/bookstore/books/{id}/similar [get]
 func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -398,7 +398,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 //	@Param			limit	query		int	false	"数量限制"	default(10)
 //	@Success 200 {object} response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/popular [get]
+//	@Router			/api/v1/bookstore/books/popular [get]
 func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -424,7 +424,7 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 //	@Param			limit	query		int	false	"数量限制"	default(10)
 //	@Success 200 {object} response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/latest [get]
+//	@Router			/api/v1/bookstore/books/latest [get]
 func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 50 {
@@ -452,7 +452,7 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 //	@Success		200	{object}	response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id}/statistics [get]
+//	@Router			/api/v1/bookstore/books/{id}/statistics [get]
 func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -493,7 +493,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 //	@Success 201 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/books [post]
+//	@Router			/api/v1/bookstore/books [post]
 func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 	var book bookstore.BookDetail
 	if err := c.ShouldBindJSON(&book); err != nil {
@@ -522,7 +522,7 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		404	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id} [put]
+//	@Router			/api/v1/bookstore/books/{id} [put]
 func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -568,7 +568,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		404	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id} [delete]
+//	@Router			/api/v1/bookstore/books/{id} [delete]
 func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -607,7 +607,7 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		404	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id}/view [post]
+//	@Router			/api/v1/bookstore/books/{id}/view [post]
 func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -642,7 +642,7 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id}/like [post]
+//	@Router			/api/v1/bookstore/books/{id}/like [post]
 func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -677,7 +677,7 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/books/{id}/unlike [post]
+//	@Router			/api/v1/bookstore/books/{id}/unlike [post]
 func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {

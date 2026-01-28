@@ -36,7 +36,7 @@ func NewBookRatingAPI(bookRatingService bookstoreService.BookRatingService) *Boo
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/ratings/{id} [get]
+// @Router /api/v1/bookstore/books/{id}/rating [get]
 func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -71,7 +71,7 @@ func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 // @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/books/{book_id}/ratings [get]
+// @Router /api/v1/bookstore/books/{id}/ratings [get]
 func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -116,7 +116,7 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 // @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/users/{user_id}/ratings [get]
+// @Router /api/v1/bookstore/ratings/user/{id} [get]
 func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 	userIDStr := c.Param("user_id")
 	if userIDStr == "" {
@@ -159,7 +159,7 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 // @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/books/{book_id}/average-rating [get]
+// @Router /api/v1/bookstore/books/{id}/average-rating [get]
 func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -192,7 +192,7 @@ func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 // @Success 200 {object} APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/books/{book_id}/rating-distribution [get]
+// @Router /api/v1/bookstore/books/{id}/rating-distribution [get]
 func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
@@ -225,7 +225,7 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 // @Success 201 {object} APIResponse "创建成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/ratings [post]
+// @Router /api/v1/bookstore/books/{id}/rating [post]
 func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	var rating bookstore.BookRating
 	if err := c.ShouldBindJSON(&rating); err != nil {
@@ -257,7 +257,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/ratings/{id} [put]
+// @Router /api/v1/bookstore/books/{id}/rating [put]
 func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -302,7 +302,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
-// @Router /api/v1/reading/ratings/{id} [delete]
+// @Router /api/v1/bookstore/books/{id}/rating [delete]
 func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {

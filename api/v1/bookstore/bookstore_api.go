@@ -151,13 +151,13 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 //	@Tags			书籍
 //	@Accept			json
 //	@Produce		json
-//	@Param			categoryId	path		string	true	"分类ID"
+//	@Param			id		path		string	true	"分类ID"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			size		query		int		false	"每页数量"	default(20)
 //	@Success 200 {object} APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
-//	@Router			/api/v1/bookstore/categories/{categoryId}/books [get]
+//	@Router			/api/v1/bookstore/categories/{id}/books [get]
 func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 	categoryID := c.Param("id")
 	if categoryID == "" {
