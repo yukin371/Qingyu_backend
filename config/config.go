@@ -16,6 +16,7 @@ import (
 type Config struct {
 	Database *DatabaseConfig                   `mapstructure:"database"`
 	Redis    *RedisConfig                      `mapstructure:"redis"`
+	Cache    *CacheConfig                      `mapstructure:"cache"`
 	Server   *ServerConfig                     `mapstructure:"server"`
 	Log      *LogConfig                        `mapstructure:"log"`
 	JWT      *JWTConfig                        `mapstructure:"jwt"`
@@ -24,6 +25,7 @@ type Config struct {
 	AIQuota  *AIQuotaConfig                    `mapstructure:"ai_quota"`
 	Email    *EmailConfig                      `mapstructure:"email"`
 	Payment  *PaymentConfig                    `mapstructure:"payment"`
+	RateLimit *RateLimitConfig                 `mapstructure:"rate_limit"`
 	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
 }
 
@@ -149,6 +151,33 @@ type PaymentConfig struct {
 	ReturnURL       string           `mapstructure:"return_url"`
 }
 
+// RateLimitConfig 速率限制配置
+type RateLimitConfig struct {
+	Enabled        bool     `mapstructure:"enabled" json:"enabled"`
+	RequestsPerSec float64  `mapstructure:"requests_per_sec" json:"requests_per_sec"`
+	Burst          int      `mapstructure:"burst" json:"burst"`
+	SkipPaths      []string `mapstructure:"skip_paths" json:"skip_paths"`
+}
+
+// Validate validates the rate limit configuration
+func (c *RateLimitConfig) Validate() error {
+	// Skip validation if disabled
+	if !c.Enabled {
+		return nil
+	}
+
+	if c.RequestsPerSec <= 0 {
+		return fmt.Errorf("rate_limit.requests_per_sec must be positive, got %f", c.RequestsPerSec)
+	}
+	if c.Burst < 0 {
+		return fmt.Errorf("rate_limit.burst cannot be negative, got %d", c.Burst)
+	}
+	if c.Burst > 10000 {
+		return fmt.Errorf("rate_limit.burst too large (%d), maximum is 10000", c.Burst)
+	}
+	return nil
+}
+
 // AlipayConfig 支付宝配置
 type AlipayConfig struct {
 	Enabled         bool   `mapstructure:"enabled"`
@@ -203,6 +232,15 @@ func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
 
 	// 最后的默认值
 	return 5
+}
+
+// DefaultRateLimitConfig returns a default rate limit configuration
+// Note: Actual defaults are set in setDefaults() for Viper
+func DefaultRateLimitConfig() *RateLimitConfig {
+	return &RateLimitConfig{
+		Enabled: true,
+		// Other fields will be populated by Viper defaults
+	}
 }
 
 var (
@@ -411,6 +449,22 @@ func setDefaults() {
 	// 微信支付默认配置
 	v.SetDefault("payment.wechat.enabled", false)
 	v.SetDefault("payment.wechat.sandbox", true)
+
+	// 缓存默认配置
+	v.SetDefault("cache.enabled", false)
+	v.SetDefault("cache.double_delete_delay", 1*time.Second)
+	v.SetDefault("cache.null_cache_ttl", 30*time.Second)
+	v.SetDefault("cache.null_cache_prefix", "@@NULL@@")
+	v.SetDefault("cache.breaker_max_requests", 3)
+	v.SetDefault("cache.breaker_interval", 10*time.Second)
+	v.SetDefault("cache.breaker_timeout", 30*time.Second)
+	v.SetDefault("cache.breaker_threshold", 0.6)
+
+	// 速率限制默认配置
+	v.SetDefault("rate_limit.enabled", true)
+	v.SetDefault("rate_limit.requests_per_sec", 100)
+	v.SetDefault("rate_limit.burst", 200)
+	v.SetDefault("rate_limit.skip_paths", []string{"/health", "/metrics"})
 }
 
 // WatchConfig 启用配置热重载

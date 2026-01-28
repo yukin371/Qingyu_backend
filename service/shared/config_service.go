@@ -59,6 +59,12 @@ func (s *ConfigService) GetAllConfigs(ctx context.Context) ([]*ConfigGroup, erro
 		return nil, fmt.Errorf("配置未加载")
 	}
 
+	// 获取MongoDB配置
+	mongoConfig, err := cfg.Database.GetMongoConfig()
+	if err != nil {
+		return nil, fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
+
 	groups := []*ConfigGroup{
 		{
 			Name:        "server",
@@ -88,7 +94,7 @@ func (s *ConfigService) GetAllConfigs(ctx context.Context) ([]*ConfigGroup, erro
 			Items: []*ConfigItem{
 				{
 					Key:         "database.uri",
-					Value:       s.maskSensitiveValue(cfg.Database.Primary.MongoDB.URI),
+					Value:       s.maskSensitiveValue(mongoConfig.URI),
 					Type:        "string",
 					Description: "MongoDB连接URI",
 					Editable:    true,
@@ -96,7 +102,7 @@ func (s *ConfigService) GetAllConfigs(ctx context.Context) ([]*ConfigGroup, erro
 				},
 				{
 					Key:         "database.name",
-					Value:       cfg.Database.Primary.MongoDB.Database,
+					Value:       mongoConfig.Database,
 					Type:        "string",
 					Description: "数据库名称",
 					Editable:    true,
@@ -104,7 +110,7 @@ func (s *ConfigService) GetAllConfigs(ctx context.Context) ([]*ConfigGroup, erro
 				},
 				{
 					Key:         "database.max_pool_size",
-					Value:       cfg.Database.Primary.MongoDB.MaxPoolSize,
+					Value:       mongoConfig.MaxPoolSize,
 					Type:        "number",
 					Description: "最大连接池大小",
 					Editable:    true,

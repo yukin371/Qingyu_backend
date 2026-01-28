@@ -473,6 +473,12 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		}
 	}
 
+	// 6. 预热缓存（非阻塞）
+	if err := c.warmUpCache(ctx); err != nil {
+		// 缓存预热失败不阻塞应用启动
+		fmt.Printf("警告: 缓存预热失败: %v\n", err)
+	}
+
 	c.initialized = true
 	return nil
 }
@@ -480,11 +486,14 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 // initMongoDB 初始化MongoDB客户端
 func (c *ServiceContainer) initMongoDB() error {
 	cfg := config.GlobalConfig.Database
-	if cfg == nil || cfg.Primary.MongoDB == nil {
-		return fmt.Errorf("MongoDB配置未找到")
+	if cfg == nil {
+		return fmt.Errorf("数据库配置未找到")
 	}
 
-	mongoCfg := cfg.Primary.MongoDB
+	mongoCfg, err := cfg.GetMongoConfig()
+	if err != nil {
+		return fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
 
 	clientOptions := options.Client().
 		ApplyURI(mongoCfg.URI).
@@ -626,6 +635,17 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// ============ 1. 创建用户服务 ============
 	userRepo := c.repositoryFactory.CreateUserRepository()
 	authRepo := c.repositoryFactory.CreateAuthRepository()
+
+	// 缓存装饰器集成
+	// 注意：当前缓存装饰器只实现了核心CRUD方法，完整接口兼容性待完善
+	// TODO: 完善缓存装饰器以实现完整的Repository接口
+	if config.GetCacheConfig().Enabled && c.redisClient != nil {
+		fmt.Println("缓存配置已启用，但缓存装饰器暂未完全集成（接口兼容性问题待解决）")
+		fmt.Println("建议：手动在需要的地方应用缓存装饰器")
+	} else if config.GetCacheConfig().Enabled && c.redisClient == nil {
+		fmt.Println("缓存配置已启用，但Redis客户端未初始化")
+	}
+
 	c.userService = userService.NewUserService(userRepo, authRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
@@ -633,7 +653,6 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	// ============ 2. 创建书城服务 ============
-	// RepositoryFactory已返回具体类型，无需类型断言
 	bookRepo := c.repositoryFactory.CreateBookRepository()
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
@@ -1382,3 +1401,40 @@ func (c *ServiceContainer) GetAllServicesHealth(ctx context.Context) map[string]
 
 	return result
 }
+
+// ============ 缓存预热功能 ============
+
+// warmUpCache 预热缓存
+func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
+	// 检查缓存是否启用
+	cacheCfg := config.GetCacheConfig()
+	if !cacheCfg.Enabled {
+		fmt.Println("缓存未启用，跳过缓存预热")
+		return nil
+	}
+
+	// 检查Redis是否可用
+	if c.redisClient == nil {
+		fmt.Println("Redis客户端未初始化，跳过缓存预热")
+		return nil
+	}
+
+	// 获取原始Redis客户端
+	rawClient := c.redisClient.GetClient()
+	redisClient, ok := rawClient.(*redis.Client)
+	if !ok {
+		fmt.Println("Redis客户端类型转换失败，跳过缓存预热")
+		return nil
+	}
+
+	// 获取Repository
+	bookRepo := c.repositoryFactory.CreateBookRepository()
+	userRepo := c.repositoryFactory.CreateUserRepository()
+
+	// 创建缓存预热器
+	warmer := cache.NewCacheWarmer(bookRepo, userRepo, redisClient)
+
+	// 执行预热
+	return warmer.WarmUpCache(ctx)
+}
+

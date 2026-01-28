@@ -101,3 +101,8 @@ func (s BookStatus) IsPublic() bool {
 func (s BookStatus) CanEdit() bool {
 	return s == BookStatusDraft || s == BookStatusPaused
 }
+
+// GetID 实现Cacheable接口 - 返回字符串形式的ID（使用值接收者）
+func (b Book) GetID() string {
+	return b.ID.Hex()
+}

@@ -110,3 +110,6 @@ scripts/logs/
 
 # Serena配置
 .serena/
+__pycache__/
+*.pyc
+*.pyo

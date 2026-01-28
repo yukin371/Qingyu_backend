@@ -166,13 +166,19 @@ func CreateTestUsers() error {
 		return fmt.Errorf("加载配置失败: %w", err)
 	}
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Database.Primary.MongoDB.URI))
+	// 获取MongoDB配置
+	mongoConfig, err := cfg.Database.GetMongoConfig()
+	if err != nil {
+		return fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConfig.URI))
 	if err != nil {
 		return fmt.Errorf("连接MongoDB失败: %w", err)
 	}
 	defer client.Disconnect(ctx)
 
-	db := client.Database(cfg.Database.Primary.MongoDB.Database)
+	db := client.Database(mongoConfig.Database)
 	collection := db.Collection("users")
 
 	// 清空现有测试用户

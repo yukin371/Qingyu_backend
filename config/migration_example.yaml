@@ -1,0 +1,104 @@
+# Database Configuration Migration Example
+# This file shows both old (flat) and new (nested) configuration formats
+# Both formats are supported for backward compatibility
+
+# ============================================================================
+# OLD FORMAT (Flat/Legacy) - Still Supported
+# ============================================================================
+# This is the original flat configuration format used in the initial version
+database_old:
+  # Direct flat fields - simple but less structured
+  uri: "mongodb://localhost:27017"
+  name: "qingyu"
+  max_pool_size: 100
+  min_pool_size: 10
+  connect_timeout: 10s
+
+# ============================================================================
+# NEW FORMAT (Nested/Structured) - Recommended
+# ============================================================================
+# This is the new structured format introduced in block3 optimization
+database_new:
+  type: "mongodb"
+
+  # Primary database connection (required)
+  primary:
+    type: mongodb
+    mongodb:
+      uri: "mongodb://localhost:27017"
+      database: "qingyu"
+      max_pool_size: 100
+      min_pool_size: 10
+      connect_timeout: 10s
+      server_timeout: 30s
+
+      # MongoDB Profiling Configuration
+      profiling_level: 1    # 0=off, 1=slow, 2=all
+      slow_ms: 100          # Threshold for slow queries (ms)
+      profiler_size_mb: 100 # Max size of profiler collection
+
+  # Replica database connections (optional)
+  replicas:
+    - type: mongodb
+      mongodb:
+        uri: "mongodb://replica1:27017"
+        database: "qingyu_replica"
+        max_pool_size: 50
+        min_pool_size: 5
+
+  # Indexing configuration
+  indexing:
+    auto_create: true
+    background: true
+
+  # Validation configuration
+  validation:
+    enabled: true
+    strict_mode: false
+
+  # Synchronization configuration
+  sync:
+    enabled: false
+    interval: 5m
+
+# ============================================================================
+# MIGRATION GUIDE
+# ============================================================================
+#
+# To migrate from old to new format:
+#
+# 1. URI: database.uri → database.primary.mongodb.uri
+# 2. Name: database.name → database.primary.mongodb.database
+# 3. MaxPoolSize: database.max_pool_size → database.primary.mongodb.max_pool_size
+# 4. MinPoolSize: database.min_pool_size → database.primary.mongodb.min_pool_size
+# 5. ConnectTimeout: database.connect_timeout → database.primary.mongodb.connect_timeout
+#
+# Additional features in new format:
+# - Profiling configuration (profiling_level, slow_ms, profiler_size_mb)
+# - Server timeout configuration
+# - Multiple replica support
+# - Indexing configuration
+# - Validation settings
+# - Synchronization settings
+#
+# Priority:
+# - If both old and new formats are present, new format takes priority
+# - Old format is provided for backward compatibility only
+# - New format is recommended for all new deployments
+
+# ============================================================================
+# EXAMPLE: Mixed Configuration (Not Recommended)
+# ============================================================================
+# If both formats are present, new format takes priority
+database_mixed:
+  # Old format fields (will be ignored if new format is present)
+  uri: "mongodb://old-format:27017"
+  name: "old_database"
+
+  # New format (takes priority)
+  primary:
+    type: mongodb
+    mongodb:
+      uri: "mongodb://new-format:27017"  # This will be used
+      database: "new_database"            # This will be used
+      max_pool_size: 100

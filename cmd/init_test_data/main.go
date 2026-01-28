@@ -122,11 +122,15 @@ func main() {
 // connectDB 连接数据库
 func connectDB() (*mongo.Database, error) {
 	dbConfig := config.GlobalConfig.Database
-	if dbConfig == nil || dbConfig.Primary.MongoDB == nil {
-		return nil, fmt.Errorf("MongoDB配置未找到")
+	if dbConfig == nil {
+		return nil, fmt.Errorf("数据库配置未找到")
 	}
 
-	mongoConfig := dbConfig.Primary.MongoDB
+	mongoConfig, err := dbConfig.GetMongoConfig()
+	if err != nil {
+		return nil, fmt.Errorf("获取MongoDB配置失败: %w", err)
+	}
+
 	clientOptions := options.Client().ApplyURI(mongoConfig.URI)
 	clientOptions.SetMaxPoolSize(mongoConfig.MaxPoolSize)
 	clientOptions.SetMinPoolSize(mongoConfig.MinPoolSize)

@@ -34,16 +34,15 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	// 检查MongoDB配置
-	if config.GlobalConfig.Database.Primary.Type != config.DatabaseTypeMongoDB ||
-		config.GlobalConfig.Database.Primary.MongoDB == nil {
-		fmt.Println("Skipping integration tests: MongoDB config is missing")
+	// 获取MongoDB配置
+	mongoCfg, err := config.GlobalConfig.Database.GetMongoConfig()
+	if err != nil {
+		fmt.Println("Skipping integration tests: cannot get MongoDB config:", err)
 		os.Exit(0)
 	}
 
 	testutil.EnableStrictLogging()
 
-	mongoCfg := config.GlobalConfig.Database.Primary.MongoDB
 	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

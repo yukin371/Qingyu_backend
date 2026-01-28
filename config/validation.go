@@ -38,6 +38,10 @@ func validateConfigDetails(cfg *Config) error {
 		return fmt.Errorf("AI config validation failed: %w", err)
 	}
 
+	if err := validateRateLimitConfig(cfg.RateLimit); err != nil {
+		return fmt.Errorf("rate limit config validation failed: %w", err)
+	}
+
 	return nil
 }
 
@@ -128,6 +132,12 @@ func setConfigDefaults(cfg *Config) {
 		cfg.Redis = DefaultRedisConfig()
 		SetRedisConfig(cfg.Redis)
 	}
+
+	// Cache默认值
+	if cfg.Cache == nil {
+		cfg.Cache = DefaultCacheConfig()
+	}
+	SetCacheConfig(cfg.Cache)
 
 	// 服务器默认值
 	if cfg.Server == nil {
@@ -250,4 +260,18 @@ func setConfigDefaults(cfg *Config) {
 			Sandbox: true,
 		}
 	}
+
+	// 速率限制默认值
+	if cfg.RateLimit == nil {
+		cfg.RateLimit = DefaultRateLimitConfig()
+	}
+}
+
+// validateRateLimitConfig 验证速率限制配置
+func validateRateLimitConfig(cfg *RateLimitConfig) error {
+	// Rate limiting is optional, only validate if enabled
+	if cfg == nil || !cfg.Enabled {
+		return nil
+	}
+	return cfg.Validate()
 }

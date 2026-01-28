@@ -24,15 +24,21 @@ func main() {
 		log.Fatalf("加载配置失败: %v", err)
 	}
 
+	// 获取MongoDB配置
+	mongoConfig, err := cfg.Database.GetMongoConfig()
+	if err != nil {
+		log.Fatalf("获取MongoDB配置失败: %v", err)
+	}
+
 	// 连接MongoDB
 	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Database.Primary.MongoDB.URI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConfig.URI))
 	if err != nil {
 		log.Fatalf("连接MongoDB失败: %v", err)
 	}
 	defer client.Disconnect(ctx)
 
-	db := client.Database(cfg.Database.Primary.MongoDB.Database)
+	db := client.Database(mongoConfig.Database)
 	booksCollection := db.Collection("books")
 	bannersCollection := db.Collection("banners")
 

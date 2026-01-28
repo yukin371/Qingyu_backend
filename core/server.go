@@ -83,11 +83,35 @@ func InitServer() (*gin.Engine, error) {
 	// PrometheusMiddleware - 监控指标收集
 	r.Use(metrics.Middleware())
 
-	// RateLimitMiddleware - API限流（IP + 用户双重限流）
-	rateLimitConfig := pkgmiddleware.DefaultRateLimiterConfig()
-	rateLimitConfig.Rate = 100  // 每秒100个请求
-	rateLimitConfig.Burst = 200 // 桶容量200
-	r.Use(pkgmiddleware.RateLimitMiddleware(rateLimitConfig))
+	// RateLimitMiddleware - API限流（支持配置化启用/禁用）
+	if config.GlobalConfig.RateLimit != nil && config.GlobalConfig.RateLimit.Enabled {
+		// Create a wrapper that checks skip paths
+		skipPaths := config.GlobalConfig.RateLimit.SkipPaths
+		rateLimitConfig := &pkgmiddleware.RateLimiterConfig{
+			Rate:    config.GlobalConfig.RateLimit.RequestsPerSec,
+			Burst:   config.GlobalConfig.RateLimit.Burst,
+			KeyFunc: pkgmiddleware.DefaultKeyFunc,
+		}
+
+		// Wrap the middleware to handle skip paths
+		r.Use(func(c *gin.Context) {
+			path := c.Request.URL.Path
+			for _, skipPath := range skipPaths {
+				if path == skipPath {
+					c.Next()
+					return
+				}
+			}
+			pkgmiddleware.RateLimitMiddleware(rateLimitConfig)(c)
+		})
+
+		logger.Info("Rate limit middleware enabled",
+			zap.Float64("rate", rateLimitConfig.Rate),
+			zap.Int("burst", rateLimitConfig.Burst),
+			zap.Strings("skip_paths", skipPaths))
+	} else {
+		logger.Info("Rate limit middleware disabled")
+	}
 
 	// ErrorHandler - 统一错误处理（最后执行，处理所有错误）
 	r.Use(pkgmiddleware.ErrorHandler())
