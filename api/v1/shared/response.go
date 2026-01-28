@@ -5,6 +5,7 @@ import (
 	"time"
 
 	apperrors "Qingyu_backend/pkg/errors"
+	"Qingyu_backend/internal/middleware/builtin"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,7 +55,7 @@ func SuccessResponse(data interface{}, message string) APIResponse {
 		Code:      200,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 	}
 }
 
@@ -64,7 +65,7 @@ func SuccessResponseWithRequestID(data interface{}, message, requestID string) A
 		Code:      200,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: requestID,
 	}
 }
@@ -79,7 +80,7 @@ func ErrorResponseWithCode(code int, message string, err error) ErrorResponse {
 		Code:      code,
 		Message:   message,
 		Error:     errMsg,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 	}
 }
 
@@ -93,7 +94,7 @@ func ErrorResponseWithRequestID(code int, message string, err error, requestID s
 		Code:      code,
 		Message:   message,
 		Error:     errMsg,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: requestID,
 	}
 }
@@ -109,7 +110,7 @@ func PaginatedResponseHelper(data interface{}, total int64, page, pageSize int, 
 		Code:      200,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		Pagination: &Pagination{
 			Total:       total,
 			Page:        page,
@@ -132,7 +133,7 @@ func PaginatedResponseWithRequestID(data interface{}, total int64, page, pageSiz
 		Code:      200,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: requestID,
 		Pagination: &Pagination{
 			Total:       total,
@@ -183,7 +184,7 @@ func HandleUnifiedError(c *gin.Context, err *apperrors.UnifiedError) {
 		Code:      statusCode,
 		Message:   err.Message,
 		Error:     err.Code,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: err.RequestID,
 	}
 
@@ -242,7 +243,8 @@ func Success(c *gin.Context, statusCode int, message string, data interface{}) {
 		Code:      statusCode,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -258,7 +260,8 @@ func Error(c *gin.Context, statusCode int, message string, errorDetail string) {
 		Code:      statusCode,
 		Message:   message,
 		Error:     errorDetail,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -273,7 +276,8 @@ func ValidationError(c *gin.Context, err error) {
 		Code:      http.StatusBadRequest,
 		Message:   "参数验证失败",
 		Error:     errorDetail,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -289,7 +293,7 @@ func SuccessWithRequestID(c *gin.Context, statusCode int, message string, data i
 		Code:      statusCode,
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: requestID,
 	})
 }
@@ -300,7 +304,7 @@ func ErrorWithRequestID(c *gin.Context, statusCode int, message string, errorDet
 		Code:      statusCode,
 		Message:   message,
 		Error:     errorDetail,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 		RequestID: requestID,
 	})
 }
@@ -311,7 +315,8 @@ func Unauthorized(c *gin.Context, message string) {
 		Code:      http.StatusUnauthorized,
 		Message:   message,
 		Error:     "请先登录或提供有效的访问凭证",
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -321,7 +326,8 @@ func Forbidden(c *gin.Context, message string) {
 		Code:      http.StatusForbidden,
 		Message:   message,
 		Error:     "您没有权限访问此资源",
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -331,7 +337,8 @@ func NotFound(c *gin.Context, message string) {
 		Code:      http.StatusNotFound,
 		Message:   message,
 		Error:     "请求的资源不存在",
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -345,7 +352,8 @@ func InternalError(c *gin.Context, message string, err error) {
 		Code:      http.StatusInternalServerError,
 		Message:   message,
 		Error:     errorDetail,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
 
@@ -355,6 +363,7 @@ func BadRequest(c *gin.Context, message string, errorDetail string) {
 		Code:      http.StatusBadRequest,
 		Message:   message,
 		Error:     errorDetail,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: builtin.GetRequestID(c),
 	})
 }
