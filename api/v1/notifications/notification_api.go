@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -830,4 +831,147 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 	}
 
 	shared.SuccessData(c, gin.H{"devices": devices})
+}
+
+// ClearReadNotifications 清除已读通知
+// @Summary 清除已读通知
+// @Description 清除当前用户的所有已读通知
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Success 200 {object} shared.APIResponse
+// @Router /api/v1/notifications/clear-read [post]
+func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		return
+	}
+
+	// 调用服务
+	count, err := api.notificationService.ClearReadNotifications(c.Request.Context(), userIDStr)
+	if err != nil {
+		shared.HandleServiceError(c, err)
+		return
+	}
+
+	shared.SuccessData(c, gin.H{
+		"message": "清除成功",
+		"count":   count,
+	})
+}
+
+// ResendNotification 重发通知
+// @Summary 重发通知
+// @Description 重新发送指定的通知给用户
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Param id path string true "通知ID"
+// @Param request body object{method=string} true "重发方式 (email, push, sms)"
+// @Success 200 {object} shared.APIResponse
+// @Router /api/v1/notifications/{id}/resend [post]
+func (api *NotificationAPI) ResendNotification(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		shared.Error(c, http.StatusInternalServerError, "INVALID_USER_ID", "无效的用户ID")
+		return
+	}
+
+	// 获取通知ID
+	id := c.Param("id")
+	if id == "" {
+		shared.Error(c, http.StatusBadRequest, "INVALID_ID", "通知ID不能为空")
+		return
+	}
+
+	// 解析请求
+	var req struct {
+		Method string `json:"method" validate:"required,oneof=email push sms"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "请求参数错误")
+		return
+	}
+
+	// 验证请求
+	if err := shared.GetValidator().Struct(&req); err != nil {
+		shared.HandleValidationError(c, err)
+		return
+	}
+
+	// 调用服务
+	if err := api.notificationService.ResendNotification(c.Request.Context(), id, userIDStr, req.Method); err != nil {
+		shared.HandleServiceError(c, err)
+		return
+	}
+
+	shared.SuccessData(c, gin.H{"message": "重发成功"})
+}
+
+// GetWSEndpoint 获取WebSocket端点
+// @Summary 获取WebSocket端点
+// @Description 获取通知WebSocket连接的端点信息
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Success 200 {object} shared.APIResponse
+// @Router /api/v1/notifications/ws-endpoint [get]
+func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
+	// 获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		return
+	}
+
+	// 获取token
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		shared.Error(c, http.StatusUnauthorized, "MISSING_TOKEN", "缺少认证令牌")
+		return
+	}
+
+	// 提取Bearer token
+	token := ""
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	} else {
+		shared.Error(c, http.StatusUnauthorized, "INVALID_TOKEN_FORMAT", "无效的令牌格式")
+		return
+	}
+
+	// 确定协议（ws或wss）
+	scheme := "ws"
+	if c.Request.TLS != nil {
+		scheme = "wss"
+	}
+
+	// 获取主机
+	host := c.Request.Host
+	if host == "" {
+		host = "localhost:8080"
+	}
+
+	// 构建WebSocket URL
+	wsURL := fmt.Sprintf("%s://%s/api/v1/notifications/ws?token=%s", scheme, host, token)
+
+	shared.SuccessData(c, gin.H{
+		"url": wsURL,
+		"message": "WebSocket端点获取成功",
+	})
 }
