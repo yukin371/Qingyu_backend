@@ -105,6 +105,9 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 
 		// Messaging相关测试集合
 		_ = db.Collection("announcements").Drop(ctx)
+		_ = db.Collection("conversations").Drop(ctx)
+		_ = db.Collection("messages").Drop(ctx)
+		_ = db.Collection("mentions").Drop(ctx)
 
 		// 关闭服务容器
 		_ = c.Close(ctx)
@@ -194,6 +197,9 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		_ = db.Collection("annotations").Drop(ctx)
 		_ = db.Collection("chapters").Drop(ctx)
 		_ = db.Collection("announcements").Drop(ctx)
+		_ = db.Collection("conversations").Drop(ctx)
+		_ = db.Collection("messages").Drop(ctx)
+		_ = db.Collection("mentions").Drop(ctx)
 
 		// 关闭服务容器
 		_ = service.CloseServices(ctx)
