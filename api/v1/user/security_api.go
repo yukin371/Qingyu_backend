@@ -1,11 +1,10 @@
 package user
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	shared "Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	user2 "Qingyu_backend/service/interfaces/user"
 )
 
@@ -44,18 +43,11 @@ func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 
 	resp, err := api.userService.SendEmailVerification(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.APIResponse{
-			Code:    500,
-			Message: "发送验证码失败: " + err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    0,
-		Message: resp.Message,
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, resp.Message, resp)
 }
 
 // VerifyEmail 验证邮箱
@@ -79,18 +71,11 @@ func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 
 	resp, err := api.userService.VerifyEmail(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, shared.APIResponse{
-			Code:    400,
-			Message: "验证失败: " + err.Error(),
-		})
+		response.BadRequest(c, "验证失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    0,
-		Message: resp.Message,
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, resp.Message, resp)
 }
 
 // ==================== 密码重置相关API ====================
@@ -115,18 +100,11 @@ func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 
 	resp, err := api.userService.RequestPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, shared.APIResponse{
-			Code:    500,
-			Message: "请求重置失败: " + err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    0,
-		Message: resp.Message,
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, resp.Message, resp)
 }
 
 // ConfirmPasswordReset 确认密码重置
@@ -150,16 +128,9 @@ func (api *SecurityAPI) ConfirmPasswordReset(c *gin.Context) {
 
 	resp, err := api.userService.ConfirmPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, shared.APIResponse{
-			Code:    400,
-			Message: "重置失败: " + err.Error(),
-		})
+		response.BadRequest(c, "重置失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    0,
-		Message: resp.Message,
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, resp.Message, resp)
 }

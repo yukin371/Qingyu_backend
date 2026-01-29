@@ -1,12 +1,11 @@
 package user
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	sharedApi "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
+	"Qingyu_backend/pkg/response"
 	userService "Qingyu_backend/service/user"
 	userConstants "Qingyu_backend/service/user"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
@@ -57,21 +56,14 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	// 发送验证码
 	err = api.verificationService.SendEmailCode(c.Request.Context(), req.Email, "verify_email")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-			500,
-			"发送失败",
-			err,
-		))
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
-		dto.SendCodeResponse{
-			ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
-			Message:   "验证码已发送到您的邮箱",
-		},
-		"success",
-	))
+	response.SuccessWithMessage(c, "success", dto.SendCodeResponse{
+		ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
+		Message:   "验证码已发送到您的邮箱",
+	})
 }
 
 // SendPhoneVerifyCode 发送手机验证码（模拟实现）
@@ -94,21 +86,14 @@ func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 	// 模拟实现：发送手机验证码
 	err := api.verificationService.SendPhoneCode(c.Request.Context(), req.Phone, "verify_phone")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-			500,
-			"发送失败",
-			err,
-		))
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
-		dto.SendCodeResponse{
-			ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
-			Message:   "验证码已发送（模拟实现：请查看控制台）",
-		},
-		"success",
-	))
+	response.SuccessWithMessage(c, "success", dto.SendCodeResponse{
+		ExpiresIn: userConstants.VerificationCodeExpirySec, // 30分钟
+		Message:   "验证码已发送（模拟实现：请查看控制台）",
+	})
 }
 
 // VerifyEmail 验证邮箱
@@ -132,22 +117,14 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	// 验证验证码
 	err := api.verificationService.VerifyCode(c.Request.Context(), req.Email, req.Code, "verify_email")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, sharedApi.ErrorResponseWithCode(
-			400,
-			"验证码无效或已过期",
-			err,
-		))
+		response.BadRequest(c, "验证码无效或已过期", err)
 		return
 	}
 
 	// ✅ 添加：标记验证码为已使用（防止重复使用）
 	err = api.verificationService.MarkCodeAsUsed(c.Request.Context(), req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-			500,
-			"标记验证码失败",
-			err,
-		))
+		response.InternalError(c, err)
 		return
 	}
 
@@ -155,21 +132,14 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	userID := c.GetString("userID")
 	err = api.verificationService.SetEmailVerified(c.Request.Context(), userID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-			500,
-			"更新失败",
-			err,
-		))
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(
-		dto.VerifyEmailResponse{
-			Verified: true,
-			Message:  "邮箱验证成功",
-		},
-		"success",
-	))
+	response.SuccessWithMessage(c, "success", dto.VerifyEmailResponse{
+		Verified: true,
+		Message:  "邮箱验证成功",
+	})
 }
 
 // UnbindEmail 解绑邮箱
@@ -195,26 +165,18 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
-			401,
-			"密码错误",
-			err,
-		))
+		response.Unauthorized(c, "密码错误")
 		return
 	}
 
 	// 解绑邮箱
 	err = api.userService.UnbindEmail(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-			500,
-			"解绑失败",
-			err,
-		))
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
+	response.Success(c, nil)
 }
 
 // UnbindPhone 解绑手机（模拟实现）
@@ -239,11 +201,7 @@ func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
-			401,
-			"密码错误",
-			err,
-		))
+		response.Unauthorized(c, "密码错误")
 		return
 	}
 
@@ -253,7 +211,7 @@ func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 	if err != nil {
 		// 暂时忽略错误，因为这是模拟实现
 	}
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
+	response.Success(c, nil)
 }
 
 // DeleteDevice 删除设备
@@ -282,11 +240,7 @@ func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 	// 验证密码
 	err := api.verificationService.CheckPassword(c.Request.Context(), userID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, sharedApi.ErrorResponseWithCode(
-			401,
-			"密码错误",
-			err,
-		))
+		response.Unauthorized(c, "密码错误")
 		return
 	}
 
@@ -295,20 +249,12 @@ func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 	if err != nil {
 		// 使用错误类型判断而不是字符串比较
 		if serviceInterfaces.IsNotFoundError(err) {
-			c.JSON(http.StatusNotFound, sharedApi.ErrorResponseWithCode(
-				404,
-				"设备不存在",
-				err,
-			))
+			response.NotFound(c, "设备不存在")
 		} else {
-			c.JSON(http.StatusInternalServerError, sharedApi.ErrorResponseWithCode(
-				500,
-				"删除失败",
-				err,
-			))
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	c.JSON(http.StatusOK, sharedApi.SuccessResponse(nil, "success"))
+	response.Success(c, nil)
 }
