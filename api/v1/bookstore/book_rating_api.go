@@ -2,7 +2,6 @@ package bookstore
 
 import (
 	"errors"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -234,11 +233,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	}
 
 	if err := api.BookRatingService.CreateRating(c.Request.Context(), &rating); err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "创建评分失败: " + err.Error(),
-			Data:    nil,
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -280,11 +275,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	rating.ID = id
 	err = api.BookRatingService.UpdateRating(c.Request.Context(), &rating)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "更新评分失败: " + err.Error(),
-			Data:    nil,
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -318,11 +309,7 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 
 	err = api.BookRatingService.DeleteRating(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "删除评分失败: " + err.Error(),
-			Data:    nil,
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -377,11 +364,7 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 
 	err = api.BookRatingService.LikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "点赞失败: " + err.Error(),
-			Data:    nil,
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -436,11 +419,7 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 
 	err = api.BookRatingService.UnlikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "取消点赞失败: " + err.Error(),
-			Data:    nil,
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -479,12 +458,5 @@ func (api *BookRatingAPI) SearchRatings(c *gin.Context) {
 
 	// TODO: SearchByKeyword方法尚未在Service层实现
 	// 暂时返回空结果
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "搜索功能开发中",
-		Data:    []bookstore.BookRating{},
-		Total:   0,
-		Page:    page,
-		Limit:   limit,
-	})
+	response.SuccessWithMessage(c, "搜索功能开发中", []bookstore.BookRating{})
 }

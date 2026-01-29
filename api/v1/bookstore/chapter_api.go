@@ -1,7 +1,6 @@
 package bookstore
 
 import (
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -509,13 +508,9 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data: map[string]interface{}{
-			"chapter_id": id.Hex(),
-			"content":    content,
-		},
+	response.SuccessWithMessage(c, "获取成功", map[string]interface{}{
+		"chapter_id": id.Hex(),
+		"content":    content,
 	})
 }
 
@@ -730,8 +725,5 @@ func (api *ChapterAPI) DeleteChapter(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.APIResponse{
-		Code:    200,
-		Message: "删除成功",
-	})
+	response.SuccessWithMessage(c, "删除成功", nil)
 }
