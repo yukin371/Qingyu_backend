@@ -75,7 +75,7 @@ func BenchmarkGetRatingStats_CacheMiss(b *testing.B) {
 	mockCommentRepo.On("GetByID", mock.Anything, "benchmark456").Return(comment, nil)
 
 	// 设置Redis写入缓存
-	mockRedis.On("Set", mock.Anything, "rating:stats:comment:benchmark456", mock.Anything, 5*time.Minute).Return(nil)
+	mockRedis.On("Set", mock.Anything, "rating:stats:comment:benchmark456", mock.Anything, mock.AnythingOfType("time.Duration")).Return(nil)
 
 	// 创建service
 	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)
@@ -120,7 +120,7 @@ func BenchmarkGetRatingStats_Book_CacheMiss(b *testing.B) {
 	mockCommentRepo.On("GetBookRatingStats", mock.Anything, "book_benchmark").Return(statsMap, nil)
 
 	// 设置Redis写入缓存
-	mockRedis.On("Set", mock.Anything, "rating:stats:book:book_benchmark", mock.Anything, 5*time.Minute).Return(nil)
+	mockRedis.On("Set", mock.Anything, "rating:stats:book:book_benchmark", mock.Anything, mock.AnythingOfType("time.Duration")).Return(nil)
 
 	// 创建service
 	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)

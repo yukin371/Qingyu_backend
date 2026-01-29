@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"Qingyu_backend/models/social"
@@ -11,6 +12,22 @@ import (
 	"Qingyu_backend/pkg/cache"
 	"go.uber.org/zap"
 )
+
+const (
+	// BaseCacheTTL 基础缓存TTL
+	BaseCacheTTL = 5 * time.Minute
+	// EmptyCacheValue 空值缓存标记
+	EmptyCacheValue = "EMPTY"
+	// EmptyCacheTTL 空值缓存TTL（防止缓存穿透）
+	EmptyCacheTTL = 1 * time.Minute
+	// TTLJitterPercent TTL抖动百分比（防止缓存雪崩）
+	TTLJitterPercent = 0.1 // 10%
+)
+
+// init 初始化随机数种子
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // RatingServiceImplementation 评分服务实现
 type RatingServiceImplementation struct {
@@ -35,12 +52,20 @@ func NewRatingService(
 	}
 }
 
-// GetRatingStats 获取评分统计（带缓存）
+// GetRatingStats 获取评分统计（带高级缓存策略）
 func (s *RatingServiceImplementation) GetRatingStats(ctx context.Context, targetType, targetID string) (*social.RatingStats, error) {
 	// 1. 尝试从缓存获取
 	cacheKey := fmt.Sprintf("rating:stats:%s:%s", targetType, targetID)
 	cached, err := s.redisClient.Get(ctx, cacheKey)
 	if err == nil && cached != "" {
+		// 检查是否为空值缓存标记
+		if cached == EmptyCacheValue {
+			s.logger.Debug("命中空值缓存",
+				zap.String("targetType", targetType),
+				zap.String("targetID", targetID))
+			return nil, fmt.Errorf("评分数据不存在")
+		}
+
 		stats, err := s.deserializeStats(cached)
 		if err == nil {
 			s.logger.Debug("缓存命中",
@@ -57,17 +82,37 @@ func (s *RatingServiceImplementation) GetRatingStats(ctx context.Context, target
 	// 2. 缓存未命中，聚合数据库数据
 	stats, err := s.AggregateRatings(ctx, targetType, targetID)
 	if err != nil {
+		// 3. 缓存空值（防止缓存穿透）
+		if s.redisClient != nil {
+			if setErr := s.redisClient.Set(ctx, cacheKey, EmptyCacheValue, EmptyCacheTTL); setErr != nil {
+				s.logger.Warn("写入空值缓存失败",
+					zap.String("targetType", targetType),
+					zap.String("targetID", targetID),
+					zap.Error(setErr))
+			} else {
+				s.logger.Debug("已缓存空值",
+					zap.String("targetType", targetType),
+					zap.String("targetID", targetID),
+					zap.Duration("ttl", EmptyCacheTTL))
+			}
+		}
 		return nil, fmt.Errorf("聚合评分失败: %w", err)
 	}
 
-	// 3. 写入缓存（TTL: 5分钟）
+	// 4. 写入缓存（TTL带随机抖动，防止缓存雪崩）
 	serialized, _ := s.serializeStats(stats)
 	if s.redisClient != nil {
-		if err := s.redisClient.Set(ctx, cacheKey, serialized, 5*time.Minute); err != nil {
+		ttl := s.calculateTTLWithJitter(BaseCacheTTL)
+		if err := s.redisClient.Set(ctx, cacheKey, serialized, ttl); err != nil {
 			s.logger.Warn("写入缓存失败",
 				zap.String("targetType", targetType),
 				zap.String("targetID", targetID),
 				zap.Error(err))
+		} else {
+			s.logger.Debug("已写入缓存",
+				zap.String("targetType", targetType),
+				zap.String("targetID", targetID),
+				zap.Duration("ttl", ttl))
 		}
 	}
 
@@ -225,4 +270,18 @@ func (s *RatingServiceImplementation) deserializeStats(data string) (*social.Rat
 		return nil, fmt.Errorf("反序列化失败: %w", err)
 	}
 	return &stats, nil
+}
+
+// calculateTTLWithJitter 计算带随机抖动的TTL（防止缓存雪崩）
+func (s *RatingServiceImplementation) calculateTTLWithJitter(baseTTL time.Duration) time.Duration {
+	// 计算抖动范围：±10%
+	jitterRange := float64(baseTTL) * TTLJitterPercent
+	// 生成随机抖动值：[-jitterRange, +jitterRange]
+	jitter := rand.Float64()*2*jitterRange - jitterRange
+	// 应用抖动
+	ttl := float64(baseTTL) + jitter
+	if ttl < 0 {
+		ttl = 0
+	}
+	return time.Duration(ttl)
 }

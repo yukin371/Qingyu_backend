@@ -329,7 +329,7 @@ func TestGetRatingStats_CacheMiss(t *testing.T) {
 	mockCommentRepo.On("GetByID", mock.Anything, "456").Return(comment, nil)
 
 	// 设置Redis写入缓存
-	mockRedis.On("Set", mock.Anything, "rating:stats:comment:456", mock.Anything, 5*time.Minute).Return(nil)
+	mockRedis.On("Set", mock.Anything, "rating:stats:comment:456", mock.Anything, mock.AnythingOfType("time.Duration")).Return(nil)
 
 	// 创建service
 	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)
@@ -580,7 +580,7 @@ func TestGetRatingStats_CacheDeserializeError(t *testing.T) {
 	mockCommentRepo.On("GetByID", mock.Anything, "999").Return(comment, nil)
 
 	// 设置Redis写入缓存
-	mockRedis.On("Set", mock.Anything, "rating:stats:comment:999", mock.Anything, 5*time.Minute).Return(nil)
+	mockRedis.On("Set", mock.Anything, "rating:stats:comment:999", mock.Anything, mock.AnythingOfType("time.Duration")).Return(nil)
 
 	// 创建service
 	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)
@@ -622,4 +622,122 @@ func TestInvalidateCache_DeleteError(t *testing.T) {
 
 	// 验证mock调用
 	mockRedis.AssertExpectations(t)
+}
+
+// TestGetRatingStats_EmptyCacheValue 测试空值缓存（防止缓存穿透）
+func TestGetRatingStats_EmptyCacheValue(t *testing.T) {
+	// 准备测试数据
+	mockRedis := new(MockRedisClient)
+	mockCommentRepo := new(MockCommentRepository)
+	mockReviewRepo := new(MockReviewRepository)
+	logger := zap.NewNop()
+
+	// 第一次请求：Redis返回空，数据库也返回错误（模拟数据不存在）
+	mockRedis.On("Get", mock.Anything, "rating:stats:comment:notexist").Return("", nil)
+	mockCommentRepo.On("GetByID", mock.Anything, "notexist").Return(nil, errors.New("comment not found"))
+
+	// 预期：应该缓存空值（EMPTY标记），TTL为1分钟
+	mockRedis.On("Set", mock.Anything, "rating:stats:comment:notexist", EmptyCacheValue, EmptyCacheTTL).Return(nil)
+
+	// 创建service
+	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)
+
+	// 执行测试 - 第一次请求
+	_, err := service.GetRatingStats(context.Background(), "comment", "notexist")
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "聚合评分失败")
+
+	// 验证空值缓存被写入
+	mockRedis.AssertExpectations(t)
+}
+
+// TestCalculateTTLWithJitter 测试TTL随机抖动
+func TestCalculateTTLWithJitter(t *testing.T) {
+	mockRedis := new(MockRedisClient)
+	mockCommentRepo := new(MockCommentRepository)
+	mockReviewRepo := new(MockReviewRepository)
+	logger := zap.NewNop()
+
+	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger).(*RatingServiceImplementation)
+
+	// 多次计算TTL，验证抖动效果
+	ttls := make([]time.Duration, 100)
+	for i := 0; i < 100; i++ {
+		ttls[i] = service.calculateTTLWithJitter(BaseCacheTTL)
+	}
+
+	// 计算最小值和最大值
+	minTTL := ttls[0]
+	maxTTL := ttls[0]
+	for _, ttl := range ttls {
+		if ttl < minTTL {
+			minTTL = ttl
+		}
+		if ttl > maxTTL {
+			maxTTL = ttl
+		}
+	}
+
+	// 验证抖动范围：±10%左右
+	// 基础TTL是5分钟(300秒)
+	// 预期抖动范围：270秒-330秒
+	expectedMin := time.Duration(270 * time.Second)
+	expectedMax := time.Duration(330 * time.Second)
+
+	assert.True(t, minTTL >= expectedMin-time.Second, "min TTL %v should be >= %v", minTTL, expectedMin)
+	assert.True(t, maxTTL <= expectedMax+time.Second, "max TTL %v should be <= %v", maxTTL, expectedMax)
+
+	// 验证抖动确实存在（不是所有TTL都相同）
+	firstTTL := ttls[0]
+	hasVariation := false
+	for _, ttl := range ttls {
+		if ttl != firstTTL {
+			hasVariation = true
+			break
+		}
+	}
+	assert.True(t, hasVariation, "TTL should have random jitter")
+}
+
+// TestGetRatingStats_CachePenetrationProtection 测试缓存穿透防护
+func TestGetRatingStats_CachePenetrationProtection(t *testing.T) {
+	mockRedis := new(MockRedisClient)
+	mockCommentRepo := new(MockCommentRepository)
+	mockReviewRepo := new(MockReviewRepository)
+	logger := zap.NewNop()
+
+	targetID := "nonexistent123"
+
+	// 第一次请求：缓存未命中，数据库返回错误
+	mockRedis.On("Get", mock.Anything, "rating:stats:comment:"+targetID).Return("", nil)
+	mockCommentRepo.On("GetByID", mock.Anything, targetID).Return(nil, errors.New("not found"))
+	mockRedis.On("Set", mock.Anything, "rating:stats:comment:"+targetID, EmptyCacheValue, EmptyCacheTTL).Return(nil)
+
+	// 创建service
+	service := NewRatingService(mockCommentRepo, mockReviewRepo, mockRedis, logger)
+
+	// 第一次请求
+	_, err := service.GetRatingStats(context.Background(), "comment", targetID)
+	assert.Error(t, err)
+
+	// 第二次请求：从缓存中读取空值
+	mockRedis2 := new(MockRedisClient)
+	mockCommentRepo2 := new(MockCommentRepository)
+	mockReviewRepo2 := new(MockReviewRepository)
+
+	// 返回空值缓存标记
+	mockRedis2.On("Get", mock.Anything, "rating:stats:comment:"+targetID).Return(EmptyCacheValue, nil)
+
+	service2 := NewRatingService(mockCommentRepo2, mockReviewRepo2, mockRedis2, logger)
+
+	// 第二次请求应该从空值缓存返回错误
+	_, err = service2.GetRatingStats(context.Background(), "comment", targetID)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "评分数据不存在")
+
+	// 验证没有再次查询数据库
+	mockCommentRepo2.AssertNotCalled(t, "GetByID")
+	mockRedis2.AssertExpectations(t)
 }
