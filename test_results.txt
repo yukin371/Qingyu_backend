@@ -1,0 +1,156 @@
+=== RUN   TestBookListRepository_CreateBookList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_CreateBookList (0.06s)
+=== RUN   TestBookListRepository_GetBookListByID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListByID (0.04s)
+=== RUN   TestBookListRepository_GetBookListByID_NotFound
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListByID_NotFound (0.03s)
+=== RUN   TestBookListRepository_GetBookListByID_InvalidID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListByID_InvalidID (0.03s)
+=== RUN   TestBookListRepository_GetBookListByID_NotExists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListByID_NotExists (0.03s)
+=== RUN   TestBookListRepository_GetBookListsByUser
+缓存未启用，跳过缓存预热
+    booklist_repository_test.go:169: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:169
+        	Error:      	Expected value not to be nil.
+        	Test:       	TestBookListRepository_GetBookListsByUser
+    booklist_repository_test.go:170: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:170
+        	Error:      	"0" is not greater than or equal to "5"
+        	Test:       	TestBookListRepository_GetBookListsByUser
+    booklist_repository_test.go:171: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:171
+        	Error:      	"0" is not greater than or equal to "5"
+        	Test:       	TestBookListRepository_GetBookListsByUser
+--- FAIL: TestBookListRepository_GetBookListsByUser (0.04s)
+=== RUN   TestBookListRepository_GetBookListsByUser_Pagination
+缓存未启用，跳过缓存预热
+    booklist_repository_test.go:204: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:204
+        	Error:      	"0" is not greater than or equal to "15"
+        	Test:       	TestBookListRepository_GetBookListsByUser_Pagination
+    booklist_repository_test.go:205: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:205
+        	Error:      	"0" is not greater than or equal to "10"
+        	Test:       	TestBookListRepository_GetBookListsByUser_Pagination
+--- FAIL: TestBookListRepository_GetBookListsByUser_Pagination (0.05s)
+=== RUN   TestBookListRepository_GetBookListsByUser_InvalidUserID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListsByUser_InvalidUserID (0.04s)
+=== RUN   TestBookListRepository_GetPublicBookLists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetPublicBookLists (0.04s)
+=== RUN   TestBookListRepository_GetBookListsByCategory
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListsByCategory (0.04s)
+=== RUN   TestBookListRepository_GetBookListsByTag
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBookListsByTag (0.04s)
+=== RUN   TestBookListRepository_SearchBookLists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_SearchBookLists (0.04s)
+=== RUN   TestBookListRepository_SearchBookLists_CaseInsensitive
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_SearchBookLists_CaseInsensitive (0.04s)
+=== RUN   TestBookListRepository_UpdateBookList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_UpdateBookList (0.03s)
+=== RUN   TestBookListRepository_UpdateBookList_NotFound
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_UpdateBookList_NotFound (0.03s)
+=== RUN   TestBookListRepository_UpdateBookList_InvalidID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_UpdateBookList_InvalidID (0.04s)
+=== RUN   TestBookListRepository_DeleteBookList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_DeleteBookList (0.04s)
+=== RUN   TestBookListRepository_DeleteBookList_NotFound
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_DeleteBookList_NotFound (0.04s)
+=== RUN   TestBookListRepository_DeleteBookList_InvalidID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_DeleteBookList_InvalidID (0.03s)
+=== RUN   TestBookListRepository_AddBookToList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_AddBookToList (0.04s)
+=== RUN   TestBookListRepository_AddBookToList_InvalidBookListID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_AddBookToList_InvalidBookListID (0.04s)
+=== RUN   TestBookListRepository_AddBookToList_BookListNotExists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_AddBookToList_BookListNotExists (0.04s)
+=== RUN   TestBookListRepository_RemoveBookFromList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_RemoveBookFromList (0.04s)
+=== RUN   TestBookListRepository_RemoveBookFromList_InvalidBookListID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_RemoveBookFromList_InvalidBookListID (0.04s)
+=== RUN   TestBookListRepository_RemoveBookFromList_BookListNotExists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_RemoveBookFromList_BookListNotExists (0.04s)
+=== RUN   TestBookListRepository_UpdateBookInList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_UpdateBookInList (0.04s)
+=== RUN   TestBookListRepository_UpdateBookInList_BookNotFound
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_UpdateBookInList_BookNotFound (0.03s)
+=== RUN   TestBookListRepository_ReorderBooks
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_ReorderBooks (0.04s)
+=== RUN   TestBookListRepository_ReorderBooks_InvalidID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_ReorderBooks_InvalidID (0.03s)
+=== RUN   TestBookListRepository_GetBooksInList
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBooksInList (0.04s)
+=== RUN   TestBookListRepository_GetBooksInList_InvalidID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBooksInList_InvalidID (0.04s)
+=== RUN   TestBookListRepository_GetBooksInList_BookListNotExists
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_GetBooksInList_BookListNotExists (0.04s)
+=== RUN   TestBookListRepository_CreateBookListLike
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_CreateBookListLike (0.04s)
+=== RUN   TestBookListRepository_DeleteBookListLike
+缓存未启用，跳过缓存预热
+    booklist_repository_test.go:887: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:887
+        	Error:      	Not equal: 
+        	            	expected: 0
+        	            	actual  : 1
+        	Test:       	TestBookListRepository_DeleteBookListLike
+--- FAIL: TestBookListRepository_DeleteBookListLike (0.04s)
+=== RUN   TestBookListRepository_DeleteBookListLike_InvalidUserID
+缓存未启用，跳过缓存预热
+--- PASS: TestBookListRepository_DeleteBookListLike_InvalidUserID (0.04s)
+=== RUN   TestBookListRepository_GetBookListLike
+缓存未启用，跳过缓存预热
+    booklist_repository_test.go:926: 
+        	Error Trace:	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:926
+        	Error:      	Expected value not to be nil.
+        	Test:       	TestBookListRepository_GetBookListLike
+--- FAIL: TestBookListRepository_GetBookListLike (0.04s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+[signal 0xc0000005 code=0x0 addr=0x10 pc=0x7ff7c0df7bdc]
+
+goroutine 4912 [running]:
+testing.tRunner.func1.2({0x7ff7c0fcd840, 0x7ff7c1f7c620})
+	C:/Program Files/Go/src/testing/testing.go:1872 +0x239
+testing.tRunner.func1()
+	C:/Program Files/Go/src/testing/testing.go:1875 +0x35b
+panic({0x7ff7c0fcd840?, 0x7ff7c1f7c620?})
+	C:/Program Files/Go/src/runtime/panic.go:783 +0x132
+Qingyu_backend/repository/mongodb/social_test.TestBookListRepository_GetBookListLike(0xc000540700)
+	E:/Github/Qingyu/.worktrees/launch-prep/repository/mongodb/social/booklist_repository_test.go:927 +0x53c
+testing.tRunner(0xc000540700, 0x7ff7c121de18)
+	C:/Program Files/Go/src/testing/testing.go:1934 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:1997 +0x44b
+FAIL	Qingyu_backend/repository/mongodb/social	1.419s
+FAIL

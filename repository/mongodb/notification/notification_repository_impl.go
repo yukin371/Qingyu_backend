@@ -85,6 +85,11 @@ func (r *NotificationRepositoryImpl) Update(ctx context.Context, id string, upda
 		return fmt.Errorf("无效的通知ID: %w", err)
 	}
 
+	// 如果更新read字段为true，自动设置read_at
+	if read, ok := updates["read"].(bool); ok && read {
+		updates["read_at"] = time.Now()
+	}
+
 	updates["updated_at"] = time.Now()
 
 	result, err := r.notificationCollection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})

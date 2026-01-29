@@ -35,9 +35,19 @@ func (r *MongoBookListRepository) CreateBookList(ctx context.Context, bookList *
 	bookList.CreatedAt = time.Now()
 	bookList.UpdatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(ctx, bookList)
+	// 初始化Books字段为空切片，避免null值
+	if bookList.Books == nil {
+		bookList.Books = []social.BookListItem{}
+	}
+
+	result, err := r.collection.InsertOne(ctx, bookList)
 	if err != nil {
 		return fmt.Errorf("创建书单失败: %w", err)
+	}
+
+	// 获取插入后的ID
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		bookList.ID = oid
 	}
 
 	return nil
@@ -66,12 +76,7 @@ func (r *MongoBookListRepository) GetBookListByID(ctx context.Context, bookListI
 
 // GetBookListsByUser 获取用户的书单列表
 func (r *MongoBookListRepository) GetBookListsByUser(ctx context.Context, userID string, page, size int) ([]*social.BookList, int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("无效的用户ID: %w", err)
-	}
-
-	filter := bson.M{"user_id": objectID}
+	filter := bson.M{"user_id": userID}
 
 	// 计算总数
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -408,9 +413,14 @@ func (r *MongoBookListRepository) CreateBookListLike(ctx context.Context, bookLi
 	likesCollection := r.db.Collection("book_list_likes")
 	bookListLike.CreatedAt = time.Now()
 
-	_, err := likesCollection.InsertOne(ctx, bookListLike)
+	result, err := likesCollection.InsertOne(ctx, bookListLike)
 	if err != nil {
 		return fmt.Errorf("创建点赞记录失败: %w", err)
+	}
+
+	// 获取插入后的ID
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		bookListLike.ID = oid
 	}
 
 	// 增加书单点赞数
@@ -421,14 +431,9 @@ func (r *MongoBookListRepository) CreateBookListLike(ctx context.Context, bookLi
 func (r *MongoBookListRepository) DeleteBookListLike(ctx context.Context, bookListID, userID string) error {
 	likesCollection := r.db.Collection("book_list_likes")
 
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return fmt.Errorf("无效的用户ID: %w", err)
-	}
-
 	filter := bson.M{
-		"book_list_id": bookListID,
-		"user_id":      userObjectID,
+		"booklist_id": bookListID,
+		"user_id":      userID,
 	}
 
 	result, err := likesCollection.DeleteOne(ctx, filter)
@@ -448,18 +453,13 @@ func (r *MongoBookListRepository) DeleteBookListLike(ctx context.Context, bookLi
 func (r *MongoBookListRepository) GetBookListLike(ctx context.Context, bookListID, userID string) (*social.BookListLike, error) {
 	likesCollection := r.db.Collection("book_list_likes")
 
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, fmt.Errorf("无效的用户ID: %w", err)
-	}
-
 	filter := bson.M{
-		"book_list_id": bookListID,
-		"user_id":      userObjectID,
+		"booklist_id": bookListID,
+		"user_id":      userID,
 	}
 
 	var bookListLike social.BookListLike
-	err = likesCollection.FindOne(ctx, filter).Decode(&bookListLike)
+	err := likesCollection.FindOne(ctx, filter).Decode(&bookListLike)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -474,14 +474,9 @@ func (r *MongoBookListRepository) GetBookListLike(ctx context.Context, bookListI
 func (r *MongoBookListRepository) IsBookListLiked(ctx context.Context, bookListID, userID string) (bool, error) {
 	likesCollection := r.db.Collection("book_list_likes")
 
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return false, fmt.Errorf("无效的用户ID: %w", err)
-	}
-
 	filter := bson.M{
-		"book_list_id": bookListID,
-		"user_id":      userObjectID,
+		"booklist_id": bookListID,
+		"user_id":      userID,
 	}
 
 	count, err := likesCollection.CountDocuments(ctx, filter)
@@ -496,7 +491,7 @@ func (r *MongoBookListRepository) IsBookListLiked(ctx context.Context, bookListI
 func (r *MongoBookListRepository) GetBookListLikes(ctx context.Context, bookListID string, page, size int) ([]*social.BookListLike, int64, error) {
 	likesCollection := r.db.Collection("book_list_likes")
 
-	filter := bson.M{"book_list_id": bookListID}
+	filter := bson.M{"booklist_id": bookListID}
 
 	total, err := likesCollection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -679,12 +674,7 @@ func (r *MongoBookListRepository) IncrementViewCount(ctx context.Context, bookLi
 
 // CountUserBookLists 统计用户书单数
 func (r *MongoBookListRepository) CountUserBookLists(ctx context.Context, userID string) (int64, error) {
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return 0, fmt.Errorf("无效的用户ID: %w", err)
-	}
-
-	filter := bson.M{"user_id": userObjectID}
+	filter := bson.M{"user_id": userID}
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("统计用户书单数失败: %w", err)

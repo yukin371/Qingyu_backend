@@ -1,0 +1,72 @@
+# Prometheus配置文件
+# Qingyu后端监控系统
+
+global:
+  scrape_interval: 15s  # 默认抓取间隔
+  evaluation_interval: 15s  # 规则评估间隔
+  external_labels:
+    cluster: 'qingyu-production'
+    environment: 'production'
+
+# 告警规则文件
+rule_files:
+  - 'alerts.yml'
+
+# 抓取配置
+scrape_configs:
+  # Qingyu后端API指标
+  - job_name: 'qingyu-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          service: 'qingyu-backend'
+          team: 'backend'
+
+  # Prometheus自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Alertmanager监控
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+
+  # Grafana监控
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  # MongoDB Exporter（如果部署）
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+        labels:
+          service: 'mongodb'
+
+  # Redis Exporter（如果部署）
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+
+  # Node Exporter（系统指标，如果部署）
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+
+# Alertmanager配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# 存储配置
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 15d
+    retention.size: 10GB

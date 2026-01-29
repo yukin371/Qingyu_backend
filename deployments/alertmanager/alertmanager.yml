@@ -1,0 +1,154 @@
+# Alertmanager配置文件
+# Qingyu后端告警管理系统
+
+global:
+  # 全局解析超时
+  resolve_timeout: 5m
+
+  # SMTP配置（使用环境变量）
+  smtp_smarthost: '${SMTP_SMARTHOST:-smtp.gmail.com:587}'
+  smtp_from: '${SMTP_FROM:-alerts@qingyu.com}'
+  smtp_auth_username: '${SMTP_USERNAME:-alerts@qingyu.com}'
+  smtp_auth_password: '${SMTP_PASSWORD:-}'
+  smtp_require_tls: true
+
+  # 全局标签
+  labels:
+    cluster: 'qingyu-production'
+    environment: 'production'
+
+# 路由配置
+route:
+  # 默认接收器
+  receiver: 'default'
+
+  # 按标签分组
+  group_by: ['alertname', 'cluster', 'service', 'severity']
+
+  # 分组等待时间
+  group_wait: 10s
+
+  # 分组间隔
+  group_interval: 10s
+
+  # 重复发送间隔
+  repeat_interval: 12h
+
+  # 子路由
+  routes:
+    # Critical级别告警
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 5m
+
+    # Warning级别告警
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      repeat_interval: 1h
+
+    # 性能相关告警
+    - match_re:
+        category: ^(performance|database)$
+      receiver: 'performance-team'
+      group_by: ['alertname', 'category']
+
+    # 安全相关告警
+    - match:
+        category: security
+      receiver: 'security-team'
+      group_wait: 0s
+      repeat_interval: 30m
+
+    # 可用性相关告警
+    - match:
+        category: availability
+      receiver: 'oncall-team'
+      group_wait: 0s
+      repeat_interval: 5m
+
+    # 业务相关告警
+    - match:
+        category: business
+      receiver: 'business-team'
+      repeat_interval: 2h
+
+# 抑制规则
+inhibit_rules:
+  # 当有critical告警时，抑制同一服务的warning告警
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service', 'cluster']
+
+  # 当服务不健康时，抑制性能相关的告警
+  - source_match:
+      category: 'availability'
+    target_match:
+      category: 'performance'
+    equal: ['service']
+
+# 接收器配置
+receivers:
+  # 默认接收器
+  - name: 'default'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO:-team@qingyu.com}'
+        headers:
+          Subject: '[Qingyu Alert] {{ .GroupLabels.alertname }}'
+          From: 'Qingyu Alertmanager <alerts@qingyu.com>'
+
+  # Critical告警接收器
+  - name: 'critical-alerts'
+    email_configs:
+      - to: '${ALERT_ONCALL_TO:-oncall@qingyu.com}'
+        headers:
+          Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+          Priority: 'urgent'
+    # 可选：添加Slack、钉钉、企业微信等webhook
+    # webhook_configs:
+    #   - url: '${WEBHOOK_URL:-}'
+
+  # Warning告警接收器
+  - name: 'warning-alerts'
+    email_configs:
+      - to: '${ALERT_TEAM_TO:-team@qingyu.com}'
+        headers:
+          Subject: '[WARNING] {{ .GroupLabels.alertname }}'
+
+  # 性能团队接收器
+  - name: 'performance-team'
+    email_configs:
+      - to: '${ALERT_PERF_TO:-performance@qingyu.com}'
+        headers:
+          Subject: '[Performance] {{ .GroupLabels.alertname }}'
+
+  # 安全团队接收器
+  - name: 'security-team'
+    email_configs:
+      - to: '${ALERT_SECURITY_TO:-security@qingyu.com}'
+        headers:
+          Subject: '[Security] {{ .GroupLabels.alertname }}'
+          Priority: 'high'
+
+  # 运维团队接收器
+  - name: 'oncall-team'
+    email_configs:
+      - to: '${ALERT_ONCALL_TO:-oncall@qingyu.com}'
+        headers:
+          Subject: '[URGENT] {{ .GroupLabels.alertname }}'
+          Priority: 'urgent'
+
+  # 业务团队接收器
+  - name: 'business-team'
+    email_configs:
+      - to: '${ALERT_BUSINESS_TO:-business@qingyu.com}'
+        headers:
+          Subject: '[Business] {{ .GroupLabels.alertname }}'
+
+# 模板配置（可选）
+# templates:
+#   - '/etc/alertmanager/templates/*.tmpl'

@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -120,7 +121,7 @@ func setSecurityHeaders(c *gin.Context, config SecurityConfig) {
 
 	// HSTS
 	if config.HSTSMaxAge > 0 {
-		hstsValue := "max-age=" + string(rune(config.HSTSMaxAge))
+		hstsValue := fmt.Sprintf("max-age=%d", config.HSTSMaxAge)
 		if config.HSTSIncludeSubdomains {
 			hstsValue += "; includeSubDomains"
 		}

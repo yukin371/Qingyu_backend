@@ -178,6 +178,11 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 		return nil, 0, fmt.Errorf("failed to decode followers: %w", err)
 	}
 
+	// 确保返回空切片而不是nil
+	if follows == nil {
+		follows = []*social.FollowInfo{}
+	}
+
 	return follows, total, nil
 }
 
@@ -210,6 +215,11 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 	var follows []*social.FollowingInfo
 	if err = cursor.All(ctx, &follows); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode following: %w", err)
+	}
+
+	// 确保返回空切片而不是nil
+	if follows == nil {
+		follows = []*social.FollowingInfo{}
 	}
 
 	return follows, total, nil
@@ -317,6 +327,11 @@ func (r *MongoFollowRepository) GetAuthorFollowers(ctx context.Context, authorID
 		return nil, 0, fmt.Errorf("failed to decode author followers: %w", err)
 	}
 
+	// 确保返回空切片而不是nil
+	if follows == nil {
+		follows = []*social.FollowInfo{}
+	}
+
 	return follows, total, nil
 }
 
@@ -348,6 +363,11 @@ func (r *MongoFollowRepository) GetUserFollowingAuthors(ctx context.Context, use
 	var authorFollows []*social.AuthorFollow
 	if err = cursor.All(ctx, &authorFollows); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode following authors: %w", err)
+	}
+
+	// 确保返回空切片而不是nil
+	if authorFollows == nil {
+		authorFollows = []*social.AuthorFollow{}
 	}
 
 	return authorFollows, total, nil
