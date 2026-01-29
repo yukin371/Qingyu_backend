@@ -43,8 +43,8 @@ var WebSocketUpgrader = gorilla_websocket.Upgrader{
 //	@Produce		json
 //	@Param			token		header	string	true	"JWT Token"
 //	@Success		101			{string}	string	"Switching Protocols"
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/ws [get]
 func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 获取用户ID
@@ -95,9 +95,9 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		SyncProgressRequest	true	"同步请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/sync [post]
 func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	var req SyncProgressRequest
@@ -132,9 +132,9 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		MergeProgressRequest	true	"合并请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/merge [post]
 func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	var req MergeProgressRequest
@@ -188,8 +188,8 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 //	@Tags			Reader-Sync
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/sync-status [get]
 func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取用户ID

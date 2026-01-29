@@ -34,10 +34,10 @@ func NewBookmarkAPI(bookmarkService interfaces.BookmarkService) *BookmarkAPI {
 //	@Produce		json
 //	@Param		bookId	path	string	true	"书籍ID"
 //	@Param			request	body	CreateBookmarkRequest	true	"书签信息"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		409		{object}	shared.APIResponse	"书签已存在"
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		409		{object}	response.APIResponse	"书签已存在"
 //	@Router			/api/v1/reader/books/{bookId}/bookmarks [post]
 func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	var req CreateBookmarkRequest
@@ -86,8 +86,8 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 //	@Param			isPublic	query	bool	false	"是否公开"
 //	@Param			page		query	int	false	"页码"	default(1)
 //	@Param			size		query	int	false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks [get]
 //	@Router			/api/v1/reader/books/{bookId}/bookmarks [get]
 func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
@@ -146,9 +146,9 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"书签ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [get]
 func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
@@ -175,10 +175,10 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path	string				true	"书签ID"
 //	@Param			request	body	UpdateBookmarkRequest	true	"更新信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [put]
 func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
@@ -217,9 +217,9 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"书签ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [delete]
 func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
@@ -245,7 +245,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 //	@Produce		json
 //	@Param			format	query	string	true	"导出格式"	Enums(json,csv)
 //	@Success		200		{file}		file
-//	@Failure		401		{object}	shared.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/export [get]
 func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	// 获取用户ID
@@ -275,8 +275,8 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 //	@Tags			Reader-Bookmark
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/stats [get]
 func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 	// 获取用户ID
@@ -305,8 +305,8 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 //	@Param			keyword	query	string	true	"搜索关键词"
 //	@Param			page		query	int	false	"页码"	default(1)
 //	@Param			size		query	int	false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/search [get]
 func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 	// 获取用户ID

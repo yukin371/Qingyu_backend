@@ -27,7 +27,7 @@ func NewBooksAPI(readerService interfaces.ReaderService) *BooksAPI {
 //	@Tags		阅读器-书架
 //	@Param		page	query	int	false	"页码"	default(1)
 //	@Param		size	query	int	false	"每页数量"	default(20)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books [get]
 func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取用户ID
@@ -73,7 +73,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 //	@Summary	添加到书架
 //	@Tags		阅读器-书架
 //	@Param		bookId	path	string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/{bookId} [post]
 func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	// 获取用户ID
@@ -104,7 +104,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 //	@Summary	从书架移除
 //	@Tags		阅读器-书架
 //	@Param		bookId	path	string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/{bookId} [delete]
 func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 获取用户ID
@@ -135,7 +135,7 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 //	@Summary	获取最近阅读
 //	@Tags		阅读器-书架
 //	@Param		limit	query	int	false	"数量限制"	default(10)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/recent [get]
 func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
@@ -168,7 +168,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 //
 //	@Summary	获取未读完的书
 //	@Tags		阅读器-书架
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/unfinished [get]
 func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
@@ -193,7 +193,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 //
 //	@Summary	获取已读完的书
 //	@Tags		阅读器-书架
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/finished [get]
 func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
@@ -225,7 +225,7 @@ type UpdateBookStatusRequest struct {
 //	@Tags		阅读器-书架
 //	@Param		bookId	path	string	true	"书籍ID"
 //	@Param		request	body	UpdateBookStatusRequest	true	"状态信息"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/{bookId}/status [put]
 func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
@@ -269,7 +269,7 @@ type BatchUpdateBookStatusRequest struct {
 //	@Summary	批量更新书籍状态
 //	@Tags		阅读器-书架
 //	@Param		request	body	BatchUpdateBookStatusRequest	true	"批量状态信息"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/books/batch/status [put]
 func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 获取用户ID

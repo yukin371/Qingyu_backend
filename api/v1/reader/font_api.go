@@ -23,7 +23,7 @@ func NewFontAPI() *FontAPI {
 //	@Tags		阅读器-字体
 //	@Param		category	query	string	false	"字体分类：serif/sans-serif/monospace"
 //	@Param		builtin		query	bool	false	"仅显示内置字体"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts [get]
 func (api *FontAPI) GetFonts(c *gin.Context) {
 	// 获取查询参数
@@ -66,7 +66,7 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 //	@Summary	根据名称获取字体
 //	@Tags		阅读器-字体
 //	@Param		name	path	string	true	"字体名称"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{name} [get]
 func (api *FontAPI) GetFontByName(c *gin.Context) {
 	name := c.Param("name")
@@ -91,7 +91,7 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 //	@Summary	创建自定义字体
 //	@Tags		阅读器-字体
 //	@Param		request	body object	true	"创建字体请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts [post]
 func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	// 获取用户ID
@@ -137,7 +137,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 //	@Tags		阅读器-字体
 //	@Param		id		path	string						true	"字体ID"
 //	@Param		request	body object	true	"更新字体请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [put]
 func (api *FontAPI) UpdateFont(c *gin.Context) {
 	userID, exists := c.Get("userId")
@@ -175,7 +175,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 //	@Summary	删除自定义字体
 //	@Tags		阅读器-字体
 //	@Param		id	path	string	true	"字体ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [delete]
 func (api *FontAPI) DeleteFont(c *gin.Context) {
 	userID, exists := c.Get("userId")
@@ -202,7 +202,7 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 //	@Summary	设置字体偏好
 //	@Tags		阅读器-字体
 //	@Param		request	body object	true	"字体偏好"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings/font [post]
 func (api *FontAPI) SetFontPreference(c *gin.Context) {
 	userID, exists := c.Get("userId")

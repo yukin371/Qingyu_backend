@@ -46,7 +46,7 @@ type GetAnnotationStatsResponse struct {
 //	@Summary	批量创建注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchCreateAnnotationsRequest	true	"批量创建注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [post]
 func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	var req BatchCreateAnnotationsRequest
@@ -104,7 +104,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 //	@Summary	批量更新注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchUpdateAnnotationsRequest	true	"批量更新注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [put]
 func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 	var req BatchUpdateAnnotationsRequest
@@ -144,7 +144,7 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 //	@Summary	批量删除注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchDeleteAnnotationsRequest	true	"批量删除注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [delete]
 func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	var req BatchDeleteAnnotationsRequest
@@ -170,7 +170,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 //	@Summary	获取注记统计
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/stats [get]
 func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	// 获取用户ID
@@ -208,7 +208,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
 //	@Param		format	query		string	false	"导出格式 (json/markdown/txt)"	default(json)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/export [get]
 func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	// 获取用户ID
@@ -311,7 +311,7 @@ func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) 
 //	@Summary	同步注记
 //	@Tags		阅读器
 //	@Param		request	body		object	true	"同步注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 获取用户ID
