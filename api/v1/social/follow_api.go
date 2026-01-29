@@ -30,7 +30,7 @@ func NewFollowAPI(followService interfaces.FollowService) *FollowAPI {
 // @Accept json
 // @Produce json
 // @Param userId path string true "被关注用户ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/users/{userId}/follow [post]
 // @Security Bearer
 func (api *FollowAPI) FollowUser(c *gin.Context) {
@@ -68,7 +68,7 @@ func (api *FollowAPI) FollowUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userId path string true "被关注用户ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/users/{userId}/unfollow [delete]
 // @Security Bearer
 func (api *FollowAPI) UnfollowUser(c *gin.Context) {
@@ -106,7 +106,7 @@ func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 // @Param userId path string true "用户ID"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/users/{userId}/followers [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowers(c *gin.Context) {
@@ -156,7 +156,7 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 // @Param userId path string true "用户ID"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/users/{userId}/following [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowing(c *gin.Context) {
@@ -204,7 +204,7 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userId path string true "用户ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/users/{userId}/follow-status [get]
 // @Security Bearer
 func (api *FollowAPI) CheckFollowStatus(c *gin.Context) {
@@ -254,7 +254,7 @@ type FollowAuthorRequest struct {
 // @Produce json
 // @Param authorId path string true "作者ID"
 // @Param request body FollowAuthorRequest true "关注信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/authors/{authorId}/follow [post]
 // @Security Bearer
 func (api *FollowAPI) FollowAuthor(c *gin.Context) {
@@ -304,7 +304,7 @@ func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param authorId path string true "作者ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/authors/{authorId}/unfollow [delete]
 // @Security Bearer
 func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
@@ -346,7 +346,7 @@ func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/following/authors [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {

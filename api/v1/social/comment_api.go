@@ -44,7 +44,7 @@ type UpdateCommentRequest struct {
 //	@Summary	发表评论
 //	@Tags		评论
 //	@Param		request	body		CreateCommentRequest	true	"评论信息"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments [post]
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	var req CreateCommentRequest
@@ -86,7 +86,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 //	@Param		sortBy	query		string	false	"排序方式(latest/hot)"	default(latest)
 //	@Param		page	query		int		false	"页码"					default(1)
 //	@Param		size	query		int		false	"每页数量"				default(20)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments [get]
 func (api *CommentAPI) GetCommentList(c *gin.Context) {
 	bookID := c.Query("book_id")
@@ -125,7 +125,7 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 //	@Summary	获取评论详情
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [get]
 func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 	commentID := c.Param("id")
@@ -149,7 +149,7 @@ func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id		path		string					true	"评论ID"
 //	@Param		request	body		UpdateCommentRequest	true	"评论内容"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [put]
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -192,7 +192,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 //	@Summary	删除评论
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [delete]
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -229,7 +229,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id		path		string					true	"父评论ID"
 //	@Param		request	body		ReplyCommentRequest	true	"回复内容"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/reply [post]
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	parentCommentID := c.Param("id")
@@ -272,7 +272,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 //	@Summary	点赞评论
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/like [post]
 func (api *CommentAPI) LikeComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -308,7 +308,7 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 //	@Summary	取消点赞评论
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/like [delete]
 func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -344,7 +344,7 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 //	@Summary	获取评论完整线程
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/thread [get]
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	commentID := c.Param("id")
@@ -369,7 +369,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 //	@Tags		评论
 //	@Param		book_id	query		string	true	"书籍ID"
 //	@Param		limit	query		int		false	"返回数量"	default(10)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/top [get]
 func (api *CommentAPI) GetTopComments(c *gin.Context) {
 	bookID := c.Query("book_id")
@@ -403,7 +403,7 @@ func (api *CommentAPI) GetTopComments(c *gin.Context) {
 //	@Param		id		path		string	true	"评论ID"
 //	@Param		page	query		int		false	"页码"		default(1)
 //	@Param		size	query		int		false	"每页数量"	default(20)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/replies [get]
 func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 	commentID := c.Param("id")

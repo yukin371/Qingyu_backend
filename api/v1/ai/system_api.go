@@ -1,13 +1,12 @@
 package ai
 
 import (
-	"net/http"
 	"time"
 
-	"Qingyu_backend/api/v1/shared"
 	aiService "Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // SystemApi AI系统API
@@ -37,7 +36,7 @@ func (api *SystemApi) HealthCheck(c *gin.Context) {
 		"service":   "ai",
 	}
 
-	shared.Success(c, http.StatusOK, "服务正常", status)
+	response.Success(c, status)
 }
 
 // GetProviders 获取AI提供商列表
@@ -62,7 +61,7 @@ func (api *SystemApi) GetProviders(c *gin.Context) {
 		},
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", providers)
+	response.Success(c, providers)
 }
 
 // GetModels 获取可用模型列表
@@ -106,5 +105,5 @@ func (api *SystemApi) GetModels(c *gin.Context) {
 		models = filtered
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", models)
+	response.Success(c, models)
 }

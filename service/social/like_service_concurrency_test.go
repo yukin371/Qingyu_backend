@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/social"
-	"Qingyu_backend/service/messaging"
 )
 
 // TestLikeServiceConcurrency Service层并发测试
@@ -23,7 +22,7 @@ func TestLikeServiceConcurrency(t *testing.T) {
 		// Arrange
 		mockRepo := new(MockLikeRepository)
 		mockCommentRepo := new(MockCommentRepository)
-		mockEventBus := messaging.NewMockEventBus()
+		mockEventBus := NewMockEventBus()
 
 		service := NewLikeService(mockRepo, mockCommentRepo, mockEventBus)
 		ctx := context.Background()
@@ -59,7 +58,7 @@ func TestLikeServiceConcurrency(t *testing.T) {
 		// Arrange
 		mockRepo := new(MockLikeRepository)
 		mockCommentRepo := new(MockCommentRepository)
-		mockEventBus := messaging.NewMockEventBus()
+		mockEventBus := NewMockEventBus()
 
 		service := NewLikeService(mockRepo, mockCommentRepo, mockEventBus)
 		ctx := context.Background()

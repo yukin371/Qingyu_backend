@@ -40,7 +40,7 @@ type AddCollectionRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body AddCollectionRequest true "收藏信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections [post]
 // @Security Bearer
 func (api *CollectionAPI) AddCollection(c *gin.Context) {
@@ -90,7 +90,7 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 // @Param folder_id query string false "收藏夹ID"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollections(c *gin.Context) {
@@ -150,7 +150,7 @@ type UpdateCollectionRequest struct {
 // @Produce json
 // @Param id path string true "收藏ID"
 // @Param request body UpdateCollectionRequest true "更新信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id} [put]
 // @Security Bearer
 func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
@@ -213,7 +213,7 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "收藏ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id} [delete]
 // @Security Bearer
 func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
@@ -249,7 +249,7 @@ func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "书籍ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/check/{book_id} [get]
 // @Security Bearer
 func (api *CollectionAPI) CheckCollected(c *gin.Context) {
@@ -289,7 +289,7 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 // @Param tag path string true "标签"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/tags/{tag} [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
@@ -355,7 +355,7 @@ type CreateFolderRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateFolderRequest true "收藏夹信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders [post]
 // @Security Bearer
 func (api *CollectionAPI) CreateFolder(c *gin.Context) {
@@ -392,7 +392,7 @@ func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 // @Tags 阅读端-收藏
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders [get]
 // @Security Bearer
 func (api *CollectionAPI) GetFolders(c *gin.Context) {
@@ -431,7 +431,7 @@ type UpdateFolderRequest struct {
 // @Produce json
 // @Param id path string true "收藏夹ID"
 // @Param request body UpdateFolderRequest true "更新信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders/{id} [put]
 // @Security Bearer
 func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
@@ -491,7 +491,7 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "收藏夹ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders/{id} [delete]
 // @Security Bearer
 func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
@@ -531,7 +531,7 @@ func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "收藏ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id}/share [post]
 // @Security Bearer
 func (api *CollectionAPI) ShareCollection(c *gin.Context) {
@@ -567,7 +567,7 @@ func (api *CollectionAPI) ShareCollection(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "收藏ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id}/share [delete]
 // @Security Bearer
 func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
@@ -604,7 +604,7 @@ func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/public [get]
 func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 	var params struct {
@@ -647,7 +647,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 // @Tags 阅读端-收藏
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/stats [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollectionStats(c *gin.Context) {

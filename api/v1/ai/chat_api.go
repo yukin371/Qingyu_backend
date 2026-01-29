@@ -2,10 +2,8 @@ package ai
 
 import (
 	"io"
-	"net/http"
 	"strconv"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
 	aiDto "Qingyu_backend/service/ai/dto" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
@@ -76,7 +74,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 	c.Set("requestID", uuid.New().String())
 	c.Set("aiService", "chat")
 
-	shared.Success(c, http.StatusOK, "聊天成功", result)
+	response.Success(c, result)
 }
 
 // ChatStream 聊天（流式）
@@ -203,7 +201,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", sessions)
+	response.Success(c, sessions)
 }
 
 // GetChatHistory 获取聊天历史
@@ -250,7 +248,7 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", session)
+	response.Success(c, session)
 }
 
 // DeleteChatSession 删除聊天会话
@@ -275,7 +273,7 @@ func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 var _ = aiDto.ChatSessionDTO{}

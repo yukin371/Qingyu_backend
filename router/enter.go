@@ -41,8 +41,10 @@ import (
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
 	syncService "Qingyu_backend/pkg/sync"
+	"Qingyu_backend/pkg/cache"
 	readerservice "Qingyu_backend/service/reader"
 	messagingService "Qingyu_backend/service/messaging"
+	socialService "Qingyu_backend/service/social"
 	modelsMessaging "Qingyu_backend/models/messaging"
 
 	"github.com/gin-gonic/gin"
@@ -398,6 +400,42 @@ func RegisterRoutes(r *gin.Engine) {
 		if relationAPI != nil {
 			logger.Info("  - /api/v1/social/follow/* (关注系统)")
 		}
+	}
+
+	// ============ 注册评分路由 ============
+	// 获取Redis客户端
+	var redisClient cache.RedisClient
+	if rc := serviceContainer.GetRedisClient(); rc != nil {
+		redisClient = rc
+	}
+
+	if redisClient != nil {
+		// 创建RatingService（仓库暂时传nil，待后续集成）
+		ratingSvc := socialService.NewRatingService(
+			nil, // commentRepo - 待实现
+			nil, // reviewRepo - 待实现
+			redisClient,
+			logger,
+		)
+
+		// 创建RatingAPI
+		ratingAPI := socialApi.NewRatingAPI(ratingSvc)
+
+		// 注册评分路由
+		ratingGroup := v1.Group("/ratings")
+		{
+			// 获取评分统计
+			ratingGroup.GET("/:targetType/:targetId/stats", ratingAPI.GetRatingStats)
+
+			// 获取用户评分
+			ratingGroup.GET("/:targetType/:targetId/user-rating", ratingAPI.GetUserRating)
+		}
+
+		logger.Info("✓ 评分路由已注册到: /api/v1/ratings/")
+		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/stats (获取评分统计)")
+		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/user-rating (获取用户评分)")
+	} else {
+		logger.Warn("⚠ Redis客户端未配置，评分路由未注册")
 	}
 
 	// ============ 注册推荐系统路由 ============

@@ -1,10 +1,8 @@
 package ai
 
 import (
-	"net/http"
 	"strconv"
 
-	"Qingyu_backend/api/v1/shared"
 	aiModel "Qingyu_backend/models/ai" // Imported for Swagger annotations
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
@@ -36,7 +34,7 @@ func NewQuotaApi(quotaService *aiService.QuotaService) *QuotaApi {
 func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "无法获取用户信息")
 		return
 	}
 
@@ -46,7 +44,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", quota)
+	response.Success(c, quota)
 }
 
 // GetAllQuotas 获取所有配额
@@ -60,7 +58,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "无法获取用户信息")
 		return
 	}
 
@@ -70,7 +68,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", quotas)
+	response.Success(c, quotas)
 }
 
 // GetQuotaStatistics 获取配额统计
@@ -84,7 +82,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "无法获取用户信息")
 		return
 	}
 
@@ -94,7 +92,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // GetTransactionHistory 获取配额事务历史
@@ -110,7 +108,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "无法获取用户信息")
 		return
 	}
 
@@ -134,7 +132,7 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", transactions)
+	response.Success(c, transactions)
 }
 
 // RechargeRequest 充值请求
@@ -155,7 +153,7 @@ type RechargeRequest struct {
 func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "无法获取用户信息")
 		return
 	}
 
@@ -172,7 +170,7 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "充值成功", nil)
+	response.Success(c, nil)
 }
 
 // 注意：管理员配额管理功能已迁移到 admin 模块

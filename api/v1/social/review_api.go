@@ -36,7 +36,7 @@ type CreateReviewRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateReviewRequest true "书评信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews [post]
 // @Security Bearer
 func (api *ReviewAPI) CreateReview(c *gin.Context) {
@@ -88,7 +88,7 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 // @Param book_id query string false "书籍ID"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews [get]
 func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	bookID := c.Query("book_id")
@@ -135,7 +135,7 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书评ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews/{id} [get]
 func (api *ReviewAPI) GetReviewDetail(c *gin.Context) {
 	reviewID := c.Param("id")
@@ -169,7 +169,7 @@ type UpdateReviewRequest struct {
 // @Produce json
 // @Param id path string true "书评ID"
 // @Param request body UpdateReviewRequest true "更新信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews/{id} [put]
 // @Security Bearer
 func (api *ReviewAPI) UpdateReview(c *gin.Context) {
@@ -228,7 +228,7 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书评ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews/{id} [delete]
 // @Security Bearer
 func (api *ReviewAPI) DeleteReview(c *gin.Context) {
@@ -259,7 +259,7 @@ func (api *ReviewAPI) DeleteReview(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书评ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews/{id}/like [post]
 // @Security Bearer
 func (api *ReviewAPI) LikeReview(c *gin.Context) {

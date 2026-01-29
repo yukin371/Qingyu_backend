@@ -40,10 +40,10 @@ func NewUserRelationAPI(relationService UserRelationServiceInterface) *UserRelat
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path	string	true	"被关注用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/follow/{userId} [post]
 func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 	// 获取当前用户ID
@@ -85,10 +85,10 @@ func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path	string	true	"被取消关注用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/follow/{userId} [delete]
 func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 	// 获取当前用户ID
@@ -130,10 +130,10 @@ func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path	string	true	"目标用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/follow/{userId}/status [get]
 func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 	// 获取当前用户ID
@@ -173,9 +173,9 @@ func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 //	@Param			userId	path	string	true	"用户ID"
 //	@Param			page	query	int		false	"页码"	default(1)
 //	@Param			size	query	int		false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/users/{userId}/followers [get]
 func (api *UserRelationAPI) GetFollowers(c *gin.Context) {
 	// 获取用户ID
@@ -214,9 +214,9 @@ func (api *UserRelationAPI) GetFollowers(c *gin.Context) {
 //	@Param			userId	path	string	true	"用户ID"
 //	@Param			page	query	int		false	"页码"	default(1)
 //	@Param			size	query	int		false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/users/{userId}/following [get]
 func (api *UserRelationAPI) GetFollowing(c *gin.Context) {
 	// 获取用户ID
@@ -253,9 +253,9 @@ func (api *UserRelationAPI) GetFollowing(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path	string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/social/users/{userId}/follow-stats [get]
 func (api *UserRelationAPI) GetFollowStats(c *gin.Context) {
 	// 获取用户ID

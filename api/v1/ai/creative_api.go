@@ -1,9 +1,6 @@
 package ai
 
 import (
-	"net/http"
-
-	"Qingyu_backend/api/v1/shared"
 	pb "Qingyu_backend/pkg/grpc/pb"
 	"Qingyu_backend/service/ai"
 
@@ -37,7 +34,7 @@ func NewCreativeAPI(phase3Client *ai.Phase3Client) *CreativeAPI {
 func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 	var req GenerateOutlineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -62,12 +59,12 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 	}
 
 	// 转换响应
-	response := &GenerateOutlineResponse{
+	outlineResp := &GenerateOutlineResponse{
 		Outline:       convertProtoOutlineToModel(grpcResp.Outline),
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	shared.Success(c, http.StatusOK, "大纲生成成功", response)
+	response.Success(c, outlineResp)
 }
 
 // GenerateCharacters 生成角色
@@ -84,7 +81,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 	var req GenerateCharactersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -113,12 +110,12 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		return
 	}
 
-	response := &GenerateCharactersResponse{
+	charactersResp := &GenerateCharactersResponse{
 		Characters:    convertProtoCharactersToModel(grpcResp.Characters),
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	shared.Success(c, http.StatusOK, "角色生成成功", response)
+	response.Success(c, charactersResp)
 }
 
 // GeneratePlot 生成情节
@@ -135,7 +132,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 	var req GeneratePlotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -170,12 +167,12 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		return
 	}
 
-	response := &GeneratePlotResponse{
+	plotResp := &GeneratePlotResponse{
 		Plot:          convertProtoPlotToModel(grpcResp.Plot),
 		ExecutionTime: grpcResp.ExecutionTime,
 	}
 
-	shared.Success(c, http.StatusOK, "情节生成成功", response)
+	response.Success(c, plotResp)
 }
 
 // ExecuteCreativeWorkflow 执行完整创作工作流
@@ -192,7 +189,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 	var req ExecuteCreativeWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -221,7 +218,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		return
 	}
 
-	response := &ExecuteCreativeWorkflowResponse{
+	workflowResp := &ExecuteCreativeWorkflowResponse{
 		ExecutionID:      grpcResp.ExecutionId,
 		ReviewPassed:     grpcResp.ReviewPassed,
 		ReflectionCount:  grpcResp.ReflectionCount,
@@ -234,7 +231,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		TokensUsed:       grpcResp.TokensUsed,
 	}
 
-	shared.Success(c, http.StatusOK, "工作流执行成功", response)
+	response.Success(c, workflowResp)
 }
 
 // HealthCheck 健康检查
@@ -255,7 +252,7 @@ func (a *CreativeAPI) HealthCheck(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "健康检查成功", gin.H{
+	response.Success(c, gin.H{
 		"status": resp.Status,
 		"checks": resp.Checks,
 	})

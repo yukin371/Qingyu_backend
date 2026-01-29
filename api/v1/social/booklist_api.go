@@ -36,7 +36,7 @@ type CreateBookListRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateBookListRequest true "书单信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists [post]
 // @Security Bearer
 func (api *BookListAPI) CreateBookList(c *gin.Context) {
@@ -87,7 +87,7 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists [get]
 func (api *BookListAPI) GetBookLists(c *gin.Context) {
 	var params struct {
@@ -127,7 +127,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书单ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [get]
 func (api *BookListAPI) GetBookListDetail(c *gin.Context) {
 	bookListID := c.Param("id")
@@ -162,7 +162,7 @@ type UpdateBookListRequest struct {
 // @Produce json
 // @Param id path string true "书单ID"
 // @Param request body UpdateBookListRequest true "更新信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [put]
 // @Security Bearer
 func (api *BookListAPI) UpdateBookList(c *gin.Context) {
@@ -224,7 +224,7 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书单ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [delete]
 // @Security Bearer
 func (api *BookListAPI) DeleteBookList(c *gin.Context) {
@@ -255,7 +255,7 @@ func (api *BookListAPI) DeleteBookList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书单ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id}/like [post]
 // @Security Bearer
 func (api *BookListAPI) LikeBookList(c *gin.Context) {
@@ -291,7 +291,7 @@ func (api *BookListAPI) LikeBookList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书单ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id}/fork [post]
 // @Security Bearer
 func (api *BookListAPI) ForkBookList(c *gin.Context) {
@@ -322,7 +322,7 @@ func (api *BookListAPI) ForkBookList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "书单ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id}/books [get]
 func (api *BookListAPI) GetBooksInList(c *gin.Context) {
 	bookListID := c.Param("id")

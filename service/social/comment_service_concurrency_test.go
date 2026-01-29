@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	audit "Qingyu_backend/service/audit"
-	"Qingyu_backend/service/messaging"
+	"Qingyu_backend/models/audit"
 )
 
 // TestCommentServiceConcurrency Service层并发测试
@@ -21,7 +21,7 @@ func TestCommentServiceConcurrency(t *testing.T) {
 		// Arrange
 		mockRepo := new(MockCommentRepository)
 		mockSensitiveRepo := new(MockSensitiveWordRepository)
-		mockEventBus := messaging.NewMockEventBus()
+		mockEventBus := NewMockEventBus()
 
 		service := NewCommentService(mockRepo, mockSensitiveRepo, mockEventBus)
 		ctx := context.Background()
