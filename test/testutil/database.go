@@ -113,6 +113,8 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = db.Collection("comments").Drop(ctx)
 		_ = db.Collection("reviews").Drop(ctx)
 		_ = db.Collection("review_likes").Drop(ctx)
+		_ = db.Collection("user_relations").Drop(ctx)
+		_ = db.Collection("user_relations").Drop(ctx)
 
 		// Notification相关测试集合
 		_ = db.Collection("notifications").Drop(ctx)
@@ -214,6 +216,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		_ = db.Collection("comments").Drop(ctx)
 		_ = db.Collection("reviews").Drop(ctx)
 		_ = db.Collection("review_likes").Drop(ctx)
+		_ = db.Collection("user_relations").Drop(ctx)
 
 		// Notification相关测试集合
 		_ = db.Collection("notifications").Drop(ctx)
