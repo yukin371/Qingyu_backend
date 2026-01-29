@@ -40,6 +40,7 @@ import (
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
+	versionAPI "Qingyu_backend/api/v1"
 	syncService "Qingyu_backend/pkg/sync"
 	"Qingyu_backend/pkg/cache"
 	readerservice "Qingyu_backend/service/reader"
@@ -663,6 +664,19 @@ func RegisterRoutes(r *gin.Engine) {
 	logger.Info("  - /api/v1/system/health/:service (服务健康检查)")
 	logger.Info("  - /api/v1/system/metrics (所有服务指标)")
 	logger.Info("  - /api/v1/system/metrics/:service (特定服务指标)")
+
+	// ============ 注册版本信息路由 ============
+	versionApiInstance := versionAPI.NewVersionAPI()
+	// 注册全局版本路由 (/api)
+	apiGroup := r.Group("/api")
+	versionAPI.InitVersionRoutes(apiGroup, versionApiInstance)
+	// 注册版本特定路由 (/api/v1)
+	versionAPI.InitVersionRoutesWithVersionGroup(v1, versionApiInstance)
+	logger.Info("✓ 版本信息路由已注册:")
+	logger.Info("  - GET /api (获取所有API版本信息)")
+	logger.Info("  - GET /api/v1 (获取v1版本信息)")
+	logger.Info("  - GET /api/version (获取当前请求版本)")
+	logger.Info("  - GET /api/migration-guide (API版本迁移指南)")
 
 	// ============ 健康检查 ============
 	// 注意: /metrics 端点已在 core/server.go 中注册

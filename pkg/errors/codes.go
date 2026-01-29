@@ -6,55 +6,55 @@ import "net/http"
 type ErrorCode int
 
 // 常用错误码定义
-// 格式：6位数字，前2位表示错误类别，后4位为具体错误编号
-// 10xxxx: 客户端错误 - 参数/请求相关
-// 10xxxx: 客户端错误 - 认证授权相关
-// 99xxxx: 服务器错误 - 系统内部错误
-// 99xxxx: 服务器错误 - 外部服务错误
+// 格式：4位数字，前1位表示错误类别，后3位为具体错误编号
+// 1xxx: 客户端错误 - 参数/请求相关
+// 1xxx: 客户端错误 - 认证授权相关
+// 5xxx: 服务器错误 - 系统内部错误
+// 5xxx: 服务器错误 - 外部服务错误
 const (
 	// 成功
 	Success ErrorCode = 0
 
-	// 客户端错误 - 参数相关 (10xxxx)
-	InvalidParams ErrorCode = 100001 // 无效参数
+	// 客户端错误 - 参数相关 (1xxx)
+	InvalidParams ErrorCode = 1001 // 无效参数
 
-	// 客户端错误 - 认证授权相关 (10xxxx)
-	Unauthorized ErrorCode = 100601 // 未授权
-	Forbidden    ErrorCode = 100603 // 禁止访问
+	// 客户端错误 - 认证授权相关 (1xxx)
+	Unauthorized ErrorCode = 1002 // 未授权
+	Forbidden    ErrorCode = 1003 // 禁止访问
 
-	// 客户端错误 - 资源相关 (10xxxx)
-	NotFound      ErrorCode = 100404 // 资源不存在 (HTTP 404)
-	AlreadyExists ErrorCode = 100201 // 资源已存在
-	Conflict      ErrorCode = 100202 // 冲突
+	// 客户端错误 - 资源相关 (1xxx)
+	NotFound      ErrorCode = 1004 // 资源不存在 (HTTP 404)
+	AlreadyExists ErrorCode = 1005 // 资源已存在
+	Conflict      ErrorCode = 1006 // 冲突
 
-	// 认证授权错误 (10xxxx)
-	InvalidCredentials ErrorCode = 100611 // 无效凭证
-	TokenExpired       ErrorCode = 100612 // Token过期
-	TokenInvalid       ErrorCode = 100613 // Token无效
-	PasswordTooWeak    ErrorCode = 100114 // 密码强度不足
-	AccountLocked      ErrorCode = 100615 // 账户已锁定
-	AccountDisabled    ErrorCode = 100616 // 账户已禁用
+	// 认证授权错误 (1xxx)
+	InvalidCredentials ErrorCode = 2002 // 无效凭证
+	TokenExpired       ErrorCode = 2007 // Token过期
+	TokenInvalid       ErrorCode = 2008 // Token无效
+	PasswordTooWeak    ErrorCode = 2009 // 密码强度不足
+	AccountLocked      ErrorCode = 2010 // 账户已锁定
+	AccountDisabled    ErrorCode = 2011 // 账户已禁用
 
-	// 业务逻辑错误 (10xxxx)
-	InsufficientBalance ErrorCode = 100301 // 余额不足
-	InsufficientQuota   ErrorCode = 100302 // 配额不足
-	WalletFrozen        ErrorCode = 100303 // 钱包已冻结
-	ContentNotPublished ErrorCode = 100304 // 内容未发布
-	ChapterLocked       ErrorCode = 100305 // 章节已锁定
+	// 业务逻辑错误 (1xxx)
+	InsufficientBalance ErrorCode = 3003 // 余额不足
+	InsufficientQuota   ErrorCode = 3010 // 配额不足
+	WalletFrozen        ErrorCode = 3011 // 钱包已冻结
+	ContentNotPublished ErrorCode = 3012 // 内容未发布
+	ChapterLocked       ErrorCode = 3013 // 章节已锁定
 
-	// 内容审核错误 (10xxxx)
-	ContentPendingReview ErrorCode = 100401 // 内容待审核
-	ContentRejected      ErrorCode = 100403 // 内容被拒绝
-	ContentViolation     ErrorCode = 100405 // 内容违规
+	// 内容审核错误 (1xxx)
+	ContentPendingReview ErrorCode = 3014 // 内容待审核
+	ContentRejected      ErrorCode = 3015 // 内容被拒绝
+	ContentViolation     ErrorCode = 3016 // 内容违规
 
-	// 服务器错误 - 系统错误 (99xxxx)
-	InternalError ErrorCode = 995001 // 内部错误
-	DatabaseError ErrorCode = 995002 // 数据库错误
-	RedisError    ErrorCode = 995004 // Redis错误
+	// 服务器错误 - 系统错误 (5xxx)
+	InternalError ErrorCode = 5000 // 内部错误
+	DatabaseError ErrorCode = 5001 // 数据库错误
+	RedisError    ErrorCode = 5003 // Redis错误
 
-	// 服务器错误 - 外部服务 (99xxxx/99xxxx)
-	ExternalAPIError  ErrorCode = 990001 // 外部API错误
-	RateLimitExceeded ErrorCode = 995007 // 超出频率限制
+	// 服务器错误 - 外部服务 (5xxx)
+	ExternalAPIError  ErrorCode = 5004 // 外部API错误
+	RateLimitExceeded ErrorCode = 4290 // 超出频率限制
 )
 
 // ErrorInfo 错误信息
