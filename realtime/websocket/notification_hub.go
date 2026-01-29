@@ -22,6 +22,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // 生产环境应该检查Origin
 	},
+	// 使用子协议传递token，避免在URL中暴露敏感信息
+	Subprotocols: []string{"Bearer-Token"},
 }
 
 // WSHub WebSocket连接中心
@@ -71,15 +73,22 @@ func NewWSHub(jwtService auth.JWTService) *WSHub {
 
 // HandleWebSocket WebSocket连接处理器
 // @Summary WebSocket通知端点
-// @Description 实时接收用户通知，需要在URL中传递token参数
+// @Description 实时接收用户通知，通过WebSocket子协议传递token
 // @Tags Notifications
-// @Param token query string true "JWT认证token"
+// @Param token header string true "JWT认证token (通过Sec-WebSocket-Protocol子协议传递)"
 // @Router /ws/notifications [get]
 func (h *WSHub) HandleWebSocket(c *gin.Context) {
-	// 从query参数获取token
-	token := c.Query("token")
+	// 从子协议中获取token（避免在URL中暴露）
+	token := ""
+	for _, subprotocol := range c.Request.Header["Sec-WebSocket-Protocol"] {
+		if subprotocol != "Bearer-Token" && subprotocol != "" {
+			token = subprotocol
+			break
+		}
+	}
+
 	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少token参数"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少token参数，请通过Sec-WebSocket-Protocol传递"})
 		return
 	}
 
@@ -90,7 +99,7 @@ func (h *WSHub) HandleWebSocket(c *gin.Context) {
 		return
 	}
 
-	// 升级HTTP连接为WebSocket
+	// 升级HTTP连接为WebSocket，选择子协议
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("WebSocket升级失败: %v", err)
@@ -226,9 +235,11 @@ func (h *WSHub) Run() {
 
 // broadcastToUser 向特定用户广播消息
 func (h *WSHub) broadcastToUser(userID string, message interface{}) {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
+	// 第一阶段：在读锁下收集需要发送消息的客户端和需要删除的客户端ID
+	var clientsToSend []*WSClient
+	var clientIDsToDelete []string
 
+	h.mu.RLock()
 	for _, client := range h.clients {
 		if client.UserID == userID {
 			// 序列化消息
@@ -238,15 +249,28 @@ func (h *WSHub) broadcastToUser(userID string, message interface{}) {
 				continue
 			}
 
-			// 发送消息
+			// 尝试发送消息
 			select {
 			case client.Send <- data:
+				clientsToSend = append(clientsToSend, client)
 			default:
-				// 发送通道已满，关闭连接
-				close(client.Send)
-				delete(h.clients, client.ID)
+				// 发送通道已满，标记需要删除
+				clientIDsToDelete = append(clientIDsToDelete, client.ID)
 			}
 		}
+	}
+	h.mu.RUnlock()
+
+	// 第二阶段：如果有需要删除的客户端，使用写锁删除
+	if len(clientIDsToDelete) > 0 {
+		h.mu.Lock()
+		for _, clientID := range clientIDsToDelete {
+			if client, ok := h.clients[clientID]; ok {
+				delete(h.clients, clientID)
+				close(client.Send)
+			}
+		}
+		h.mu.Unlock()
 	}
 }
 

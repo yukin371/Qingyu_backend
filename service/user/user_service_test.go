@@ -220,11 +220,6 @@ func (m *MockUserRepository) GetDevices(ctx context.Context, userID string) ([]i
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (m *MockUserRepository) UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error {
-	args := m.Called(ctx, email, hashedPassword)
-	return args.Error(0)
-}
-
 // MockAuthRepository Mock认证仓储
 type MockAuthRepository struct {
 	mock.Mock
