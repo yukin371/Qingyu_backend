@@ -35,6 +35,13 @@ const (
 	CodeAccountLocked     = 2010 // 账户已锁定
 	CodeAccountDisabled   = 2011 // 账户已禁用
 
+	// 评分相关错误 (2500-2599)
+	CodeRatingNotFound       = 2501 // 评分不存在
+	CodeRatingInvalid        = 2502 // 评分值无效（不在1-5范围）
+	CodeRatingAlreadyExists  = 2503 // 用户已评分
+	CodeRatingUnauthorized   = 2504 // 无权操作此评分
+	CodeRatingTargetNotFound = 2505 // 评分目标不存在
+
 	// 业务逻辑错误 (3000-3999)
 	CodeBookNotFound        = 3001 // 书籍不存在
 	CodeChapterNotFound     = 3002 // 章节不存在
@@ -46,13 +53,6 @@ const (
 	CodeContentPendingReview = 3014 // 内容待审核
 	CodeContentRejected     = 3015 // 内容被拒绝
 	CodeContentViolation    = 3016 // 内容违规
-
-	// 评分相关错误 (2500-2599)
-	CodeRatingNotFound       = 2501 // 评分不存在
-	CodeRatingInvalid        = 2502 // 评分值无效（不在1-5范围）
-	CodeRatingAlreadyExists  = 2503 // 用户已评分
-	CodeRatingUnauthorized   = 2504 // 无权操作此评分
-	CodeRatingTargetNotFound = 2505 // 评分目标不存在
 
 	// 频率限制错误 (4000-4999)
 	CodeRateLimitExceeded   = 4290 // 频率限制超出
