@@ -8,14 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"Qingyu_backend/models/social"
-	socialRepo "Qingyu_backend/repository/mongodb/social"
+	socialIntf "Qingyu_backend/repository/interfaces/social"
+	mongoSocial "Qingyu_backend/repository/mongodb/social"
 	"Qingyu_backend/test/testutil"
 )
 
 // setupReviewRepo 测试辅助函数
-func setupReviewRepo(t *testing.T) (*socialRepo.MongoReviewRepository, context.Context, func()) {
+func setupReviewRepo(t *testing.T) (socialIntf.ReviewRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := socialRepo.NewMongoReviewRepository(db)
+	repo := mongoSocial.NewMongoReviewRepository(db)
 	ctx := context.Background()
 	return repo, ctx, cleanup
 }

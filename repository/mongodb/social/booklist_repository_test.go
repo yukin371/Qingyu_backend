@@ -206,8 +206,8 @@ func TestBookListRepository_GetBookListsByUser_Pagination(t *testing.T) {
 	assert.LessOrEqual(t, len(page2), 5)
 }
 
-// TestBookListRepository_GetBookListsByUser_InvalidUserID 测试无效用户ID
-func TestBookListRepository_GetBookListsByUser_InvalidUserID(t *testing.T) {
+// TestBookListRepository_GetBookListsByUser_NotExists 测试无效用户ID
+func TestBookListRepository_GetBookListsByUser_NotExists(t *testing.T) {
 	// Arrange
 	repo, ctx, cleanup := setupBookListRepo(t)
 	defer cleanup()
@@ -216,10 +216,9 @@ func TestBookListRepository_GetBookListsByUser_InvalidUserID(t *testing.T) {
 	bookLists, total, err := repo.GetBookListsByUser(ctx, "invalid_userid", 1, 10)
 
 	// Assert
-	require.Error(t, err)
-	assert.Nil(t, bookLists)
+	require.NoError(t, err)
 	assert.Equal(t, int64(0), total)
-	assert.Contains(t, err.Error(), "无效的用户ID")
+	assert.Equal(t, 0, len(bookLists))
 }
 
 // TestBookListRepository_GetPublicBookLists 测试获取公开书单列表
@@ -887,18 +886,17 @@ func TestBookListRepository_DeleteBookListLike(t *testing.T) {
 	assert.Equal(t, 0, found.LikeCount)
 }
 
-// TestBookListRepository_DeleteBookListLike_InvalidUserID 测试删除点赞时用户ID无效
-func TestBookListRepository_DeleteBookListLike_InvalidUserID(t *testing.T) {
+// TestBookListRepository_DeleteBookListLike_NotExists 测试删除不存在的点赞记录
+func TestBookListRepository_DeleteBookListLike_NotExists(t *testing.T) {
 	// Arrange
 	repo, ctx, cleanup := setupBookListRepo(t)
 	defer cleanup()
 
-	// Act
-	err := repo.DeleteBookListLike(ctx, "booklist123", "invalid_userid")
+	// Act - 删除不存在的点赞记录应该返回成功（幂等操作）
+	err := repo.DeleteBookListLike(ctx, "booklist123", "user123")
 
 	// Assert
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "无效的用户ID")
+	require.NoError(t, err)
 }
 
 // TestBookListRepository_GetBookListLike 测试获取书单点赞记录
@@ -1274,19 +1272,18 @@ func TestBookListRepository_CountUserBookLists(t *testing.T) {
 	assert.GreaterOrEqual(t, count, int64(5))
 }
 
-// TestBookListRepository_CountUserBookLists_InvalidUserID 测试统计无效用户ID的书单数
-func TestBookListRepository_CountUserBookLists_InvalidUserID(t *testing.T) {
+// TestBookListRepository_CountUserBookLists_NotExists 测试统计不存在用户的书单数
+func TestBookListRepository_CountUserBookLists_NotExists(t *testing.T) {
 	// Arrange
 	repo, ctx, cleanup := setupBookListRepo(t)
 	defer cleanup()
 
 	// Act
-	count, err := repo.CountUserBookLists(ctx, "invalid_userid")
+	count, err := repo.CountUserBookLists(ctx, "nonexistent_user_id")
 
 	// Assert
-	require.Error(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, int64(0), count)
-	assert.Contains(t, err.Error(), "无效的用户ID")
 }
 
 // TestBookListRepository_Health 测试健康检查

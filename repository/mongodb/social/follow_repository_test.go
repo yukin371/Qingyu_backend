@@ -9,15 +9,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	socialModel "Qingyu_backend/models/social"
-	socialIntf "Qingyu_backend/repository/interfaces/social"
 	mongoSocial "Qingyu_backend/repository/mongodb/social"
 	"Qingyu_backend/test/testutil"
 )
 
 // setupFollowRepo 测试辅助函数
-func setupFollowRepo(t *testing.T) (socialIntf.FollowRepository, context.Context, func()) {
+func setupFollowRepo(t *testing.T) (*mongoSocial.MongoFollowRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := mongoSocial.NewMongoFollowRepository(db)
+	repoInterface := mongoSocial.NewMongoFollowRepository(db)
+	repo := repoInterface.(*mongoSocial.MongoFollowRepository)
 	ctx := context.Background()
 
 	// 在cleanup中添加follows和author_follows集合的清理

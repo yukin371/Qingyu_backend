@@ -9,15 +9,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	socialModel "Qingyu_backend/models/social"
-	socialRepo "Qingyu_backend/repository/interfaces/social"
 	impl "Qingyu_backend/repository/mongodb/social"
 	"Qingyu_backend/test/testutil"
 )
 
 // setupUserRelationRepo 测试辅助函数
-func setupUserRelationRepo(t *testing.T) (socialRepo.UserRelationRepository, context.Context, func()) {
+func setupUserRelationRepo(t *testing.T) (*impl.MongoUserRelationRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
-	repo := impl.NewMongoUserRelationRepository(db)
+	repoInterface := impl.NewMongoUserRelationRepository(db)
+	repo := repoInterface.(*impl.MongoUserRelationRepository)
 	ctx := context.Background()
 	return repo, ctx, cleanup
 }
