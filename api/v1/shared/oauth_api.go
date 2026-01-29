@@ -1,12 +1,11 @@
 package shared
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	authModel "Qingyu_backend/models/auth"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/shared/auth"
 )
 
@@ -57,20 +56,13 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 
 	authURL, err := api.oauthService.GetAuthURL(c.Request.Context(), provider, req.RedirectURI, req.State, linkMode, userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "获取授权URL失败: " + err.Error(),
-		})
+		response.BadRequest(c, "获取授权URL失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取授权URL成功",
-		Data: gin.H{
-			"authorize_url": authURL,
-			"provider":      provider,
-		},
+	response.SuccessWithMessage(c, "获取授权URL成功", gin.H{
+		"authorize_url": authURL,
+		"provider":      provider,
 	})
 }
 
@@ -99,20 +91,14 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 	// 交换授权码获取Token
 	token, session, err := api.oauthService.ExchangeCode(c.Request.Context(), provider, req.Code, req.State)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "授权码交换失败: " + err.Error(),
-		})
+		response.BadRequest(c, "授权码交换失败: "+err.Error(), nil)
 		return
 	}
 
 	// 获取用户信息
 	identity, err := api.oauthService.GetUserInfo(c.Request.Context(), provider, token)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "获取用户信息失败: " + err.Error(),
-		})
+		response.BadRequest(c, "获取用户信息失败: "+err.Error(), nil)
 		return
 	}
 
@@ -121,20 +107,13 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 		// 绑定模式：将OAuth账号绑定到已登录用户
 		account, err := api.oauthService.LinkAccount(c.Request.Context(), session.UserID, provider, token, identity)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, APIResponse{
-				Code:    400,
-				Message: "绑定账号失败: " + err.Error(),
-			})
+			response.BadRequest(c, "绑定账号失败: "+err.Error(), nil)
 			return
 		}
 
-		c.JSON(http.StatusOK, APIResponse{
-			Code:    200,
-			Message: "账号绑定成功",
-			Data: gin.H{
-				"account":  account,
-				"provider": provider,
-			},
+		response.SuccessWithMessage(c, "账号绑定成功", gin.H{
+			"account":  account,
+			"provider": provider,
 		})
 		return
 	}
@@ -151,18 +130,11 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 
 	loginResp, err := api.authService.OAuthLogin(c.Request.Context(), oauthLoginReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "OAuth登录失败: " + err.Error(),
-		})
+		response.BadRequest(c, "OAuth登录失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "OAuth登录成功",
-		Data:    loginResp,
-	})
+	response.SuccessWithMessage(c, "OAuth登录成功", loginResp)
 }
 
 // GetLinkedAccounts 获取用户绑定的OAuth账号列表
@@ -180,24 +152,17 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权",
-		})
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	accounts, err := api.oauthService.GetLinkedAccounts(c.Request.Context(), userID.(string))
 	if err != nil {
-		InternalError(c, "获取绑定账号失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    accounts,
-	})
+	response.SuccessWithMessage(c, "获取成功", accounts)
 }
 
 // UnlinkAccount 解绑OAuth账号
@@ -217,35 +182,23 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权",
-		})
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	accountID := c.Param("accountID")
 	if accountID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "账号ID不能为空",
-		})
+		response.BadRequest(c, "账号ID不能为空", nil)
 		return
 	}
 
 	err := api.oauthService.UnlinkAccount(c.Request.Context(), userID.(string), accountID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "解绑账号失败: " + err.Error(),
-		})
+		response.BadRequest(c, "解绑账号失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "解绑成功",
-	})
+	response.SuccessWithMessage(c, "解绑成功", nil)
 }
 
 // SetPrimaryAccount 设置主账号
@@ -265,35 +218,23 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权",
-		})
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	accountID := c.Param("accountID")
 	if accountID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "账号ID不能为空",
-		})
+		response.BadRequest(c, "账号ID不能为空", nil)
 		return
 	}
 
 	err := api.oauthService.SetPrimaryAccount(c.Request.Context(), userID.(string), accountID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "设置主账号失败: " + err.Error(),
-		})
+		response.BadRequest(c, "设置主账号失败: "+err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "设置成功",
-	})
+	response.SuccessWithMessage(c, "设置成功", nil)
 }
 
 // ==================== 请求和响应结构 ====================
