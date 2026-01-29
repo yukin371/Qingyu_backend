@@ -35,9 +35,14 @@ func (r *MongoBookListRepository) CreateBookList(ctx context.Context, bookList *
 	bookList.CreatedAt = time.Now()
 	bookList.UpdatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(ctx, bookList)
+	result, err := r.collection.InsertOne(ctx, bookList)
 	if err != nil {
 		return fmt.Errorf("创建书单失败: %w", err)
+	}
+
+	// 获取插入后的ID
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		bookList.ID = oid
 	}
 
 	return nil
@@ -408,9 +413,14 @@ func (r *MongoBookListRepository) CreateBookListLike(ctx context.Context, bookLi
 	likesCollection := r.db.Collection("book_list_likes")
 	bookListLike.CreatedAt = time.Now()
 
-	_, err := likesCollection.InsertOne(ctx, bookListLike)
+	result, err := likesCollection.InsertOne(ctx, bookListLike)
 	if err != nil {
 		return fmt.Errorf("创建点赞记录失败: %w", err)
+	}
+
+	// 获取插入后的ID
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		bookListLike.ID = oid
 	}
 
 	// 增加书单点赞数
