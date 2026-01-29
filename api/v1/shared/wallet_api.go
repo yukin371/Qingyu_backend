@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/finance/wallet"
 )
 
@@ -36,24 +37,17 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 func (api *WalletAPI) GetBalance(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	balance, err := api.walletService.GetBalance(c.Request.Context(), userID.(string))
 	if err != nil {
-		InternalError(c, "查询余额失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "查询余额成功",
-		Data:    balance,
-	})
+	response.SuccessWithMessage(c, "查询余额成功", balance)
 }
 
 // GetWallet 获取钱包信息
@@ -71,24 +65,17 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 func (api *WalletAPI) GetWallet(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	walletInfo, err := api.walletService.GetWallet(c.Request.Context(), userID.(string))
 	if err != nil {
-		InternalError(c, "获取钱包信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取钱包信息成功",
-		Data:    walletInfo,
-	})
+	response.SuccessWithMessage(c, "获取钱包信息成功", walletInfo)
 }
 
 // RechargeRequest 充值请求
@@ -114,10 +101,7 @@ type RechargeRequest struct {
 func (api *WalletAPI) Recharge(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -131,15 +115,11 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 
 	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), amountInCents, req.Method)
 	if err != nil {
-		InternalError(c, "充值失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "充值成功",
-		Data:    transaction,
-	})
+	response.SuccessWithMessage(c, "充值成功", transaction)
 }
 
 // ConsumeRequest 消费请求
@@ -165,10 +145,7 @@ type ConsumeRequest struct {
 func (api *WalletAPI) Consume(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -182,15 +159,11 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 
 	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), amountInCents, req.Reason)
 	if err != nil {
-		InternalError(c, "消费失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "消费成功",
-		Data:    transaction,
-	})
+	response.SuccessWithMessage(c, "消费成功", transaction)
 }
 
 // TransferRequest 转账请求

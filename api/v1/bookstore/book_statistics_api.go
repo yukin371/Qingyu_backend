@@ -1,7 +1,6 @@
 package bookstore
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
@@ -39,39 +38,23 @@ func NewBookStatisticsAPI(bookStatisticsService bookstoreService.BookStatisticsS
 func (api *BookStatisticsAPI) GetBookStatistics(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
 	statistics, err := api.BookStatisticsService.GetStatisticsByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		c.JSON(http.StatusNotFound, APIResponse{
-			Code:    404,
-			Message: "统计信息不存在: " + err.Error(),
-			Data:    nil,
-		})
+		shared.NotFound(c, "统计信息不存在")
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetTopViewedBooks 获取最多浏览的图书
@@ -93,19 +76,11 @@ func (api *BookStatisticsAPI) GetTopViewedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopViewedBooks(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取最多浏览图书失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取最多浏览图书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetTopFavoritedBooks 获取最多收藏的图书
@@ -127,19 +102,11 @@ func (api *BookStatisticsAPI) GetTopFavoritedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopFavoritedBooks(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取最多收藏图书失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取最多收藏图书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetTopRatedBooks 获取最高评分的图书
@@ -161,19 +128,11 @@ func (api *BookStatisticsAPI) GetTopRatedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopRatedBooks(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取最高评分图书失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取最高评分图书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetHottestBooks 获取最热门的图书
@@ -195,19 +154,11 @@ func (api *BookStatisticsAPI) GetHottestBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetHottestBooks(c.Request.Context(), limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取最热门图书失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取最热门图书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetTrendingBooks 获取趋势图书
@@ -229,19 +180,11 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTrendingBooks(c.Request.Context(), 0, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取趋势图书失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取趋势图书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // IncrementViewCount 增加浏览量
@@ -258,35 +201,23 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
 	err = api.BookStatisticsService.IncrementViewCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "增加浏览量失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "增加浏览量失败", err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "增加浏览量成功", nil)
+	shared.SuccessData(c, nil)
 }
 
 // IncrementFavoriteCount 增加收藏量
@@ -303,35 +234,23 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "图书ID不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "无效的图书ID格式",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
 	err = api.BookStatisticsService.IncrementFavoriteCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "增加收藏量失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "增加收藏量失败", err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "增加收藏量成功", nil)
+	shared.SuccessData(c, nil)
 }
 
 // GetAggregatedStatistics 获取聚合统计信息
@@ -346,19 +265,11 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
 	statistics, err := api.BookStatisticsService.GetAggregatedStatistics(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取聚合统计信息失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取聚合统计信息失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-	})
+	shared.SuccessData(c, statistics)
 }
 
 // GetStatisticsByTimeRange 获取时间范围内的统计信息
@@ -380,31 +291,19 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 	endTimeStr := c.Query("end_time")
 
 	if startTimeStr == "" || endTimeStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "开始时间和结束时间不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "开始时间和结束时间不能为空")
 		return
 	}
 
 	startTime, err := time.Parse(time.RFC3339, startTimeStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "开始时间格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "开始时间格式错误")
 		return
 	}
 
 	endTime, err := time.Parse(time.RFC3339, endTimeStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "结束时间格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "结束时间格式错误")
 		return
 	}
 
@@ -420,24 +319,13 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetStatisticsByTimeRange(c.Request.Context(), startTime, endTime)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取时间范围统计信息失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取时间范围统计信息失败", err)
 		return
 	}
 
 	total := int64(len(statistics))
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    statistics,
-		Total:   total,
-		Page:    page,
-		Limit:   limit,
-	})
+	shared.Paginated(c, statistics, total, page, limit, "获取成功")
 }
 
 // GetDailyStatisticsReport 获取日统计报告
@@ -454,39 +342,23 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 	dateStr := c.Query("date")
 	if dateStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "日期不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "日期不能为空")
 		return
 	}
 
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "日期格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "日期格式错误")
 		return
 	}
 
 	report, err := api.BookStatisticsService.GenerateDailyReport(c.Request.Context(), date)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取日统计报告失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取日统计报告失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    report,
-	})
+	shared.SuccessData(c, report)
 }
 
 // GetWeeklyStatisticsReport 获取周统计报告
@@ -506,31 +378,19 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 	weekStr := c.Query("week")
 
 	if yearStr == "" || weekStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "年份和周数不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "年份和周数不能为空")
 		return
 	}
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "年份格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "年份格式错误")
 		return
 	}
 
 	week, err := strconv.Atoi(weekStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "周数格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "周数格式错误")
 		return
 	}
 
@@ -545,19 +405,11 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 
 	report, err := api.BookStatisticsService.GenerateWeeklyReport(c.Request.Context(), startDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取周统计报告失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取周统计报告失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    report,
-	})
+	shared.SuccessData(c, report)
 }
 
 // GetMonthlyStatisticsReport 获取月统计报告
@@ -577,49 +429,29 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 	monthStr := c.Query("month")
 
 	if yearStr == "" || monthStr == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "年份和月份不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "年份和月份不能为空")
 		return
 	}
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "年份格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "年份格式错误")
 		return
 	}
 
 	month, err := strconv.Atoi(monthStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "月份格式错误",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "月份格式错误")
 		return
 	}
 
 	report, err := api.BookStatisticsService.GenerateMonthlyReport(c.Request.Context(), year, month)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "获取月统计报告失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "获取月统计报告失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    report,
-	})
+	shared.SuccessData(c, report)
 }
 
 // SearchStatistics 搜索统计信息
@@ -638,11 +470,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Code:    400,
-			Message: "搜索关键词不能为空",
-			Data:    nil,
-		})
+		shared.BadRequest(c, "参数错误", "搜索关键词不能为空")
 		return
 	}
 
@@ -658,20 +486,9 @@ func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 
 	statistics, total, err := api.BookStatisticsService.SearchStatistics(c.Request.Context(), keyword, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "搜索统计信息失败",
-			Data:    nil,
-		})
+		shared.InternalError(c, "搜索统计信息失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "搜索成功",
-		Data:    statistics,
-		Total:   total,
-		Page:    page,
-		Limit:   limit,
-	})
+	shared.Paginated(c, statistics, total, page, limit, "搜索成功")
 }
