@@ -51,17 +51,22 @@ func getRequestID(c *gin.Context) string {
 			return requestID
 		}
 	}
-	// 最后生成新的request_id
-	return ""
+	// 最后生成新的request_id（使用UUID或随机字符串）
+	return generateRequestID()
+}
+
+// generateRequestID 生成新的request_id
+func generateRequestID() string {
+	return "req_" + time.Now().Format("20060102150405")
 }
 
 // Success 返回成功响应（200 OK）
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, APIResponse{
-		Code:      http.StatusOK,
+		Code:      0, // 成功响应code为0
 		Message:   "操作成功",
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -69,10 +74,10 @@ func Success(c *gin.Context, data interface{}) {
 // Created 返回创建成功响应（201 Created）
 func Created(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusCreated, APIResponse{
-		Code:      http.StatusCreated,
+		Code:      0, // 成功响应code为0
 		Message:   "创建成功",
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -85,9 +90,9 @@ func NoContent(c *gin.Context) {
 // BadRequest 返回错误请求响应（400 Bad Request）
 func BadRequest(c *gin.Context, message string, details interface{}) {
 	response := APIResponse{
-		Code:      http.StatusBadRequest,
+		Code:      CodeParamError, // 参数错误
 		Message:   message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	}
 	if details != nil {
@@ -101,9 +106,9 @@ func BadRequest(c *gin.Context, message string, details interface{}) {
 // Unauthorized 返回未授权响应（401 Unauthorized）
 func Unauthorized(c *gin.Context, message string) {
 	c.JSON(http.StatusUnauthorized, APIResponse{
-		Code:      http.StatusUnauthorized,
+		Code:      CodeUnauthorized, // 未授权
 		Message:   message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -111,9 +116,9 @@ func Unauthorized(c *gin.Context, message string) {
 // Forbidden 返回禁止访问响应（403 Forbidden）
 func Forbidden(c *gin.Context, message string) {
 	c.JSON(http.StatusForbidden, APIResponse{
-		Code:      http.StatusForbidden,
+		Code:      CodeForbidden, // 禁止访问
 		Message:   message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -121,9 +126,9 @@ func Forbidden(c *gin.Context, message string) {
 // NotFound 返回资源不存在响应（404 Not Found）
 func NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, APIResponse{
-		Code:      http.StatusNotFound,
+		Code:      CodeNotFound, // 资源不存在
 		Message:   message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -131,9 +136,9 @@ func NotFound(c *gin.Context, message string) {
 // Conflict 返回冲突响应（409 Conflict）
 func Conflict(c *gin.Context, message string, details interface{}) {
 	response := APIResponse{
-		Code:      http.StatusConflict,
+		Code:      CodeConflict, // 资源冲突
 		Message:   message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	}
 	if details != nil {
@@ -152,12 +157,12 @@ func InternalError(c *gin.Context, err error) {
 		errorDetail = err.Error()
 	}
 	c.JSON(http.StatusInternalServerError, APIResponse{
-		Code:      http.StatusInternalServerError,
+		Code:      CodeInternalError, // 内部错误
 		Message:   message,
 		Data: map[string]interface{}{
 			"error": errorDetail,
 		},
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }
@@ -170,10 +175,10 @@ func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int
 	}
 
 	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:      http.StatusOK,
+		Code:      0, // 成功响应code为0
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 		Pagination: &Pagination{
 			Total:       total,
@@ -189,10 +194,10 @@ func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int
 // SuccessWithMessage 返回带自定义消息的成功响应（200 OK）
 func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 	c.JSON(http.StatusOK, APIResponse{
-		Code:      http.StatusOK,
+		Code:      0, // 成功响应code为0
 		Message:   message,
 		Data:      data,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(), // 毫秒级时间戳
 		RequestID: getRequestID(c),
 	})
 }

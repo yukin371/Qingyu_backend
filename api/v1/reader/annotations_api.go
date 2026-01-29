@@ -1,15 +1,15 @@
 package reader
 
 import (
-	"net/http"
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // AnnotationsAPI 标注API
@@ -41,30 +41,57 @@ type UpdateAnnotationRequest struct {
 	Range *string `json:"range"` // 标注范围
 }
 
+// getUserID 从gin.Context中获取并验证用户ID
+func (api *AnnotationsAPI) getUserID(c *gin.Context) (string, bool) {
+	userID, exists := c.Get("userId")
+	if !exists {
+		response.Unauthorized(c, "请先登录")
+		return "", false
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		response.InternalError(c, errors.New("用户ID类型错误"))
+		return "", false
+	}
+
+	return userIDStr, true
+}
+
+// requireQueryParam 验证查询参数是否存在
+func (api *AnnotationsAPI) requireQueryParam(c *gin.Context, key string) (string, bool) {
+	value := c.Query(key)
+	if value == "" {
+		response.BadRequest(c, "参数错误", key+"不能为空")
+		return "", false
+	}
+	return value, true
+}
+
 // CreateAnnotation 创建标注
 //
 //	@Summary	创建标注
 //	@Tags		阅读器
 //	@Param		request	body		CreateAnnotationRequest	true	"创建标注请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations [post]
 func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	var req CreateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数验证失败", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -84,11 +111,11 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 
 	err := api.readerService.CreateAnnotation(c.Request.Context(), annotation)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", annotation)
+	response.Created(c, annotation)
 }
 
 // UpdateAnnotation 更新标注
@@ -97,14 +124,14 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		id		path		string					true	"标注ID"
 //	@Param		request	body		UpdateAnnotationRequest	true	"更新标注请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/{id} [put]
 func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
 
 	var req UpdateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数验证失败", err.Error())
 		return
 	}
 
@@ -121,11 +148,11 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 
 	err := api.readerService.UpdateAnnotation(c.Request.Context(), annotationID, updates)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteAnnotation 删除标注
@@ -133,18 +160,18 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 //	@Summary	删除标注
 //	@Tags		阅读器
 //	@Param		id	path		string	true	"标注ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/{id} [delete]
 func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
 
 	err := api.readerService.DeleteAnnotation(c.Request.Context(), annotationID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetAnnotationsByChapter 获取章节标注
@@ -153,37 +180,31 @@ func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId		query		string	true	"书籍ID"
 //	@Param		chapterId	query		string	true	"章节ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/chapter [get]
 func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	chapterID := c.Query("chapterId")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
+		return
+	}
 
-	if bookID == "" || chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID和章节ID不能为空")
+	chapterID, ok := api.requireQueryParam(c, "chapterId")
+	if !ok {
 		return
 	}
 
 	annotations, err := api.readerService.GetAnnotationsByChapter(c.Request.Context(), userIDStr, bookID, chapterID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取章节标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetAnnotationsByBook 获取书籍标注
@@ -191,35 +212,26 @@ func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 //	@Summary	获取书籍标注
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/book [get]
 func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
 		return
 	}
 
 	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书籍标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetNotes 获取笔记
@@ -227,35 +239,26 @@ func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 //	@Summary	获取笔记
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/notes [get]
 func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
 		return
 	}
 
 	notes, err := api.readerService.GetNotes(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取笔记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", notes)
+	response.Success(c, notes)
 }
 
 // SearchNotes 搜索笔记
@@ -263,35 +266,26 @@ func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 //	@Summary	搜索笔记
 //	@Tags		阅读器
 //	@Param		keyword	query		string	true	"搜索关键词"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/notes/search [get]
 func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	keyword := c.Query("keyword")
-	if keyword == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "搜索关键词不能为空")
+	keyword, ok := api.requireQueryParam(c, "keyword")
+	if !ok {
 		return
 	}
 
 	notes, err := api.readerService.SearchNotes(c.Request.Context(), userIDStr, keyword)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "搜索笔记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", notes)
+	response.Success(c, notes)
 }
 
 // GetBookmarks 获取书签
@@ -299,35 +293,26 @@ func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 //	@Summary	获取书签
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/bookmarks [get]
 func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
 		return
 	}
 
 	bookmarks, err := api.readerService.GetBookmarks(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书签失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookmarks)
+	response.Success(c, bookmarks)
 }
 
 // GetLatestBookmark 获取最新书签
@@ -335,35 +320,26 @@ func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 //	@Summary	获取最新书签
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/bookmarks/latest [get]
 func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
 		return
 	}
 
 	bookmark, err := api.readerService.GetLatestBookmark(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取最新书签失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookmark)
+	response.Success(c, bookmark)
 }
 
 // GetHighlights 获取高亮
@@ -371,35 +347,26 @@ func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 //	@Summary	获取高亮
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/highlights [get]
 func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
-	bookID := c.Query("bookId")
-	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
 		return
 	}
 
 	highlights, err := api.readerService.GetHighlights(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取高亮失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", highlights)
+	response.Success(c, highlights)
 }
 
 // GetRecentAnnotations 获取最近标注
@@ -407,19 +374,11 @@ func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 //	@Summary	获取最近标注
 //	@Tags		阅读器
 //	@Param		limit	query		int	false	"数量限制"	default(20)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/recent [get]
 func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("userId")
-	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
 		return
 	}
 
@@ -427,11 +386,11 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 
 	annotations, err := api.readerService.GetRecentAnnotations(c.Request.Context(), userIDStr, limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取最近标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }
 
 // GetPublicAnnotations 获取公开标注
@@ -440,22 +399,24 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId		query		string	true	"书籍ID"
 //	@Param		chapterId	query		string	true	"章节ID"
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/public [get]
 func (api *AnnotationsAPI) GetPublicAnnotations(c *gin.Context) {
-	bookID := c.Query("bookId")
-	chapterID := c.Query("chapterId")
+	bookID, ok := api.requireQueryParam(c, "bookId")
+	if !ok {
+		return
+	}
 
-	if bookID == "" || chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID和章节ID不能为空")
+	chapterID, ok := api.requireQueryParam(c, "chapterId")
+	if !ok {
 		return
 	}
 
 	annotations, err := api.readerService.GetPublicAnnotations(c.Request.Context(), bookID, chapterID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取公开标注失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", annotations)
+	response.Success(c, annotations)
 }

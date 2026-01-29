@@ -1,12 +1,11 @@
 package social
 
 import (
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // ReviewAPI 书评API处理器
@@ -43,13 +42,13 @@ type CreateReviewRequest struct {
 func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	var req CreateReviewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -74,11 +73,11 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建书评失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建书评成功", review)
+	response.Created(c, review)
 }
 
 // GetReviews 获取书评列表
@@ -94,7 +93,7 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	bookID := c.Query("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -106,7 +105,7 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -118,11 +117,11 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书评列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书评列表成功", gin.H{
+	response.Success(c, gin.H{
 		"list":  reviews,
 		"total": total,
 		"page":  params.Page,
@@ -141,17 +140,17 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 func (api *ReviewAPI) GetReviewDetail(c *gin.Context) {
 	reviewID := c.Param("id")
 	if reviewID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书评ID不能为空")
+		response.BadRequest(c,  "参数错误", "书评ID不能为空")
 		return
 	}
 
 	review, err := api.reviewService.GetReviewByID(c.Request.Context(), reviewID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取书评详情失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取书评详情成功", review)
+	response.Success(c, review)
 }
 
 // UpdateReviewRequest 更新书评请求
@@ -176,19 +175,19 @@ type UpdateReviewRequest struct {
 func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 	reviewID := c.Param("id")
 	if reviewID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书评ID不能为空")
+		response.BadRequest(c,  "参数错误", "书评ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateReviewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -210,17 +209,17 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "没有要更新的字段")
+		response.BadRequest(c,  "参数错误", "没有要更新的字段")
 		return
 	}
 
 	err := api.reviewService.UpdateReview(c.Request.Context(), userID.(string), reviewID, updates)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新书评失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新书评成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteReview 删除书评
@@ -235,23 +234,23 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 func (api *ReviewAPI) DeleteReview(c *gin.Context) {
 	reviewID := c.Param("id")
 	if reviewID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书评ID不能为空")
+		response.BadRequest(c,  "参数错误", "书评ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	err := api.reviewService.DeleteReview(c.Request.Context(), userID.(string), reviewID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除书评失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除书评成功", nil)
+	response.Success(c, nil)
 }
 
 // LikeReview 点赞书评
@@ -266,13 +265,13 @@ func (api *ReviewAPI) DeleteReview(c *gin.Context) {
 func (api *ReviewAPI) LikeReview(c *gin.Context) {
 	reviewID := c.Param("id")
 	if reviewID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书评ID不能为空")
+		response.BadRequest(c,  "参数错误", "书评ID不能为空")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -280,12 +279,12 @@ func (api *ReviewAPI) LikeReview(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经点赞过该书评" {
-			shared.Error(c, http.StatusBadRequest, "操作失败", errMsg)
+			response.BadRequest(c,  "操作失败", errMsg)
 		} else {
-			shared.Error(c, http.StatusInternalServerError, "点赞失败", errMsg)
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", nil)
+	response.Success(c, nil)
 }

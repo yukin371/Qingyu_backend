@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // LocationApi 地点API处理器
@@ -25,13 +26,13 @@ func NewLocationApi(locationService interfaces.LocationService) *LocationApi {
 func (api *LocationApi) CreateLocation(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateLocationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -44,7 +45,7 @@ func (api *LocationApi) CreateLocation(c *gin.Context) {
 
 	location, err := api.locationService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建地点失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -57,7 +58,7 @@ func (api *LocationApi) GetLocation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if locationID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "locationId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "locationId和projectId不能为空")
 		return
 	}
 
@@ -74,13 +75,13 @@ func (api *LocationApi) GetLocation(c *gin.Context) {
 func (api *LocationApi) ListLocations(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	locations, err := api.locationService.List(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取地点列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -91,13 +92,13 @@ func (api *LocationApi) ListLocations(c *gin.Context) {
 func (api *LocationApi) GetLocationTree(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	tree, err := api.locationService.GetLocationTree(c.Request.Context(), projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取地点树失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -110,19 +111,19 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if locationID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "locationId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "locationId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateLocationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	location, err := api.locationService.Update(c.Request.Context(), locationID, projectID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新地点失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -135,13 +136,13 @@ func (api *LocationApi) DeleteLocation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if locationID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "locationId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "locationId和projectId不能为空")
 		return
 	}
 
 	err := api.locationService.Delete(c.Request.Context(), locationID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除地点失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -152,19 +153,19 @@ func (api *LocationApi) DeleteLocation(c *gin.Context) {
 func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateLocationRelationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	relation, err := api.locationService.CreateRelation(c.Request.Context(), projectID, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建关系失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -175,7 +176,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 func (api *LocationApi) ListLocationRelations(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "项目ID不能为空", "")
+		response.BadRequest(c,  "项目ID不能为空", "")
 		return
 	}
 
@@ -187,7 +188,7 @@ func (api *LocationApi) ListLocationRelations(c *gin.Context) {
 
 	relations, err := api.locationService.ListRelations(c.Request.Context(), projectID, locIDPtr)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取关系列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -200,13 +201,13 @@ func (api *LocationApi) DeleteLocationRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if relationID == "" || projectID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "relationId和projectId不能为空")
+		response.BadRequest(c,  "参数错误", "relationId和projectId不能为空")
 		return
 	}
 
 	err := api.locationService.DeleteRelation(c.Request.Context(), relationID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除关系失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

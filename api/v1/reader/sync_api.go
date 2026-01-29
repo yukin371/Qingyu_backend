@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	gorilla_websocket "github.com/gorilla/websocket"
 
-	"Qingyu_backend/api/v1/shared"
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
 )
 
 // SyncAPI 阅读进度同步API
@@ -43,14 +43,14 @@ var WebSocketUpgrader = gorilla_websocket.Upgrader{
 //	@Produce		json
 //	@Param			token		header	string	true	"JWT Token"
 //	@Success		101			{string}	string	"Switching Protocols"
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/ws [get]
 func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 升级到WebSocket
 	conn, err := WebSocketUpgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "WebSocket升级失败", err.Error())
+		response.BadRequest(c,  "WebSocket升级失败", err.Error())
 		return
 	}
 
@@ -95,21 +95,21 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		SyncProgressRequest	true	"同步请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/sync [post]
 func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	var req SyncProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -117,11 +117,11 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 
 	// 同步进度
 	if err := api.syncService.SyncProgress(c.Request.Context(), userIDStr, req.BookID, req.ChapterID, req.DeviceID, req.Progress); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "同步失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "同步成功", nil)
+	response.Success(c, nil)
 }
 
 // MergeOfflineProgresses 合并离线进度
@@ -132,21 +132,21 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		MergeProgressRequest	true	"合并请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/merge [post]
 func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	var req MergeProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -158,7 +158,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 		// 解析时间戳
 		timestamp, err := time.Parse(time.RFC3339, p.Timestamp)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "时间戳格式错误", err.Error())
+			response.BadRequest(c,  "时间戳格式错误", err.Error())
 			return
 		}
 
@@ -174,11 +174,11 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 
 	// 合并进度
 	if err := api.syncService.MergeOfflineProgresses(c.Request.Context(), userIDStr, progresses); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "合并失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "合并成功", nil)
+	response.Success(c, nil)
 }
 
 // GetSyncStatus 获取同步状态
@@ -188,14 +188,14 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 //	@Tags			Reader-Sync
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
 //	@Router			/api/v1/reader/progress/sync-status [get]
 func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -204,7 +204,7 @@ func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取同步状态
 	status := api.syncService.GetSyncStatus(userIDStr)
 
-	shared.Success(c, http.StatusOK, "获取成功", status)
+	response.Success(c, status)
 }
 
 // SyncProgressRequest 同步进度请求

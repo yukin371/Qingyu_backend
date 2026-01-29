@@ -2,12 +2,11 @@ package admin
 
 import (
 	"Qingyu_backend/service/interfaces/audit"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 )
 
 // AuditAdminAPI 审核管理API处理器（管理员）
@@ -58,7 +57,7 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 	// 调用Service层获取待审核列表
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 	_ = targetType
 	_ = page
 
-	shared.Success(c, http.StatusOK, "获取成功", records)
+	response.Success(c, records)
 }
 
 // ReviewAudit 审核通过/拒绝（管理员）
@@ -89,20 +88,20 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
 	if auditID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "审核记录ID不能为空")
+		response.BadRequest(c, "参数错误", "审核记录ID不能为空")
 		return
 	}
 
 	var req ReviewAuditRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从context获取管理员ID
 	reviewerID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -112,7 +111,7 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "审核失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -121,7 +120,7 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 		message = "审核已通过"
 	}
 
-	shared.Success(c, http.StatusOK, message, nil)
+	response.SuccessWithMessage(c, message, nil)
 }
 
 // ReviewAppeal 审核申诉（管理员）
@@ -143,20 +142,20 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 	if auditID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "审核记录ID不能为空")
+		response.BadRequest(c, "参数错误", "审核记录ID不能为空")
 		return
 	}
 
 	var req ReviewAppealRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从context获取管理员ID
 	reviewerID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取管理员信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -166,7 +165,7 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "审核申诉失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -175,7 +174,7 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 		message = "申诉已通过"
 	}
 
-	shared.Success(c, http.StatusOK, message, nil)
+	response.SuccessWithMessage(c, message, nil)
 }
 
 // GetHighRiskAudits 获取高风险审核记录（管理员）
@@ -212,11 +211,11 @@ func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 	// 调用Service层
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "查询失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", records)
+	response.Success(c, records)
 }
 
 // GetAuditStatistics 获取审核统计（管理员）
@@ -236,9 +235,9 @@ func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 	// 调用AuditService获取审核统计
 	stats, err := api.auditService.GetAuditStatistics(c.Request.Context())
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取审核统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }

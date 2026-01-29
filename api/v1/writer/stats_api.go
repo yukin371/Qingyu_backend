@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // StatsApi 阅读/书店统计API
@@ -38,14 +39,14 @@ func NewStatsApi(statsService *readingStats.ReadingStatsService) *StatsApi {
 func (api *StatsApi) GetBookStats(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
 	// 获取作品统计
 	bookStats, err := api.statsService.CalculateBookStats(c.Request.Context(), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取作品统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -71,14 +72,14 @@ func (api *StatsApi) GetBookStats(c *gin.Context) {
 func (api *StatsApi) GetChapterStats(c *gin.Context) {
 	chapterID := c.Param("chapter_id")
 	if chapterID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "章节ID不能为空")
+		response.BadRequest(c,  "参数错误", "章节ID不能为空")
 		return
 	}
 
 	// 获取章节统计
 	chapterStats, err := api.statsService.CalculateChapterStats(c.Request.Context(), chapterID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取章节统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -104,14 +105,14 @@ func (api *StatsApi) GetChapterStats(c *gin.Context) {
 func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
 	// 生成热力图
 	heatmap, err := api.statsService.GenerateHeatmap(c.Request.Context(), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "生成热力图失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -134,7 +135,7 @@ func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -148,7 +149,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	if startDateStr != "" {
 		startDate, err = time.Parse("2006-01-02", startDateStr)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "参数错误", "开始日期格式错误")
+			response.BadRequest(c,  "参数错误", "开始日期格式错误")
 			return
 		}
 	} else {
@@ -159,7 +160,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	if endDateStr != "" {
 		endDate, err = time.Parse("2006-01-02", endDateStr)
 		if err != nil {
-			shared.Error(c, http.StatusBadRequest, "参数错误", "结束日期格式错误")
+			response.BadRequest(c,  "参数错误", "结束日期格式错误")
 			return
 		}
 	} else {
@@ -169,7 +170,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	// 获取收入细分
 	revenueBreakdown, err := api.statsService.GetRevenueBreakdown(c.Request.Context(), bookID, startDate, endDate)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取收入统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -190,14 +191,14 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 func (api *StatsApi) GetTopChapters(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
 	// 获取热门章节
 	topChapters, err := api.statsService.GetTopChapters(c.Request.Context(), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取热门章节失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -219,7 +220,7 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -227,14 +228,14 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	daysStr := c.DefaultQuery("days", "7")
 	days, err := strconv.Atoi(daysStr)
 	if err != nil || days < 1 || days > 365 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "天数必须在1-365之间")
+		response.BadRequest(c,  "参数错误", "天数必须在1-365之间")
 		return
 	}
 
 	// 获取每日统计
 	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), bookID, days)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取每日统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -255,14 +256,14 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
 	// 获取跳出点
 	dropOffPoints, err := api.statsService.CalculateDropOffPoints(c.Request.Context(), bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取跳出点失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -283,7 +284,7 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	var behavior stats.ReaderBehavior
 	if err := c.ShouldBindJSON(&behavior); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -296,7 +297,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	// 记录行为
 	err := api.statsService.RecordReaderBehavior(c.Request.Context(), &behavior)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "记录行为失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -318,7 +319,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "作品ID不能为空")
+		response.BadRequest(c,  "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -326,14 +327,14 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	daysStr := c.DefaultQuery("days", "7")
 	days, err := strconv.Atoi(daysStr)
 	if err != nil || days < 1 || days > 90 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "天数必须在1-90之间")
+		response.BadRequest(c,  "参数错误", "天数必须在1-90之间")
 		return
 	}
 
 	// 计算留存率
 	retentionRate, err := api.statsService.CalculateRetention(c.Request.Context(), bookID, days)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "计算留存率失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

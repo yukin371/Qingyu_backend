@@ -34,6 +34,17 @@ type UserService interface {
 	SendEmailVerification(ctx context.Context, req *SendEmailVerificationRequest) (*SendEmailVerificationResponse, error)
 	VerifyEmail(ctx context.Context, req *VerifyEmailRequest) (*VerifyEmailResponse, error)
 
+	// 邮箱/手机管理
+	UnbindEmail(ctx context.Context, userID string) error
+	UnbindPhone(ctx context.Context, userID string) error
+
+	// 设备管理
+	DeleteDevice(ctx context.Context, userID string, deviceID string) error
+
+	// 密码验证
+	VerifyPassword(ctx context.Context, userID string, password string) error
+	EmailExists(ctx context.Context, email string) (bool, error)
+
 	// 完整密码重置流程
 	RequestPasswordReset(ctx context.Context, req *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	ConfirmPasswordReset(ctx context.Context, req *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)
@@ -43,11 +54,6 @@ type UserService interface {
 	RemoveRole(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
 	GetUserRoles(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
 	GetUserPermissions(ctx context.Context, req *GetUserPermissionsRequest) (*GetUserPermissionsResponse, error)
-
-	// 用户账户管理
-	UnbindEmail(ctx context.Context, userID string) error
-	UnbindPhone(ctx context.Context, userID string) error
-	DeleteDevice(ctx context.Context, userID string, deviceID string) error
 }
 
 // 请求和响应结构体定义

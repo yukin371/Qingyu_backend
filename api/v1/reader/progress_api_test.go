@@ -324,7 +324,7 @@ func TestProgressAPI_GetReadingProgress_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -362,7 +362,7 @@ func TestProgressAPI_SaveReadingProgress_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -446,7 +446,7 @@ func TestProgressAPI_UpdateReadingTime_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -505,7 +505,7 @@ func TestProgressAPI_GetRecentReading_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -564,7 +564,7 @@ func TestProgressAPI_GetReadingHistory_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -596,7 +596,7 @@ func TestProgressAPI_GetReadingStats_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -634,7 +634,7 @@ func TestProgressAPI_GetUnfinishedBooks_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -672,7 +672,7 @@ func TestProgressAPI_GetFinishedBooks_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)

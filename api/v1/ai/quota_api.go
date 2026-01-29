@@ -10,6 +10,7 @@ import (
 	aiService "Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // QuotaApi 配额API
@@ -41,7 +42,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 
 	quota, err := api.quotaService.GetQuotaInfo(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取配额信息失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -65,7 +66,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 
 	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取配额列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -89,7 +90,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 
 	stats, err := api.quotaService.GetQuotaStatistics(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取统计信息失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -129,7 +130,7 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 
 	transactions, err := api.quotaService.GetTransactionHistory(c.Request.Context(), userID.(string), limit, offset)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取事务历史失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -160,14 +161,14 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 
 	var req RechargeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 调用充值服务
 	err := api.quotaService.RechargeQuota(c.Request.Context(), userID.(string), req.Amount, req.Reason, userID.(string))
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "充值失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

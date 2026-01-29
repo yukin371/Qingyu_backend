@@ -22,9 +22,11 @@ type NotificationService interface {
 	// =========================
 	MarkAsRead(ctx context.Context, id string, userID string) error
 	MarkMultipleAsRead(ctx context.Context, ids []string, userID string) error
+	MarkMultipleAsReadWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error)
 	MarkAllAsRead(ctx context.Context, userID string) error
 	DeleteNotification(ctx context.Context, id string, userID string) error
 	BatchDeleteNotifications(ctx context.Context, ids []string, userID string) error
+	BatchDeleteNotificationsWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error)
 	DeleteAllNotifications(ctx context.Context, userID string) error
 
 	// =========================
@@ -66,6 +68,8 @@ type NotificationService interface {
 	// =========================
 	CleanupExpiredNotifications(ctx context.Context) (int64, error)
 	CleanupOldNotifications(ctx context.Context, days int) (int64, error)
+	ClearReadNotifications(ctx context.Context, userID string) (int64, error)
+	ResendNotification(ctx context.Context, id string, userID string, method string) error
 }
 
 // =========================

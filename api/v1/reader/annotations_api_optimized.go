@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // BatchCreateAnnotationsRequest 批量创建注记请求
@@ -44,7 +46,7 @@ type GetAnnotationStatsResponse struct {
 //	@Summary	批量创建注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchCreateAnnotationsRequest	true	"批量创建注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [post]
 func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	var req BatchCreateAnnotationsRequest
@@ -62,7 +64,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
@@ -87,7 +89,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	// 批量创建
 	err := api.readerService.BatchCreateAnnotations(c.Request.Context(), annotations)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量创建注记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -102,7 +104,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 //	@Summary	批量更新注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchUpdateAnnotationsRequest	true	"批量更新注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [put]
 func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 	var req BatchUpdateAnnotationsRequest
@@ -142,7 +144,7 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 //	@Summary	批量删除注记
 //	@Tags		阅读器
 //	@Param		request	body		BatchDeleteAnnotationsRequest	true	"批量删除注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/batch [delete]
 func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	var req BatchDeleteAnnotationsRequest
@@ -154,7 +156,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	// 批量删除
 	err := api.readerService.BatchDeleteAnnotations(c.Request.Context(), req.IDs)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "批量删除注记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -168,7 +170,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 //	@Summary	获取注记统计
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/stats [get]
 func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	// 获取用户ID
@@ -180,20 +182,20 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
 	bookID := c.Query("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 获取统计数据
 	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取注记统计失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -206,7 +208,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 //	@Tags		阅读器
 //	@Param		bookId	query		string	true	"书籍ID"
 //	@Param		format	query		string	false	"导出格式 (json/markdown/txt)"	default(json)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/export [get]
 func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	// 获取用户ID
@@ -218,26 +220,26 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
 	bookID := c.Query("bookId")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	format := c.DefaultQuery("format", "json")
 	if format != "json" && format != "markdown" && format != "txt" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "不支持的导出格式")
+		response.BadRequest(c,  "参数错误", "不支持的导出格式")
 		return
 	}
 
 	// 获取注记数据
 	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取注记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -309,7 +311,7 @@ func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) 
 //	@Summary	同步注记
 //	@Tags		阅读器
 //	@Param		request	body		object	true	"同步注记请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 获取用户ID
@@ -321,7 +323,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		shared.Error(c, http.StatusInternalServerError, "用户ID类型错误", "")
+		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
@@ -334,7 +336,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 执行同步逻辑
 	result, err := api.readerService.SyncAnnotations(c.Request.Context(), userIDStr, &req)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "同步注记失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

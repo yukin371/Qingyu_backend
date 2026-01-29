@@ -162,7 +162,7 @@ func runInit(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}
@@ -229,7 +229,7 @@ func runMigrate(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}
@@ -319,7 +319,7 @@ func runSwitch(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}
@@ -397,7 +397,7 @@ func runRollback(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}
@@ -450,7 +450,7 @@ func runStatus(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}
@@ -538,7 +538,7 @@ func runCleanup(args []string) error {
 	}
 
 	// 4. 创建搜索引擎
-	esEngine, err := engine.NewElasticsearchEngine()
+	esEngine, err := engine.NewElasticsearchEngine(client)
 	if err != nil {
 		return fmt.Errorf("failed to create search engine: %w", err)
 	}

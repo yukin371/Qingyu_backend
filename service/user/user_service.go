@@ -1050,6 +1050,13 @@ func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.C
 	}, nil
 }
 
+// ==================== 新增方法：邮箱/手机/设备管理 ====================
+
+// EmailExists 检查邮箱是否存在
+func (s *UserServiceImpl) EmailExists(ctx context.Context, email string) (bool, error) {
+	return s.userRepo.ExistsByEmail(ctx, email)
+}
+
 // UnbindEmail 解绑邮箱
 func (s *UserServiceImpl) UnbindEmail(ctx context.Context, userID string) error {
 	// 1. 检查用户是否存在
@@ -1098,9 +1105,9 @@ func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error 
 
 	// 3. 清除手机号
 	updates := map[string]interface{}{
-		"phone":       "",
+		"phone":         "",
 		"phone_verified": false,
-		"updated_at":  time.Now(),
+		"updated_at":    time.Now(),
 	}
 
 	if err := s.userRepo.Update(ctx, userID, updates); err != nil {
@@ -1112,11 +1119,26 @@ func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error 
 
 // DeleteDevice 删除设备
 func (s *UserServiceImpl) DeleteDevice(ctx context.Context, userID string, deviceID string) error {
-	// TODO: 实现设备删除逻辑
 	// 当前 User 模型不支持设备管理，这是一个占位实现
 	// 实际实现需要：
 	// 1. 检查用户是否存在
 	// 2. 检查设备是否存在
 	// 3. 删除设备
 	return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "设备管理功能尚未实现", nil)
+}
+
+// VerifyPassword 验证密码
+func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, password string) error {
+	// 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+	}
+
+	// 验证密码
+	if !user.ValidatePassword(password) {
+		return serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "密码错误", nil)
+	}
+
+	return nil
 }

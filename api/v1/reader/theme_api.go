@@ -1,13 +1,12 @@
 package reader
 
 import (
-	"net/http"
 	"strconv"
 
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // ThemeAPI 主题API
@@ -26,7 +25,7 @@ func NewThemeAPI() *ThemeAPI {
 //	@Tags		阅读器-主题
 //	@Param		builtin	query	bool	false	"仅显示内置主题"
 //	@Param		public	query	bool	false	"仅显示公开主题"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.Response
 //	@Router		/api/v1/reader/themes [get]
 func (api *ThemeAPI) GetThemes(c *gin.Context) {
 	// 获取查询参数
@@ -48,7 +47,7 @@ func (api *ThemeAPI) GetThemes(c *gin.Context) {
 		filteredThemes = append(filteredThemes, theme)
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"themes": filteredThemes,
 		"total":  len(filteredThemes),
 	})
@@ -59,24 +58,24 @@ func (api *ThemeAPI) GetThemes(c *gin.Context) {
 //	@Summary	根据名称获取主题
 //	@Tags		阅读器-主题
 //	@Param		name	path	string	true	"主题名称"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.Response
 //	@Router		/api/v1/reader/themes/{name} [get]
 func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题名称不能为空")
+		response.BadRequest(c, "参数错误", "主题名称不能为空")
 		return
 	}
 
 	// 从内置主题中查找
 	for _, theme := range readerModels.BuiltInThemes {
 		if theme.Name == name {
-			shared.Success(c, http.StatusOK, "获取成功", theme)
+			response.Success(c, theme)
 			return
 		}
 	}
 
-	shared.Error(c, http.StatusNotFound, "主题不存在", "未找到指定主题")
+	response.NotFound(c, "主题不存在")
 }
 
 // CreateCustomTheme 创建自定义主题
@@ -84,19 +83,19 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //	@Summary	创建自定义主题
 //	@Tags		阅读器-主题
 //	@Param		request	body object	true	"创建主题请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.Response
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req readerModels.CreateCustomThemeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -116,7 +115,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 
 	// 实际应用中应该保存到数据库
 	// 这里暂时返回成功
-	shared.Success(c, http.StatusCreated, "创建成功", gin.H{
+	response.Created(c, gin.H{
 		"theme":   theme,
 		"message": "自定义主题创建成功",
 	})
@@ -128,24 +127,24 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Tags		阅读器-主题
 //	@Param		id		path	string						true	"主题ID"
 //	@Param		request	body object	true	"更新主题请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.Response
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	themeID := c.Param("id")
 	if themeID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题ID不能为空")
+		response.BadRequest(c, "参数错误", "主题ID不能为空")
 		return
 	}
 
 	var req readerModels.UpdateThemeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -155,7 +154,7 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 	// 3. 更新主题
 	// 4. 保存到数据库
 
-	shared.Success(c, http.StatusOK, "更新成功", gin.H{
+	response.Success(c, gin.H{
 		"message": "主题更新成功",
 		"themeId": themeID,
 		"userId":  userID,
@@ -167,18 +166,18 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 //	@Summary	删除自定义主题
 //	@Tags		阅读器-主题
 //	@Param		id	path	string	true	"主题ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.Response
 //	@Router		/api/v1/reader/themes/{id} [delete]
 func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	themeID := c.Param("id")
 	if themeID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题ID不能为空")
+		response.BadRequest(c, "参数错误", "主题ID不能为空")
 		return
 	}
 
@@ -187,7 +186,7 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 	// 2. 验证用户是否为创建者
 	// 3. 删除主题
 
-	shared.Success(c, http.StatusOK, "删除成功", gin.H{
+	response.Success(c, gin.H{
 		"message": "主题删除成功",
 		"themeId": themeID,
 		"userId":  userID,
@@ -199,18 +198,18 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 //	@Summary	激活主题（应用到阅读设置）
 //	@Tags		阅读器-主题
 //	@Param		name	path	string	true	"主题名称"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.Response
 //	@Router		/api/v1/reader/themes/{name}/activate [post]
 func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	themeName := c.Param("name")
 	if themeName == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "主题名称不能为空")
+		response.BadRequest(c, "参数错误", "主题名称不能为空")
 		return
 	}
 
@@ -224,7 +223,7 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 	}
 
 	if !themeExists {
-		shared.Error(c, http.StatusNotFound, "主题不存在", "未找到指定主题")
+		response.NotFound(c, "主题不存在")
 		return
 	}
 
@@ -232,7 +231,7 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 	// 1. 更新用户的阅读设置，将theme字段设置为themeName
 	// 2. 清除设置缓存
 
-	shared.Success(c, http.StatusOK, "激活成功", gin.H{
+	response.Success(c, gin.H{
 		"message":   "主题已激活",
 		"themeName": themeName,
 		"userId":    userID,

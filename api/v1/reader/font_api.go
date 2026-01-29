@@ -1,12 +1,10 @@
 package reader
 
 import (
-	"net/http"
-
-	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
 )
 
 // FontAPI 字体API
@@ -25,7 +23,7 @@ func NewFontAPI() *FontAPI {
 //	@Tags		阅读器-字体
 //	@Param		category	query	string	false	"字体分类：serif/sans-serif/monospace"
 //	@Param		builtin		query	bool	false	"仅显示内置字体"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts [get]
 func (api *FontAPI) GetFonts(c *gin.Context) {
 	// 获取查询参数
@@ -56,7 +54,7 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 		fontsByCategory[font.Category] = append(fontsByCategory[font.Category], font)
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"fonts":           filteredFonts,
 		"total":           len(filteredFonts),
 		"fontsByCategory": fontsByCategory,
@@ -68,24 +66,24 @@ func (api *FontAPI) GetFonts(c *gin.Context) {
 //	@Summary	根据名称获取字体
 //	@Tags		阅读器-字体
 //	@Param		name	path	string	true	"字体名称"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{name} [get]
 func (api *FontAPI) GetFontByName(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体名称不能为空")
+		response.BadRequest(c,  "参数错误", "字体名称不能为空")
 		return
 	}
 
 	// 从内置字体中查找
 	for _, font := range readerModels.BuiltInFonts {
 		if font.Name == name {
-			shared.Success(c, http.StatusOK, "获取成功", font)
+			response.Success(c, font)
 			return
 		}
 	}
 
-	shared.Error(c, http.StatusNotFound, "字体不存在", "未找到指定字体")
+	response.NotFound(c, "字体不存在")
 }
 
 // CreateCustomFont 创建自定义字体
@@ -93,19 +91,19 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 //	@Summary	创建自定义字体
 //	@Tags		阅读器-字体
 //	@Param		request	body object	true	"创建字体请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts [post]
 func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	var req readerModels.CreateCustomFontRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -126,7 +124,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	}
 
 	// 实际应用中应该保存到数据库
-	shared.Success(c, http.StatusCreated, "创建成功", gin.H{
+	response.Created(c, gin.H{
 		"font":    font,
 		"message": "自定义字体创建成功",
 		"userId":  userID,
@@ -139,24 +137,24 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 //	@Tags		阅读器-字体
 //	@Param		id		path	string						true	"字体ID"
 //	@Param		request	body object	true	"更新字体请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [put]
 func (api *FontAPI) UpdateFont(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	fontID := c.Param("id")
 	if fontID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体ID不能为空")
+		response.BadRequest(c,  "参数错误", "字体ID不能为空")
 		return
 	}
 
 	var req readerModels.UpdateFontRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -165,7 +163,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 	// 2. 验证用户权限
 	// 3. 更新字体
 
-	shared.Success(c, http.StatusOK, "更新成功", gin.H{
+	response.Success(c, gin.H{
 		"message": "字体更新成功",
 		"fontId":  fontID,
 		"userId":  userID,
@@ -177,22 +175,22 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 //	@Summary	删除自定义字体
 //	@Tags		阅读器-字体
 //	@Param		id	path	string	true	"字体ID"
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [delete]
 func (api *FontAPI) DeleteFont(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	fontID := c.Param("id")
 	if fontID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "字体ID不能为空")
+		response.BadRequest(c,  "参数错误", "字体ID不能为空")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", gin.H{
+	response.Success(c, gin.H{
 		"message": "字体删除成功",
 		"fontId":  fontID,
 		"userId":  userID,
@@ -204,18 +202,18 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 //	@Summary	设置字体偏好
 //	@Tags		阅读器-字体
 //	@Param		request	body object	true	"字体偏好"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings/font [post]
 func (api *FontAPI) SetFontPreference(c *gin.Context) {
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	var preference readerModels.FontPreference
 	if err := c.ShouldBindJSON(&preference); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -229,7 +227,7 @@ func (api *FontAPI) SetFontPreference(c *gin.Context) {
 	}
 
 	if !fontExists {
-		shared.Error(c, http.StatusNotFound, "字体不存在", "未找到指定字体")
+		response.NotFound(c, "字体不存在")
 		return
 	}
 
@@ -241,7 +239,7 @@ func (api *FontAPI) SetFontPreference(c *gin.Context) {
 	// 2. 保存到数据库
 	// 3. 清除缓存
 
-	shared.Success(c, http.StatusOK, "设置成功", gin.H{
+	response.Success(c, gin.H{
 		"message":    "字体偏好设置成功",
 		"preference": preference,
 	})

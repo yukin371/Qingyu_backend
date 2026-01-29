@@ -7,6 +7,8 @@ import (
 	"Qingyu_backend/service"
 
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // HealthAPI 健康检查API
@@ -29,7 +31,7 @@ func NewHealthAPI() *HealthAPI {
 func (api *HealthAPI) SystemHealth(c *gin.Context) {
 	container := service.GetServiceContainer()
 	if container == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务容器未初始化", "")
+		response.InternalError(c, errors.New("服务容器未初始化: "))
 		return
 	}
 
@@ -71,7 +73,7 @@ func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 
 	container := service.GetServiceContainer()
 	if container == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务容器未初始化", "")
+		response.InternalError(c, errors.New("服务容器未初始化: "))
 		return
 	}
 
@@ -107,7 +109,7 @@ func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 func (api *HealthAPI) AllMetrics(c *gin.Context) {
 	container := service.GetServiceContainer()
 	if container == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务容器未初始化", "")
+		response.InternalError(c, errors.New("服务容器未初始化: "))
 		return
 	}
 
@@ -142,7 +144,7 @@ func (api *HealthAPI) ServiceMetrics(c *gin.Context) {
 
 	container := service.GetServiceContainer()
 	if container == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务容器未初始化", "")
+		response.InternalError(c, errors.New("服务容器未初始化: "))
 		return
 	}
 

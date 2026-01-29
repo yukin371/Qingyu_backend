@@ -47,7 +47,7 @@ type BookRepository interface {
 	GetStats(ctx context.Context) (*bookstore2.BookStats, error)
 	IncrementViewCount(ctx context.Context, bookID string) error
 
-	// 筛选相关方法
+	// 元数据查询方法 - 用于筛选项
 	GetYears(ctx context.Context) ([]int, error)
 	GetTags(ctx context.Context, categoryID *string) ([]string, error)
 

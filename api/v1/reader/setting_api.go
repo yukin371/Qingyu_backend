@@ -2,12 +2,12 @@ package reader
 
 import (
 	readerModels "Qingyu_backend/models/reader"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/pkg/response"
+	"errors"
 )
 
 // SettingAPI 设置API
@@ -38,36 +38,36 @@ type UpdateSettingsRequest struct {
 //
 //	@Summary	获取阅读设置
 //	@Tags		阅读器
-//	@Success	200	{object}	shared.APIResponse
+//	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings [get]
 func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
 	settings, err := api.readerService.GetReadingSettings(c.Request.Context(), userIDStr)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", settings)
+	response.Success(c, settings)
 }
 
 // SaveReadingSettings 保存阅读设置
@@ -75,32 +75,32 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 //	@Summary	保存阅读设置
 //	@Tags		阅读器
 //	@Param		request	body object	true	"阅读设置"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings [post]
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
 	var settings readerModels.ReadingSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -108,11 +108,11 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 
 	err := api.readerService.SaveReadingSettings(c.Request.Context(), &settings)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "保存阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "保存成功", nil)
+	response.Success(c, nil)
 }
 
 // UpdateReadingSettings 更新阅读设置
@@ -120,32 +120,32 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 //	@Summary	更新阅读设置
 //	@Tags		阅读器
 //	@Param		request	body		UpdateSettingsRequest	true	"更新设置请求"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings [put]
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		shared.Error(c, http.StatusInternalServerError, "服务未初始化", "阅读器服务未正确初始化")
+		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	// 类型断言安全检查
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
 	var req UpdateSettingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.ValidationError(c, err)
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -177,9 +177,9 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 
 	err := api.readerService.UpdateReadingSettings(c.Request.Context(), userIDStr, updates)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "更新阅读设置失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }

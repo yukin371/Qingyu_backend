@@ -1,12 +1,11 @@
 package social
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -50,14 +49,14 @@ type UpdateCommentRequest struct {
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	var req CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -72,11 +71,11 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "发表评论失败", err.Error())
+		response.BadRequest(c, "发表评论失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "发表评论成功", comment)
+	response.Created(c, comment)
 }
 
 // GetCommentList 获取评论列表
@@ -92,7 +91,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 func (api *CommentAPI) GetCommentList(c *gin.Context) {
 	bookID := c.Query("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -109,11 +108,11 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取评论列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"comments": comments,
 		"total":    total,
 		"page":     page,
@@ -131,17 +130,17 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	comment, err := api.commentService.GetCommentDetail(c.Request.Context(), commentID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "获取评论详情失败", err.Error())
+		response.NotFound(c, "获取评论详情失败")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", comment)
+	response.Success(c, comment)
 }
 
 // UpdateComment 更新评论
@@ -155,20 +154,20 @@ func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	var req UpdateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -181,11 +180,11 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "更新评论失败", err.Error())
+		response.BadRequest(c, "更新评论失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteComment 删除评论
@@ -198,14 +197,14 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -217,11 +216,11 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "删除评论失败", err.Error())
+		response.BadRequest(c, "删除评论失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ReplyComment 回复评论
@@ -235,20 +234,20 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	parentCommentID := c.Param("id")
 	if parentCommentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "父评论ID不能为空")
+		response.BadRequest(c, "参数错误", "父评论ID不能为空")
 		return
 	}
 
 	var req ReplyCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -261,11 +260,11 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "回复评论失败", err.Error())
+		response.BadRequest(c, "回复评论失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "回复成功", comment)
+	response.Created(c, comment)
 }
 
 // LikeComment 点赞评论
@@ -278,14 +277,14 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 func (api *CommentAPI) LikeComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -297,11 +296,11 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "点赞失败", err.Error())
+		response.BadRequest(c, "点赞失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "点赞成功", nil)
+	response.Success(c, nil)
 }
 
 // UnlikeComment 取消点赞评论
@@ -314,14 +313,14 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -333,11 +332,11 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	)
 
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "取消点赞失败", err.Error())
+		response.BadRequest(c, "取消点赞失败", err.Error())
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消点赞成功", nil)
+	response.Success(c, nil)
 }
 
 // GetCommentThread 获取评论完整线程（包含所有回复）
@@ -350,18 +349,18 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
 	// 获取评论及其所有回复（树状结构）
 	thread, err := api.commentService.GetCommentThread(c.Request.Context(), commentID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取评论线程失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", thread)
+	response.Success(c, thread)
 }
 
 // GetTopComments 获取热门评论
@@ -375,7 +374,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 func (api *CommentAPI) GetTopComments(c *gin.Context) {
 	bookID := c.Query("book_id")
 	if bookID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -387,11 +386,11 @@ func (api *CommentAPI) GetTopComments(c *gin.Context) {
 	// 获取热门评论（按点赞数、回复数等排序）
 	topComments, err := api.commentService.GetTopComments(c.Request.Context(), bookID, limit)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取热门评论失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"comments": topComments,
 		"total":    len(topComments),
 	})
@@ -409,7 +408,7 @@ func (api *CommentAPI) GetTopComments(c *gin.Context) {
 func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "评论ID不能为空")
+		response.BadRequest(c, "参数错误", "评论ID不能为空")
 		return
 	}
 
@@ -419,11 +418,11 @@ func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 	// 获取评论的直接回复（分页）
 	replies, total, err := api.commentService.GetCommentReplies(c.Request.Context(), commentID, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取回复列表失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.Success(c, gin.H{
 		"replies": replies,
 		"total":   total,
 		"page":    page,

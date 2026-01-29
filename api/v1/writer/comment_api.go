@@ -10,6 +10,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	writermodels "Qingyu_backend/models/writer"
 	writerservice "Qingyu_backend/service/writer"
+	"Qingyu_backend/pkg/response"
 )
 
 // CommentAPI 批注API
@@ -40,13 +41,13 @@ func NewCommentAPI(commentService writerservice.CommentService) *CommentAPI {
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -65,14 +66,14 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	// 构建批注
 	comment, err := req.ToComment(documentID, userID.(string), userName)
 	if err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	// 创建批注
 	created, err := api.commentService.CreateComment(c.Request.Context(), comment)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "创建失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -98,7 +99,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 func (api *CommentAPI) GetComments(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -127,7 +128,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 
 	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -156,7 +157,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 func (api *CommentAPI) GetComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -166,7 +167,7 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -190,13 +191,13 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
 	var req UpdateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -211,7 +212,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "更新失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -233,7 +234,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -242,7 +243,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -265,7 +266,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 func (api *CommentAPI) ResolveComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -281,10 +282,10 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 			return
 		}
 		if err == writerservice.ErrCommentAlreadyResolved {
-			shared.Error(c, http.StatusBadRequest, "批注已解决", err.Error())
+			response.BadRequest(c,  "批注已解决", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "操作失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -307,7 +308,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -316,7 +317,7 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
 			return
 		}
-		shared.Error(c, http.StatusInternalServerError, "操作失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -340,13 +341,13 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	parentID := c.Param("id")
 	if parentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID不能为空")
 		return
 	}
 
 	var req ReplyCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
@@ -363,7 +364,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 
 	reply, err := api.commentService.ReplyComment(c.Request.Context(), parentID, req.Content, userID.(string), userName)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "回复失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -386,13 +387,13 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	threadID := c.Param("threadId")
 	if threadID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "线程ID不能为空")
+		response.BadRequest(c,  "参数错误", "线程ID不能为空")
 		return
 	}
 
 	thread, err := api.commentService.GetCommentThread(c.Request.Context(), threadID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -414,13 +415,13 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
 	stats, err := api.commentService.GetCommentStats(c.Request.Context(), documentID)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "获取失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -445,13 +446,13 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 func (api *CommentAPI) SearchComments(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "文档ID不能为空")
+		response.BadRequest(c,  "参数错误", "文档ID不能为空")
 		return
 	}
 
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "关键词不能为空")
+		response.BadRequest(c,  "参数错误", "关键词不能为空")
 		return
 	}
 
@@ -460,7 +461,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 
 	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, page, size)
 	if err != nil {
-		shared.Error(c, http.StatusInternalServerError, "搜索失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
@@ -490,17 +491,17 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	var req BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.Error(c, http.StatusBadRequest, "参数错误", err.Error())
+		response.BadRequest(c,  "参数错误", err.Error())
 		return
 	}
 
 	if len(req.CommentIDs) == 0 {
-		shared.Error(c, http.StatusBadRequest, "参数错误", "批注ID列表不能为空")
+		response.BadRequest(c,  "参数错误", "批注ID列表不能为空")
 		return
 	}
 
 	if err := api.commentService.BatchDeleteComments(c.Request.Context(), req.CommentIDs); err != nil {
-		shared.Error(c, http.StatusInternalServerError, "删除失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 

@@ -52,7 +52,7 @@ type BookstoreService interface {
 	GetBookStats(ctx context.Context) (*bookstore2.BookStats, error)
 	IncrementBookView(ctx context.Context, bookID string) error
 
-	// 筛选相关方法
+	// 元数据查询 - 用于筛选项
 	GetYears(ctx context.Context) ([]int, error)
 	GetTags(ctx context.Context, categoryID *string) ([]string, error)
 }
@@ -686,11 +686,8 @@ func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType b
 }
 
 // boolPtr 返回bool值的指针
-func boolPtr(b bool) *bool {
-	return &b
-}
 
-// GetYears 获取所有书籍的发布年份列表
+// GetYears 获取所有书籍的发布年份列表（去重，倒序）
 func (s *BookstoreServiceImpl) GetYears(ctx context.Context) ([]int, error) {
 	years, err := s.bookRepo.GetYears(ctx)
 	if err != nil {
@@ -699,11 +696,16 @@ func (s *BookstoreServiceImpl) GetYears(ctx context.Context) ([]int, error) {
 	return years, nil
 }
 
-// GetTags 获取所有标签列表
+// GetTags 获取所有标签列表（去重，排序）
+// 如果提供了 categoryID，则只返回该分类下的书籍标签
 func (s *BookstoreServiceImpl) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
 	tags, err := s.bookRepo.GetTags(ctx, categoryID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tags: %w", err)
 	}
 	return tags, nil
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }
