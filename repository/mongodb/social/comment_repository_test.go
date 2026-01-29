@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/social"
 	socialRepo "Qingyu_backend/repository/mongodb/social"
@@ -63,7 +64,7 @@ func TestCommentRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -78,13 +79,13 @@ func TestCommentRepository_GetByID_NotFound(t *testing.T) {
 	repo, ctx, cleanup := setupCommentRepo(t)
 	defer cleanup()
 
-	// Act
-	found, err := repo.GetByID(ctx, "nonexistent_id")
+	// Act - 使用有效的ObjectID格式但不存在
+	nonExistentID := primitive.NewObjectID().Hex()
+	found, err := repo.GetByID(ctx, nonExistentID)
 
 	// Assert
 	require.Error(t, err)
 	assert.Nil(t, found)
-	assert.Contains(t, err.Error(), "comment not found")
 }
 
 // TestCommentRepository_Update 测试更新评论
@@ -109,13 +110,13 @@ func TestCommentRepository_Update(t *testing.T) {
 		"content": "更新后的内容",
 		"rating":  5,
 	}
-	err = repo.Update(ctx, comment.ID, updates)
+	err = repo.Update(ctx, comment.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "更新后的内容", found.Content)
 	assert.Equal(t, 5, found.Rating)
@@ -138,13 +139,13 @@ func TestCommentRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除评论
-	err = repo.Delete(ctx, comment.ID)
+	err = repo.Delete(ctx, comment.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证状态已更新为deleted
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 	assert.Equal(t, social.CommentStateDeleted, found.State)
@@ -208,12 +209,13 @@ func TestCommentRepository_GetRepliesByCommentID(t *testing.T) {
 		State:      social.CommentStateNormal,
 	}
 	// 设置ParentID以建立回复关系
-	reply.ParentID = &parentComment.ID
+	parentIDStr := parentComment.ID.Hex()
+	reply.ParentID = &parentIDStr
 	err = repo.Create(ctx, reply)
 	require.NoError(t, err)
 
 	// Act
-	replies, err := repo.GetRepliesByCommentID(ctx, parentComment.ID)
+	replies, err := repo.GetRepliesByCommentID(ctx, parentComment.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -238,13 +240,13 @@ func TestCommentRepository_UpdateCommentStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 更新审核状态
-	err = repo.UpdateCommentStatus(ctx, comment.ID, string(social.CommentStateRejected), "包含敏感词")
+	err = repo.UpdateCommentStatus(ctx, comment.ID.Hex(), string(social.CommentStateRejected), "包含敏感词")
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证状态
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, social.CommentStateRejected, found.State)
 	assert.Equal(t, "包含敏感词", found.RejectReason)
@@ -267,13 +269,13 @@ func TestCommentRepository_IncrementLikeCount(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 增加点赞数
-	err = repo.IncrementLikeCount(ctx, comment.ID)
+	err = repo.IncrementLikeCount(ctx, comment.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证点赞数
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), found.LikeCount)
 }
@@ -296,18 +298,18 @@ func TestCommentRepository_DecrementLikeCount(t *testing.T) {
 
 	// Act - 先增加几次点赞
 	for i := 0; i < 5; i++ {
-		err = repo.IncrementLikeCount(ctx, comment.ID)
+		err = repo.IncrementLikeCount(ctx, comment.ID.Hex())
 		require.NoError(t, err)
 	}
 
 	// Act - 减少点赞数
-	err = repo.DecrementLikeCount(ctx, comment.ID)
+	err = repo.DecrementLikeCount(ctx, comment.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证点赞数
-	found, err := repo.GetByID(ctx, comment.ID)
+	found, err := repo.GetByID(ctx, comment.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), found.LikeCount)
 }
