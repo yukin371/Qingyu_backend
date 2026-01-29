@@ -1,11 +1,10 @@
 package auth
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/shared/auth"
 )
 
@@ -41,15 +40,11 @@ func (api *AuthAPI) Register(c *gin.Context) {
 
 	resp, err := api.authService.Register(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "注册失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "注册成功",
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, "注册成功", resp)
 }
 
 // Login 用户登录
@@ -68,27 +63,17 @@ func (api *AuthAPI) Register(c *gin.Context) {
 func (api *AuthAPI) Login(c *gin.Context) {
 	var req auth.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, shared.APIResponse{
-			Code:    400,
-			Message: "请求参数错误: " + err.Error(),
-		})
+		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
 		return
 	}
 
 	resp, err := api.authService.Login(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "登录失败: " + err.Error(),
-		})
+		response.Unauthorized(c, "登录失败: "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "登录成功",
-		Data:    resp,
-	})
+	response.SuccessWithMessage(c, "登录成功", resp)
 }
 
 // Logout 用户登出
@@ -106,10 +91,7 @@ func (api *AuthAPI) Login(c *gin.Context) {
 func (api *AuthAPI) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未提供Token",
-		})
+		response.Unauthorized(c, "未提供Token")
 		return
 	}
 
@@ -120,14 +102,11 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 
 	err := api.authService.Logout(c.Request.Context(), token)
 	if err != nil {
-		shared.InternalError(c, "登出失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "登出成功",
-	})
+	response.SuccessWithMessage(c, "登出成功", nil)
 }
 
 // RefreshToken 刷新Token
@@ -145,10 +124,7 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 func (api *AuthAPI) RefreshToken(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未提供Token",
-		})
+		response.Unauthorized(c, "未提供Token")
 		return
 	}
 
@@ -159,18 +135,11 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 
 	newToken, err := api.authService.RefreshToken(c.Request.Context(), token)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "Token刷新失败: " + err.Error(),
-		})
+		response.Unauthorized(c, "Token刷新失败: "+err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "Token刷新成功",
-		Data:    map[string]string{"token": newToken},
-	})
+	response.SuccessWithMessage(c, "Token刷新成功", map[string]string{"token": newToken})
 }
 
 // GetUserPermissions 获取用户权限
@@ -189,24 +158,17 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 	// 从Context中获取当前用户ID（由中间件设置）
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	permissions, err := api.authService.GetUserPermissions(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取权限失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "获取权限成功",
-		Data:    permissions,
-	})
+	response.SuccessWithMessage(c, "获取权限成功", permissions)
 }
 
 // GetUserRoles 获取用户角色
@@ -225,22 +187,15 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	roles, err := api.authService.GetUserRoles(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取角色失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "获取角色成功",
-		Data:    roles,
-	})
+	response.SuccessWithMessage(c, "获取角色成功", roles)
 }
