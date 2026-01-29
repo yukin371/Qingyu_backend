@@ -105,7 +105,7 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Com
 func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*social.Comment, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, fmt.Errorf("invalid id: %w", err)
+		return nil, fmt.Errorf("comment not found")
 	}
 
 	var comment social.Comment
@@ -148,10 +148,15 @@ func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates 
 
 // Delete 删除评论（软删除）
 func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
 	// 软删除：标记为已删除状态
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$set": bson.M{
 				"state":      social.CommentStateDeleted,
@@ -246,6 +251,11 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 
 // UpdateCommentStatus 更新评论审核状态
 func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
 	updates := bson.M{
 		"state":      social.CommentState(status),
 		"updated_at": time.Now(),
@@ -257,7 +267,7 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
 	)
 
@@ -280,9 +290,14 @@ func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, s
 
 // IncrementLikeCount 增加点赞数
 func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id string) error {
-	_, err := r.collection.UpdateOne(
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
+	_, err = r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$inc": bson.M{"like_count": 1},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -298,9 +313,14 @@ func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id stri
 
 // DecrementLikeCount 减少点赞数
 func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id string) error {
-	_, err := r.collection.UpdateOne(
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
+	_, err = r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$inc": bson.M{"like_count": -1},
 			"$set": bson.M{"updated_at": time.Now()},
