@@ -1,7 +1,6 @@
 package finance
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -37,10 +36,7 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 func (api *WalletAPI) GetBalance(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -50,11 +46,7 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "查询成功",
-		Data:    balance,
-	})
+	shared.SuccessData(c, balance)
 }
 
 // GetWallet 获取钱包信息
@@ -72,10 +64,7 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 func (api *WalletAPI) GetWallet(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -85,11 +74,7 @@ func (api *WalletAPI) GetWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "获取钱包信息成功",
-		Data:    walletInfo,
-	})
+	shared.Success(c, 200, "获取钱包信息成功", walletInfo)
 }
 
 // RechargeRequest 充值请求
@@ -115,10 +100,7 @@ type RechargeRequest struct {
 func (api *WalletAPI) Recharge(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -136,11 +118,7 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "充值成功",
-		Data:    transaction,
-	})
+	shared.Success(c, 200, "充值成功", transaction)
 }
 
 // ConsumeRequest 消费请求
@@ -161,15 +139,12 @@ type ConsumeRequest struct {
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500	{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/consume [post]
 func (api *WalletAPI) Consume(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -187,11 +162,7 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "消费成功",
-		Data:    transaction,
-	})
+	shared.Success(c, 200, "消费成功", transaction)
 }
 
 // TransferRequest 转账请求
@@ -213,15 +184,12 @@ type TransferRequest struct {
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500	{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/transfer [post]
 func (api *WalletAPI) Transfer(c *gin.Context) {
 	fromUserID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -239,11 +207,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "转账成功",
-		Data:    transaction,
-	})
+	shared.Success(c, 200, "转账成功", transaction)
 }
 
 // GetTransactions 获取交易记录
@@ -264,10 +228,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 func (api *WalletAPI) GetTransactions(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -289,11 +250,7 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    transactions,
-	})
+	shared.Success(c, 200, "获取成功", transactions)
 }
 
 // WithdrawAPIRequest 提现请求
@@ -316,15 +273,12 @@ type WithdrawAPIRequest struct {
 //	@Success 200 {object} APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
-//	@Failure		500	{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/withdraw [post]
 func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -342,11 +296,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.APIResponse{
-		Code:    200,
-		Message: "提现申请已提交，等待审核",
-		Data:    withdrawal,
-	})
+	shared.Success(c, 200, "提现申请已提交，等待审核", withdrawal)
 }
 
 // GetWithdrawRequests 查询提现申请
@@ -367,10 +317,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, shared.APIResponse{
-			Code:    401,
-			Message: "未认证",
-		})
+		shared.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -393,11 +340,5 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, shared.PaginatedResponseHelper(
-		requests,
-		int64(len(requests)),
-		page,
-		pageSize,
-		"查询提现申请成功",
-	))
+	shared.Paginated(c, requests, int64(len(requests)), page, pageSize, "查询提现申请成功")
 }
