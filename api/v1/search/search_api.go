@@ -1,7 +1,6 @@
 package search
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +8,7 @@ import (
 
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/pkg/logger"
+	"Qingyu_backend/pkg/response"
 	searchService "Qingyu_backend/service/search"
 )
 
@@ -90,32 +90,20 @@ func (api *SearchAPI) Search(c *gin.Context) {
 		searchLogger.WithModule("search").Warn("搜索参数绑定失败",
 			zap.Error(err),
 		)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   err.Error(),
-		})
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 参数验证
 	if req.Type == "" {
 		searchLogger.WithModule("search").Warn("搜索类型为空")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   "搜索类型不能为空",
-		})
+		response.BadRequest(c, "参数错误", "搜索类型不能为空")
 		return
 	}
 
 	if req.Query == "" {
 		searchLogger.WithModule("search").Warn("搜索关键词为空")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   "搜索关键词不能为空",
-		})
+		response.BadRequest(c, "参数错误", "搜索关键词不能为空")
 		return
 	}
 
@@ -166,11 +154,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("took", duration),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "搜索失败",
-			"error":   err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -184,11 +168,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 			zap.String("error_message", resp.Error.Message),
 			zap.Duration("took", duration),
 		)
-		c.JSON(http.StatusOK, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": resp.Error.Message,
-			"error":   resp.Error.Details,
-		})
+		response.BadRequest(c, resp.Error.Message, resp.Error.Details)
 		return
 	}
 
@@ -211,13 +191,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 		"took":      resp.Data.Took.String(),
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "搜索成功",
-		"data":      responseData,
-		"timestamp": time.Now().Unix(),
-		"request_id": resp.Meta.RequestID,
-	})
+	response.SuccessWithMessage(c, "搜索成功", responseData)
 }
 
 // SearchBatch 批量搜索
@@ -255,22 +229,14 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 		searchLogger.WithModule("search").Warn("批量搜索参数绑定失败",
 			zap.Error(err),
 		)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   err.Error(),
-		})
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 参数验证
 	if len(req.Queries) == 0 {
 		searchLogger.WithModule("search").Warn("批量搜索查询列表为空")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   "查询列表不能为空",
-		})
+		response.BadRequest(c, "参数错误", "查询列表不能为空")
 		return
 	}
 
@@ -289,11 +255,7 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 				zap.String("type", q.Type),
 				zap.String("query", q.Query),
 			)
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    http.StatusBadRequest,
-				"message": "参数错误",
-				"error":   "查询类型和关键词不能为空",
-			})
+			response.BadRequest(c, "参数错误", "查询类型和关键词不能为空")
 			return
 		}
 
@@ -336,11 +298,7 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("took", duration),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "批量搜索失败",
-			"error":   err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -387,13 +345,7 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 		results[i] = result
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "批量搜索成功",
-		"data":      results,
-		"timestamp": time.Now().Unix(),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "批量搜索成功", results)
 }
 
 // Health 健康检查
@@ -440,11 +392,5 @@ func (api *SearchAPI) Health(c *gin.Context) {
 		healthStatus["status"] = "degraded"
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "健康检查完成",
-		"data":      healthStatus,
-		"timestamp": time.Now().Unix(),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "健康检查完成", healthStatus)
 }

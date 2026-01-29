@@ -1,12 +1,11 @@
 package search
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/pkg/logger"
+	"Qingyu_backend/pkg/response"
 	searchService "Qingyu_backend/service/search"
 )
 
@@ -107,10 +106,7 @@ func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "灰度决策器未初始化",
-		})
+		response.InternalError(c, nil)
 		return
 	}
 
@@ -128,7 +124,7 @@ func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 	mongoAvgTook := metrics.MongoDBAvgTook.Milliseconds()
 
 	// 构造响应
-	response := GrayscaleStatusResponse{
+	statusResponse := GrayscaleStatusResponse{
 		Enabled:        config.Enabled,
 		Percent:        config.Percent,
 		ESCount:        metrics.ESCount,
@@ -146,13 +142,7 @@ func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 		zap.Int64("mongodb_count", metrics.MongoDBCount),
 	)
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "获取灰度状态成功",
-		"data":      response,
-		"timestamp": c.GetInt64("request_time"),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "获取灰度状态成功", statusResponse)
 }
 
 // UpdateGrayscaleConfig 更新灰度配置
@@ -199,11 +189,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 		apiLogger.WithModule("search").Warn("灰度配置更新参数绑定失败",
 			zap.Error(err),
 		)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   err.Error(),
-		})
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -212,11 +198,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 		apiLogger.WithModule("search").Warn("灰度百分比超出范围",
 			zap.Int("percent", req.Percent),
 		)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-			"error":   "灰度百分比必须在 0-100 之间",
-		})
+		response.BadRequest(c, "参数错误", "灰度百分比必须在 0-100 之间")
 		return
 	}
 
@@ -224,10 +206,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "灰度决策器未初始化",
-		})
+		response.InternalError(c, nil)
 		return
 	}
 
@@ -239,11 +218,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 		apiLogger.WithModule("search").Error("灰度配置更新失败",
 			zap.Error(err),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "灰度配置更新失败",
-			"error":   err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
@@ -262,7 +237,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	esTraffic, mongoTraffic := metrics.GetTrafficDistribution()
 
 	// 构造响应
-	response := gin.H{
+	updateResponse := gin.H{
 		"old_config": gin.H{
 			"enabled": oldConfig.Enabled,
 			"percent": oldConfig.Percent,
@@ -280,13 +255,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 		"reason": req.Reason,
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "灰度配置更新成功",
-		"data":      response,
-		"timestamp": c.GetInt64("request_time"),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "灰度配置更新成功", updateResponse)
 }
 
 // GetGrayscaleMetrics 获取灰度指标
@@ -319,10 +288,7 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "灰度决策器未初始化",
-		})
+		response.InternalError(c, nil)
 		return
 	}
 
@@ -343,7 +309,7 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 	totalDecisions := metrics.ESCount + metrics.MongoDBCount
 
 	// 构造响应
-	response := GrayscaleMetricsResponse{
+	metricsResponse := GrayscaleMetricsResponse{
 		Config: GrayscaleConfig{
 			Enabled: config.Enabled,
 			Percent: config.Percent,
@@ -365,13 +331,7 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 		zap.Int64("total_decisions", totalDecisions),
 	)
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "获取灰度指标成功",
-		"data":      response,
-		"timestamp": c.GetInt64("request_time"),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "获取灰度指标成功", metricsResponse)
 }
 
 // GetTrafficDistribution 获取流量分配
@@ -404,10 +364,7 @@ func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "灰度决策器未初始化",
-		})
+		response.InternalError(c, nil)
 		return
 	}
 
@@ -421,7 +378,7 @@ func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
 	totalRequests := metrics.ESCount + metrics.MongoDBCount
 
 	// 构造响应
-	response := TrafficDistributionResponse{
+	trafficResponse := TrafficDistributionResponse{
 		ESTraffic:      esTraffic,
 		MongoDBTraffic: mongoTraffic,
 		TotalRequests:  totalRequests,
@@ -433,11 +390,5 @@ func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
 		zap.Int64("total_requests", totalRequests),
 	)
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":      http.StatusOK,
-		"message":   "获取流量分配成功",
-		"data":      response,
-		"timestamp": c.GetInt64("request_time"),
-		"request_id": requestID,
-	})
+	response.SuccessWithMessage(c, "获取流量分配成功", trafficResponse)
 }

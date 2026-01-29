@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/middleware"
@@ -162,7 +160,7 @@ func (api *VersionAPI) VersionStatusHandler(c *gin.Context) {
 		status[config.Version] = versionStatus
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response.Success(c, gin.H{
 		"versions": status,
 		"default":  api.versionRegistry.GetDefaultVersion(),
 	})

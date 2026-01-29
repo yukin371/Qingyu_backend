@@ -73,11 +73,7 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    catalog,
-	})
+	shared.SuccessData(c, catalog)
 }
 
 // GetChapterInfo 获取单个章节信息
@@ -117,11 +113,7 @@ func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    chapter,
-	})
+	shared.SuccessData(c, chapter)
 }
 
 // GetTrialChapters 获取试读章节列表
@@ -161,14 +153,10 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data: map[string]interface{}{
-			"book_id":  bookID.Hex(),
-			"count":    len(chapters),
-			"chapters": chapters,
-		},
+	shared.Success(c, 200, "获取成功", map[string]interface{}{
+		"book_id":  bookID.Hex(),
+		"count":    len(chapters),
+		"chapters": chapters,
 	})
 }
 
@@ -203,14 +191,10 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data: map[string]interface{}{
-			"book_id":  bookID.Hex(),
-			"count":    len(chapters),
-			"chapters": chapters,
-		},
+	shared.Success(c, 200, "获取成功", map[string]interface{}{
+		"book_id":  bookID.Hex(),
+		"count":    len(chapters),
+		"chapters": chapters,
 	})
 }
 
@@ -250,13 +234,9 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data: map[string]interface{}{
-			"chapter_id": chapterID.Hex(),
-			"price":      price,
-		},
+	shared.Success(c, 200, "获取成功", map[string]interface{}{
+		"chapter_id": chapterID.Hex(),
+		"price":      price,
 	})
 }
 
@@ -289,19 +269,13 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 	// 获取用户ID
 	userIDValue, exists := c.Get("userId")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权访问",
-		})
+		shared.Unauthorized(c, "未授权访问")
 		return
 	}
 
 	userIDStr, ok := userIDValue.(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "无效的用户信息",
-		})
+		shared.Unauthorized(c, "无效的用户信息")
 		return
 	}
 
@@ -314,17 +288,11 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 	purchase, err := api.purchaseService.PurchaseChapter(c.Request.Context(), userID.Hex(), chapterID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "already purchased") {
-			c.JSON(http.StatusConflict, APIResponse{
-				Code:    409,
-				Message: "章节已购买",
-			})
+			shared.Error(c, http.StatusConflict, "章节已购买", "")
 			return
 		}
 		if strings.Contains(err.Error(), "insufficient balance") {
-			c.JSON(http.StatusForbidden, APIResponse{
-				Code:    403,
-				Message: "余额不足",
-			})
+			shared.Forbidden(c, "余额不足")
 			return
 		}
 		if strings.Contains(err.Error(), "free chapter") {
@@ -335,11 +303,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "购买成功",
-		Data:    purchase,
-	})
+	shared.Success(c, 200, "购买成功", purchase)
 }
 
 // PurchaseBook 购买全书
@@ -371,19 +335,13 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 	// 获取用户ID
 	userIDValue, exists := c.Get("userId")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权访问",
-		})
+		shared.Unauthorized(c, "未授权访问")
 		return
 	}
 
 	userIDStr, ok := userIDValue.(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "无效的用户信息",
-		})
+		shared.Unauthorized(c, "无效的用户信息")
 		return
 	}
 
@@ -396,28 +354,18 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 	purchase, err := api.purchaseService.PurchaseBook(c.Request.Context(), userID.Hex(), bookID.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "already purchased") {
-			c.JSON(http.StatusConflict, APIResponse{
-				Code:    409,
-				Message: "全书已购买",
-			})
+			shared.Error(c, http.StatusConflict, "全书已购买", "")
 			return
 		}
 		if strings.Contains(err.Error(), "insufficient balance") {
-			c.JSON(http.StatusForbidden, APIResponse{
-				Code:    403,
-				Message: "余额不足",
-			})
+			shared.Forbidden(c, "余额不足")
 			return
 		}
 		shared.InternalError(c, "购买全书失败", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "购买成功",
-		Data:    purchase,
-	})
+	shared.Success(c, 200, "购买成功", purchase)
 }
 
 // GetPurchases 获取购买记录
@@ -437,19 +385,13 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 	// 获取用户ID
 	userIDValue, exists := c.Get("userId")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权访问",
-		})
+		shared.Unauthorized(c, "未授权访问")
 		return
 	}
 
 	userIDStr, ok := userIDValue.(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "无效的用户信息",
-		})
+		shared.Unauthorized(c, "无效的用户信息")
 		return
 	}
 
@@ -475,14 +417,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    purchases,
-		Total:   total,
-		Page:    page,
-		Size:    size,
-	})
+	shared.Paginated(c, purchases, total, page, size, "获取成功")
 }
 
 // GetBookPurchases 获取某本书的购买记录
@@ -515,19 +450,13 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 	// 获取用户ID
 	userIDValue, exists := c.Get("userId")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "未授权访问",
-		})
+		shared.Unauthorized(c, "未授权访问")
 		return
 	}
 
 	userIDStr, ok := userIDValue.(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, APIResponse{
-			Code:    401,
-			Message: "无效的用户信息",
-		})
+		shared.Unauthorized(c, "无效的用户信息")
 		return
 	}
 
@@ -553,14 +482,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    purchases,
-		Total:   total,
-		Page:    page,
-		Size:    size,
-	})
+	shared.Paginated(c, purchases, total, page, size, "获取成功")
 }
 
 // CheckChapterAccess 检查章节访问权限
@@ -607,9 +529,5 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "检查成功",
-		Data:    accessInfo,
-	})
+	shared.SuccessData(c, accessInfo)
 }
