@@ -2,18 +2,16 @@ package writer
 
 import (
 	"context"
-	"net/http"
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/pkg/response"
-	"errors"
 )
 
 // TemplateAPI 模板API
@@ -37,10 +35,10 @@ func NewTemplateAPI(service *document.TemplateService, logger *zap.Logger) *Temp
 // @Accept json
 // @Produce json
 // @Param request body CreateTemplateRequest true "创建模板请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 401 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates [post]
 func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	// 检查服务是否初始化
@@ -52,7 +50,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -99,7 +97,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", template)
+	response.Created(c, template)
 }
 
 // ListTemplates 列出模板
@@ -119,9 +117,9 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 // @Param sortBy query string false "排序字段" default(created_at)
 // @Param sortOrder query int false "排序方向 (1=升序, -1=降序)" default(-1)
 // @Success 200 {object} shared.PaginatedResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 401 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates [get]
 func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	// 解析查询参数
@@ -179,7 +177,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, templates, total, page, pageSize, "查询成功")
+	response.Paginated(c, templates, total, page, pageSize, "查询成功")
 }
 
 // GetTemplate 获取模板详情
@@ -189,10 +187,10 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "模板ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates/{id} [get]
 func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 	id := c.Param("id")
@@ -209,7 +207,7 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", template)
+	response.Success(c, template)
 }
 
 // UpdateTemplate 更新模板
@@ -220,11 +218,11 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param request body UpdateTemplateRequest true "更新模板请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 403 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates/{id} [put]
 func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 	id := c.Param("id")
@@ -266,14 +264,14 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 	if err != nil {
 		// 判断是否为权限问题
 		if err.Error() == "系统模板不允许修改" {
-			shared.Error(c, http.StatusForbidden, "禁止操作", err.Error())
+			response.Forbidden(c, "禁止操作")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", template)
+	response.Success(c, template)
 }
 
 // DeleteTemplate 删除模板
@@ -283,12 +281,12 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "模板ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 401 {object} shared.APIResponse
-// @Failure 403 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates/{id} [delete]
 func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 	id := c.Param("id")
@@ -302,7 +300,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -317,18 +315,18 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 	if err != nil {
 		// 判断错误类型
 		if err.Error() == "系统模板不允许删除" {
-			shared.Error(c, http.StatusForbidden, "禁止操作", err.Error())
+			response.Forbidden(c, "禁止操作")
 			return
 		}
 		if err.Error() == "无权限删除此模板" {
-			shared.Error(c, http.StatusForbidden, "权限不足", err.Error())
+			response.Forbidden(c, "权限不足")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ApplyTemplate 应用模板
@@ -339,10 +337,10 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param request body ApplyTemplateRequest true "应用模板请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/templates/{id}/apply [post]
 func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	id := c.Param("id")
@@ -362,7 +360,7 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	// 获取模板
 	template, err := api.service.GetTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "模板不存在", err.Error())
+		response.NotFound(c, "模板不存在")
 		return
 	}
 
@@ -377,13 +375,13 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	}
 
 	// 返回渲染结果
-	response := &ApplyTemplateResponse{
+	applyResp := &ApplyTemplateResponse{
 		TemplateID:      templateID,
 		RenderedContent: renderedContent,
 		Variables:       req.Variables,
 	}
 
-	shared.Success(c, http.StatusOK, "应用成功", response)
+	response.Success(c, applyResp)
 }
 
 // ==================== DTO 定义 ====================

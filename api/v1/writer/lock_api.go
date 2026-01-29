@@ -1,13 +1,11 @@
 package writer
 
 import (
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/pkg/response"
 )
@@ -33,10 +31,10 @@ func NewLockAPI(lockService lock.DocumentLockService) *LockAPI {
 //	@Produce		json
 //	@Param			id		path	string				true	"文档ID"
 //	@Param			request	body	LockDocumentRequest	true	"锁定请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		409		{object}	shared.APIResponse	"文档已被锁定"
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		409		{object}	response.APIResponse	"文档已被锁定"
 //	@Router			/api/v1/writer/documents/{id}/lock [post]
 func (api *LockAPI) LockDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -54,7 +52,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -78,14 +76,14 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 	lock, err := api.lockService.LockDocument(c.Request.Context(), documentID, userID.(string), userName, deviceID, req.AutoExtend, ttl)
 	if err != nil {
 		if isLockedError(err) {
-			shared.Error(c, http.StatusConflict, "文档已被锁定", err.Error())
+			response.Conflict(c, "文档已被锁定", err.Error())
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "锁定成功", lock)
+	response.Success(c, lock)
 }
 
 // UnlockDocument 解锁文档
@@ -96,10 +94,10 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"文档ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse	"无权解锁"
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse	"无权解锁"
 //	@Router			/api/v1/writer/documents/{id}/lock [delete]
 func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -111,21 +109,21 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 解锁文档
 	if err := api.lockService.UnlockDocument(c.Request.Context(), documentID, userID.(string)); err != nil {
 		if isPermissionError(err) {
-			shared.Error(c, http.StatusForbidden, "无权操作", err.Error())
+			response.Forbidden(c, "无权操作")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "解锁成功", nil)
+	response.Success(c, nil)
 }
 
 // RefreshLock 刷新锁（心跳）
@@ -136,9 +134,9 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path	string	true	"文档ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/lock/refresh [put]
 func (api *LockAPI) RefreshLock(c *gin.Context) {
 	documentID := c.Param("id")
@@ -150,7 +148,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -162,7 +160,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "刷新成功", nil)
+	response.Success(c, nil)
 }
 
 // GetLockStatus 获取锁状态
@@ -173,8 +171,8 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"文档ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/lock/status [get]
 func (api *LockAPI) GetLockStatus(c *gin.Context) {
 	documentID := c.Param("id")
@@ -195,7 +193,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", status)
+	response.Success(c, status)
 }
 
 // ForceUnlock 强制解锁（管理员）
@@ -206,10 +204,10 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path	string	true	"文档ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse	"需要管理员权限"
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse	"需要管理员权限"
 //	@Router			/api/v1/writer/documents/{id}/lock/force [post]
 func (api *LockAPI) ForceUnlock(c *gin.Context) {
 	documentID := c.Param("id")
@@ -225,7 +223,7 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 	}
 
 	if !isAdmin {
-		shared.Error(c, http.StatusForbidden, "权限不足", "需要管理员权限")
+		response.Forbidden(c, "权限不足")
 		return
 	}
 
@@ -235,7 +233,7 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "强制解锁成功", nil)
+	response.Success(c, nil)
 }
 
 // ExtendLock 延长锁时间
@@ -247,9 +245,9 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path	string				true	"文档ID"
 //	@Param			request	body	ExtendLockRequest	true	"延长请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/lock/extend [post]
 func (api *LockAPI) ExtendLock(c *gin.Context) {
 	documentID := c.Param("id")
@@ -267,7 +265,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -282,7 +280,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "延长成功", nil)
+	response.Success(c, nil)
 }
 
 // LockDocumentRequest 锁定请求

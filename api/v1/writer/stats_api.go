@@ -1,14 +1,13 @@
 package writer
 
 import (
-	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/stats"
-	readingStats "Qingyu_backend/service/reader/stats"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"Qingyu_backend/models/stats"
+	readingStats "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -32,9 +31,9 @@ func NewStatsApi(statsService *readingStats.ReadingStatsService) *StatsApi {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "作品ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/stats [get]
 func (api *StatsApi) GetBookStats(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -51,11 +50,11 @@ func (api *StatsApi) GetBookStats(c *gin.Context) {
 	}
 
 	if bookStats == nil {
-		shared.Error(c, http.StatusNotFound, "作品统计不存在", "")
+		response.NotFound(c, "作品统计不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", bookStats)
+	response.Success(c, bookStats)
 }
 
 // GetChapterStats 获取章节统计
@@ -65,9 +64,9 @@ func (api *StatsApi) GetBookStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param chapter_id path string true "章节ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/chapters/{chapter_id}/stats [get]
 func (api *StatsApi) GetChapterStats(c *gin.Context) {
 	chapterID := c.Param("chapter_id")
@@ -84,11 +83,11 @@ func (api *StatsApi) GetChapterStats(c *gin.Context) {
 	}
 
 	if chapterStats == nil {
-		shared.Error(c, http.StatusNotFound, "章节统计不存在", "")
+		response.NotFound(c, "章节统计不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", chapterStats)
+	response.Success(c, chapterStats)
 }
 
 // GetBookHeatmap 获取阅读热力图
@@ -98,9 +97,9 @@ func (api *StatsApi) GetChapterStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "作品ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/heatmap [get]
 func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -116,7 +115,7 @@ func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", heatmap)
+	response.Success(c, heatmap)
 }
 
 // GetBookRevenue 获取收入统计
@@ -128,9 +127,9 @@ func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 // @Param book_id path string true "作品ID"
 // @Param start_date query string false "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string false "结束日期 (YYYY-MM-DD)"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/revenue [get]
 func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -174,7 +173,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", revenueBreakdown)
+	response.Success(c, revenueBreakdown)
 }
 
 // GetTopChapters 获取热门章节
@@ -184,9 +183,9 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "作品ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/top-chapters [get]
 func (api *StatsApi) GetTopChapters(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -202,7 +201,7 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", topChapters)
+	response.Success(c, topChapters)
 }
 
 // GetDailyStats 获取每日统计
@@ -213,9 +212,9 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 // @Produce json
 // @Param book_id path string true "作品ID"
 // @Param days query int false "天数" default(7)
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/daily-stats [get]
 func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -239,7 +238,7 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", dailyStats)
+	response.Success(c, dailyStats)
 }
 
 // GetDropOffPoints 获取跳出点分析
@@ -249,9 +248,9 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "作品ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/drop-off-points [get]
 func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -267,7 +266,7 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", dropOffPoints)
+	response.Success(c, dropOffPoints)
 }
 
 // RecordBehavior 记录读者行为
@@ -277,9 +276,9 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "读者行为数据"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/reader/behavior [post]
 func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	var behavior stats.ReaderBehavior
@@ -301,7 +300,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "记录成功", nil)
+	response.Success(c, nil)
 }
 
 // GetRetentionRate 获取留存率
@@ -312,9 +311,9 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 // @Produce json
 // @Param book_id path string true "作品ID"
 // @Param days query int false "天数" default(7)
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/books/{book_id}/retention [get]
 func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	bookID := c.Param("book_id")
@@ -344,5 +343,5 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 		"retention_rate": retentionRate,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }

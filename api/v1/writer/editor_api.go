@@ -2,12 +2,10 @@ package writer
 
 import (
 	documentModel "Qingyu_backend/models/writer"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/writer/document"
+		"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -35,8 +33,8 @@ func NewEditorApi(documentService *document.DocumentService) *EditorApi {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "自动保存请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 409 {object} shared.APIResponse "版本冲突"
+// @Success 200 {object} response.APIResponse
+// @Failure 409 {object} response.APIResponse "版本冲突"
 // @Router /api/v1/documents/{id}/autosave [post]
 func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -53,14 +51,14 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	if err != nil {
 		// 检查是否是版本冲突
 		if err.Error() == "版本冲突" {
-			shared.Error(c, http.StatusConflict, "版本冲突", "文档已被其他用户修改，请刷新后重试")
+			response.Conflict(c, "版本冲突", "文档已被其他用户修改，请刷新后重试")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "保存成功", resp)
+	response.Success(c, resp)
 }
 
 // GetSaveStatus 获取保存状态
@@ -70,7 +68,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/save-status [get]
 func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 	documentID := c.Param("id")
@@ -81,7 +79,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", status)
+	response.Success(c, status)
 }
 
 // GetDocumentContent 获取文档内容
@@ -91,7 +89,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/content [get]
 func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
@@ -102,7 +100,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", content)
+	response.Success(c, content)
 }
 
 // UpdateDocumentContent 更新文档内容
@@ -113,7 +111,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "更新内容请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/content [put]
 func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
@@ -131,7 +129,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // CalculateWordCount 计算字数
@@ -142,7 +140,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body WordCountRequest true "字数统计请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/word-count [post]
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
@@ -158,7 +156,7 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 		result = api.wordCountService.CalculateWordCount(req.Content)
 	}
 
-	shared.Success(c, http.StatusOK, "计算成功", result)
+	response.Success(c, result)
 }
 
 // GetUserShortcuts 获取用户快捷键配置
@@ -167,12 +165,12 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user/shortcuts [get]
 func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -182,7 +180,7 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", config)
+	response.Success(c, config)
 }
 
 // UpdateUserShortcuts 更新用户快捷键配置
@@ -192,12 +190,12 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body UpdateShortcutsRequest true "快捷键配置"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user/shortcuts [put]
 func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -212,7 +210,7 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // ResetUserShortcuts 重置用户快捷键配置
@@ -221,12 +219,12 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user/shortcuts/reset [post]
 func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -235,7 +233,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "重置成功", nil)
+	response.Success(c, nil)
 }
 
 // GetShortcutHelp 获取快捷键帮助
@@ -244,12 +242,12 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 // @Tags 编辑器
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user/shortcuts/help [get]
 func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -259,7 +257,7 @@ func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", help)
+	response.Success(c, help)
 }
 
 // WordCountRequest 字数统计请求

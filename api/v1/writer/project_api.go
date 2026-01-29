@@ -2,12 +2,10 @@ package writer
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	documentModel "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/service/writer/project"
 	"Qingyu_backend/pkg/response"
@@ -32,9 +30,9 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 // @Accept json
 // @Produce json
 // @Param request body object true "创建项目请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 401 {object} shared.APIResponse
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects [post]
 func (api *ProjectApi) CreateProject(c *gin.Context) {
 	var req project.CreateProjectRequest
@@ -55,7 +53,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", resp)
+	response.Created(c, resp)
 }
 
 // GetProject 获取项目详情
@@ -65,8 +63,8 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/projects/{id} [get]
 func (api *ProjectApi) GetProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -77,7 +75,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", project)
+	response.Success(c, project)
 }
 
 // ListProjects 获取项目列表
@@ -90,7 +88,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 // @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "项目状态"
 // @Param category query string false "项目分类"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects [get]
 func (api *ProjectApi) ListProjects(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -117,7 +115,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", resp)
+	response.Success(c, resp)
 }
 
 // UpdateProject 更新项目
@@ -128,9 +126,9 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param request body object true "更新项目请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 403 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
 // @Router /api/v1/projects/{id} [put]
 func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -152,7 +150,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteProject 删除项目
@@ -162,8 +160,8 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 403 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
 // @Router /api/v1/projects/{id} [delete]
 func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -179,7 +177,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // UpdateProjectStatistics 更新项目统计信息
@@ -189,7 +187,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{id}/statistics [put]
 func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 	projectID := c.Param("id")
@@ -206,7 +204,7 @@ func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 var _ = documentModel.Project{}

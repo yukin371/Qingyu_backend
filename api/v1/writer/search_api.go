@@ -1,16 +1,14 @@
 package writer
 
 import (
-	"net/http"
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/search"
 	searchservice "Qingyu_backend/service/search"
 	"Qingyu_backend/pkg/response"
-	"errors"
 )
 
 // SearchAPI 搜索API处理器（写作端）
@@ -37,23 +35,23 @@ func NewSearchAPI(searchService *searchservice.SearchService) *SearchAPI {
 //	@Param			project_id	query		string	false	"项目ID过滤"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/writer/search/documents [get]
 func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 1. 验证用户登录
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Unauthorized(c, "未授权")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	// 2. 获取搜索参数
 	keyword := c.Query("q")
 	if keyword == "" {
-		shared.BadRequest(c, "参数错误", "搜索关键词不能为空")
+		response.BadRequest(c, "参数错误", "搜索关键词不能为空")
 		return
 	}
 
@@ -92,5 +90,5 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	}
 
 	// 6. 返回结果
-	shared.Success(c, http.StatusOK, "搜索成功", resp.Data)
+	response.Success(c, resp.Data)
 }

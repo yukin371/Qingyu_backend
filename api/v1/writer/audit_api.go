@@ -28,8 +28,8 @@ func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 // @Accept json
 // @Produce json
 // @Param request body object true "检测请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/audit/check [post]
 func (api *AuditApi) CheckContent(c *gin.Context) {
 	var req auditDTO.CheckContentRequest
@@ -55,8 +55,8 @@ func (api *AuditApi) CheckContent(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "审核请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/audit [post]
 func (api *AuditApi) AuditDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -96,8 +96,8 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param targetType query string false "目标类型" default(document)
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/audit-result [get]
 func (api *AuditApi) GetAuditResult(c *gin.Context) {
 	documentID := c.Param("id")
@@ -109,9 +109,9 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 		return
 	}
 
-	response := convertAuditRecordToResponse(record)
+	auditResp := convertAuditRecordToResponse(record)
 
-	response.Success(c, response)
+	response.Success(c, auditResp)
 }
 
 // SubmitAppeal 提交申诉
@@ -122,8 +122,8 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 // @Produce json
 // @Param id path string true "审核记录ID"
 // @Param request body object true "申诉请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/audit/{id}/appeal [post]
 func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 	auditID := c.Param("id")
@@ -157,7 +157,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "数量限制" default(50)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/admin/audit/pending [get]
 func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 	limit := 50
@@ -189,7 +189,7 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 // @Produce json
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/admin/audit/{id}/review [post]
 func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
@@ -224,7 +224,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 // @Produce json
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核申诉请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/admin/audit/{id}/appeal/review [post]
 func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
@@ -248,11 +248,6 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 		return
 	}
 
-	status := "驳回"
-	if req.Approved {
-		status = "通过"
-	}
-
 	response.Success(c, nil)
 }
 
@@ -263,7 +258,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userId path string true "用户ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/users/{userId}/violations [get]
 func (api *AuditApi) GetUserViolations(c *gin.Context) {
 	userID := c.Param("userId")
@@ -305,7 +300,7 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userId path string true "用户ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/users/{userId}/violation-summary [get]
 func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 	userID := c.Param("userId")
@@ -332,9 +327,9 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 		return
 	}
 
-	response := convertUserViolationSummaryToResponse(summary)
+	summaryResp := convertUserViolationSummaryToResponse(summary)
 
-	response.Success(c, response)
+	response.Success(c, summaryResp)
 }
 
 // GetHighRiskAudits 获取高风险审核记录
@@ -345,7 +340,7 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 // @Produce json
 // @Param minRiskLevel query int false "最低风险等级" default(3)
 // @Param limit query int false "数量限制" default(50)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/admin/audit/high-risk [get]
 func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 	minRiskLevel := 3

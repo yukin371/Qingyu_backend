@@ -2,11 +2,9 @@ package writer
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/document"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
@@ -33,8 +31,8 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body object true "创建文档请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/documents [post]
 func (api *DocumentApi) CreateDocument(c *gin.Context) {
 	// 检查服务是否初始化
@@ -54,7 +52,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -81,7 +79,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", resp)
+	response.Created(c, resp)
 }
 
 // GetDocument 获取文档详情
@@ -91,7 +89,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id} [get]
 func (api *DocumentApi) GetDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -102,7 +100,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", doc)
+	response.Success(c, doc)
 }
 
 // GetDocumentTree 获取文档树
@@ -112,7 +110,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/documents/tree [get]
 func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -123,7 +121,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", resp)
+	response.Success(c, resp)
 }
 
 // UpdateDocument 更新文档
@@ -134,7 +132,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "更新文档请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id} [put]
 func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -150,7 +148,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteDocument 删除文档
@@ -160,7 +158,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id} [delete]
 func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -170,7 +168,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ListDocuments 获取文档列表
@@ -182,7 +180,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 // @Param projectId path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/documents [get]
 func (api *DocumentApi) ListDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -202,7 +200,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", resp)
+	response.Success(c, resp)
 }
 
 // MoveDocument 移动文档
@@ -213,7 +211,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "移动文档请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id}/move [put]
 func (api *DocumentApi) MoveDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -231,7 +229,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "移动成功", nil)
+	response.Success(c, nil)
 }
 
 // ReorderDocuments 重新排序文档
@@ -242,7 +240,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body object true "排序请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/documents/reorder [put]
 func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -260,7 +258,7 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "排序成功", nil)
+	response.Success(c, nil)
 }
 
 // DuplicateDocument 复制文档
@@ -271,11 +269,11 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Param request body object true "复制文档请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 403 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
-// @Failure 500 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/duplicate [post]
 func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -283,7 +281,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	// 获取并验证用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -304,11 +302,11 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	resp, err := api.documentService.DuplicateDocument(ctx, documentID, &req)
 	if err != nil {
-		shared.HandleError(c, err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "复制成功", resp)
+	response.Success(c, resp)
 }
 
 var _ = writerModels.Document{}

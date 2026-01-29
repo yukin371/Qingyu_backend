@@ -1,11 +1,8 @@
 package writer
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
 )
@@ -42,7 +39,7 @@ func (api *TimelineApi) CreateTimeline(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", timeline)
+	response.Created(c, timeline)
 }
 
 // GetTimeline 获取时间线详情
@@ -57,11 +54,11 @@ func (api *TimelineApi) GetTimeline(c *gin.Context) {
 
 	timeline, err := api.timelineService.GetTimeline(c.Request.Context(), timelineID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "时间线不存在", err.Error())
+		response.NotFound(c, "时间线不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", timeline)
+	response.Success(c, timeline)
 }
 
 // ListTimelines 获取项目时间线列表
@@ -78,7 +75,7 @@ func (api *TimelineApi) ListTimelines(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", timelines)
+	response.Success(c, timelines)
 }
 
 // DeleteTimeline 删除时间线
@@ -97,7 +94,7 @@ func (api *TimelineApi) DeleteTimeline(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // CreateTimelineEvent 创建时间线事件
@@ -125,7 +122,7 @@ func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建成功", event)
+	response.Created(c, event)
 }
 
 // GetTimelineEvent 获取事件详情
@@ -140,11 +137,11 @@ func (api *TimelineApi) GetTimelineEvent(c *gin.Context) {
 
 	event, err := api.timelineService.GetEvent(c.Request.Context(), eventID, projectID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "事件不存在", err.Error())
+		response.NotFound(c, "事件不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", event)
+	response.Success(c, event)
 }
 
 // ListTimelineEvents 获取时间线事件列表
@@ -161,7 +158,7 @@ func (api *TimelineApi) ListTimelineEvents(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", events)
+	response.Success(c, events)
 }
 
 // UpdateTimelineEvent 更新时间线事件
@@ -186,7 +183,7 @@ func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", event)
+	response.Success(c, event)
 }
 
 // DeleteTimelineEvent 删除时间线事件
@@ -205,7 +202,7 @@ func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // GetTimelineVisualization 获取时间线可视化数据
@@ -222,5 +219,5 @@ func (api *TimelineApi) GetTimelineVisualization(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", visualization)
+	response.Success(c, visualization)
 }

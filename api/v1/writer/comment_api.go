@@ -1,13 +1,11 @@
 package writer
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	writermodels "Qingyu_backend/models/writer"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/pkg/response"
@@ -34,9 +32,9 @@ func NewCommentAPI(commentService writerservice.CommentService) *CommentAPI {
 //	@Produce		json
 //	@Param			id		path		string				true	"文档ID"
 //	@Param			request	body		CreateCommentRequest	true	"批注信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/comments [post]
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	documentID := c.Param("id")
@@ -54,7 +52,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	// 获取用户信息
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
@@ -77,7 +75,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "创建成功", created)
+	response.Success(c, created)
 }
 
 // GetComments 获取批注列表
@@ -92,9 +90,9 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 //	@Param			type			query		string	false	"批注类型"
 //	@Param			page			query		int		false	"页码"	default(1)
 //	@Param			size			query		int		false	"每页数量"	default(20)
-//	@Success		200				{object}	shared.APIResponse
-//	@Failure		400				{object}	shared.APIResponse
-//	@Failure		401				{object}	shared.APIResponse
+//	@Success		200				{object}	response.APIResponse
+//	@Failure		400				{object}	response.APIResponse
+//	@Failure		401				{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/comments [get]
 func (api *CommentAPI) GetComments(c *gin.Context) {
 	documentID := c.Param("id")
@@ -139,7 +137,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 		"size":     size,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", result)
+	response.Success(c, result)
 }
 
 // GetComment 获取批注详情
@@ -150,9 +148,9 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"批注ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id} [get]
 func (api *CommentAPI) GetComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -164,14 +162,14 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 	comment, err := api.commentService.GetComment(c.Request.Context(), commentID)
 	if err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", comment)
+	response.Success(c, comment)
 }
 
 // UpdateComment 更新批注
@@ -183,10 +181,10 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string					true	"批注ID"
 //	@Param			request	body		UpdateCommentRequest	true	"更新信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id} [put]
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -209,14 +207,14 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 
 	if err := api.commentService.UpdateComment(c.Request.Context(), commentID, comment); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // DeleteComment 删除批注
@@ -227,9 +225,9 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"批注ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id} [delete]
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -240,14 +238,14 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 
 	if err := api.commentService.DeleteComment(c.Request.Context(), commentID); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ResolveComment 标记批注为已解决
@@ -258,10 +256,10 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"批注ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id}/resolve [post]
 func (api *CommentAPI) ResolveComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -272,13 +270,13 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
 	if err := api.commentService.ResolveComment(c.Request.Context(), commentID, userID.(string)); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		if err == writerservice.ErrCommentAlreadyResolved {
@@ -289,7 +287,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记成功", nil)
+	response.Success(c, nil)
 }
 
 // UnresolveComment 标记批注为未解决
@@ -300,10 +298,10 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"批注ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id}/unresolve [post]
 func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 	commentID := c.Param("id")
@@ -314,14 +312,14 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 
 	if err := api.commentService.UnresolveComment(c.Request.Context(), commentID); err != nil {
 		if err == writerservice.ErrCommentNotFound {
-			shared.Error(c, http.StatusNotFound, "批注不存在", err.Error())
+			response.NotFound(c, "批注不存在")
 			return
 		}
 		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记成功", nil)
+	response.Success(c, nil)
 }
 
 // ReplyComment 回复批注
@@ -333,10 +331,10 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string				true	"批注ID"
 //	@Param			request	body		ReplyCommentRequest	true	"回复内容"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/{id}/reply [post]
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	parentID := c.Param("id")
@@ -353,7 +351,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "需要登录")
+		response.Unauthorized(c, "需要登录")
 		return
 	}
 
@@ -368,7 +366,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "回复成功", reply)
+	response.Success(c, reply)
 }
 
 // GetCommentThread 获取批注线程
@@ -379,10 +377,10 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			threadId	path		string	true	"线程ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/threads/{threadId} [get]
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	threadID := c.Param("threadId")
@@ -397,7 +395,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", thread)
+	response.Success(c, thread)
 }
 
 // GetCommentStats 获取批注统计
@@ -408,9 +406,9 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"文档ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/comments/stats [get]
 func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 	documentID := c.Param("id")
@@ -425,7 +423,7 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.Success(c, stats)
 }
 
 // SearchComments 搜索批注
@@ -439,9 +437,9 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 //	@Param			keyword	query		string	true	"搜索关键词"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			size		query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
 //	@Router			/api/v1/writer/documents/{id}/comments/search [get]
 func (api *CommentAPI) SearchComments(c *gin.Context) {
 	documentID := c.Param("id")
@@ -473,7 +471,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 		"keyword":  keyword,
 	}
 
-	shared.Success(c, http.StatusOK, "搜索成功", result)
+	response.Success(c, result)
 }
 
 // BatchDeleteComments 批量删除批注
@@ -484,9 +482,9 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchDeleteRequest	true	"批量删除请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/writer/comments/batch-delete [post]
 func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	var req BatchDeleteRequest
@@ -505,7 +503,7 @@ func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除成功", nil)
+	response.Success(c, nil)
 }
 
 // ============ 请求体结构 ============

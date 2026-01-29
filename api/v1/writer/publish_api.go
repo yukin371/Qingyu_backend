@@ -1,12 +1,10 @@
 package writer
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
 )
@@ -31,9 +29,9 @@ func NewPublishApi(publishService interfaces.PublishService) *PublishApi {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param request body object true "发布请求"
-// @Success 202 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 202 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publish [post]
 func (api *PublishApi) PublishProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -63,7 +61,7 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusAccepted, "发布任务已创建", record)
+	response.Success(c, record)
 }
 
 // UnpublishProject 取消发布项目
@@ -73,9 +71,9 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/unpublish [post]
 func (api *PublishApi) UnpublishProject(c *gin.Context) {
 	projectID := c.Param("id")
@@ -99,7 +97,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "取消发布成功", nil)
+	response.Success(c, nil)
 }
 
 // GetProjectPublicationStatus 获取项目发布状态
@@ -109,8 +107,8 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publication-status [get]
 func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 	projectID := c.Param("id")
@@ -126,7 +124,7 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", status)
+	response.Success(c, status)
 }
 
 // PublishDocument 发布文档（章节）
@@ -138,9 +136,9 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Param id path string true "文档ID"
 // @Param projectId query string true "项目ID"
 // @Param request body object true "发布请求"
-// @Success 202 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 202 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/publish [post]
 func (api *PublishApi) PublishDocument(c *gin.Context) {
 	documentID := c.Param("id")
@@ -171,7 +169,7 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusAccepted, "发布任务已创建", record)
+	response.Success(c, record)
 }
 
 // UpdateDocumentPublishStatus 更新文档发布状态
@@ -183,9 +181,9 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 // @Param id path string true "文档ID"
 // @Param projectId query string true "项目ID"
 // @Param request body object true "更新请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/publish-status [put]
 func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 	documentID := c.Param("id")
@@ -216,7 +214,7 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.Success(c, nil)
 }
 
 // BatchPublishDocuments 批量发布文档
@@ -227,9 +225,9 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body object true "批量发布请求"
-// @Success 202 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 202 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/documents/batch-publish [post]
 func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -259,7 +257,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusAccepted, "批量发布任务已创建", result)
+	response.Success(c, result)
 }
 
 // GetPublicationRecords 获取发布记录列表
@@ -271,8 +269,8 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 // @Param projectId path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/publications [get]
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -291,7 +289,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, records, total, page, pageSize, "获取成功")
+	response.Paginated(c, records, total, page, pageSize, "获取成功")
 }
 
 // GetPublicationRecord 获取发布记录详情
@@ -301,8 +299,8 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "记录ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 404 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/publications/{id} [get]
 func (api *PublishApi) GetPublicationRecord(c *gin.Context) {
 	recordID := c.Param("id")
@@ -314,9 +312,9 @@ func (api *PublishApi) GetPublicationRecord(c *gin.Context) {
 
 	record, err := api.publishService.GetPublicationRecord(c.Request.Context(), recordID)
 	if err != nil {
-		shared.Error(c, http.StatusNotFound, "发布记录不存在", err.Error())
+		response.NotFound(c, "发布记录不存在")
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", record)
+	response.Success(c, record)
 }

@@ -1,12 +1,10 @@
 package writer
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/writer/project"
 	"Qingyu_backend/pkg/response"
 )
@@ -32,7 +30,7 @@ func NewVersionApi(versionService *project.VersionService) *VersionApi {
 // @Param documentId path string true "文档ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions [get]
 func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -45,7 +43,7 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", versions)
+	response.Success(c, versions)
 }
 
 // GetVersion 获取特定版本
@@ -56,7 +54,7 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 // @Produce json
 // @Param documentId path string true "文档ID"
 // @Param versionId path string true "版本ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/{versionId} [get]
 func (api *VersionApi) GetVersion(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -68,7 +66,7 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", version)
+	response.Success(c, version)
 }
 
 // CompareVersions 比较版本
@@ -80,7 +78,7 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 // @Param documentId path string true "文档ID"
 // @Param fromVersion query string true "源版本ID"
 // @Param toVersion query string true "目标版本ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/compare [get]
 func (api *VersionApi) CompareVersions(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -98,7 +96,7 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "比较成功", diff)
+	response.Success(c, diff)
 }
 
 // RestoreVersion 恢复版本
@@ -109,7 +107,7 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 // @Produce json
 // @Param documentId path string true "文档ID"
 // @Param versionId path string true "版本ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/{versionId}/restore [post]
 func (api *VersionApi) RestoreVersion(c *gin.Context) {
 	documentID := c.Param("documentId")
@@ -120,5 +118,5 @@ func (api *VersionApi) RestoreVersion(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "恢复成功", nil)
+	response.Success(c, nil)
 }
