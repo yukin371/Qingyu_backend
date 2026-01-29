@@ -109,6 +109,17 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = db.Collection("messages").Drop(ctx)
 		_ = db.Collection("mentions").Drop(ctx)
 
+		// Social相关测试集合
+		_ = db.Collection("comments").Drop(ctx)
+		_ = db.Collection("reviews").Drop(ctx)
+		_ = db.Collection("review_likes").Drop(ctx)
+
+		// Notification相关测试集合
+		_ = db.Collection("notifications").Drop(ctx)
+		_ = db.Collection("notification_preferences").Drop(ctx)
+		_ = db.Collection("push_devices").Drop(ctx)
+		_ = db.Collection("notification_templates").Drop(ctx)
+
 		// 关闭服务容器
 		_ = c.Close(ctx)
 	}
@@ -200,6 +211,15 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		_ = db.Collection("conversations").Drop(ctx)
 		_ = db.Collection("messages").Drop(ctx)
 		_ = db.Collection("mentions").Drop(ctx)
+		_ = db.Collection("comments").Drop(ctx)
+		_ = db.Collection("reviews").Drop(ctx)
+		_ = db.Collection("review_likes").Drop(ctx)
+
+		// Notification相关测试集合
+		_ = db.Collection("notifications").Drop(ctx)
+		_ = db.Collection("notification_preferences").Drop(ctx)
+		_ = db.Collection("push_devices").Drop(ctx)
+		_ = db.Collection("notification_templates").Drop(ctx)
 
 		// 关闭服务容器
 		_ = service.CloseServices(ctx)
