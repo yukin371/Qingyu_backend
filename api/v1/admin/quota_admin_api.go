@@ -4,7 +4,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	aiModels "Qingyu_backend/models/ai"
 	ai "Qingyu_backend/service/ai"
 	"Qingyu_backend/pkg/response"
