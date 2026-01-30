@@ -4,7 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	statsAPI "Qingyu_backend/api/v1/stats"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
+	middleware "Qingyu_backend/pkg/middleware"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 )
 
@@ -29,7 +30,7 @@ func RegisterReadingStatsRoutes(
 
 	// ============ 我的统计路由（需要认证） ============
 	myStats := statsGroup.Group("/my")
-	myStats.Use(middleware.JWTAuth())
+	myStats.Use(auth.JWTAuth())
 	{
 		// 获取我的统计
 		myStats.GET("/stats", readingStatsAPI.GetMyStats)
@@ -49,7 +50,7 @@ func RegisterReadingStatsRoutes(
 
 	// ============ 推荐路由（需要认证） ============
 	recommendations := statsGroup.Group("/recommendations")
-	recommendations.Use(middleware.JWTAuth())
+	recommendations.Use(auth.JWTAuth())
 	{
 		recommendations.GET("", readingStatsAPI.GetRecommendations)
 	}

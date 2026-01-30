@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/interfaces"
 	searchservice "Qingyu_backend/service/search"
@@ -52,7 +52,7 @@ func InitWriterRouter(
 
 	// 写作端路由组
 	writerGroup := r.Group("/writer")
-	writerGroup.Use(middleware.JWTAuth())
+	writerGroup.Use(auth.JWTAuth())
 	{
 		// 项目管理路由
 		InitProjectRouter(writerGroup, projectApi)

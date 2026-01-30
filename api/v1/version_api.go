@@ -2,8 +2,8 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"Qingyu_backend/internal/middleware"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/middleware"
 )
 
 // VersionAPI 版本信息API

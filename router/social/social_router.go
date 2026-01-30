@@ -5,7 +5,7 @@ import (
 
 	messagesApi "Qingyu_backend/api/v1/messages"
 	socialApi "Qingyu_backend/api/v1/social"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 )
 
 // RegisterSocialRoutes 注册所有社交相关路由
@@ -22,7 +22,7 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 
 	// 社交路由需要认证
 	socialGroup := r.Group("/social")
-	socialGroup.Use(middleware.JWTAuth())
+	socialGroup.Use(auth.JWTAuth())
 	{
 		// ========== 用户关注相关（原有） ==========
 		if relationAPI != nil {

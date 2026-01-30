@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
@@ -812,7 +812,7 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *user2.UpdatePasswor
 func (s *UserServiceImpl) generateToken(userID, role string) (string, error) {
 	// 使用middleware包中的GenerateToken函数
 	// 导入: "Qingyu_backend/middleware"
-	return middleware.GenerateToken(userID, "", []string{role})
+	return auth.GenerateToken(userID, "", []string{role})
 }
 
 // ==================== 邮箱验证相关方法 ====================

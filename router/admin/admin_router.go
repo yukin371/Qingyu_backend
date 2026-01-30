@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/admin"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	adminservice "Qingyu_backend/service/admin"
 	aiService "Qingyu_backend/service/ai"
 	auditService "Qingyu_backend/service/interfaces/audit"
@@ -40,8 +40,8 @@ func RegisterAdminRoutes(
 
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
 	adminGroup := r.Group("/admin")
-	adminGroup.Use(middleware.JWTAuth())            // JWT认证
-	adminGroup.Use(middleware.RequireRole("admin")) // 管理员权限验证
+	adminGroup.Use(auth.JWTAuth())            // JWT认证
+	adminGroup.Use(auth.RequireRole("admin")) // 管理员权限验证
 	{
 		// ===========================
 		// 用户管理（管理员专用）

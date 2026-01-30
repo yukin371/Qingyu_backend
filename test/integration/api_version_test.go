@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/api/v1"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware"
 	pkgmiddleware "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/pkg/response"
 )

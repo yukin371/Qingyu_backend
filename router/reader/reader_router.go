@@ -3,7 +3,7 @@ package reader
 import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	socialApi "Qingyu_backend/api/v1/social"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	syncService "Qingyu_backend/pkg/sync"
 	"Qingyu_backend/service/bookstore"
 	readerservice "Qingyu_backend/service/reader"
@@ -90,7 +90,7 @@ func InitReaderRouter(
 	// 需要认证的路由
 	// ========================================
 	readerGroup := r.Group("/reader")
-	readerGroup.Use(middleware.JWTAuth())
+	readerGroup.Use(auth.JWTAuth())
 	{
 		// 书架管理
 		books := readerGroup.Group("/books")

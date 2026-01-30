@@ -2,7 +2,7 @@ package search
 
 import (
 	"github.com/gin-gonic/gin"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	searchService "Qingyu_backend/service/search"
 )
 
@@ -26,7 +26,7 @@ func RegisterSearchRoutes(router *gin.RouterGroup, searchSvc *searchService.Sear
 
 	// 灰度配置管理路由组（需要认证）
 	grayscaleGroup := router.Group("/search/grayscale")
-	grayscaleGroup.Use(middleware.JWTAuth())
+	grayscaleGroup.Use(auth.JWTAuth())
 	{
 		// 获取灰度状态
 		grayscaleGroup.GET("/status", grayscaleAPI.GetGrayscaleStatus)

@@ -4,15 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	financeApi "Qingyu_backend/api/v1/finance"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
+	"Qingyu_backend/internal/middleware/ratelimit"
 )
 
 // RegisterFinanceRoutes 注册所有财务相关路由
 func RegisterFinanceRoutes(r *gin.RouterGroup, walletAPI *financeApi.WalletAPI, membershipAPI *financeApi.MembershipAPI, authorRevenueAPI *financeApi.AuthorRevenueAPI) {
 	// 财务路由需要认证
 	financeGroup := r.Group("/finance")
-	financeGroup.Use(middleware.JWTAuth())
-	financeGroup.Use(middleware.RateLimitMiddleware(50, 60))
+	financeGroup.Use(auth.JWTAuth())
+	financeGroup.Use(ratelimit.RateLimitMiddlewareSimple(50, 60))
 	{
 		// ========== 钱包相关 ==========
 		if walletAPI != nil {

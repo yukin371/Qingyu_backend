@@ -88,7 +88,7 @@ func (r *RegexRule) Check(content string) []audit.ViolationDetail {
 			Level:       r.Level,
 			Description: r.Description,
 			Position:    match[0],
-			Context:     extractContext(content, match[0], match[1]),
+			Context:     extractContext([]rune(content), match[0], match[1], 20),
 			Keywords:    []string{content[match[0]:match[1]]},
 		}
 		violations = append(violations, violation)
@@ -129,7 +129,7 @@ func (r *PhoneNumberRule) Check(content string) []audit.ViolationDetail {
 			Level:       audit.LevelMedium,
 			Description: "检测到手机号码，可能涉及广告推广",
 			Position:    match[0],
-			Context:     extractContext(content, match[0], match[1]),
+			Context:     extractContext([]rune(content), match[0], match[1], 20),
 			Keywords:    []string{phone},
 		}
 		violations = append(violations, violation)
@@ -170,7 +170,7 @@ func (r *URLRule) Check(content string) []audit.ViolationDetail {
 			Level:       audit.LevelMedium,
 			Description: "检测到外部链接，可能涉及广告推广",
 			Position:    match[0],
-			Context:     extractContext(content, match[0], match[1]),
+			Context:     extractContext([]rune(content), match[0], match[1], 20),
 			Keywords:    []string{url},
 		}
 		violations = append(violations, violation)
@@ -213,7 +213,7 @@ func (r *WeChatRule) Check(content string) []audit.ViolationDetail {
 				Level:       audit.LevelLow,
 				Description: "检测到微信相关信息，可能涉及广告推广",
 				Position:    index,
-				Context:     extractContext(content, index, index+len(keyword)),
+				Context:     extractContext([]rune(content), index, index+len(keyword), 20),
 				Keywords:    []string{keyword},
 			}
 			violations = append(violations, violation)
@@ -258,7 +258,7 @@ func (r *QQRule) Check(content string) []audit.ViolationDetail {
 				Level:       audit.LevelLow,
 				Description: "检测到QQ相关信息，可能涉及广告推广",
 				Position:    index,
-				Context:     extractContext(content, index, index+len(keyword)),
+				Context:     extractContext([]rune(content), index, index+len(keyword), 20),
 				Keywords:    []string{keyword},
 			}
 			violations = append(violations, violation)
@@ -311,7 +311,7 @@ func (r *ExcessiveRepetitionRule) Check(content string) []audit.ViolationDetail 
 					Level:       audit.LevelLow,
 					Description: "检测到过度重复字符，可能为灌水内容",
 					Position:    startPos,
-					Context:     extractContext(content, startPos, i),
+					Context:     extractContext([]rune(content), startPos, i, 20),
 					Keywords:    []string{string(lastRune)},
 				}
 				violations = append(violations, violation)
@@ -400,28 +400,4 @@ func LoadDefaultRules(engine *RuleEngine) {
 
 // 辅助函数
 
-func extractContext(content string, start, end int) string {
-	runes := []rune(content)
-	contextLen := 20
-
-	contextStart := start - contextLen
-	if contextStart < 0 {
-		contextStart = 0
-	}
-
-	contextEnd := end + contextLen
-	if contextEnd > len(runes) {
-		contextEnd = len(runes)
-	}
-
-	prefix := ""
-	suffix := ""
-	if contextStart > 0 {
-		prefix = "..."
-	}
-	if contextEnd < len(runes) {
-		suffix = "..."
-	}
-
-	return prefix + string(runes[contextStart:contextEnd]) + suffix
-}
+// extractContext函数已在dfa.go中定义，此处不再重复声明
