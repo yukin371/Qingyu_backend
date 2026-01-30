@@ -220,13 +220,18 @@ func (r *RoleRepositoryImpl) RemoveUserRole(ctx context.Context, userID, roleID 
 func (r *RoleRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([]*authModel.Role, error) {
 	userCollection := r.db.Collection("users")
 
+	// 将string类型的userID转换为ObjectID
+	userObjectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的用户ID: %w", err)
+	}
+
 	// 查询用户 - 同时支持 role（字符串）和 roles（数组）字段
-	// 注意：users集合的_id字段是string类型，不是ObjectID，所以直接使用userID
 	var user struct {
 		Role  string   `bson:"role"`  // 单个角色（旧格式）
 		Roles []string `bson:"roles"` // 多个角色（新格式）
 	}
-	err := userCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	err = userCollection.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("用户不存在: %s", userID)
