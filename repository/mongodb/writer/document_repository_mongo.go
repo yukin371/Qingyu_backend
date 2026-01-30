@@ -13,19 +13,21 @@ import (
 
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	writingInterface "Qingyu_backend/repository/interfaces/writer"
+
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoDocumentRepository MongoDB文档仓储实现
 type MongoDocumentRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
+	db *mongo.Database
 }
 
 // NewMongoDocumentRepository 创建MongoDB文档仓储
 func NewMongoDocumentRepository(db *mongo.Database) writingInterface.DocumentRepository {
 	return &MongoDocumentRepository{
-		db:         db,
-		collection: db.Collection("documents"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "documents"),
+		db:                 db,
 	}
 }
 
@@ -49,7 +51,7 @@ func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Docume
 	}
 
 	// 插入数据库
-	_, err := r.collection.InsertOne(ctx, doc)
+	_, err := r.GetCollection().InsertOne(ctx, doc)
 	if err != nil {
 		return fmt.Errorf("创建文档失败: %w", err)
 	}
@@ -61,7 +63,7 @@ func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Docume
 func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writer.Document, error) {
 	var doc writer.Document
 
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -71,7 +73,7 @@ func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writ
 		"deleted_at": nil,
 	}
 
-	err = r.collection.FindOne(ctx, filter).Decode(&doc)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -86,7 +88,7 @@ func (r *MongoDocumentRepository) GetByID(ctx context.Context, id string) (*writ
 func (r *MongoDocumentRepository) GetByIDUnscoped(ctx context.Context, id string) (*writer.Document, error) {
 	var doc writer.Document
 
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -95,7 +97,7 @@ func (r *MongoDocumentRepository) GetByIDUnscoped(ctx context.Context, id string
 		"_id": objID,
 	}
 
-	err = r.collection.FindOne(ctx, filter).Decode(&doc)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -115,7 +117,7 @@ func (r *MongoDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([
 	// 转换字符串ID为ObjectID
 	objectIDs := make([]primitive.ObjectID, 0, len(ids))
 	for _, id := range ids {
-		objID, err := primitive.ObjectIDFromHex(id)
+		objID, err := r.ParseID(id)
 		if err != nil {
 			// 跳过无效的ID
 			continue
@@ -132,7 +134,7 @@ func (r *MongoDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([
 		"deleted_at": nil,
 	}
 
-	cursor, err := r.collection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("批量查询文档失败: %w", err)
 	}
@@ -148,7 +150,7 @@ func (r *MongoDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([
 
 // Update 更新文档
 func (r *MongoDocumentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -159,7 +161,7 @@ func (r *MongoDocumentRepository) Update(ctx context.Context, id string, updates
 	filter := bson.M{"_id": objID, "deleted_at": nil}
 	update := bson.M{"$set": updates}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新文档失败: %w", err)
 	}
@@ -173,14 +175,14 @@ func (r *MongoDocumentRepository) Update(ctx context.Context, id string, updates
 
 // Delete 物理删除文档
 func (r *MongoDocumentRepository) Delete(ctx context.Context, id string) error {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
 
 	filter := bson.M{"_id": objID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除文档失败: %w", err)
 	}
@@ -211,7 +213,7 @@ func (r *MongoDocumentRepository) List(ctx context.Context, filter infrastructur
 		opts.SetSort(filter.GetSort())
 	}
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询文档列表失败: %w", err)
 	}
@@ -227,14 +229,14 @@ func (r *MongoDocumentRepository) List(ctx context.Context, filter infrastructur
 
 // Exists 检查文档是否存在
 func (r *MongoDocumentRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return false, fmt.Errorf("无效的文档ID: %w", err)
 	}
 
 	filter := bson.M{"_id": objID, "deleted_at": nil}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("检查文档存在失败: %w", err)
 	}
@@ -254,7 +256,7 @@ func (r *MongoDocumentRepository) Count(ctx context.Context, filter infrastructu
 		}
 	}
 
-	count, err := r.collection.CountDocuments(ctx, mongoFilter)
+	count, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return 0, fmt.Errorf("统计文档数失败: %w", err)
 	}
@@ -277,7 +279,7 @@ func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID 
 			{Key: "order", Value: 1},
 		})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询文档列表失败: %w", err)
 	}
@@ -304,7 +306,7 @@ func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, proje
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "order", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询文档列表失败: %w", err)
 	}
@@ -320,7 +322,7 @@ func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, proje
 
 // UpdateByProject 按项目更新文档
 func (r *MongoDocumentRepository) UpdateByProject(ctx context.Context, documentID, projectID string, updates map[string]interface{}) error {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -334,7 +336,7 @@ func (r *MongoDocumentRepository) UpdateByProject(ctx context.Context, documentI
 	}
 	update := bson.M{"$set": updates}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新文档失败: %w", err)
 	}
@@ -348,7 +350,7 @@ func (r *MongoDocumentRepository) UpdateByProject(ctx context.Context, documentI
 
 // DeleteByProject 按项目删除文档
 func (r *MongoDocumentRepository) DeleteByProject(ctx context.Context, documentID, projectID string) error {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -358,7 +360,7 @@ func (r *MongoDocumentRepository) DeleteByProject(ctx context.Context, documentI
 		"project_id": projectID,
 	}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除文档失败: %w", err)
 	}
@@ -372,7 +374,7 @@ func (r *MongoDocumentRepository) DeleteByProject(ctx context.Context, documentI
 
 // RestoreByProject 按项目恢复文档
 func (r *MongoDocumentRepository) RestoreByProject(ctx context.Context, documentID, projectID string) error {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -388,7 +390,7 @@ func (r *MongoDocumentRepository) RestoreByProject(ctx context.Context, document
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("恢复文档失败: %w", err)
 	}
@@ -402,7 +404,7 @@ func (r *MongoDocumentRepository) RestoreByProject(ctx context.Context, document
 
 // IsProjectMember 检查文档是否属于项目
 func (r *MongoDocumentRepository) IsProjectMember(ctx context.Context, documentID, projectID string) (bool, error) {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return false, fmt.Errorf("无效的文档ID: %w", err)
 	}
@@ -413,7 +415,7 @@ func (r *MongoDocumentRepository) IsProjectMember(ctx context.Context, documentI
 		"deleted_at": nil,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("检查文档失败: %w", err)
 	}
@@ -423,12 +425,12 @@ func (r *MongoDocumentRepository) IsProjectMember(ctx context.Context, documentI
 
 // SoftDelete 软删除文档
 func (r *MongoDocumentRepository) SoftDelete(ctx context.Context, documentID, projectID string) error {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
 
-	projectObjID, err := primitive.ObjectIDFromHex(projectID)
+	projectObjID, err := r.ParseID(projectID)
 	if err != nil {
 		return fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -448,7 +450,7 @@ func (r *MongoDocumentRepository) SoftDelete(ctx context.Context, documentID, pr
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("软删除文档失败: %w", err)
 	}
@@ -462,14 +464,14 @@ func (r *MongoDocumentRepository) SoftDelete(ctx context.Context, documentID, pr
 
 // HardDelete 物理删除文档
 func (r *MongoDocumentRepository) HardDelete(ctx context.Context, documentID string) error {
-	objID, err := primitive.ObjectIDFromHex(documentID)
+	objID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
 
 	filter := bson.M{"_id": objID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("物理删除文档失败: %w", err)
 	}
@@ -488,7 +490,7 @@ func (r *MongoDocumentRepository) CountByProject(ctx context.Context, projectID 
 		"deleted_at": nil,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("统计文档数失败: %w", err)
 	}
@@ -556,7 +558,7 @@ func (r *MongoDocumentRepository) EnsureIndexes(ctx context.Context) error {
 		},
 	}
 
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
+	_, err := r.GetCollection().Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return fmt.Errorf("创建索引失败: %w", err)
 	}

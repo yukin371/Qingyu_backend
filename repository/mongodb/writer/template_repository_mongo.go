@@ -2,6 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"fmt"
 
@@ -15,15 +16,15 @@ import (
 
 // MongoTemplateRepository MongoDB模板仓储实现
 type MongoTemplateRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
+	db *mongo.Database
 }
 
 // NewMongoTemplateRepository 创建MongoDB模板仓储
 func NewMongoTemplateRepository(db *mongo.Database) writerInterface.TemplateRepository {
 	return &MongoTemplateRepository{
-		db:         db,
-		collection: db.Collection("templates"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "templates"),
+		db:                 db,
 	}
 }
 
@@ -37,7 +38,7 @@ func (r *MongoTemplateRepository) Create(ctx context.Context, template *writer.T
 	template.TouchForCreate()
 
 	// 插入数据库
-	_, err := r.collection.InsertOne(ctx, template)
+	_, err := r.GetCollection().InsertOne(ctx, template)
 	if err != nil {
 		return fmt.Errorf("创建模板失败: %w", err)
 	}
@@ -56,7 +57,7 @@ func (r *MongoTemplateRepository) GetByID(ctx context.Context, id primitive.Obje
 		"status": bson.M{"$ne": writer.TemplateStatusDeleted},
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&template)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&template)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -84,7 +85,7 @@ func (r *MongoTemplateRepository) Update(ctx context.Context, template *writer.T
 
 	update := bson.M{"$set": template}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新模板失败: %w", err)
 	}
@@ -100,7 +101,7 @@ func (r *MongoTemplateRepository) Update(ctx context.Context, template *writer.T
 func (r *MongoTemplateRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除模板失败: %w", err)
 	}
@@ -223,7 +224,7 @@ func (r *MongoTemplateRepository) ListByProject(ctx context.Context, projectID p
 	mongoFilter := r.buildFilter(&projectID, "", false, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询项目模板列表失败: %w", err)
 	}
@@ -273,7 +274,7 @@ func (r *MongoTemplateRepository) ListByWorkspace(ctx context.Context, workspace
 
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询工作区模板列表失败: %w", err)
 	}
@@ -292,7 +293,7 @@ func (r *MongoTemplateRepository) ListGlobal(ctx context.Context, filter *writer
 	mongoFilter := r.buildFilter(nil, "", true, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询全局模板列表失败: %w", err)
 	}
@@ -314,7 +315,7 @@ func (r *MongoTemplateRepository) CountByProject(ctx context.Context, projectID 
 		"status":     bson.M{"$ne": writer.TemplateStatusDeleted},
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("统计项目模板数量失败: %w", err)
 	}
@@ -343,7 +344,7 @@ func (r *MongoTemplateRepository) ExistsByName(ctx context.Context, projectID *p
 		filter["_id"] = bson.M{"$ne": *excludeID}
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("检查模板名称是否存在失败: %w", err)
 	}
@@ -420,7 +421,7 @@ func (r *MongoTemplateRepository) EnsureIndexes(ctx context.Context) error {
 		},
 	}
 
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
+	_, err := r.GetCollection().Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return fmt.Errorf("创建索引失败: %w", err)
 	}

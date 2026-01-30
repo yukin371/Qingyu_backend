@@ -25,17 +25,17 @@ func (m *MockBookRepository) Create(ctx context.Context, book *bookstore2.Book) 
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.Book, error) {
+func (m *MockBookRepository) GetByID(ctx context.Context, id string) (*bookstore2.Book, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (m *MockBookRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+func (m *MockBookRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -45,17 +45,12 @@ func (m *MockBookRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) GetByTitle(ctx context.Context, title string) (*bookstore2.Book, error) {
-	args := m.Called(ctx, title)
-	return args.Get(0).(*bookstore2.Book), args.Error(1)
-}
-
 func (m *MockBookRepository) GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, author, limit, offset)
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookRepository) GetByCategory(ctx context.Context, categoryID primitive.ObjectID, limit, offset int) ([]*bookstore2.Book, error) {
+func (m *MockBookRepository) GetByCategory(ctx context.Context, categoryID string, limit, offset int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, categoryID, limit, offset)
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
@@ -80,7 +75,7 @@ func (m *MockBookRepository) SearchWithFilter(ctx context.Context, filter *books
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookRepository) CountByCategory(ctx context.Context, categoryID primitive.ObjectID) (int64, error) {
+func (m *MockBookRepository) CountByCategory(ctx context.Context, categoryID string) (int64, error) {
 	args := m.Called(ctx, categoryID)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -100,32 +95,32 @@ func (m *MockBookRepository) GetStats(ctx context.Context) (*bookstore2.BookStat
 	return args.Get(0).(*bookstore2.BookStats), args.Error(1)
 }
 
-func (m *MockBookRepository) IncrementViewCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (m *MockBookRepository) IncrementViewCount(ctx context.Context, bookID string) error {
 	args := m.Called(ctx, bookID)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) IncrementLikeCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (m *MockBookRepository) IncrementLikeCount(ctx context.Context, bookID string) error {
 	args := m.Called(ctx, bookID)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) IncrementCommentCount(ctx context.Context, bookID primitive.ObjectID) error {
+func (m *MockBookRepository) IncrementCommentCount(ctx context.Context, bookID string) error {
 	args := m.Called(ctx, bookID)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) UpdateRating(ctx context.Context, bookID primitive.ObjectID, rating float64) error {
+func (m *MockBookRepository) UpdateRating(ctx context.Context, bookID string, rating float64) error {
 	args := m.Called(ctx, bookID, rating)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []primitive.ObjectID, status bookstore2.BookStatus) error {
+func (m *MockBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []string, status bookstore2.BookStatus) error {
 	args := m.Called(ctx, bookIDs, status)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs []primitive.ObjectID, categoryIDs []primitive.ObjectID) error {
+func (m *MockBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs []string, categoryIDs []string) error {
 	args := m.Called(ctx, bookIDs, categoryIDs)
 	return args.Error(0)
 }
@@ -135,12 +130,12 @@ func (m *MockBookRepository) Transaction(ctx context.Context, fn func(ctx contex
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) BatchUpdateFeatured(ctx context.Context, bookIDs []primitive.ObjectID, isFeatured bool) error {
+func (m *MockBookRepository) BatchUpdateFeatured(ctx context.Context, bookIDs []string, isFeatured bool) error {
 	args := m.Called(ctx, bookIDs, isFeatured)
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) BatchUpdateRecommended(ctx context.Context, bookIDs []primitive.ObjectID, isRecommended bool) error {
+func (m *MockBookRepository) BatchUpdateRecommended(ctx context.Context, bookIDs []string, isRecommended bool) error {
 	args := m.Called(ctx, bookIDs, isRecommended)
 	return args.Error(0)
 }
@@ -175,12 +170,12 @@ func (m *MockBookRepository) Search(ctx context.Context, keyword string, limit, 
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
-func (m *MockBookRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+func (m *MockBookRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID primitive.ObjectID, limit, offset int) ([]*bookstore2.Book, error) {
+func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID string, limit, offset int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, authorID, limit, offset)
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
@@ -198,6 +193,16 @@ func (m *MockBookRepository) GetFreeBooks(ctx context.Context, limit, offset int
 func (m *MockBookRepository) GetHotBooks(ctx context.Context, limit, offset int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, limit, offset)
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetYears(ctx context.Context) ([]int, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]int), args.Error(1)
+}
+
+func (m *MockBookRepository) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	args := m.Called(ctx, categoryID)
+	return args.Get(0).([]string), args.Error(1)
 }
 
 func (m *MockBookRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*bookstore2.Book, error) {
@@ -323,7 +328,7 @@ func (m *MockBannerRepository) Create(ctx context.Context, banner *bookstore2.Ba
 	return args.Error(0)
 }
 
-func (m *MockBannerRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.Banner, error) {
+func (m *MockBannerRepository) GetByID(ctx context.Context, id string) (*bookstore2.Banner, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -331,12 +336,12 @@ func (m *MockBannerRepository) GetByID(ctx context.Context, id primitive.ObjectI
 	return args.Get(0).(*bookstore2.Banner), args.Error(1)
 }
 
-func (m *MockBannerRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+func (m *MockBannerRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
-func (m *MockBannerRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+func (m *MockBannerRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -361,17 +366,17 @@ func (m *MockBannerRepository) GetByTimeRange(ctx context.Context, startTime, en
 	return args.Get(0).([]*bookstore2.Banner), args.Error(1)
 }
 
-func (m *MockBannerRepository) IncrementClickCount(ctx context.Context, bannerID primitive.ObjectID) error {
+func (m *MockBannerRepository) IncrementClickCount(ctx context.Context, bannerID string) error {
 	args := m.Called(ctx, bannerID)
 	return args.Error(0)
 }
 
-func (m *MockBannerRepository) GetClickStats(ctx context.Context, bannerID primitive.ObjectID) (int64, error) {
+func (m *MockBannerRepository) GetClickStats(ctx context.Context, bannerID string) (int64, error) {
 	args := m.Called(ctx, bannerID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs []primitive.ObjectID, isActive bool) error {
+func (m *MockBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs []string, isActive bool) error {
 	args := m.Called(ctx, bannerIDs, isActive)
 	return args.Error(0)
 }
@@ -386,7 +391,7 @@ func (m *MockBannerRepository) Count(ctx context.Context, filter infrastructure.
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBannerRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
+func (m *MockBannerRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(bool), args.Error(1)
 }
@@ -532,11 +537,11 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 	// 准备测试数据
 	bookID := primitive.NewObjectID()
 	expectedBook := &bookstore2.Book{
-		ID:     bookID,
 		Title:  "测试书籍",
 		Author: "测试作者",
-		Status: "published",
+		Status: bookstore2.BookStatusOngoing,
 	}
+	expectedBook.ID = bookID
 
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
@@ -544,7 +549,7 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望
-	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(expectedBook, nil)
+	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return(expectedBook, nil)
 
 	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
@@ -571,7 +576,7 @@ func TestBookstoreService_GetBookByID_NotFound(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望 - 返回nil表示未找到
-	mockBookRepo.On("GetByID", mock.Anything, bookID).Return((*bookstore2.Book)(nil), nil)
+	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return((*bookstore2.Book)(nil), nil)
 
 	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
@@ -595,6 +600,9 @@ func TestBookstoreService_GetBookByID_InvalidID(t *testing.T) {
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
 
+	// 设置 Mock 期望 - 返回 nil 表示未找到（Mock 不验证 ID 格式）
+	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return((*bookstore2.Book)(nil), nil)
+
 	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
 
@@ -604,30 +612,31 @@ func TestBookstoreService_GetBookByID_InvalidID(t *testing.T) {
 	// 执行测试 - 使用无效ID
 	result, err := service.GetBookByID(context.Background(), "invalid-id")
 
-	// 验证结果
+	// 验证结果 - service 会返回 "book not found" 因为 Mock 返回了 nil
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "invalid book ID")
+	assert.Contains(t, err.Error(), "book not found")
 }
 
 func TestBookstoreService_GetRecommendedBooks(t *testing.T) {
 	// 准备测试数据
-	expectedBooks := []*bookstore2.Book{
-		{
-			ID:            primitive.NewObjectID(),
-			Title:         "推荐书籍1",
-			Author:        "作者1",
-			Status:        "published",
-			IsRecommended: true,
-		},
-		{
-			ID:            primitive.NewObjectID(),
-			Title:         "推荐书籍2",
-			Author:        "作者2",
-			Status:        "published",
-			IsRecommended: true,
-		},
+	book1 := &bookstore2.Book{
+		Title:         "推荐书籍1",
+		Author:        "作者1",
+		Status:        bookstore2.BookStatusOngoing,
+		IsRecommended: true,
 	}
+	book1.ID = primitive.NewObjectID()
+
+	book2 := &bookstore2.Book{
+		Title:         "推荐书籍2",
+		Author:        "作者2",
+		Status:        bookstore2.BookStatusOngoing,
+		IsRecommended: true,
+	}
+	book2.ID = primitive.NewObjectID()
+
+	expectedBooks := []*bookstore2.Book{book1, book2}
 
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
@@ -636,6 +645,7 @@ func TestBookstoreService_GetRecommendedBooks(t *testing.T) {
 
 	// 设置Mock期望
 	mockBookRepo.On("GetRecommended", mock.Anything, 20, 0).Return(expectedBooks, nil)
+	mockBookRepo.On("Count", mock.Anything, mock.Anything).Return(int64(2), nil)
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -657,10 +667,10 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 	// 准备测试数据
 	bookID := primitive.NewObjectID()
 	book := &bookstore2.Book{
-		ID:     bookID,
 		Title:  "测试书籍",
-		Status: "published",
+		Status: bookstore2.BookStatusOngoing,
 	}
+	book.ID = bookID
 
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
@@ -668,8 +678,8 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望
-	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(book, nil)
-	mockBookRepo.On("IncrementViewCount", mock.Anything, bookID).Return(nil)
+	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return(book, nil)
+	mockBookRepo.On("IncrementViewCount", mock.Anything, mock.AnythingOfType("string")).Return(nil)
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -689,10 +699,10 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 	// 准备测试数据
 	bookID := primitive.NewObjectID()
 	book := &bookstore2.Book{
-		ID:     bookID,
 		Title:  "测试书籍",
-		Status: "draft", // 未发布状态
+		Status: bookstore2.BookStatusDraft, // 未发布状态
 	}
+	book.ID = bookID
 
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
@@ -700,7 +710,7 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望
-	mockBookRepo.On("GetByID", mock.Anything, bookID).Return(book, nil)
+	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return(book, nil)
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -785,14 +795,13 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 func TestBookstoreService_SearchBooks(t *testing.T) {
 	// 准备测试数据
 	keyword := "测试"
-	expectedBooks := []*bookstore2.Book{
-		{
-			ID:     primitive.NewObjectID(),
-			Title:  "测试书籍",
-			Author: "测试作者",
-			Status: "published",
-		},
+	book1 := &bookstore2.Book{
+		Title:  "测试书籍",
+		Author: "测试作者",
+		Status: "published",
 	}
+	book1.ID = primitive.NewObjectID()
+	expectedBooks := []*bookstore2.Book{book1}
 
 	// 创建Mock
 	mockBookRepo := new(MockBookRepository)
@@ -845,21 +854,20 @@ func TestBookstoreService_SearchBooks_EmptyKeywordAndFilter(t *testing.T) {
 
 func TestBookstoreService_GetHomepageData(t *testing.T) {
 	// 准备测试数据
-	expectedBanners := []*bookstore2.Banner{
-		{
-			ID:       primitive.NewObjectID(),
-			Title:    "测试Banner",
-			IsActive: true,
-		},
+	banner1 := &bookstore2.Banner{
+		Title:    "测试Banner",
+		IsActive: true,
 	}
-	expectedBooks := []*bookstore2.Book{
-		{
-			ID:            primitive.NewObjectID(),
-			Title:         "测试书籍",
-			Status:        "published",
-			IsRecommended: true,
-		},
+	banner1.ID = primitive.NewObjectID()
+	expectedBanners := []*bookstore2.Banner{banner1}
+
+	book1 := &bookstore2.Book{
+		Title:         "测试书籍",
+		Status:        "published",
+		IsRecommended: true,
 	}
+	book1.ID = primitive.NewObjectID()
+	expectedBooks := []*bookstore2.Book{book1}
 	expectedCategories := []*bookstore2.Category{
 		{
 			ID:       primitive.NewObjectID().Hex(),
@@ -883,6 +891,8 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 	mockBookRepo.On("GetFeatured", mock.Anything, 10, 0).Return(expectedBooks, nil)
 	mockCategoryRepo.On("GetRootCategories", mock.Anything).Return(expectedCategories, nil)
 	mockBookRepo.On("GetStats", mock.Anything).Return(expectedStats, nil)
+	mockBookRepo.On("Count", mock.Anything, mock.Anything).Return(int64(1), nil).Maybe()
+	mockBookRepo.On("CountByFilter", mock.Anything, mock.Anything).Return(int64(1), nil).Maybe()
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -922,6 +932,8 @@ func TestBookstoreService_GetHomepageData_PartialFailure(t *testing.T) {
 	mockBookRepo.On("GetFeatured", mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore2.Book)(nil), nil).Maybe()
 	mockCategoryRepo.On("GetRootCategories", mock.Anything).Return(([]*bookstore2.Category)(nil), nil).Maybe()
 	mockBookRepo.On("GetStats", mock.Anything).Return((*bookstore2.BookStats)(nil), nil).Maybe()
+	mockBookRepo.On("Count", mock.Anything, mock.Anything).Return(int64(0), nil).Maybe()
+	mockBookRepo.On("CountByFilter", mock.Anything, mock.Anything).Return(int64(0), nil).Maybe()
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)

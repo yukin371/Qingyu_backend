@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	"Qingyu_backend/repository/mongodb/base"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,15 +16,13 @@ import (
 
 // TimelineRepositoryMongo Timeline Repository的MongoDB实现
 type TimelineRepositoryMongo struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 }
 
 // NewTimelineRepository 创建TimelineRepository实例
 func NewTimelineRepository(db *mongo.Database) writerRepo.TimelineRepository {
 	return &TimelineRepositoryMongo{
-		db:         db,
-		collection: db.Collection("timelines"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "timelines"),
 	}
 }
 
@@ -37,7 +36,7 @@ func (r *TimelineRepositoryMongo) Create(ctx context.Context, timeline *writer.T
 	timeline.CreatedAt = now
 	timeline.UpdatedAt = now
 
-	_, err := r.collection.InsertOne(ctx, timeline)
+	_, err := r.GetCollection().InsertOne(ctx, timeline)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create timeline failed", err)
 	}
@@ -50,7 +49,7 @@ func (r *TimelineRepositoryMongo) FindByID(ctx context.Context, timelineID strin
 	var timeline writer.Timeline
 	filter := bson.M{"_id": timelineID}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&timeline)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&timeline)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "timeline not found", err)
@@ -65,7 +64,7 @@ func (r *TimelineRepositoryMongo) FindByID(ctx context.Context, timelineID strin
 func (r *TimelineRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Timeline, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.collection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find timelines failed", err)
 	}
@@ -86,7 +85,7 @@ func (r *TimelineRepositoryMongo) Update(ctx context.Context, timeline *writer.T
 	filter := bson.M{"_id": timeline.ID}
 	update := bson.M{"$set": timeline}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update timeline failed", err)
 	}
@@ -102,7 +101,7 @@ func (r *TimelineRepositoryMongo) Update(ctx context.Context, timeline *writer.T
 func (r *TimelineRepositoryMongo) Delete(ctx context.Context, timelineID string) error {
 	filter := bson.M{"_id": timelineID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete timeline failed", err)
 	}
@@ -116,15 +115,13 @@ func (r *TimelineRepositoryMongo) Delete(ctx context.Context, timelineID string)
 
 // TimelineEventRepositoryMongo TimelineEvent Repository的MongoDB实现
 type TimelineEventRepositoryMongo struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 }
 
 // NewTimelineEventRepository 创建TimelineEventRepository实例
 func NewTimelineEventRepository(db *mongo.Database) writerRepo.TimelineEventRepository {
 	return &TimelineEventRepositoryMongo{
-		db:         db,
-		collection: db.Collection("timeline_events"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "timeline_events"),
 	}
 }
 
@@ -138,7 +135,7 @@ func (r *TimelineEventRepositoryMongo) Create(ctx context.Context, event *writer
 	event.CreatedAt = now
 	event.UpdatedAt = now
 
-	_, err := r.collection.InsertOne(ctx, event)
+	_, err := r.GetCollection().InsertOne(ctx, event)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create timeline event failed", err)
 	}
@@ -151,7 +148,7 @@ func (r *TimelineEventRepositoryMongo) FindByID(ctx context.Context, eventID str
 	var event writer.TimelineEvent
 	filter := bson.M{"_id": eventID}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&event)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&event)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "timeline event not found", err)
@@ -166,7 +163,7 @@ func (r *TimelineEventRepositoryMongo) FindByID(ctx context.Context, eventID str
 func (r *TimelineEventRepositoryMongo) FindByTimelineID(ctx context.Context, timelineID string) ([]*writer.TimelineEvent, error) {
 	filter := bson.M{"timeline_id": timelineID}
 
-	cursor, err := r.collection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find timeline events failed", err)
 	}
@@ -184,7 +181,7 @@ func (r *TimelineEventRepositoryMongo) FindByTimelineID(ctx context.Context, tim
 func (r *TimelineEventRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.TimelineEvent, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.collection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find timeline events failed", err)
 	}
@@ -205,7 +202,7 @@ func (r *TimelineEventRepositoryMongo) Update(ctx context.Context, event *writer
 	filter := bson.M{"_id": event.ID}
 	update := bson.M{"$set": event}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update timeline event failed", err)
 	}
@@ -221,7 +218,7 @@ func (r *TimelineEventRepositoryMongo) Update(ctx context.Context, event *writer
 func (r *TimelineEventRepositoryMongo) Delete(ctx context.Context, eventID string) error {
 	filter := bson.M{"_id": eventID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete timeline event failed", err)
 	}

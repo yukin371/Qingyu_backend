@@ -2,7 +2,6 @@ package reader_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -25,10 +24,14 @@ func TestReadingProgressRepository_Create(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	progress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -53,10 +56,14 @@ func TestReadingProgressRepository_GetByID(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -65,7 +72,7 @@ func TestReadingProgressRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, testProgress.ID)
+	found, err := repo.GetByID(ctx, testProgress.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -101,10 +108,14 @@ func TestReadingProgressRepository_GetByUserAndBook(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -113,13 +124,13 @@ func TestReadingProgressRepository_GetByUserAndBook(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByUserAndBook(ctx, "user123", "book123")
+	found, err := repo.GetByUserAndBook(ctx, userID.Hex(), bookID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, found)
-	assert.Equal(t, "user123", found.UserID)
-	assert.Equal(t, "book123", found.BookID)
+	assert.Equal(t, userID, found.UserID)
+	assert.Equal(t, bookID, found.BookID)
 }
 
 // TestReadingProgressRepository_Update 测试更新阅读进度
@@ -131,10 +142,15 @@ func TestReadingProgressRepository_Update(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+	newChapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -144,20 +160,20 @@ func TestReadingProgressRepository_Update(t *testing.T) {
 
 	// Act - 更新进度
 	updates := map[string]interface{}{
-		"chapter_id":   "chapter2",
-		"progress":     0.8,
+		"chapter_id":   newChapterID,
+		"progress":     types.Progress(0.8),
 		"last_read_at": time.Now(),
 	}
-	err = repo.Update(ctx, testProgress.ID, updates)
+	err = repo.Update(ctx, testProgress.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, testProgress.ID)
+	found, err := repo.GetByID(ctx, testProgress.ID.Hex())
 	require.NoError(t, err)
-	assert.Equal(t, "chapter2", found.ChapterID)
-	assert.Equal(t, 0.8, found.Progress)
+	assert.Equal(t, newChapterID, found.ChapterID)
+	assert.Equal(t, types.Progress(0.8), found.Progress)
 }
 
 // TestReadingProgressRepository_Delete 测试删除阅读进度
@@ -169,10 +185,14 @@ func TestReadingProgressRepository_Delete(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -181,13 +201,13 @@ func TestReadingProgressRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除进度
-	err = repo.Delete(ctx, testProgress.ID)
+	err = repo.Delete(ctx, testProgress.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, testProgress.ID)
+	found, err := repo.GetByID(ctx, testProgress.ID.Hex())
 	assert.Error(t, err)
 	assert.Nil(t, found)
 }
@@ -201,18 +221,22 @@ func TestReadingProgressRepository_SaveProgress(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	// Act - 保存进度
-	err := repo.SaveProgress(ctx, "user123", "book123", "chapter1", 0.5)
+	err := repo.SaveProgress(ctx, userID.Hex(), bookID.Hex(), chapterID.Hex(), 0.5)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证进度已保存
-	found, err := repo.GetByUserAndBook(ctx, "user123", "book123")
+	found, err := repo.GetByUserAndBook(ctx, userID.Hex(), bookID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
-	assert.Equal(t, "chapter1", found.ChapterID)
-	assert.Equal(t, 0.5, found.Progress)
+	assert.Equal(t, chapterID, found.ChapterID)
+	assert.Equal(t, types.Progress(0.5), found.Progress)
 }
 
 // TestReadingProgressRepository_UpdateReadingTime 测试更新阅读时间
@@ -224,10 +248,14 @@ func TestReadingProgressRepository_UpdateReadingTime(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now(),
@@ -236,13 +264,13 @@ func TestReadingProgressRepository_UpdateReadingTime(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 更新阅读时间
-	err = repo.UpdateReadingTime(ctx, "user123", "book123", 1800)
+	err = repo.UpdateReadingTime(ctx, userID.Hex(), bookID.Hex(), 1800)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证阅读时间已更新
-	found, err := repo.GetByUserAndBook(ctx, "user123", "book123")
+	found, err := repo.GetByUserAndBook(ctx, userID.Hex(), bookID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, int64(5400), found.ReadingTime) // 3600 + 1800
 }
@@ -256,10 +284,14 @@ func TestReadingProgressRepository_UpdateLastReadAt(t *testing.T) {
 	repo := readerRepo.NewMongoReadingProgressRepository(db)
 	ctx := context.Background()
 
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+
 	testProgress := &readerModel.ReadingProgress{
-		UserID:      "user123",
-		BookID:      "book123",
-		ChapterID:   "chapter1",
+		UserID:      userID,
+		BookID:      bookID,
+		ChapterID:   chapterID,
 		Progress:    0.5,
 		ReadingTime: 3600,
 		LastReadAt:  time.Now().Add(-1 * time.Hour),
@@ -268,13 +300,13 @@ func TestReadingProgressRepository_UpdateLastReadAt(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 更新最后阅读时间
-	err = repo.UpdateLastReadAt(ctx, "user123", "book123")
+	err = repo.UpdateLastReadAt(ctx, userID.Hex(), bookID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证最后阅读时间已更新
-	found, err := repo.GetByUserAndBook(ctx, "user123", "book123")
+	found, err := repo.GetByUserAndBook(ctx, userID.Hex(), bookID.Hex())
 	require.NoError(t, err)
 	assert.True(t, found.LastReadAt.After(testProgress.LastReadAt))
 }
@@ -289,11 +321,11 @@ func TestReadingProgressRepository_GetByUser(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建多个阅读进度 - 使用不同的BookID避免ID冲突
-	userID := "user_getby_test_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID()
 	progresses := []*readerModel.ReadingProgress{
-		{ID: primitive.NewObjectID().Hex(), UserID: userID, BookID: primitive.NewObjectID().Hex(), ChapterID: "chapter1", Progress: 0.3, LastReadAt: time.Now()},
-		{ID: primitive.NewObjectID().Hex(), UserID: userID, BookID: primitive.NewObjectID().Hex(), ChapterID: "chapter2", Progress: 0.5, LastReadAt: time.Now()},
-		{ID: primitive.NewObjectID().Hex(), UserID: userID, BookID: primitive.NewObjectID().Hex(), ChapterID: "chapter3", Progress: 0.8, LastReadAt: time.Now()},
+		{UserID: userID, BookID: primitive.NewObjectID(), ChapterID: primitive.NewObjectID(), Progress: 0.3, LastReadAt: time.Now()},
+		{UserID: userID, BookID: primitive.NewObjectID(), ChapterID: primitive.NewObjectID(), Progress: 0.5, LastReadAt: time.Now()},
+		{UserID: userID, BookID: primitive.NewObjectID(), ChapterID: primitive.NewObjectID(), Progress: 0.8, LastReadAt: time.Now()},
 	}
 
 	for _, progress := range progresses {
@@ -302,7 +334,7 @@ func TestReadingProgressRepository_GetByUser(t *testing.T) {
 	}
 
 	// Act
-	result, err := repo.GetByUser(ctx, userID)
+	result, err := repo.GetByUser(ctx, userID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -320,13 +352,12 @@ func TestReadingProgressRepository_GetRecentReadingByUser(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建阅读进度 - 使用唯一ID避免冲突
-	userID := "user_recent_test_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID()
 	for i := 0; i < 5; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:         primitive.NewObjectID().Hex(),
 			UserID:     userID,
-			BookID:     primitive.NewObjectID().Hex(),
-			ChapterID:  "chapter1",
+			BookID:     primitive.NewObjectID(),
+			ChapterID:  primitive.NewObjectID(),
 			Progress:   types.Progress(float32(i) * 0.2),
 			LastReadAt: time.Now(),
 		}
@@ -335,7 +366,7 @@ func TestReadingProgressRepository_GetRecentReadingByUser(t *testing.T) {
 	}
 
 	// Act
-	result, err := repo.GetRecentReadingByUser(ctx, userID, 3)
+	result, err := repo.GetRecentReadingByUser(ctx, userID.Hex(), 3)
 
 	// Assert
 	require.NoError(t, err)
@@ -353,13 +384,12 @@ func TestReadingProgressRepository_CountReadingBooks(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建阅读进度 - 使用唯一ID避免冲突
-	userID := "user_count_test_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID()
 	for i := 0; i < 5; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:         primitive.NewObjectID().Hex(),
 			UserID:     userID,
-			BookID:     primitive.NewObjectID().Hex(),
-			ChapterID:  "chapter1",
+			BookID:     primitive.NewObjectID(),
+			ChapterID:  primitive.NewObjectID(),
 			Progress:   0.5,
 			LastReadAt: time.Now(),
 		}
@@ -368,7 +398,7 @@ func TestReadingProgressRepository_CountReadingBooks(t *testing.T) {
 	}
 
 	// Act
-	count, err := repo.CountReadingBooks(ctx, userID)
+	count, err := repo.CountReadingBooks(ctx, userID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -401,13 +431,13 @@ func TestReadingProgressRepository_DeleteByBook(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建同一本书的多个章节进度 - 使用唯一ID避免冲突
-	bookID := fmt.Sprintf("book_delete_test_%d", time.Now().UnixNano())
+	userID := primitive.NewObjectID()
+	bookID := primitive.NewObjectID()
 	for i := 0; i < 3; i++ {
 		progress := &readerModel.ReadingProgress{
-			ID:         primitive.NewObjectID().Hex(),
-			UserID:     "user123",
+			UserID:     userID,
 			BookID:     bookID,
-			ChapterID:  fmt.Sprintf("chapter%d", i+1),
+			ChapterID:  primitive.NewObjectID(),
 			Progress:   types.Progress(float32(i+1) * 0.3),
 			LastReadAt: time.Now(),
 		}
@@ -416,13 +446,13 @@ func TestReadingProgressRepository_DeleteByBook(t *testing.T) {
 	}
 
 	// Act - 删除书籍的所有进度
-	err := repo.DeleteByBook(ctx, bookID)
+	err := repo.DeleteByBook(ctx, bookID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	allProgress, _ := repo.GetByUser(ctx, "user123")
+	allProgress, _ := repo.GetByUser(ctx, userID.Hex())
 	for _, progress := range allProgress {
 		assert.NotEqual(t, bookID, progress.BookID)
 	}

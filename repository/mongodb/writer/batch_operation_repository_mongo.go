@@ -2,6 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"fmt"
 	"time"
@@ -17,15 +18,15 @@ import (
 
 // MongoBatchOperationRepository MongoDB批量操作仓储实现
 type MongoBatchOperationRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
+	db *mongo.Database
 }
 
 // NewMongoBatchOperationRepository 创建MongoDB批量操作仓储
 func NewMongoBatchOperationRepository(db *mongo.Database) writingInterface.BatchOperationRepository {
 	return &MongoBatchOperationRepository{
-		db:         db,
-		collection: db.Collection("batch_operations"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "batch_operations"),
+		db:                 db,
 	}
 }
 
@@ -44,7 +45,7 @@ func (r *MongoBatchOperationRepository) Create(ctx context.Context, op *writer.B
 	op.TouchForCreate()
 
 	// 插入数据库
-	_, err := r.collection.InsertOne(ctx, op)
+	_, err := r.GetCollection().InsertOne(ctx, op)
 	if err != nil {
 		return fmt.Errorf("创建批量操作失败: %w", err)
 	}
@@ -56,7 +57,7 @@ func (r *MongoBatchOperationRepository) Create(ctx context.Context, op *writer.B
 func (r *MongoBatchOperationRepository) GetByID(ctx context.Context, id string) (*writer.BatchOperation, error) {
 	var op writer.BatchOperation
 
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("无效的批量操作ID: %w", err)
 	}
@@ -66,7 +67,7 @@ func (r *MongoBatchOperationRepository) GetByID(ctx context.Context, id string) 
 		"deleted_at": nil,
 	}
 
-	err = r.collection.FindOne(ctx, filter).Decode(&op)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&op)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -79,7 +80,7 @@ func (r *MongoBatchOperationRepository) GetByID(ctx context.Context, id string) 
 
 // Update 更新批量操作
 func (r *MongoBatchOperationRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
@@ -90,7 +91,7 @@ func (r *MongoBatchOperationRepository) Update(ctx context.Context, id string, u
 	filter := bson.M{"_id": objID, "deleted_at": nil}
 	update := bson.M{"$set": updates}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新批量操作失败: %w", err)
 	}
@@ -104,14 +105,14 @@ func (r *MongoBatchOperationRepository) Update(ctx context.Context, id string, u
 
 // Delete 物理删除批量操作
 func (r *MongoBatchOperationRepository) Delete(ctx context.Context, id string) error {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
 
 	filter := bson.M{"_id": objID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除批量操作失败: %w", err)
 	}
@@ -142,7 +143,7 @@ func (r *MongoBatchOperationRepository) List(ctx context.Context, filter infrast
 		opts.SetSort(filter.GetSort())
 	}
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询批量操作列表失败: %w", err)
 	}
@@ -158,14 +159,14 @@ func (r *MongoBatchOperationRepository) List(ctx context.Context, filter infrast
 
 // Exists 检查批量操作是否存在
 func (r *MongoBatchOperationRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := r.ParseID(id)
 	if err != nil {
 		return false, fmt.Errorf("无效的批量操作ID: %w", err)
 	}
 
 	filter := bson.M{"_id": objID, "deleted_at": nil}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("检查批量操作存在失败: %w", err)
 	}
@@ -185,7 +186,7 @@ func (r *MongoBatchOperationRepository) Count(ctx context.Context, filter infras
 		}
 	}
 
-	count, err := r.collection.CountDocuments(ctx, mongoFilter)
+	count, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return 0, fmt.Errorf("统计批量操作数失败: %w", err)
 	}
@@ -195,7 +196,7 @@ func (r *MongoBatchOperationRepository) Count(ctx context.Context, filter infras
 
 // GetByProjectID 获取项目的批量操作列表
 func (r *MongoBatchOperationRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.BatchOperation, error) {
-	objID, err := primitive.ObjectIDFromHex(projectID)
+	objID, err := r.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -210,7 +211,7 @@ func (r *MongoBatchOperationRepository) GetByProjectID(ctx context.Context, proj
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询批量操作列表失败: %w", err)
 	}
@@ -226,7 +227,7 @@ func (r *MongoBatchOperationRepository) GetByProjectID(ctx context.Context, proj
 
 // GetByProjectAndType 按项目和操作类型查询
 func (r *MongoBatchOperationRepository) GetByProjectAndType(ctx context.Context, projectID string, opType writer.BatchOperationType, limit, offset int64) ([]*writer.BatchOperation, error) {
-	objID, err := primitive.ObjectIDFromHex(projectID)
+	objID, err := r.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -242,7 +243,7 @@ func (r *MongoBatchOperationRepository) GetByProjectAndType(ctx context.Context,
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询批量操作列表失败: %w", err)
 	}
@@ -258,7 +259,7 @@ func (r *MongoBatchOperationRepository) GetByProjectAndType(ctx context.Context,
 
 // GetByProjectAndStatus 按项目和状态查询
 func (r *MongoBatchOperationRepository) GetByProjectAndStatus(ctx context.Context, projectID string, status writer.BatchOperationStatus, limit, offset int64) ([]*writer.BatchOperation, error) {
-	objID, err := primitive.ObjectIDFromHex(projectID)
+	objID, err := r.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -274,7 +275,7 @@ func (r *MongoBatchOperationRepository) GetByProjectAndStatus(ctx context.Contex
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询批量操作列表失败: %w", err)
 	}
@@ -297,7 +298,7 @@ func (r *MongoBatchOperationRepository) GetByClientRequestID(ctx context.Context
 		"deleted_at":        nil,
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&op)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&op)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -310,7 +311,7 @@ func (r *MongoBatchOperationRepository) GetByClientRequestID(ctx context.Context
 
 // UpdateStatus 更新操作状态
 func (r *MongoBatchOperationRepository) UpdateStatus(ctx context.Context, operationID string, status writer.BatchOperationStatus) error {
-	objID, err := primitive.ObjectIDFromHex(operationID)
+	objID, err := r.ParseID(operationID)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
@@ -323,7 +324,7 @@ func (r *MongoBatchOperationRepository) UpdateStatus(ctx context.Context, operat
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新操作状态失败: %w", err)
 	}
@@ -337,7 +338,7 @@ func (r *MongoBatchOperationRepository) UpdateStatus(ctx context.Context, operat
 
 // UpdateItemStatus 更新操作项状态
 func (r *MongoBatchOperationRepository) UpdateItemStatus(ctx context.Context, operationID, targetID string, itemStatus writer.BatchItemStatus, errCode, errMsg string) error {
-	objID, err := primitive.ObjectIDFromHex(operationID)
+	objID, err := r.ParseID(operationID)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
@@ -370,7 +371,7 @@ func (r *MongoBatchOperationRepository) UpdateItemStatus(ctx context.Context, op
 		update["$set"].(bson.M)["items.$.started_at"] = &now
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新操作项状态失败: %w", err)
 	}
@@ -400,7 +401,7 @@ func (r *MongoBatchOperationRepository) GetPendingOperations(ctx context.Context
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询待处理操作失败: %w", err)
 	}
@@ -425,7 +426,7 @@ func (r *MongoBatchOperationRepository) GetProcessingOperations(ctx context.Cont
 		SetLimit(limit).
 		SetSort(bson.D{{Key: "started_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("查询处理中操作失败: %w", err)
 	}
@@ -441,7 +442,7 @@ func (r *MongoBatchOperationRepository) GetProcessingOperations(ctx context.Cont
 
 // CountByProjectAndStatus 按项目和状态统计
 func (r *MongoBatchOperationRepository) CountByProjectAndStatus(ctx context.Context, projectID string, status writer.BatchOperationStatus) (int64, error) {
-	objID, err := primitive.ObjectIDFromHex(projectID)
+	objID, err := r.ParseID(projectID)
 	if err != nil {
 		return 0, fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -452,7 +453,7 @@ func (r *MongoBatchOperationRepository) CountByProjectAndStatus(ctx context.Cont
 		"deleted_at": nil,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("统计批量操作数失败: %w", err)
 	}
@@ -462,12 +463,12 @@ func (r *MongoBatchOperationRepository) CountByProjectAndStatus(ctx context.Cont
 
 // DeleteByProject 按项目删除操作
 func (r *MongoBatchOperationRepository) DeleteByProject(ctx context.Context, operationID, projectID string) error {
-	opObjID, err := primitive.ObjectIDFromHex(operationID)
+	opObjID, err := r.ParseID(operationID)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
 
-	projectObjID, err := primitive.ObjectIDFromHex(projectID)
+	projectObjID, err := r.ParseID(projectID)
 	if err != nil {
 		return fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -477,7 +478,7 @@ func (r *MongoBatchOperationRepository) DeleteByProject(ctx context.Context, ope
 		"project_id": projectObjID,
 	}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除批量操作失败: %w", err)
 	}
@@ -491,12 +492,12 @@ func (r *MongoBatchOperationRepository) DeleteByProject(ctx context.Context, ope
 
 // SoftDeleteByProject 按项目软删除
 func (r *MongoBatchOperationRepository) SoftDeleteByProject(ctx context.Context, operationID, projectID string) error {
-	opObjID, err := primitive.ObjectIDFromHex(operationID)
+	opObjID, err := r.ParseID(operationID)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
 
-	projectObjID, err := primitive.ObjectIDFromHex(projectID)
+	projectObjID, err := r.ParseID(projectID)
 	if err != nil {
 		return fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -515,7 +516,7 @@ func (r *MongoBatchOperationRepository) SoftDeleteByProject(ctx context.Context,
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("软删除批量操作失败: %w", err)
 	}
@@ -529,12 +530,12 @@ func (r *MongoBatchOperationRepository) SoftDeleteByProject(ctx context.Context,
 
 // IsProjectMember 检查操作是否属于项目
 func (r *MongoBatchOperationRepository) IsProjectMember(ctx context.Context, operationID, projectID string) (bool, error) {
-	opObjID, err := primitive.ObjectIDFromHex(operationID)
+	opObjID, err := r.ParseID(operationID)
 	if err != nil {
 		return false, fmt.Errorf("无效的批量操作ID: %w", err)
 	}
 
-	projectObjID, err := primitive.ObjectIDFromHex(projectID)
+	projectObjID, err := r.ParseID(projectID)
 	if err != nil {
 		return false, fmt.Errorf("无效的项目ID: %w", err)
 	}
@@ -545,7 +546,7 @@ func (r *MongoBatchOperationRepository) IsProjectMember(ctx context.Context, ope
 		"deleted_at": nil,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("检查批量操作失败: %w", err)
 	}
@@ -588,7 +589,7 @@ func (r *MongoBatchOperationRepository) EnsureIndexes(ctx context.Context) error
 		},
 	}
 
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
+	_, err := r.GetCollection().Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return fmt.Errorf("创建索引失败: %w", err)
 	}

@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 	writerrepo "Qingyu_backend/repository/interfaces/writer"
 )
 
@@ -18,13 +19,13 @@ const (
 )
 
 type MongoCommentRepository struct {
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 }
 
 // NewMongoCommentRepository 创建批注仓储
 func NewMongoCommentRepository(db *mongo.Database) writerrepo.CommentRepository {
 	return &MongoCommentRepository{
-		collection: db.Collection(CommentCollection),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, CommentCollection),
 	}
 }
 
@@ -40,7 +41,7 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *writer.Doc
 		comment.ThreadID = &threadID
 	}
 
-	_, err := r.collection.InsertOne(ctx, comment)
+	_, err := r.GetCollection().InsertOne(ctx, comment)
 	return err
 }
 
@@ -49,7 +50,7 @@ func (r *MongoCommentRepository) GetByID(ctx context.Context, id primitive.Objec
 	var comment writer.DocumentComment
 	filter := bson.M{"_id": id, "deleted_at": nil}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&comment)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&comment)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func (r *MongoCommentRepository) Update(ctx context.Context, id primitive.Object
 	filter := bson.M{"_id": id, "deleted_at": nil}
 	update := bson.M{"$set": comment}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	return err
 }
 
@@ -73,14 +74,14 @@ func (r *MongoCommentRepository) Delete(ctx context.Context, id primitive.Object
 	filter := bson.M{"_id": id, "deleted_at": nil}
 	update := bson.M{"$set": bson.M{"deleted_at": now}}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	return err
 }
 
 // HardDelete 硬删除批注
 func (r *MongoCommentRepository) HardDelete(ctx context.Context, id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
-	_, err := r.collection.DeleteOne(ctx, filter)
+	_, err := r.GetCollection().DeleteOne(ctx, filter)
 	return err
 }
 
@@ -89,7 +90,7 @@ func (r *MongoCommentRepository) List(ctx context.Context, filter *writer.Commen
 	mongoFilter := r.buildFilter(filter)
 
 	// 获取总数
-	total, err := r.collection.CountDocuments(ctx, mongoFilter)
+	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -101,7 +102,7 @@ func (r *MongoCommentRepository) List(ctx context.Context, filter *writer.Commen
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -123,7 +124,7 @@ func (r *MongoCommentRepository) GetByDocument(ctx context.Context, documentID p
 	}
 
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +146,7 @@ func (r *MongoCommentRepository) GetByChapter(ctx context.Context, chapterID pri
 	}
 
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +166,7 @@ func (r *MongoCommentRepository) GetThread(ctx context.Context, threadID primiti
 	filter := bson.M{"thread_id": threadID, "deleted_at": nil}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func (r *MongoCommentRepository) GetReplies(ctx context.Context, parentID primit
 	filter := bson.M{"parent_id": parentID, "deleted_at": nil}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +242,7 @@ func (r *MongoCommentRepository) MarkAsResolved(ctx context.Context, id primitiv
 		"updated_at":  now,
 	}}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	return err
 }
 
@@ -256,7 +257,7 @@ func (r *MongoCommentRepository) MarkAsUnresolved(ctx context.Context, id primit
 		"updated_at":  now,
 	}}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	return err
 }
 
@@ -265,11 +266,11 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 	filter := bson.M{"document_id": documentID, "deleted_at": nil}
 
 	// 总数
-	totalCount, _ := r.collection.CountDocuments(ctx, filter)
+	totalCount, _ := r.GetCollection().CountDocuments(ctx, filter)
 
 	// 已解决数
 	resolvedFilter := bson.M{"document_id": documentID, "resolved": true, "deleted_at": nil}
-	resolvedCount, _ := r.collection.CountDocuments(ctx, resolvedFilter)
+	resolvedCount, _ := r.GetCollection().CountDocuments(ctx, resolvedFilter)
 
 	// 未解决数
 	unresolvedCount := totalCount - resolvedCount
@@ -283,7 +284,7 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 		}},
 	}
 
-	cursor, _ := r.collection.Aggregate(ctx, pipeline)
+	cursor, _ := r.GetCollection().Aggregate(ctx, pipeline)
 	defer cursor.Close(ctx)
 
 	byType := make(map[string]int)
@@ -304,14 +305,14 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 		}},
 	}
 
-	cursor, _ = r.collection.Aggregate(ctx, pipeline)
+	cursor, _ = r.GetCollection().Aggregate(ctx, pipeline)
 	defer cursor.Close(ctx)
 
 	byUser := make(map[string]int)
 	results = nil
 	cursor.All(ctx, &results)
 	for _, result := range results {
-		userID := result["_id"].(primitive.ObjectID).Hex()
+		userID := r.IDToHex(result["_id"].(primitive.ObjectID))
 		count := result["count"].(int32)
 		byUser[userID] = int(count)
 	}
@@ -331,7 +332,7 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 func (r *MongoCommentRepository) GetUserComments(ctx context.Context, userID primitive.ObjectID, page, pageSize int) ([]*writer.DocumentComment, int64, error) {
 	filter := bson.M{"user_id": userID, "deleted_at": nil}
 
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -342,7 +343,7 @@ func (r *MongoCommentRepository) GetUserComments(ctx context.Context, userID pri
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -362,7 +363,7 @@ func (r *MongoCommentRepository) BatchDelete(ctx context.Context, ids []primitiv
 	filter := bson.M{"_id": bson.M{"$in": ids}, "deleted_at": nil}
 	update := bson.M{"$set": bson.M{"deleted_at": now}}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
@@ -374,7 +375,7 @@ func (r *MongoCommentRepository) Search(ctx context.Context, keyword string, doc
 		"content":     bson.M{"$regex": keyword, "$options": "i"},
 	}
 
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -385,7 +386,7 @@ func (r *MongoCommentRepository) Search(ctx context.Context, keyword string, doc
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, err
 	}

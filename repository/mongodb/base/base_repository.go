@@ -37,6 +37,7 @@ import (
 //	    // ...
 //	}
 type BaseMongoRepository struct {
+	db         *mongo.Database
 	collection *mongo.Collection
 }
 
@@ -50,8 +51,17 @@ type BaseMongoRepository struct {
 //   - *BaseMongoRepository: 基类实例
 func NewBaseMongoRepository(db *mongo.Database, collectionName string) *BaseMongoRepository {
 	return &BaseMongoRepository{
+		db:         db,
 		collection: db.Collection(collectionName),
 	}
+}
+
+// GetDB 获取数据库实例（用于事务等需要访问db的场景）
+//
+// 返回：
+//   - *mongo.Database: MongoDB数据库实例
+func (b *BaseMongoRepository) GetDB() *mongo.Database {
+	return b.db
 }
 
 // GetCollection 获取集合实例（用于子类直接访问）

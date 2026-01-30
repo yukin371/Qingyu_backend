@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository/mongodb/base"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,16 +17,16 @@ import (
 
 // CharacterRepositoryMongo Character Repository的MongoDB实现
 type CharacterRepositoryMongo struct {
-	db                  *mongo.Database
-	characterCollection *mongo.Collection
-	relationCollection  *mongo.Collection
+	*base.BaseMongoRepository // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	db                        *mongo.Database
+	relationCollection        *mongo.Collection // 关系collection独立管理喵~
 }
 
 // NewCharacterRepository 创建CharacterRepository实例
 func NewCharacterRepository(db *mongo.Database) writerRepo.CharacterRepository {
 	return &CharacterRepositoryMongo{
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "characters"),
 		db:                  db,
-		characterCollection: db.Collection("characters"),
 		relationCollection:  db.Collection("character_relations"),
 	}
 }
@@ -40,7 +41,7 @@ func (r *CharacterRepositoryMongo) Create(ctx context.Context, character *writer
 	character.CreatedAt = now
 	character.UpdatedAt = now
 
-	_, err := r.characterCollection.InsertOne(ctx, character)
+	_, err := r.GetCollection().InsertOne(ctx, character)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create character failed", err)
 	}
@@ -53,7 +54,7 @@ func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID str
 	var character writer.Character
 	filter := bson.M{"_id": characterID}
 
-	err := r.characterCollection.FindOne(ctx, filter).Decode(&character)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&character)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "character not found", err)
@@ -68,7 +69,7 @@ func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID str
 func (r *CharacterRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Character, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.characterCollection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find characters failed", err)
 	}
@@ -89,7 +90,7 @@ func (r *CharacterRepositoryMongo) Update(ctx context.Context, character *writer
 	filter := bson.M{"_id": character.ID}
 	update := bson.M{"$set": character}
 
-	result, err := r.characterCollection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update character failed", err)
 	}
@@ -105,7 +106,7 @@ func (r *CharacterRepositoryMongo) Update(ctx context.Context, character *writer
 func (r *CharacterRepositoryMongo) Delete(ctx context.Context, characterID string) error {
 	filter := bson.M{"_id": characterID}
 
-	result, err := r.characterCollection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete character failed", err)
 	}
@@ -197,7 +198,7 @@ func (r *CharacterRepositoryMongo) DeleteRelation(ctx context.Context, relationI
 // ExistsByID 检查角色是否存在
 func (r *CharacterRepositoryMongo) ExistsByID(ctx context.Context, characterID string) (bool, error) {
 	filter := bson.M{"_id": characterID}
-	count, err := r.characterCollection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, errors.NewRepositoryError(errors.RepositoryErrorInternal, fmt.Sprintf("check character exists failed: %s", characterID), err)
 	}
@@ -207,7 +208,7 @@ func (r *CharacterRepositoryMongo) ExistsByID(ctx context.Context, characterID s
 // CountByProjectID 统计项目下的角色数量
 func (r *CharacterRepositoryMongo) CountByProjectID(ctx context.Context, projectID string) (int64, error) {
 	filter := bson.M{"project_id": projectID}
-	count, err := r.characterCollection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count characters failed", err)
 	}

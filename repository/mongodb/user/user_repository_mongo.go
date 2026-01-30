@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"Qingyu_backend/repository/mongodb/base"
 	usersModel "Qingyu_backend/models/users"
 	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
@@ -18,16 +19,15 @@ import (
 // MongoUserRepository MongoDB用户仓储实现
 // 基于新的架构设计，实现BaseRepository和UserRepository接口
 type MongoUserRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository  // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	db *mongo.Database
 }
 
 // NewMongoUserRepository 创建新的MongoDB用户仓储实例
 func NewMongoUserRepository(db *mongo.Database) UserInterface.UserRepository {
-	// 创建新的MongoDB用户仓储实例
 	return &MongoUserRepository{
-		db:         db,
-		collection: db.Collection("users"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "users"),
+		db:                 db,
 	}
 }
 
@@ -76,7 +76,7 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 	}
 
 	// 插入文档
-	_, err := r.collection.InsertOne(ctx, actualUser)
+	_, err := r.GetCollection().InsertOne(ctx, actualUser)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return UserInterface.NewUserRepositoryError(
@@ -102,7 +102,7 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *usersModel.User)
 
 // GetByID 根据ID获取用户
 func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersModel.User, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
@@ -119,7 +119,7 @@ func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersMod
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	err = r.collection.FindOne(ctx, mongoFilter).Decode(&user)
+	err = r.GetCollection().FindOne(ctx, mongoFilter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -140,7 +140,7 @@ func (r *MongoUserRepository) GetByID(ctx context.Context, id string) (*usersMod
 
 // Update 更新用户信息
 func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
@@ -159,7 +159,7 @@ func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map
 	}
 	update := bson.M{"$set": updates}
 
-	result, err := r.collection.UpdateOne(ctx, mongoFilter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, mongoFilter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -181,7 +181,7 @@ func (r *MongoUserRepository) Update(ctx context.Context, id string, updates map
 
 // Delete 软删除用户
 func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
@@ -198,7 +198,7 @@ func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 	}
 	update := bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, mongoFilter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, mongoFilter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -220,7 +220,7 @@ func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 
 // HardDelete 硬删除用户
 func (r *MongoUserRepository) HardDelete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeValidation,
@@ -231,7 +231,7 @@ func (r *MongoUserRepository) HardDelete(ctx context.Context, id string) error {
 
 	filter := bson.M{"_id": objectID}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -287,7 +287,7 @@ func (r *MongoUserRepository) List(ctx context.Context, filter infrastructure.Fi
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	// 执行查询
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -346,7 +346,7 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 	pagination.CalculatePagination()
 
 	// 获取总数
-	total, err := r.collection.CountDocuments(ctx, mongoFilter)
+	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -361,7 +361,7 @@ func (r *MongoUserRepository) ListWithPagination(ctx context.Context, filter Use
 	opts.SetLimit(int64(pagination.PageSize))
 
 	// 执行查询
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -441,7 +441,7 @@ func (r *MongoUserRepository) Count(ctx context.Context, filter infrastructure.F
 		mongoFilter["created_at"].(bson.M)["$lte"] = userFilter.ToDate
 	}
 
-	count, err := r.collection.CountDocuments(ctx, mongoFilter)
+	count, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return 0, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -460,7 +460,7 @@ func (r *MongoUserRepository) Exists(ctx context.Context, id string) (bool, erro
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	count, err := r.collection.CountDocuments(ctx, mongoFilter)
+	count, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return false, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -482,7 +482,7 @@ func (r *MongoUserRepository) GetByUsername(ctx context.Context, username string
 		// 软删除检查应该在业务层处理，这里只查询用户是否存在
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&user)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -511,7 +511,7 @@ func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*us
 		// 软删除检查应该在业务层处理，这里只查询用户是否存在
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&user)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -537,7 +537,7 @@ func (r *MongoUserRepository) ExistsByUsername(ctx context.Context, username str
 		// 注意：User 模型使用 status 字段，软删除检查在业务层处理
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -556,7 +556,7 @@ func (r *MongoUserRepository) ExistsByEmail(ctx context.Context, email string) (
 		// 注意：User 模型使用 status 字段，软删除检查在业务层处理
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -578,7 +578,7 @@ func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id string, ip
 		"updated_at":    now,
 	}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -604,7 +604,7 @@ func (r *MongoUserRepository) UpdatePassword(ctx context.Context, id string, has
 	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"password": hashedPassword, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -630,7 +630,7 @@ func (r *MongoUserRepository) UpdatePasswordByEmail(ctx context.Context, email s
 	filter := bson.M{"email": email, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"password": hashedPassword, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -663,7 +663,7 @@ func (r *MongoUserRepository) GetActiveUsers(ctx context.Context, limit int64) (
 		SetSort(bson.M{"last_login_at": -1}).
 		SetLimit(limit)
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -735,7 +735,7 @@ func (r *MongoUserRepository) BatchUpdate(ctx context.Context, filters []UserInt
 	// 批量更新
 	filter := bson.M{"$or": orConditions}
 	update := bson.M{"$set": updates}
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(UserInterface.ErrorTypeInternal,
 			"批量更新用户失败", err)
@@ -762,8 +762,8 @@ func (r *MongoUserRepository) Transaction(ctx context.Context,
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// 创建事务内的Repository实例
 		txRepo := &MongoUserRepository{
-			db:         r.db,
-			collection: r.collection,
+			BaseMongoRepository: r.BaseMongoRepository,
+			db:                 r.db,
 		}
 
 		return nil, fn(sessCtx, txRepo)
@@ -816,7 +816,7 @@ func (r *MongoUserRepository) BatchCreate(ctx context.Context, users []*usersMod
 	}
 
 	// 执行批量插入
-	_, err := r.collection.InsertMany(ctx, documents)
+	_, err := r.GetCollection().InsertMany(ctx, documents)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return UserInterface.NewUserRepositoryError(UserInterface.ErrorTypeDuplicate,
@@ -891,7 +891,7 @@ func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter inf
 	pagination.CalculatePagination()
 
 	// 获取总数
-	total, err := r.collection.CountDocuments(ctx, mongoFilter)
+	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -914,7 +914,7 @@ func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter inf
 	}
 
 	// 执行查询
-	cursor, err := r.collection.Find(ctx, mongoFilter, findOptions)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, findOptions)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -969,7 +969,7 @@ func (r *MongoUserRepository) GetByPhone(ctx context.Context, phone string) (*us
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&user)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, UserInterface.NewUserRepositoryError(
@@ -995,7 +995,7 @@ func (r *MongoUserRepository) ExistsByPhone(ctx context.Context, phone string) (
 		"deleted_at": bson.M{"$exists": false},
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1013,7 +1013,7 @@ func (r *MongoUserRepository) UpdateStatus(ctx context.Context, id string, statu
 	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"status": status, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1044,7 +1044,7 @@ func (r *MongoUserRepository) GetUsersByRole(ctx context.Context, role string, l
 		SetSort(bson.M{"created_at": -1}).
 		SetLimit(limit)
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1084,7 +1084,7 @@ func (r *MongoUserRepository) SetEmailVerified(ctx context.Context, id string, v
 	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"email_verified": verified, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1110,7 +1110,7 @@ func (r *MongoUserRepository) SetPhoneVerified(ctx context.Context, id string, v
 	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"phone_verified": verified, "updated_at": now}}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1143,7 +1143,7 @@ func (r *MongoUserRepository) BatchUpdateStatus(ctx context.Context, ids []strin
 	}
 	update := bson.M{"$set": bson.M{"status": status, "updated_at": now}}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1168,7 +1168,7 @@ func (r *MongoUserRepository) BatchDelete(ctx context.Context, ids []string) err
 	}
 	update := bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1239,7 +1239,7 @@ func (r *MongoUserRepository) FindWithFilter(ctx context.Context, filter *usersM
 	}
 
 	// 获取总数
-	total, err := r.collection.CountDocuments(ctx, mongoFilter)
+	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		return nil, 0, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1261,7 +1261,7 @@ func (r *MongoUserRepository) FindWithFilter(ctx context.Context, filter *usersM
 	opts.SetSort(bson.M{filter.SortBy: sortOrder})
 
 	// 执行查询
-	cursor, err := r.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
 	if err != nil {
 		return nil, 0, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1311,7 +1311,7 @@ func (r *MongoUserRepository) SearchUsers(ctx context.Context, keyword string, l
 		SetLimit(int64(limit)).
 		SetSort(bson.M{"created_at": -1})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1352,7 +1352,7 @@ func (r *MongoUserRepository) CountByRole(ctx context.Context, role string) (int
 		"role":       role,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1371,7 +1371,7 @@ func (r *MongoUserRepository) CountByStatus(ctx context.Context, status usersMod
 		"status":     status,
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1397,7 +1397,7 @@ func (r *MongoUserRepository) UnbindEmail(ctx context.Context, id string) error 
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -1429,7 +1429,7 @@ func (r *MongoUserRepository) UnbindPhone(ctx context.Context, id string) error 
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,

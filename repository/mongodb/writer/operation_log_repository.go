@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -42,27 +43,27 @@ type OperationLogRepository interface {
 
 // OperationLogRepositoryImpl 操作日志仓储实现
 type OperationLogRepositoryImpl struct {
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 }
 
 // NewOperationLogRepository 创建操作日志仓储
 func NewOperationLogRepository(db *mongo.Database) OperationLogRepository {
 	return &OperationLogRepositoryImpl{
-		collection: db.Collection("operation_logs"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "operation_logs"),
 	}
 }
 
 // Create 创建操作日志
 func (r *OperationLogRepositoryImpl) Create(ctx context.Context, log *writer.OperationLog) error {
 	log.TouchForCreate()
-	_, err := r.collection.InsertOne(ctx, log)
+	_, err := r.GetCollection().InsertOne(ctx, log)
 	return err
 }
 
 // GetByID 根据ID获取操作日志
 func (r *OperationLogRepositoryImpl) GetByID(ctx context.Context, id primitive.ObjectID) (*writer.OperationLog, error) {
 	var log writer.OperationLog
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&log)
+	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&log)
 	if err == mongo.ErrNoDocuments {
 		return nil, ErrOperationLogNotFound
 	}
@@ -74,7 +75,7 @@ func (r *OperationLogRepositoryImpl) GetByChainID(ctx context.Context, chainID s
 	filter := bson.M{"chain_id": chainID}
 	opts := options.Find().SetSort(bson.M{"created_at": 1})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (r *OperationLogRepositoryImpl) GetLatestByProject(ctx context.Context, pro
 		SetSort(bson.M{"created_at": -1}).
 		SetLimit(int64(limit))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func (r *OperationLogRepositoryImpl) UpdateStatus(ctx context.Context, id primit
 		update["$set"].(bson.M)["redone_at"] = primitive.NewDateTimeFromTime(time.Now())
 	}
 
-	result, err := r.collection.UpdateByID(ctx, id, update)
+	result, err := r.GetCollection().UpdateByID(ctx, id, update)
 	if err != nil {
 		return err
 	}
@@ -135,7 +136,7 @@ func (r *OperationLogRepositoryImpl) MarkAsCommitted(ctx context.Context, id pri
 		"is_committed": true,
 		"updated_at":   primitive.NewDateTimeFromTime(time.Now()),
 	}}
-	result, err := r.collection.UpdateByID(ctx, id, update)
+	result, err := r.GetCollection().UpdateByID(ctx, id, update)
 	if err != nil {
 		return err
 	}

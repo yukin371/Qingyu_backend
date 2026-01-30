@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository/mongodb/base"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,17 +17,15 @@ import (
 
 // LocationRepositoryMongo Location Repository的MongoDB实现
 type LocationRepositoryMongo struct {
-	db                 *mongo.Database
-	locationCollection *mongo.Collection
-	relationCollection *mongo.Collection
+	*base.BaseMongoRepository // 嵌入location集合的基类
+	relationCollection        *mongo.Collection // relation集合单独管理
 }
 
 // NewLocationRepository 创建LocationRepository实例
 func NewLocationRepository(db *mongo.Database) writerRepo.LocationRepository {
 	return &LocationRepositoryMongo{
-		db:                 db,
-		locationCollection: db.Collection("locations"),
-		relationCollection: db.Collection("location_relations"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "locations"),
+		relationCollection:  db.Collection("location_relations"),
 	}
 }
 
@@ -40,7 +39,7 @@ func (r *LocationRepositoryMongo) Create(ctx context.Context, location *writer.L
 	location.CreatedAt = now
 	location.UpdatedAt = now
 
-	_, err := r.locationCollection.InsertOne(ctx, location)
+	_, err := r.GetCollection().InsertOne(ctx, location)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create location failed", err)
 	}
@@ -51,9 +50,13 @@ func (r *LocationRepositoryMongo) Create(ctx context.Context, location *writer.L
 // FindByID 根据ID查询地点
 func (r *LocationRepositoryMongo) FindByID(ctx context.Context, locationID string) (*writer.Location, error) {
 	var location writer.Location
-	filter := bson.M{"_id": locationID}
+	oid, err := r.ParseID(locationID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid location ID", err)
+	}
+	filter := bson.M{"_id": oid}
 
-	err := r.locationCollection.FindOne(ctx, filter).Decode(&location)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&location)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "location not found", err)
@@ -68,7 +71,7 @@ func (r *LocationRepositoryMongo) FindByID(ctx context.Context, locationID strin
 func (r *LocationRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Location, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.locationCollection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find locations failed", err)
 	}
@@ -86,7 +89,7 @@ func (r *LocationRepositoryMongo) FindByProjectID(ctx context.Context, projectID
 func (r *LocationRepositoryMongo) FindByParentID(ctx context.Context, parentID string) ([]*writer.Location, error) {
 	filter := bson.M{"parent_id": parentID}
 
-	cursor, err := r.locationCollection.Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find child locations failed", err)
 	}
@@ -107,7 +110,7 @@ func (r *LocationRepositoryMongo) Update(ctx context.Context, location *writer.L
 	filter := bson.M{"_id": location.ID}
 	update := bson.M{"$set": location}
 
-	result, err := r.locationCollection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update location failed", err)
 	}
@@ -121,9 +124,14 @@ func (r *LocationRepositoryMongo) Update(ctx context.Context, location *writer.L
 
 // Delete 删除地点
 func (r *LocationRepositoryMongo) Delete(ctx context.Context, locationID string) error {
-	filter := bson.M{"_id": locationID}
+	oid, err := r.ParseID(locationID)
+	if err != nil {
+		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid location ID", err)
+	}
 
-	result, err := r.locationCollection.DeleteOne(ctx, filter)
+	filter := bson.M{"_id": oid}
+
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete location failed", err)
 	}
@@ -180,7 +188,12 @@ func (r *LocationRepositoryMongo) FindRelations(ctx context.Context, projectID s
 
 // DeleteRelation 删除地点关系
 func (r *LocationRepositoryMongo) DeleteRelation(ctx context.Context, relationID string) error {
-	filter := bson.M{"_id": relationID}
+	oid, err := r.ParseID(relationID)
+	if err != nil {
+		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid relation ID", err)
+	}
+
+	filter := bson.M{"_id": oid}
 
 	result, err := r.relationCollection.DeleteOne(ctx, filter)
 	if err != nil {
@@ -196,8 +209,13 @@ func (r *LocationRepositoryMongo) DeleteRelation(ctx context.Context, relationID
 
 // ExistsByID 检查地点是否存在
 func (r *LocationRepositoryMongo) ExistsByID(ctx context.Context, locationID string) (bool, error) {
-	filter := bson.M{"_id": locationID}
-	count, err := r.locationCollection.CountDocuments(ctx, filter)
+	oid, err := r.ParseID(locationID)
+	if err != nil {
+		return false, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid location ID", err)
+	}
+
+	filter := bson.M{"_id": oid}
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, errors.NewRepositoryError(errors.RepositoryErrorInternal, fmt.Sprintf("check location exists failed: %s", locationID), err)
 	}
@@ -207,7 +225,7 @@ func (r *LocationRepositoryMongo) ExistsByID(ctx context.Context, locationID str
 // CountByProjectID 统计项目下的地点数量
 func (r *LocationRepositoryMongo) CountByProjectID(ctx context.Context, projectID string) (int64, error) {
 	filter := bson.M{"project_id": projectID}
-	count, err := r.locationCollection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count locations failed", err)
 	}

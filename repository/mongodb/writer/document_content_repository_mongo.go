@@ -2,6 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"fmt"
 	"time"
@@ -17,15 +18,15 @@ import (
 
 // MongoDocumentContentRepository MongoDB文档内容仓储实现
 type MongoDocumentContentRepository struct {
-	db         *mongo.Database
-	collection *mongo.Collection
+	*base.BaseMongoRepository
+	db *mongo.Database
 }
 
 // NewMongoDocumentContentRepository 创建MongoDB文档内容仓储
 func NewMongoDocumentContentRepository(db *mongo.Database) writingInterface.DocumentContentRepository {
 	return &MongoDocumentContentRepository{
-		db:         db,
-		collection: db.Collection("document_contents"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "document_contents"),
+		db:                  db,
 	}
 }
 
@@ -45,7 +46,7 @@ func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *wr
 		return fmt.Errorf("文档内容数据验证失败: %w", err)
 	}
 
-	_, err := r.collection.InsertOne(ctx, content)
+	_, err := r.GetCollection().InsertOne(ctx, content)
 	if err != nil {
 		return fmt.Errorf("创建文档内容失败: %w", err)
 	}
@@ -55,14 +56,14 @@ func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *wr
 
 // GetByID 根据ID获取文档内容
 func (r *MongoDocumentContentRepository) GetByID(ctx context.Context, id string) (*writer.DocumentContent, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("无效的ID: %w", err)
 	}
 
 	var content writer.DocumentContent
 
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&content)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -75,13 +76,13 @@ func (r *MongoDocumentContentRepository) GetByID(ctx context.Context, id string)
 
 // GetByDocumentID 根据DocumentID获取文档内容
 func (r *MongoDocumentContentRepository) GetByDocumentID(ctx context.Context, documentID string) (*writer.DocumentContent, error) {
-	objectID, err := primitive.ObjectIDFromHex(documentID)
+	objectID, err := r.ParseID(documentID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的DocumentID: %w", err)
 	}
 
 	var content writer.DocumentContent
-	err = r.collection.FindOne(ctx, bson.M{"document_id": objectID}).Decode(&content)
+	err = r.GetCollection().FindOne(ctx, bson.M{"document_id": objectID}).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -95,7 +96,7 @@ func (r *MongoDocumentContentRepository) GetByDocumentID(ctx context.Context, do
 // Update 更新文档内容
 func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
-	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	result, err := r.GetCollection().UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("更新文档内容失败: %w", err)
 	}
@@ -109,7 +110,7 @@ func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, 
 
 // UpdateWithVersion 带版本号的更新（乐观锁）
 func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
-	objectID, err := primitive.ObjectIDFromHex(documentID)
+	objectID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的DocumentID: %w", err)
 	}
@@ -135,7 +136,7 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("更新文档内容失败: %w", err)
 	}
@@ -149,7 +150,7 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 
 // Delete 删除文档内容
 func (r *MongoDocumentContentRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("删除文档内容失败: %w", err)
 	}
@@ -163,7 +164,7 @@ func (r *MongoDocumentContentRepository) Delete(ctx context.Context, id string) 
 
 // List 列出文档内容
 func (r *MongoDocumentContentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.DocumentContent, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{})
+	cursor, err := r.GetCollection().Find(ctx, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("查询文档内容列表失败: %w", err)
 	}
@@ -179,7 +180,7 @@ func (r *MongoDocumentContentRepository) List(ctx context.Context, filter infras
 
 // Count 统计文档内容数量
 func (r *MongoDocumentContentRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{})
 	if err != nil {
 		return 0, fmt.Errorf("统计文档内容数量失败: %w", err)
 	}
@@ -188,7 +189,7 @@ func (r *MongoDocumentContentRepository) Count(ctx context.Context, filter infra
 
 // Exists 检查文档内容是否存在
 func (r *MongoDocumentContentRepository) Exists(ctx context.Context, id string) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, fmt.Errorf("检查文档内容存在性失败: %w", err)
 	}
@@ -205,7 +206,7 @@ func (r *MongoDocumentContentRepository) BatchUpdateContent(ctx context.Context,
 // GetContentStats 获取内容统计
 func (r *MongoDocumentContentRepository) GetContentStats(ctx context.Context, documentID string) (wordCount, charCount int, err error) {
 	var content writer.DocumentContent
-	err = r.collection.FindOne(ctx, bson.M{"document_id": documentID}, options.FindOne().SetProjection(bson.M{"word_count": 1, "char_count": 1})).Decode(&content)
+	err = r.GetCollection().FindOne(ctx, bson.M{"document_id": documentID}, options.FindOne().SetProjection(bson.M{"word_count": 1, "char_count": 1})).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, 0, nil
