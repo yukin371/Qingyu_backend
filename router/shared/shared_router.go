@@ -5,39 +5,41 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
+	"Qingyu_backend/internal/middleware/ratelimit"
+	mw "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/finance/wallet"
-	"Qingyu_backend/service/shared/auth"
+	sharedAuth "Qingyu_backend/service/shared/auth"
 	search_legacy "Qingyu_backend/service/shared/search_legacy"
 	"Qingyu_backend/service/shared/storage"
+	walletService "Qingyu_backend/service/finance/wallet"
 )
 
 // RegisterRoutes 注册共享服务路由（向后兼容）
 // 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
 func RegisterRoutes(
 	r *gin.RouterGroup,
-	authService auth.AuthService,
-	oauthService *auth.OAuthService,
+	authService sharedAuth.AuthService,
+	oauthService *sharedAuth.OAuthService,
 	logger *zap.Logger,
-	walletService wallet.WalletService,
+	walletSvc walletService.WalletService,
 	storageService *storage.StorageServiceImpl,
 	multipartService *storage.MultipartUploadService,
 	imageProcessor *storage.ImageProcessor,
 ) {
 	// 应用全局中间件
-	r.Use(middleware.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
-	r.Use(middleware.ResponseTimingMiddleware())    // 响应时间记录
-	r.Use(middleware.CORSMiddleware())              // 跨域处理
-	r.Use(middleware.Recovery())                    // Panic恢复
-	r.Use(response.GzipMiddleware(5))               // Gzip压缩（压缩级别5）
+	r.Use(mw.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
+	r.Use(mw.ResponseTimingMiddleware())    // 响应时间记录
+	r.Use(mw.CORSMiddleware())              // 跨域处理
+	r.Use(mw.Recovery())                    // Panic恢复
+	r.Use(response.GzipMiddleware(5))       // Gzip压缩（压缩级别5）
 
 	// 调用各个独立的注册函数
 	if authService != nil && oauthService != nil {
 		RegisterAuthRoutes(r, authService, oauthService, logger)
 	}
-	if walletService != nil {
-		RegisterWalletRoutes(r, walletService)
+	if walletSvc != nil {
+		RegisterWalletRoutes(r, walletSvc)
 	}
 	if storageService != nil {
 		RegisterStorageRoutes(r, storageService, multipartService, imageProcessor)
@@ -46,7 +48,7 @@ func RegisterRoutes(
 }
 
 // RegisterAuthRoutes 注册认证服务路由
-func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthService *auth.OAuthService, logger *zap.Logger) {
+func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, oauthService *sharedAuth.OAuthService, logger *zap.Logger) {
 	// 创建API处理器
 	authAPI := shared.NewAuthAPI(authService)
 	oauthAPI := shared.NewOAuthAPI(oauthService, authService, logger)
@@ -56,7 +58,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthS
 	{
 		// 公开路由（添加速率限制）
 		publicAuth := authGroup.Group("")
-		publicAuth.Use(middleware.RateLimitMiddleware(10, 60)) // 10次/分钟
+		publicAuth.Use(ratelimit.RateLimitMiddlewareSimple(10, 60)) // 10次/分钟
 		{
 			publicAuth.POST("/register", authAPI.Register)
 			publicAuth.POST("/login", authAPI.Login)
@@ -64,8 +66,8 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthS
 
 		// 需要认证的路由
 		authProtected := authGroup.Group("")
-		authProtected.Use(middleware.JWTAuth())
-		authProtected.Use(middleware.RateLimitMiddleware(30, 60)) // 30次/分钟
+		authProtected.Use(auth.JWTAuth())
+		authProtected.Use(ratelimit.RateLimitMiddlewareSimple(30, 60)) // 30次/分钟
 		{
 			authProtected.POST("/logout", authAPI.Logout)
 			authProtected.POST("/refresh", authAPI.RefreshToken)
@@ -79,7 +81,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthS
 	{
 		// 公开路由（添加速率限制）
 		publicOAuth := oauthGroup.Group("")
-		publicOAuth.Use(middleware.RateLimitMiddleware(10, 60)) // 10次/分钟
+		publicOAuth.Use(ratelimit.RateLimitMiddlewareSimple(10, 60)) // 10次/分钟
 		{
 			// 获取授权URL
 			publicOAuth.POST("/:provider/authorize", oauthAPI.GetAuthorizeURL)
@@ -89,8 +91,8 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthS
 
 		// 需要认证的路由
 		oauthProtected := oauthGroup.Group("")
-		oauthProtected.Use(middleware.JWTAuth())
-		oauthProtected.Use(middleware.RateLimitMiddleware(20, 60)) // 20次/分钟
+		oauthProtected.Use(auth.JWTAuth())
+		oauthProtected.Use(ratelimit.RateLimitMiddlewareSimple(20, 60)) // 20次/分钟
 		{
 			// 获取绑定的账号列表
 			oauthProtected.GET("/accounts", oauthAPI.GetLinkedAccounts)
@@ -103,14 +105,14 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService auth.AuthService, oauthS
 }
 
 // RegisterWalletRoutes 注册钱包服务路由
-func RegisterWalletRoutes(r *gin.RouterGroup, walletService wallet.WalletService) {
+func RegisterWalletRoutes(r *gin.RouterGroup, walletService walletService.WalletService) {
 	// 创建API处理器
 	walletAPI := shared.NewWalletAPI(walletService)
 
 	// ============ 钱包服务路由 ============
 	walletGroup := r.Group("/wallet")
-	walletGroup.Use(middleware.JWTAuth())                   // 所有钱包接口都需要认证
-	walletGroup.Use(middleware.RateLimitMiddleware(50, 60)) // 50次/分钟
+	walletGroup.Use(auth.JWTAuth())                   // 所有钱包接口都需要认证
+	walletGroup.Use(ratelimit.RateLimitMiddlewareSimple(50, 60)) // 50次/分钟
 	{
 		// 查询接口
 		walletGroup.GET("/balance", walletAPI.GetBalance)
@@ -138,8 +140,8 @@ func RegisterStorageRoutes(
 
 	// ============ 存储服务路由 ============
 	storageGroup := r.Group("/storage")
-	storageGroup.Use(middleware.JWTAuth())                   // 所有存储接口都需要认证
-	storageGroup.Use(middleware.RateLimitMiddleware(20, 60)) // 20次/分钟（文件操作限制更严格）
+	storageGroup.Use(auth.JWTAuth())                   // 所有存储接口都需要认证
+	storageGroup.Use(ratelimit.RateLimitMiddlewareSimple(20, 60)) // 20次/分钟（文件操作限制更严格）
 	{
 		// 文件操作
 		storageGroup.POST("/upload", storageAPI.UploadFile)
@@ -164,7 +166,7 @@ func RegisterSearchRoutes(r *gin.RouterGroup, searchSvc search_legacy.SearchServ
 	{
 		// 公开路由（无需认证）
 		publicSearch := searchGroup.Group("")
-		publicSearch.Use(middleware.RateLimitMiddleware(30, 60)) // 30次/分钟
+		publicSearch.Use(ratelimit.RateLimitMiddlewareSimple(30, 60)) // 30次/分钟
 		{
 			publicSearch.GET("/suggest", searchAPI.GetSearchSuggestions)
 		}

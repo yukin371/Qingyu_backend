@@ -4,7 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	announcementsAPI "Qingyu_backend/api/v1/announcements"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/ratelimit"
+	"Qingyu_backend/pkg/middleware"
 	messagingService "Qingyu_backend/service/messaging"
 )
 
@@ -27,7 +28,7 @@ func RegisterAnnouncementRoutes(
 	{
 		// 公开路由（无需认证，可选速率限制）
 		publicAnnouncement := announcementGroup.Group("")
-		publicAnnouncement.Use(middleware.RateLimitMiddleware(30, 60)) // 30次/分钟
+		publicAnnouncement.Use(ratelimit.RateLimitMiddlewareSimple(30, 60)) // 30次/分钟
 		{
 			publicAnnouncement.GET("/effective", announcementPublicAPI.GetEffectiveAnnouncements)
 			publicAnnouncement.GET("/:id", announcementPublicAPI.GetAnnouncementByID)

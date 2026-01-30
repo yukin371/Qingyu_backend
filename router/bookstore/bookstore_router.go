@@ -2,7 +2,7 @@ package bookstore
 
 import (
 	bookstoreApi "Qingyu_backend/api/v1/bookstore"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/logger"
 	searchService "Qingyu_backend/service/search"
 	"Qingyu_backend/service/bookstore"
@@ -165,7 +165,7 @@ func InitBookstoreRouter(
 
 	// 需要认证的接口
 	authenticated := bookstoreGroup.Group("")
-	authenticated.Use(middleware.JWTAuth())
+	authenticated.Use(auth.JWTAuth())
 	{
 		// ✅ 书籍点击记录（认证接口 - 关联到用户）
 		authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
@@ -193,7 +193,7 @@ func InitReaderPurchaseRouter(
 	}
 
 	readerGroup := r.Group("/reader")
-	readerGroup.Use(middleware.JWTAuth())
+	readerGroup.Use(auth.JWTAuth())
 	{
 		// 创建章节目录API处理器
 		chapterCatalogApiHandler := bookstoreApi.NewChapterCatalogAPI(nil, purchaseService)

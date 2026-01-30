@@ -10,7 +10,6 @@ import (
 
 	"Qingyu_backend/models/audit"
 	"Qingyu_backend/models/shared"
-	pkgAudit "Qingyu_backend/pkg/audit"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
 	"Qingyu_backend/service/base"
@@ -21,7 +20,7 @@ type ContentAuditService struct {
 	sensitiveWordRepo auditRepo.SensitiveWordRepository
 	auditRecordRepo   auditRepo.AuditRecordRepository
 	violationRepo     auditRepo.ViolationRecordRepository
-	dfaFilter         *pkgAudit.DFAFilter
+	dfaFilter         *DFAFilter
 	ruleEngine        *RuleEngine
 	eventBus          base.EventBus
 	serviceName       string
@@ -38,7 +37,7 @@ func NewContentAuditService(
 		sensitiveWordRepo: sensitiveWordRepo,
 		auditRecordRepo:   auditRecordRepo,
 		violationRepo:     violationRepo,
-		dfaFilter:         pkgAudit.NewDFAFilter(),
+		dfaFilter:         NewDFAFilter(),
 		eventBus:          eventBus,
 		serviceName:       "ContentAuditService",
 	}
@@ -60,14 +59,14 @@ func (s *ContentAuditService) Initialize(ctx context.Context) error {
 
 	// 如果数据库为空，加载默认词库
 	if len(words) == 0 {
-		pkgAudit.LoadDefaultWords(s.dfaFilter)
+		LoadDefaultWords(s.dfaFilter)
 		return nil
 	}
 
 	// 批量添加到DFA过滤器
-	wordInfos := make([]pkgAudit.SensitiveWordInfo, len(words))
+	wordInfos := make([]SensitiveWordInfo, len(words))
 	for i, w := range words {
-		wordInfos[i] = pkgAudit.SensitiveWordInfo{
+		wordInfos[i] = SensitiveWordInfo{
 			Word:     w.Word,
 			Level:    w.Level,
 			Category: w.Category,

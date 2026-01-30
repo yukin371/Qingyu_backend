@@ -2,7 +2,8 @@ package ai
 
 import (
 	aiApi "Qingyu_backend/api/v1/ai"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
+	"Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,7 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 
 	// AI主路由组
 	aiGroup := r.Group("/ai")
-	aiGroup.Use(middleware.JWTAuth()) // 需要认证
+	aiGroup.Use(auth.JWTAuth()) // 需要认证
 	{
 		// 系统功能（不需要配额）
 		aiGroup.GET("/health", systemApiHandler.HealthCheck)

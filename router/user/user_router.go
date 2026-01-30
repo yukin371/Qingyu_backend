@@ -8,7 +8,8 @@ import (
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	userService "Qingyu_backend/service/user"
 	userConstants "Qingyu_backend/service/user"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
+	"Qingyu_backend/internal/middleware/ratelimit"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"Qingyu_backend/service/shared/stats"
 )
@@ -77,9 +78,9 @@ func RegisterUserRoutes(
 
 		// 验证和密码相关（新API） - 公开访问
 		// 应用频率限制：每分钟最多3次请求
-		verifyEmailRateLimit := middleware.RateLimitMiddleware(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
-		verifyPhoneRateLimit := middleware.RateLimitMiddleware(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
-		passwordResetRateLimit := middleware.RateLimitMiddleware(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
+		verifyEmailRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
+		verifyPhoneRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
+		passwordResetRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
 
 		r.POST("/users/verify/email/send", verifyEmailRateLimit, handlers.VerificationAPI.SendEmailVerifyCode)
 		r.POST("/users/verify/phone/send", verifyPhoneRateLimit, handlers.VerificationAPI.SendPhoneVerifyCode)
@@ -97,7 +98,7 @@ func RegisterUserRoutes(
 	// 需要认证的路由
 	// ========================================
 	authenticated := r.Group("/user")
-	authenticated.Use(middleware.JWTAuth())
+	authenticated.Use(auth.JWTAuth())
 	{
 		// 个人信息管理
 		authenticated.GET("/profile", handlers.ProfileHandler.GetProfile)

@@ -2,7 +2,7 @@ package ai
 
 import (
 	aiAPI "Qingyu_backend/api/v1/ai"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ func InitCreativeRoutes(router *gin.RouterGroup, creativeAPI *aiAPI.CreativeAPI)
 		creative.GET("/health", creativeAPI.HealthCheck)
 
 		// 需要认证的路由
-		authGroup := creative.Group("").Use(middleware.JWTAuth())
+		authGroup := creative.Group("").Use(auth.JWTAuth())
 		{
 			// 大纲生成
 			authGroup.POST("/outline", creativeAPI.GenerateOutline)

@@ -2,7 +2,7 @@ package shared
 
 import (
 	sharedApi "Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +18,7 @@ func InitStorageRoutes(router *gin.RouterGroup, api *sharedApi.StorageAPI) {
 
 		// ============ 需要认证的路由 ============
 		authenticated := storage.Group("")
-		authenticated.Use(middleware.JWTAuth())
+		authenticated.Use(auth.JWTAuth())
 		{
 			// 基础文件操作
 			authenticated.POST("/upload", api.UploadFile)     // 上传文件

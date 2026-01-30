@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/writer"
-	"Qingyu_backend/middleware"
+	"Qingyu_backend/internal/middleware/auth"
 )
 
 // InitAuditRouter 初始化审核路由
@@ -42,8 +42,8 @@ func InitAuditRouter(r *gin.RouterGroup, auditService audit.ContentAuditService)
 
 	// 管理员审核接口（需要管理员权限）
 	adminGroup := r.Group("/admin/audit")
-	adminGroup.Use(middleware.JWTAuth())
-	adminGroup.Use(middleware.RequireRole("admin"))
+	adminGroup.Use(auth.JWTAuth())
+	adminGroup.Use(auth.RequireRole("admin"))
 	{
 		// 待复核列表
 		adminGroup.GET("/pending", auditApi.GetPendingReviews)
