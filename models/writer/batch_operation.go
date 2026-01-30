@@ -76,13 +76,15 @@ const (
 type BatchOperationStatus string
 
 const (
-	BatchOpStatusPending    BatchOperationStatus = "pending"     // 待处理
-	BatchOpStatusPreflight  BatchOperationStatus = "preflight"   // 预检查中
-	BatchOpStatusProcessing BatchOperationStatus = "processing"  // 执行中
-	BatchOpStatusCompleted  BatchOperationStatus = "completed"   // 已完成
-	BatchOpStatusFailed     BatchOperationStatus = "failed"      // 失败
-	BatchOpStatusCancelled  BatchOperationStatus = "cancelled"   // 已取消
-	BatchOpStatusPartial    BatchOperationStatus = "partial"     // 部分成功（atomic=false时）
+	BatchOpStatusPending        BatchOperationStatus = "pending"         // 待处理
+	BatchOpStatusPreflight      BatchOperationStatus = "preflight"       // 预检查中
+	BatchOpStatusRunning        BatchOperationStatus = "running"         // 执行中（别名，向后兼容）
+	BatchOpStatusProcessing     BatchOperationStatus = "processing"      // 执行中
+	BatchOpStatusCompleted      BatchOperationStatus = "completed"       // 已完成
+	BatchOpStatusFailed         BatchOperationStatus = "failed"          // 失败
+	BatchOpStatusCancelled      BatchOperationStatus = "cancelled"       // 已取消
+	BatchOpStatusPartial        BatchOperationStatus = "partial"         // 部分成功（atomic=false时）
+	BatchOpStatusPartiallyFailed BatchOperationStatus = "partially_failed" // 部分失败（别名，向后兼容）
 )
 
 // BatchOperationItem 批量操作项
