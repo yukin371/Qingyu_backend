@@ -63,7 +63,7 @@ func createTestAnnouncement(title, content string) *messagingModel.Announcement 
 
 	// 设置嵌入的字段
 	ann.Title = title
-	ann.ID = ""
+	ann.ID = primitive.NilObjectID
 	ann.IsPinned = false
 	ann.ExpiresAt = &later
 
@@ -91,8 +91,7 @@ func TestAnnouncementRepository_GetByID(t *testing.T) {
 	err := repo.Create(ctx, announcement)
 	require.NoError(t, err)
 
-	objectID, err := primitive.ObjectIDFromHex(announcement.ID)
-	require.NoError(t, err)
+	objectID := announcement.ID
 
 	found, err := repo.GetByID(ctx, objectID)
 	require.NoError(t, err)
@@ -121,8 +120,7 @@ func TestAnnouncementRepository_Update(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	objectID, err := primitive.ObjectIDFromHex(announcement.ID)
-	require.NoError(t, err)
+	objectID := announcement.ID
 
 	updates := map[string]interface{}{
 		"title":    "新标题",
@@ -146,8 +144,7 @@ func TestAnnouncementRepository_Delete(t *testing.T) {
 	err := repo.Create(ctx, announcement)
 	require.NoError(t, err)
 
-	objectID, err := primitive.ObjectIDFromHex(announcement.ID)
-	require.NoError(t, err)
+	objectID := announcement.ID
 
 	err = repo.Delete(ctx, objectID)
 	require.NoError(t, err)
@@ -239,8 +236,7 @@ func TestAnnouncementRepository_IncrementViewCount(t *testing.T) {
 	err := repo.Create(ctx, announcement)
 	require.NoError(t, err)
 
-	objectID, err := primitive.ObjectIDFromHex(announcement.ID)
-	require.NoError(t, err)
+	objectID := announcement.ID
 
 	err = repo.IncrementViewCount(ctx, objectID)
 	require.NoError(t, err)
@@ -275,8 +271,7 @@ func TestAnnouncementRepository_Exists(t *testing.T) {
 	err := repo.Create(ctx, announcement)
 	require.NoError(t, err)
 
-	objectID, err := primitive.ObjectIDFromHex(announcement.ID)
-	require.NoError(t, err)
+	objectID := announcement.ID
 
 	exists, err := repo.Exists(ctx, objectID)
 	require.NoError(t, err)

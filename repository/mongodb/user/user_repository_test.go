@@ -62,7 +62,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -184,13 +184,13 @@ func TestUserRepository_Update(t *testing.T) {
 		"username": "updated_username",
 		"status":   usersModel.UserStatusInactive,
 	}
-	err = repo.Update(ctx, testUser.ID, updates)
+	err = repo.Update(ctx, testUser.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "updated_username", found.Username)
 	assert.Equal(t, usersModel.UserStatusInactive, found.Status)
@@ -236,13 +236,13 @@ func TestUserRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除用户
-	err = repo.Delete(ctx, testUser.ID)
+	err = repo.Delete(ctx, testUser.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 	assert.Error(t, err)
 	assert.Nil(t, found)
 }
@@ -345,13 +345,13 @@ func TestUserRepository_UpdateStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 更新状态
-	err = repo.UpdateStatus(ctx, testUser.ID, usersModel.UserStatusBanned)
+	err = repo.UpdateStatus(ctx, testUser.ID.Hex(), usersModel.UserStatusBanned)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证状态更新
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, usersModel.UserStatusBanned, found.Status)
 }
@@ -376,13 +376,13 @@ func TestUserRepository_UpdatePassword(t *testing.T) {
 
 	// Act - 更新密码
 	newPassword := "new_hashed_password"
-	err = repo.UpdatePassword(ctx, testUser.ID, newPassword)
+	err = repo.UpdatePassword(ctx, testUser.ID.Hex(), newPassword)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证密码已更新
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, newPassword, found.Password)
 }
@@ -406,7 +406,7 @@ func TestUserRepository_UpdateLastLogin(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 更新最后登录IP
-	err = repo.UpdateLastLogin(ctx, testUser.ID, "192.168.1.1")
+	err = repo.UpdateLastLogin(ctx, testUser.ID.Hex(), "192.168.1.1")
 
 	// Assert
 	require.NoError(t, err)
@@ -536,13 +536,13 @@ func TestUserRepository_SetEmailVerified(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 设置为已验证
-	err = repo.SetEmailVerified(ctx, testUser.ID, true)
+	err = repo.SetEmailVerified(ctx, testUser.ID.Hex(), true)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证状态
-	found, err := repo.GetByID(ctx, testUser.ID)
+	found, err := repo.GetByID(ctx, testUser.ID.Hex())
 	require.NoError(t, err)
 	assert.True(t, found.EmailVerified)
 }
@@ -567,7 +567,7 @@ func TestUserRepository_BatchUpdateStatus(t *testing.T) {
 		}
 		err := repo.Create(ctx, user)
 		require.NoError(t, err)
-		userIDs = append(userIDs, user.ID)
+		userIDs = append(userIDs, user.ID.Hex())
 	}
 
 	// Act - 批量更新状态
