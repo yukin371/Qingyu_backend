@@ -156,10 +156,7 @@ func (m *JWTAuthMiddleware) Handler() gin.HandlerFunc {
 				)
 			}
 			if isBlacklisted {
-				m.respondWithError(c, appErrors.New(
-					appErrors.TokenRevoked,
-					"Token已被撤销",
-				))
+				m.respondWithError(c, errors.New("2016"))
 				c.Abort()
 				return
 			}

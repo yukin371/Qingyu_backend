@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/pkg/response"
 )

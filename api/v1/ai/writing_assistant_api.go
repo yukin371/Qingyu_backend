@@ -2,7 +2,6 @@ package ai
 
 import (
 
-	"Qingyu_backend/api/v1/shared"
 	aiService "Qingyu_backend/service/ai"
 	"Qingyu_backend/service/ai/dto"
 

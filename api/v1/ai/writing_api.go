@@ -3,9 +3,7 @@ package ai
 import (
 	"fmt"
 	"io"
-	"net/http"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
 	aiService "Qingyu_backend/service/ai"
 

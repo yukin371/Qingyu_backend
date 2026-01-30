@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/pkg/response"
 )
