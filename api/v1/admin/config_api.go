@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"net/http"
 
 	"Qingyu_backend/api/v1/shared"
 	sharedService "Qingyu_backend/service/shared"
@@ -80,7 +79,7 @@ func (api *ConfigAPI) GetConfigByKey(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取配置成功", item)
+	response.SuccessWithMessage(c, "获取配置成功", item)
 }
 
 // UpdateConfigRequest 更新配置请求
@@ -121,7 +120,7 @@ func (api *ConfigAPI) UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "配置更新成功", nil)
+	response.SuccessWithMessage(c, "配置更新成功", nil)
 }
 
 // BatchUpdateConfigRequest 批量更新配置请求
@@ -164,7 +163,7 @@ func (api *ConfigAPI) BatchUpdateConfig(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "配置批量更新成功", nil)
+	response.SuccessWithMessage(c, "配置批量更新成功", nil)
 }
 
 // ValidateConfigRequest 验证配置请求
@@ -196,7 +195,7 @@ func (api *ConfigAPI) ValidateConfig(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "配置验证通过", nil)
+	response.SuccessWithMessage(c, "配置验证通过", nil)
 }
 
 // GetConfigBackupsResponse 获取配置备份响应
@@ -245,5 +244,5 @@ func (api *ConfigAPI) RestoreConfigBackup(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "配置恢复成功", nil)
+	response.SuccessWithMessage(c, "配置恢复成功", nil)
 }

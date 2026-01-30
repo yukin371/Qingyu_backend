@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -72,7 +71,7 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "更新成功", nil)
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // SuspendUserQuota 暂停用户配额（管理员）
@@ -103,7 +102,7 @@ func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "暂停成功", nil)
+	response.SuccessWithMessage(c, "暂停成功", nil)
 }
 
 // ActivateUserQuota 激活用户配额（管理员）
@@ -134,7 +133,7 @@ func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "激活成功", nil)
+	response.SuccessWithMessage(c, "激活成功", nil)
 }
 
 // GetUserQuotaDetails 获取用户配额详情（管理员）
@@ -166,5 +165,5 @@ func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", quotas)
+	response.SuccessWithMessage(c, "获取成功", quotas)
 }
