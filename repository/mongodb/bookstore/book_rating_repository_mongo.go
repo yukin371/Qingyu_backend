@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
 	"time"
@@ -17,15 +18,16 @@ import (
 
 // MongoBookRatingRepository MongoDB书籍评分仓储实现
 type MongoBookRatingRepository struct {
-	collection *mongo.Collection
-	client     *mongo.Client
+	*base.BaseMongoRepository
+	client *mongo.Client
 }
 
 // NewMongoBookRatingRepository 创建MongoDB书籍评分仓储实例
 func NewMongoBookRatingRepository(client *mongo.Client, database string) BookstoreInterface.BookRatingRepository {
+	db := client.Database(database)
 	return &MongoBookRatingRepository{
-		collection: client.Database(database).Collection("book_ratings"),
-		client:     client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "book_ratings"),
+		client:              client,
 	}
 }
 
@@ -37,7 +39,7 @@ func (r *MongoBookRatingRepository) Create(ctx context.Context, rating *bookstor
 
 	rating.BeforeCreate()
 
-	result, err := r.collection.InsertOne(ctx, rating)
+	result, err := r.GetCollection().InsertOne(ctx, rating)
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (r *MongoBookRatingRepository) Create(ctx context.Context, rating *bookstor
 // GetByID 根据ID获取书籍评分
 func (r *MongoBookRatingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore.BookRating, error) {
 	var rating bookstore.BookRating
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&rating)
+	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&rating)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -65,7 +67,7 @@ func (r *MongoBookRatingRepository) Update(ctx context.Context, id primitive.Obj
 		return errors.New("updates cannot be empty")
 	}
 	updates["updated_at"] = time.Now()
-	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	result, err := r.GetCollection().UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
 	if err != nil {
 		return err
 	}
@@ -77,7 +79,7 @@ func (r *MongoBookRatingRepository) Update(ctx context.Context, id primitive.Obj
 
 // Delete 删除书籍评分
 func (r *MongoBookRatingRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
 	}
@@ -100,7 +102,7 @@ func (r *MongoBookRatingRepository) GetAll(ctx context.Context, limit, offset in
 	}
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +128,7 @@ func (r *MongoBookRatingRepository) Count(ctx context.Context, filter infra.Filt
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // List 根据过滤条件列出评分
@@ -148,7 +150,7 @@ func (r *MongoBookRatingRepository) List(ctx context.Context, filter infra.Filte
 			opts.SetSort(sortDoc)
 		}
 	}
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +164,7 @@ func (r *MongoBookRatingRepository) List(ctx context.Context, filter infra.Filte
 
 // Exists 判断评分是否存在
 func (r *MongoBookRatingRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, err
 	}
@@ -181,7 +183,7 @@ func (r *MongoBookRatingRepository) GetByBookID(ctx context.Context, bookID prim
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"book_id": bookID}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +213,7 @@ func (r *MongoBookRatingRepository) GetByUserID(ctx context.Context, userID prim
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"user_id": userID}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +242,7 @@ func (r *MongoBookRatingRepository) GetMostLiked(ctx context.Context, bookID pri
 	}
 	opts.SetSort(bson.D{{Key: "likes", Value: -1}, {Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"book_id": bookID}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +259,7 @@ func (r *MongoBookRatingRepository) GetMostLiked(ctx context.Context, bookID pri
 func (r *MongoBookRatingRepository) GetByBookIDAndUserID(ctx context.Context, bookID, userID primitive.ObjectID) (*bookstore.BookRating, error) {
 	var rating bookstore.BookRating
 	filter := bson.M{"book_id": bookID, "user_id": userID}
-	err := r.collection.FindOne(ctx, filter).Decode(&rating)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&rating)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -279,7 +281,7 @@ func (r *MongoBookRatingRepository) GetByRating(ctx context.Context, rating int,
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"rating": rating}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +310,7 @@ func (r *MongoBookRatingRepository) GetTopRated(ctx context.Context, bookID prim
 	}
 	opts.SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "likes", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"book_id": bookID}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"book_id": bookID}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +335,7 @@ func (r *MongoBookRatingRepository) GetByTags(ctx context.Context, tags []string
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"tags": bson.M{"$in": tags}}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +371,7 @@ func (r *MongoBookRatingRepository) Search(ctx context.Context, keyword string, 
 		},
 	}
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +445,7 @@ func (r *MongoBookRatingRepository) SearchByFilter(ctx context.Context, filter *
 		query["likes"] = bson.M{"$gte": *filter.MinLikes}
 	}
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -464,13 +466,13 @@ func (r *MongoBookRatingRepository) SearchByFilter(ctx context.Context, filter *
 // CountByBookID 根据书籍ID统计评分数量
 func (r *MongoBookRatingRepository) CountByBookID(ctx context.Context, bookID primitive.ObjectID) (int64, error) {
 	filter := bson.M{"book_id": bookID}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountByUserID 根据用户ID统计评分数量
 func (r *MongoBookRatingRepository) CountByUserID(ctx context.Context, userID primitive.ObjectID) (int64, error) {
 	filter := bson.M{"user_id": userID}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountByRating 根据评分值统计数量
@@ -479,7 +481,7 @@ func (r *MongoBookRatingRepository) CountByRating(ctx context.Context, bookID pr
 		"book_id": bookID,
 		"rating":  rating,
 	}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // GetAverageRating 获取书籍平均评分
@@ -492,7 +494,7 @@ func (r *MongoBookRatingRepository) GetAverageRating(ctx context.Context, bookID
 		}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
@@ -522,7 +524,7 @@ func (r *MongoBookRatingRepository) GetRatingDistribution(ctx context.Context, b
 		}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -549,7 +551,7 @@ func (r *MongoBookRatingRepository) GetTotalLikes(ctx context.Context, bookID pr
 		{"$match": bson.M{"book_id": bookID}},
 		{"$group": bson.M{"_id": nil, "total": bson.M{"$sum": "$likes"}}},
 	}
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
@@ -579,7 +581,7 @@ func (r *MongoBookRatingRepository) GetTopRatedBooks(ctx context.Context, limit 
 		{"$limit": limit},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -607,7 +609,7 @@ func (r *MongoBookRatingRepository) IncrementLikes(ctx context.Context, id primi
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -627,7 +629,7 @@ func (r *MongoBookRatingRepository) DecrementLikes(ctx context.Context, id primi
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -649,7 +651,7 @@ func (r *MongoBookRatingRepository) UpdateRating(ctx context.Context, id primiti
 		},
 	}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -670,7 +672,7 @@ func (r *MongoBookRatingRepository) UpdateComment(ctx context.Context, id primit
 			"updated_at": time.Now(),
 		},
 	}
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -689,7 +691,7 @@ func (r *MongoBookRatingRepository) UpdateTags(ctx context.Context, id primitive
 			"updated_at": time.Now(),
 		},
 	}
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -709,42 +711,42 @@ func (r *MongoBookRatingRepository) BatchUpdateTags(ctx context.Context, ratingI
 		},
 	}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
 // BatchDelete 批量删除评分
 func (r *MongoBookRatingRepository) BatchDelete(ctx context.Context, ratingIDs []primitive.ObjectID) error {
 	filter := bson.M{"_id": bson.M{"$in": ratingIDs}}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 
 // BatchDeleteByBookID 根据书籍ID批量删除评分
 func (r *MongoBookRatingRepository) BatchDeleteByBookID(ctx context.Context, bookID primitive.ObjectID) error {
 	filter := bson.M{"book_id": bookID}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 
 // BatchDeleteByUserID 根据用户ID批量删除评分
 func (r *MongoBookRatingRepository) BatchDeleteByUserID(ctx context.Context, userID primitive.ObjectID) error {
 	filter := bson.M{"user_id": userID}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 
 // DeleteByBookID 根据书籍ID删除评分
 func (r *MongoBookRatingRepository) DeleteByBookID(ctx context.Context, bookID primitive.ObjectID) error {
 	filter := bson.M{"book_id": bookID}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 
 // DeleteByUserID 根据用户ID删除评分
 func (r *MongoBookRatingRepository) DeleteByUserID(ctx context.Context, userID primitive.ObjectID) error {
 	filter := bson.M{"user_id": userID}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 

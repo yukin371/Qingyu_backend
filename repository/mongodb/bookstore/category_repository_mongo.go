@@ -11,21 +11,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"Qingyu_backend/repository/mongodb/base"
+
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoCategoryRepository MongoDB分类仓储实现
 type MongoCategoryRepository struct {
-	collection *mongo.Collection
-	client     *mongo.Client
+	*base.BaseMongoRepository
+	client *mongo.Client
 }
 
 // NewMongoCategoryRepository 创建MongoDB分类仓储实例
 func NewMongoCategoryRepository(client *mongo.Client, database string) BookstoreInterface.CategoryRepository {
+	db := client.Database(database)
 	return &MongoCategoryRepository{
-		collection: client.Database(database).Collection("categories"),
-		client:     client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "categories"),
+		client:              client,
 	}
 }
 
@@ -38,7 +41,7 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 	category.CreatedAt = time.Now()
 	category.UpdatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(ctx, category)
+	_, err := r.GetCollection().InsertOne(ctx, category)
 	if err != nil {
 		return err
 	}
@@ -49,13 +52,13 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 
 // GetByID 根据ID获取分类
 func (r *MongoCategoryRepository) GetByID(ctx context.Context, id string) (*bookstore.Category, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var category bookstore.Category
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -67,14 +70,14 @@ func (r *MongoCategoryRepository) GetByID(ctx context.Context, id string) (*book
 
 // Update 更新分类
 func (r *MongoCategoryRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -92,12 +95,12 @@ func (r *MongoCategoryRepository) Update(ctx context.Context, id string, updates
 
 // Delete 删除分类
 func (r *MongoCategoryRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -122,7 +125,7 @@ func (r *MongoCategoryRepository) Count(ctx context.Context, filter infra.Filter
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // List 根据过滤条件列出分类
@@ -144,7 +147,7 @@ func (r *MongoCategoryRepository) List(ctx context.Context, filter infra.Filter)
 			opts.SetSort(sortDoc)
 		}
 	}
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -158,12 +161,12 @@ func (r *MongoCategoryRepository) List(ctx context.Context, filter infra.Filter)
 
 // Exists 判断分类是否存在
 func (r *MongoCategoryRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return false, err
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -173,7 +176,7 @@ func (r *MongoCategoryRepository) Exists(ctx context.Context, id string) (bool, 
 // GetByName 根据名称获取分类
 func (r *MongoCategoryRepository) GetByName(ctx context.Context, name string) (*bookstore.Category, error) {
 	var category bookstore.Category
-	err := r.collection.FindOne(ctx, bson.M{"name": name}).Decode(&category)
+	err := r.GetCollection().FindOne(ctx, bson.M{"name": name}).Decode(&category)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -190,7 +193,7 @@ func (r *MongoCategoryRepository) GetByParent(ctx context.Context, parentID stri
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"parent_id": parentID}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"parent_id": parentID}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +214,7 @@ func (r *MongoCategoryRepository) GetByLevel(ctx context.Context, level int, lim
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"level": level}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"level": level}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +232,7 @@ func (r *MongoCategoryRepository) GetByLevel(ctx context.Context, level int, lim
 func (r *MongoCategoryRepository) GetRootCategories(ctx context.Context) ([]*bookstore.Category, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"level": 0, "is_active": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"level": 0, "is_active": true}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +250,7 @@ func (r *MongoCategoryRepository) GetRootCategories(ctx context.Context) ([]*boo
 func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*bookstore.CategoryTree, error) {
 	// 获取所有激活的分类
 	opts := options.Find().SetSort(bson.D{{Key: "level", Value: 1}, {Key: "sort_order", Value: 1}})
-	cursor, err := r.collection.Find(ctx, bson.M{"is_active": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"is_active": true}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -289,17 +292,17 @@ func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*books
 
 // CountByParent 统计父分类下的子分类数量
 func (r *MongoCategoryRepository) CountByParent(ctx context.Context, parentID string) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{"parent_id": parentID})
+	return r.GetCollection().CountDocuments(ctx, bson.M{"parent_id": parentID})
 }
 
 // UpdateBookCount 更新分类下的书籍数量
 func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryID string, count int64) error {
-	objectID, err := primitive.ObjectIDFromHex(categoryID)
+	objectID, err := r.ParseID(categoryID)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -315,7 +318,7 @@ func (r *MongoCategoryRepository) UpdateBookCount(ctx context.Context, categoryI
 // GetChildren 获取子分类
 func (r *MongoCategoryRepository) GetChildren(ctx context.Context, parentID string) ([]*bookstore.Category, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: 1}})
-	cursor, err := r.collection.Find(ctx, bson.M{"parent_id": parentID, "is_active": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"parent_id": parentID, "is_active": true}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -335,13 +338,13 @@ func (r *MongoCategoryRepository) GetAncestors(ctx context.Context, categoryID s
 	currentID := categoryID
 
 	for {
-		objectID, err := primitive.ObjectIDFromHex(currentID)
+		objectID, err := r.ParseID(currentID)
 		if err != nil {
 			return nil, err
 		}
 
 		var category bookstore.Category
-		err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
+		err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				break
@@ -394,14 +397,14 @@ func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID
 func (r *MongoCategoryRepository) BatchUpdateStatus(ctx context.Context, categoryIDs []string, isActive bool) error {
 	objectIDs := make([]primitive.ObjectID, 0, len(categoryIDs))
 	for _, id := range categoryIDs {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := r.ParseID(id)
 		if err != nil {
 			return err
 		}
 		objectIDs = append(objectIDs, objectID)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{

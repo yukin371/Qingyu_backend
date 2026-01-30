@@ -10,17 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoCommentRepository MongoDB评论仓储实现
 type MongoCommentRepository struct {
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 }
 
 // NewMongoCommentRepository 创建MongoDB评论仓储实例
 func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
-	collection := db.Collection("comments")
-
 	// 创建索引
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -61,6 +61,7 @@ func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
 		},
 	}
 
+	collection := db.Collection("comments")
 	_, err := collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		// 索引创建失败不影响启动，只记录日志
@@ -68,7 +69,7 @@ func NewMongoCommentRepository(db *mongo.Database) *MongoCommentRepository {
 	}
 
 	return &MongoCommentRepository{
-		collection: collection,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "comments"),
 	}
 }
 
@@ -93,7 +94,7 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Com
 		comment.State = social.CommentStateNormal
 	}
 
-	_, err := r.collection.InsertOne(ctx, comment)
+	_, err := r.GetCollection().InsertOne(ctx, comment)
 	if err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)
 	}
@@ -103,13 +104,13 @@ func (r *MongoCommentRepository) Create(ctx context.Context, comment *social.Com
 
 // GetByID 根据ID获取评论
 func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*social.Comment, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("comment not found")
 	}
 
 	var comment social.Comment
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&comment)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("comment not found")
@@ -122,14 +123,14 @@ func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*socia
 
 // Update 更新评论
 func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid id: %w", err)
 	}
 
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -148,13 +149,13 @@ func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates 
 
 // Delete 删除评论（软删除）
 func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid id: %w", err)
 	}
 
 	// 软删除：标记为已删除状态
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -201,7 +202,7 @@ func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, comm
 		"state":     social.CommentStateNormal,
 	}
 
-	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}}))
+	cursor, err := r.GetCollection().Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get replies: %w", err)
 	}
@@ -251,7 +252,7 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 
 // UpdateCommentStatus 更新评论审核状态
 func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, status, reason string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid id: %w", err)
 	}
@@ -265,7 +266,7 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 		updates["reject_reason"] = reason
 	}
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -290,12 +291,12 @@ func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, s
 
 // IncrementLikeCount 增加点赞数
 func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid id: %w", err)
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -313,12 +314,12 @@ func (r *MongoCommentRepository) IncrementLikeCount(ctx context.Context, id stri
 
 // DecrementLikeCount 减少点赞数
 func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid id: %w", err)
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -336,7 +337,7 @@ func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id stri
 
 // IncrementReplyCount 增加回复数
 func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id string) error {
-	_, err := r.collection.UpdateOne(
+	_, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": id},
 		bson.M{
@@ -354,7 +355,7 @@ func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id str
 
 // DecrementReplyCount 减少回复数
 func (r *MongoCommentRepository) DecrementReplyCount(ctx context.Context, id string) error {
-	_, err := r.collection.UpdateOne(
+	_, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": id},
 		bson.M{
@@ -391,7 +392,7 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 		}}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rating stats: %w", err)
 	}
@@ -419,7 +420,7 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 
 // GetCommentCount 获取书籍评论总数
 func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID string) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"target_id":   bookID,
 		"target_type": social.CommentTargetTypeBook,
 		"state":       social.CommentStateNormal,
@@ -434,7 +435,7 @@ func (r *MongoCommentRepository) GetCommentCount(ctx context.Context, bookID str
 
 // GetCommentsByIDs 批量获取评论
 func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*social.Comment, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comments by IDs: %w", err)
 	}
@@ -450,7 +451,7 @@ func (r *MongoCommentRepository) GetCommentsByIDs(ctx context.Context, ids []str
 
 // DeleteCommentsByBookID 删除书籍的所有评论
 func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, bookID string) error {
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{
 			"target_id":   bookID,
@@ -473,13 +474,13 @@ func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, boo
 
 // Health 健康检查
 func (r *MongoCommentRepository) Health(ctx context.Context) error {
-	return r.collection.Database().Client().Ping(ctx, nil)
+	return r.GetDB().Client().Ping(ctx, nil)
 }
 
 // findComments 通用的查询评论方法
 func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*social.Comment, int64, error) {
 	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
 	}
@@ -493,7 +494,7 @@ func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
 	}

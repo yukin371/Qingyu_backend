@@ -11,19 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/social"
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoCollectionRepository MongoDB收藏仓储实现
 type MongoCollectionRepository struct {
-	collectionColl *mongo.Collection
-	folderColl     *mongo.Collection
+	*base.BaseMongoRepository // 嵌入基类，管理主collection (collections)
+	folderColl *mongo.Collection // 独立管理folder collection
 }
 
 // NewMongoCollectionRepository 创建MongoDB收藏仓储实例
 func NewMongoCollectionRepository(db *mongo.Database) *MongoCollectionRepository {
-	collectionColl := db.Collection("collections")
-	folderColl := db.Collection("collection_folders")
-
 	// 创建索引
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -69,6 +67,7 @@ func NewMongoCollectionRepository(db *mongo.Database) *MongoCollectionRepository
 		},
 	}
 
+	collectionColl := db.Collection("collections")
 	_, err := collectionColl.Indexes().CreateMany(ctx, collectionIndexes)
 	if err != nil {
 		fmt.Printf("Warning: Failed to create collection indexes: %v\n", err)
@@ -92,14 +91,15 @@ func NewMongoCollectionRepository(db *mongo.Database) *MongoCollectionRepository
 		},
 	}
 
+	folderColl := db.Collection("collection_folders")
 	_, err = folderColl.Indexes().CreateMany(ctx, folderIndexes)
 	if err != nil {
 		fmt.Printf("Warning: Failed to create folder indexes: %v\n", err)
 	}
 
 	return &MongoCollectionRepository{
-		collectionColl: collectionColl,
-		folderColl:     folderColl,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "collections"),
+		folderColl:          folderColl,
 	}
 }
 
@@ -123,7 +123,7 @@ func (r *MongoCollectionRepository) Create(ctx context.Context, collection *soci
 		return fmt.Errorf("用户ID和书籍ID不能为空")
 	}
 
-	_, err := r.collectionColl.InsertOne(ctx, collection)
+	_, err := r.GetCollection().InsertOne(ctx, collection)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return fmt.Errorf("已经收藏过该书籍")
@@ -136,13 +136,13 @@ func (r *MongoCollectionRepository) Create(ctx context.Context, collection *soci
 
 // GetByID 根据ID获取收藏
 func (r *MongoCollectionRepository) GetByID(ctx context.Context, id string) (*social.Collection, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid collection ID: %w", err)
 	}
 
 	var collection social.Collection
-	err = r.collectionColl.FindOne(ctx, bson.M{"_id": objectID}).Decode(&collection)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&collection)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("collection not found")
@@ -160,7 +160,7 @@ func (r *MongoCollectionRepository) GetByUserAndBook(ctx context.Context, userID
 	}
 
 	var collection social.Collection
-	err := r.collectionColl.FindOne(ctx, bson.M{
+	err := r.GetCollection().FindOne(ctx, bson.M{
 		"user_id": userID,
 		"book_id": bookID,
 	}).Decode(&collection)
@@ -188,7 +188,7 @@ func (r *MongoCollectionRepository) GetCollectionsByUser(ctx context.Context, us
 	}
 
 	// 计算总数
-	total, err := r.collectionColl.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count collections: %w", err)
 	}
@@ -202,7 +202,7 @@ func (r *MongoCollectionRepository) GetCollectionsByUser(ctx context.Context, us
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.collectionColl.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find collections: %w", err)
 	}
@@ -228,7 +228,7 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 	}
 
 	// 计算总数
-	total, err := r.collectionColl.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count collections by tag: %w", err)
 	}
@@ -242,7 +242,7 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.collectionColl.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find collections by tag: %w", err)
 	}
@@ -258,7 +258,7 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 
 // Update 更新收藏
 func (r *MongoCollectionRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid collection ID: %w", err)
 	}
@@ -266,7 +266,7 @@ func (r *MongoCollectionRepository) Update(ctx context.Context, id string, updat
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collectionColl.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -285,12 +285,12 @@ func (r *MongoCollectionRepository) Update(ctx context.Context, id string, updat
 
 // Delete 删除收藏
 func (r *MongoCollectionRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid collection ID: %w", err)
 	}
 
-	result, err := r.collectionColl.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete collection: %w", err)
 	}
@@ -335,7 +335,7 @@ func (r *MongoCollectionRepository) CreateFolder(ctx context.Context, folder *so
 
 // GetFolderByID 根据ID获取收藏夹
 func (r *MongoCollectionRepository) GetFolderByID(ctx context.Context, id string) (*social.CollectionFolder, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid folder ID: %w", err)
 	}
@@ -376,7 +376,7 @@ func (r *MongoCollectionRepository) GetFoldersByUser(ctx context.Context, userID
 
 // UpdateFolder 更新收藏夹
 func (r *MongoCollectionRepository) UpdateFolder(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid folder ID: %w", err)
 	}
@@ -403,7 +403,7 @@ func (r *MongoCollectionRepository) UpdateFolder(ctx context.Context, id string,
 
 // DeleteFolder 删除收藏夹
 func (r *MongoCollectionRepository) DeleteFolder(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return fmt.Errorf("invalid folder ID: %w", err)
 	}
@@ -426,7 +426,7 @@ func (r *MongoCollectionRepository) IncrementFolderBookCount(ctx context.Context
 		return nil // 不在收藏夹中，不需要更新
 	}
 
-	objectID, err := primitive.ObjectIDFromHex(folderID)
+	objectID, err := r.ParseID(folderID)
 	if err != nil {
 		return fmt.Errorf("invalid folder ID: %w", err)
 	}
@@ -453,7 +453,7 @@ func (r *MongoCollectionRepository) DecrementFolderBookCount(ctx context.Context
 		return nil // 不在收藏夹中，不需要更新
 	}
 
-	objectID, err := primitive.ObjectIDFromHex(folderID)
+	objectID, err := r.ParseID(folderID)
 	if err != nil {
 		return fmt.Errorf("invalid folder ID: %w", err)
 	}
@@ -483,7 +483,7 @@ func (r *MongoCollectionRepository) GetPublicCollections(ctx context.Context, pa
 	filter := bson.M{"is_public": true}
 
 	// 计算总数
-	total, err := r.collectionColl.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count public collections: %w", err)
 	}
@@ -497,7 +497,7 @@ func (r *MongoCollectionRepository) GetPublicCollections(ctx context.Context, pa
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.collectionColl.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find public collections: %w", err)
 	}
@@ -554,7 +554,7 @@ func (r *MongoCollectionRepository) CountUserCollections(ctx context.Context, us
 		return 0, fmt.Errorf("用户ID不能为空")
 	}
 
-	count, err := r.collectionColl.CountDocuments(ctx, bson.M{"user_id": userID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"user_id": userID})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count user collections: %w", err)
 	}
@@ -564,5 +564,5 @@ func (r *MongoCollectionRepository) CountUserCollections(ctx context.Context, us
 
 // Health 健康检查
 func (r *MongoCollectionRepository) Health(ctx context.Context) error {
-	return r.collectionColl.Database().Client().Ping(ctx, nil)
+	return r.GetDB().Client().Ping(ctx, nil)
 }

@@ -10,18 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoLikeRepository MongoDB点赞仓储实现
 type MongoLikeRepository struct {
-	collection *mongo.Collection
+	*base.BaseMongoRepository
 	// redisClient cache.RedisClient // TODO: 添加Redis支持
 }
 
 // NewMongoLikeRepository 创建MongoDB点赞仓储实例
 func NewMongoLikeRepository(db *mongo.Database) *MongoLikeRepository {
-	collection := db.Collection("likes")
-
 	// 创建索引
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -52,13 +52,14 @@ func NewMongoLikeRepository(db *mongo.Database) *MongoLikeRepository {
 		},
 	}
 
+	collection := db.Collection("likes")
 	_, err := collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		fmt.Printf("Warning: Failed to create like indexes: %v\n", err)
 	}
 
 	return &MongoLikeRepository{
-		collection: collection,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "likes"),
 	}
 }
 
@@ -78,7 +79,7 @@ func (r *MongoLikeRepository) AddLike(ctx context.Context, like *social.Like) er
 	}
 
 	// 插入点赞记录
-	_, err := r.collection.InsertOne(ctx, like)
+	_, err := r.GetCollection().InsertOne(ctx, like)
 	if err != nil {
 		// 检查是否为重复点赞（唯一索引冲突）
 		if mongo.IsDuplicateKeyError(err) {
@@ -98,7 +99,7 @@ func (r *MongoLikeRepository) RemoveLike(ctx context.Context, userID, targetType
 		return fmt.Errorf("取消点赞参数不完整")
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{
 		"user_id":     userID,
 		"target_type": targetType,
 		"target_id":   targetID,
@@ -125,7 +126,7 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"user_id":     userID,
 		"target_type": targetType,
 		"target_id":   targetID,
@@ -140,13 +141,13 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 
 // GetByID 根据ID获取点赞记录
 func (r *MongoLikeRepository) GetByID(ctx context.Context, id string) (*social.Like, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid like ID: %w", err)
 	}
 
 	var like social.Like
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&like)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&like)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("like not found")
@@ -169,7 +170,7 @@ func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetTy
 	}
 
 	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count user likes: %w", err)
 	}
@@ -183,7 +184,7 @@ func (r *MongoLikeRepository) GetUserLikes(ctx context.Context, userID, targetTy
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find user likes: %w", err)
 	}
@@ -205,7 +206,7 @@ func (r *MongoLikeRepository) GetLikeCount(ctx context.Context, targetType, targ
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"target_type": targetType,
 		"target_id":   targetID,
 	})
@@ -235,7 +236,7 @@ func (r *MongoLikeRepository) GetLikesCountBatch(ctx context.Context, targetType
 		}}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to aggregate like counts: %w", err)
 	}
@@ -270,7 +271,7 @@ func (r *MongoLikeRepository) GetUserLikeStatusBatch(ctx context.Context, userID
 	}
 
 	// 查询用户对这些目标的点赞记录
-	cursor, err := r.collection.Find(ctx, bson.M{
+	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"user_id":     userID,
 		"target_type": targetType,
 		"target_id":   bson.M{"$in": targetIDs},
@@ -305,7 +306,7 @@ func (r *MongoLikeRepository) CountUserLikes(ctx context.Context, userID string)
 		return 0, fmt.Errorf("用户ID不能为空")
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"user_id": userID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"user_id": userID})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count user likes: %w", err)
 	}
@@ -320,5 +321,5 @@ func (r *MongoLikeRepository) CountTargetLikes(ctx context.Context, targetType, 
 
 // Health 健康检查
 func (r *MongoLikeRepository) Health(ctx context.Context) error {
-	return r.collection.Database().Client().Ping(ctx, nil)
+	return r.GetDB().Client().Ping(ctx, nil)
 }

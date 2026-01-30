@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
 	"log"
@@ -19,15 +20,16 @@ import (
 
 // MongoBookRepository MongoDB书籍仓储实现
 type MongoBookRepository struct {
-	collection *mongo.Collection
-	client     *mongo.Client
+	*base.BaseMongoRepository
+	client *mongo.Client
 }
 
 // NewMongoBookRepository 创建MongoDB书籍仓储实例
 func NewMongoBookRepository(client *mongo.Client, database string) BookstoreInterface.BookRepository {
+	db := client.Database(database)
 	return &MongoBookRepository{
-		collection: client.Database(database).Collection("books"),
-		client:     client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "books"),
+		client:              client,
 	}
 }
 
@@ -40,7 +42,7 @@ func (r *MongoBookRepository) Create(ctx context.Context, book *bookstore.Book) 
 	book.CreatedAt = time.Now()
 	book.UpdatedAt = time.Now()
 
-	result, err := r.collection.InsertOne(ctx, book)
+	result, err := r.GetCollection().InsertOne(ctx, book)
 	if err != nil {
 		return err
 	}
@@ -51,13 +53,13 @@ func (r *MongoBookRepository) Create(ctx context.Context, book *bookstore.Book) 
 
 // GetByID 根据ID获取书籍
 func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstore.Book, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var book bookstore.Book
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&book)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&book)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -69,14 +71,14 @@ func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstor
 
 // Update 更新书籍
 func (r *MongoBookRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -94,12 +96,12 @@ func (r *MongoBookRepository) Update(ctx context.Context, id string, updates map
 
 // Delete 删除书籍
 func (r *MongoBookRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -124,13 +126,13 @@ func (r *MongoBookRepository) Count(ctx context.Context, filter infra.Filter) (i
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // GetByTitle 根据标题获取书籍
 func (r *MongoBookRepository) GetByTitle(ctx context.Context, title string) (*bookstore.Book, error) {
 	var book bookstore.Book
-	err := r.collection.FindOne(ctx, bson.M{"title": title}).Decode(&book)
+	err := r.GetCollection().FindOne(ctx, bson.M{"title": title}).Decode(&book)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -143,7 +145,7 @@ func (r *MongoBookRepository) GetByTitle(ctx context.Context, title string) (*bo
 // GetByAuthor 根据作者获取书籍列表
 func (r *MongoBookRepository) GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore.Book, error) {
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
-	cursor, err := r.collection.Find(ctx, bson.M{"author": author}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"author": author}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -159,13 +161,13 @@ func (r *MongoBookRepository) GetByAuthor(ctx context.Context, author string, li
 
 // GetByAuthorID 根据作者ID获取书籍
 func (r *MongoBookRepository) GetByAuthorID(ctx context.Context, authorID string, limit, offset int) ([]*bookstore.Book, error) {
-	objectID, err := primitive.ObjectIDFromHex(authorID)
+	objectID, err := r.ParseID(authorID)
 	if err != nil {
 		return nil, err
 	}
 
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
-	cursor, err := r.collection.Find(ctx, bson.M{"author_id": objectID}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"author_id": objectID}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -179,13 +181,13 @@ func (r *MongoBookRepository) GetByAuthorID(ctx context.Context, authorID string
 
 // GetByCategory 根据分类获取书籍列表
 func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID string, limit, offset int) ([]*bookstore.Book, error) {
-	objectID, err := primitive.ObjectIDFromHex(categoryID)
+	objectID, err := r.ParseID(categoryID)
 	if err != nil {
 		return nil, err
 	}
 
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
-	cursor, err := r.collection.Find(ctx, bson.M{"category_ids": objectID}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"category_ids": objectID}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +204,7 @@ func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID stri
 // GetByStatus 根据状态获取书籍列表
 func (r *MongoBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
-	cursor, err := r.collection.Find(ctx, bson.M{"status": status}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"status": status}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +227,7 @@ func (r *MongoBookRepository) GetRecommended(ctx context.Context, limit, offset 
 		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "title", Value: 1}})
 
 	// 查询所有书籍，不再只返回推荐的
-	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +249,7 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 		SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "view_count", Value: -1}})
 
 	// 查询精选书籍，包含所有已发布状态（published, ongoing, completed）
-	cursor, err := r.collection.Find(ctx, bson.M{
+	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"is_featured": true,
 		"status":      bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
@@ -272,7 +274,7 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 		SetSort(bson.D{{Key: "view_count", Value: -1}, {Key: "rating", Value: -1}})
 
 	// 查询热门书籍，包含所有已发布状态（published, ongoing, completed）
-	cursor, err := r.collection.Find(ctx, bson.M{
+	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
 	if err != nil {
@@ -294,7 +296,7 @@ func (r *MongoBookRepository) GetNewReleases(ctx context.Context, limit, offset 
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "published_at", Value: -1}})
 	// 查询新上架书籍，包含所有已发布状态（published, ongoing, completed）
-	cursor, err := r.collection.Find(ctx, bson.M{
+	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
 	if err != nil {
@@ -314,7 +316,7 @@ func (r *MongoBookRepository) GetFreeBooks(ctx context.Context, limit, offset in
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "updated_at", Value: -1}})
-	cursor, err := r.collection.Find(ctx, bson.M{"is_free": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"is_free": true}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +337,7 @@ func (r *MongoBookRepository) GetByPriceRange(ctx context.Context, minPrice, max
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "price", Value: 1}})
-	cursor, err := r.collection.Find(ctx, bson.M{"price": priceQuery}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"price": priceQuery}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +364,7 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, limit,
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	// 查询所有已发布的书籍
-	cursor, err := r.collection.Find(ctx, bson.M{
+	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
 	if err != nil {
@@ -493,7 +495,7 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 		opts.SetSort(sortFields)
 	}
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -504,7 +506,7 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 		return nil, 0, err
 	}
 
-	total, err := r.collection.CountDocuments(ctx, query)
+	total, err := r.GetCollection().CountDocuments(ctx, query)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -574,7 +576,7 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	}
 	opts.SetSort(bson.D{{Key: sortBy, Value: sortOrder}})
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -599,17 +601,17 @@ func (r *MongoBookRepository) CountByCategory(ctx context.Context, categoryID st
 	if err != nil {
 		return 0, err
 	}
-	return r.collection.CountDocuments(ctx, bson.M{"category_ids": objectID})
+	return r.GetCollection().CountDocuments(ctx, bson.M{"category_ids": objectID})
 }
 
 // CountByAuthor 统计作者的书籍数量
 func (r *MongoBookRepository) CountByAuthor(ctx context.Context, author string) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{"author": author})
+	return r.GetCollection().CountDocuments(ctx, bson.M{"author": author})
 }
 
 // CountByStatus 统计指定状态的书籍数量
 func (r *MongoBookRepository) CountByStatus(ctx context.Context, status bookstore.BookStatus) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{"status": status})
+	return r.GetCollection().CountDocuments(ctx, bson.M{"status": status})
 }
 
 // CountByFilter 根据过滤器统计
@@ -675,7 +677,7 @@ func (r *MongoBookRepository) CountByFilter(ctx context.Context, filter *booksto
 			query["$or"] = orConditions
 		}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // GetStats 获取书籍统计信息
@@ -683,35 +685,35 @@ func (r *MongoBookRepository) GetStats(ctx context.Context) (*bookstore.BookStat
 	stats := &bookstore.BookStats{}
 
 	// 总书籍数
-	total, err := r.collection.CountDocuments(ctx, bson.M{})
+	total, err := r.GetCollection().CountDocuments(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 	stats.TotalBooks = total
 
 	// 已发布书籍数
-	published, err := r.collection.CountDocuments(ctx, bson.M{"status": "published"})
+	published, err := r.GetCollection().CountDocuments(ctx, bson.M{"status": "published"})
 	if err != nil {
 		return nil, err
 	}
 	stats.PublishedBooks = published
 
 	// 草稿书籍数
-	draft, err := r.collection.CountDocuments(ctx, bson.M{"status": "draft"})
+	draft, err := r.GetCollection().CountDocuments(ctx, bson.M{"status": "draft"})
 	if err != nil {
 		return nil, err
 	}
 	stats.DraftBooks = draft
 
 	// 推荐书籍数
-	recommended, err := r.collection.CountDocuments(ctx, bson.M{"is_recommended": true})
+	recommended, err := r.GetCollection().CountDocuments(ctx, bson.M{"is_recommended": true})
 	if err != nil {
 		return nil, err
 	}
 	stats.RecommendedBooks = recommended
 
 	// 精选书籍数
-	featured, err := r.collection.CountDocuments(ctx, bson.M{"is_featured": true})
+	featured, err := r.GetCollection().CountDocuments(ctx, bson.M{"is_featured": true})
 	if err != nil {
 		return nil, err
 	}
@@ -727,7 +729,7 @@ func (r *MongoBookRepository) IncrementLikeCount(ctx context.Context, bookID str
 		return err
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -745,7 +747,7 @@ func (r *MongoBookRepository) IncrementCommentCount(ctx context.Context, bookID 
 		return err
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -764,7 +766,7 @@ func (r *MongoBookRepository) UpdateRating(ctx context.Context, bookID string, r
 	}
 
 	// 这里简化处理，实际应该计算平均评分
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -789,7 +791,7 @@ func (r *MongoBookRepository) BatchUpdateStatus(ctx context.Context, bookIDs []s
 		objectIDs = append(objectIDs, objectID)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
@@ -813,7 +815,7 @@ func (r *MongoBookRepository) BatchUpdateFeatured(ctx context.Context, bookIDs [
 		objectIDs = append(objectIDs, objectID)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
@@ -837,7 +839,7 @@ func (r *MongoBookRepository) BatchUpdateRecommended(ctx context.Context, bookID
 		objectIDs = append(objectIDs, objectID)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
@@ -870,7 +872,7 @@ func (r *MongoBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs [
 		categoryObjectIDs = append(categoryObjectIDs, objectID)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{
@@ -916,7 +918,7 @@ func (r *MongoBookRepository) List(ctx context.Context, filter infra.Filter) ([]
 			opts.SetSort(sortDoc)
 		}
 	}
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -935,7 +937,7 @@ func (r *MongoBookRepository) Exists(ctx context.Context, id string) (bool, erro
 		return false, err
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -955,7 +957,7 @@ func (r *MongoBookRepository) IncrementViewCount(ctx context.Context, bookID str
 		"$set": bson.M{"updated_at": time.Now()},
 	}
 
-	_, err = r.collection.UpdateOne(ctx, filter, update)
+	_, err = r.GetCollection().UpdateOne(ctx, filter, update)
 	return err
 }
 
@@ -985,7 +987,7 @@ func (r *MongoBookRepository) GetYears(ctx context.Context) ([]int, error) {
 		},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -1046,7 +1048,7 @@ func (r *MongoBookRepository) GetTags(ctx context.Context, categoryID *string) (
 		},
 	})
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}

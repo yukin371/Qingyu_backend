@@ -12,17 +12,17 @@ import (
 
 	"Qingyu_backend/models/social"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoFollowRepository MongoDB关注仓储实现
 type MongoFollowRepository struct {
-	followsCollection *mongo.Collection
-	authorFollowsCollection *mongo.Collection
+	*base.BaseMongoRepository  // 嵌入基类，管理主collection (follows)
+	authorFollowsCollection *mongo.Collection  // 作者关注collection独立管理
 }
 
 // NewMongoFollowRepository 创建MongoDB关注仓储实例
 func NewMongoFollowRepository(db *mongo.Database) socialRepo.FollowRepository {
-	followsCollection := db.Collection("follows")
 	authorFollowsCollection := db.Collection("author_follows")
 
 	// 创建索引
@@ -64,7 +64,8 @@ func NewMongoFollowRepository(db *mongo.Database) socialRepo.FollowRepository {
 		},
 	}
 
-	_, err := followsCollection.Indexes().CreateMany(ctx, followIndexes)
+	// 使用基类的GetCollection()创建follows索引
+	_, err := base.NewBaseMongoRepository(db, "follows").GetCollection().Indexes().CreateMany(ctx, followIndexes)
 	if err != nil {
 		fmt.Printf("Warning: Failed to create follows indexes: %v\n", err)
 	}
@@ -75,7 +76,7 @@ func NewMongoFollowRepository(db *mongo.Database) socialRepo.FollowRepository {
 	}
 
 	return &MongoFollowRepository{
-		followsCollection: followsCollection,
+		BaseMongoRepository:       base.NewBaseMongoRepository(db, "follows"),
 		authorFollowsCollection: authorFollowsCollection,
 	}
 }
@@ -91,7 +92,7 @@ func (r *MongoFollowRepository) CreateFollow(ctx context.Context, follow *social
 	follow.CreatedAt = now
 	follow.UpdatedAt = now
 
-	_, err := r.followsCollection.InsertOne(ctx, follow)
+	_, err := r.GetCollection().InsertOne(ctx, follow)
 	if err != nil {
 		return fmt.Errorf("failed to create follow: %w", err)
 	}
@@ -106,7 +107,7 @@ func (r *MongoFollowRepository) DeleteFollow(ctx context.Context, followerID, fo
 		"follow_type": followType,
 	}
 
-	_, err := r.followsCollection.DeleteOne(ctx, filter)
+	_, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete follow: %w", err)
 	}
@@ -122,7 +123,7 @@ func (r *MongoFollowRepository) GetFollow(ctx context.Context, followerID, follo
 	}
 
 	var follow social.Follow
-	err := r.followsCollection.FindOne(ctx, filter).Decode(&follow)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&follow)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -140,7 +141,7 @@ func (r *MongoFollowRepository) IsFollowing(ctx context.Context, followerID, fol
 		"follow_type": followType,
 	}
 
-	count, err := r.followsCollection.CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("failed to check follow status: %w", err)
 	}
@@ -155,7 +156,7 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 	}
 
 	// 统计总数
-	total, err := r.followsCollection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count followers: %w", err)
 	}
@@ -167,7 +168,7 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.followsCollection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find followers: %w", err)
 	}
@@ -194,7 +195,7 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 	}
 
 	// 统计总数
-	total, err := r.followsCollection.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count following: %w", err)
 	}
@@ -206,7 +207,7 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.followsCollection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find following: %w", err)
 	}
@@ -240,7 +241,7 @@ func (r *MongoFollowRepository) UpdateMutualStatus(ctx context.Context, follower
 		},
 	}
 
-	_, err := r.followsCollection.UpdateOne(ctx, filter, update)
+	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update mutual status: %w", err)
 	}
@@ -378,7 +379,7 @@ func (r *MongoFollowRepository) GetUserFollowingAuthors(ctx context.Context, use
 // GetFollowStats 获取关注统计
 func (r *MongoFollowRepository) GetFollowStats(ctx context.Context, userID string) (*social.FollowStats, error) {
 	// 统计粉丝数
-	followerCount, err := r.followsCollection.CountDocuments(ctx, bson.M{
+	followerCount, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"following_id": userID,
 		"follow_type": "user",
 	})
@@ -387,7 +388,7 @@ func (r *MongoFollowRepository) GetFollowStats(ctx context.Context, userID strin
 	}
 
 	// 统计关注数
-	followingCount, err := r.followsCollection.CountDocuments(ctx, bson.M{
+	followingCount, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"follower_id": userID,
 		"follow_type": "user",
 	})
@@ -412,7 +413,7 @@ func (r *MongoFollowRepository) UpdateFollowStats(ctx context.Context, userID st
 
 // CountFollowers 统计粉丝数
 func (r *MongoFollowRepository) CountFollowers(ctx context.Context, userID, followType string) (int64, error) {
-	count, err := r.followsCollection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"following_id": userID,
 		"follow_type": followType,
 	})
@@ -424,7 +425,7 @@ func (r *MongoFollowRepository) CountFollowers(ctx context.Context, userID, foll
 
 // CountFollowing 统计关注数
 func (r *MongoFollowRepository) CountFollowing(ctx context.Context, userID, followType string) (int64, error) {
-	count, err := r.followsCollection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"follower_id": userID,
 		"follow_type": followType,
 	})
@@ -437,7 +438,7 @@ func (r *MongoFollowRepository) CountFollowing(ctx context.Context, userID, foll
 // Health 健康检查
 func (r *MongoFollowRepository) Health(ctx context.Context) error {
 	// 简单的健康检查：执行一次count操作
-	_, err := r.followsCollection.EstimatedDocumentCount(ctx)
+	_, err := r.GetCollection().EstimatedDocumentCount(ctx)
 	if err != nil {
 		return fmt.Errorf("follows collection health check failed: %w", err)
 	}

@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
 	"fmt"
@@ -18,15 +19,16 @@ import (
 
 // MongoChapterRepository MongoDB章节仓储实现
 type MongoChapterRepository struct {
-	collection *mongo.Collection
-	client     *mongo.Client
+	*base.BaseMongoRepository
+	client *mongo.Client
 }
 
 // NewMongoChapterRepository 创建MongoDB章节仓储实例
 func NewMongoChapterRepository(client *mongo.Client, database string) BookstoreInterface.ChapterRepository {
+	db := client.Database(database)
 	return &MongoChapterRepository{
-		collection: client.Database(database).Collection("chapters"),
-		client:     client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "chapters"),
+		client:              client,
 	}
 }
 
@@ -38,7 +40,7 @@ func (r *MongoChapterRepository) Create(ctx context.Context, chapter *bookstore.
 
 	chapter.BeforeCreate()
 
-	result, err := r.collection.InsertOne(ctx, chapter)
+	result, err := r.GetCollection().InsertOne(ctx, chapter)
 	if err != nil {
 		return err
 	}
@@ -49,13 +51,13 @@ func (r *MongoChapterRepository) Create(ctx context.Context, chapter *bookstore.
 
 // GetByID 根据ID获取章节
 func (r *MongoChapterRepository) GetByID(ctx context.Context, id string) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var chapter bookstore.Chapter
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -71,7 +73,7 @@ func (r *MongoChapterRepository) Update(ctx context.Context, id string, updates 
 		return errors.New("updates cannot be empty")
 	}
 
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
@@ -82,7 +84,7 @@ func (r *MongoChapterRepository) Update(ctx context.Context, id string, updates 
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": updates}
 
-	result, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -96,12 +98,12 @@ func (r *MongoChapterRepository) Update(ctx context.Context, id string, updates 
 
 // Delete 删除章节
 func (r *MongoChapterRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -124,7 +126,7 @@ func (r *MongoChapterRepository) GetAll(ctx context.Context, limit, offset int) 
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +152,7 @@ func (r *MongoChapterRepository) Count(ctx context.Context, filter infra.Filter)
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // List 根据过滤条件列出章节
@@ -172,7 +174,7 @@ func (r *MongoChapterRepository) List(ctx context.Context, filter infra.Filter) 
 			opts.SetSort(sortDoc)
 		}
 	}
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -186,12 +188,12 @@ func (r *MongoChapterRepository) List(ctx context.Context, filter infra.Filter) 
 
 // Exists 判断章节是否存在
 func (r *MongoChapterRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return false, err
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -200,13 +202,13 @@ func (r *MongoChapterRepository) Exists(ctx context.Context, id string) (bool, e
 
 // GetByBookID 根据书籍ID获取章节列表
 func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Printf("[DEBUG] GetByBookID called with bookID=%s, limit=%d, offset=%d\n", bookID, limit, offset)
-	fmt.Printf("[DEBUG] Collection name: %s\n", r.collection.Name())
+	fmt.Printf("[DEBUG] Collection name: %s\n", r.GetCollection().Name())
 
 	opts := options.Find()
 	if limit > 0 {
@@ -220,10 +222,10 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 	filter := bson.M{"book_id": objectID}
 
 	// 添加：检查总文档数
-	totalCount, _ := r.collection.CountDocuments(ctx, filter)
+	totalCount, _ := r.GetCollection().CountDocuments(ctx, filter)
 	fmt.Printf("[DEBUG] Total documents in collection: %d\n", totalCount)
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -243,14 +245,14 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 
 // GetByBookIDAndChapterNum 根据书籍ID和章节号获取章节
 func (r *MongoChapterRepository) GetByBookIDAndChapterNum(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
 
 	var chapter bookstore.Chapter
 	filter := bson.M{"book_id": objectID, "chapter_num": chapterNum}
-	err = r.collection.FindOne(ctx, filter).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -272,7 +274,7 @@ func (r *MongoChapterRepository) GetByTitle(ctx context.Context, title string, l
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
 	filter := bson.M{"title": bson.M{"$regex": title, "$options": "i"}}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +294,7 @@ func (r *MongoChapterRepository) GetByTitle(ctx context.Context, title string, l
 
 // GetFreeChapters 获取免费章节
 func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +309,7 @@ func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID str
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
 	filter := bson.M{"book_id": objectID, "is_free": true}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +329,7 @@ func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID str
 
 // GetPaidChapters 获取付费章节
 func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +344,7 @@ func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID str
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
 	filter := bson.M{"book_id": objectID, "is_free": false}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +364,7 @@ func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID str
 
 // GetPublishedChapters 获取已发布章节
 func (r *MongoChapterRepository) GetPublishedChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +382,7 @@ func (r *MongoChapterRepository) GetPublishedChapters(ctx context.Context, bookI
 		"book_id":      objectID,
 		"publish_time": bson.M{"$lte": time.Now()},
 	}
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +418,7 @@ func (r *MongoChapterRepository) Search(ctx context.Context, keyword string, lim
 		},
 	}
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +461,7 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 	query := bson.M{}
 
 	if filter.BookID != nil {
-		objectID, err := primitive.ObjectIDFromHex(*filter.BookID)
+		objectID, err := r.ParseID(*filter.BookID)
 		if err == nil {
 			query["book_id"] = objectID
 		}
@@ -502,7 +504,7 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 		}
 	}
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -522,40 +524,40 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 
 // CountByBookID 根据书籍ID统计章节数量
 func (r *MongoChapterRepository) CountByBookID(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{"book_id": objectID}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountFreeChapters 统计免费章节数量
 func (r *MongoChapterRepository) CountFreeChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{"book_id": objectID, "is_free": true}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountPaidChapters 统计付费章节数量
 func (r *MongoChapterRepository) CountPaidChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{"book_id": objectID, "is_free": false}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // GetChapterRange 获取章节范围
 func (r *MongoChapterRepository) GetChapterRange(ctx context.Context, bookID string, startChapter, endChapter int) ([]*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +571,7 @@ func (r *MongoChapterRepository) GetChapterRange(ctx context.Context, bookID str
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +591,7 @@ func (r *MongoChapterRepository) GetChapterRange(ctx context.Context, bookID str
 
 // CountPublishedChapters 统计已发布章节数量
 func (r *MongoChapterRepository) CountPublishedChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return 0, err
 	}
@@ -598,12 +600,12 @@ func (r *MongoChapterRepository) CountPublishedChapters(ctx context.Context, boo
 		"book_id":      objectID,
 		"is_published": true,
 	}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // GetTotalWordCount 获取书籍总字数
 func (r *MongoChapterRepository) GetTotalWordCount(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return 0, err
 	}
@@ -616,7 +618,7 @@ func (r *MongoChapterRepository) GetTotalWordCount(ctx context.Context, bookID s
 		}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
@@ -638,7 +640,7 @@ func (r *MongoChapterRepository) GetTotalWordCount(ctx context.Context, bookID s
 
 // GetPreviousChapter 获取上一章节
 func (r *MongoChapterRepository) GetPreviousChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -650,7 +652,7 @@ func (r *MongoChapterRepository) GetPreviousChapter(ctx context.Context, bookID 
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: -1}})
 
-	err = r.collection.FindOne(ctx, filter, opts).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -662,7 +664,7 @@ func (r *MongoChapterRepository) GetPreviousChapter(ctx context.Context, bookID 
 
 // GetNextChapter 获取下一章节
 func (r *MongoChapterRepository) GetNextChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -674,7 +676,7 @@ func (r *MongoChapterRepository) GetNextChapter(ctx context.Context, bookID stri
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	err = r.collection.FindOne(ctx, filter, opts).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -686,7 +688,7 @@ func (r *MongoChapterRepository) GetNextChapter(ctx context.Context, bookID stri
 
 // GetFirstChapter 获取第一章节
 func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -695,7 +697,7 @@ func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID str
 	filter := bson.M{"book_id": objectID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	err = r.collection.FindOne(ctx, filter, opts).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -707,7 +709,7 @@ func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID str
 
 // GetLastChapter 获取最后章节
 func (r *MongoChapterRepository) GetLastChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -716,7 +718,7 @@ func (r *MongoChapterRepository) GetLastChapter(ctx context.Context, bookID stri
 	filter := bson.M{"book_id": objectID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: -1}})
 
-	err = r.collection.FindOne(ctx, filter, opts).Decode(&chapter)
+	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -730,7 +732,7 @@ func (r *MongoChapterRepository) GetLastChapter(ctx context.Context, bookID stri
 func (r *MongoChapterRepository) BatchUpdatePrice(ctx context.Context, chapterIDs []string, price float64) error {
 	objectIDs := make([]primitive.ObjectID, 0, len(chapterIDs))
 	for _, id := range chapterIDs {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := r.ParseID(id)
 		if err != nil {
 			return err
 		}
@@ -746,7 +748,7 @@ func (r *MongoChapterRepository) BatchUpdatePrice(ctx context.Context, chapterID
 		},
 	}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
@@ -754,7 +756,7 @@ func (r *MongoChapterRepository) BatchUpdatePrice(ctx context.Context, chapterID
 func (r *MongoChapterRepository) BatchUpdatePublishTime(ctx context.Context, chapterIDs []string, publishTime time.Time) error {
 	objectIDs := make([]primitive.ObjectID, 0, len(chapterIDs))
 	for _, id := range chapterIDs {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := r.ParseID(id)
 		if err != nil {
 			return err
 		}
@@ -769,7 +771,7 @@ func (r *MongoChapterRepository) BatchUpdatePublishTime(ctx context.Context, cha
 		},
 	}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
@@ -777,7 +779,7 @@ func (r *MongoChapterRepository) BatchUpdatePublishTime(ctx context.Context, cha
 func (r *MongoChapterRepository) BatchUpdateFreeStatus(ctx context.Context, chapterIDs []string, isFree bool) error {
 	objectIDs := make([]primitive.ObjectID, 0, len(chapterIDs))
 	for _, id := range chapterIDs {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := r.ParseID(id)
 		if err != nil {
 			return err
 		}
@@ -792,7 +794,7 @@ func (r *MongoChapterRepository) BatchUpdateFreeStatus(ctx context.Context, chap
 		},
 	}
 
-	_, err := r.collection.UpdateMany(ctx, filter, update)
+	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
@@ -800,7 +802,7 @@ func (r *MongoChapterRepository) BatchUpdateFreeStatus(ctx context.Context, chap
 func (r *MongoChapterRepository) BatchDelete(ctx context.Context, chapterIDs []string) error {
 	objectIDs := make([]primitive.ObjectID, 0, len(chapterIDs))
 	for _, id := range chapterIDs {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := r.ParseID(id)
 		if err != nil {
 			return err
 		}
@@ -808,18 +810,18 @@ func (r *MongoChapterRepository) BatchDelete(ctx context.Context, chapterIDs []s
 	}
 
 	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err := r.GetCollection().DeleteMany(ctx, filter)
 	return err
 }
 
 // DeleteByBookID 根据书籍ID删除所有章节
 func (r *MongoChapterRepository) DeleteByBookID(ctx context.Context, bookID string) error {
-	objectID, err := primitive.ObjectIDFromHex(bookID)
+	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.collection.DeleteMany(ctx, bson.M{"book_id": objectID})
+	_, err = r.GetCollection().DeleteMany(ctx, bson.M{"book_id": objectID})
 	return err
 }
 

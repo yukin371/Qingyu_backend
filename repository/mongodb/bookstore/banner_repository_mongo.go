@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
 	"fmt"
@@ -18,15 +19,16 @@ import (
 
 // MongoBannerRepository MongoDB Banner仓储实现
 type MongoBannerRepository struct {
-	collection *mongo.Collection
-	client     *mongo.Client
+	*base.BaseMongoRepository
+	client *mongo.Client
 }
 
 // NewMongoBannerRepository 创建MongoDB Banner仓储实例
 func NewMongoBannerRepository(client *mongo.Client, database string) interfaces.BannerRepository {
+	db := client.Database(database)
 	return &MongoBannerRepository{
-		collection: client.Database(database).Collection("banners"),
-		client:     client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "banners"),
+		client:              client,
 	}
 }
 
@@ -39,7 +41,7 @@ func (r *MongoBannerRepository) Create(ctx context.Context, banner *bookstore.Ba
 	banner.CreatedAt = time.Now()
 	banner.UpdatedAt = time.Now()
 
-	result, err := r.collection.InsertOne(ctx, banner)
+	result, err := r.GetCollection().InsertOne(ctx, banner)
 	if err != nil {
 		return err
 	}
@@ -50,13 +52,13 @@ func (r *MongoBannerRepository) Create(ctx context.Context, banner *bookstore.Ba
 
 // GetByID 根据ID获取Banner
 func (r *MongoBannerRepository) GetByID(ctx context.Context, id string) (*bookstore.Banner, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var banner bookstore.Banner
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&banner)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&banner)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -68,14 +70,14 @@ func (r *MongoBannerRepository) GetByID(ctx context.Context, id string) (*bookst
 
 // Update 更新Banner
 func (r *MongoBannerRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{"$set": updates},
@@ -93,12 +95,12 @@ func (r *MongoBannerRepository) Update(ctx context.Context, id string, updates m
 
 // Delete 删除Banner
 func (r *MongoBannerRepository) Delete(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
 	}
@@ -123,7 +125,7 @@ func (r *MongoBannerRepository) Count(ctx context.Context, filter infra.Filter) 
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // List 根据过滤条件列出Banner
@@ -147,7 +149,7 @@ func (r *MongoBannerRepository) List(ctx context.Context, filter infra.Filter) (
 		}
 	}
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -162,12 +164,12 @@ func (r *MongoBannerRepository) List(ctx context.Context, filter infra.Filter) (
 
 // Exists 判断Banner是否存在
 func (r *MongoBannerRepository) Exists(ctx context.Context, id string) (bool, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := r.ParseID(id)
 	if err != nil {
 		return false, err
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}
@@ -192,7 +194,7 @@ func (r *MongoBannerRepository) GetActive(ctx context.Context, limit, offset int
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +215,7 @@ func (r *MongoBannerRepository) GetByTargetType(ctx context.Context, targetType 
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{"target_type": targetType, "is_active": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"target_type": targetType, "is_active": true}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +255,7 @@ func (r *MongoBannerRepository) GetByTimeRange(ctx context.Context, startTime, e
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, query, opts)
+	cursor, err := r.GetCollection().Find(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -269,12 +271,12 @@ func (r *MongoBannerRepository) GetByTimeRange(ctx context.Context, startTime, e
 
 // IncrementClickCount 增加点击次数
 func (r *MongoBannerRepository) IncrementClickCount(ctx context.Context, bannerID string) error {
-	objectID, err := primitive.ObjectIDFromHex(bannerID)
+	objectID, err := r.ParseID(bannerID)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.collection.UpdateOne(
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": objectID},
 		bson.M{
@@ -287,13 +289,13 @@ func (r *MongoBannerRepository) IncrementClickCount(ctx context.Context, bannerI
 
 // GetClickStats 获取点击统计
 func (r *MongoBannerRepository) GetClickStats(ctx context.Context, bannerID string) (int64, error) {
-	objectID, err := primitive.ObjectIDFromHex(bannerID)
+	objectID, err := r.ParseID(bannerID)
 	if err != nil {
 		return 0, err
 	}
 
 	var banner bookstore.Banner
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}, options.FindOne().SetProjection(bson.M{"click_count": 1})).Decode(&banner)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}, options.FindOne().SetProjection(bson.M{"click_count": 1})).Decode(&banner)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
@@ -308,14 +310,14 @@ func (r *MongoBannerRepository) BatchUpdateStatus(ctx context.Context, bannerIDs
 	// 转换 string ID 为 ObjectID
 	objectIDs := make([]primitive.ObjectID, 0, len(bannerIDs))
 	for _, id := range bannerIDs {
-		oid, err := primitive.ObjectIDFromHex(id)
+		oid, err := r.ParseID(id)
 		if err != nil {
 			return fmt.Errorf("无效的ID: %s", id)
 		}
 		objectIDs = append(objectIDs, oid)
 	}
 
-	_, err := r.collection.UpdateMany(
+	_, err := r.GetCollection().UpdateMany(
 		ctx,
 		bson.M{"_id": bson.M{"$in": objectIDs}},
 		bson.M{

@@ -11,27 +11,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/social"
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoMessageRepository MongoDB消息仓储实现
 type MongoMessageRepository struct {
-	db               *mongo.Database
-	conversationsCol *mongo.Collection
-	messagesCol      *mongo.Collection
-	mentionsCol      *mongo.Collection
+	*base.BaseMongoRepository  // 嵌入基类，管理主collection (conversations)
+	db               *mongo.Database  // 保留db字段用于事务和健康检查
+	messagesCol      *mongo.Collection  // 消息collection独立管理
+	mentionsCol      *mongo.Collection  // @提醒collection独立管理
 }
 
 // NewMongoMessageRepository 创建MongoDB消息仓储实例
 func NewMongoMessageRepository(db *mongo.Database) *MongoMessageRepository {
-	conversationsCol := db.Collection("conversations")
 	messagesCol := db.Collection("messages")
 	mentionsCol := db.Collection("mentions")
 
 	repo := &MongoMessageRepository{
-		db:               db,
-		conversationsCol: conversationsCol,
-		messagesCol:      messagesCol,
-		mentionsCol:      mentionsCol,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "conversations"),
+		db:                  db,
+		messagesCol:         messagesCol,
+		mentionsCol:         mentionsCol,
 	}
 
 	// 创建索引
@@ -55,7 +55,7 @@ func (r *MongoMessageRepository) createIndexes(ctx context.Context) {
 		},
 	}
 
-	_, err := r.conversationsCol.Indexes().CreateMany(ctx, conversationIndexes)
+	_, err := r.GetCollection().Indexes().CreateMany(ctx, conversationIndexes)
 	if err != nil {
 		fmt.Printf("Warning: Failed to create conversation indexes: %v\n", err)
 	}
@@ -130,7 +130,7 @@ func (r *MongoMessageRepository) CreateConversation(ctx context.Context, convers
 		conversation.UnreadCount = make(map[string]int)
 	}
 
-	_, err := r.conversationsCol.InsertOne(ctx, conversation)
+	_, err := r.GetCollection().InsertOne(ctx, conversation)
 	if err != nil {
 		return fmt.Errorf("failed to create conversation: %w", err)
 	}
@@ -146,7 +146,7 @@ func (r *MongoMessageRepository) GetConversationByID(ctx context.Context, conver
 	}
 
 	var conversation social.Conversation
-	err = r.conversationsCol.FindOne(ctx, bson.M{"_id": objectID}).Decode(&conversation)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&conversation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("conversation not found")
@@ -168,7 +168,7 @@ func (r *MongoMessageRepository) GetConversationByParticipants(ctx context.Conte
 	}
 
 	var conversation social.Conversation
-	err := r.conversationsCol.FindOne(ctx, filter).Decode(&conversation)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&conversation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("conversation not found")
@@ -186,7 +186,7 @@ func (r *MongoMessageRepository) GetUserConversations(ctx context.Context, userI
 	}
 
 	// 计算总数
-	total, err := r.conversationsCol.CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count conversations: %w", err)
 	}
@@ -198,7 +198,7 @@ func (r *MongoMessageRepository) GetUserConversations(ctx context.Context, userI
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "updated_at", Value: -1}})
 
-	cursor, err := r.conversationsCol.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find conversations: %w", err)
 	}
@@ -221,7 +221,7 @@ func (r *MongoMessageRepository) UpdateConversation(ctx context.Context, convers
 
 	updates["updated_at"] = time.Now()
 
-	_, err = r.conversationsCol.UpdateByID(ctx, objectID, bson.M{"$set": updates})
+	_, err = r.GetCollection().UpdateByID(ctx, objectID, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to update conversation: %w", err)
 	}
@@ -236,7 +236,7 @@ func (r *MongoMessageRepository) DeleteConversation(ctx context.Context, convers
 		return fmt.Errorf("invalid conversation ID: %w", err)
 	}
 
-	_, err = r.conversationsCol.DeleteOne(ctx, bson.M{"_id": objectID})
+	_, err = r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete conversation: %w", err)
 	}
@@ -258,7 +258,7 @@ func (r *MongoMessageRepository) UpdateLastMessage(ctx context.Context, conversa
 		},
 	}
 
-	_, err = r.conversationsCol.UpdateByID(ctx, objectID, update)
+	_, err = r.GetCollection().UpdateByID(ctx, objectID, update)
 	if err != nil {
 		return fmt.Errorf("failed to update last message: %w", err)
 	}
@@ -282,7 +282,7 @@ func (r *MongoMessageRepository) IncrementUnreadCount(ctx context.Context, conve
 		},
 	}
 
-	_, err = r.conversationsCol.UpdateByID(ctx, objectID, update)
+	_, err = r.GetCollection().UpdateByID(ctx, objectID, update)
 	if err != nil {
 		return fmt.Errorf("failed to increment unread count: %w", err)
 	}
@@ -304,7 +304,7 @@ func (r *MongoMessageRepository) ClearUnreadCount(ctx context.Context, conversat
 		},
 	}
 
-	_, err = r.conversationsCol.UpdateByID(ctx, objectID, update)
+	_, err = r.GetCollection().UpdateByID(ctx, objectID, update)
 	if err != nil {
 		return fmt.Errorf("failed to clear unread count: %w", err)
 	}
@@ -525,7 +525,7 @@ func (r *MongoMessageRepository) CountUnreadMessages(ctx context.Context, userID
 		},
 	}
 
-	cursor, err := r.conversationsCol.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count unread messages: %w", err)
 	}

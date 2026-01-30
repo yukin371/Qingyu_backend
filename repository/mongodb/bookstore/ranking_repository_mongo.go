@@ -12,23 +12,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"Qingyu_backend/repository/mongodb/base"
+
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // MongoRankingRepository MongoDB榜单仓储实现
 type MongoRankingRepository struct {
-	collection     *mongo.Collection
+	*base.BaseMongoRepository
 	bookCollection *mongo.Collection
 	client         *mongo.Client
 }
 
 // NewMongoRankingRepository 创建MongoDB榜单仓储实例
 func NewMongoRankingRepository(client *mongo.Client, database string) BookstoreInterface.RankingRepository {
+	db := client.Database(database)
 	return &MongoRankingRepository{
-		collection:     client.Database(database).Collection("rankings"),
-		bookCollection: client.Database(database).Collection("books"),
-		client:         client,
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "rankings"),
+		bookCollection:      db.Collection("books"),
+		client:              client,
 	}
 }
 
@@ -43,7 +46,7 @@ func (r *MongoRankingRepository) Create(ctx context.Context, item *bookstore2.Ra
 	item.CreatedAt = time.Now()
 	item.UpdatedAt = time.Now()
 
-	result, err := r.collection.InsertOne(ctx, item)
+	result, err := r.GetCollection().InsertOne(ctx, item)
 	if err != nil {
 		return fmt.Errorf("failed to create ranking item: %w", err)
 	}
@@ -55,7 +58,7 @@ func (r *MongoRankingRepository) Create(ctx context.Context, item *bookstore2.Ra
 // GetByID 根据ID获取榜单项
 func (r *MongoRankingRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*bookstore2.RankingItem, error) {
 	var item bookstore2.RankingItem
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&item)
+	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&item)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -69,7 +72,7 @@ func (r *MongoRankingRepository) GetByID(ctx context.Context, id primitive.Objec
 func (r *MongoRankingRepository) Update(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 
-	result, err := r.collection.UpdateOne(
+	result, err := r.GetCollection().UpdateOne(
 		ctx,
 		bson.M{"_id": id},
 		bson.M{"$set": updates},
@@ -87,7 +90,7 @@ func (r *MongoRankingRepository) Update(ctx context.Context, id primitive.Object
 
 // Delete 删除榜单项
 func (r *MongoRankingRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete ranking item: %w", err)
 	}
@@ -108,7 +111,7 @@ func (r *MongoRankingRepository) List(ctx context.Context, filter infra.Filter) 
 		query = bson.M{}
 	}
 
-	cursor, err := r.collection.Find(ctx, query)
+	cursor, err := r.GetCollection().Find(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list ranking items: %w", err)
 	}
@@ -130,12 +133,12 @@ func (r *MongoRankingRepository) Count(ctx context.Context, filter infra.Filter)
 	} else {
 		query = bson.M{}
 	}
-	return r.collection.CountDocuments(ctx, query)
+	return r.GetCollection().CountDocuments(ctx, query)
 }
 
 // Exists 检查榜单项是否存在
 func (r *MongoRankingRepository) Exists(ctx context.Context, id primitive.ObjectID) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": id})
 	if err != nil {
 		return false, fmt.Errorf("failed to check ranking item existence: %w", err)
 	}
@@ -161,7 +164,7 @@ func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType book
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rankings by type: %w", err)
 	}
@@ -231,7 +234,7 @@ func (r *MongoRankingRepository) GetByBookID(ctx context.Context, bookID primiti
 	}
 
 	var item bookstore2.RankingItem
-	err := r.collection.FindOne(ctx, filter).Decode(&item)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&item)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -251,7 +254,7 @@ func (r *MongoRankingRepository) GetByPeriod(ctx context.Context, period string,
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rankings by period: %w", err)
 	}
@@ -284,7 +287,7 @@ func (r *MongoRankingRepository) GetRankingStats(ctx context.Context, rankingTyp
 		}}},
 	}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to aggregate ranking stats: %w", err)
 	}
@@ -326,7 +329,7 @@ func (r *MongoRankingRepository) CountByType(ctx context.Context, rankingType bo
 		"type":   rankingType,
 		"period": period,
 	}
-	return r.collection.CountDocuments(ctx, filter)
+	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // GetTopBooks 获取榜单前N本书
@@ -354,7 +357,7 @@ func (r *MongoRankingRepository) UpsertRankingItem(ctx context.Context, item *bo
 	}
 
 	opts := options.Update().SetUpsert(true)
-	_, err := r.collection.UpdateOne(
+	_, err := r.GetCollection().UpdateOne(
 		ctx,
 		filter,
 		bson.M{"$set": item},
@@ -406,7 +409,7 @@ func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, it
 		return nil
 	}
 
-	_, err := r.collection.BulkWrite(ctx, operations)
+	_, err := r.GetCollection().BulkWrite(ctx, operations)
 	if err != nil {
 		return fmt.Errorf("failed to batch upsert ranking items: %w", err)
 	}
@@ -425,7 +428,7 @@ func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType
 
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// 1. 删除旧榜单数据
-		_, err := r.collection.DeleteMany(sessCtx, bson.M{
+		_, err := r.GetCollection().DeleteMany(sessCtx, bson.M{
 			"type":   rankingType,
 			"period": period,
 		})
@@ -447,7 +450,7 @@ func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType
 			}
 
 			if len(docs) > 0 {
-				_, err = r.collection.InsertMany(sessCtx, docs)
+				_, err = r.GetCollection().InsertMany(sessCtx, docs)
 				if err != nil {
 					return nil, fmt.Errorf("failed to insert new rankings: %w", err)
 				}
@@ -468,7 +471,7 @@ func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType
 
 // DeleteByPeriod 删除指定周期的榜单
 func (r *MongoRankingRepository) DeleteByPeriod(ctx context.Context, period string) error {
-	_, err := r.collection.DeleteMany(ctx, bson.M{"period": period})
+	_, err := r.GetCollection().DeleteMany(ctx, bson.M{"period": period})
 	if err != nil {
 		return fmt.Errorf("failed to delete rankings by period: %w", err)
 	}
@@ -477,7 +480,7 @@ func (r *MongoRankingRepository) DeleteByPeriod(ctx context.Context, period stri
 
 // DeleteByType 删除指定类型的榜单
 func (r *MongoRankingRepository) DeleteByType(ctx context.Context, rankingType bookstore2.RankingType) error {
-	_, err := r.collection.DeleteMany(ctx, bson.M{"type": rankingType})
+	_, err := r.GetCollection().DeleteMany(ctx, bson.M{"type": rankingType})
 	if err != nil {
 		return fmt.Errorf("failed to delete rankings by type: %w", err)
 	}
@@ -489,7 +492,7 @@ func (r *MongoRankingRepository) DeleteExpiredRankings(ctx context.Context, befo
 	// 转换为周期字符串格式
 	periodStr := beforeDate.Format("2006-01-02")
 
-	_, err := r.collection.DeleteMany(ctx, bson.M{
+	_, err := r.GetCollection().DeleteMany(ctx, bson.M{
 		"period": bson.M{"$lt": periodStr},
 	})
 	if err != nil {
