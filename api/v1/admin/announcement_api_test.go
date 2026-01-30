@@ -117,7 +117,7 @@ func TestAnnouncementAPI_GetAnnouncementByID_Success(t *testing.T) {
 	announcementType := messagingModel.AnnouncementTypeInfo
 	expectedAnnouncement := &messagingModel.Announcement{
 		IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID},
-		TitledEntity:     messagingBase.TitledEntity{Title: &title},
+		TitledEntity:     messagingBase.TitledEntity{Title: title},
 		Content:          "这是一个测试公告",
 		Type:             announcementType,
 	}
@@ -250,8 +250,8 @@ func TestAnnouncementAPI_GetAnnouncements_Success(t *testing.T) {
 	title2 := "公告2"
 	expectedResponse := &messagingService.GetAnnouncementsResponse{
 		Announcements: []*messagingModel.Announcement{
-			{IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID1}, TitledEntity: messagingBase.TitledEntity{Title: &title1}, Type: messagingModel.AnnouncementTypeInfo},
-			{IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID2}, TitledEntity: messagingBase.TitledEntity{Title: &title2}, Type: messagingModel.AnnouncementTypeWarning},
+			{IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID1}, TitledEntity: messagingBase.TitledEntity{Title: title1}, Type: messagingModel.AnnouncementTypeInfo},
+			{IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID2}, TitledEntity: messagingBase.TitledEntity{Title: title2}, Type: messagingModel.AnnouncementTypeWarning},
 		},
 		Total: 2,
 	}
@@ -304,9 +304,8 @@ func TestAnnouncementAPI_CreateAnnouncement_Success(t *testing.T) {
 
 	endTime := time.Now().Add(24 * time.Hour)
 	title := "新公告"
-	titleStr := title
 	req := messagingService.CreateAnnouncementRequest{
-		Title:       &titleStr,
+		Title:       title,
 		Content:     "公告内容",
 		Type:        string(messagingModel.AnnouncementTypeInfo),
 		TargetRole:  "all",
@@ -318,7 +317,7 @@ func TestAnnouncementAPI_CreateAnnouncement_Success(t *testing.T) {
 	objID := primitive.NewObjectID()
 	expectedAnnouncement := &messagingModel.Announcement{
 		IdentifiedEntity: messagingBase.IdentifiedEntity{ID: objID},
-		TitledEntity:     messagingBase.TitledEntity{Title: &title},
+		TitledEntity:     messagingBase.TitledEntity{Title: title},
 		Content:          req.Content,
 		Type:             messagingModel.AnnouncementTypeInfo,
 	}
@@ -359,9 +358,8 @@ func TestAnnouncementAPI_CreateAnnouncement_ServiceError(t *testing.T) {
 	router := setupAnnouncementAPITestRouter(mockService)
 
 	title := "新公告"
-	titleStr := title
 	req := messagingService.CreateAnnouncementRequest{
-		Title:      &titleStr,
+		Title:      title,
 		Content:    "公告内容",
 		Type:       string(messagingModel.AnnouncementTypeInfo),
 		TargetRole: "all",
@@ -495,7 +493,7 @@ func TestAnnouncementAPI_BatchUpdateStatus_Success(t *testing.T) {
 	router := setupAnnouncementAPITestRouter(mockService)
 
 	req := messagingService.BatchUpdateAnnouncementStatusRequest{
-		IDs:      []string{primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex()},
+		AnnouncementIDs: []string{primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex()},
 		IsActive: false,
 	}
 
@@ -520,7 +518,7 @@ func TestAnnouncementAPI_BatchUpdateStatus_ValidationError(t *testing.T) {
 	router := setupAnnouncementAPITestRouter(mockService)
 
 	req := messagingService.BatchUpdateAnnouncementStatusRequest{
-		IDs:      []string{"invalid-id"},
+		AnnouncementIDs: []string{"invalid-id"},
 		IsActive: true,
 	}
 
