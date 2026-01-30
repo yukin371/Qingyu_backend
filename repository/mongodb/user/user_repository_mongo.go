@@ -264,7 +264,15 @@ func (r *MongoUserRepository) List(ctx context.Context, filter infrastructure.Fi
 
 	// 如果是UserFilter类型，使用自定义过滤条件
 	if userFilter.ID != "" {
-		mongoFilter["_id"] = userFilter.ID
+		objID, err := r.ParseID(userFilter.ID)
+		if err != nil {
+			return nil, UserInterface.NewUserRepositoryError(
+				UserInterface.ErrorTypeValidation,
+				"无效的用户ID",
+				err,
+			)
+		}
+		mongoFilter["_id"] = objID
 	}
 	if userFilter.Username != "" {
 		mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
@@ -420,7 +428,15 @@ func (r *MongoUserRepository) Count(ctx context.Context, filter infrastructure.F
 
 	// 添加过滤条件
 	if userFilter.ID != "" {
-		mongoFilter["_id"] = userFilter.ID
+		objID, err := r.ParseID(userFilter.ID)
+		if err != nil {
+			return 0, UserInterface.NewUserRepositoryError(
+				UserInterface.ErrorTypeValidation,
+				"无效的用户ID",
+				err,
+			)
+		}
+		mongoFilter["_id"] = objID
 	}
 	if userFilter.Username != "" {
 		mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
@@ -570,8 +586,17 @@ func (r *MongoUserRepository) ExistsByEmail(ctx context.Context, email string) (
 
 // UpdateLastLogin 更新最后登录时间和IP
 func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id string, ip string) error {
+	objID, err := r.ParseID(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
-	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	filter := bson.M{"_id": objID, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{
 		"last_login_at": now,
 		"last_login_ip": ip,
@@ -600,8 +625,17 @@ func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id string, ip
 
 // UpdatePassword 更新密码
 func (r *MongoUserRepository) UpdatePassword(ctx context.Context, id string, hashedPassword string) error {
+	objID, err := r.ParseID(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
-	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	filter := bson.M{"_id": objID, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"password": hashedPassword, "updated_at": now}}
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
@@ -868,7 +902,15 @@ func (r *MongoUserRepository) FindWithPagination(ctx context.Context, filter inf
 	// 如果是UserFilter类型，添加过滤条件
 	if userFilter, ok := filter.(UserInterface.UserFilter); ok {
 		if userFilter.ID != "" {
-			mongoFilter["_id"] = userFilter.ID
+			objID, err := r.ParseID(userFilter.ID)
+			if err != nil {
+				return nil, UserInterface.NewUserRepositoryError(
+					UserInterface.ErrorTypeValidation,
+					"无效的用户ID",
+					err,
+				)
+			}
+			mongoFilter["_id"] = objID
 		}
 		if userFilter.Username != "" {
 			mongoFilter["username"] = bson.M{"$regex": userFilter.Username, "$options": "i"}
@@ -1009,8 +1051,17 @@ func (r *MongoUserRepository) ExistsByPhone(ctx context.Context, phone string) (
 
 // UpdateStatus 更新用户状态
 func (r *MongoUserRepository) UpdateStatus(ctx context.Context, id string, status usersModel.UserStatus) error {
+	objID, err := r.ParseID(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
-	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	filter := bson.M{"_id": objID, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"status": status, "updated_at": now}}
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
@@ -1080,8 +1131,17 @@ func (r *MongoUserRepository) GetUsersByRole(ctx context.Context, role string, l
 
 // SetEmailVerified 设置邮箱验证状态
 func (r *MongoUserRepository) SetEmailVerified(ctx context.Context, id string, verified bool) error {
+	objID, err := r.ParseID(id)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
-	filter := bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}
+	filter := bson.M{"_id": objID, "deleted_at": bson.M{"$exists": false}}
 	update := bson.M{"$set": bson.M{"email_verified": verified, "updated_at": now}}
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)

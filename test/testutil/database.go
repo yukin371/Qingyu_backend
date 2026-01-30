@@ -96,6 +96,7 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = db.Collection("wallets").Drop(ctx)
 		_ = db.Collection("transactions").Drop(ctx)
 		_ = db.Collection("withdraw_requests").Drop(ctx)
+		_ = db.Collection("users").Drop(ctx)
 
 		// Reading相关测试集合
 		_ = db.Collection("reading_settings").Drop(ctx)
@@ -205,6 +206,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		_ = db.Collection("wallets").Drop(ctx)
 		_ = db.Collection("transactions").Drop(ctx)
 		_ = db.Collection("withdraw_requests").Drop(ctx)
+		_ = db.Collection("users").Drop(ctx)
 		_ = db.Collection("reading_settings").Drop(ctx)
 		_ = db.Collection("reading_progress").Drop(ctx)
 		_ = db.Collection("annotations").Drop(ctx)
