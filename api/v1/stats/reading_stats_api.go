@@ -1,13 +1,11 @@
 package stats
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/pkg/response"
 )
@@ -35,7 +33,7 @@ func NewReadingStatsAPI(statsService *readingStatsService.ReadingStatsService) *
 func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -51,7 +49,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取统计成功", stats)
+	response.SuccessWithMessage(c, "获取统计成功", stats)
 }
 
 // GetMyDailyStats 获取我的每日阅读统计
@@ -66,7 +64,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -83,7 +81,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取每日统计成功", gin.H{
+	response.SuccessWithMessage(c, "获取每日统计成功", gin.H{
 		"days":  days,
 		"stats": dailyStats,
 	})
@@ -101,7 +99,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -116,7 +114,7 @@ func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 		"message": "排名功能待实现",
 	}
 
-	shared.Success(c, http.StatusOK, "获取排名成功", ranking)
+	response.SuccessWithMessage(c, "获取排名成功", ranking)
 }
 
 // GetMyReadingTime 获取我的阅读时长统计
@@ -131,7 +129,7 @@ func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -155,7 +153,7 @@ func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
 		"message":      "功能待实现",
 	}
 
-	shared.Success(c, http.StatusOK, "获取阅读时长成功", readingTime)
+	response.SuccessWithMessage(c, "获取阅读时长成功", readingTime)
 }
 
 // GetMyHistory 获取我的阅读历史统计
@@ -170,7 +168,7 @@ func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
 func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -191,7 +189,7 @@ func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 		"message":      "功能待实现",
 	}
 
-	shared.Success(c, http.StatusOK, "获取阅读历史成功", history)
+	response.SuccessWithMessage(c, "获取阅读历史成功", history)
 }
 
 // GetRecommendations 获取阅读推荐（基于统计）
@@ -207,7 +205,7 @@ func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 func (api *ReadingStatsAPI) GetRecommendations(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -227,5 +225,5 @@ func (api *ReadingStatsAPI) GetRecommendations(c *gin.Context) {
 		"message": "推荐功能待实现",
 	}
 
-	shared.Success(c, http.StatusOK, "获取推荐成功", recommendations)
+	response.SuccessWithMessage(c, "获取推荐成功", recommendations)
 }

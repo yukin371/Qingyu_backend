@@ -2,7 +2,6 @@ package notifications
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -47,7 +46,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -128,7 +127,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, result)
+	response.Success(c, result)
 }
 
 // GetNotification 获取通知详情
@@ -144,7 +143,7 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -170,11 +169,11 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 
 	// 验证权限
 	if notif.UserID != userIDStr {
-		shared.Error(c, http.StatusForbidden, "FORBIDDEN", "无权访问此通知")
+		response.Forbidden(c, "无权访问此通知")
 		return
 	}
 
-	shared.SuccessData(c, notif)
+	response.Success(c, notif)
 }
 
 // MarkAsRead 标记通知为已读
@@ -190,7 +189,7 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -213,7 +212,7 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "标记成功"})
+	response.SuccessWithMessage(c, "标记成功", nil)
 }
 
 // MarkMultipleAsRead 批量标记通知为已读
@@ -229,7 +228,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -272,7 +271,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 		resp.Errors = []string{"部分通知标记失败"}
 	}
 
-	shared.SuccessData(c, resp)
+	response.Success(c, resp)
 }
 
 // MarkAllAsRead 标记所有通知为已读
@@ -287,7 +286,7 @@ func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -303,7 +302,7 @@ func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "全部标记成功"})
+	response.SuccessWithMessage(c, "全部标记成功", nil)
 }
 
 // DeleteNotification 删除通知
@@ -319,7 +318,7 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -342,7 +341,7 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "删除成功"})
+	response.SuccessWithMessage(c, "删除成功", nil)
 }
 
 // BatchDeleteNotifications 批量删除通知
@@ -358,7 +357,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -401,7 +400,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 		resp.Errors = []string{"部分通知删除失败"}
 	}
 
-	shared.SuccessData(c, resp)
+	response.Success(c, resp)
 }
 
 // DeleteAllNotifications 删除所有通知
@@ -416,7 +415,7 @@ func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -432,7 +431,7 @@ func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "全部删除成功"})
+	response.SuccessWithMessage(c, "全部删除成功", nil)
 }
 
 // GetUnreadCount 获取未读通知数量
@@ -447,7 +446,7 @@ func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -464,7 +463,7 @@ func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"count": count})
+	response.Success(c, gin.H{"count": count})
 }
 
 // GetNotificationStats 获取通知统计
@@ -479,7 +478,7 @@ func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -496,7 +495,7 @@ func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, stats)
+	response.Success(c, stats)
 }
 
 // GetNotificationPreference 获取通知偏好设置
@@ -511,7 +510,7 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -528,7 +527,7 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, preference)
+	response.Success(c, preference)
 }
 
 // UpdateNotificationPreference 更新通知偏好设置
@@ -544,7 +543,7 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -573,7 +572,7 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "更新成功"})
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // ResetNotificationPreference 重置通知偏好设置
@@ -588,7 +587,7 @@ func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -604,7 +603,7 @@ func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "重置成功"})
+	response.SuccessWithMessage(c, "重置成功", nil)
 }
 
 // GetEmailNotificationSettings 获取邮件通知设置
@@ -619,7 +618,7 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -636,7 +635,7 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, settings)
+	response.Success(c, settings)
 }
 
 // UpdateEmailNotificationSettings 更新邮件通知设置
@@ -652,7 +651,7 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -675,7 +674,7 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "更新成功"})
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // GetSMSNotificationSettings 获取短信通知设置
@@ -690,7 +689,7 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -707,7 +706,7 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, settings)
+	response.Success(c, settings)
 }
 
 // UpdateSMSNotificationSettings 更新短信通知设置
@@ -723,7 +722,7 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -746,7 +745,7 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "更新成功"})
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // RegisterPushDevice 注册推送设备
@@ -762,7 +761,7 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -795,7 +794,7 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, device)
+	response.Success(c, device)
 }
 
 // UnregisterPushDevice 取消注册推送设备
@@ -811,7 +810,7 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -834,7 +833,7 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"message": "取消注册成功"})
+	response.SuccessWithMessage(c, "取消注册成功", nil)
 }
 
 // GetPushDevices 获取推送设备列表
@@ -849,7 +848,7 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -866,7 +865,7 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, gin.H{"devices": devices})
+	response.Success(c, gin.H{"devices": devices})
 }
 
 // ClearReadNotifications 清除已读通知
@@ -882,7 +881,7 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -899,7 +898,7 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, dto.BatchOperationResponse{
+	response.Success(c, dto.BatchOperationResponse{
 		Success:   true,
 		Total:     int(affected),
 		Succeeded: int(affected),
@@ -924,7 +923,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -963,7 +962,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, dto.MarkAsReadResponse{
+	response.Success(c, dto.MarkAsReadResponse{
 		Success: true,
 		Message: "重新发送成功",
 	})
@@ -982,7 +981,7 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "未授权访问")
+		response.Unauthorized(c, "未授权访问")
 		return
 	}
 
@@ -994,7 +993,7 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 
 	// 验证 Authorization Header 存在
 	if c.GetHeader("Authorization") == "" {
-		shared.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "缺少认证令牌")
+		response.Unauthorized(c, "缺少认证令牌")
 		return
 	}
 
@@ -1006,7 +1005,7 @@ func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 
 	wsURL := fmt.Sprintf("%s://%s/ws/notifications", scheme, c.Request.Host)
 
-	shared.SuccessData(c, dto.WSEndpointResponse{
+	response.Success(c, dto.WSEndpointResponse{
 		URL:     wsURL,
 		Message: "请使用Authorization Header或子协议传递token",
 	})

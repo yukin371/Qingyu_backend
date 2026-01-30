@@ -48,7 +48,7 @@ func (api *HealthAPI) SystemHealth(c *gin.Context) {
 	}
 
 	if allHealthy {
-		shared.Success(c, http.StatusOK, "系统健康", gin.H{
+		response.SuccessWithMessage(c, "系统健康", gin.H{
 			"status":   "healthy",
 			"services": healthStatus,
 		})
@@ -91,7 +91,7 @@ func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "服务健康", gin.H{
+	response.SuccessWithMessage(c, "服务健康", gin.H{
 		"service": serviceName,
 		"status":  "healthy",
 	})
@@ -122,7 +122,7 @@ func (api *HealthAPI) AllMetrics(c *gin.Context) {
 		metricsResponse[name] = metric.ToResponse()
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"total_services": len(allMetrics),
 		"metrics":        metricsResponse,
 	})
@@ -155,5 +155,5 @@ func (api *HealthAPI) ServiceMetrics(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", metric.ToResponse())
+	response.SuccessWithMessage(c, "获取成功", metric.ToResponse())
 }

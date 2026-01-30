@@ -1,9 +1,7 @@
 package ai
 
 import (
-	"net/http"
 
-	"Qingyu_backend/api/v1/shared"
 	aiService "Qingyu_backend/service/ai"
 	"Qingyu_backend/service/ai/dto"
 
@@ -71,7 +69,7 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	shared.Success(c, http.StatusOK, "总结成功", result)
+	response.SuccessWithMessage(c, "总结成功", result)
 }
 
 // SummarizeChapter 总结章节内容
@@ -108,7 +106,7 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", "summarize_service")
 
-	shared.Success(c, http.StatusOK, "章节总结成功", result)
+	response.SuccessWithMessage(c, "章节总结成功", result)
 }
 
 // ===========================
@@ -149,7 +147,7 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	shared.Success(c, http.StatusOK, "校对完成", result)
+	response.SuccessWithMessage(c, "校对完成", result)
 }
 
 // GetProofreadSuggestion 获取校对建议详情
@@ -178,7 +176,7 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取建议成功", result)
+	response.SuccessWithMessage(c, "获取建议成功", result)
 }
 
 // ===========================
@@ -221,7 +219,7 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 		c.Set("aiModel", "sensitive_words_detector")
 	}
 
-	shared.Success(c, http.StatusOK, "检测完成", result)
+	response.SuccessWithMessage(c, "检测完成", result)
 }
 
 // GetSensitiveWordsDetail 获取敏感词检测结果
@@ -250,5 +248,5 @@ func (api *WritingAssistantApi) GetSensitiveWordsDetail(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取检测结果成功", result)
+	response.SuccessWithMessage(c, "获取检测结果成功", result)
 }

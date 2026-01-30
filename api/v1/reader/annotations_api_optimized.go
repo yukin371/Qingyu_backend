@@ -1,8 +1,8 @@
 package reader
 
 import (
-	readerModels "Qingyu_backend/models/reader"
 	"net/http"
+	readerModels "Qingyu_backend/models/reader"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,7 +58,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "批量创建成功", gin.H{
+	response.Created(c, gin.H{
 		"count":       len(annotations),
 		"annotations": annotations,
 	})
@@ -133,7 +133,7 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 		}
 	}
 
-	shared.Success(c, http.StatusOK, "批量更新完成", gin.H{
+	response.SuccessWithMessage(c, "批量更新完成", gin.H{
 		"total":   len(req.Updates),
 		"success": successCount,
 	})
@@ -160,7 +160,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "批量删除成功", gin.H{
+	response.SuccessWithMessage(c, "批量删除成功", gin.H{
 		"count": len(req.IDs),
 	})
 }
@@ -176,7 +176,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", stats)
+	response.SuccessWithMessage(c, "获取成功", stats)
 }
 
 // ExportAnnotations 导出注记
@@ -214,7 +214,7 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -317,7 +317,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -340,7 +340,7 @@ func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "同步成功", result)
+	response.SuccessWithMessage(c, "同步成功", result)
 }
 
 // SyncAnnotationsRequest 同步注记请求

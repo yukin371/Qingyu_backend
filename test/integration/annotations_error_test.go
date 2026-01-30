@@ -109,6 +109,7 @@ func TestErrorCodeMapping(t *testing.T) {
 	code := int(resp["code"].(float64))
 
 	// 验证是6位错误码
+	// TODO 需要改为4位错误码
 	assert.GreaterOrEqual(t, code, 100000, "错误码应该是6位数字")
 	assert.Less(t, code, 1000000, "错误码应该是6位数字")
 	assert.Equal(t, 100001, code)

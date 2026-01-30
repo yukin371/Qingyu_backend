@@ -147,6 +147,22 @@ func (m *MockBookstoreService) IncrementBannerClick(ctx context.Context, bannerI
 	return args.Error(0)
 }
 
+func (m *MockBookstoreService) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	args := m.Called(ctx, categoryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *MockBookstoreService) GetYears(ctx context.Context) ([]int, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
+}
+
 func (m *MockBookstoreService) GetRealtimeRanking(ctx context.Context, limit int) ([]*bookstoreModel.RankingItem, error) {
 	args := m.Called(ctx, limit)
 	if args.Get(0) == nil {

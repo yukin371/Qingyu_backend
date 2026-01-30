@@ -1,11 +1,8 @@
 package messages
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
 	"fmt"
@@ -40,7 +37,7 @@ func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 func (api *MessageAPI) GetConversations(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -68,7 +65,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取会话列表成功", gin.H{
+	response.SuccessWithMessage(c, "获取会话列表成功", gin.H{
 		"list":  conversations,
 		"total": total,
 		"page":  params.Page,
@@ -96,7 +93,7 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -125,7 +122,7 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取消息成功", gin.H{
+	response.SuccessWithMessage(c, "获取消息成功", gin.H{
 		"list":  messages,
 		"total": total,
 		"page":  params.Page,
@@ -162,7 +159,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 
 	senderID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -184,7 +181,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "发送消息成功", message)
+	response.Created(c, message)
 }
 
 // MarkMessageAsRead 标记消息已读
@@ -205,7 +202,7 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -220,7 +217,7 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记消息已读成功", nil)
+	response.SuccessWithMessage(c, "标记消息已读成功", nil)
 }
 
 // DeleteMessage 删除消息
@@ -241,7 +238,7 @@ func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -256,7 +253,7 @@ func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "删除消息成功", nil)
+	response.SuccessWithMessage(c, "删除消息成功", nil)
 }
 
 // =========================
@@ -289,7 +286,7 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 
 	senderID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -307,7 +304,7 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusCreated, "创建@提醒成功", nil)
+	response.Created(c, nil)
 }
 
 // GetMentions 获取@提醒列表
@@ -323,7 +320,7 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 func (api *MessageAPI) GetMentions(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -351,7 +348,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取@提醒列表成功", gin.H{
+	response.SuccessWithMessage(c, "获取@提醒列表成功", gin.H{
 		"list":  mentions,
 		"total": total,
 		"page":  params.Page,
@@ -377,7 +374,7 @@ func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -392,5 +389,5 @@ func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "标记@提醒已读成功", nil)
+	response.SuccessWithMessage(c, "标记@提醒已读成功", nil)
 }

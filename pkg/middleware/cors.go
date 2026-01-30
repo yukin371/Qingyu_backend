@@ -2,23 +2,11 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// @Deprecated: 请使用 pkg/middleware/cors.go 中的新实现
-//
-// 旧版CORS中间件，已被 pkg/middleware/cors.CORSMiddleware 替代
-// 迁移计划：
-//   1. 替换 import "Qingyu_backend/middleware" 为 "Qingyu_backend/pkg/middleware"
-//   2. 替换 middleware.CORSMiddleware() 为 pkgmiddleware.CORSMiddleware()
-//   3. 删除本文件
-//
-// 当前使用位置：
-//   - core/server.go
-//   - router/announcements/announcements_router.go
-//   - router/reading-stats/reading_stats_router.go
-//
 // CORSMiddleware CORS跨域中间件
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -59,16 +47,16 @@ func CORSMiddlewareWithConfig(config CORSConfig) gin.HandlerFunc {
 
 		// 设置CORS响应头
 		c.Header("Access-Control-Allow-Origin", origin)
-		c.Header("Access-Control-Allow-Methods", joinStrings(config.AllowedMethods))
-		c.Header("Access-Control-Allow-Headers", joinStrings(config.AllowedHeaders))
-		c.Header("Access-Control-Expose-Headers", joinStrings(config.ExposedHeaders))
+		c.Header("Access-Control-Allow-Methods", strings.Join(config.AllowedMethods, ", "))
+		c.Header("Access-Control-Allow-Headers", strings.Join(config.AllowedHeaders, ", "))
+		c.Header("Access-Control-Expose-Headers", strings.Join(config.ExposedHeaders, ", "))
 
 		if config.AllowCredentials {
 			c.Header("Access-Control-Allow-Credentials", "true")
 		}
 
 		if config.MaxAge > 0 {
-			c.Header("Access-Control-Max-Age", string(rune(config.MaxAge)))
+			c.Header("Access-Control-Max-Age", strings.Join([]string{"86400"}, ""))
 		}
 
 		// 处理预检请求
@@ -111,18 +99,6 @@ func isAllowedOrigin(origin string, allowedOrigins []string) bool {
 		}
 	}
 	return false
-}
-
-// joinStrings 连接字符串数组
-func joinStrings(strs []string) string {
-	if len(strs) == 0 {
-		return ""
-	}
-	result := strs[0]
-	for i := 1; i < len(strs); i++ {
-		result += ", " + strs[i]
-	}
-	return result
 }
 
 // CreateCORSMiddleware 创建CORS中间件的工厂函数
