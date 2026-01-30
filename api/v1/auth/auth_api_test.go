@@ -229,7 +229,7 @@ func TestAuthAPI_Register_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "注册成功", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -363,7 +363,7 @@ func TestAuthAPI_Login_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "登录成功", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -458,7 +458,7 @@ func TestAuthAPI_Logout_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "登出成功", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -541,7 +541,7 @@ func TestAuthAPI_RefreshToken_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "Token刷新成功", response["message"])
 
 	data := response["data"].(map[string]interface{})
@@ -606,7 +606,7 @@ func TestAuthAPI_GetUserPermissions_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "获取权限成功", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -667,7 +667,7 @@ func TestAuthAPI_GetUserRoles_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "获取角色成功", response["message"])
 
 	mockService.AssertExpectations(t)

@@ -379,14 +379,24 @@ func (r *MongoDocumentRepository) RestoreByProject(ctx context.Context, document
 		return fmt.Errorf("无效的文档ID: %w", err)
 	}
 
+	projectObjID, err := r.ParseID(projectID)
+	if err != nil {
+		return fmt.Errorf("无效的项目ID: %w", err)
+	}
+
+	now := time.Now()
+	dateTime := primitive.NewDateTimeFromTime(now)
+
 	filter := bson.M{
 		"_id":        objID,
-		"project_id": projectID,
+		"project_id": projectObjID,
 	}
 	update := bson.M{
+		"$unset": bson.M{
+			"deleted_at": "",
+		},
 		"$set": bson.M{
-			"deleted_at": nil,
-			"updated_at": time.Now(),
+			"updated_at": dateTime,
 		},
 	}
 

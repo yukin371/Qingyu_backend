@@ -395,8 +395,75 @@ func (s *BatchOperationService) GetProgress(ctx context.Context, operationID str
 
 // Undo 撤销批量操作
 func (s *BatchOperationService) Undo(ctx context.Context, operationID string, userID string) error {
-	// TODO: 实现撤销逻辑
-	return fmt.Errorf("撤销功能尚未实现")
+	// 1. 获取批量操作
+	batchOp, err := s.batchOpRepo.GetByID(ctx, operationID)
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询批量操作失败", "", err)
+	}
+
+	if batchOp == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "批量操作不存在", "", nil)
+	}
+
+	// 2. 验证操作类型（目前只支持撤销删除操作）
+	if batchOp.Type != writer.BatchOpTypeDelete {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "只支持撤销删除操作", "", nil)
+	}
+
+	// 3. 验证操作状态（只能撤销已完成或部分成功的操作）
+	if batchOp.Status != writer.BatchOpStatusCompleted && batchOp.Status != writer.BatchOpStatusPartial {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "只能撤销已完成或部分成功的操作", "", nil)
+	}
+
+	// 4. 验证用户权限
+	project, err := s.projectRepo.GetByID(ctx, batchOp.ProjectID.Hex())
+	if err != nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询项目失败", "", err)
+	}
+
+	if project == nil {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
+	}
+
+	if !project.CanEdit(userID) {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorForbidden, "无权限撤销该操作", "", nil)
+	}
+
+	// 5. 恢复已成功删除的文档
+	restoreCount := 0
+	failedCount := 0
+
+	for _, item := range batchOp.Items {
+		// 只恢复之前成功删除的文档
+		if item.Status == writer.BatchItemStatusSucceeded {
+			err := s.docRepo.RestoreByProject(ctx, item.TargetID, batchOp.ProjectID.Hex())
+			if err != nil {
+				// 恢复失败，记录错误但继续处理其他文档
+				failedCount++
+			} else {
+				restoreCount++
+			}
+		}
+	}
+
+	// 6. 发布撤销事件
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: "batch_operation.undone",
+			EventData: map[string]interface{}{
+				"operation_id":   operationID,
+				"project_id":     batchOp.ProjectID.Hex(),
+				"type":           string(batchOp.Type),
+				"restore_count":  restoreCount,
+				"failed_count":   failedCount,
+				"undo_by":        userID,
+			},
+			Timestamp: time.Now(),
+			Source:    s.serviceName,
+		})
+	}
+
+	return nil
 }
 
 // 私有方法

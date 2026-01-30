@@ -210,7 +210,7 @@ func TestAuthAPI_Register(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "注册成功", resp["message"])
 				data := resp["data"].(map[string]interface{})
 				assert.NotEmpty(t, data["token"])
@@ -231,8 +231,8 @@ func TestAuthAPI_Register(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(500), resp["code"])
-				assert.Contains(t, resp["message"], "注册失败")
+				assert.Equal(t, float64(5000), resp["code"])
+				assert.Equal(t, "服务器内部错误", resp["message"])
 			},
 		},
 	}
@@ -291,7 +291,7 @@ func TestAuthAPI_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "登录成功", resp["message"])
 				data := resp["data"].(map[string]interface{})
 				assert.Equal(t, "test_token_123", data["token"])
@@ -310,7 +310,7 @@ func TestAuthAPI_Login(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(401), resp["code"])
+				assert.Equal(t, float64(1002), resp["code"])
 				assert.Contains(t, resp["message"], "登录失败")
 			},
 		},
@@ -358,7 +358,7 @@ func TestAuthAPI_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "登出成功", resp["message"])
 			},
 		},
@@ -370,7 +370,7 @@ func TestAuthAPI_Logout(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(401), resp["code"])
+				assert.Equal(t, float64(1002), resp["code"])
 				assert.Equal(t, "未提供Token", resp["message"])
 			},
 		},
@@ -419,7 +419,7 @@ func TestAuthAPI_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "Token刷新成功", resp["message"])
 				data := resp["data"].(map[string]interface{})
 				assert.Equal(t, "new_token_456", data["token"])
@@ -433,7 +433,7 @@ func TestAuthAPI_RefreshToken(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(401), resp["code"])
+				assert.Equal(t, float64(1002), resp["code"])
 				assert.Contains(t, resp["message"], "Token刷新失败")
 			},
 		},
@@ -483,7 +483,7 @@ func TestAuthAPI_GetUserPermissions(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "获取权限成功", resp["message"])
 				data := resp["data"].([]interface{})
 				assert.Len(t, data, 3)
@@ -498,7 +498,7 @@ func TestAuthAPI_GetUserPermissions(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(401), resp["code"])
+				assert.Equal(t, float64(1002), resp["code"])
 				assert.Equal(t, "未认证", resp["message"])
 			},
 		},
@@ -545,7 +545,7 @@ func TestAuthAPI_GetUserRoles(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(200), resp["code"])
+				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "获取角色成功", resp["message"])
 				data := resp["data"].([]interface{})
 				assert.Len(t, data, 2)
@@ -560,7 +560,7 @@ func TestAuthAPI_GetUserRoles(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				assert.Equal(t, float64(401), resp["code"])
+				assert.Equal(t, float64(1002), resp["code"])
 				assert.Equal(t, "未认证", resp["message"])
 			},
 		},
