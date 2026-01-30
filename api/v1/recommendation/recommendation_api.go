@@ -1,7 +1,6 @@
 package recommendation
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +33,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -53,7 +52,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
 		"count":           len(recommendations),
 	})
@@ -89,7 +88,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"similar_items": similarItems,
 		"count":         len(similarItems),
 	})
@@ -106,7 +105,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("userId")
 	if !exists {
-		shared.Error(c, http.StatusUnauthorized, "未授权", "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -146,7 +145,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "记录成功", nil)
+	response.SuccessWithMessage(c, "记录成功", nil)
 }
 
 // GetHomepageRecommendations 获取首页推荐
@@ -189,7 +188,7 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 		}
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
 		"count":           len(recommendations),
 	})
@@ -222,7 +221,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
 		"count":           len(recommendations),
 	})
@@ -259,7 +258,7 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", gin.H{
+	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
 		"count":           len(recommendations),
 		"category":        category,

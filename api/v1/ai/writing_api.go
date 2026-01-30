@@ -78,7 +78,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	shared.Success(c, http.StatusOK, "续写成功", result)
+	response.SuccessWithMessage(c, "续写成功", result)
 }
 
 // ContinueWritingStream 智能续写（流式）
@@ -248,7 +248,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	shared.Success(c, http.StatusOK, "改写成功", result)
+	response.SuccessWithMessage(c, "改写成功", result)
 }
 
 // RewriteTextStream 改写文本（流式）
