@@ -27,13 +27,18 @@ const (
 	AlreadyExists ErrorCode = 1005 // 资源已存在
 	Conflict      ErrorCode = 1006 // 冲突
 
-	// 认证授权错误 (1xxx)
+	// 认证授权错误 (2xxx)
 	InvalidCredentials ErrorCode = 2002 // 无效凭证
 	TokenExpired       ErrorCode = 2007 // Token过期
 	TokenInvalid       ErrorCode = 2008 // Token无效
-	PasswordTooWeak    ErrorCode = 2009 // 密码强度不足
-	AccountLocked      ErrorCode = 2010 // 账户已锁定
-	AccountDisabled    ErrorCode = 2011 // 账户已禁用
+	TokenFormatError   ErrorCode = 2009 // Token格式错误
+	TokenMissing       ErrorCode = 2010 // Token缺失
+	RefreshTokenExpired ErrorCode = 2011 // Refresh Token过期
+	RefreshTokenInvalid ErrorCode = 2012 // Refresh Token无效
+	PasswordTooWeak    ErrorCode = 2013 // 密码强度不足
+	AccountLocked      ErrorCode = 2014 // 账户已锁定
+	AccountDisabled    ErrorCode = 2015 // 账户已禁用
+	TokenRevoked       ErrorCode = 2016 // Token已被撤销
 
 	// 业务逻辑错误 (1xxx)
 	InsufficientBalance ErrorCode = 3003 // 余额不足
@@ -78,9 +83,14 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	InvalidCredentials: "用户名或密码错误",
 	TokenExpired:       "登录已过期，请重新登录",
 	TokenInvalid:       "无效的登录凭证",
+	TokenFormatError:   "Token格式错误",
+	TokenMissing:       "缺少认证Token",
+	RefreshTokenExpired: "Refresh Token已过期",
+	RefreshTokenInvalid: "无效的Refresh Token",
 	PasswordTooWeak:    "密码强度不足",
 	AccountLocked:      "账户已被锁定",
 	AccountDisabled:    "账户已被禁用",
+	TokenRevoked:       "Token已被撤销",
 
 	InsufficientBalance: "余额不足",
 	InsufficientQuota:   "配额不足",
@@ -111,9 +121,14 @@ var DefaultHTTPStatus = map[ErrorCode]int{
 	InvalidCredentials: http.StatusUnauthorized,
 	TokenExpired:       http.StatusUnauthorized,
 	TokenInvalid:       http.StatusUnauthorized,
+	TokenFormatError:   http.StatusBadRequest,
+	TokenMissing:       http.StatusUnauthorized,
+	RefreshTokenExpired: http.StatusUnauthorized,
+	RefreshTokenInvalid: http.StatusUnauthorized,
 	PasswordTooWeak:    http.StatusBadRequest,
 	AccountLocked:      http.StatusForbidden,
 	AccountDisabled:    http.StatusForbidden,
+	TokenRevoked:       http.StatusUnauthorized,
 
 	InsufficientBalance: http.StatusBadRequest,
 	InsufficientQuota:   http.StatusBadRequest,
