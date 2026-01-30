@@ -37,7 +37,7 @@ func TestDocumentApi_DuplicateDocument_MissingUserID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusUnauthorized), response["code"])
+	assert.Equal(t, float64(1002), response["code"]) // 1002 = Unauthorized
 }
 
 // TestDocumentApi_DuplicateDocument_InvalidJSON 测试无效的JSON请求（有userId）

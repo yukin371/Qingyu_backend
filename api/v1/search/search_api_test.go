@@ -177,7 +177,7 @@ func TestSearch_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 验证响应结构
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "搜索成功", response["message"])
 	assert.NotNil(t, response["data"])
 
@@ -215,9 +215,9 @@ func TestSearch_EmptyType(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
-	// Gin 的 required 验证会返回 "Field validation for 'Type' failed on the 'required' tag"
-	assert.Contains(t, response["error"], "required")
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "参数错误", response["message"])
+	assert.NotNil(t, response["data"])
 }
 
 // TestSearch_EmptyQuery 测试空搜索关键词
@@ -245,9 +245,9 @@ func TestSearch_EmptyQuery(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
-	// Gin 的 required 验证会返回 "Field validation for 'Query' failed on the 'required' tag"
-	assert.Contains(t, response["error"], "required")
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "参数错误", response["message"])
+	assert.NotNil(t, response["data"])
 }
 
 // TestSearch_WithFilter 测试带过滤条件的搜索
@@ -279,7 +279,8 @@ func TestSearch_WithFilter(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "搜索成功", response["message"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -315,7 +316,8 @@ func TestSearch_WithSort(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "搜索成功", response["message"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -400,7 +402,7 @@ func TestSearchBatch_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "批量搜索成功", response["message"])
 
 	data := response["data"].([]interface{})
@@ -437,9 +439,9 @@ func TestSearchBatch_EmptyQueries(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
-	// Gin 的 min 验证会返回 "Field validation for 'Queries' failed on the 'min' tag"
-	assert.Contains(t, response["error"], "min")
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "参数错误", response["message"])
+	assert.NotNil(t, response["data"])
 }
 
 // TestSearchBatch_InvalidQuery 测试批量搜索中的无效查询
@@ -476,7 +478,8 @@ func TestSearchBatch_InvalidQuery(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "参数错误", response["message"])
 }
 
 // TestHealth_Success 测试健康检查
@@ -496,7 +499,7 @@ func TestHealth_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "健康检查完成", response["message"])
 
 	// 验证健康状态数据
@@ -532,9 +535,9 @@ func TestSearch_UnsupportedType(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	// 验证响应格式 - HTTP 500，包含 "搜索失败" 消息
-	assert.Equal(t, float64(http.StatusInternalServerError), response["code"])
-	assert.Contains(t, response["message"], "搜索失败")
+	// 验证响应格式 - HTTP 500，code为5000（内部错误）
+	assert.Equal(t, float64(5000), response["code"])
+	assert.Contains(t, response["message"], "服务器内部错误")
 }
 
 // TestSearch_DefaultPagination 测试默认分页参数
@@ -631,7 +634,8 @@ func TestSearch_ComplexFilter(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "搜索成功", response["message"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -665,7 +669,8 @@ func TestSearch_MultipleSortFields(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "搜索成功", response["message"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -734,6 +739,6 @@ func TestSearch_InvalidJSON(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"])
 	assert.Contains(t, response["message"], "参数错误")
 }

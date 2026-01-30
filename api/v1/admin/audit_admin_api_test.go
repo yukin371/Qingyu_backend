@@ -185,8 +185,8 @@ func TestAuditAdminAPI_GetPendingAudits_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "获取成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -264,7 +264,7 @@ func TestAuditAdminAPI_ReviewAudit_Success_Approve(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "审核已通过", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -297,7 +297,7 @@ func TestAuditAdminAPI_ReviewAudit_Success_Reject(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "审核已拒绝", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -431,7 +431,7 @@ func TestAuditAdminAPI_ReviewAppeal_Success_Approve(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "申诉已通过", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -464,7 +464,7 @@ func TestAuditAdminAPI_ReviewAppeal_Success_Reject(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "申诉已驳回", response["message"])
 
 	mockService.AssertExpectations(t)
@@ -602,8 +602,8 @@ func TestAuditAdminAPI_GetHighRiskAudits_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "获取成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -681,8 +681,8 @@ func TestAuditAdminAPI_GetAuditStatistics_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "获取成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }

@@ -221,8 +221,8 @@ func TestPermissionAPI_GetAllPermissions_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "获取成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }

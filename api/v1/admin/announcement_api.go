@@ -282,6 +282,12 @@ func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 		return
 	}
 
+	// 验证IDs不为空
+	if len(req.IDs) == 0 {
+		response.BadRequest(c, "IDs不能为空", "")
+		return
+	}
+
 	if err := api.announcementService.BatchDelete(c.Request.Context(), req.IDs); err != nil {
 		response.InternalError(c, err)
 		return

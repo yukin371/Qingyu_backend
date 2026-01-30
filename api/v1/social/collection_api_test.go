@@ -213,7 +213,7 @@ func TestCollectionAPI_AddCollection_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -244,7 +244,7 @@ func TestCollectionAPI_AddCollection_MissingBookID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestCollectionAPI_GetCollections_Success 测试获取收藏列表成功
@@ -282,7 +282,7 @@ func TestCollectionAPI_GetCollections_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -313,7 +313,7 @@ func TestCollectionAPI_CheckCollected_True(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, true, data["is_collected"])
@@ -350,7 +350,7 @@ func TestCollectionAPI_UpdateCollection_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -377,7 +377,7 @@ func TestCollectionAPI_DeleteCollection_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -420,7 +420,7 @@ func TestCollectionAPI_CreateFolder_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -451,7 +451,7 @@ func TestCollectionAPI_CreateFolder_MissingName(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestCollectionAPI_GetFolders_Success 测试获取收藏夹列表成功
@@ -488,7 +488,7 @@ func TestCollectionAPI_GetFolders_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -523,7 +523,7 @@ func TestCollectionAPI_UpdateFolder_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -550,7 +550,7 @@ func TestCollectionAPI_DeleteFolder_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -577,7 +577,7 @@ func TestCollectionAPI_ShareCollection_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -604,7 +604,7 @@ func TestCollectionAPI_UnshareCollection_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -643,7 +643,7 @@ func TestCollectionAPI_GetPublicCollections_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -679,7 +679,7 @@ func TestCollectionAPI_GetCollectionStats_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -716,7 +716,7 @@ func TestCollectionAPI_GetCollectionsByTag_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(1), data["total"])

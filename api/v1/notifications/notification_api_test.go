@@ -843,7 +843,8 @@ func TestNotificationAPI_GetWSEndpoint_Success(t *testing.T) {
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	data := resp["data"].(map[string]interface{})
 	assert.Contains(t, data["url"], "ws://")
-	assert.Contains(t, data["url"], "token="+token)
+	assert.Contains(t, data["url"], "/ws/notifications")
+	// Token 通过 Authorization Header 传递，不在 URL 中
 }
 
 // TestNotificationAPI_GetWSEndpoint_HTTPS 测试HTTPS环境

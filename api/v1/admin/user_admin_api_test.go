@@ -185,8 +185,8 @@ func TestUserAdminAPI_ListUsers_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "获取成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -257,7 +257,7 @@ func TestUserAdminAPI_GetUserDetail_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -321,7 +321,7 @@ func TestUserAdminAPI_UpdateUserStatus_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -494,8 +494,8 @@ func TestUserAdminAPI_DeleteUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
-	assert.Equal(t, "删除成功", response["message"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -626,7 +626,7 @@ func TestUserAdminAPI_ResetUserPassword_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, newPassword, data["newPassword"])
@@ -838,7 +838,7 @@ func TestUserAdminAPI_CountByStatus_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }

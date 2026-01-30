@@ -124,7 +124,7 @@ func TestRelationAPI_FollowUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, true, data["followed"])
@@ -196,7 +196,7 @@ func TestRelationAPI_UnfollowUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, false, data["followed"])
@@ -249,7 +249,7 @@ func TestRelationAPI_CheckIsFollowing_True(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, true, data["is_following"])
@@ -279,7 +279,7 @@ func TestRelationAPI_CheckIsFollowing_False(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, false, data["is_following"])
@@ -338,7 +338,7 @@ func TestRelationAPI_GetFollowers_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -412,7 +412,7 @@ func TestRelationAPI_GetFollowing_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -465,7 +465,7 @@ func TestRelationAPI_GetFollowStats_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(100), data["follower_count"])

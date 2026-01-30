@@ -132,12 +132,13 @@ func TestPublishApi_PublishProject_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusAccepted, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusAccepted), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 0 = Success
+	assert.Equal(t, "操作成功", response["message"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -167,7 +168,7 @@ func TestPublishApi_PublishProject_MissingProjectID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 1001 = InvalidParams
 }
 
 // TestPublishApi_PublishProject_ServiceError 测试服务错误
@@ -198,7 +199,7 @@ func TestPublishApi_PublishProject_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusInternalServerError), response["code"])
+	assert.Equal(t, float64(5000), response["code"]) // 5000 = InternalError
 
 	mockService.AssertExpectations(t)
 }

@@ -165,7 +165,7 @@ func TestBookListAPI_CreateBookList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -196,7 +196,7 @@ func TestBookListAPI_CreateBookList_MissingTitle(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestBookListAPI_GetBookLists_Success 测试获取书单列表成功
@@ -232,7 +232,7 @@ func TestBookListAPI_GetBookLists_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -268,7 +268,7 @@ func TestBookListAPI_GetBookListDetail_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -304,7 +304,7 @@ func TestBookListAPI_UpdateBookList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -332,7 +332,7 @@ func TestBookListAPI_DeleteBookList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -360,7 +360,7 @@ func TestBookListAPI_LikeBookList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -393,7 +393,7 @@ func TestBookListAPI_ForkBookList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -431,7 +431,7 @@ func TestBookListAPI_GetBooksInList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.NotNil(t, data["list"])
@@ -464,5 +464,5 @@ func TestBookListAPI_UpdateBookList_NoFields(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }

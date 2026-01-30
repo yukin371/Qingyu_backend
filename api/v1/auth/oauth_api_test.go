@@ -151,7 +151,7 @@ func TestOAuthAPI_GetAuthorizeURL_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, expectedURL, data["authorize_url"])
@@ -325,7 +325,7 @@ func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "OAuth登录成功", response["message"])
 
 	mockOAuthService.AssertExpectations(t)
@@ -385,7 +385,7 @@ func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "账号绑定成功", response["message"])
 
 	data := response["data"].(map[string]interface{})
@@ -628,7 +628,7 @@ func TestOAuthAPI_GetLinkedAccounts_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "获取成功", response["message"])
 
 	mockOAuthService.AssertExpectations(t)
@@ -692,7 +692,7 @@ func TestOAuthAPI_UnlinkAccount_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "解绑成功", response["message"])
 
 	mockOAuthService.AssertExpectations(t)
@@ -773,7 +773,7 @@ func TestOAuthAPI_SetPrimaryAccount_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "设置成功", response["message"])
 
 	mockOAuthService.AssertExpectations(t)

@@ -152,7 +152,8 @@ func TestMessageAPI_GetConversations_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "获取会话列表成功", response["message"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(1), data["total"])
@@ -195,7 +196,8 @@ func TestMessageAPI_GetConversationMessages_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "获取消息成功", response["message"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(1), data["total"])
@@ -264,7 +266,8 @@ func TestMessageAPI_SendMessage_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "创建成功", response["message"])
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -342,7 +345,8 @@ func TestMessageAPI_MarkMessageAsRead_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "标记消息已读成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -369,7 +373,8 @@ func TestMessageAPI_DeleteMessage_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "删除消息成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -427,7 +432,8 @@ func TestMessageAPI_CreateMention_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "创建成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }
@@ -490,7 +496,8 @@ func TestMessageAPI_GetMentions_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "获取@提醒列表成功", response["message"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(1), data["total"])
@@ -521,7 +528,8 @@ func TestMessageAPI_MarkMentionAsRead_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "标记@提醒已读成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }

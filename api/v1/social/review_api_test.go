@@ -155,7 +155,7 @@ func TestReviewAPI_CreateReview_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusCreated), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -188,7 +188,7 @@ func TestReviewAPI_CreateReview_MissingBookID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestReviewAPI_CreateReview_MissingTitle 测试创建书评缺少title
@@ -219,7 +219,7 @@ func TestReviewAPI_CreateReview_MissingTitle(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestReviewAPI_GetReviews_Success 测试获取书评列表成功
@@ -261,7 +261,7 @@ func TestReviewAPI_GetReviews_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -288,7 +288,7 @@ func TestReviewAPI_GetReviews_MissingBookID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestReviewAPI_GetReviewDetail_Success 测试获取书评详情成功
@@ -319,7 +319,7 @@ func TestReviewAPI_GetReviewDetail_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
@@ -354,7 +354,7 @@ func TestReviewAPI_UpdateReview_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -383,7 +383,7 @@ func TestReviewAPI_UpdateReview_NoFields(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestReviewAPI_DeleteReview_Success 测试删除书评成功
@@ -408,7 +408,7 @@ func TestReviewAPI_DeleteReview_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -435,7 +435,7 @@ func TestReviewAPI_LikeReview_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }

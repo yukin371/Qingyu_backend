@@ -151,7 +151,7 @@ func TestFollowAPI_FollowUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -175,7 +175,7 @@ func TestFollowAPI_FollowUser_EmptyUserID(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestFollowAPI_UnfollowUser_Success 测试取消关注用户成功
@@ -200,7 +200,7 @@ func TestFollowAPI_UnfollowUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -242,7 +242,7 @@ func TestFollowAPI_GetFollowers_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -288,7 +288,7 @@ func TestFollowAPI_GetFollowing_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
@@ -319,7 +319,7 @@ func TestFollowAPI_CheckFollowStatus_True(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, true, data["is_following"])
@@ -349,7 +349,7 @@ func TestFollowAPI_CheckFollowStatus_False(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, false, data["is_following"])
@@ -391,7 +391,7 @@ func TestFollowAPI_FollowAuthor_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -422,7 +422,7 @@ func TestFollowAPI_FollowAuthor_MissingAuthorName(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusBadRequest), response["code"])
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
 }
 
 // TestFollowAPI_UnfollowAuthor_Success 测试取消关注作者成功
@@ -447,7 +447,7 @@ func TestFollowAPI_UnfollowAuthor_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	mockService.AssertExpectations(t)
 }
@@ -493,7 +493,7 @@ func TestFollowAPI_GetFollowingAuthors_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(http.StatusOK), response["code"])
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(2), data["total"])
