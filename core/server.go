@@ -5,7 +5,6 @@ import (
 
 	"Qingyu_backend/api/v1/system"
 	"Qingyu_backend/config"
-	"Qingyu_backend/middleware"
 	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/pkg/metrics"
 	pkgmiddleware "Qingyu_backend/pkg/middleware"
@@ -116,8 +115,8 @@ func InitServer() (*gin.Engine, error) {
 	// ErrorHandler - 统一错误处理（最后执行，处理所有错误）
 	r.Use(pkgmiddleware.ErrorHandler())
 
-	// 保留原有的中间件
-	r.Use(middleware.CORSMiddleware())
+	// CORSMiddleware - 跨域处理
+	r.Use(pkgmiddleware.CORSMiddleware())
 
 	// 自定义JSON渲染 - 设置不转义HTML字符（包括中文）
 	// 注意：我们通过在API层使用response.JSON()函数来实现
