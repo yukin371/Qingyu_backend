@@ -8,10 +8,10 @@ type Role struct {
 	Name        string    `json:"name" bson:"name"`               // 角色名称：reader, author, admin
 	Description string    `json:"description" bson:"description"` // 角色描述
 	Permissions []string  `json:"permissions" bson:"permissions"` // 权限列表
-	IsSystem    bool      `json:"$1$2" bson:"is_system"`     // 是否系统角色（不可删除）
-	IsDefault   bool      `json:"$1$2" bson:"is_default"`   // 是否默认角色（新用户默认分配）
-	CreatedAt   time.Time `json:"$1$2" bson:"created_at"`
-	UpdatedAt   time.Time `json:"$1$2" bson:"updated_at"`
+	IsSystem    bool      `json:"is_system" bson:"is_system"`     // 是否系统角色（不可删除）
+	IsDefault   bool      `json:"is_default" bson:"is_default"`   // 是否默认角色（新用户默认分配）
+	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 // Permission 权限定义（可选，可以只用字符串）
@@ -21,14 +21,14 @@ type Permission struct {
 	Description string    `json:"description" bson:"description"` // 权限描述
 	Resource    string    `json:"resource" bson:"resource"`       // 资源类型：user, book, wallet
 	Action      string    `json:"action" bson:"action"`           // 操作类型：read, write, delete
-	CreatedAt   time.Time `json:"$1$2" bson:"created_at"`
+	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
 }
 
 // UserRole 用户角色关联（存储在users集合中的roles字段，或单独的集合）
 type UserRole struct {
-	UserID     string    `json:"$1$2" bson:"user_id"`
-	RoleID     string    `json:"$1$2" bson:"role_id"`
-	AssignedAt time.Time `json:"$1$2" bson:"assigned_at"`
+	UserID     string    `json:"user_id" bson:"user_id"`
+	RoleID     string    `json:"role_id" bson:"role_id"`
+	AssignedAt time.Time `json:"assigned_at" bson:"assigned_at"`
 	AssignedBy string    `json:"assigned_by,omitempty" bson:"assigned_by,omitempty"` // 分配者ID
 }
 

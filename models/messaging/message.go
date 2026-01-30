@@ -14,7 +14,7 @@ type Message struct {
 	Metadata          map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"` // 元数据
 	Status            string                 `json:"status" bson:"status"`                         // pending, processing, completed, failed
 	Retry             int                    `json:"retry" bson:"retry"`                           // 重试次数
-	MaxRetry          int                    `json:"$1$2" bson:"max_retry"`                   // 最大重试次数
+	MaxRetry          int                    `json:"max_retry" bson:"max_retry"`                   // 最大重试次数
 	Error             string                 `json:"error,omitempty" bson:"error,omitempty"`       // 错误信息
 	shared.BaseEntity                        // 嵌入时间戳字段
 	ProcessedAt       *time.Time             `json:"processed_at,omitempty" bson:"processed_at,omitempty"`
@@ -28,7 +28,7 @@ type MessageTemplate struct {
 	Subject   string                 `json:"subject,omitempty" bson:"subject,omitempty"` // 邮件主题
 	Content   string                 `json:"content" bson:"content"`                     // 模板内容
 	Variables []string               `json:"variables" bson:"variables"`                 // 可用变量
-	IsActive  bool                   `json:"$1$2" bson:"is_active"`                 // 是否启用
+	IsActive  bool                   `json:"is_active" bson:"is_active"`                 // 是否启用
 	Metadata  map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	shared.BaseEntity
 }

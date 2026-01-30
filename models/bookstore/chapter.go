@@ -7,12 +7,12 @@ import (
 // Chapter 章节模型（元数据，不含内容）
 type Chapter struct {
 	ID         string `bson:"_id,omitempty" json:"id"`
-	BookID     string `bson:"book_id" json:"$1$2"`
+	BookID     string `bson:"book_id" json:"book_id"`
 	Title      string             `bson:"title" json:"title"`
-	ChapterNum int                `bson:"chapter_num" json:"$1$2"`
+	ChapterNum int                `bson:"chapter_num" json:"chapter_num"`
 	// Content 字段已移除，使用 ChapterContent 单独存储
-	WordCount int     `bson:"word_count" json:"$1$2"`
-	IsFree    bool    `bson:"is_free" json:"$1$2"`
+	WordCount int     `bson:"word_count" json:"word_count"`
+	IsFree    bool    `bson:"is_free" json:"is_free"`
 	Price     float64 `bson:"price" json:"price"` // 价格 (分，使用float64以兼容MongoDB)
 
 	// 内容引用信息
@@ -21,9 +21,9 @@ type Chapter struct {
 	ContentHash    string `bson:"content_hash,omitempty" json:"contentHash,omitempty"`       // 内容哈希（校验用）
 	ContentVersion int    `bson:"content_version,omitempty" json:"contentVersion,omitempty"` // 内容版本
 
-	PublishTime time.Time `bson:"publish_time" json:"$1$2"`
-	CreatedAt   time.Time `bson:"created_at" json:"$1$2"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"$1$2"`
+	PublishTime time.Time `bson:"publish_time" json:"publish_time"`
+	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 // BeforeCreate 在创建前设置时间戳
