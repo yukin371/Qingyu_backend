@@ -20,7 +20,6 @@ func (m *MockBookstoreServiceForBenchmark) GetHomepageData(ctx context.Context) 
 	return &bookstoreService.HomepageData{
 		Banners: []*bookstore2.Banner{
 			{
-				ID:         primitive.NewObjectID(),
 				Title:      "测试Banner",
 				Image:      "http://example.com/banner.jpg",
 				Target:     "http://example.com",
@@ -30,7 +29,6 @@ func (m *MockBookstoreServiceForBenchmark) GetHomepageData(ctx context.Context) 
 		},
 		FeaturedBooks: []*bookstore2.Book{
 			{
-				ID:     primitive.NewObjectID(),
 				Title:  "测试书籍",
 				Author: "测试作者",
 			},
@@ -40,11 +38,12 @@ func (m *MockBookstoreServiceForBenchmark) GetHomepageData(ctx context.Context) 
 }
 
 func (m *MockBookstoreServiceForBenchmark) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
-	return &bookstore2.Book{
-		ID:     primitive.NewObjectID(),
+	book := &bookstore2.Book{
 		Title:  "测试书籍",
 		Author: "测试作者",
-	}, nil
+	}
+	book.ID = primitive.NewObjectID()
+	return book, nil
 }
 
 func (m *MockBookstoreServiceForBenchmark) GetRankings(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {

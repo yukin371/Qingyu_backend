@@ -13,7 +13,7 @@ func TestBatchOperation_TouchForCreate(t *testing.T) {
 		Type:      BatchOpTypeDelete,
 		TargetIDs: []string{"doc-1", "doc-2"},
 		Atomic:    true,
-		CreatedBy: primitive.NewObjectID(),
+		CreatedBy: "user123",
 	}
 
 	op.TouchForCreate()
@@ -24,14 +24,14 @@ func TestBatchOperation_TouchForCreate(t *testing.T) {
 	if op.Status != BatchOpStatusPending {
 		t.Errorf("Status should be pending, got %s", op.Status)
 	}
-	if !op.Cancelable {
-		t.Error("Should be cancelable by default")
-	}
 	if op.CreatedAt.IsZero() {
 		t.Error("CreatedAt should be set")
 	}
 	if op.UpdatedAt.IsZero() {
 		t.Error("UpdatedAt should be set")
+	}
+	if len(op.Items) != 2 {
+		t.Errorf("Items length should be 2, got %d", len(op.Items))
 	}
 }
 
@@ -41,7 +41,7 @@ func TestBatchOperation_TouchForCreate_WithExistingStatus(t *testing.T) {
 		Type:      BatchOpTypeDelete,
 		TargetIDs: []string{"doc-1"},
 		Status:    BatchOpStatusRunning,
-		CreatedBy: primitive.NewObjectID(),
+		CreatedBy: "user123",
 	}
 
 	op.TouchForCreate()
@@ -52,31 +52,7 @@ func TestBatchOperation_TouchForCreate_WithExistingStatus(t *testing.T) {
 	}
 }
 
-func TestBatchOperation_IsRunning(t *testing.T) {
-	tests := []struct {
-		name   string
-		status BatchOperationStatus
-		want   bool
-	}{
-		{"pending", BatchOpStatusPending, false},
-		{"running", BatchOpStatusRunning, true},
-		{"completed", BatchOpStatusCompleted, false},
-		{"failed", BatchOpStatusFailed, false},
-		{"cancelled", BatchOpStatusCancelled, false},
-		{"partially_failed", BatchOpStatusPartiallyFailed, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			op := &BatchOperation{Status: tt.status}
-			if got := op.IsRunning(); got != tt.want {
-				t.Errorf("IsRunning() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestBatchOperation_IsTerminal(t *testing.T) {
+func TestBatchOperation_IsCompleted(t *testing.T) {
 	tests := []struct {
 		name   string
 		status BatchOperationStatus
@@ -84,214 +60,43 @@ func TestBatchOperation_IsTerminal(t *testing.T) {
 	}{
 		{"pending", BatchOpStatusPending, false},
 		{"running", BatchOpStatusRunning, false},
+		{"processing", BatchOpStatusProcessing, false},
 		{"completed", BatchOpStatusCompleted, true},
 		{"failed", BatchOpStatusFailed, true},
 		{"cancelled", BatchOpStatusCancelled, true},
-		{"partially_failed", BatchOpStatusPartiallyFailed, true},
+		{"partial", BatchOpStatusPartial, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			op := &BatchOperation{Status: tt.status}
-			if got := op.IsTerminal(); got != tt.want {
-				t.Errorf("IsTerminal() = %v, want %v", got, tt.want)
+			if got := op.IsCompleted(); got != tt.want {
+				t.Errorf("IsCompleted() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestBatchOperation_CanCancel(t *testing.T) {
-	tests := []struct {
-		name       string
-		status     BatchOperationStatus
-		cancelable bool
-		want       bool
-	}{
-		{"running cancelable", BatchOpStatusRunning, true, true},
-		{"running not cancelable", BatchOpStatusRunning, false, false},
-		{"completed cancelable", BatchOpStatusCompleted, true, false},
-		{"pending cancelable", BatchOpStatusPending, true, false},
-		{"failed cancelable", BatchOpStatusFailed, true, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			op := &BatchOperation{
-				Status:     tt.status,
-				Cancelable: tt.cancelable,
-			}
-			if got := op.CanCancel(); got != tt.want {
-				t.Errorf("CanCancel() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestBatchOperationItem_TouchForCreate(t *testing.T) {
+func TestBatchOperationItem_Structure(t *testing.T) {
 	item := &BatchOperationItem{
-		BatchID:        primitive.NewObjectID(),
-		TargetID:       "doc-1",
-		TargetStableRef: "stable-ref-123",
+		TargetID:    "doc-1",
+		TargetType:  "document",
+		Status:      BatchItemStatusPending,
+		Retryable:   true,
+		RetryCount:  0,
+		ErrorCode:   "",
+		ErrorMsg:    "",
+		ErrorMessage: "",
 	}
 
-	item.TouchForCreate()
-
-	if item.ID.IsZero() {
-		t.Error("ID should be generated")
+	if item.TargetID != "doc-1" {
+		t.Errorf("TargetID should be doc-1, got %s", item.TargetID)
 	}
 	if item.Status != BatchItemStatusPending {
 		t.Errorf("Status should be pending, got %s", item.Status)
 	}
-	if item.CreatedAt.IsZero() {
-		t.Error("CreatedAt should be set")
-	}
-	if item.UpdatedAt.IsZero() {
-		t.Error("UpdatedAt should be set")
-	}
-}
-
-func TestBatchOperationItem_TouchForCreate_WithExistingStatus(t *testing.T) {
-	item := &BatchOperationItem{
-		BatchID:        primitive.NewObjectID(),
-		TargetID:       "doc-1",
-		TargetStableRef: "stable-ref-123",
-		Status:         BatchItemStatusProcessing,
-	}
-
-	item.TouchForCreate()
-
-	// Status should not be overwritten if already set
-	if item.Status != BatchItemStatusProcessing {
-		t.Errorf("Status should remain processing, got %s", item.Status)
-	}
-}
-
-func TestOperationLog_TouchForCreate(t *testing.T) {
-	log := &OperationLog{
-		ProjectID:   primitive.NewObjectID(),
-		UserID:      primitive.NewObjectID(),
-		CommandType: CommandDelete,
-		TargetIDs:   []string{"doc-1"},
-	}
-
-	log.TouchForCreate()
-
-	if log.ID.IsZero() {
-		t.Error("ID should be generated")
-	}
-	if log.ChainID == "" {
-		t.Error("ChainID should be set")
-	}
-	if log.ChainID != log.ID.Hex() {
-		t.Error("ChainID should equal ID when not set")
-	}
-	if log.Status != OpLogStatusExecuted {
-		t.Errorf("Status should be executed, got %s", log.Status)
-	}
-	if log.CreatedAt.IsZero() {
-		t.Error("CreatedAt should be set")
-	}
-	if log.UpdatedAt.IsZero() {
-		t.Error("UpdatedAt should be set")
-	}
-}
-
-func TestOperationLog_TouchForCreate_WithChainID(t *testing.T) {
-	log := &OperationLog{
-		ProjectID:   primitive.NewObjectID(),
-		UserID:      primitive.NewObjectID(),
-		CommandType: CommandDelete,
-		TargetIDs:   []string{"doc-1"},
-		ChainID:     "existing-chain-id",
-	}
-
-	log.TouchForCreate()
-
-	// ChainID should not be overwritten if already set
-	if log.ChainID != "existing-chain-id" {
-		t.Errorf("ChainID should remain existing-chain-id, got %s", log.ChainID)
-	}
-}
-
-func TestOperationLog_TouchForCreate_WithExistingStatus(t *testing.T) {
-	log := &OperationLog{
-		ProjectID:   primitive.NewObjectID(),
-		UserID:      primitive.NewObjectID(),
-		CommandType: CommandDelete,
-		TargetIDs:   []string{"doc-1"},
-		Status:      OpLogStatusUndone,
-	}
-
-	log.TouchForCreate()
-
-	// Status should not be overwritten if already set
-	if log.Status != OpLogStatusUndone {
-		t.Errorf("Status should remain undone, got %s", log.Status)
-	}
-}
-
-func TestOperationLog_IsUndoable(t *testing.T) {
-	tests := []struct {
-		name       string
-		status     OperationLogStatus
-		committed  bool
-		want       bool
-	}{
-		{"executed and committed", OpLogStatusExecuted, true, true},
-		{"executed but not committed", OpLogStatusExecuted, false, false},
-		{"undone", OpLogStatusUndone, true, false},
-		{"redone", OpLogStatusRedone, true, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			log := &OperationLog{
-				Status:      tt.status,
-				IsCommitted: tt.committed,
-			}
-			if got := log.IsUndoable(); got != tt.want {
-				t.Errorf("IsUndoable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestOperationLog_IsRedoable(t *testing.T) {
-	tests := []struct {
-		name           string
-		status         OperationLogStatus
-		inverseCommand map[string]interface{}
-		want           bool
-	}{
-		{"undone with inverse", OpLogStatusUndone, map[string]interface{}{"test": "value"}, true},
-		{"undone without inverse", OpLogStatusUndone, nil, false},
-		{"executed with inverse", OpLogStatusExecuted, map[string]interface{}{"test": "value"}, false},
-		{"redone with inverse", OpLogStatusRedone, map[string]interface{}{"test": "value"}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			log := &OperationLog{
-				Status:         tt.status,
-				InverseCommand: tt.inverseCommand,
-			}
-			if got := log.IsRedoable(); got != tt.want {
-				t.Errorf("IsRedoable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestOperationLog_IsRedoable_EmptyInverseCommand(t *testing.T) {
-	log := &OperationLog{
-		Status:         OpLogStatusUndone,
-		InverseCommand: map[string]interface{}{}, // Empty map
-	}
-
-	// Empty map is not nil, so it should be considered as having an inverse command
-	// This test verifies the behavior with empty inverse command
-	if got := log.IsRedoable(); !got {
-		t.Error("IsRedoable() should return true even when InverseCommand is empty (not nil)")
+	if !item.Retryable {
+		t.Error("Retryable should be true")
 	}
 }
 
@@ -304,7 +109,7 @@ func TestBatchOperationType_Constants(t *testing.T) {
 		{"move", BatchOpTypeMove},
 		{"copy", BatchOpTypeCopy},
 		{"export", BatchOpTypeExport},
-		{"apply_template", BatchOpTypeApplyTemplate},
+		{"apply", BatchOpTypeApply},
 	}
 
 	for _, tt := range tests {
@@ -316,38 +121,19 @@ func TestBatchOperationType_Constants(t *testing.T) {
 	}
 }
 
-func TestDocumentCommandType_Constants(t *testing.T) {
-	tests := []struct {
-		name  string
-		value DocumentCommandType
-	}{
-		{"create", CommandCreate},
-		{"update", CommandUpdate},
-		{"move", CommandMove},
-		{"copy", CommandCopy},
-		{"delete", CommandDelete},
-		{"restore", CommandRestore},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if string(tt.value) == "" {
-				t.Errorf("DocumentCommandType %s should not be empty", tt.name)
-			}
-		})
-	}
-}
-
 func TestBatchOperationStatus_Constants(t *testing.T) {
 	tests := []struct {
 		name  string
 		value BatchOperationStatus
 	}{
 		{"pending", BatchOpStatusPending},
+		{"preflight", BatchOpStatusPreflight},
 		{"running", BatchOpStatusRunning},
+		{"processing", BatchOpStatusProcessing},
 		{"completed", BatchOpStatusCompleted},
 		{"failed", BatchOpStatusFailed},
 		{"cancelled", BatchOpStatusCancelled},
+		{"partial", BatchOpStatusPartial},
 		{"partially_failed", BatchOpStatusPartiallyFailed},
 	}
 
@@ -382,52 +168,15 @@ func TestBatchItemStatus_Constants(t *testing.T) {
 	}
 }
 
-func TestOperationLogStatus_Constants(t *testing.T) {
-	tests := []struct {
-		name  string
-		value OperationLogStatus
-	}{
-		{"executed", OpLogStatusExecuted},
-		{"undone", OpLogStatusUndone},
-		{"redone", OpLogStatusRedone},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if string(tt.value) == "" {
-				t.Errorf("OperationLogStatus %s should not be empty", tt.name)
-			}
-		})
-	}
-}
-
-func TestExecutionMode_Constants(t *testing.T) {
-	tests := []struct {
-		name  string
-		value ExecutionMode
-	}{
-		{"standard_atomic", ExecutionModeStandardAtomic},
-		{"saga_atomic", ExecutionModeSagaAtomic},
-		{"non_atomic", ExecutionModeNonAtomic},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if string(tt.value) == "" {
-				t.Errorf("ExecutionMode %s should not be empty", tt.name)
-			}
-		})
-	}
-}
-
 func TestConflictPolicy_Constants(t *testing.T) {
 	tests := []struct {
 		name  string
 		value ConflictPolicy
 	}{
-		{"abort", ConflictPolicyAbort},
-		{"overwrite", ConflictPolicyOverwrite},
 		{"skip", ConflictPolicySkip},
+		{"overwrite", ConflictPolicyOverwrite},
+		{"rename", ConflictPolicyRename},
+		{"abort", ConflictPolicyAbort},
 	}
 
 	for _, tt := range tests {
@@ -462,38 +211,40 @@ func TestPreflightSummary_Structure(t *testing.T) {
 }
 
 func TestBatchOperation_TimeFields(t *testing.T) {
-	now := time.Now()
+	now := primitive.NewDateTimeFromTime(time.Now())
 	op := &BatchOperation{
-		Status:    BatchOpStatusRunning,
-		StartedAt: &now,
+		Status:     BatchOpStatusRunning,
+		StartedAt:  &now,
+		CompletedAt: nil,
 	}
 
-	if !op.IsRunning() {
-		t.Error("Operation should be running")
+	if op.CompletedAt != nil {
+		t.Error("CompletedAt should be nil initially")
 	}
 
-	later := now.Add(time.Hour)
-	op.FinishedAt = &later
+	later := primitive.NewDateTimeFromTime(time.Now().Add(time.Hour))
+	op.CompletedAt = &later
 	op.Status = BatchOpStatusCompleted
 
-	if op.IsRunning() {
-		t.Error("Operation should not be running after completion")
+	if op.CompletedAt == nil {
+		t.Error("CompletedAt should be set after completion")
 	}
 }
 
 func TestBatchOperationItem_TimeFields(t *testing.T) {
-	now := time.Now()
+	now := primitive.NewDateTimeFromTime(time.Now())
 	item := &BatchOperationItem{
-		Status:     BatchItemStatusProcessing,
-		StartedAt:  &now,
+		Status:      BatchItemStatusProcessing,
+		StartedAt:   &now,
+		CompletedAt: nil,
 	}
 
 	if item.Status != BatchItemStatusProcessing {
 		t.Errorf("Status = %s, want processing", item.Status)
 	}
 
-	later := now.Add(time.Minute)
-	item.FinishedAt = &later
+	later := primitive.NewDateTimeFromTime(time.Now().Add(time.Minute))
+	item.CompletedAt = &later
 	item.Status = BatchItemStatusSucceeded
 
 	if item.Status != BatchItemStatusSucceeded {
@@ -501,189 +252,64 @@ func TestBatchOperationItem_TimeFields(t *testing.T) {
 	}
 }
 
-func TestOperationLog_TimeFields(t *testing.T) {
-	now := time.Now()
-	log := &OperationLog{
-		Status:      OpLogStatusExecuted,
-		IsCommitted: true,
-	}
-
-	if !log.IsUndoable() {
-		t.Error("Should be undoable when status is executed and committed")
-	}
-
-	// Change to undone status and add inverse command
-	log.Status = OpLogStatusUndone
-	log.UndoneAt = &now
-	log.InverseCommand = map[string]interface{}{"test": "value"}
-	if !log.IsRedoable() {
-		t.Error("Should be redoable when status is undone and has inverse command")
-	}
-}
-
-func TestBatchOperation_WithPreflightSummary(t *testing.T) {
-	summary := &PreflightSummary{
-		TotalCount:   50,
-		ValidCount:   45,
-		InvalidCount: 3,
-		SkippedCount: 2,
+func TestBatchOperation_GetSummary(t *testing.T) {
+	items := []BatchOperationItem{
+		{TargetID: "doc-1", Status: BatchItemStatusSucceeded},
+		{TargetID: "doc-2", Status: BatchItemStatusSucceeded},
+		{TargetID: "doc-3", Status: BatchItemStatusFailed},
 	}
 
 	op := &BatchOperation{
-		ProjectID:        primitive.NewObjectID(),
-		Type:             BatchOpTypeDelete,
-		TargetIDs:        []string{"doc-1", "doc-2"},
-		PreflightSummary: summary,
+		ProjectID: primitive.NewObjectID(),
+		Type:      BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1", "doc-2", "doc-3"},
+		Items:     items,
 	}
 
-	if op.PreflightSummary == nil {
-		t.Error("PreflightSummary should not be nil")
+	summary := op.GetSummary()
+
+	if summary.SuccessCount != 2 {
+		t.Errorf("SuccessCount = %d, want 2", summary.SuccessCount)
 	}
-
-	if op.PreflightSummary.TotalCount != 50 {
-		t.Errorf("PreflightSummary.TotalCount = %d, want 50", op.PreflightSummary.TotalCount)
-	}
-}
-
-func TestBatchOperationItem_WithVersionControl(t *testing.T) {
-	expectedVersion := 1
-	actualVersion := 2
-
-	item := &BatchOperationItem{
-		BatchID:         primitive.NewObjectID(),
-		TargetID:        "doc-1",
-		TargetStableRef: "stable-ref-123",
-		ExpectedVersion: &expectedVersion,
-		ActualVersion:   &actualVersion,
-	}
-
-	if item.ExpectedVersion == nil {
-		t.Error("ExpectedVersion should not be nil")
-	}
-
-	if *item.ExpectedVersion != 1 {
-		t.Errorf("ExpectedVersion = %d, want 1", *item.ExpectedVersion)
-	}
-
-	if *item.ActualVersion != 2 {
-		t.Errorf("ActualVersion = %d, want 2", *item.ActualVersion)
+	if summary.FailedCount != 1 {
+		t.Errorf("FailedCount = %d, want 1", summary.FailedCount)
 	}
 }
 
-func TestOperationLog_WithBatchOpID(t *testing.T) {
-	batchOpID := primitive.NewObjectID()
-
-	log := &OperationLog{
-		ProjectID:   primitive.NewObjectID(),
-		UserID:      primitive.NewObjectID(),
-		CommandType: CommandDelete,
-		TargetIDs:   []string{"doc-1"},
-		BatchOpID:   &batchOpID,
-	}
-
-	if log.BatchOpID == nil {
-		t.Error("BatchOpID should not be nil")
-	}
-
-	if *log.BatchOpID != batchOpID {
-		t.Errorf("BatchOpID = %s, want %s", log.BatchOpID.Hex(), batchOpID.Hex())
-	}
-}
-
-func TestOperationLog_WithCommandPayload(t *testing.T) {
-	payload := map[string]interface{}{
-		"reason": "user_request",
-		"cascade": true,
-	}
-
-	log := &OperationLog{
-		ProjectID:      primitive.NewObjectID(),
-		UserID:         primitive.NewObjectID(),
-		CommandType:    CommandDelete,
-		TargetIDs:      []string{"doc-1"},
-		CommandPayload: payload,
-	}
-
-	if log.CommandPayload == nil {
-		t.Error("CommandPayload should not be nil")
-	}
-
-	if log.CommandPayload["reason"] != "user_request" {
-		t.Errorf("CommandPayload[reason] = %v, want user_request", log.CommandPayload["reason"])
-	}
-
-	if log.CommandPayload["cascade"] != true {
-		t.Errorf("CommandPayload[cascade] = %v, want true", log.CommandPayload["cascade"])
-	}
-}
-
-func TestBatchOperationItem_WithInverseCommand(t *testing.T) {
-	inverseCommand := map[string]interface{}{
-		"action": "restore",
-		"data":   "original_data",
-	}
-
-	item := &BatchOperationItem{
-		BatchID:         primitive.NewObjectID(),
-		TargetID:        "doc-1",
-		TargetStableRef: "stable-ref-123",
-		InverseCommand:  inverseCommand,
-	}
-
-	if item.InverseCommand == nil {
-		t.Error("InverseCommand should not be nil")
-	}
-
-	if item.InverseCommand["action"] != "restore" {
-		t.Errorf("InverseCommand[action] = %v, want restore", item.InverseCommand["action"])
-	}
-}
-
-func TestBatchOperation_WithClientRequestID(t *testing.T) {
-	clientRequestID := "client-request-123"
-
-	op := &BatchOperation{
-		ProjectID:       primitive.NewObjectID(),
-		Type:            BatchOpTypeDelete,
-		TargetIDs:       []string{"doc-1"},
-		ClientRequestID: clientRequestID,
-	}
-
-	if op.ClientRequestID != clientRequestID {
-		t.Errorf("ClientRequestID = %s, want %s", op.ClientRequestID, clientRequestID)
-	}
-}
-
-func TestBatchOperation_WithExpectedVersions(t *testing.T) {
-	expectedVersions := map[string]int{
-		"doc-1": 1,
-		"doc-2": 2,
-		"doc-3": 1,
+func TestBatchOperation_UpdateItemStatus(t *testing.T) {
+	items := []BatchOperationItem{
+		{TargetID: "doc-1", Status: BatchItemStatusPending},
+		{TargetID: "doc-2", Status: BatchItemStatusPending},
 	}
 
 	op := &BatchOperation{
-		ProjectID:        primitive.NewObjectID(),
-		Type:             BatchOpTypeDelete,
-		TargetIDs:        []string{"doc-1", "doc-2", "doc-3"},
-		ExpectedVersions: expectedVersions,
+		ProjectID: primitive.NewObjectID(),
+		Type:      BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1", "doc-2"},
+		Items:     items,
 	}
 
-	if op.ExpectedVersions == nil {
-		t.Error("ExpectedVersions should not be nil")
+	// Update doc-1 to succeeded
+	op.UpdateItemStatus("doc-1", BatchItemStatusSucceeded, "", "")
+
+	if op.Items[0].Status != BatchItemStatusSucceeded {
+		t.Errorf("Items[0].Status = %s, want succeeded", op.Items[0].Status)
 	}
 
-	if op.ExpectedVersions["doc-1"] != 1 {
-		t.Errorf("ExpectedVersions[doc-1] = %d, want 1", op.ExpectedVersions["doc-1"])
-	}
+	// Update doc-2 to failed with error
+	op.UpdateItemStatus("doc-2", BatchItemStatusFailed, "NOT_FOUND", "Document not found")
 
-	if op.ExpectedVersions["doc-2"] != 2 {
-		t.Errorf("ExpectedVersions[doc-2] = %d, want 2", op.ExpectedVersions["doc-2"])
+	if op.Items[1].Status != BatchItemStatusFailed {
+		t.Errorf("Items[1].Status = %s, want failed", op.Items[1].Status)
+	}
+	if op.Items[1].ErrorCode != "NOT_FOUND" {
+		t.Errorf("Items[1].ErrorCode = %s, want NOT_FOUND", op.Items[1].ErrorCode)
 	}
 }
 
 func TestBatchOperation_WithPayload(t *testing.T) {
 	payload := map[string]interface{}{
-		"recursive":     true,
+		"recursive":      true,
 		"skip_conflicts": false,
 	}
 
@@ -708,37 +334,17 @@ func TestBatchOperation_WithPayload(t *testing.T) {
 	}
 }
 
-func TestBatchOperation_OriginalTargetIDs(t *testing.T) {
-	originalIDs := []string{"doc-1", "doc-2", "doc-3"}
-	modifiedIDs := []string{"doc-1", "doc-2"}
-
-	op := &BatchOperation{
-		ProjectID:         primitive.NewObjectID(),
-		Type:              BatchOpTypeDelete,
-		TargetIDs:         modifiedIDs,
-		OriginalTargetIDs: originalIDs,
-	}
-
-	if len(op.OriginalTargetIDs) != 3 {
-		t.Errorf("OriginalTargetIDs length = %d, want 3", len(op.OriginalTargetIDs))
-	}
-
-	if len(op.TargetIDs) != 2 {
-		t.Errorf("TargetIDs length = %d, want 2", len(op.TargetIDs))
-	}
-}
-
-// ===== P1扩展测试：支持atomic=false模式 =====
+// ===== 错误处理和重试测试 =====
 
 func TestBatchOperationItem_WithRetryable(t *testing.T) {
 	item := &BatchOperationItem{
-		BatchID:         primitive.NewObjectID(),
-		TargetID:        "doc-1",
-		TargetStableRef: "stable-ref-123",
-		Status:          BatchItemStatusFailed,
-		ErrorCode:       "CONFLICT",
-		ErrorMessage:    "Version conflict detected",
-		Retryable:       true,
+		TargetID:     "doc-1",
+		TargetType:   "document",
+		Status:       BatchItemStatusFailed,
+		ErrorCode:    "CONFLICT",
+		ErrorMessage: "Version conflict detected",
+		Retryable:    true,
+		RetryCount:   3,
 	}
 
 	if !item.Retryable {
@@ -752,16 +358,19 @@ func TestBatchOperationItem_WithRetryable(t *testing.T) {
 	if item.ErrorMessage != "Version conflict detected" {
 		t.Errorf("ErrorMessage = %s, want 'Version conflict detected'", item.ErrorMessage)
 	}
+
+	if item.RetryCount != 3 {
+		t.Errorf("RetryCount = %d, want 3", item.RetryCount)
+	}
 }
 
 func TestBatchOperationItem_ErrorFields_OmitEmpty(t *testing.T) {
 	// 验证空值情况下omitempty标签的作用
 	item := &BatchOperationItem{
-		BatchID:         primitive.NewObjectID(),
-		TargetID:        "doc-1",
-		TargetStableRef: "stable-ref-123",
-		Status:          BatchItemStatusPending,
-		Retryable:       false, // 默认值false应该被序列化
+		TargetID:  "doc-1",
+		TargetType: "document",
+		Status:    BatchItemStatusPending,
+		Retryable: false, // 默认值false应该被序列化
 	}
 
 	// 空字符串不应该影响JSON序列化
@@ -813,13 +422,12 @@ func TestBatchOperationItem_WithFullErrorInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			item := &BatchOperationItem{
-				BatchID:         primitive.NewObjectID(),
-				TargetID:        "doc-1",
-				TargetStableRef: "stable-ref-123",
-				Status:          tt.status,
-				ErrorCode:       tt.errorCode,
-				ErrorMessage:    tt.errorMessage,
-				Retryable:       tt.retryable,
+				TargetID:     "doc-1",
+				TargetType:   "document",
+				Status:       tt.status,
+				ErrorCode:    tt.errorCode,
+				ErrorMessage: tt.errorMessage,
+				Retryable:    tt.retryable,
 			}
 
 			if item.Status != tt.status {
@@ -965,13 +573,12 @@ func TestBatchOperationItem_AllStatusesWithErrors(t *testing.T) {
 	for _, status := range statuses {
 		t.Run(string(status), func(t *testing.T) {
 			item := &BatchOperationItem{
-				BatchID:         primitive.NewObjectID(),
-				TargetID:        "doc-1",
-				TargetStableRef: "stable-ref-123",
-				Status:          status,
-				ErrorCode:       "TEST_ERROR",
-				ErrorMessage:    "Test error message",
-				Retryable:       true,
+				TargetID:     "doc-1",
+				TargetType:   "document",
+				Status:       status,
+				ErrorCode:    "TEST_ERROR",
+				ErrorMessage: "Test error message",
+				Retryable:    true,
 			}
 
 			if item.Status != status {

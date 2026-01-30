@@ -81,7 +81,7 @@ func TestUserRepository_GetByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	// Act
-	found, err := repo.GetByID(ctx, "nonexistent_id")
+	found, err := repo.GetByID(ctx, "507f1f77bcf86cd799439011")
 
 	// Assert
 	assert.Error(t, err)
@@ -210,7 +210,7 @@ func TestUserRepository_Update_NotFound(t *testing.T) {
 	}
 
 	// Act
-	err := repo.Update(ctx, "nonexistent_id", updates)
+	err := repo.Update(ctx, "507f1f77bcf86cd799439011", updates)
 
 	// Assert
 	assert.Error(t, err)

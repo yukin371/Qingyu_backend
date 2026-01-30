@@ -1136,14 +1136,24 @@ func (r *MongoUserRepository) BatchUpdateStatus(ctx context.Context, ids []strin
 		return nil
 	}
 
+	// 将string IDs转换为ObjectIDs
+	objectIDs, err := r.ParseIDs(ids)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的用户ID",
+			err,
+		)
+	}
+
 	now := time.Now()
 	filter := bson.M{
-		"_id":        bson.M{"$in": ids},
+		"_id":        bson.M{"$in": objectIDs},
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": bson.M{"status": status, "updated_at": now}}
 
-	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
+	_, err = r.GetCollection().UpdateMany(ctx, filter, update)
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,

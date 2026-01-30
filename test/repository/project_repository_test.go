@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
@@ -17,19 +18,13 @@ import (
 )
 
 // isReplicaSet 检测MongoDB是否为副本集
-func isReplicaSet(db interface{}) bool {
+func isReplicaSet(db *mongo.Database) bool {
 	// 尝试执行replSetGetStatus命令
 	// 如果成功，说明是副本集；如果失败，说明是单节点
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	// 使用类型断言获取*mongo.Database
-	mongoDB, ok := db.(*testutil.TestDB)
-	if !ok {
-		return false
-	}
-
-	result := mongoDB.RunCommand(ctx, bson.D{{Key: "replSetGetStatus", Value: 1}})
+	result := db.RunCommand(ctx, bson.D{{Key: "replSetGetStatus", Value: 1}})
 	if result.Err() != nil {
 		return false
 	}

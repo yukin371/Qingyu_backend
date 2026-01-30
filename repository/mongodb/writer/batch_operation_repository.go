@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository/mongodb/base"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -44,29 +45,29 @@ type BatchOperationRepository interface {
 
 // BatchOperationRepositoryImpl 批量操作仓储实现
 type BatchOperationRepositoryImpl struct {
-	collection    *mongo.Collection
-	itemCollection *mongo.Collection
+	*base.BaseMongoRepository // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	itemCollection            *mongo.Collection // 辅助collection独立管理喵~
 }
 
 // NewBatchOperationRepository 创建批量操作仓储
 func NewBatchOperationRepository(db *mongo.Database) BatchOperationRepository {
 	return &BatchOperationRepositoryImpl{
-		collection:    db.Collection("batch_operations"),
-		itemCollection: db.Collection("batch_operation_items"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "batch_operations"),
+		itemCollection:      db.Collection("batch_operation_items"),
 	}
 }
 
 // Create 创建批量操作
 func (r *BatchOperationRepositoryImpl) Create(ctx context.Context, op *writer.BatchOperation) error {
 	op.TouchForCreate()
-	_, err := r.collection.InsertOne(ctx, op)
+	_, err := r.GetCollection().InsertOne(ctx, op)
 	return err
 }
 
 // GetByID 根据ID获取批量操作
 func (r *BatchOperationRepositoryImpl) GetByID(ctx context.Context, id primitive.ObjectID) (*writer.BatchOperation, error) {
 	var op writer.BatchOperation
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&op)
+	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&op)
 	if err == mongo.ErrNoDocuments {
 		return nil, ErrBatchOperationNotFound
 	}
@@ -76,7 +77,7 @@ func (r *BatchOperationRepositoryImpl) GetByID(ctx context.Context, id primitive
 // GetByClientRequestID 根据客户端请求ID获取（幂等性检查）
 func (r *BatchOperationRepositoryImpl) GetByClientRequestID(ctx context.Context, projectID primitive.ObjectID, clientRequestID string) (*writer.BatchOperation, error) {
 	var op writer.BatchOperation
-	err := r.collection.FindOne(ctx, bson.M{
+	err := r.GetCollection().FindOne(ctx, bson.M{
 		"project_id":        projectID,
 		"client_request_id": clientRequestID,
 	}).Decode(&op)
@@ -92,7 +93,7 @@ func (r *BatchOperationRepositoryImpl) UpdateStatus(ctx context.Context, id prim
 		"status":     status,
 		"updated_at": primitive.NewDateTimeFromTime(time.Now()),
 	}}
-	result, err := r.collection.UpdateByID(ctx, id, update)
+	result, err := r.GetCollection().UpdateByID(ctx, id, update)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (r *BatchOperationRepositoryImpl) UpdateStatus(ctx context.Context, id prim
 // Update 更新整个操作
 func (r *BatchOperationRepositoryImpl) Update(ctx context.Context, op *writer.BatchOperation) error {
 	op.Timestamps.Touch()
-	result, err := r.collection.UpdateByID(ctx, op.ID, bson.M{"$set": op})
+	result, err := r.GetCollection().UpdateByID(ctx, op.ID, bson.M{"$set": op})
 	if err != nil {
 		return err
 	}
@@ -145,7 +146,7 @@ func (r *BatchOperationRepositoryImpl) ListByProject(ctx context.Context, projec
 		}
 	}
 
-	cursor, err := r.collection.Find(ctx, filter, findOpts)
+	cursor, err := r.GetCollection().Find(ctx, filter, findOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -157,9 +158,9 @@ func (r *BatchOperationRepositoryImpl) ListByProject(ctx context.Context, projec
 
 // GetRunningCount 获取运行中的操作数量
 func (r *BatchOperationRepositoryImpl) GetRunningCount(ctx context.Context, projectID primitive.ObjectID) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"project_id": projectID,
-			"status":     writer.BatchOpStatusProcessing,
+		"status":     bson.M{"$in": []writer.BatchOperationStatus{writer.BatchOpStatusRunning, writer.BatchOpStatusProcessing}},
 	})
 	return count, err
 }

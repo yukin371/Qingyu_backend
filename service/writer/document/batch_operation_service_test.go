@@ -1,6 +1,7 @@
 package document
 
 import (
+	"fmt"
 	"testing"
 
 	"Qingyu_backend/models/writer"
@@ -47,33 +48,33 @@ func TestBatchOperationService_RequestValidation(t *testing.T) {
 		{
 			name: "valid request",
 			req: &SubmitBatchOperationRequest{
-				ProjectID: primitive.NewObjectID(),
+				ProjectID: primitive.NewObjectID().Hex(),
 				Type:      writer.BatchOpTypeDelete,
 				TargetIDs:  []string{"doc-1", "doc-2"},
 				Atomic:     true,
-				UserID:     primitive.NewObjectID(),
+				UserID:     primitive.NewObjectID().Hex(),
 			},
 			wantErr: false,
 		},
 		{
 			name: "empty target IDs",
 			req: &SubmitBatchOperationRequest{
-				ProjectID: primitive.NewObjectID(),
+				ProjectID: primitive.NewObjectID().Hex(),
 				Type:      writer.BatchOpTypeDelete,
 				TargetIDs:  []string{},
 				Atomic:     true,
-				UserID:     primitive.NewObjectID(),
+				UserID:     primitive.NewObjectID().Hex(),
 			},
 			wantErr: true,
 		},
 		{
 			name: "invalid operation type",
 			req: &SubmitBatchOperationRequest{
-				ProjectID: primitive.NewObjectID(),
+				ProjectID: primitive.NewObjectID().Hex(),
 				Type:      writer.BatchOperationType("invalid"),
 				TargetIDs:  []string{"doc-1"},
 				Atomic:     true,
-				UserID:     primitive.NewObjectID(),
+				UserID:     primitive.NewObjectID().Hex(),
 			},
 			wantErr: true,
 		},
@@ -82,11 +83,11 @@ func TestBatchOperationService_RequestValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 验证请求基本字段
-			if tt.req.ProjectID.IsZero() {
-				t.Error("ProjectID should not be zero")
+			if tt.req.ProjectID == "" {
+				t.Error("ProjectID should not be empty")
 			}
-			if tt.req.UserID.IsZero() {
-				t.Error("UserID should not be zero")
+			if tt.req.UserID == "" {
+				t.Error("UserID should not be empty")
 			}
 			if len(tt.req.TargetIDs) == 0 && !tt.wantErr {
 				t.Error("TargetIDs should not be empty")
@@ -97,20 +98,38 @@ func TestBatchOperationService_RequestValidation(t *testing.T) {
 
 // TestBatchOperationService_Progress 测试操作进度结构
 func TestBatchOperationService_Progress(t *testing.T) {
-	progress := &BatchOperationProgress{
-		BatchID:        primitive.NewObjectID(),
-		Status:         writer.BatchOpStatusCompleted,
-		TotalItems:     10,
-		CompletedItems: 10,
-		FailedItems:    0,
+	// 使用 writer.BatchOperation 并通过 Items 列表跟踪进度
+	totalItems := 10
+	completedItems := 10
+
+	// 创建操作项列表
+	items := make([]writer.BatchOperationItem, totalItems)
+	for i := 0; i < completedItems; i++ {
+		items[i] = writer.BatchOperationItem{
+			TargetID: fmt.Sprintf("target-%d", i),
+			Status:   writer.BatchItemStatusSucceeded,
+		}
 	}
 
-	if progress.TotalItems != 10 {
-		t.Errorf("Expected 10 total items, got %d", progress.TotalItems)
+	progress := &writer.BatchOperation{
+		Status: writer.BatchOpStatusCompleted,
+		Items:  items,
 	}
 
-	if progress.CompletedItems != progress.TotalItems {
-		t.Errorf("Completed items should equal total items")
+	if len(progress.Items) != totalItems {
+		t.Errorf("Expected %d total items, got %d", totalItems, len(progress.Items))
+	}
+
+	// 计算已完成项
+	completedCount := 0
+	for _, item := range progress.Items {
+		if item.Status == writer.BatchItemStatusSucceeded {
+			completedCount++
+		}
+	}
+
+	if completedCount != completedItems {
+		t.Errorf("Expected %d completed items, got %d", completedItems, completedCount)
 	}
 
 	if progress.Status != writer.BatchOpStatusCompleted {

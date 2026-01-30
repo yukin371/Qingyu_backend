@@ -127,6 +127,15 @@ func (m *MockDocumentRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
+func (m *MockDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([]*writer.Document, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*writer.Document), args.Error(1)
+}
+
+
 // TestPreflightService_ValidateBatchOperation 测试批量操作验证
 func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 	ctx := context.Background()
