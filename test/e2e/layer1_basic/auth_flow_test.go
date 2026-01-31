@@ -5,9 +5,6 @@ package layer1_basic
 
 import (
 	"testing"
-
-	"Qingyu_backend/models/users"
-	e2e "Qingyu_backend/test/e2e/framework"
 )
 
 // TestAuthFlow 测试认证流程

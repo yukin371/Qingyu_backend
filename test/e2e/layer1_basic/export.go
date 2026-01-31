@@ -57,7 +57,7 @@ func RunAuthFlow(t *testing.T) {
 		user := env.GetTestData("test_user").(*users.User)
 
 		// 验证用户存在
-		assertions.AssertUserExists(user.ID)
+		assertions.AssertUserExists(user.ID.Hex())
 		t.Logf("✓ 用户验证通过: %s", user.Username)
 	})
 
@@ -68,7 +68,7 @@ func RunAuthFlow(t *testing.T) {
 		user := env.GetTestData("test_user").(*users.User)
 
 		// 通过Actions获取用户详细信息
-		userDetail := actions.GetUser(user.ID)
+		userDetail := actions.GetUser(user.ID.Hex())
 		t.Logf("✓ 获取用户详情: %s, Email: %s, VIP: %d",
 			userDetail.Username, userDetail.Email, userDetail.VIPLevel)
 
@@ -119,12 +119,12 @@ func RunReadingFlow(t *testing.T) {
 		t.Logf("✓ 作者创建成功: %s", author.Username)
 
 		// 创建书籍
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		t.Logf("✓ 书籍创建成功: %s (ID: %s)", book.Title, book.ID.Hex())
 
 		// 创建章节
 		chapter := fixtures.CreateChapter(book.ID.Hex())
-		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID.Hex())
+		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID)
 
 		// 保存到环境
 		env.SetTestData("test_book", book)
@@ -179,7 +179,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 获取章节内容
-		chapterContent := actions.GetChapter(chapter.ID.Hex(), token)
+		chapterContent := actions.GetChapter(chapter.ID, token)
 
 		// 验证响应
 		assertions.AssertResponseContains(chapterContent, "data")
@@ -196,7 +196,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 保存阅读进度
-		progress := actions.StartReading(user.ID, book.ID.Hex(), chapter.ID.Hex(), token)
+		progress := actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
 
 		// 验证响应包含code和message字段（data可能为null）
 		assertions.AssertResponseContains(progress, "code")
@@ -204,7 +204,7 @@ func RunReadingFlow(t *testing.T) {
 		t.Logf("✓ 阅读进度保存成功")
 
 		// 验证阅读进度已保存
-		assertions.AssertReadingProgress(user.ID, book.ID.Hex())
+		assertions.AssertReadingProgress(user.ID.Hex(), book.ID.Hex())
 	})
 }
 
@@ -248,12 +248,12 @@ func RunSocialFlow(t *testing.T) {
 		t.Logf("✓ 作者创建成功: %s", author.Username)
 
 		// 创建书籍
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		t.Logf("✓ 书籍创建成功: %s (ID: %s)", book.Title, book.ID.Hex())
 
 		// 创建章节
 		chapter := fixtures.CreateChapter(book.ID.Hex())
-		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID.Hex())
+		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID)
 
 		// 保存到环境
 		env.SetTestData("test_book", book)
@@ -276,7 +276,7 @@ func RunSocialFlow(t *testing.T) {
 		t.Logf("✓ 评论发表成功")
 
 		// 验证评论存在
-		assertions.AssertCommentExists(user.ID, book.ID.Hex())
+		assertions.AssertCommentExists(user.ID.Hex(), book.ID.Hex())
 	})
 
 	// 步骤4: 收藏书籍
@@ -295,7 +295,7 @@ func RunSocialFlow(t *testing.T) {
 		t.Logf("✓ 书籍收藏成功: %s", book.Title)
 
 		// 验证收藏记录存在
-		assertions.AssertCollectionExists(user.ID, book.ID.Hex())
+		assertions.AssertCollectionExists(user.ID.Hex(), book.ID.Hex())
 	})
 
 	// 步骤5: 点赞书籍
@@ -321,7 +321,7 @@ func RunSocialFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 获取收藏列表
-		collections := actions.GetReaderCollections(user.ID, token)
+		collections := actions.GetReaderCollections(user.ID.Hex(), token)
 
 		// 验证响应
 		assertions.AssertResponseContains(collections, "data")

@@ -377,8 +377,8 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", lastErr)
 	}
 
-	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID.Hex(), "user")
+	// 6. 生成JWT令牌 - 使用用户的实际角色列表
+	token, err := s.generateToken(user.ID.Hex(), user.Roles)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -479,8 +479,8 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 		)
 	}
 
-	// 6. 生成JWT令牌
-	token, err := s.generateToken(user.ID.Hex(), "user")
+	// 6. 生成JWT令牌 - 使用用户的实际角色列表
+	token, err := s.generateToken(user.ID.Hex(), user.Roles)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
@@ -809,10 +809,10 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *user2.UpdatePasswor
 }
 
 // generateToken 生成JWT令牌（辅助方法）
-func (s *UserServiceImpl) generateToken(userID, role string) (string, error) {
+func (s *UserServiceImpl) generateToken(userID string, roles []string) (string, error) {
 	// 使用middleware包中的GenerateToken函数
 	// 导入: "Qingyu_backend/middleware"
-	return auth.GenerateToken(userID, "", []string{role})
+	return auth.GenerateToken(userID, "", roles)
 }
 
 // ==================== 邮箱验证相关方法 ====================

@@ -52,12 +52,12 @@ func TestSocialFlow(t *testing.T) {
 		t.Logf("✓ 作者创建成功: %s", author.Username)
 
 		// 创建书籍
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		t.Logf("✓ 书籍创建成功: %s (ID: %s)", book.Title, book.ID.Hex())
 
 		// 创建章节
 		chapter := fixtures.CreateChapter(book.ID.Hex())
-		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID.Hex())
+		t.Logf("✓ 章节创建成功: %s (ID: %s)", chapter.Title, chapter.ID)
 
 		// 保存到环境
 		env.SetTestData("test_book", book)
@@ -80,7 +80,7 @@ func TestSocialFlow(t *testing.T) {
 		t.Logf("✓ 评论发表成功")
 
 		// 验证评论存在
-		assertions.AssertCommentExists(user.ID, book.ID.Hex())
+		assertions.AssertCommentExists(user.ID.Hex(), book.ID.Hex())
 	})
 
 	// 步骤4: 收藏书籍
@@ -99,7 +99,7 @@ func TestSocialFlow(t *testing.T) {
 		t.Logf("✓ 书籍收藏成功: %s", book.Title)
 
 		// 验证收藏记录存在
-		assertions.AssertCollectionExists(user.ID, book.ID.Hex())
+		assertions.AssertCollectionExists(user.ID.Hex(), book.ID.Hex())
 	})
 
 	// 步骤5: 点赞书籍
@@ -125,7 +125,7 @@ func TestSocialFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 获取收藏列表
-		collections := actions.GetReaderCollections(user.ID, token)
+		collections := actions.GetReaderCollections(user.ID.Hex(), token)
 
 		// 验证响应
 		assertions.AssertResponseContains(collections, "data")

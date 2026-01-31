@@ -202,9 +202,8 @@ func (r *MongoChapterRepository) Exists(ctx context.Context, id string) (bool, e
 
 // GetByBookID 根据书籍ID获取章节列表
 func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	fmt.Printf("[DEBUG] GetByBookID called with bookID=%s, limit=%d, offset=%d\n", bookID, limit, offset)
@@ -219,7 +218,8 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	filter := bson.M{"book_id": objectID}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID}
 
 	// 添加：检查总文档数
 	totalCount, _ := r.GetCollection().CountDocuments(ctx, filter)
@@ -245,14 +245,14 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 
 // GetByBookIDAndChapterNum 根据书籍ID和章节号获取章节
 func (r *MongoChapterRepository) GetByBookIDAndChapterNum(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	var chapter bookstore.Chapter
-	filter := bson.M{"book_id": objectID, "chapter_num": chapterNum}
-	err = r.GetCollection().FindOne(ctx, filter).Decode(&chapter)
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID, "chapter_num": chapterNum}
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -294,9 +294,8 @@ func (r *MongoChapterRepository) GetByTitle(ctx context.Context, title string, l
 
 // GetFreeChapters 获取免费章节
 func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	opts := options.Find()
@@ -308,7 +307,8 @@ func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID str
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	filter := bson.M{"book_id": objectID, "is_free": true}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID, "is_free": true}
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -329,9 +329,8 @@ func (r *MongoChapterRepository) GetFreeChapters(ctx context.Context, bookID str
 
 // GetPaidChapters 获取付费章节
 func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	opts := options.Find()
@@ -343,7 +342,8 @@ func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID str
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	filter := bson.M{"book_id": objectID, "is_free": false}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID, "is_free": false}
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -364,9 +364,8 @@ func (r *MongoChapterRepository) GetPaidChapters(ctx context.Context, bookID str
 
 // GetPublishedChapters 获取已发布章节
 func (r *MongoChapterRepository) GetPublishedChapters(ctx context.Context, bookID string, limit, offset int) ([]*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	opts := options.Find()
@@ -378,8 +377,9 @@ func (r *MongoChapterRepository) GetPublishedChapters(ctx context.Context, bookI
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	filter := bson.M{
-		"book_id":      objectID,
+		"book_id":      bookID,
 		"publish_time": bson.M{"$lte": time.Now()},
 	}
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
@@ -461,10 +461,8 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 	query := bson.M{}
 
 	if filter.BookID != nil {
-		objectID, err := r.ParseID(*filter.BookID)
-		if err == nil {
-			query["book_id"] = objectID
-		}
+		// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+		query["book_id"] = *filter.BookID
 	}
 	if filter.Title != "" {
 		query["title"] = bson.M{"$regex": filter.Title, "$options": "i"}
@@ -524,46 +522,46 @@ func (r *MongoChapterRepository) SearchByFilter(ctx context.Context, filter *Boo
 
 // CountByBookID 根据书籍ID统计章节数量
 func (r *MongoChapterRepository) CountByBookID(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return 0, err
+	if bookID == "" {
+		return 0, errors.New("book ID cannot be empty")
 	}
 
-	filter := bson.M{"book_id": objectID}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID}
 	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountFreeChapters 统计免费章节数量
 func (r *MongoChapterRepository) CountFreeChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return 0, err
+	if bookID == "" {
+		return 0, errors.New("book ID cannot be empty")
 	}
 
-	filter := bson.M{"book_id": objectID, "is_free": true}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID, "is_free": true}
 	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // CountPaidChapters 统计付费章节数量
 func (r *MongoChapterRepository) CountPaidChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return 0, err
+	if bookID == "" {
+		return 0, errors.New("book ID cannot be empty")
 	}
 
-	filter := bson.M{"book_id": objectID, "is_free": false}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID, "is_free": false}
 	return r.GetCollection().CountDocuments(ctx, filter)
 }
 
 // GetChapterRange 获取章节范围
 func (r *MongoChapterRepository) GetChapterRange(ctx context.Context, bookID string, startChapter, endChapter int) ([]*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	filter := bson.M{
-		"book_id": objectID,
+		"book_id": bookID,
 		"chapter_num": bson.M{
 			"$gte": startChapter,
 			"$lte": endChapter,
@@ -591,13 +589,13 @@ func (r *MongoChapterRepository) GetChapterRange(ctx context.Context, bookID str
 
 // CountPublishedChapters 统计已发布章节数量
 func (r *MongoChapterRepository) CountPublishedChapters(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return 0, err
+	if bookID == "" {
+		return 0, errors.New("book ID cannot be empty")
 	}
 
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	filter := bson.M{
-		"book_id":      objectID,
+		"book_id":      bookID,
 		"is_published": true,
 	}
 	return r.GetCollection().CountDocuments(ctx, filter)
@@ -605,13 +603,13 @@ func (r *MongoChapterRepository) CountPublishedChapters(ctx context.Context, boo
 
 // GetTotalWordCount 获取书籍总字数
 func (r *MongoChapterRepository) GetTotalWordCount(ctx context.Context, bookID string) (int64, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return 0, err
+	if bookID == "" {
+		return 0, errors.New("book ID cannot be empty")
 	}
 
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	pipeline := []bson.M{
-		{"$match": bson.M{"book_id": objectID}},
+		{"$match": bson.M{"book_id": bookID}},
 		{"$group": bson.M{
 			"_id":   nil,
 			"total": bson.M{"$sum": "$word_count"},
@@ -640,19 +638,19 @@ func (r *MongoChapterRepository) GetTotalWordCount(ctx context.Context, bookID s
 
 // GetPreviousChapter 获取上一章节
 func (r *MongoChapterRepository) GetPreviousChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	var chapter bookstore.Chapter
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	filter := bson.M{
-		"book_id":     objectID,
+		"book_id":     bookID,
 		"chapter_num": bson.M{"$lt": chapterNum},
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: -1}})
 
-	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
+	err := r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -664,19 +662,19 @@ func (r *MongoChapterRepository) GetPreviousChapter(ctx context.Context, bookID 
 
 // GetNextChapter 获取下一章节
 func (r *MongoChapterRepository) GetNextChapter(ctx context.Context, bookID string, chapterNum int) (*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	var chapter bookstore.Chapter
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
 	filter := bson.M{
-		"book_id":     objectID,
+		"book_id":     bookID,
 		"chapter_num": bson.M{"$gt": chapterNum},
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
+	err := r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -688,16 +686,16 @@ func (r *MongoChapterRepository) GetNextChapter(ctx context.Context, bookID stri
 
 // GetFirstChapter 获取第一章节
 func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	var chapter bookstore.Chapter
-	filter := bson.M{"book_id": objectID}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
+	err := r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -709,16 +707,16 @@ func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID str
 
 // GetLastChapter 获取最后章节
 func (r *MongoChapterRepository) GetLastChapter(ctx context.Context, bookID string) (*bookstore.Chapter, error) {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return nil, err
+	if bookID == "" {
+		return nil, errors.New("book ID cannot be empty")
 	}
 
 	var chapter bookstore.Chapter
-	filter := bson.M{"book_id": objectID}
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	filter := bson.M{"book_id": bookID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: -1}})
 
-	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
+	err := r.GetCollection().FindOne(ctx, filter, opts).Decode(&chapter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -816,12 +814,12 @@ func (r *MongoChapterRepository) BatchDelete(ctx context.Context, chapterIDs []s
 
 // DeleteByBookID 根据书籍ID删除所有章节
 func (r *MongoChapterRepository) DeleteByBookID(ctx context.Context, bookID string) error {
-	objectID, err := r.ParseID(bookID)
-	if err != nil {
-		return err
+	if bookID == "" {
+		return errors.New("book ID cannot be empty")
 	}
 
-	_, err = r.GetCollection().DeleteMany(ctx, bson.M{"book_id": objectID})
+	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	_, err := r.GetCollection().DeleteMany(ctx, bson.M{"book_id": bookID})
 	return err
 }
 
