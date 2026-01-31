@@ -85,22 +85,22 @@ func (f *TestDataFactory) CreateUser(ctx context.Context, opts UserOptions) *use
 	}
 
 	user := &users.User{
-		ID:        userID.Hex(),
 		Username:  username,
 		Email:     email,
 		Password:  string(hashedPassword),
 		VIPLevel:  opts.VIPLevel,
 		Status:    users.UserStatusActive,
 		Roles:     roles,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
+	user.ID = userID
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 
 	// 清理可能存在的同名用户
 	userRepository := userRepo.NewMongoUserRepository(global.DB)
 	existingUser, err := userRepository.GetByUsername(ctx, user.Username)
 	if err == nil && existingUser != nil && existingUser.ID != user.ID {
-		err = userRepository.Delete(ctx, existingUser.ID)
+		err = userRepository.Delete(ctx, existingUser.ID.Hex())
 		if err != nil {
 			f.t.Logf("警告: 删除重名用户 %s 失败: %v", existingUser.Username, err)
 		}
@@ -151,7 +151,6 @@ func (f *TestDataFactory) CreateBook(ctx context.Context, opts BookOptions) *boo
 	}
 
 	book := &bookstore.Book{
-		ID:           bookID,
 		Title:        title,
 		AuthorID:     authorObjID,
 		Introduction: "E2E测试书籍 - 用于验证系统功能",
@@ -161,9 +160,10 @@ func (f *TestDataFactory) CreateBook(ctx context.Context, opts BookOptions) *boo
 		WordCount:    wordCount,
 		IsFree:       opts.IsFree,
 		ChapterCount: opts.ChapterCount,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
 	}
+	book.ID = bookID
+	book.CreatedAt = time.Now()
+	book.UpdatedAt = time.Now()
 
 	bookRepository := bookRepo.NewMongoBookRepository(global.DB.Client(), global.DB.Name())
 	err = bookRepository.Create(ctx, book)
@@ -179,16 +179,16 @@ func (f *TestDataFactory) CreateChapter(ctx context.Context, bookID string, chap
 	require.NoError(f.t, err, "书籍ID格式错误")
 
 	chapter := &bookstore.Chapter{
-		ID:         chapterID,
-		BookID:     bookObjID,
 		Title:      fmt.Sprintf("第%d章", chapterNum),
 		ChapterNum: chapterNum,
 		WordCount:  2000,
 		IsFree:     isFree,
 		Price:      0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
 	}
+	chapter.ID = chapterID.Hex()
+	chapter.BookID = bookObjID.Hex()
+	chapter.CreatedAt = time.Now()
+	chapter.UpdatedAt = time.Now()
 	chapter.BeforeCreate()
 
 	chapterRepo := bookRepo.NewMongoChapterRepository(global.DB.Client(), global.DB.Name())
@@ -227,19 +227,15 @@ func (f *TestDataFactory) CreateComment(ctx context.Context, opts CommentOptions
 
 	now := time.Now()
 	comment := &social.Comment{
-		IdentifiedEntity: social.IdentifiedEntity{
-			ID: commentID.Hex(),
-		},
-		Timestamps: social.Timestamps{
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
 		AuthorID:   opts.AuthorID,
 		TargetID:   opts.TargetID,
 		TargetType: social.CommentTargetType(opts.TargetType),
 		Content:    content,
 		State:      social.CommentStateNormal,
 	}
+	comment.ID = commentID
+	comment.CreatedAt = now
+	comment.UpdatedAt = now
 
 	commentRepo := socialRepo.NewMongoCommentRepository(global.DB)
 	err := commentRepo.Create(ctx, comment)
@@ -253,12 +249,12 @@ func (f *TestDataFactory) CreateCollection(ctx context.Context, userID, bookID s
 	collectionID := primitive.NewObjectID()
 
 	collection := &social.Collection{
-		ID:        collectionID,
-		UserID:    userID,
-		BookID:    bookID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		UserID: userID,
+		BookID: bookID,
 	}
+	collection.ID = collectionID
+	collection.CreatedAt = time.Now()
+	collection.UpdatedAt = time.Now()
 
 	collectionRepo := socialRepo.NewMongoCollectionRepository(global.DB)
 	err := collectionRepo.Create(ctx, collection)

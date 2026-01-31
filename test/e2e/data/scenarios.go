@@ -53,7 +53,7 @@ func (sb *ScenarioBuilder) BuildReaderWithProgress() *ReaderWithProgress {
 
 	book := sb.factory.CreateBook(ctx, BookOptions{
 		Title:        "读者正在阅读的书",
-		AuthorID:     author.ID,
+		AuthorID:     author.ID.Hex(),
 		Price:        0,
 		IsFree:       true,
 		ChapterCount: 5,
@@ -96,7 +96,7 @@ func (sb *ScenarioBuilder) BuildSocialInteraction(userCount int) *SocialInteract
 	// 创建书籍
 	book := sb.factory.CreateBook(ctx, BookOptions{
 		Title:        "热门互动书籍",
-		AuthorID:     author.ID,
+		AuthorID:     author.ID.Hex(),
 		Price:        0,
 		IsFree:       true,
 		ChapterCount: 3,
@@ -115,7 +115,7 @@ func (sb *ScenarioBuilder) BuildSocialInteraction(userCount int) *SocialInteract
 	comments := make([]*social.Comment, 0)
 	for i := 0; i < userCount; i++ {
 		comment := sb.factory.CreateComment(ctx, CommentOptions{
-			AuthorID:   users[i].ID,
+			AuthorID:   users[i].ID.Hex(),
 			TargetID:   book.ID.Hex(),
 			TargetType: "book",
 			Content:    "这是测试评论",
@@ -126,7 +126,7 @@ func (sb *ScenarioBuilder) BuildSocialInteraction(userCount int) *SocialInteract
 	// 创建收藏
 	collections := make([]*social.Collection, 0)
 	for i := 0; i < userCount/2; i++ {
-		collection := sb.factory.CreateCollection(ctx, users[i].ID, book.ID.Hex())
+		collection := sb.factory.CreateCollection(ctx, users[i].ID.Hex(), book.ID.Hex())
 		collections = append(collections, collection)
 	}
 
@@ -176,7 +176,7 @@ func (sb *ScenarioBuilder) BuildPaidContent() *PaidContent {
 	// 创建付费书籍
 	paidBook := sb.factory.CreateBook(ctx, BookOptions{
 		Title:        "付费书籍",
-		AuthorID:     author.ID,
+		AuthorID:     author.ID.Hex(),
 		Price:        100,
 		IsFree:       false,
 		ChapterCount: 10,

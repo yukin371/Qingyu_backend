@@ -99,7 +99,6 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 	// 使用完整的 ID 确保用户名唯一
 	uniqueSuffix := userID.Hex()
 	user := &users.User{
-		ID:       userID.Hex(), // User.ID 是 string 类型
 		Username: "e2e_test_user_" + uniqueSuffix,
 		Email:    "e2e_test_" + uniqueSuffix + "@example.com",
 		Password: string(hashedPassword),
@@ -107,6 +106,7 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 		Status:   users.UserStatusActive,
 		Roles:    []string{"reader"},
 	}
+	user.ID = userID
 
 	// 应用选项（注意：WithUsername 会覆盖上面的用户名）
 	for _, opt := range opts {
@@ -117,7 +117,7 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 	userRepository := userRepo.NewMongoUserRepository(global.DB)
 	existingUser, _ := userRepository.GetByUsername(context.Background(), user.Username)
 	if existingUser != nil && existingUser.ID != user.ID {
-		_ = userRepository.Delete(context.Background(), existingUser.ID)
+		_ = userRepository.Delete(context.Background(), existingUser.ID.Hex())
 	}
 
 	err = userRepository.Create(context.Background(), user)
@@ -129,7 +129,7 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 	require.Equal(f.env.T, user.ID, userByUsername.ID, "找到的用户ID不匹配")
 	require.True(f.env.T, userByUsername.ValidatePassword(testPassword), "用户密码验证失败")
 
-	f.env.LogSuccess("创建用户: %s (%s)", user.Username, user.ID)
+	f.env.LogSuccess("创建用户: %s (%s)", user.Username, user.ID.Hex())
 
 	return user
 }
@@ -140,7 +140,6 @@ func (f *Fixtures) CreateBook(authorID string, opts ...BookOption) *bookstore.Bo
 	authorObjID, _ := primitive.ObjectIDFromHex(authorID)
 
 	book := &bookstore.Book{
-		ID:           bookID,
 		Title:        "e2e_test_book_" + bookID.Hex()[:8],
 		AuthorID:     authorObjID,
 		Introduction: "E2E测试书籍",
@@ -150,6 +149,7 @@ func (f *Fixtures) CreateBook(authorID string, opts ...BookOption) *bookstore.Bo
 		WordCount:    10000,
 		IsFree:       true,
 	}
+	book.ID = bookID
 
 	// 应用选项
 	for _, opt := range opts {
@@ -167,19 +167,17 @@ func (f *Fixtures) CreateBook(authorID string, opts ...BookOption) *bookstore.Bo
 
 // CreateChapter 创建测试章节（带 e2e_test_ 前缀）
 func (f *Fixtures) CreateChapter(bookID string, opts ...ChapterOption) *bookstore.Chapter {
-	chapterID := primitive.NewObjectID()
 	bookObjID, _ := primitive.ObjectIDFromHex(bookID)
 
 	chapter := &bookstore.Chapter{
-		ID:         chapterID,
-		BookID:     bookObjID,
-		Title:      "e2e_test_chapter_" + chapterID.Hex()[:8],
+		Title:      "e2e_test_chapter_" + bookObjID.Hex()[:8],
 		ChapterNum: 1, // 使用 ChapterNum 而不是 ChapterNo
 		WordCount:  50,
 		IsFree:     true,
 		Price:      0,
 		// Chapter 没有 Content 字段，内容需要通过 ChapterContent 单独存储
 	}
+	chapter.BookID = bookObjID.Hex()
 
 	// 应用选项
 	for _, opt := range opts {
@@ -192,9 +190,10 @@ func (f *Fixtures) CreateChapter(bookID string, opts ...ChapterOption) *bookstor
 
 	// 创建章节内容
 	chapterContentRepo := bookstoreRepo.NewMongoChapterContentRepository(global.DB)
+	chapterObjID, _ := primitive.ObjectIDFromHex(chapter.ID)
 	chapterContent := &bookstore.ChapterContent{
 		ID:        primitive.NewObjectID(),
-		ChapterID: chapterID,
+		ChapterID: chapterObjID,
 		Content:   "这是 E2E 测试章节内容。这是一段测试文字，用于验证阅读功能。内容需要有足够的长度来模拟真实的章节。",
 		Format:    "markdown",
 		Version:   1,
@@ -203,7 +202,7 @@ func (f *Fixtures) CreateChapter(bookID string, opts ...ChapterOption) *bookstor
 	err = chapterContentRepo.Create(context.Background(), chapterContent)
 	require.NoError(f.env.T, err, "创建章节内容失败")
 
-	f.env.LogSuccess("创建章节: %s (%s)", chapter.Title, chapter.ID.Hex())
+	f.env.LogSuccess("创建章节: %s (%s)", chapter.Title, chapter.ID)
 
 	return chapter
 }
@@ -216,7 +215,6 @@ func (f *Fixtures) CreateAdminUser(opts ...UserOption) *users.User {
 	require.NoError(f.env.T, err, "密码哈希失败")
 
 	user := &users.User{
-		ID:       userID.Hex(), // User.ID 是 string 类型
 		Username: "e2e_test_admin_" + userID.Hex()[:8],
 		Email:    "e2e_test_admin_" + userID.Hex()[:8] + "@example.com",
 		Password: string(hashedPassword),
@@ -224,6 +222,7 @@ func (f *Fixtures) CreateAdminUser(opts ...UserOption) *users.User {
 		Status:   users.UserStatusActive,
 		Roles:    []string{"admin"},
 	}
+	user.ID = userID
 
 	// 应用选项
 	for _, opt := range opts {
@@ -255,24 +254,23 @@ func (f *Fixtures) CreateChapters(bookID string, count int) []*bookstore.Chapter
 	bookObjID, _ := primitive.ObjectIDFromHex(bookID)
 
 	for i := 0; i < count; i++ {
-		chapterID := primitive.NewObjectID()
 		chapter := &bookstore.Chapter{
-			ID:         chapterID,
-			BookID:     bookObjID,
-			Title:      "e2e_test_chapter_" + chapterID.Hex()[:8],
+			Title:      "e2e_test_chapter_" + bookObjID.Hex()[:8],
 			ChapterNum: i + 1,
 			WordCount:  20,
 			IsFree:     i == 0, // 第一章免费
 			Price:      0,
 		}
+		chapter.BookID = bookObjID.Hex()
 
 		err := chapterRepo.Create(context.Background(), chapter)
 		require.NoError(f.env.T, err, "创建章节失败")
 
 		// 创建章节内容
+		chapterObjID, _ := primitive.ObjectIDFromHex(chapter.ID)
 		chapterContent := &bookstore.ChapterContent{
 			ID:        primitive.NewObjectID(),
-			ChapterID: chapterID,
+			ChapterID: chapterObjID,
 			Content:   "这是章节内容。",
 			Format:    "markdown",
 			Version:   1,
