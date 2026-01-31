@@ -11,8 +11,8 @@ import (
 func InitPublishRoutes(router *gin.RouterGroup, publishService interfaces.PublishService) {
 	api := writer.NewPublishApi(publishService)
 
-	// 项目发布路由
-	projectGroup := router.Group("/projects/:projectId")
+	// 项目发布路由（使用 :id 以避免与现有项目路由冲突）
+	projectGroup := router.Group("/projects/:id")
 	{
 		// 项目发布
 		projectGroup.POST("/publish", api.PublishProject)

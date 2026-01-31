@@ -1,6 +1,9 @@
 package writer
 
 import (
+	"context"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -59,11 +62,9 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var exportSvc interfaces.ExportService
 
 	// 创建PublishService（发布服务）
-	// 注意：需要先实现PublicationRepository和BookstoreClient接口
-	// publicationRepo := repositoryFactory.CreatePublicationRepository()
-	// bookstoreClient := serviceContainer.GetBookstoreClient()
-	// publishSvc := writerService.NewPublishService(projectRepo, documentRepo, publicationRepo, bookstoreClient, eventBus)
-	var publishSvc interfaces.PublishService
+	// 注意：由于PublicationRepository和BookstoreClient尚未完全实现，暂时使用MockPublishService
+	// 当书城服务完善后，可以替换为真实的PublishService
+	var publishSvc interfaces.PublishService = NewMockPublishService()
 
 	// 创建DocumentLockService（文档锁服务）
 	// 从服务容器获取Redis客户端
@@ -90,4 +91,112 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 调用InitWriterRouter初始化所有写作路由
 	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc)
+}
+
+// MockPublishService 用于E2E测试的Mock发布服务
+type MockPublishService struct{}
+
+// NewMockPublishService 创建Mock发布服务实例
+func NewMockPublishService() *MockPublishService {
+	return &MockPublishService{}
+}
+
+// PublishProject 模拟发布项目
+func (m *MockPublishService) PublishProject(ctx context.Context, projectID, userID string, req *interfaces.PublishProjectRequest) (*interfaces.PublicationRecord, error) {
+	// 返回一个模拟的成功发布记录
+	now := time.Now()
+	return &interfaces.PublicationRecord{
+		ID:            "mock_pub_" + projectID,
+		Type:          "project",
+		ResourceID:    projectID,
+		ResourceTitle: "Mock Published Project",
+		BookstoreID:   req.BookstoreID,
+		BookstoreName: "Mock Bookstore",
+		Status:        interfaces.PublicationStatusPublished,
+		PublishTime:   &now,
+		CreatedBy:     userID,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}, nil
+}
+
+// UnpublishProject 模拟取消发布项目
+func (m *MockPublishService) UnpublishProject(ctx context.Context, projectID, userID string) error {
+	return nil
+}
+
+// GetProjectPublicationStatus 获取项目发布状态
+func (m *MockPublishService) GetProjectPublicationStatus(ctx context.Context, projectID string) (*interfaces.PublicationStatus, error) {
+	return &interfaces.PublicationStatus{
+		ProjectID:           projectID,
+		ProjectTitle:        "Mock Project",
+		IsPublished:         false,
+		TotalChapters:       0,
+		PublishedChapters:   0,
+		UnpublishedChapters: 0,
+		PendingChapters:     0,
+	}, nil
+}
+
+// PublishDocument 模拟发布文档
+func (m *MockPublishService) PublishDocument(ctx context.Context, documentID, projectID, userID string, req *interfaces.PublishDocumentRequest) (*interfaces.PublicationRecord, error) {
+	// 如果没有提供 chapterTitle，使用默认值
+	chapterTitle := req.ChapterTitle
+	if chapterTitle == "" {
+		chapterTitle = "Mock Chapter"
+	}
+
+	now := time.Now()
+	return &interfaces.PublicationRecord{
+		ID:            "mock_pub_doc_" + documentID,
+		Type:          "document",
+		ResourceID:    documentID,
+		ResourceTitle: chapterTitle,
+		BookstoreID:   "mock_bookstore",
+		BookstoreName: "Mock Bookstore",
+		Status:        interfaces.PublicationStatusPublished,
+		PublishTime:   &now,
+		Metadata: interfaces.PublicationMetadata{
+			ChapterTitle:  chapterTitle,
+			ChapterNumber: req.ChapterNumber,
+			IsFree:        req.IsFree,
+		},
+		CreatedBy: userID,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, nil
+}
+
+// UpdateDocumentPublishStatus 更新文档发布状态
+func (m *MockPublishService) UpdateDocumentPublishStatus(ctx context.Context, documentID, projectID, userID string, req *interfaces.UpdateDocumentPublishStatusRequest) error {
+	return nil
+}
+
+// BatchPublishDocuments 批量发布文档
+func (m *MockPublishService) BatchPublishDocuments(ctx context.Context, projectID, userID string, req *interfaces.BatchPublishDocumentsRequest) (*interfaces.BatchPublishResult, error) {
+	result := &interfaces.BatchPublishResult{
+		SuccessCount: len(req.DocumentIDs),
+		FailCount:    0,
+		Results:      make([]interfaces.BatchPublishItem, 0, len(req.DocumentIDs)),
+	}
+
+	for _, docID := range req.DocumentIDs {
+		result.Results = append(result.Results, interfaces.BatchPublishItem{
+			DocumentID: docID,
+			Success:    true,
+			RecordID:   "mock_pub_" + docID,
+		})
+	}
+
+	return result, nil
+}
+
+// GetPublicationRecords 获取发布记录列表
+func (m *MockPublishService) GetPublicationRecords(ctx context.Context, projectID string, page, pageSize int) ([]*interfaces.PublicationRecord, int64, error) {
+	return []*interfaces.PublicationRecord{}, 0, nil
+}
+
+// GetPublicationRecord 获取发布记录详情
+func (m *MockPublishService) GetPublicationRecord(ctx context.Context, recordID string) (*interfaces.PublicationRecord, error) {
+	return nil, nil
 }

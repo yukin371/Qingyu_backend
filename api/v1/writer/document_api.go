@@ -309,4 +309,98 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// CreateDocumentByBody 通过请求体创建文档
+// @Summary 创建文档（通过请求体）
+// @Description 在项目中创建新文档，project_id 从请求体获取
+// @Tags 文档管理
+// @Accept json
+// @Produce json
+// @Param request body object true "创建文档请求"
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Router /api/v1/writer/documents [post]
+func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
+	// 检查服务是否初始化
+	if api.documentService == nil {
+		response.InternalError(c, errors.New("服务未初始化: 文档服务未正确初始化"))
+		return
+	}
+
+	// 获取并验证用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok || userIDStr == "" {
+		response.BadRequest(c, "参数错误", "无效的用户ID")
+		return
+	}
+
+	// 将用户ID添加到context
+	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+
+	// 定义请求结构体，支持从请求体获取 project_id
+	var req struct {
+		ProjectID    string   `json:"project_id" binding:"required"`
+		ParentID     string   `json:"parent_id,omitempty"`
+		Title        string   `json:"title" binding:"required,min=1,max=200"`
+		Type         string   `json:"type,omitempty"` // 可选，默认为 chapter
+		CharacterIDs []string `json:"character_ids,omitempty"`
+		LocationIDs  []string `json:"location_ids,omitempty"`
+		TimelineIDs  []string `json:"timeline_ids,omitempty"`
+		Tags         []string `json:"tags,omitempty"`
+		Notes        string   `json:"notes,omitempty"`
+		Order        int      `json:"order,omitempty"`
+		Content      string   `json:"content,omitempty"`
+		WordCount    int      `json:"word_count,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	// 如果未提供 type，默认设置为 chapter（章节）
+	if req.Type == "" {
+		req.Type = "chapter"
+	}
+
+	// 构造 CreateDocumentRequest
+	createReq := &document.CreateDocumentRequest{
+		ProjectID:    req.ProjectID,
+		ParentID:     req.ParentID,
+		Title:        req.Title,
+		Type:         req.Type,
+		CharacterIDs: req.CharacterIDs,
+		LocationIDs:  req.LocationIDs,
+		TimelineIDs:  req.TimelineIDs,
+		Tags:         req.Tags,
+		Notes:        req.Notes,
+		Order:        req.Order,
+	}
+
+	resp, err := api.documentService.CreateDocument(ctx, createReq)
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+
+	// 如果提供了内容，保存文档内容
+	if req.Content != "" {
+		updateContentReq := &document.UpdateContentRequest{
+			DocumentID: resp.DocumentID,
+			Content:    req.Content,
+		}
+		if err := api.documentService.UpdateDocumentContent(ctx, updateContentReq); err != nil {
+			// 内容更新失败不影响文档创建成功
+			// 记录日志即可
+		}
+	}
+
+	response.Created(c, resp)
+}
+
 var _ = writerModels.Document{}

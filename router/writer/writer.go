@@ -123,6 +123,8 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi, loc
 	// 文档直接操作
 	documentGroup := r.Group("/documents")
 	{
+		// 通过请求体创建文档（E2E测试支持）
+		documentGroup.POST("", documentApi.CreateDocumentByBody)
 		documentGroup.GET("/:id", documentApi.GetDocument)
 		documentGroup.PUT("/:id", documentApi.UpdateDocument)
 		documentGroup.DELETE("/:id", documentApi.DeleteDocument)

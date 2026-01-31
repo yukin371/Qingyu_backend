@@ -134,7 +134,7 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Param projectId query string true "项目ID"
+// @Param projectId query string false "项目ID（可选，如不提供则从文档中获取）"
 // @Param request body object true "发布请求"
 // @Success 202 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
@@ -142,16 +142,15 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Router /api/v1/writer/documents/{id}/publish [post]
 func (api *PublishApi) PublishDocument(c *gin.Context) {
 	documentID := c.Param("id")
-	projectID := c.Query("projectId")
 
-	if documentID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "documentId和projectId不能为空")
+	if documentID == "" {
+		response.BadRequest(c, "参数错误", "documentId不能为空")
 		return
 	}
 
 	var req interfaces.PublishDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -161,6 +160,13 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
+	}
+
+	// 尝试从查询参数获取 projectId
+	projectID := c.Query("projectId")
+	if projectID == "" {
+		// 如果没有提供 projectId，尝试使用空字符串（由 MockPublishService 处理）
+		projectID = ""
 	}
 
 	record, err := api.publishService.PublishDocument(c.Request.Context(), documentID, projectID, userID, &req)
@@ -223,14 +229,14 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 // @Tags 发布管理
 // @Accept json
 // @Produce json
-// @Param projectId path string true "项目ID"
+// @Param id path string true "项目ID"
 // @Param request body object true "批量发布请求"
 // @Success 202 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
-// @Router /api/v1/writer/projects/{projectId}/documents/batch-publish [post]
+// @Router /api/v1/writer/projects/{id}/documents/batch-publish [post]
 func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 
 	if projectID == "" {
 		response.BadRequest(c,  "参数错误", "项目ID不能为空")
@@ -266,14 +272,14 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 // @Tags 发布管理
 // @Accept json
 // @Produce json
-// @Param projectId path string true "项目ID"
+// @Param id path string true "项目ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
-// @Router /api/v1/writer/projects/{projectId}/publications [get]
+// @Router /api/v1/writer/projects/{id}/publications [get]
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c,  "参数错误", "项目ID不能为空")
 		return

@@ -122,7 +122,15 @@ func TestWritingFlow(t *testing.T) {
 		if w.Code == 200 || w.Code == 201 {
 			response := env.ParseJSONResponse(w)
 			if data, ok := response["data"].(map[string]interface{}); ok {
-				if documentId, ok := data["document_id"].(string); ok {
+				// 支持驼峰命名 documentId（Go标准）和蛇形命名 document_id
+				var documentId string
+				if id, ok := data["documentId"].(string); ok {
+					documentId = id
+				} else if id, ok := data["document_id"].(string); ok {
+					documentId = id
+				}
+
+				if documentId != "" {
 					t.Logf("✓ 第一章创建成功 (ID: %s)", documentId)
 					env.SetTestData("chapter1_id", documentId)
 				} else {
@@ -148,7 +156,15 @@ func TestWritingFlow(t *testing.T) {
 		if w2.Code == 200 || w2.Code == 201 {
 			response := env.ParseJSONResponse(w2)
 			if data, ok := response["data"].(map[string]interface{}); ok {
-				if documentId, ok := data["document_id"].(string); ok {
+				// 支持驼峰命名 documentId（Go标准）和蛇形命名 document_id
+				var documentId string
+				if id, ok := data["documentId"].(string); ok {
+					documentId = id
+				} else if id, ok := data["document_id"].(string); ok {
+					documentId = id
+				}
+
+				if documentId != "" {
 					t.Logf("✓ 第二章创建成功 (ID: %s)", documentId)
 					env.SetTestData("chapter2_id", documentId)
 				}

@@ -1189,11 +1189,17 @@ func (s *UserServiceImpl) DowngradeRole(ctx context.Context, req *user2.Downgrad
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "已经是读者，无法降级", nil)
 	}
 
-	// 5. 检查是否已经是目标角色
+	// 5. 检查是否已经是目标角色（只有目标角色时才返回错误）
+	hasHigherRole := false
 	for _, role := range currentRoles {
-		if role == req.TargetRole {
-			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "当前已是目标角色", nil)
+		if role == "author" || role == "admin" {
+			hasHigherRole = true
+			break
 		}
+	}
+	// 如果没有更高角色且只有目标角色，则不能降级
+	if !hasHigherRole && len(currentRoles) == 1 && currentRoles[0] == req.TargetRole {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "当前已是目标角色", nil)
 	}
 
 	// 6. 执行降级操作
