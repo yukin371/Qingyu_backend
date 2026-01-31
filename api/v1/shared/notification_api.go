@@ -38,7 +38,7 @@ func NewNotificationAPI(notificationService messaging.NotificationService) *Noti
 //	@Router			/api/v1/notifications [get]
 func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未登录")
 		return
@@ -73,7 +73,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 //	@Router			/api/v1/notifications/unread-count [get]
 func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未登录")
 		return
@@ -138,7 +138,7 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 //	@Router			/api/v1/notifications/read-all [put]
 func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未登录")
 		return

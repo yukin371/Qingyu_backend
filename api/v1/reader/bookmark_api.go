@@ -47,7 +47,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -92,7 +92,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 //	@Router			/api/v1/reader/books/{bookId}/bookmarks [get]
 func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -249,7 +249,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/export [get]
 func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -280,7 +280,7 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/stats [get]
 func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -310,7 +310,7 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/search [get]
 func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

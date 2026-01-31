@@ -48,7 +48,7 @@ var WebSocketUpgrader = gorilla_websocket.Upgrader{
 //	@Router			/api/v1/reader/progress/ws [get]
 func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -107,7 +107,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -144,7 +144,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -193,7 +193,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 //	@Router			/api/v1/reader/progress/sync-status [get]
 func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

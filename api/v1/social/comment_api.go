@@ -54,7 +54,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -165,7 +165,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -202,7 +202,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -245,7 +245,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -282,7 +282,7 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -318,7 +318,7 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return

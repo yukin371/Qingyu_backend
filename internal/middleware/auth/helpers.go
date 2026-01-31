@@ -3,6 +3,8 @@ package auth
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"Qingyu_backend/config"
 )
 
 // JWTAuth 提供简单的JWT认证中间件
@@ -11,9 +13,9 @@ func JWTAuth() gin.HandlerFunc {
 	// 创建logger
 	logger, _ := zap.NewDevelopment()
 
-	// 创建默认的JWT管理器和黑名单
-	// 注意：这里使用默认配置，实际使用时应该从服务容器获取
-	jwtManager, err := NewJWTManager("default-secret-change-in-production", DefaultAccessExpiration, DefaultRefreshExpiration)
+	// 从配置获取JWT secret，确保与登录服务使用相同的secret
+	jwtConfig := config.GetJWTConfigEnhanced()
+	jwtManager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
 	if err != nil {
 		logger.Fatal("Failed to create JWT manager", zap.Error(err))
 	}
@@ -26,8 +28,9 @@ func JWTAuth() gin.HandlerFunc {
 // 这是一个便捷函数，用于生成JWT令牌
 // 注意：这个函数使用默认配置，生产环境应该使用服务容器中的JWT管理器
 func GenerateToken(userID, username string, roles []string) (string, error) {
-	// 创建默认的JWT管理器
-	jwtManager, err := NewJWTManager("default-secret-change-in-production", DefaultAccessExpiration, DefaultRefreshExpiration)
+	// 从配置获取JWT secret，确保与登录服务使用相同的secret
+	jwtConfig := config.GetJWTConfigEnhanced()
+	jwtManager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
 	if err != nil {
 		return "", err
 	}

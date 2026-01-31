@@ -43,7 +43,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
-	if userID, exists := c.Get("userId"); exists {
+	if userID, exists := c.Get("user_id"); exists {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
@@ -105,7 +105,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
-	if userID, exists := c.Get("userId"); exists {
+	if userID, exists := c.Get("user_id"); exists {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
@@ -141,7 +141,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
-	if userID, exists := c.Get("userId"); exists {
+	if userID, exists := c.Get("user_id"); exists {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
@@ -168,7 +168,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
-	if userID, exists := c.Get("userId"); exists {
+	if userID, exists := c.Get("user_id"); exists {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
@@ -194,7 +194,7 @@ func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
-	if userID, exists := c.Get("userId"); exists {
+	if userID, exists := c.Get("user_id"); exists {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 

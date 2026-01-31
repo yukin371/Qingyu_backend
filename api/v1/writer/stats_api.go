@@ -288,7 +288,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	}
 
 	// 从context获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if exists {
 		behavior.UserID = userID.(string)
 	}

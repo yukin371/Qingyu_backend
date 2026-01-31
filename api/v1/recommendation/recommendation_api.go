@@ -30,7 +30,7 @@ func NewRecommendationAPI(recoService recommendation.RecommendationService) *Rec
 //	@Router		/api/v1/recommendation/personalized [get]
 func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -102,7 +102,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 //	@Router		/api/v1/recommendation/behavior [post]
 func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -156,7 +156,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 //	@Router		/api/v1/recommendation/homepage [get]
 func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 	// 获取用户ID（可选）
-	userID, _ := c.Get("userId")
+	userID, _ := c.Get("user_id")
 	userIDStr := ""
 	if userID != nil {
 		userIDStr = userID.(string)

@@ -47,7 +47,7 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}

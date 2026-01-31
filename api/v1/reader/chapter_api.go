@@ -61,7 +61,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -113,7 +113,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -159,7 +159,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -202,7 +202,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -254,7 +254,7 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -290,7 +290,7 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 
 	// 获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 

@@ -32,7 +32,7 @@ func NewQuotaApi(quotaService *aiService.QuotaService) *QuotaApi {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota [get]
 func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "无法获取用户信息")
 		return
@@ -56,7 +56,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/all [get]
 func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "无法获取用户信息")
 		return
@@ -80,7 +80,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/statistics [get]
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "无法获取用户信息")
 		return
@@ -106,7 +106,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/transactions [get]
 func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "无法获取用户信息")
 		return
@@ -151,7 +151,7 @@ type RechargeRequest struct {
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/ai/quota/recharge [post]
 func (api *QuotaApi) RechargeQuota(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "无法获取用户信息")
 		return

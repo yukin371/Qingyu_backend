@@ -31,7 +31,7 @@ func NewBooksAPI(readerService interfaces.ReaderService) *BooksAPI {
 //	@Router		/api/v1/reader/books [get]
 func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -77,7 +77,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/{bookId} [post]
 func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -108,7 +108,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/{bookId} [delete]
 func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -139,7 +139,7 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/recent [get]
 func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -172,7 +172,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 //	@Router		/api/v1/reader/books/unfinished [get]
 func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -197,7 +197,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 //	@Router		/api/v1/reader/books/finished [get]
 func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -229,7 +229,7 @@ type UpdateBookStatusRequest struct {
 //	@Router		/api/v1/reader/books/{bookId}/status [put]
 func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -273,7 +273,7 @@ type BatchUpdateBookStatusRequest struct {
 //	@Router		/api/v1/reader/books/batch/status [put]
 func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

@@ -49,7 +49,7 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -85,7 +85,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -157,7 +157,7 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -202,7 +202,7 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -245,7 +245,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}

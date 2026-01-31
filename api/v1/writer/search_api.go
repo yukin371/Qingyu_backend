@@ -42,7 +42,7 @@ func NewSearchAPI(searchService *searchservice.SearchService) *SearchAPI {
 //	@Router			/api/v1/writer/search/documents [get]
 func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 1. 验证用户登录
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return

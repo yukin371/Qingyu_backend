@@ -140,7 +140,7 @@ func (api *ChatApi) ChatStream(c *gin.Context) {
 
 				// 异步消费配额
 				go func() {
-					userID, _ := c.Get("userId")
+					userID, _ := c.Get("user_id")
 					_ = api.quotaService.ConsumeQuota(
 						c.Request.Context(),
 						userID.(string),

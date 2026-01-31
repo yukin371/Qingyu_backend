@@ -34,7 +34,7 @@ func (api *LocationApi) CreateLocation(c *gin.Context) {
 	}
 
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}

@@ -138,7 +138,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 //	@Router		/api/v1/reader/chapters/{chapterId}/comments [post]
 func (api *ChapterCommentAPI) CreateChapterComment(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -250,7 +250,7 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [put]
 func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -296,7 +296,7 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [delete]
 func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -330,7 +330,7 @@ func (api *ChapterCommentAPI) DeleteChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId}/like [post]
 func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -362,7 +362,7 @@ func (api *ChapterCommentAPI) LikeChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId}/like [delete]
 func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -428,7 +428,7 @@ func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraph-comments [post]
 func (api *ChapterCommentAPI) CreateParagraphComment(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

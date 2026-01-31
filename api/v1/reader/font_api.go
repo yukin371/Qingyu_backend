@@ -95,7 +95,7 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 //	@Router		/api/v1/reader/fonts [post]
 func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -140,7 +140,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [put]
 func (api *FontAPI) UpdateFont(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -178,7 +178,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [delete]
 func (api *FontAPI) DeleteFont(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -205,7 +205,7 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings/font [post]
 func (api *FontAPI) SetFontPreference(c *gin.Context) {
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

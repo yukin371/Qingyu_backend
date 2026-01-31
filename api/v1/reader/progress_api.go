@@ -52,7 +52,7 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -84,7 +84,7 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -114,7 +114,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -138,7 +138,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/recent [get]
 func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -165,7 +165,7 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/history [get]
 func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -197,7 +197,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/stats [get]
 func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -267,7 +267,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/unfinished [get]
 func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return
@@ -290,7 +290,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/finished [get]
 func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 			response.Unauthorized(c, "请先登录")
 		return

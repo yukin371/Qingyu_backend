@@ -56,7 +56,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -174,7 +174,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/stats [get]
 func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -212,7 +212,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/export [get]
 func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return
@@ -315,7 +315,7 @@ func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) 
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "请先登录")
 		return

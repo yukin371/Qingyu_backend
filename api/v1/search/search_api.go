@@ -68,7 +68,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 
 	// 获取用户ID
 	var userID string
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 

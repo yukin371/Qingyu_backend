@@ -47,7 +47,7 @@ func NewUserRelationAPI(relationService UserRelationServiceInterface) *UserRelat
 //	@Router			/api/v1/social/follow/{userId} [post]
 func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未登录")
 		return
@@ -92,7 +92,7 @@ func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 //	@Router			/api/v1/social/follow/{userId} [delete]
 func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未登录")
 		return
@@ -137,7 +137,7 @@ func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 //	@Router			/api/v1/social/follow/{userId}/status [get]
 func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未登录")
 		return

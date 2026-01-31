@@ -37,7 +37,7 @@ func NewStatsHandler(statsService stats.PlatformStatsService) *StatsHandler {
 //	@Router			/api/v1/user/stats/my [get]
 func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未登录")
 		return
@@ -68,7 +68,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/content [get]
 func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未登录")
 		return
@@ -100,7 +100,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/activity [get]
 func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未登录")
 		return
@@ -141,7 +141,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/revenue [get]
 func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("userId")
+	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未登录")
 		return

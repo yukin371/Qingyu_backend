@@ -50,7 +50,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "需要登录")
 		return
@@ -268,7 +268,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "需要登录")
 		return
@@ -349,7 +349,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "需要登录")
 		return

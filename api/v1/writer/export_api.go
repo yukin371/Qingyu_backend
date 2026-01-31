@@ -51,7 +51,7 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -94,7 +94,7 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -215,7 +215,7 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}
@@ -251,7 +251,7 @@ func (api *ExportApi) CancelExportTask(c *gin.Context) {
 
 	// 从上下文获取用户ID
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		if uidStr, ok := uid.(string); ok {
 			userID = uidStr
 		}

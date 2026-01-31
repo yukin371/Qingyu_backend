@@ -149,7 +149,7 @@ func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 
 				// 异步消费配额
 				go func() {
-					userID, _ := c.Get("userId")
+					userID, _ := c.Get("user_id")
 					_ = api.quotaService.ConsumeQuota(
 						c.Request.Context(),
 						userID.(string),
@@ -330,7 +330,7 @@ func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 
 				// 异步消费配额
 				go func() {
-					userID, _ := c.Get("userId")
+					userID, _ := c.Get("user_id")
 					_ = api.quotaService.ConsumeQuota(
 						c.Request.Context(),
 						userID.(string),

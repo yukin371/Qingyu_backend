@@ -50,7 +50,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -107,7 +107,7 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -146,7 +146,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return
@@ -183,7 +183,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 
 	// 获取用户信息
 	userID := ""
-	if uid, exists := c.Get("userId"); exists {
+	if uid, exists := c.Get("user_id"); exists {
 		userID = uid.(string)
 	}
 
@@ -263,7 +263,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		response.Unauthorized(c, "未授权")
 		return

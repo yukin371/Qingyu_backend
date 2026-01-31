@@ -61,7 +61,7 @@ func (api *SearchAPI) GetSearchSuggestions(c *gin.Context) {
 // TODO(Phase3): 搜索历史API
 // GetSearchHistory 获取用户搜索历史
 // func (api *SearchAPI) GetSearchHistory(c *gin.Context) {
-//     userID, _ := c.Get("userId")
+//     userID, _ := c.Get("user_id")
 //     history, err := api.searchService.GetSearchHistory(c.Request.Context(), userID.(string), 20)
 //     if err != nil {
 //         Error(c, 500, "获取搜索历史失败", err.Error())

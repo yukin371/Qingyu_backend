@@ -492,7 +492,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 
 	// 获取用户ID（从中间件设置的上下文中）
 	var userID primitive.ObjectID
-	if userIDValue, exists := c.Get("userId"); exists {
+	if userIDValue, exists := c.Get("user_id"); exists {
 		if uid, ok := userIDValue.(string); ok {
 			userID, _ = primitive.ObjectIDFromHex(uid)
 		}

@@ -50,7 +50,7 @@ func NewStorageAPI(
 //	@Router			/api/v1/files/upload [post]
 func (api *StorageAPI) UploadFile(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未授权")
 		return
@@ -112,7 +112,7 @@ func (api *StorageAPI) DownloadFile(c *gin.Context) {
 	}
 
 	// 2. 获取用户ID（可选，用于权限检查）
-	userID, _ := c.Get("userId")
+	userID, _ := c.Get("user_id")
 
 	// 3. 获取文件信息
 	fileInfo, err := api.storageService.GetFileInfo(c.Request.Context(), fileID)
@@ -193,7 +193,7 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	// 1. 获取文件ID和用户ID
 	fileID := c.Param("id")
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未授权")
 		return
@@ -238,7 +238,7 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 //	@Router			/api/v1/files [get]
 func (api *StorageAPI) ListFiles(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未授权")
 		return
@@ -316,7 +316,7 @@ func (api *StorageAPI) GetDownloadURL(c *gin.Context) {
 //	@Router			/api/v1/files/multipart/init [post]
 func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("userId")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		Unauthorized(c, "未授权")
 		return

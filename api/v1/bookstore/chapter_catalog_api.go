@@ -57,7 +57,7 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 
 	// 获取用户ID（从中间件设置的上下文中）
 	var userID primitive.ObjectID
-	if userIDValue, exists := c.Get("userId"); exists {
+	if userIDValue, exists := c.Get("user_id"); exists {
 		if uid, ok := userIDValue.(string); ok {
 			userID, _ = primitive.ObjectIDFromHex(uid)
 		}
@@ -267,7 +267,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userIDValue, exists := c.Get("userId")
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权访问")
 		return
@@ -333,7 +333,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userIDValue, exists := c.Get("userId")
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权访问")
 		return
@@ -383,7 +383,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 //	@Router			/api/v1/reader/purchases [get]
 func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 	// 获取用户ID
-	userIDValue, exists := c.Get("userId")
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权访问")
 		return
@@ -448,7 +448,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userIDValue, exists := c.Get("userId")
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权访问")
 		return
@@ -513,7 +513,7 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 
 	// 获取用户ID（可选）
 	var userID primitive.ObjectID
-	if userIDValue, exists := c.Get("userId"); exists {
+	if userIDValue, exists := c.Get("user_id"); exists {
 		if uid, ok := userIDValue.(string); ok {
 			userID, _ = primitive.ObjectIDFromHex(uid)
 		}
