@@ -1142,3 +1142,88 @@ func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, pas
 
 	return nil
 }
+
+// DowngradeRole 角色降级
+// 将用户角色降级到指定角色（只能降级到reader或author）
+func (s *UserServiceImpl) DowngradeRole(ctx context.Context, req *user2.DowngradeRoleRequest) (*user2.DowngradeRoleResponse, error) {
+	// 1. 验证请求数据
+	if req.UserID == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
+	}
+	if req.TargetRole == "" {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "目标角色不能为空", nil)
+	}
+	if !req.Confirm {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "请确认降级操作", nil)
+	}
+
+	// 2. 验证目标角色是否合法
+	validRoles := map[string]bool{
+		"reader": true,
+		"author": true,
+	}
+	if !validRoles[req.TargetRole] {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "目标角色无效，只能降级为reader或author", nil)
+	}
+
+	// 3. 获取用户信息
+	user, err := s.userRepo.GetByID(ctx, req.UserID)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
+	}
+
+	// 4. 检查用户当前角色（只能从author或admin降级）
+	currentRoles := user.Roles
+	hasAuthorOrAdmin := false
+	for _, role := range currentRoles {
+		if role == "author" || role == "admin" {
+			hasAuthorOrAdmin = true
+			break
+		}
+	}
+
+	if !hasAuthorOrAdmin {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "已经是读者，无法降级", nil)
+	}
+
+	// 5. 检查是否已经是目标角色
+	for _, role := range currentRoles {
+		if role == req.TargetRole {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "当前已是目标角色", nil)
+		}
+	}
+
+	// 6. 执行降级操作
+	// 如果目标角色是reader，则清空所有角色，只保留reader
+	// 如果目标角色是author，则移除admin角色（如果有）
+	var newRoles []string
+	if req.TargetRole == "reader" {
+		newRoles = []string{"reader"}
+	} else if req.TargetRole == "author" {
+		// 保留author角色，移除admin
+		for _, role := range currentRoles {
+			if role == "author" || role == "reader" {
+				newRoles = append(newRoles, role)
+			}
+		}
+		// 确保至少有author角色
+		if len(newRoles) == 0 {
+			newRoles = []string{"author"}
+		}
+	}
+
+	// 7. 更新用户角色
+	updates := map[string]interface{}{
+		"roles": newRoles,
+	}
+	if err := s.userRepo.Update(ctx, req.UserID, updates); err != nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "更新用户角色失败", err)
+	}
+
+	return &user2.DowngradeRoleResponse{
+		CurrentRoles: newRoles,
+	}, nil
+}

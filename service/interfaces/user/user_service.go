@@ -54,6 +54,9 @@ type UserService interface {
 	RemoveRole(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
 	GetUserRoles(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
 	GetUserPermissions(ctx context.Context, req *GetUserPermissionsRequest) (*GetUserPermissionsResponse, error)
+
+	// 角色降级
+	DowngradeRole(ctx context.Context, req *DowngradeRoleRequest) (*DowngradeRoleResponse, error)
 }
 
 // 请求和响应结构体定义
@@ -296,4 +299,16 @@ type ConfirmPasswordResetRequest struct {
 type ConfirmPasswordResetResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message,omitempty"`
+}
+
+// DowngradeRoleRequest 角色降级请求
+type DowngradeRoleRequest struct {
+	UserID     string `json:"user_id" validate:"required"`                                              // 用户ID
+	TargetRole string `json:"target_role" validate:"required,oneof=reader author admin"` // 目标角色
+	Confirm    bool   `json:"confirm" validate:"required"`                                       // 确认标志
+}
+
+// DowngradeRoleResponse 角色降级响应
+type DowngradeRoleResponse struct {
+	CurrentRoles []string `json:"current_roles"` // 当前角色列表
 }

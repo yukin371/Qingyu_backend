@@ -106,6 +106,9 @@ func RegisterUserRoutes(
 		authenticated.PUT("/password", handlers.ProfileHandler.UpdatePassword)
 		authenticated.POST("/avatar", handlers.ProfileHandler.UploadAvatar)
 
+		// 角色管理
+		authenticated.POST("/role/downgrade", handlers.ProfileHandler.DowngradeRole)
+
 		// 安全相关 - 邮箱验证（需要登录）
 		authenticated.POST("/email/send-code", handlers.SecurityHandler.SendEmailVerification)
 		authenticated.POST("/email/verify", handlers.SecurityHandler.VerifyEmail)

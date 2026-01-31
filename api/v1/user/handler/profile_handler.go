@@ -334,3 +334,88 @@ func isAllowedType(contentType string, allowedTypes []string) bool {
 	}
 	return false
 }
+
+// DowngradeRoleRequest 降级角色请求
+type DowngradeRoleRequest struct {
+	TargetRole string `json:"target_role" binding:"required,oneof=reader author"` // 只能降级到reader或author
+	Confirm    bool   `json:"confirm" binding:"required"`                          // 必须确认
+}
+
+// DowngradeRole 降级用户角色
+//
+//	@Summary		降级用户角色
+//	@Description	将当前用户角色降级到指定角色（author只能降级到reader，admin可以降级到author或reader）
+//	@Tags			用户管理-个人信息
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		DowngradeRoleRequest	true	"降级请求"
+//	@Success		200		{object}	shared.APIResponse{data=map[string]interface{}}
+//	@Failure		400		{object}	shared.ErrorResponse
+//	@Failure		401		{object}	shared.ErrorResponse
+//	@Failure		403		{object}	shared.ErrorResponse
+//	@Failure		500		{object}	shared.ErrorResponse
+//	@Router			/api/v1/user/role/downgrade [post]
+func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
+	// 从Context中获取当前用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		shared.Unauthorized(c, "未认证")
+		return
+	}
+
+	// 解析请求体
+	var req DowngradeRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	// 验证确认标志
+	if !req.Confirm {
+		shared.BadRequest(c, "请确认降级操作", "")
+		return
+	}
+
+	// 验证目标角色
+	if req.TargetRole != "reader" && req.TargetRole != "author" {
+		shared.BadRequest(c, "目标角色无效，只能降级为reader或author", "")
+		return
+	}
+
+	// 调用Service层
+	serviceReq := &userServiceInterface.DowngradeRoleRequest{
+		UserID:     userID.(string),
+		TargetRole: req.TargetRole,
+		Confirm:    req.Confirm,
+	}
+
+	resp, err := h.userService.DowngradeRole(c.Request.Context(), serviceReq)
+	if err != nil {
+		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
+			switch serviceErr.Type {
+			case serviceInterfaces.ErrorTypeValidation:
+				shared.BadRequest(c, "参数错误", serviceErr.Message)
+			case serviceInterfaces.ErrorTypeBusiness:
+				// 业务错误：如"已经是读者，无法降级"应该返回403
+				c.JSON(403, shared.ErrorResponse{
+					Code:      1003,
+					Message:   serviceErr.Message,
+					Timestamp: time.Now().UnixMilli(),
+				})
+			case serviceInterfaces.ErrorTypeNotFound:
+				shared.NotFound(c, "用户不存在")
+			default:
+				shared.InternalError(c, "降级失败", err)
+			}
+			return
+		}
+		shared.InternalError(c, "降级失败", err)
+		return
+	}
+
+	// 返回成功响应
+	shared.Success(c, 200, "降级成功", map[string]interface{}{
+		"current_roles": resp.CurrentRoles,
+	})
+}
