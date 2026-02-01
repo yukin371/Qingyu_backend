@@ -177,6 +177,24 @@ func (r *MongoCommentRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// Exists 检查评论是否存在（用于外键验证）
+func (r *MongoCommentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return false, err
+	}
+
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
+		"_id":   objectID,
+		"state": social.CommentStateNormal, // 只统计正常状态的评论
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 // GetCommentsByBookID 获取书籍的评论列表
 func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*social.Comment, int64, error) {
 	filter := bson.M{

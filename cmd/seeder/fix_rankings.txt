@@ -1,0 +1,27 @@
+		for i := 0; i < maxRank; i++ {
+			book := sortedBooks[i]
+
+			// 计算分数和统计数据
+			score := s.calculateScore(book, i, rankingType.Type)
+			viewCount := int64((maxRank - i) * 10000)
+			likeCount := int64((maxRank - i) * 500)
+
+			// 转换字符串ID为ObjectID
+			bookID, err := primitive.ObjectIDFromHex(book.ID)
+			if err != nil {
+				return fmt.Errorf("转换书籍ID失败: %w", err)
+			}
+
+			rankings = append(rankings, bson.M{
+				"_id":         primitive.NewObjectID(),
+				"book_id":     bookID,
+				"type":        rankingType.Type,
+				"rank":        i + 1,
+				"score":       score,
+				"view_count":  viewCount,
+				"like_count":  likeCount,
+				"period":      rankingType.Period,
+				"created_at":  now,
+				"updated_at":  now,
+			})
+		}

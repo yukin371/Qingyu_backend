@@ -3,12 +3,14 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"Qingyu_backend/cmd/seeder/config"
 	"Qingyu_backend/cmd/seeder/utils"
+	"Qingyu_backend/cmd/seeder/validator"
 
 	"github.com/spf13/cobra"
 )
@@ -148,6 +150,20 @@ var (
 		Short: "填充财务数据（作者收入、会员）",
 		Run:   runFinance,
 	}
+
+	// auditReaderCmd 审查读者视角数据关联
+	auditReaderCmd = &cobra.Command{
+		Use:   "audit-reader",
+		Short: "审查读者视角数据关联完整性",
+		Run:   runAuditReader,
+	}
+
+	// auditAuthorCmd 审查作者视角数据关联
+	auditAuthorCmd = &cobra.Command{
+		Use:   "audit-author",
+		Short: "审查作者视角数据关联完整性",
+		Run:   runAuthorAuditCmd,
+	}
 )
 
 // init 初始化命令
@@ -174,6 +190,8 @@ func init() {
 	rootCmd.AddCommand(messagingCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(financeCmd)
+	rootCmd.AddCommand(auditReaderCmd)
+	rootCmd.AddCommand(auditAuthorCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(testCmd)
@@ -251,6 +269,13 @@ func runAll(cmd *cobra.Command, args []string) {
 	fmt.Println("\n填充订阅关系...")
 	if err := seedSubscriptions(db); err != nil {
 		fmt.Printf("填充订阅关系失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 数据验证
+	fmt.Println("\n验证数据完整性...")
+	if err := validateData(db); err != nil {
+		fmt.Printf("数据验证失败: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -367,36 +392,13 @@ func runVerify(cmd *cobra.Command, args []string) {
 	}
 	defer db.Disconnect()
 
-	reports := utils.VerifyData(db)
-
-	// 显示验证结果
-	for _, report := range reports {
-		if report.Passed {
-			fmt.Printf("✅ %s: 通过\n", report.Category)
-		} else {
-			fmt.Printf("❌ %s: 失败\n", report.Category)
-		}
-
-		for _, issue := range report.Issues {
-			fmt.Printf("   - %s\n", issue)
-		}
-		fmt.Println()
-	}
-
-	// 统计结果
-	passedCount := 0
-	for _, report := range reports {
-		if report.Passed {
-			passedCount++
-		}
-	}
-
-	fmt.Printf("总计: %d/%d 验证通过\n", passedCount, len(reports))
-
-	// 如果有验证失败，返回错误码
-	if passedCount < len(reports) {
+	// 使用新的验证器
+	if err := validateData(db); err != nil {
+		fmt.Printf("验证失败: %v\n", err)
 		os.Exit(1)
 	}
+
+	fmt.Println("\n数据验证完成!")
 }
 
 // cleanAllData 清空所有数据
@@ -808,4 +810,113 @@ func runFinance(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("\n财务数据填充完成!")
+}
+
+// runAuditReader 审查读者视角数据关联
+func runAuditReader(cmd *cobra.Command, args []string) {
+	fmt.Println("🔍 开始读者视角数据关联审查...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if err := RunReaderAudit(db.Database); err != nil {
+		fmt.Printf("审查执行失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n✅ 读者视角数据关联审查完成!")
+	fmt.Println("📄 报告已输出到控制台")
+}
+
+// runAuthorAuditCmd 审查作者视角数据关联
+func runAuthorAuditCmd(cmd *cobra.Command, args []string) {
+	fmt.Println("🚀 开始执行作者视角数据关联审查...")
+	fmt.Println()
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("❌ 数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	report, err := RunAuthorAudit(db)
+	if err != nil {
+		fmt.Printf("❌ 审查失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	report.PrintReport()
+
+	// 根据评分返回退出码
+	if report.TotalScore == "差 (D)" {
+		os.Exit(1)
+	}
+}
+
+// validateData 验证数据完整性
+func validateData(db *utils.Database) error {
+	v := validator.NewDataValidator(db.Database)
+
+	report, err := v.ValidateRelationships(context.Background())
+	if err != nil {
+		return fmt.Errorf("验证执行失败: %w", err)
+	}
+
+	// 打印验证结果
+	fmt.Println("========== 数据验证报告 ==========")
+	fmt.Printf("验证时间: %s\n", report.ValidatedAt.Format("2006-01-02 15:04:05"))
+	fmt.Printf("验证结果: ")
+	if report.IsValid {
+		fmt.Println("✅ 通过")
+	} else {
+		fmt.Println("❌ 失败")
+	}
+
+	// 打印集合统计信息
+	if len(report.CollectionStats) > 0 {
+		fmt.Println("\n集合统计:")
+		for coll, count := range report.CollectionStats {
+			fmt.Printf("  - %s: %d 条记录\n", coll, count)
+		}
+	}
+
+	// 打印孤儿记录详情
+	if report.TotalOrphanedRecords > 0 {
+		fmt.Printf("\n孤儿记录 (共 %d 条):\n", report.TotalOrphanedRecords)
+		for _, detail := range report.OrphanDetails {
+			fmt.Printf("  - %s\n", detail)
+		}
+	}
+
+	// 打印ID格式不一致问题
+	if len(report.InconsistentRecords) > 0 {
+		fmt.Printf("\nID格式不一致 (共 %d 条):\n", len(report.InconsistentRecords))
+		for _, issue := range report.InconsistentRecords {
+			fmt.Printf("  - %s\n", issue)
+		}
+	}
+
+	// 打印错误信息
+	if len(report.Errors) > 0 {
+		fmt.Printf("\n错误 (共 %d 个):\n", len(report.Errors))
+		for _, err := range report.Errors {
+			fmt.Printf("  - %v\n", err)
+		}
+	}
+
+	// 打印摘要
+	fmt.Printf("\n%s\n", report.Summary)
+	fmt.Println("=================================")
+
+	// 如果验证失败，返回错误
+	if !report.IsValid {
+		return fmt.Errorf("数据验证失败: %s", report.Summary)
+	}
+
+	return nil
 }

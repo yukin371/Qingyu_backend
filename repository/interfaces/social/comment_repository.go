@@ -13,6 +13,9 @@ type CommentRepository interface {
 	Update(ctx context.Context, id string, updates map[string]interface{}) error
 	Delete(ctx context.Context, id string) error
 
+	// 存在性检查 - 用于外键验证
+	Exists(ctx context.Context, id string) (bool, error)
+
 	// 查询操作
 	GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*social.Comment, int64, error)
 	GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*social.Comment, int64, error)
