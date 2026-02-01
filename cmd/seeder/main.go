@@ -113,6 +113,41 @@ var (
 		Short: "从JSON文件导入小说数据",
 		Run:   runImport,
 	}
+
+	// readerCmd 填充阅读数据
+	readerCmd = &cobra.Command{
+		Use:   "reader",
+		Short: "填充阅读数据（阅读历史、书架、订阅）",
+		Run:   runReader,
+	}
+
+	// notificationsCmd 填充通知数据
+	notificationsCmd = &cobra.Command{
+		Use:   "notifications",
+		Short: "填充通知数据",
+		Run:   runNotifications,
+	}
+
+	// messagingCmd 填充消息数据
+	messagingCmd = &cobra.Command{
+		Use:   "messaging",
+		Short: "填充消息数据（对话、消息、公告）",
+		Run:   runMessaging,
+	}
+
+	// statsCmd 填充统计数据
+	statsCmd = &cobra.Command{
+		Use:   "stats",
+		Short: "填充统计数据（书籍统计、章节统计）",
+		Run:   runStats,
+	}
+
+	// financeCmd 填充财务数据
+	financeCmd = &cobra.Command{
+		Use:   "finance",
+		Short: "填充财务数据（作者收入、会员）",
+		Run:   runFinance,
+	}
 )
 
 // init 初始化命令
@@ -134,6 +169,11 @@ func init() {
 	rootCmd.AddCommand(rankingsCmd)
 	rootCmd.AddCommand(aiQuotaCmd)
 	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(readerCmd)
+	rootCmd.AddCommand(notificationsCmd)
+	rootCmd.AddCommand(messagingCmd)
+	rootCmd.AddCommand(statsCmd)
+	rootCmd.AddCommand(financeCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(testCmd)
@@ -200,6 +240,13 @@ func runAll(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	// 生成榜单数据
+	fmt.Println("\n生成榜单数据...")
+	if err := seedRankings(db); err != nil {
+		fmt.Printf("生成榜单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
 	// 填充订阅关系
 	fmt.Println("\n填充订阅关系...")
 	if err := seedSubscriptions(db); err != nil {
@@ -263,7 +310,14 @@ func runBookstore(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Println("\n书籍数据填充完成!")
+	// 自动生成榜单数据
+	fmt.Println("\n生成榜单数据...")
+	if err := seedRankings(db); err != nil {
+		fmt.Printf("生成榜单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n书籍和榜单数据填充完成!")
 }
 
 // runClean 清空所有数据
@@ -303,7 +357,8 @@ func runClean(cmd *cobra.Command, args []string) {
 
 // runVerify 验证数据完整性
 func runVerify(cmd *cobra.Command, args []string) {
-	fmt.Println("验证数据完整性...\n")
+	fmt.Println("验证数据完整性...")
+	fmt.Println()
 
 	db, err := getDatabase()
 	if err != nil {
@@ -594,4 +649,163 @@ func runImport(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("\n小说数据导入完成!")
+}
+
+// seedRankings 填充榜单数据
+func seedRankings(db *utils.Database) error {
+	seeder := NewRankingSeeder(db, cfg)
+	return seeder.SeedRankings()
+}
+
+// seedRankingsClean 清空榜单数据
+func seedRankingsClean(db *utils.Database) error {
+	seeder := NewRankingSeeder(db, cfg)
+	return seeder.Clean()
+}
+
+// runReader 填充阅读数据
+func runReader(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充阅读数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空阅读数据...")
+		seeder := NewReaderSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空阅读数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewReaderSeeder(db, cfg)
+
+	if err := seeder.SeedReadingData(); err != nil {
+		fmt.Printf("填充阅读数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n阅读数据填充完成!")
+}
+
+// runNotifications 填充通知数据
+func runNotifications(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充通知数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空通知数据...")
+		seeder := NewNotificationSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空通知数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewNotificationSeeder(db, cfg)
+
+	if err := seeder.SeedNotifications(); err != nil {
+		fmt.Printf("填充通知数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n通知数据填充完成!")
+}
+
+// runMessaging 填充消息数据
+func runMessaging(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充消息数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空消息数据...")
+		seeder := NewMessagingSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空消息数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewMessagingSeeder(db, cfg)
+	if err := seeder.SeedMessagingData(); err != nil {
+		fmt.Printf("填充消息数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n消息数据填充完成!")
+}
+
+// runStats 填充统计数据
+func runStats(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充统计数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空统计数据...")
+		seeder := NewStatsSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空统计数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewStatsSeeder(db, cfg)
+	if err := seeder.SeedStats(); err != nil {
+		fmt.Printf("填充统计数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n统计数据填充完成!")
+}
+
+// runFinance 填充财务数据
+func runFinance(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充财务数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空财务数据...")
+		seeder := NewFinanceSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空财务数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewFinanceSeeder(db, cfg)
+	if err := seeder.SeedFinanceData(); err != nil {
+		fmt.Printf("填充财务数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n财务数据填充完成!")
 }
