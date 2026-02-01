@@ -138,6 +138,8 @@ func InitBookstoreRouter(
 				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
 				// 注意：GetSimilarBooks 已移至 bookstoreApiHandler，符合 P1 设计文档
 				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
+				// ✅ 浏览量记录API（公开接口，不需要认证）
+				public.POST("/books/:id/view", bookDetailApiHandler.IncrementViewCount)
 			}
 
 			// ✅ 统计API（当StatisticsService可用时）
@@ -167,9 +169,6 @@ func InitBookstoreRouter(
 	authenticated := bookstoreGroup.Group("")
 	authenticated.Use(auth.JWTAuth())
 	{
-		// ✅ 书籍点击记录（认证接口 - 关联到用户）
-		authenticated.POST("/books/:id/view", bookstoreApiHandler.IncrementBookView)
-
 		// ✅ 评分API（当RatingAPI可用时）
 		if ratingApiHandler != nil {
 			authenticated.GET("/books/:id/rating", ratingApiHandler.GetBookRating)

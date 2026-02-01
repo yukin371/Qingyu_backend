@@ -32,6 +32,11 @@ go build -o seeder .
 | `social` | 填充社交数据（评论、点赞、收藏、关注） | users, books |
 | `wallets` | 填充钱包和交易数据 | users |
 | `rankings` | 填充榜单数据 | books |
+| `reader` | 填充阅读数据（阅读历史、书架、订阅） | users, books |
+| `notifications` | 填充通知数据 | users |
+| `messaging` | 填充消息数据（私信、对话、公告） | users |
+| `stats` | 填充统计数据（书籍、章节统计） | books, chapters |
+| `finance` | 填充财务数据（作者收益、会员） | users, books |
 | `ai-quota` | 激活用户AI配额 | users |
 | `import` | 从JSON文件导入小说数据 | - |
 | `clean` | 清空所有测试数据 | - |
@@ -90,6 +95,21 @@ go build -o seeder .
 
 # 填充榜单数据（需要先有书籍）
 ./seeder rankings
+
+# 填充阅读数据（需要先有用户和书籍）
+./seeder reader
+
+# 填充通知数据（需要先有用户）
+./seeder notifications
+
+# 填充消息数据（需要先有用户）
+./seeder messaging
+
+# 填充统计数据（需要先有书籍和章节）
+./seeder stats
+
+# 填充财务数据（需要先有用户和书籍）
+./seeder finance
 
 # 激活AI配额（需要先有用户）
 ./seeder ai-quota
@@ -175,6 +195,56 @@ go build -o seeder .
 - VIP用户：100000
 - 普通用户：10000
 
+### 阅读数据 (reader)
+- **阅读历史**: 每个用户 5-30 条阅读记录
+- **书架**: 每个用户 5-20 本收藏书籍
+- **订阅**: 每个用户 3-15 个订阅作者
+- **阅读进度**: 自动生成章节阅读进度
+
+### 通知数据 (notifications)
+- **评论通知**: 40% - 评论作品相关通知
+- **点赞通知**: 30% - 点赞作品相关通知
+- **关注通知**: 20% - 新粉丝通知
+- **系统通知**: 10% - 平台公告和系统消息
+- 每个用户 20-50 条通知
+- 70% 已读，30% 未读
+
+### 消息数据 (messaging)
+- **私信**: 用户间私信消息
+  - 40% 用户有私信记录
+  - 每个用户 3-10 个对话
+  - 每个对话 2-20 条消息
+  - 60% 已读，40% 未读
+- **公告**: 平台公告
+  - 3-5 条系统公告
+  - 2-3 条活动公告
+  - 1-2 条更新公告
+- 消息类型：文本(70%)、图片(15%)、系统(10%)、其他(5%)
+
+### 统计数据 (stats)
+- **书籍统计**: 每本书的浏览、阅读、收藏、分享数据
+  - 根据书籍热度生成合理分布
+  - 高热度书籍：5000-20000 浏览
+  - 中热度书籍：1000-5000 浏览
+  - 低热度书籍：100-1000 浏览
+- **章节统计**: 每章的详细统计
+  - 平均停留时间：30-180 秒
+  - 跳章率：10%-40%
+  - 完读率：40%-90%
+
+### 财务数据 (finance)
+- **作者收益**: 每本书的收益记录
+  - 订阅收益：60%
+  - 打赏收益：25%
+  - 广告收益：10%
+  - 其他收益：5%
+  - 月度收益记录
+- **会员**: 用户会员信息
+  - 20% 用户为VIP会员
+  - 月度会员：60%
+  - 年度会员：30%
+  - 终身会员：10%
+
 ## 配置
 
 默认配置：
@@ -193,13 +263,20 @@ cmd/seeder/
 ├── generators/              # 数据生成器
 │   ├── base.go             # 基础生成器
 │   ├── user.go             # 用户生成器
+│   ├── reader.go           # 阅读数据生成器
 │   └── book.go             # 书籍生成器
 ├── utils/                   # 工具函数
 │   ├── mongodb.go          # MongoDB 操作
 │   └── verify.go           # 数据验证
 ├── models/                  # 数据模型
 │   ├── user.go
-│   └── book.go
+│   ├── book.go
+│   ├── reader.go           # 阅读相关模型
+│   ├── messaging.go        # 消息相关模型
+│   ├── notification.go     # 通知相关模型
+│   ├── writer.go           # 作者相关模型
+│   ├── finance.go          # 财务相关模型
+│   └── stats.go            # 统计相关模型
 ├── seeder_*.go              # 数据填充器
 │   ├── seeder_users.go
 │   ├── seeder_bookstore.go
@@ -207,6 +284,11 @@ cmd/seeder/
 │   ├── seeder_social.go
 │   ├── seeder_wallets.go
 │   ├── seeder_rankings.go
+│   ├── seeder_reader.go
+│   ├── seeder_notification.go
+│   ├── seeder_messaging.go
+│   ├── seeder_stats.go
+│   ├── seeder_finance.go
 │   ├── seeder_ai_quota.go
 │   └── seeder_import.go
 └── README.md
@@ -240,6 +322,11 @@ sudo systemctl start mongod  # Linux
 - `social` 需要先运行 `users` 和 `bookstore`
 - `wallets` 需要先运行 `users`
 - `rankings` 需要先运行 `bookstore`
+- `reader` 需要先运行 `users` 和 `bookstore`
+- `notifications` 需要先运行 `users`
+- `messaging` 需要先运行 `users`
+- `stats` 需要先运行 `bookstore` 和 `chapters`
+- `finance` 需要先运行 `users` 和 `bookstore`
 - `ai-quota` 需要先运行 `users`
 
 ## 完整初始化流程
@@ -257,6 +344,11 @@ go build -o seeder .
 ./seeder social
 ./seeder wallets
 ./seeder rankings
+./seeder reader
+./seeder notifications
+./seeder messaging
+./seeder stats
+./seeder finance
 ./seeder ai-quota
 
 # 4. 验证数据

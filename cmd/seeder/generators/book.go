@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"Qingyu_backend/cmd/seeder/models"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BookGenerator 书籍数据生成器
@@ -86,7 +86,7 @@ func (g *BookGenerator) GenerateBook(category string) models.Book {
 	introduction := g.faker.Paragraph(2, 4, 30, " ")
 
 	// 生成封面
-	cover := "/images/covers/" + uuid.New().String() + ".jpg"
+	cover := "/images/covers/" + primitive.NewObjectID().Hex() + ".jpg"
 
 	// 生成分类和标签
 	categories := []string{category}
@@ -99,7 +99,7 @@ func (g *BookGenerator) GenerateBook(category string) models.Book {
 	}
 
 	return models.Book{
-		ID:            uuid.New().String(),
+		ID:            primitive.NewObjectID().Hex(),
 		Title:         title,
 		Author:        author,
 		Introduction:  introduction,

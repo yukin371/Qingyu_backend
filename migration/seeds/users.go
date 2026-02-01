@@ -43,7 +43,7 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 			Username:   "author1",
 			Email:      "author1@qingyu.com",
 			Phone:      "13800138001",
-			Roles:      []string{"author"},
+			Roles:      []string{"reader", "author"},
 		},
 		{
 			BaseEntity: base,

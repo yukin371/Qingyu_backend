@@ -40,7 +40,7 @@ func (s *RankingSeeder) SeedRankings() error {
 	defer cursor.Close(ctx)
 
 	var books []struct {
-		ID        primitive.ObjectID `bson:"_id"`
+		ID        string `bson:"_id"`
 		Title     string             `bson:"title"`
 		Rating    float64            `bson:"rating"`
 		ViewCount int64              `bson:"view_count"`
@@ -100,9 +100,15 @@ func (s *RankingSeeder) SeedRankings() error {
 			viewCount := int64((maxRank - i) * 10000)
 			likeCount := int64((maxRank - i) * 500)
 
+			// 转换字符串ID为ObjectID
+			bookID, err := primitive.ObjectIDFromHex(book.ID)
+			if err != nil {
+				return fmt.Errorf("转换书籍ID失败: %w", err)
+			}
+
 			rankings = append(rankings, bson.M{
 				"_id":         primitive.NewObjectID(),
-				"book_id":     book.ID,
+				"book_id":     bookID,
 				"type":        rankingType.Type,
 				"rank":        i + 1,
 				"score":       score,
@@ -138,19 +144,19 @@ func (s *RankingSeeder) SeedRankings() error {
 
 // sortBooksForRanking 根据榜单类型排序书籍
 func (s *RankingSeeder) sortBooksForRanking(books []struct {
-	ID        primitive.ObjectID `bson:"_id"`
+	ID        string `bson:"_id"`
 	Title     string             `bson:"title"`
 	Rating    float64            `bson:"rating"`
 	ViewCount int64              `bson:"view_count"`
 }, rankingType string) []struct {
-	ID        primitive.ObjectID `bson:"_id"`
+	ID        string `bson:"_id"`
 	Title     string             `bson:"title"`
 	Rating    float64            `bson:"rating"`
 	ViewCount int64              `bson:"view_count"`
 } {
 	// 简单排序：按评分和浏览量排序
 	sorted := make([]struct {
-		ID        primitive.ObjectID `bson:"_id"`
+		ID        string `bson:"_id"`
 		Title     string             `bson:"title"`
 		Rating    float64            `bson:"rating"`
 		ViewCount int64              `bson:"view_count"`
@@ -171,7 +177,7 @@ func (s *RankingSeeder) sortBooksForRanking(books []struct {
 
 // calculateScore 计算榜单分数
 func (s *RankingSeeder) calculateScore(book struct {
-	ID        primitive.ObjectID `bson:"_id"`
+	ID        string `bson:"_id"`
 	Title     string             `bson:"title"`
 	Rating    float64            `bson:"rating"`
 	ViewCount int64              `bson:"view_count"`

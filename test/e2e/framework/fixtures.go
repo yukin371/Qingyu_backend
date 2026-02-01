@@ -287,3 +287,46 @@ func (f *Fixtures) CreateChapters(bookID string, count int) []*bookstore.Chapter
 	return chapters
 }
 
+// CreateAuthorUser 创建作者用户（带reader和author角色）
+func (f *Fixtures) CreateAuthorUser(opts ...UserOption) *users.User {
+	userID := primitive.NewObjectID()
+	testPassword := "Test1234"
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.DefaultCost)
+	require.NoError(f.env.T, err, "密码哈希失败")
+
+	user := &users.User{
+		Username: "e2e_test_author_" + userID.Hex(),
+		Email:    "e2e_test_author_" + userID.Hex() + "@example.com",
+		Password: string(hashedPassword),
+		VIPLevel: 0,
+		Status:   users.UserStatusActive,
+		Roles:    []string{"reader", "author"},
+	}
+	user.ID = userID
+
+	// 应用可选参数
+	for _, opt := range opts {
+		opt(user)
+	}
+
+	// 清理可能存在的同名用户（从之前的测试运行遗留）
+	userRepository := userRepo.NewMongoUserRepository(global.DB)
+	existingUser, _ := userRepository.GetByUsername(context.Background(), user.Username)
+	if existingUser != nil && existingUser.ID != user.ID {
+		_ = userRepository.Delete(context.Background(), existingUser.ID.Hex())
+	}
+
+	err = userRepository.Create(context.Background(), user)
+	require.NoError(f.env.T, err, "创建作者用户失败")
+
+	// 验证可以通过用户名找到刚创建的用户
+	userByUsername, err := userRepository.GetByUsername(context.Background(), user.Username)
+	require.NoError(f.env.T, err, "通过用户名查找用户失败")
+	require.Equal(f.env.T, user.ID, userByUsername.ID, "找到的用户ID不匹配")
+	require.True(f.env.T, userByUsername.ValidatePassword(testPassword), "用户密码验证失败")
+
+	f.env.LogSuccess("创建作者用户: %s (角色: %v)", user.Username, user.Roles)
+
+	return user
+}
+

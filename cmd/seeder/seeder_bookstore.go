@@ -12,6 +12,7 @@ import (
 	"Qingyu_backend/cmd/seeder/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BookstoreSeeder 书城数据填充器
@@ -80,33 +81,33 @@ func (s *BookstoreSeeder) SeedBanners() error {
 
 	now := time.Now()
 
-	// 定义 banners
+	// 定义 banners - 字段名与Banner模型匹配
 	banners := []interface{}{
 		map[string]interface{}{
-			"_id":         "banner_new_books",
+			"_id":         primitive.NewObjectID(),
 			"title":       "新书推荐",
 			"description": "最新上架的精品好书",
 			"image":       "/images/banners/new_books.jpg",
-			"link":        "/books/new",
-			"type":        "new_books",
-			"priority":    1,
+			"target":      "/books/new",
+			"target_type": "url",
+			"sort_order":  1,
 			"is_active":   true,
-			"start_at":    now,
-			"end_at":      now.Add(30 * 24 * time.Hour),
+			"start_time":  now,
+			"end_time":    now.Add(30 * 24 * time.Hour),
 			"created_at":  now,
 			"updated_at":  now,
 		},
 		map[string]interface{}{
-			"_id":         "banner_free_books",
+			"_id":         primitive.NewObjectID(),
 			"title":       "限时免费",
 			"description": "限时免费阅读热门作品",
 			"image":       "/images/banners/free_books.jpg",
-			"link":        "/books/free",
-			"type":        "free_books",
-			"priority":    2,
+			"target":      "/books/free",
+			"target_type": "url",
+			"sort_order":  2,
 			"is_active":   true,
-			"start_at":    now,
-			"end_at":      now.Add(7 * 24 * time.Hour),
+			"start_time":  now,
+			"end_time":    now.Add(7 * 24 * time.Hour),
 			"created_at":  now,
 			"updated_at":  now,
 		},

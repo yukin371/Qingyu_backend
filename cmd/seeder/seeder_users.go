@@ -77,17 +77,34 @@ func (s *UserSeeder) SeedGeneratedUsers() error {
 
 	var allUsers []models.User
 
+	// 计算各角色用户数量，确保不出现负数
+	normalCount := scale.Users - scale.Authors - 100
+	if normalCount < 0 {
+		normalCount = 0
+	}
+	
 	// 生成普通用户
-	normalUsers := s.gen.GenerateUsers(scale.Users-scale.Authors-100, "reader")
-	allUsers = append(allUsers, normalUsers...)
+	if normalCount > 0 {
+		normalUsers := s.gen.GenerateUsers(normalCount, "reader")
+		allUsers = append(allUsers, normalUsers...)
+	}
 
 	// 生成作者用户
 	authors := s.gen.GenerateUsers(scale.Authors, "author")
 	allUsers = append(allUsers, authors...)
 
 	// 生成 VIP 用户
-	vipUsers := s.gen.GenerateUsers(100, "vip")
-	allUsers = append(allUsers, vipUsers...)
+	vipCount := 100
+	if scale.Users < scale.Authors+vipCount {
+		vipCount = scale.Users - scale.Authors
+		if vipCount < 0 {
+			vipCount = 0
+		}
+	}
+	if vipCount > 0 {
+		vipUsers := s.gen.GenerateUsers(vipCount, "vip")
+		allUsers = append(allUsers, vipUsers...)
+	}
 
 	return s.inserter.InsertMany(context.Background(), allUsers)
 }

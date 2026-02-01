@@ -2,10 +2,7 @@
 package utils
 
 import (
-	"context"
 	"testing"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func TestBulkInserter_InsertMany(t *testing.T) {

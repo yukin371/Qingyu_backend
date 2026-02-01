@@ -53,7 +53,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	book, err := api.service.GetBookDetailByID(c.Request.Context(), id.Hex())
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			response.SuccessWithMessage(c, "书籍不存在", nil)
+			response.NotFound(c, "书籍不存在")
 			return
 		}
 		response.InternalError(c, err)

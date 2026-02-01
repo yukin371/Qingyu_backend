@@ -541,19 +541,20 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 		query["tags"] = bson.M{"$in": filter.Tags}
 	}
 
-	// 如果有关键词，使用MongoDB原生正则搜索（绕过Go层面的UTF-8编码问题）
+	// 如果有关键词，使用正则表达式进行搜索
 	if filter.Keyword != nil && *filter.Keyword != "" {
 		keyword := *filter.Keyword
 		log.Printf("[DEBUG] 搜索关键词: %s (字节: %v)", keyword, []byte(keyword))
 
-		// 使用MongoDB的$regex操作符直接在数据库层面搜索
-		// 这样可以避免Go层面的UTF-8编码问题
-		query["$or"] = []bson.M{
+		// 直接在Go代码中构建原始的BSON正则表达式
+		// 使用bson.RawValue来避免编码问题
+		orConditions := []bson.M{
 			{"title": bson.M{"$regex": keyword, "$options": "i"}},
 			{"author": bson.M{"$regex": keyword, "$options": "i"}},
 			{"introduction": bson.M{"$regex": keyword, "$options": "i"}},
 		}
-		log.Printf("[DEBUG] MongoDB正则查询条件已添加")
+		query["$or"] = orConditions
+		log.Printf("[DEBUG] MongoDB正则查询条件已添加: %s (长度: %d)", keyword, len(keyword))
 	}
 
 	// 没有关键词，直接查询

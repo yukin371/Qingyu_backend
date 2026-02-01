@@ -76,18 +76,20 @@ func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 // GetBooks 获取书籍列表
 //
 //	@Summary		获取书籍列表
-//	@Description	获取所有书籍列表，支持分页
+//	@Description	获取所有书籍列表，支持分页和关键词搜索
 //	@Tags			书籍
 //	@Accept			json
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)
 //	@Param			size	query		int	false	"每页数量"	default(20)
+//	@Param			q		query		string	false	"搜索关键词（搜索标题、作者、标签）"
 //	@Success 200 {object} PaginatedResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/books [get]
 func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	keyword := c.Query("q")
 
 	if page < 1 {
 		page = 1
@@ -96,7 +98,25 @@ func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetAllBooks(c.Request.Context(), page, size)
+	var books []*bookstore2.Book
+	var total int64
+	var err error
+
+	// 如果提供了搜索关键词，使用搜索功能
+	if keyword != "" {
+		filter := &bookstore2.BookFilter{
+			Keyword:   &keyword,
+			SortBy:    "created_at",
+			SortOrder: "desc",
+			Limit:     size,
+			Offset:    (page - 1) * size,
+		}
+		books, total, err = api.service.SearchBooksWithFilter(c.Request.Context(), filter)
+	} else {
+		// 否则返回所有书籍（分页）
+		books, total, err = api.service.GetAllBooks(c.Request.Context(), page, size)
+	}
+
 	if err != nil {
 		response.InternalError(c, err)
 		return

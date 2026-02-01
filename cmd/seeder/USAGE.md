@@ -62,7 +62,116 @@ go build -o seeder.exe .
 
 ### 扩展数据命令
 
-### 4. chapters - 填充章节数据
+### 4. reader - 填充阅读数据
+
+填充阅读历史、书架、订阅、阅读进度等数据。
+
+```bash
+# 填充阅读数据
+./seeder.exe reader
+
+# 填充前清空阅读数据
+./seeder.exe reader -c
+```
+
+**生成的数据：**
+- 阅读历史：每个用户 5-30 条阅读记录
+- 书架：每个用户 5-20 本收藏书籍
+- 订阅：每个用户 3-15 个订阅作者
+- 阅读进度：自动生成章节阅读进度
+- 书签：30% 用户有书签，每个用户 1-10 个书签
+- 批注：20% 用户有批注，每个用户 1-20 条批注
+
+### 5. notifications - 填充通知数据
+
+填充用户通知消息。
+
+```bash
+# 填充通知数据
+./seeder.exe notifications
+
+# 填充前清空通知数据
+./seeder.exe notifications -c
+```
+
+**生成的数据：**
+- 评论通知：40% - 评论作品相关通知
+- 点赞通知：30% - 点赞作品相关通知
+- 关注通知：20% - 新粉丝通知
+- 系统通知：10% - 平台公告和系统消息
+- 每个用户 20-50 条通知
+- 70% 已读，30% 未读
+
+### 6. messaging - 填充消息数据
+
+填充私信和公告数据。
+
+```bash
+# 填充消息数据
+./seeder.exe messaging
+
+# 填充前清空消息数据
+./seeder.exe messaging -c
+```
+
+**生成的数据：**
+- 私信：40% 用户有私信记录
+  - 每个用户 3-10 个对话
+  - 每个对话 2-20 条消息
+  - 60% 已读，40% 未读
+- 公告：3-5 条系统公告
+  - 2-3 条活动公告
+  - 1-2 条更新公告
+- 消息类型：文本(70%)、图片(15%)、系统(10%)、其他(5%)
+
+### 7. stats - 填充统计数据
+
+填充书籍和章节统计数据。
+
+```bash
+# 填充统计数据
+./seeder.exe stats
+
+# 填充前清空统计数据
+./seeder.exe stats -c
+```
+
+**生成的数据：**
+- 书籍统计：每本书的浏览、阅读、收藏、分享数据
+  - 高热度书籍：5000-20000 浏览
+  - 中热度书籍：1000-5000 浏览
+  - 低热度书籍：100-1000 浏览
+- 章节统计：每章的详细统计
+  - 平均停留时间：30-180 秒
+  - 跳章率：10%-40%
+  - 完读率：40%-90%
+
+### 8. finance - 填充财务数据
+
+填充作者收益和会员数据。
+
+```bash
+# 填充财务数据
+./seeder.exe finance
+
+# 填充前清空财务数据
+./seeder.exe finance -c
+```
+
+**生成的数据：**
+- 作者收益：每本书的收益记录
+  - 订阅收益：60%
+  - 打赏收益：25%
+  - 广告收益：10%
+  - 其他收益：5%
+  - 月度收益记录
+- 会员：用户会员信息
+  - 20% 用户为VIP会员
+  - 月度会员：60%
+  - 年度会员：30%
+  - 终身会员：10%
+
+### 9. chapters - 填充章节数据
 
 为现有书籍生成章节数据和内容。
 
@@ -74,7 +183,7 @@ go build -o seeder.exe .
 ./seeder.exe chapters -c
 ```
 
-### 5. social - 填充社交数据
+### 10. social - 填充社交数据
 
 填充评论、点赞、收藏、关注等社交数据。
 
@@ -83,7 +192,7 @@ go build -o seeder.exe .
 ./seeder.exe social
 ```
 
-### 6. wallets - 填充钱包数据
+### 11. wallets - 填充钱包数据
 
 填充用户钱包和交易记录数据。
 
@@ -92,7 +201,7 @@ go build -o seeder.exe .
 ./seeder.exe wallets
 ```
 
-### 7. rankings - 填充榜单数据
+### 12. rankings - 填充榜单数据
 
 填充各种榜单数据（实时榜、日榜、周榜、月榜等）。
 
@@ -101,7 +210,7 @@ go build -o seeder.exe .
 ./seeder.exe rankings
 ```
 
-### 8. ai-quota - 激活AI配额
+### 13. ai-quota - 激活AI配额
 
 为所有用户激活AI写作配额。
 
@@ -110,7 +219,7 @@ go build -o seeder.exe .
 ./seeder.exe ai-quota
 ```
 
-### 9. import - 导入小说数据
+### 14. import - 导入小说数据
 
 从JSON文件导入大量小说数据。
 
@@ -124,7 +233,7 @@ go build -o seeder.exe .
 
 ### 管理命令
 
-### 10. clean - 清空所有测试数据
+### 15. clean - 清空所有测试数据
 
 清空数据库中的所有测试数据。
 
@@ -142,7 +251,7 @@ go build -o seeder.exe .
 # 操作已取消
 ```
 
-### 11. verify - 验证数据完整性
+### 16. verify - 验证数据完整性
 
 验证数据库中的测试数据是否完整和正确。
 
@@ -165,7 +274,7 @@ go build -o seeder.exe .
 # 总计: 3/3 验证通过
 ```
 
-### 12. test - 填充E2E测试数据
+### 17. test - 填充E2E测试数据
 
 填充E2E测试所需的特定数据。
 
@@ -201,6 +310,11 @@ go build -o seeder.exe .
 | social | users, bookstore |
 | wallets | users |
 | rankings | bookstore |
+| reader | users, bookstore |
+| notifications | users |
+| messaging | users |
+| stats | bookstore, chapters |
+| finance | users, bookstore |
 | ai-quota | users |
 
 ## 验证功能详情
@@ -232,6 +346,11 @@ echo "YES" | ./seeder.exe clean
 ./seeder.exe social
 ./seeder.exe wallets
 ./seeder.exe rankings
+./seeder.exe reader
+./seeder.exe notifications
+./seeder.exe messaging
+./seeder.exe stats
+./seeder.exe finance
 ./seeder.exe ai-quota
 ```
 
@@ -312,13 +431,21 @@ batch_size: 100
 # 查看子命令帮助
 ./seeder.exe all --help
 ./seeder.exe users --help
+./seeder.exe bookstore --help
+./seeder.exe reader --help
+./seeder.exe notifications --help
+./seeder.exe messaging --help
+./seeder.exe stats --help
+./seeder.exe finance --help
 ./seeder.exe chapters --help
 ./seeder.exe social --help
 ./seeder.exe wallets --help
 ./seeder.exe rankings --help
 ./seeder.exe ai-quota --help
 ./seeder.exe import --help
+./seeder.exe clean --help
 ./seeder.exe verify --help
+./seeder.exe test --help
 ```
 
 ## 迁移指南

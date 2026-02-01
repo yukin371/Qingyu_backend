@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -324,35 +325,113 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		return nil, 0, errors.New("filter is required")
 	}
 
-	// 不设置默认状态过滤器，让搜索查找所有状态的书籍
-	// 如果需要只搜索已发布的书籍，可以在API层或请求参数中指定
+	// 如果有关键词，先在数据库中获取所有符合其他条件的书籍，然后在Go代码中过滤关键词
+	// 这样可以避免MongoDB正则表达式的UTF-8编码问题
+	var books []*bookstore2.Book
+	var err error
 
-	// 执行搜索
-	books, err := s.bookRepo.SearchWithFilter(ctx, filter)
+	if filter.Keyword != nil && *filter.Keyword != "" {
+		// 创建一个没有关键词的过滤器，并设置为不分页
+		filterWithoutKeyword := *filter
+		filterWithoutKeyword.Keyword = nil
+		filterWithoutKeyword.Limit = 0  // 不限制数量
+		filterWithoutKeyword.Offset = 0
+
+		// 获取所有符合其他条件的书籍
+		allBooks, err := s.bookRepo.SearchWithFilter(ctx, &filterWithoutKeyword)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to search books: %w", err)
+		}
+
+		fmt.Printf("[DEBUG] 获取到 %d 本书籍，搜索关键词: %s\n", len(allBooks), *filter.Keyword)
+
+		// 在Go代码中过滤关键词和其他条件
+		keyword := *filter.Keyword  // 不使用ToLower，因为中文没有大小写
+		filteredBooks := make([]*bookstore2.Book, 0)
+		matchCount := 0
+		for _, book := range allBooks {
+			// 检查关键词匹配（不区分大小写）
+			keywordMatch := strings.Contains(strings.ToLower(book.Title), strings.ToLower(keyword)) ||
+				strings.Contains(strings.ToLower(book.Author), strings.ToLower(keyword)) ||
+				strings.Contains(strings.ToLower(book.Introduction), strings.ToLower(keyword))
+
+			if keywordMatch {
+				matchCount++
+				fmt.Printf("[DEBUG] 匹配到书籍: %s (作者: %s)\n", book.Title, book.Author)
+			}
+
+			if !keywordMatch {
+				continue
+			}
+
+			// 检查其他条件
+			if filter.Status != nil && book.Status != *filter.Status {
+				continue
+			}
+			if filter.CategoryID != nil {
+				found := false
+				for _, catID := range book.CategoryIDs {
+					if catID.Hex() == *filter.CategoryID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue
+				}
+			}
+			if filter.Author != nil && book.Author != *filter.Author {
+				continue
+			}
+			if len(filter.Tags) > 0 {
+				tagMatch := false
+				for _, tag := range filter.Tags {
+					for _, bookTag := range book.Tags {
+						if bookTag == tag {
+							tagMatch = true
+							break
+						}
+					}
+					if tagMatch {
+						break
+					}
+				}
+				if !tagMatch {
+					continue
+				}
+			}
+
+			filteredBooks = append(filteredBooks, book)
+		}
+
+		// 应用排序
+		// TODO: 实现排序逻辑
+
+		// 应用分页
+		total := int64(len(filteredBooks))
+		start := filter.Offset
+		end := start + filter.Limit
+		if end > len(filteredBooks) {
+			end = len(filteredBooks)
+		}
+		if start >= len(filteredBooks) {
+			return []*bookstore2.Book{}, total, nil
+		}
+
+		books = filteredBooks[start:end]
+		return books, total, nil
+	}
+
+	// 没有关键词，直接查询
+	books, err = s.bookRepo.SearchWithFilter(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to search books: %w", err)
 	}
 
 	// 计算总数
-	// 如果有关键词，CountByFilter会使用MongoDB的$indexOfCP，对中文支持不佳
-	// 因此当有关键词时，使用SearchWithFilter返回的结果数量作为总数
-	var total int64
-	if filter.Keyword != nil && *filter.Keyword != "" {
-		// 先获取所有匹配的书籍（不分页）来计算总数
-		totalFilter := *filter
-		totalFilter.Limit = 0 // 不限制数量
-		totalFilter.Offset = 0
-		allBooks, err := s.bookRepo.SearchWithFilter(ctx, &totalFilter)
-		if err != nil {
-			return books, int64(len(books)), nil // 降级：使用当前页数量
-		}
-		total = int64(len(allBooks))
-	} else {
-		// 没有关键词时，使用CountByFilter
-		total, err = s.bookRepo.CountByFilter(ctx, filter)
-		if err != nil {
-			return books, int64(len(books)), nil // 降级：使用当前页数量
-		}
+	total, err := s.bookRepo.CountByFilter(ctx, filter)
+	if err != nil {
+		return books, int64(len(books)), nil // 降级：使用当前页数量
 	}
 
 	return books, total, nil
