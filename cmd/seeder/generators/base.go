@@ -3,9 +3,11 @@ package generators
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/google/uuid"
 )
 
 // BaseGenerator 基础数据生成器
@@ -86,4 +88,22 @@ func (g *BaseGenerator) Email() string {
 // PhoneNumber 生成随机手机号码
 func (g *BaseGenerator) PhoneNumber() string {
 	return g.faker.Phone()
+}
+
+// ID 生成唯一ID
+func (g *BaseGenerator) ID() string {
+	return uuid.New().String()
+}
+
+// ChineseName 生成中文姓名
+func (g *BaseGenerator) ChineseName() string {
+	surnames := []string{"王", "李", "张", "刘", "陈", "杨", "赵", "黄", "周", "吴"}
+	names := []string{"伟", "芳", "娜", "秀英", "敏", "静", "丽", "强", "磊", "军"}
+	return surnames[rand.Intn(len(surnames))] + names[rand.Intn(len(names))]
+}
+
+// Device 生成设备类型
+func (g *BaseGenerator) Device() string {
+	devices := []string{"mobile", "tablet", "desktop"}
+	return devices[rand.Intn(len(devices))]
 }
