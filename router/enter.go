@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
@@ -15,38 +16,37 @@ import (
 	readerRouter "Qingyu_backend/router/reader"
 	readingstatsRouter "Qingyu_backend/router/reading-stats"
 	recommendationRouter "Qingyu_backend/router/recommendation"
-	searchRouter "Qingyu_backend/api/v1/search"
 	sharedRouter "Qingyu_backend/router/shared"
 	socialRouter "Qingyu_backend/router/social"
 	systemRouter "Qingyu_backend/router/system"
 	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
 
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
-	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service"
-	"Qingyu_backend/service/container"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
-	sharedService "Qingyu_backend/service/shared"
+	"Qingyu_backend/service/container"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
+	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
 
+	versionAPI "Qingyu_backend/api/v1"
 	financeApi "Qingyu_backend/api/v1/finance"
 	messagesApi "Qingyu_backend/api/v1/messages"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
-	versionAPI "Qingyu_backend/api/v1"
-	syncService "Qingyu_backend/pkg/sync"
-	"Qingyu_backend/pkg/cache"
-	readerservice "Qingyu_backend/service/reader"
-	messagingService "Qingyu_backend/service/messaging"
-	socialService "Qingyu_backend/service/social"
 	modelsMessaging "Qingyu_backend/models/messaging"
+	"Qingyu_backend/pkg/cache"
+	syncService "Qingyu_backend/pkg/sync"
+	messagingService "Qingyu_backend/service/messaging"
+	readerservice "Qingyu_backend/service/reader"
+	socialService "Qingyu_backend/service/social"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic/v7"
@@ -493,6 +493,16 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/user-management/sms-notifications (短信通知设置)")
 	}
 
+	// ============ 注册WebSocket路由 ============
+	// 获取通知WebSocket Hub
+	notificationWSHub, notificationWSErr := serviceContainer.GetNotificationWSHub()
+	if notificationWSErr == nil && notificationWSHub != nil {
+		r.GET("/ws/notifications", notificationWSHub.HandleWebSocket)
+		logger.Info("✓ WebSocket路由已注册: /ws/notifications (通知推送)")
+	} else {
+		logger.Warn("NotificationWSHub未配置", zap.Error(notificationWSErr))
+	}
+
 	// ============ 注册写作端路由 ============
 	writerRouter.RegisterWriterRoutes(v1, searchSvc)
 	logger.Info("✓ 写作端路由已注册到: /api/v1/writer/")
@@ -890,8 +900,8 @@ func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searche
 	// 构建 SearchConfig
 	searchConfig := &searchService.SearchConfig{
 		ES: searchService.ESConfig{
-			Enabled:    true,
-			URL:        esURL,
+			Enabled:     true,
+			URL:         esURL,
 			IndexPrefix: esIndexPrefix,
 			GrayScale: searchService.GrayScaleConfig{
 				Enabled: grayscaleEnabled == "true",

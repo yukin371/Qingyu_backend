@@ -119,7 +119,8 @@ type ServiceContainer struct {
 	auditService *auditSvc.ContentAuditService
 
 	// WebSocket Hub
-	messagingWSHub *websocketHub.MessagingWSHub
+	messagingWSHub    *websocketHub.MessagingWSHub
+	notificationWSHub *websocketHub.WSHub
 
 	// 存储相关具体实现（用于API层）
 	storageServiceImpl *storage.StorageServiceImpl
@@ -415,6 +416,14 @@ func (c *ServiceContainer) GetMessagingWSHub() (*websocketHub.MessagingWSHub, er
 		return nil, fmt.Errorf("MessagingWSHub未初始化")
 	}
 	return c.messagingWSHub, nil
+}
+
+// GetNotificationWSHub 获取通知WebSocket Hub
+func (c *ServiceContainer) GetNotificationWSHub() (*websocketHub.WSHub, error) {
+	if c.notificationWSHub == nil {
+		return nil, fmt.Errorf("NotificationWSHub未初始化")
+	}
+	return c.notificationWSHub, nil
 }
 
 // GetMembershipService 获取会员服务
@@ -874,34 +883,34 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 
 	// 5.2.1 创建 OAuthService（可选，需要配置）
-		// 初始化 OAuth 配置管理器
-		oauthConfigMgr := config.NewOAuthConfigManager()
-		oauthConfigMgr.LoadFromEnv()
-		
-		// 尝试从全局配置加载
-		if config.GlobalConfig != nil {
-			oauthConfigMgr.LoadFromConfig(config.GlobalConfig)
-		}
-		
-		oauthConfigs := oauthConfigMgr.GetConfigs()
-		enabledProviders := oauthConfigMgr.GetEnabledProviders()
+	// 初始化 OAuth 配置管理器
+	oauthConfigMgr := config.NewOAuthConfigManager()
+	oauthConfigMgr.LoadFromEnv()
 
-		if len(oauthConfigs) > 0 && len(enabledProviders) > 0 {
-			// 如果有OAuth配置，创建OAuthService
-			logger, err := zap.NewProduction()
-			if err == nil {
-				oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
-				if err != nil {
-					fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
-				} else {
-					c.oauthService = oauthSvc
-					fmt.Printf("  ✓ OAuthService初始化完成 (启用的提供商: %v)\n", enabledProviders)
-				}
+	// 尝试从全局配置加载
+	if config.GlobalConfig != nil {
+		oauthConfigMgr.LoadFromConfig(config.GlobalConfig)
+	}
+
+	oauthConfigs := oauthConfigMgr.GetConfigs()
+	enabledProviders := oauthConfigMgr.GetEnabledProviders()
+
+	if len(oauthConfigs) > 0 && len(enabledProviders) > 0 {
+		// 如果有OAuth配置，创建OAuthService
+		logger, err := zap.NewProduction()
+		if err == nil {
+			oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
+			if err != nil {
+				fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
+			} else {
+				c.oauthService = oauthSvc
+				fmt.Printf("  ✓ OAuthService初始化完成 (启用的提供商: %v)\n", enabledProviders)
 			}
-		} else {
-			fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
-			fmt.Println("    提示: 设置环境变量 GOOGLE_CLIENT_ID、GITHUB_CLIENT_ID 等来启用OAuth登录")
 		}
+	} else {
+		fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
+		fmt.Println("    提示: 设置环境变量 GOOGLE_CLIENT_ID、GITHUB_CLIENT_ID 等来启用OAuth登录")
+	}
 
 	// 5.3 创建 RecommendationService
 	if c.redisClient != nil {
@@ -1014,7 +1023,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	templateRepo := mongoNotification.NewNotificationTemplateRepository(c.mongoDB)
 
 	// 初始化通知WebSocket Hub（传入JWT服务）
-	notificationWSHub := websocketHub.NewWSHub(jwtService)
+	c.notificationWSHub = websocketHub.NewWSHub(jwtService)
+	notificationWSHub := c.notificationWSHub // 创建本地引用以便传递给NotificationService
 
 	// TODO: 初始化EmailService
 	// 暂时传入nil，后续需要完善
@@ -1044,6 +1054,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 	}
 	fmt.Println("  ✓ NotificationService初始化完成")
+	fmt.Println("  ✓ NotificationWSHub初始化完成")
 
 	// 5.9.1 初始化消息WebSocket Hub（传入JWT服务）
 	c.messagingWSHub = websocketHub.NewMessagingWSHub(jwtService)
@@ -1446,4 +1457,3 @@ func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
 	// 执行预热
 	return warmer.WarmUpCache(ctx)
 }
-
