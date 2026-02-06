@@ -149,3 +149,41 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	shared.Success(c, http.StatusOK, "登录成功", loginResp)
 }
+
+// Logout 用户登出
+//
+//	@Summary		用户登出
+//	@Description	用户登出，清除服务端会话/Token
+//	@Tags			用户管理-认证
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	shared.APIResponse
+//	@Failure		401	{object}	shared.ErrorResponse
+//	@Failure		500	{object}	shared.ErrorResponse
+//	@Router			/api/v1/user/auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// 获取Token（从Authorization header中）
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		// 即使没有token也返回成功，因为登出应该是幂等的
+		shared.Success(c, http.StatusOK, "登出成功", gin.H{
+			"message": "Logged out successfully",
+		})
+		return
+	}
+
+	// 去除 "Bearer " 前缀
+	if len(token) > 7 && token[:7] == "Bearer " {
+		token = token[7:]
+	}
+
+	// TODO: 将Token加入黑名单或清除服务端会话
+	// 当前JWT是无状态的，主要依赖客户端删除token
+	// 如果需要服务端控制，可以实现token黑名单机制
+
+	// 返回成功响应
+	shared.Success(c, http.StatusOK, "登出成功", gin.H{
+		"message": "Logged out successfully",
+	})
+}

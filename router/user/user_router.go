@@ -66,6 +66,7 @@ func RegisterUserRoutes(
 		// 认证相关 - 完整路径（新架构）
 		r.POST("/user/auth/register", handlers.AuthHandler.Register)
 		r.POST("/user/auth/login", handlers.AuthHandler.Login)
+		r.POST("/user/auth/logout", handlers.AuthHandler.Logout)
 
 		// 认证相关 - 简化路径（向后兼容）
 		r.POST("/register", handlers.AuthHandler.Register)
