@@ -4,8 +4,17 @@ package generators
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"Qingyu_backend/cmd/seeder/models"
+	"Qingyu_backend/cmd/seeder/utils"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// 用户角色常量
+const (
+	RoleReader = "reader"
+	RoleAuthor = "author"
+	RoleAdmin  = "admin"
 )
 
 // UserGenerator 用户数据生成器
@@ -26,15 +35,16 @@ func (g *UserGenerator) GenerateUser(role string) models.User {
 	now := time.Now()
 
 	return models.User{
-		ID:       uuid.New().String(),
+		ID:       primitive.NewObjectID(),
 		Username: username,
 		Email:    g.Email(),
-		// bcrypt hash of "password"
-		Password: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
-		Role:     role,
-		Nickname: username,
-		Avatar:   "/images/avatars/default.png",
-		Bio:      g.faker.Paragraph(1, 3, 20, " "),
+		// 使用动态生成的 bcrypt hash of "password"
+		Password:  utils.DefaultPasswordHash(),
+		Roles:     []string{role},
+		Status:    models.UserStatusActive,
+		Nickname:  username,
+		Avatar:    "/images/avatars/default.png",
+		Bio:       g.faker.Paragraph(1, 3, 20, " "),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

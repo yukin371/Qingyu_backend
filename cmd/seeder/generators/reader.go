@@ -87,6 +87,40 @@ func (g *ReaderGenerator) GenerateReadingProgresses(userIDs, bookIDs []string, c
 	return progresses
 }
 
+// GenerateReadingProgress 为指定用户和书籍生成单个阅读进度
+func (g *ReaderGenerator) GenerateReadingProgress(userID, bookID string) models.ReadingProgress {
+	now := time.Now()
+
+	// 进度分布
+	progressRand := rand.Float64()
+	var progress float64
+	var chapterNum int
+
+	switch {
+	case progressRand < 0.3:
+		progress = float64(5 + rand.Intn(15)) // 5-20%
+		chapterNum = 1 + rand.Intn(10)
+	case progressRand < 0.7:
+		progress = float64(20 + rand.Intn(60)) // 20-80%
+		chapterNum = 10 + rand.Intn(50)
+	default:
+		progress = float64(80 + rand.Intn(20)) // 80-100%
+		chapterNum = 50 + rand.Intn(100)
+	}
+
+	return models.ReadingProgress{
+		ID:            g.base.ID(),
+		UserID:        userID,
+		BookID:        bookID,
+		ChapterNum:    chapterNum,
+		Progress:      progress,
+		LastReadAt:    now.Add(-time.Duration(rand.Intn(48)) * time.Hour),
+		TotalReadTime: 1800 + rand.Intn(72000), // 30分钟到20小时
+		CreatedAt:     now.Add(-time.Duration(rand.Intn(720)) * time.Hour),
+		UpdatedAt:     now,
+	}
+}
+
 // GenerateBookmarks 生成书签
 func (g *ReaderGenerator) GenerateBookmarks(userIDs, bookIDs, chapterIDs []string, count int) []models.Bookmark {
 	bookmarks := make([]models.Bookmark, count)

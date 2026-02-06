@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BaseGenerator 基础数据生成器
@@ -90,9 +90,9 @@ func (g *BaseGenerator) PhoneNumber() string {
 	return g.faker.Phone()
 }
 
-// ID 生成唯一ID
+// ID 生成唯一ID (使用MongoDB ObjectID格式)
 func (g *BaseGenerator) ID() string {
-	return uuid.New().String()
+	return primitive.NewObjectID().Hex()
 }
 
 // ChineseName 生成中文姓名

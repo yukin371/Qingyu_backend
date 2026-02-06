@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/cmd/seeder/config"
+	"Qingyu_backend/cmd/seeder/generators"
 )
 
 // TestBookstoreSeeder_SeedsGeneratedBooks 测试书籍生成功能
@@ -15,9 +16,6 @@ func TestBookstoreSeeder_SeedsGeneratedBooks(t *testing.T) {
 		Scale:     "small", // 使用小规模测试
 		BatchSize: 10,
 	}
-
-	// 创建 BookstoreSeeder
-	seeder := NewBookstoreSeeder(nil, cfg)
 
 	// 测试分类比例计算
 	scale := config.GetScaleConfig(cfg.Scale)
@@ -40,8 +38,8 @@ func TestBookstoreSeeder_SeedsGeneratedBooks(t *testing.T) {
 
 	t.Logf("总书籍数: %d (期望: %d)", totalCount, totalBooks)
 
-	// 验证生成器能正确生成书籍
-	gen := seeder.gen
+	// 直接使用生成器测试（不依赖数据库）
+	gen := generators.NewBookGenerator()
 	testBooks := gen.GenerateBooks(5, "仙侠")
 
 	if len(testBooks) != 5 {
@@ -50,7 +48,7 @@ func TestBookstoreSeeder_SeedsGeneratedBooks(t *testing.T) {
 
 	// 验证书籍属性
 	for i, book := range testBooks {
-		if book.ID == "" {
+		if book.ID.IsZero() {
 			t.Errorf("第 %d 本书缺少 ID", i)
 		}
 		if book.Title == "" {
@@ -104,7 +102,7 @@ func TestBookstoreSeeder_VerifyCategoryDistribution(t *testing.T) {
 
 // TestBookstoreSeeder_BookStructure 测试书籍结构
 func TestBookstoreSeeder_BookStructure(t *testing.T) {
-	gen := NewBookstoreSeeder(nil, &config.Config{}).gen
+	gen := generators.NewBookGenerator()
 
 	// 测试每个分类的书籍生成
 	categories := []string{"仙侠", "都市", "科幻", "历史", "其他"}
@@ -113,7 +111,7 @@ func TestBookstoreSeeder_BookStructure(t *testing.T) {
 		book := gen.GenerateBook(category)
 
 		// 验证必填字段
-		if book.ID == "" {
+		if book.ID.IsZero() {
 			t.Errorf("[%s] 缺少 ID", category)
 		}
 		if book.Title == "" {

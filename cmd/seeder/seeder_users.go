@@ -4,7 +4,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -14,6 +14,7 @@ import (
 	"Qingyu_backend/cmd/seeder/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // UserSeeder 用户数据填充器
@@ -35,75 +36,109 @@ func NewUserSeeder(db *utils.Database, cfg *config.Config) *UserSeeder {
 	}
 }
 
-// SeedRealUsers 填充真实测试用户
+// SeedRealUsers 填充固定测试账号（用于E2E测试）
 func (s *UserSeeder) SeedRealUsers() error {
-	// 读取真实用户数据
-	data, err := os.ReadFile("data/users.json")
-	if err != nil {
-		return fmt.Errorf("读取 users.json 失败: %w", err)
-	}
+	now := time.Now()
+	defaultPassword := utils.DefaultPasswordHash()
 
-	var testData struct {
-		TestUsers []map[string]interface{} `json:"test_users"`
-	}
-
-	if err := json.Unmarshal(data, &testData); err != nil {
-		return fmt.Errorf("解析 users.json 失败: %w", err)
-	}
-
-	// 转换为 User 对象
-	realUsers := make([]models.User, len(testData.TestUsers))
-	for i, u := range testData.TestUsers {
-		realUsers[i] = models.User{
-			ID:        u["username"].(string), // 使用用户名作为 ID
-			Username:  u["username"].(string),
-			Email:     u["email"].(string),
-			Password:  u["password"].(string),
-			Role:      u["role"].(string),
-			Nickname:  u["nickname"].(string),
-			Bio:       u["bio"].(string),
+	// 固定测试账号列表 - 使用 ObjectID 而不是字符串 ID
+	testUsers := []models.User{
+		{
+			ID:        primitive.NewObjectID(),
+			Username:  "testuser001",
+			Password:  defaultPassword, // bcrypt加密的 "password"
+			Roles:     []string{generators.RoleReader},
+			Status:    models.UserStatusActive,
+			Email:     "testuser001@example.com",
+			Nickname:  "测试读者001",
+			Bio:       "E2E测试用读者账号，密码：password",
 			Avatar:    "/images/avatars/default.png",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+		{
+			ID:        primitive.NewObjectID(),
+			Username:  "testauthor001",
+			Password:  defaultPassword, // bcrypt加密的 "password"
+			Roles:     []string{generators.RoleAuthor},
+			Status:    models.UserStatusActive,
+			Email:     "testauthor001@example.com",
+			Nickname:  "测试作者001",
+			Bio:       "E2E测试用作者账号，密码：password",
+			Avatar:    "/images/avatars/default.png",
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+		{
+			ID:        primitive.NewObjectID(),
+			Username:  "testadmin001",
+			Password:  defaultPassword, // bcrypt加密的 "password"
+			Roles:     []string{generators.RoleAdmin},
+			Status:    models.UserStatusActive,
+			Email:     "testadmin001@example.com",
+			Nickname:  "测试管理员001",
+			Bio:       "E2E测试用管理员账号，密码：password",
+			Avatar:    "/images/avatars/default.png",
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+	}
+
+	// 尝试读取并合并原有的 users.json 数据（向后兼容）
+	if data, err := os.ReadFile("data/users.json"); err == nil {
+		var testData struct {
+			TestUsers []map[string]interface{} `json:"test_users"`
+		}
+		if json.Unmarshal(data, &testData) == nil {
+			for _, u := range testData.TestUsers {
+				testUsers = append(testUsers, models.User{
+					ID:        primitive.NewObjectID(),
+					Username:  u["username"].(string),
+					Email:     u["email"].(string),
+					Password:  u["password"].(string),
+					Roles:     []string{u["role"].(string)},
+					Status:    models.UserStatusActive,
+					Nickname:  u["nickname"].(string),
+					Bio:       u["bio"].(string),
+					Avatar:    "/images/avatars/default.png",
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
+			}
 		}
 	}
 
-	return s.inserter.InsertMany(context.Background(), realUsers)
+	return s.inserter.InsertMany(context.Background(), testUsers)
 }
 
 // SeedGeneratedUsers 填充生成的用户
 func (s *UserSeeder) SeedGeneratedUsers() error {
 	scale := config.GetScaleConfig(s.config.Scale)
+	totalUsers := scale.Users
+
+	// 按比例计算各角色数量
+	readerCount := int(math.Round(float64(totalUsers) * scale.ReaderPercent))
+	authorCount := int(math.Round(float64(totalUsers) * scale.AuthorPercent))
+	adminCount := totalUsers - readerCount - authorCount // 确保总数正确
 
 	var allUsers []models.User
 
-	// 计算各角色用户数量，确保不出现负数
-	normalCount := scale.Users - scale.Authors - 100
-	if normalCount < 0 {
-		normalCount = 0
-	}
-	
-	// 生成普通用户
-	if normalCount > 0 {
-		normalUsers := s.gen.GenerateUsers(normalCount, "reader")
-		allUsers = append(allUsers, normalUsers...)
+	// 生成 reader 角色用户
+	if readerCount > 0 {
+		readerUsers := s.gen.GenerateUsers(readerCount, generators.RoleReader)
+		allUsers = append(allUsers, readerUsers...)
 	}
 
-	// 生成作者用户
-	authors := s.gen.GenerateUsers(scale.Authors, "author")
-	allUsers = append(allUsers, authors...)
-
-	// 生成 VIP 用户
-	vipCount := 100
-	if scale.Users < scale.Authors+vipCount {
-		vipCount = scale.Users - scale.Authors
-		if vipCount < 0 {
-			vipCount = 0
-		}
+	// 生成 author 角色用户
+	if authorCount > 0 {
+		authorUsers := s.gen.GenerateUsers(authorCount, generators.RoleAuthor)
+		allUsers = append(allUsers, authorUsers...)
 	}
-	if vipCount > 0 {
-		vipUsers := s.gen.GenerateUsers(vipCount, "vip")
-		allUsers = append(allUsers, vipUsers...)
+
+	// 生成 admin 角色用户
+	if adminCount > 0 {
+		adminUsers := s.gen.GenerateUsers(adminCount, generators.RoleAdmin)
+		allUsers = append(allUsers, adminUsers...)
 	}
 
 	return s.inserter.InsertMany(context.Background(), allUsers)
@@ -119,4 +154,14 @@ func (s *UserSeeder) Clean() error {
 // Count 统计用户数量
 func (s *UserSeeder) Count() (int64, error) {
 	return s.inserter.CountDocuments(context.Background(), bson.M{})
+}
+
+// GetGenerator 获取用户生成器
+func (s *UserSeeder) GetGenerator() *generators.UserGenerator {
+	return s.gen
+}
+
+// GetInserter 获取批量插入器
+func (s *UserSeeder) GetInserter() *utils.BulkInserter {
+	return s.inserter
 }

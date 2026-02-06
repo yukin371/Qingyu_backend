@@ -140,22 +140,19 @@ func (s *ChapterSeeder) SeedChapterContents() error {
 	return nil
 }
 
-// determineChapterCount 根据书籍状态决定章节数量
+// determineChapterCount 根据配置的数据规模决定章节数量
 func (s *ChapterSeeder) determineChapterCount(book models.Book) int {
 	// 如果书籍已有章节数，使用它
 	if book.ChapterCount > 0 {
 		return book.ChapterCount
 	}
 
-	// 根据书籍状态和字数决定
-	switch book.Status {
-	case "completed":
-		return 100 + rand.Intn(400) // 100-500章
-	case "ongoing":
-		return 50 + rand.Intn(200) // 50-250章
-	default:
-		return 30 + rand.Intn(100) // 30-130章
-	}
+	// 根据配置的数据规模决定章节数量
+	scale := config.GetScaleConfig(s.config.Scale)
+
+	// 生成 MinChapters 到 MaxChapters 之间的随机章节数量
+	// rand.Intn(n) 返回 [0, n) 范围内的随机数，所以需要 +1 确保包含 MaxChapters
+	return scale.MinChapters + rand.Intn(scale.MaxChapters-scale.MinChapters+1)
 }
 
 // generateChaptersForBook 为单本书生成章节
@@ -169,7 +166,7 @@ func (s *ChapterSeeder) generateChaptersForBook(book models.Book, count int) []m
 		isFree := chapterNum <= 10 // 前10章免费
 
 		chapters[i] = models.Chapter{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			BookID:      book.ID,
 			ChapterNum:  chapterNum,
 			Title:       s.generateChapterTitle(chapterNum),

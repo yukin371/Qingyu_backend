@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -54,8 +55,16 @@ func (s *SocialSeeder) SeedSocialData() error {
 		return nil
 	}
 
+	// 用于收集每本书的评分
+	bookRatings := make(map[string][]float64)
+
 	// 创建评论
-	if err := s.seedComments(ctx, users, books); err != nil {
+	if err := s.seedComments(ctx, users, books, bookRatings); err != nil {
+		return err
+	}
+
+	// 更新书籍评分
+	if err := s.updateBookRatings(ctx, bookRatings); err != nil {
 		return err
 	}
 
@@ -122,7 +131,7 @@ func (s *SocialSeeder) getBookIDs(ctx context.Context) ([]string, error) {
 }
 
 // seedComments 创建评论
-func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string) error {
+func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string, bookRatings map[string][]float64) error {
 	collection := s.db.Collection("comments")
 
 	var comments []interface{}
@@ -134,6 +143,10 @@ func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string) 
 
 		for i := 0; i < commentCount; i++ {
 			userID := users[rand.Intn(len(users))]
+			rating := 3 + rand.Intn(3) // 3-5星
+
+			// 收集评分用于后续更新书籍
+			bookRatings[bookID] = append(bookRatings[bookID], float64(rating))
 
 			comments = append(comments, bson.M{
 				"_id":         primitive.NewObjectID(),
@@ -141,7 +154,7 @@ func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string) 
 				"target_type": "book",
 				"user_id":     userID,
 				"content":     s.getRandomComment(),
-				"rating":      3 + rand.Intn(3), // 3-5星
+				"rating":      rating,
 				"like_count":  rand.Intn(50),
 				"reply_count": rand.Intn(10),
 				"status":      "normal",
@@ -304,6 +317,48 @@ func (s *SocialSeeder) getRandomComment() string {
 		"故事情节跌宕起伏，很吸引人。",
 	}
 	return comments[rand.Intn(len(comments))]
+}
+
+// updateBookRatings 更新书籍评分
+func (s *SocialSeeder) updateBookRatings(ctx context.Context, bookRatings map[string][]float64) error {
+	booksCollection := s.db.Collection("books")
+
+	for bookID, ratings := range bookRatings {
+		if len(ratings) == 0 {
+			continue
+		}
+
+		// 计算平均评分
+		sum := 0.0
+		for _, r := range ratings {
+			sum += r
+		}
+		avgRating := sum / float64(len(ratings))
+
+		// 更新书籍
+		_, err := booksCollection.UpdateOne(
+			ctx,
+			bson.M{"_id": bookID},
+			bson.M{
+				"$set": bson.M{
+					"rating":       roundToOneDecimal(avgRating),
+					"rating_count": len(ratings),
+					"updated_at":   time.Now(),
+				},
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("更新书籍评分失败 (书籍ID: %s): %w", bookID, err)
+		}
+	}
+
+	fmt.Printf("  更新了 %d 本书的评分\n", len(bookRatings))
+	return nil
+}
+
+// roundToOneDecimal 保留一位小数
+func roundToOneDecimal(n float64) float64 {
+	return math.Round(n*10) / 10
 }
 
 // Clean 清空社交数据

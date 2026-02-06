@@ -40,7 +40,20 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 	scale := config.GetScaleConfig(s.config.Scale)
 	totalBooks := scale.Books
 
-	// 定义分类和比例
+	// 1. 获取真实的author用户
+	fmt.Println("正在获取author角色用户...")
+	authorIDs, err := s.getAuthorUsers()
+	if err != nil {
+		return fmt.Errorf("获取author用户失败: %w", err)
+	}
+
+	if len(authorIDs) == 0 {
+		return fmt.Errorf("没有找到author角色的用户，请先运行用户填充命令")
+	}
+
+	fmt.Printf("找到 %d 个author用户\n", len(authorIDs))
+
+	// 2. 定义分类和比例
 	categoryRatios := map[string]float64{
 		"仙侠": 0.30, // 30%
 		"都市": 0.25, // 25%
@@ -49,29 +62,94 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 		"其他": 0.10, // 10%
 	}
 
-	// 存储所有生成的书籍
+	// 3. 存储所有生成的书籍
 	var allBooks []models.Book
 
-	// 按分类生成书籍
+	// 4. 按分类生成书籍
 	for category, ratio := range categoryRatios {
 		// 计算该分类的书籍数量
 		count := int(float64(totalBooks) * ratio)
 
-		// 生成该分类的书籍
-		books := s.gen.GenerateBooks(count, category)
+		// 生成该分类的书籍，使用真实的author ID
+		books := s.gen.GenerateBooksFromAuthors(count, category, authorIDs)
 		allBooks = append(allBooks, books...)
 
 		fmt.Printf("已生成 %d 本%s类书籍\n", count, category)
 	}
 
-	// 批量插入所有书籍
+	// 5. 批量插入所有书籍
 	ctx := context.Background()
 	if err := s.inserter.InsertMany(ctx, allBooks); err != nil {
 		return fmt.Errorf("插入书籍失败: %w", err)
 	}
 
 	fmt.Printf("成功插入 %d 本书籍\n", len(allBooks))
+
+	// 6. 输出author分配统计
+	s.printAuthorDistributionStats(allBooks, authorIDs)
+
 	return nil
+}
+
+// getAuthorUsers 获取author角色的用户ID列表
+func (s *BookstoreSeeder) getAuthorUsers() ([]primitive.ObjectID, error) {
+	ctx := context.Background()
+
+	// 查询role为author的用户
+	cursor, err := s.db.Collection("users").Find(ctx, bson.M{"role": "author"})
+	if err != nil {
+		return nil, fmt.Errorf("查询author用户失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	// 解析结果
+	var users []struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, fmt.Errorf("解析author用户失败: %w", err)
+	}
+
+	// 提取ID列表
+	authorIDs := make([]primitive.ObjectID, len(users))
+	for i, u := range users {
+		authorIDs[i] = u.ID
+	}
+
+	return authorIDs, nil
+}
+
+// printAuthorDistributionStats 打印author分配统计信息
+func (s *BookstoreSeeder) printAuthorDistributionStats(books []models.Book, authorIDs []primitive.ObjectID) {
+	// 统计每个author的书籍数量
+	authorBookCount := make(map[primitive.ObjectID]int)
+	for _, book := range books {
+		if !book.AuthorID.IsZero() {
+			authorBookCount[book.AuthorID]++
+		}
+	}
+
+	// 计算统计信息
+	totalBooks := len(books)
+	totalAuthors := len(authorIDs)
+	avgBooksPerAuthor := float64(totalBooks) / float64(totalAuthors)
+	minBooks := totalBooks
+	maxBooks := 0
+
+	for _, count := range authorBookCount {
+		if count < minBooks {
+			minBooks = count
+		}
+		if count > maxBooks {
+			maxBooks = count
+		}
+	}
+
+	fmt.Println("\n📊 作者书籍分配统计:")
+	fmt.Printf("  总书籍数: %d\n", totalBooks)
+	fmt.Printf("  总作者数: %d\n", totalAuthors)
+	fmt.Printf("  平均每作者: %.1f 本\n", avgBooksPerAuthor)
+	fmt.Printf("  最少: %d 本, 最多: %d 本\n", minBooks, maxBooks)
 }
 
 // SeedBanners 填充 banner 数据

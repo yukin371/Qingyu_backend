@@ -13,6 +13,7 @@ import (
 	"Qingyu_backend/cmd/seeder/validator"
 
 	"github.com/spf13/cobra"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var (
@@ -164,6 +165,13 @@ var (
 		Short: "审查作者视角数据关联完整性",
 		Run:   runAuthorAuditCmd,
 	}
+
+	// settingsCmd 填充用户设置数据
+	settingsCmd = &cobra.Command{
+		Use:   "settings",
+		Short: "填充用户设置数据",
+		Run:   runSettings,
+	}
 )
 
 // init 初始化命令
@@ -192,6 +200,7 @@ func init() {
 	rootCmd.AddCommand(financeCmd)
 	rootCmd.AddCommand(auditReaderCmd)
 	rootCmd.AddCommand(auditAuthorCmd)
+	rootCmd.AddCommand(settingsCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(testCmd)
@@ -248,6 +257,13 @@ func runAll(cmd *cobra.Command, args []string) {
 	fmt.Println("\n填充用户数据...")
 	if err := seedUsers(db); err != nil {
 		fmt.Printf("填充用户数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 填充用户设置
+	fmt.Println("\n填充用户设置数据...")
+	if err := seedSettings(db); err != nil {
+		fmt.Printf("填充用户设置数据失败: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -321,6 +337,12 @@ func runBookstore(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer db.Disconnect()
+
+	// 确保有足够的author用户
+	if err := ensureAuthorUsers(db); err != nil {
+		fmt.Printf("确保author用户存在失败: %v\n", err)
+		os.Exit(1)
+	}
 
 	if cfg.Clean {
 		fmt.Println("\n清空书籍数据...")
@@ -404,6 +426,9 @@ func runVerify(cmd *cobra.Command, args []string) {
 // cleanAllData 清空所有数据
 func cleanAllData(db *utils.Database) error {
 	if err := seedUsersClean(db); err != nil {
+		return err
+	}
+	if err := seedSettingsClean(db); err != nil {
 		return err
 	}
 	if err := seedBooksClean(db); err != nil {
@@ -919,4 +944,80 @@ func validateData(db *utils.Database) error {
 	}
 
 	return nil
+}
+
+// ensureAuthorUsers 确保有足够的author用户
+func ensureAuthorUsers(db *utils.Database) error {
+	ctx := context.Background()
+
+	// 检查现有author数量
+	count, err := db.Collection("users").CountDocuments(ctx, bson.M{"role": "author"})
+	if err != nil {
+		return fmt.Errorf("检查author用户失败: %w", err)
+	}
+
+	// 获取配置中期望的author数量
+	scale := config.GetScaleConfig(cfg.Scale)
+	minAuthors := int64(scale.Authors)
+
+	if count >= minAuthors {
+		fmt.Printf("✓ 已有 %d 个author用户\n", count)
+		return nil
+	}
+
+	// 不足则生成
+	needed := minAuthors - count
+	fmt.Printf("需要生成 %d 个author用户...\n", needed)
+
+	seeder := NewUserSeeder(db, cfg)
+
+	// 只生成author角色用户
+	authors := seeder.GetGenerator().GenerateUsers(int(needed), "author")
+	if err := seeder.GetInserter().InsertMany(ctx, authors); err != nil {
+		return fmt.Errorf("生成author用户失败: %w", err)
+	}
+
+	fmt.Printf("✓ 成功生成 %d 个author用户\n", needed)
+	return nil
+}
+
+// runSettings 填充用户设置数据
+func runSettings(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充用户设置数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空用户设置数据...")
+		seeder := NewSettingsSeeder(db, cfg)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空用户设置数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	seeder := NewSettingsSeeder(db, cfg)
+	if err := seeder.SeedUserSettings(); err != nil {
+		fmt.Printf("填充用户设置数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n用户设置数据填充完成!")
+}
+
+// seedSettings 填充用户设置数据
+func seedSettings(db *utils.Database) error {
+	seeder := NewSettingsSeeder(db, cfg)
+	return seeder.SeedUserSettings()
+}
+
+// seedSettingsClean 清空用户设置数据
+func seedSettingsClean(db *utils.Database) error {
+	seeder := NewSettingsSeeder(db, cfg)
+	return seeder.Clean()
 }

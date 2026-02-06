@@ -56,8 +56,8 @@ func (g *BookGenerator) GenerateBook(category string) models.Book {
 		isFeatured = false
 	}
 
-	// 生成章节数和字数
-	chapterCount := g.faker.IntRange(10, 500)
+	// 生成章节数和字数（中等数据集：3-5章）
+	chapterCount := g.faker.IntRange(3, 6) // 生成3-5章
 	wordCount := int64(chapterCount * g.faker.IntRange(2000, 5000))
 
 	// 生成浏览数 (通常远大于评分人数)
@@ -99,7 +99,7 @@ func (g *BookGenerator) GenerateBook(category string) models.Book {
 	}
 
 	return models.Book{
-		ID:            primitive.NewObjectID().Hex(),
+		ID:            primitive.NewObjectID(),
 		Title:         title,
 		Author:        author,
 		Introduction:  introduction,
@@ -157,11 +157,30 @@ func (g *BookGenerator) generateTags(category string) []string {
 	return selectedTags
 }
 
-// GenerateBooks 批量生成书籍
+// GenerateBooks 批量生成书籍（保持向后兼容）
 func (g *BookGenerator) GenerateBooks(count int, category string) []models.Book {
+	return g.GenerateBooksFromAuthors(count, category, nil)
+}
+
+// GenerateBooksFromAuthors 批量生成书籍，使用真实的author用户ID
+func (g *BookGenerator) GenerateBooksFromAuthors(count int, category string, authorIDs []primitive.ObjectID) []models.Book {
 	books := make([]models.Book, count)
+
 	for i := 0; i < count; i++ {
-		books[i] = g.GenerateBook(category)
+		var authorID primitive.ObjectID
+		if len(authorIDs) > 0 {
+			// 轮询分配作者，确保均匀分布
+			authorID = authorIDs[i%len(authorIDs)]
+		}
+		books[i] = g.GenerateBookWithAuthor(category, authorID)
 	}
+
 	return books
+}
+
+// GenerateBookWithAuthor 生成单本书籍，指定author ID
+func (g *BookGenerator) GenerateBookWithAuthor(category string, authorID primitive.ObjectID) models.Book {
+	book := g.GenerateBook(category)
+	book.AuthorID = authorID
+	return book
 }

@@ -18,9 +18,16 @@ type MongoDBConfig struct {
 
 // ScaleConfig defines the data scale for generation
 type ScaleConfig struct {
-	Users   int
-	Books   int
-	Authors int
+	Scale         string // 数据规模标识：small, medium, large
+	Users         int
+	Books         int
+	Authors       int
+	MinChapters   int // 最少章节数
+	MaxChapters   int // 最多章节数
+	// 角色比例配置
+	ReaderPercent float64 // reader 角色比例 (默认 0.70)
+	AuthorPercent float64 // author 角色比例 (默认 0.25)
+	AdminPercent  float64 // admin 角色比例 (默认 0.05)
 }
 
 // DefaultConfig is the default configuration
@@ -37,19 +44,37 @@ var DefaultConfig = &Config{
 func GetScaleConfig(scale string) ScaleConfig {
 	scales := map[string]ScaleConfig{
 		"small": {
-			Users:   50,
-			Books:   100,
-			Authors: 20,
+			Scale:         "small",
+			Users:         50,
+			Books:         100,
+			Authors:       10,
+			MinChapters:   1,
+			MaxChapters:   2,
+			ReaderPercent: 0.70,
+			AuthorPercent: 0.25,
+			AdminPercent:  0.05,
 		},
 		"medium": {
-			Users:   500,
-			Books:   500,
-			Authors: 100,
+			Scale:         "medium",
+			Users:         500,
+			Books:         500,
+			Authors:       100,
+			MinChapters:   3,
+			MaxChapters:   5,
+			ReaderPercent: 0.70,
+			AuthorPercent: 0.25,
+			AdminPercent:  0.05,
 		},
 		"large": {
-			Users:   2000,
-			Books:   1200,
-			Authors: 400,
+			Scale:         "large",
+			Users:         2000,
+			Books:         1200,
+			Authors:       400,
+			MinChapters:   10,
+			MaxChapters:   30,
+			ReaderPercent: 0.70,
+			AuthorPercent: 0.25,
+			AdminPercent:  0.05,
 		},
 	}
 

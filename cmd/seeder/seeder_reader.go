@@ -11,6 +11,7 @@ import (
 	"Qingyu_backend/cmd/seeder/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ReaderSeeder 阅读数据填充器
@@ -162,20 +163,37 @@ func (s *ReaderSeeder) seedReadingProgresses(ctx context.Context, users, books [
 	userCount := int(float64(len(users)) * 0.7)
 	activeUsers := users[:userCount]
 
+	// 用于跟踪已生成的用户-书籍组合，避免重复
+	progressMap := make(map[string]bool) // key: "userID-bookID"
+
 	for _, user := range activeUsers {
 		// 每个用户平均阅读 3-10 本书
 		bookCount := 3 + len(books)%8
 		userBooks := s.getRandomItems(books, bookCount)
 
-		// 使用生成器生成阅读进度
-		generatedProgresses := s.gen.GenerateReadingProgresses([]string{user}, userBooks, len(userBooks))
+		for _, book := range userBooks {
+			// 检查是否已存在该用户-书籍组合
+			key := user + "-" + book
+			if progressMap[key] {
+				continue // 跳过已存在的组合
+			}
 
-		if _, err := collection.InsertMany(ctx, s.toInterfaceSlice(generatedProgresses)); err != nil {
-			return fmt.Errorf("插入阅读进度失败: %w", err)
+			// 生成单个阅读进度
+			progress := s.gen.GenerateReadingProgress(user, book)
+			progressMap[key] = true
+
+			// 使用 Upsert 插入或更新，确保唯一性
+			filter := bson.M{"user_id": user, "book_id": book}
+			update := bson.M{"$set": progress}
+
+			_, err := collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+			if err != nil {
+				return fmt.Errorf("插入阅读进度失败: %w", err)
+			}
 		}
 	}
 
-	fmt.Printf("  创建了阅读进度数据\n")
+	fmt.Printf("  创建了 %d 条阅读进度数据\n", len(progressMap))
 	return nil
 }
 

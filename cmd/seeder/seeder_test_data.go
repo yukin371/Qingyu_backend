@@ -9,8 +9,8 @@ import (
 	"Qingyu_backend/cmd/seeder/models"
 	"Qingyu_backend/cmd/seeder/utils"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestDataSeeder 测试数据填充器
@@ -61,11 +61,12 @@ func (s *TestDataSeeder) seedTestUser() error {
 	// 注意：这是一个示例，实际应用中应该使用bcrypt等哈希算法
 	// 为了简化，这里直接存储明文密码（仅用于测试环境）
 	user := models.User{
-		ID:        uuid.New().String(),
+		ID:        primitive.NewObjectID(),
 		Username:  "testuser",
 		Email:     "testuser@qingyu.com",
 		Password:  "123456", // ⚠️ 测试环境使用明文密码
-		Role:      "reader",
+		Roles:     []string{"reader"},
+		Status:    models.UserStatusActive,
 		Nickname:  "测试用户",
 		Avatar:    "/images/avatars/default.png",
 		Bio:       "这是一个测试账号",
@@ -99,7 +100,7 @@ func (s *TestDataSeeder) seedTestBooks() error {
 
 	books := []models.Book{
 		{
-			ID:           uuid.New().String(),
+			ID:           primitive.NewObjectID(),
 			Title:        "修仙世界",
 			Author:       "飞升作者",
 			Introduction: "一个普通少年，意外获得神秘传承，踏上修仙之路。历经千辛万苦，最终飞升成仙，成为一代传奇。",
@@ -123,7 +124,7 @@ func (s *TestDataSeeder) seedTestBooks() error {
 			UpdatedAt:    now,
 		},
 		{
-			ID:           uuid.New().String(),
+			ID:           primitive.NewObjectID(),
 			Title:        "修仙归来",
 			Author:       "逍遥子",
 			Introduction: "一代仙尊渡劫失败，重生回到地球。这一世，他要弥补所有遗憾，守护所爱之人，再登巅峰！",
@@ -147,7 +148,7 @@ func (s *TestDataSeeder) seedTestBooks() error {
 			UpdatedAt:    now,
 		},
 		{
-			ID:           uuid.New().String(),
+			ID:           primitive.NewObjectID(),
 			Title:        "修仙传说之无敌天下",
 			Author:       "剑气纵横",
 			Introduction: "天地不仁，以万物为刍狗。既然天道不公，那我便逆天而行，成就无上霸业！",
@@ -171,7 +172,7 @@ func (s *TestDataSeeder) seedTestBooks() error {
 			UpdatedAt:    now,
 		},
 		{
-			ID:           uuid.New().String(),
+			ID:           primitive.NewObjectID(),
 			Title:        "万古修仙",
 			Author:       "虚无居士",
 			Introduction: "上古修仙界，强者如林。少年叶凡，偶得神秘小鼎，开启了一段波澜壮阔的修仙之旅。",
@@ -195,7 +196,7 @@ func (s *TestDataSeeder) seedTestBooks() error {
 			UpdatedAt:    now,
 		},
 		{
-			ID:           uuid.New().String(),
+			ID:           primitive.NewObjectID(),
 			Title:        "修仙从娃娃抓起",
 			Author:       "童心未泯",
 			Introduction: "穿越到修仙世界，发现自己竟然变成了婴儿。不过没关系，修仙就要从娃娃抓起！",
@@ -251,7 +252,7 @@ func (s *TestDataSeeder) seedTestCategories() error {
 
 	categories := []interface{}{
 		bson.M{
-			"_id":        uuid.New().String(),
+			"_id":        primitive.NewObjectID(),
 			"name":       "玄幻",
 			"slug":       "xuanhuan",
 			"description": "奇幻玄幻，想象力无限",
@@ -263,7 +264,7 @@ func (s *TestDataSeeder) seedTestCategories() error {
 			"updated_at": now,
 		},
 		bson.M{
-			"_id":        uuid.New().String(),
+			"_id":        primitive.NewObjectID(),
 			"name":       "修仙",
 			"slug":       "xiuxian",
 			"description": "修仙问道，长生不老",

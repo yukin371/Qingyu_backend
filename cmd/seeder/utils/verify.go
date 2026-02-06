@@ -42,13 +42,24 @@ func verifyUsers(db *Database) VerificationReport {
 	ctx := context.Background()
 	collection := db.Collection("users")
 
-	// 检查用户名唯一性
+	// 1. 检查固定测试账号是否存在
+	requiredTestUsers := []string{"testuser001", "testauthor001", "testadmin001"}
+	for _, username := range requiredTestUsers {
+		count, _ := collection.CountDocuments(ctx, bson.M{"username": username})
+		if count == 0 {
+			report.Passed = false
+			report.Issues = append(report.Issues, fmt.Sprintf("缺少固定测试账号: %s", username))
+		} else {
+			report.Issues = append(report.Issues, fmt.Sprintf("✓ 固定测试账号存在: %s", username))
+		}
+	}
+
+	// 2. 检查用户名唯一性
 	pipeline := []bson.M{
 		{
 			"$group": bson.M{
-				"_id":       "$username",
-				"count":     bson.M{"$sum": 1},
-				"userIds":   bson.M{"$push": "$_id"},
+				"_id":   "$username",
+				"count": bson.M{"$sum": 1},
 			},
 		},
 		{
@@ -82,7 +93,39 @@ func verifyUsers(db *Database) VerificationReport {
 				fmt.Sprintf("重复用户名 '%s' 出现 %d 次", username, count))
 		}
 	} else {
-		report.Issues = append(report.Issues, "所有用户名唯一")
+		report.Issues = append(report.Issues, "✓ 所有用户名唯一")
+	}
+
+	// 3. 检查角色分布
+	totalCount, _ := collection.CountDocuments(ctx, bson.M{})
+	if totalCount > 0 {
+		readerCount, _ := collection.CountDocuments(ctx, bson.M{"role": "reader"})
+		authorCount, _ := collection.CountDocuments(ctx, bson.M{"role": "author"})
+		adminCount, _ := collection.CountDocuments(ctx, bson.M{"role": "admin"})
+
+		readerPercent := float64(readerCount) / float64(totalCount) * 100
+		authorPercent := float64(authorCount) / float64(totalCount) * 100
+		adminPercent := float64(adminCount) / float64(totalCount) * 100
+
+		report.Issues = append(report.Issues,
+			fmt.Sprintf("角色分布: Reader %.1f%% (%d), Author %.1f%% (%d), Admin %.1f%% (%d)",
+				readerPercent, readerCount, authorPercent, authorCount, adminPercent, adminCount))
+
+		// 检查三种角色都存在
+		if readerCount == 0 {
+			report.Passed = false
+			report.Issues = append(report.Issues, "缺少 reader 角色用户")
+		}
+		if authorCount == 0 {
+			report.Passed = false
+			report.Issues = append(report.Issues, "缺少 author 角色用户")
+		}
+		if adminCount == 0 {
+			report.Passed = false
+			report.Issues = append(report.Issues, "缺少 admin 角色用户")
+		}
+	} else {
+		report.Issues = append(report.Issues, "没有用户数据")
 	}
 
 	return report
