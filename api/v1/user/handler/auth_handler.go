@@ -4,6 +4,7 @@ import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -57,7 +58,22 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			case serviceInterfaces.ErrorTypeValidation:
 				shared.BadRequest(c, "注册失败", serviceErr.Message)
 			case serviceInterfaces.ErrorTypeBusiness:
-				shared.BadRequest(c, "注册失败", serviceErr.Message)
+				// 根据错误消息返回具体的错误码
+				if serviceErr.Message == "用户名已存在" {
+					c.JSON(http.StatusConflict, shared.ErrorResponse{
+						Code:      2003,
+						Message:   "用户名已被注册",
+						Timestamp: time.Now().UnixMilli(),
+					})
+				} else if serviceErr.Message == "邮箱已存在" {
+					c.JSON(http.StatusConflict, shared.ErrorResponse{
+						Code:      2004,
+						Message:   "邮箱已被注册",
+						Timestamp: time.Now().UnixMilli(),
+					})
+				} else {
+					shared.BadRequest(c, "注册失败", serviceErr.Message)
+				}
 			default:
 				shared.InternalError(c, "注册失败", err)
 			}

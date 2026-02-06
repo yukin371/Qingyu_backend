@@ -49,34 +49,35 @@ const (
 	// ========== 用户相关错误 (2000-2199) ==========
 
 	// 用户认证 (2000-2019)
-	UserNotFound       ErrorCode = 2001 // 用户不存在
-	InvalidCredentials ErrorCode = 2002 // 无效凭证
-	EmailAlreadyUsed   ErrorCode = 2003 // 邮箱已被使用
-	EmailSendFailed    ErrorCode = 2004 // 邮件发送失败
-	InvalidCode        ErrorCode = 2005 // 验证码无效
-	CodeExpired        ErrorCode = 2006 // 验证码过期
-	TokenExpired       ErrorCode = 2007 // Token过期
-	TokenInvalid       ErrorCode = 2008 // Token无效
-	TokenFormatError   ErrorCode = 2009 // Token格式错误
-	TokenMissing       ErrorCode = 2010 // Token缺失
-	RefreshTokenExpired ErrorCode = 2011 // Refresh Token过期
-	RefreshTokenInvalid ErrorCode = 2012 // Refresh Token无效
-	PasswordTooWeak    ErrorCode = 2013 // 密码强度不足
-	AccountLocked      ErrorCode = 2014 // 账户已锁定
-	AccountDisabled    ErrorCode = 2015 // 账户已禁用
-	TokenRevoked       ErrorCode = 2016 // Token已被撤销
-	SessionExpired     ErrorCode = 2017 // 会话过期
-	TooManyAttempts    ErrorCode = 2018 // 尝试次数过多
-	AccountNotVerified ErrorCode = 2019 // 账户未验证
+	UserNotFound         ErrorCode = 2001 // 用户不存在
+	InvalidCredentials   ErrorCode = 2002 // 无效凭证（用户名或密码错误）
+	UsernameAlreadyUsed  ErrorCode = 2003 // 用户名已被使用
+	EmailAlreadyUsed     ErrorCode = 2004 // 邮箱已被使用
+	EmailSendFailed      ErrorCode = 2005 // 邮件发送失败
+	InvalidCode          ErrorCode = 2006 // 验证码无效
+	CodeExpired          ErrorCode = 2007 // 验证码过期
+	TokenExpired         ErrorCode = 2008 // Token过期
+	TokenInvalid         ErrorCode = 2009 // Token无效
+	TokenFormatError     ErrorCode = 2010 // Token格式错误
+	TokenMissing         ErrorCode = 2011 // Token缺失
+	RefreshTokenExpired  ErrorCode = 2012 // Refresh Token过期
+	RefreshTokenInvalid  ErrorCode = 2013 // Refresh Token无效
+	PasswordTooWeak      ErrorCode = 2014 // 密码强度不足
+	AccountLocked        ErrorCode = 2015 // 账户已锁定
+	AccountDisabled      ErrorCode = 2016 // 账户已禁用
+	TokenRevoked         ErrorCode = 2017 // Token已被撤销
+	SessionExpired       ErrorCode = 2018 // 会话过期
+	TooManyAttempts      ErrorCode = 2019 // 尝试次数过多
+	AccountNotVerified   ErrorCode = 2020 // 账户未验证
 
 	// 邮箱和手机 (2020-2039)
-	PhoneAlreadyUsed    ErrorCode = 2020 // 手机号已使用
-	InvalidPhoneFormat  ErrorCode = 2021 // 手机号格式无效
-	EmailNotVerified    ErrorCode = 2022 // 邮箱未验证
-	PhoneNotVerified    ErrorCode = 2023 // 手机号未验证
-	SmsSendFailed       ErrorCode = 2024 // 短信发送失败
-	EmailSendTooFrequent ErrorCode = 2025 // 邮件发送过于频繁
-	SmsSendTooFrequent  ErrorCode = 2026 // 短信发送过于频繁
+	PhoneAlreadyUsed     ErrorCode = 2021 // 手机号已使用
+	InvalidPhoneFormat   ErrorCode = 2022 // 手机号格式无效
+	EmailNotVerified     ErrorCode = 2023 // 邮箱未验证
+	PhoneNotVerified     ErrorCode = 2024 // 手机号未验证
+	SmsSendFailed        ErrorCode = 2025 // 短信发送失败
+	EmailSendTooFrequent ErrorCode = 2026 // 邮件发送过于频繁
+	SmsSendTooFrequent   ErrorCode = 2027 // 短信发送过于频繁
 
 	// 评分相关 (2500-2599)
 	RatingNotFound       ErrorCode = 2501 // 评分不存在
@@ -206,6 +207,7 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	// 用户相关错误 (2000-2199)
 	UserNotFound:         "用户不存在",
 	InvalidCredentials:   "用户名或密码错误",
+	UsernameAlreadyUsed:  "用户名已被使用",
 	EmailAlreadyUsed:     "邮箱已被使用",
 	EmailSendFailed:      "邮件发送失败",
 	InvalidCode:          "验证码无效",
@@ -213,7 +215,7 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	TokenExpired:         "登录已过期，请重新登录",
 	TokenInvalid:         "无效的登录凭证",
 	TokenFormatError:     "Token格式错误",
-	TokenMissing:         "缺少认证Token",
+	TokenMissing:         "用户未认证",
 	RefreshTokenExpired:  "Refresh Token已过期",
 	RefreshTokenInvalid:  "无效的Refresh Token",
 	PasswordTooWeak:      "密码强度不足",
@@ -328,6 +330,7 @@ var DefaultHTTPStatus = map[ErrorCode]int{
 	// 用户相关错误 (2000-2199)
 	UserNotFound:         http.StatusNotFound,
 	InvalidCredentials:   http.StatusUnauthorized,
+	UsernameAlreadyUsed:  http.StatusConflict,
 	EmailAlreadyUsed:     http.StatusConflict,
 	EmailSendFailed:      http.StatusInternalServerError,
 	InvalidCode:          http.StatusBadRequest,
