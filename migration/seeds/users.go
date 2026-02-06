@@ -8,6 +8,7 @@ import (
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,37 +28,48 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 		return nil
 	}
 
-	// 准备测试用户
+	// 准备测试用户 - 显式生成 ID
 	now := time.Now()
 	base := shared.BaseEntity{CreatedAt: now, UpdatedAt: now}
+
+	// 为每个测试用户生成固定的 ObjectId
+	adminID := primitive.NewObjectID()
+	author1ID := primitive.NewObjectID()
+	reader1ID := primitive.NewObjectID()
+	reader2ID := primitive.NewObjectID()
+
 	testUsers := []users.User{
 		{
-			BaseEntity: base,
-			Username:   "admin",
-			Email:      "admin@qingyu.com",
-			Phone:      "13800138000",
-			Roles:      []string{"admin"},
+			IdentifiedEntity: shared.IdentifiedEntity{ID: adminID},
+			BaseEntity:       base,
+			Username:         "admin",
+			Email:            "admin@qingyu.com",
+			Phone:            "13800138000",
+			Roles:            []string{"admin"},
 		},
 		{
-			BaseEntity: base,
-			Username:   "author1",
-			Email:      "author1@qingyu.com",
-			Phone:      "13800138001",
-			Roles:      []string{"reader", "author"},
+			IdentifiedEntity: shared.IdentifiedEntity{ID: author1ID},
+			BaseEntity:       base,
+			Username:         "author1",
+			Email:            "author1@qingyu.com",
+			Phone:            "13800138001",
+			Roles:            []string{"reader", "author"},
 		},
 		{
-			BaseEntity: base,
-			Username:   "reader1",
-			Email:      "reader1@qingyu.com",
-			Phone:      "13800138002",
-			Roles:      []string{"reader"},
+			IdentifiedEntity: shared.IdentifiedEntity{ID: reader1ID},
+			BaseEntity:       base,
+			Username:         "reader1",
+			Email:            "reader1@qingyu.com",
+			Phone:            "13800138002",
+			Roles:            []string{"reader"},
 		},
 		{
-			BaseEntity: base,
-			Username:   "reader2",
-			Email:      "reader2@qingyu.com",
-			Phone:      "13800138003",
-			Roles:      []string{"reader"},
+			IdentifiedEntity: shared.IdentifiedEntity{ID: reader2ID},
+			BaseEntity:       base,
+			Username:         "reader2",
+			Email:            "reader2@qingyu.com",
+			Phone:            "13800138003",
+			Roles:            []string{"reader"},
 		},
 	}
 
