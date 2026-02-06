@@ -11,10 +11,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"Qingyu_backend/global"
+	"Qingyu_backend/models/ai"
 	"Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/users"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 	userRepo "Qingyu_backend/repository/mongodb/user"
+	"Qingyu_backend/service"
 )
 
 // Fixtures 测试数据夹具
@@ -131,7 +133,49 @@ func (f *Fixtures) CreateUser(opts ...UserOption) *users.User {
 
 	f.env.LogSuccess("创建用户: %s (%s)", user.Username, user.ID.Hex())
 
+	// 为测试用户初始化AI配额（用于AI功能测试）
+	f.InitializeUserAIQuota(user.ID.Hex(), user.Roles)
+
 	return user
+}
+
+// InitializeUserAIQuota 为用户初始化AI配额
+func (f *Fixtures) InitializeUserAIQuota(userID string, roles []string) {
+	sc := service.GetServiceContainer()
+	if sc == nil {
+		f.env.T.Logf("⚠ 服务容器未初始化，跳过AI配额初始化")
+		return
+	}
+
+	quotaService, err := sc.GetQuotaService()
+	if err != nil {
+		f.env.T.Logf("⚠ 获取配额服务失败: %v，跳过AI配额初始化", err)
+		return
+	}
+
+	// 确定用户角色（默认为reader）
+	userRole := "reader"
+	if len(roles) > 0 {
+		userRole = roles[0]
+	}
+
+	// 初始化配额
+	err = quotaService.InitializeUserQuota(context.Background(), userID, userRole, "normal")
+	if err != nil {
+		f.env.T.Logf("⚠ 初始化AI配额失败: %v", err)
+		return
+	}
+
+	// 为E2E测试增加额外的配额
+	// 因为配额检查中间件预估1000 tokens，而普通用户只有5次配额
+	// 所以需要为测试用户增加足够的配额
+	err = quotaService.UpdateUserQuota(context.Background(), userID, ai.QuotaTypeDaily, 10000)
+	if err != nil {
+		f.env.T.Logf("⚠ 增加AI配额失败: %v", err)
+		return
+	}
+
+	f.env.LogSuccess("初始化用户AI配额: %s (角色: %s, 配额: 10000)", userID, userRole)
 }
 
 // CreateBook 创建测试书籍（带 e2e_test_ 前缀）

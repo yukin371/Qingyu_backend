@@ -40,6 +40,16 @@ var DefaultConfig = &Config{
 	BatchSize: 100,
 }
 
+// E2EConfig 是E2E测试环境的配置
+var E2EConfig = &Config{
+	MongoDB: MongoDBConfig{
+		URI:      "mongodb://localhost:27017",
+		Database: "qingyu",
+	},
+	Scale:     "small",
+	BatchSize: 100,
+}
+
 // GetScaleConfig returns the scale configuration for the given scale name
 func GetScaleConfig(scale string) ScaleConfig {
 	scales := map[string]ScaleConfig{

@@ -155,9 +155,18 @@ func TestReadingFlow(t *testing.T) {
 				if len(chapters) > 0 {
 					// 保存第一章的ID用于后续测试
 					if firstChapter, ok := chapters[0].(map[string]interface{}); ok {
-						if chapterID, ok := firstChapter["id"].(string); ok {
+						// 尝试获取 chapterId 或 id 字段
+						var chapterID string
+						if id, ok := firstChapter["chapterId"].(string); ok {
+							chapterID = id
+						} else if id, ok := firstChapter["id"].(string); ok {
+							chapterID = id
+						}
+						if chapterID != "" {
 							env.SetTestData("test_chapter_id", chapterID)
 							t.Logf("✓ 选择测试章节: %s", chapterID)
+						} else {
+							t.Error("章节ID字段未找到")
 						}
 					}
 				} else {
@@ -186,22 +195,16 @@ func TestReadingFlow(t *testing.T) {
 		chapterContent := actions.GetChapter(chapterID.(string), token.(string))
 
 		if data, ok := chapterContent["data"].(map[string]interface{}); ok {
-			if title, ok := data["title"].(string); ok {
-				t.Logf("✓ 章节内容获取成功: %s", title)
-
-				// 验证章节内容完整性
-				if content, ok := data["content"].(string); ok && len(content) > 0 {
-					t.Logf("✓ 章节内容完整，内容长度: %d", len(content))
-				} else {
-					t.Error("章节内容为空")
-				}
-
-				// 保存章节信息用于导航测试
-				if bookID, ok := data["book_id"].(string); ok {
-					env.SetTestData("current_book_id", bookID)
-				}
+			// 验证章节内容完整性
+			if content, ok := data["content"].(string); ok && len(content) > 0 {
+				t.Logf("✓ 章节内容获取成功，内容长度: %d", len(content))
 			} else {
-				t.Error("章节内容中未找到title字段")
+				t.Error("章节内容为空")
+			}
+
+			// content API 返回 chapter_id 和 content
+			if chapterID, ok := data["chapter_id"].(string); ok {
+				t.Logf("✓ 章节ID: %s", chapterID)
 			}
 		} else {
 			t.Error("章节内容响应格式不正确")

@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"Qingyu_backend/cmd/seeder/models"
@@ -23,6 +24,44 @@ func NewTestDataSeeder(db *utils.Database) *TestDataSeeder {
 	return &TestDataSeeder{db: db}
 }
 
+// Clean 清空测试数据
+func (s *TestDataSeeder) Clean() error {
+	ctx := context.Background()
+
+	// 清空章节内容
+	_, err := s.db.Collection("chapter_contents").DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("清空章节内容失败: %w", err)
+	}
+
+	// 清空章节
+	_, err = s.db.Collection("chapters").DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("清空章节失败: %w", err)
+	}
+
+	// 清空书籍
+	_, err = s.db.Collection("books").DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("清空书籍失败: %w", err)
+	}
+
+	// 清空分类
+	_, err = s.db.Collection("categories").DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("清空分类失败: %w", err)
+	}
+
+	// 清空测试用户
+	_, err = s.db.Collection("users").DeleteMany(ctx, bson.M{"username": "testuser"})
+	if err != nil {
+		return fmt.Errorf("清空测试用户失败: %w", err)
+	}
+
+	fmt.Println("✓ 已清空所有测试数据")
+	return nil
+}
+
 // SeedTestData 填充测试所需的数据
 func (s *TestDataSeeder) SeedTestData() error {
 	fmt.Println("开始填充测试数据...")
@@ -31,12 +70,16 @@ func (s *TestDataSeeder) SeedTestData() error {
 		return fmt.Errorf("填充测试用户失败: %w", err)
 	}
 
+	if err := s.seedTestCategories(); err != nil {
+		return fmt.Errorf("填充测试分类失败: %w", err)
+	}
+
 	if err := s.seedTestBooks(); err != nil {
 		return fmt.Errorf("填充测试书籍失败: %w", err)
 	}
 
-	if err := s.seedTestCategories(); err != nil {
-		return fmt.Errorf("填充测试分类失败: %w", err)
+	if err := s.seedTestChapters(); err != nil {
+		return fmt.Errorf("填充测试章节失败: %w", err)
 	}
 
 	fmt.Println("✅ 测试数据填充完成!")
@@ -284,4 +327,133 @@ func (s *TestDataSeeder) seedTestCategories() error {
 
 	fmt.Println("✓ 已创建测试分类: 玄幻、修仙")
 	return nil
+}
+
+// seedTestChapters 为测试书籍创建章节
+func (s *TestDataSeeder) seedTestChapters() error {
+	ctx := context.Background()
+	booksCollection := s.db.Collection("books")
+	chaptersCollection := s.db.Collection("chapters")
+	contentCollection := s.db.Collection("chapter_contents")
+
+	// 获取所有修仙类测试书籍
+	cursor, err := booksCollection.Find(ctx, bson.M{"categories": bson.M{"$in": []string{"修仙"}}})
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	var books []models.Book
+	if err = cursor.All(ctx, &books); err != nil {
+		return err
+	}
+
+	if len(books) == 0 {
+		fmt.Println("✓ 没有找到需要创建章节的测试书籍")
+		return nil
+	}
+
+	now := time.Now()
+
+	// 为每本书创建10个测试章节
+	for _, book := range books {
+		// 检查是否已有章节
+		count, _ := chaptersCollection.CountDocuments(ctx, bson.M{"book_id": book.ID})
+		if count > 0 {
+			fmt.Printf("✓ 《%s》已有 %d 个章节，跳过\n", book.Title, count)
+			continue
+		}
+
+		var chapters []interface{}
+		var contents []interface{}
+
+		// 创建10个章节
+		for i := 1; i <= 10; i++ {
+			chapterID := primitive.NewObjectID()
+
+			chapter := models.Chapter{
+				ID:          chapterID,
+				BookID:      book.ID,
+				ChapterNum:  i,
+				Title:       fmt.Sprintf("第%d章 %s", i, s.getChapterTitleSuffix(i)),
+				WordCount:   1000 + rand.Intn(500),
+				Price:       0, // 测试章节全部免费
+				IsFree:      true,
+				Status:      "published",
+				PublishedAt: book.PublishedAt.Add(time.Duration(i) * 24 * time.Hour),
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			}
+			chapters = append(chapters, chapter)
+
+			// 创建章节内容
+			content := models.ChapterContent{
+				ChapterID: chapterID,
+				Content:   s.generateTestChapterContent(i),
+				WordCount: int(1000 + rand.Intn(500)),
+				CreatedAt: now,
+				UpdatedAt: now,
+			}
+			contents = append(contents, content)
+		}
+
+		// 插入章节
+		_, err = chaptersCollection.InsertMany(ctx, chapters)
+		if err != nil {
+			return fmt.Errorf("插入《%s》章节失败: %w", book.Title, err)
+		}
+
+		// 插入章节内容
+		_, err = contentCollection.InsertMany(ctx, contents)
+		if err != nil {
+			return fmt.Errorf("插入《%s》章节内容失败: %w", book.Title, err)
+		}
+
+		fmt.Printf("✓ 为《%s》创建了 %d 个测试章节\n", book.Title, 10)
+	}
+
+	return nil
+}
+
+// getChapterTitleSuffix 获取章节标题后缀
+func (s *TestDataSeeder) getChapterTitleSuffix(num int) string {
+	suffixes := []string{
+		"初入江湖", "机缘巧合", "实力大增", "遭遇强敌", "突破境界",
+		"险象环生", "绝地反击", "获得传承", "扬名立万", "再攀高峰",
+	}
+	return suffixes[(num-1)%len(suffixes)]
+}
+
+// generateTestChapterContent 生成测试章节内容
+func (s *TestDataSeeder) generateTestChapterContent(chapterNum int) string {
+	titles := []string{
+		"初入江湖", "机缘巧合", "实力大增", "遭遇强敌", "突破境界",
+		"险象环生", "绝地反击", "获得传承", "扬名立万", "再攀高峰",
+	}
+	title := titles[(chapterNum-1)%len(titles)]
+
+	return fmt.Sprintf(`# 第%d章 %s
+
+清晨的阳光洒在少年脸上，他缓缓睁开双眼，感受到体内涌动的力量。
+
+这是修仙世界的第一天，他知道自己的人生将彻底改变。
+
+## 奇遇的开始
+
+回忆起昨日的经历，一切仿佛还在眼前。那本神秘的古籍，那道耀眼的光芒，还有那个神秘的声音...
+
+"既然天道不公，那我便逆天而行！"少年握紧拳头，眼神坚定。
+
+## 修炼之路
+
+修仙之路充满艰辛，但他已经做好了准备。古籍中记载的修炼法门开始在他脑海中流转。
+
+天地灵气缓缓涌入体内，沿着经脉流转，滋润着他的丹田。
+
+这是他修仙之路的开始，也是他传奇人生的起点。
+
+---
+
+（本章测试内容，共约1000字）
+`, chapterNum, title)
 }

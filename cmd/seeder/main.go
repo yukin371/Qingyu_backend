@@ -523,6 +523,16 @@ func runTestData(cmd *cobra.Command, args []string) {
 	}
 	defer db.Disconnect()
 
+	// 如果需要清空数据
+	if cfg.Clean {
+		fmt.Println("\n清空现有测试数据...")
+		seeder := NewTestDataSeeder(db)
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空测试数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	seeder := NewTestDataSeeder(db)
 
 	if err := seeder.SeedTestData(); err != nil {
