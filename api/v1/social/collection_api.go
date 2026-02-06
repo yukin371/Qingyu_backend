@@ -248,12 +248,16 @@ func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
 // @Tags 阅读端-收藏
 // @Accept json
 // @Produce json
-// @Param book_id path string true "书籍ID"
+// @Param book_id query string true "书籍ID"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/reader/collections/check/{book_id} [get]
+// @Router /api/v1/social/collections/check [get]
 // @Security Bearer
 func (api *CollectionAPI) CheckCollected(c *gin.Context) {
+	// 支持路径参数和查询参数两种方式
 	bookID := c.Param("book_id")
+	if bookID == "" {
+		bookID = c.Query("book_id")
+	}
 	if bookID == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
