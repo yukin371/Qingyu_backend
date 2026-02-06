@@ -13,12 +13,13 @@ type RegisterRequest struct {
 
 // RegisterResponse 注册响应
 type RegisterResponse struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
-	Status   string `json:"status"`
-	Token    string `json:"token"`
+	UserID   string   `json:"user_id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Role     string   `json:"role"`
+	Roles    []string `json:"roles"` // 用户角色列表
+	Status   string   `json:"status"`
+	Token    string   `json:"token"`
 }
 
 // LoginRequest 登录请求
@@ -31,4 +32,5 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string        `json:"token"`
 	User  UserBasicInfo `json:"user"`
+	Roles []string      `json:"roles"` // 用户角色列表
 }

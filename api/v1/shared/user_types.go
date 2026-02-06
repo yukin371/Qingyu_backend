@@ -48,10 +48,11 @@ type PublicUserProfileResponse struct {
 // UserBasicInfo 基本用户信息
 // 用于：登录响应、注册响应、简单用户引用
 type UserBasicInfo struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Role     string `json:"role,omitempty"`
+	UserID   string   `json:"user_id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Role     string   `json:"role,omitempty"`
+	Roles    []string `json:"roles,omitempty"` // 用户角色列表
 }
 
 // ===========================

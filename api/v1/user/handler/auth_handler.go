@@ -77,6 +77,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Username: resp.User.Username,
 		Email:    resp.User.Email,
 		Role:     role,
+		Roles:    resp.User.Roles, // 返回完整的角色列表
 		Status:   resp.User.Status,
 		Token:    resp.Token,
 	}
@@ -144,7 +145,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			Username: resp.User.Username,
 			Email:    resp.User.Email,
 			Role:     role,
+			Roles:    resp.User.Roles, // 返回完整的角色列表
 		},
+		Roles: resp.User.Roles, // 顶层也返回roles，方便前端访问
 	}
 
 	shared.Success(c, http.StatusOK, "登录成功", loginResp)
