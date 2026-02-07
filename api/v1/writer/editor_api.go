@@ -1,11 +1,12 @@
 package writer
 
 import (
+	"context"
 	documentModel "Qingyu_backend/models/writer"
 
 	"github.com/gin-gonic/gin"
 
-		"Qingyu_backend/service/writer/document"
+	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -47,7 +48,13 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 
 	req.DocumentID = documentID
 
-	resp, err := api.documentService.AutoSaveDocument(c.Request.Context(), &req)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	resp, err := api.documentService.AutoSaveDocument(ctx, &req)
 	if err != nil {
 		// 检查是否是版本冲突
 		if err.Error() == "版本冲突" {
@@ -73,7 +80,13 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 	documentID := c.Param("id")
 
-	status, err := api.documentService.GetSaveStatus(c.Request.Context(), documentID)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	status, err := api.documentService.GetSaveStatus(ctx, documentID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -94,7 +107,13 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
 
-	content, err := api.documentService.GetDocumentContent(c.Request.Context(), documentID)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	content, err := api.documentService.GetDocumentContent(ctx, documentID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -124,7 +143,13 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 
 	req.DocumentID = documentID
 
-	if err := api.documentService.UpdateDocumentContent(c.Request.Context(), &req); err != nil {
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	if err := api.documentService.UpdateDocumentContent(ctx, &req); err != nil {
 		response.InternalError(c, err)
 		return
 	}
