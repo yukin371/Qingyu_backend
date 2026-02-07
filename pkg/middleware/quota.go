@@ -27,7 +27,7 @@ func NewQuotaMiddleware(quotaService *aiService.QuotaService) *QuotaMiddleware {
 func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取用户ID
-		userID, exists := c.Get("userId")
+		userID, exists := c.Get("user_id")
 		if !exists {
 			shared.Error(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
 			c.Abort()

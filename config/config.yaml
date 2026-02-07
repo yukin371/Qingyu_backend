@@ -4,7 +4,7 @@
 database:
   # Docker环境使用服务名，本地开发使用localhost
   uri: "mongodb://localhost:27017"  # Docker: mongodb | 本地: localhost
-  name: "Qingyu_backend"
+  name: "qingyu"  # 使用 qingyu 数据库（实际数据存储在这里）
   connect_timeout: 10s
   max_pool_size: 100
   min_pool_size: 10
