@@ -147,8 +147,17 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 		return
 	}
 
+	// 使用logger记录调试信息
+	api.logger.Info("[DEBUG] GetBookByID called",
+		zap.String("id", id),
+		zap.String("path", c.Request.URL.Path))
+
 	book, err := api.service.GetBookByID(c.Request.Context(), id)
 	if err != nil {
+		api.logger.Error("[DEBUG] GetBookByID service error",
+			zap.String("id", id),
+			zap.Error(err))
+
 		if err.Error() == "book not found" || err.Error() == "book not available" {
 			// 按需返回空数据而非404，便于前端容错显示
 			response.SuccessWithMessage(c, "书籍不存在或不可用", nil)
@@ -158,6 +167,10 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 		response.InternalError(c, err)
 		return
 	}
+
+	api.logger.Info("[DEBUG] GetBookByID success",
+		zap.String("id", id),
+		zap.String("title", book.Title))
 
 	// 转换为 DTO
 	bookDTO := ToBookDTO(book)

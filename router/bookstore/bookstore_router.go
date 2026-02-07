@@ -62,7 +62,8 @@ func InitBookstoreRouter(
 	// 初始化其他服务的API处理器
 	var bookDetailApiHandler *bookstoreApi.BookDetailAPI
 	if bookDetailService != nil {
-		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookDetailService)
+		// 传入BookstoreService以确保/books/:id/detail与/books/:id使用相同数据源
+		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookDetailService, bookstoreService)
 	}
 
 	// 初始化Rating API处理器
@@ -103,6 +104,8 @@ func InitBookstoreRouter(
 			// 书籍列表和搜索 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/books", bookstoreApiHandler.GetBooks) // 必须放在 /books/:id 之前
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
+			public.GET("/books/stream", bookstoreApiHandler.StreamSearchBooks) // 新增：流式搜索
+			public.GET("/books/stream-batch", bookstoreApiHandler.StreamSearchBooksBatch) // 新增：批量流式搜索
 			public.GET("/books/search/title", bookstoreApiHandler.SearchByTitle) // 新增：按标题搜索
 			public.GET("/books/search/author", bookstoreApiHandler.SearchByAuthor) // 新增：按作者搜索
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
@@ -110,6 +113,16 @@ func InitBookstoreRouter(
 			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags) // 新增：按标签筛选
 			public.GET("/books/status", bookstoreApiHandler.GetBooksByStatus) // 新增：按状态筛选
 			public.GET("/books/years", bookstoreApiHandler.GetYears) // 新增：获取年份列表（必须在 /books/:id 之前）
+
+			// 书籍详情接口（当BookDetailAPI可用时）- 必须在 /books/:id 之前注册
+			if bookDetailApiHandler != nil {
+				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
+				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
+				// ✅ 浏览量记录API（公开接口，不需要认证）
+				public.POST("/books/:id/view", bookDetailApiHandler.IncrementViewCount)
+			}
+
+			// /books/:id 路由必须放在所有更具体的 /books/:id/* 路由之后
 			public.GET("/books/:id", bookstoreApiHandler.GetBookByID)
 			public.GET("/books/:id/similar", bookstoreApiHandler.GetSimilarBooks) // 新增：相似书籍推荐（四层降级策略）
 
@@ -132,15 +145,6 @@ func InitBookstoreRouter(
 			public.GET("/rankings/monthly", bookstoreApiHandler.GetMonthlyRanking)
 			public.GET("/rankings/newbie", bookstoreApiHandler.GetNewbieRanking)
 			public.GET("/rankings/:type", bookstoreApiHandler.GetRankingByType)
-
-			// 书籍详情接口（当BookDetailAPI可用时）
-			if bookDetailApiHandler != nil {
-				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
-				// 注意：GetSimilarBooks 已移至 bookstoreApiHandler，符合 P1 设计文档
-				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
-				// ✅ 浏览量记录API（公开接口，不需要认证）
-				public.POST("/books/:id/view", bookDetailApiHandler.IncrementViewCount)
-			}
 
 			// ✅ 统计API（当StatisticsService可用时）
 			// 注意：BookDetailAPI中已包含GetBookStatistics

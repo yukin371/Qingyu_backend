@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -14,13 +15,16 @@ import (
 
 // BookDetailAPI 书籍详情API处理器
 type BookDetailAPI struct {
-	service bookstoreService.BookDetailService
+	bookstoreService bookstoreService.BookstoreService
+	bookDetailService bookstoreService.BookDetailService
 }
 
 // NewBookDetailAPI 创建书籍详情API实例
-func NewBookDetailAPI(service bookstoreService.BookDetailService) *BookDetailAPI {
+// 优先使用BookstoreService以确保与/books/:id接口数据一致
+func NewBookDetailAPI(bookDetailService bookstoreService.BookDetailService, bookstoreService bookstoreService.BookstoreService) *BookDetailAPI {
 	return &BookDetailAPI{
-		service: service,
+		bookstoreService: bookstoreService,
+		bookDetailService: bookDetailService,
 	}
 }
 
@@ -44,23 +48,45 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	book, err := api.service.GetBookDetailByID(c.Request.Context(), id.Hex())
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "书籍不存在")
+	// 优先使用BookstoreService，确保与/books/:id接口数据一致
+	// BookDetailRepository使用"books" collection但用BookDetail模型decode导致数据解析失败
+	if api.bookstoreService != nil {
+		book, err := api.bookstoreService.GetBookByID(c.Request.Context(), idStr)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
+				response.NotFound(c, "书籍不存在")
+				return
+			}
+			response.InternalError(c, err)
 			return
 		}
-		response.InternalError(c, err)
+		response.Success(c, book)
 		return
 	}
 
-	response.Success(c, book)
+	// 降级方案：如果没有提供BookstoreService，使用BookDetailService
+	// 这需要数据库中有BookDetail格式的数据
+	if api.bookDetailService != nil {
+		_, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			response.BadRequest(c, "参数错误", "无效的书籍ID格式")
+			return
+		}
+
+		book, err := api.bookDetailService.GetBookDetailByID(c.Request.Context(), idStr)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				response.NotFound(c, "书籍不存在")
+				return
+			}
+			response.InternalError(c, err)
+			return
+		}
+		response.Success(c, book)
+		return
+	}
+
+	response.InternalError(c, errors.New("服务未初始化"))
 }
 
 // GetBooksByTitle 根据标题搜索书籍
@@ -94,7 +120,7 @@ func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetBooksByTitle(c.Request.Context(), title, page, size)
+	books, total, err := api.bookDetailService.GetBooksByTitle(c.Request.Context(), title, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -134,7 +160,7 @@ func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetBooksByAuthor(c.Request.Context(), author, page, size)
+	books, total, err := api.bookDetailService.GetBooksByAuthor(c.Request.Context(), author, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -174,7 +200,7 @@ func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), category, page, size)
+	books, total, err := api.bookDetailService.GetBooksByCategory(c.Request.Context(), category, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -228,7 +254,7 @@ func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetBooksByStatus(c.Request.Context(), status, page, size)
+	books, total, err := api.bookDetailService.GetBooksByStatus(c.Request.Context(), status, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -273,7 +299,7 @@ func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.GetBooksByTags(c.Request.Context(), tags, page, size)
+	books, total, err := api.bookDetailService.GetBooksByTags(c.Request.Context(), tags, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -313,7 +339,7 @@ func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
 		size = 20
 	}
 
-	books, total, err := api.service.SearchBooks(c.Request.Context(), keyword, page, size)
+	books, total, err := api.bookDetailService.SearchBooks(c.Request.Context(), keyword, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -339,7 +365,7 @@ func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	books, err := api.service.GetRecommendedBooks(c.Request.Context(), limit)
+	books, err := api.bookDetailService.GetRecommendedBooks(c.Request.Context(), limit)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -379,7 +405,7 @@ func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	books, err := api.service.GetSimilarBooks(c.Request.Context(), id.Hex(), limit)
+	books, err := api.bookDetailService.GetSimilarBooks(c.Request.Context(), id.Hex(), limit)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -405,7 +431,7 @@ func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	books, err := api.service.GetPopularBooks(c.Request.Context(), limit)
+	books, err := api.bookDetailService.GetPopularBooks(c.Request.Context(), limit)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -431,7 +457,7 @@ func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
 		limit = 10
 	}
 
-	books, err := api.service.GetLatestBooks(c.Request.Context(), limit)
+	books, err := api.bookDetailService.GetLatestBooks(c.Request.Context(), limit)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -467,7 +493,7 @@ func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
 	}
 
 	// 获取统计信息
-	totalCount, err := api.service.CountBooksByCategory(c.Request.Context(), "")
+	totalCount, err := api.bookDetailService.CountBooksByCategory(c.Request.Context(), "")
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -501,7 +527,7 @@ func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
 		return
 	}
 
-	if err := api.service.CreateBookDetail(c.Request.Context(), &book); err != nil {
+	if err := api.bookDetailService.CreateBookDetail(c.Request.Context(), &book); err != nil {
 		response.InternalError(c, err)
 		return
 	}
@@ -544,7 +570,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 
 	// ID 已在 DTO 中处理，无需再赋值
 
-	if err := api.service.UpdateBookDetail(c.Request.Context(), &book); err != nil {
+	if err := api.bookDetailService.UpdateBookDetail(c.Request.Context(), &book); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "书籍不存在")
 			return
@@ -582,7 +608,7 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 		return
 	}
 
-	if err := api.service.DeleteBookDetail(c.Request.Context(), id.Hex()); err != nil {
+	if err := api.bookDetailService.DeleteBookDetail(c.Request.Context(), id.Hex()); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "书籍不存在")
 			return
@@ -615,19 +641,39 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
+	// 优先使用BookstoreService，确保数据一致性
+	if api.bookstoreService != nil {
+		err := api.bookstoreService.IncrementBookView(c.Request.Context(), idStr)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
+				response.NotFound(c, "书籍不存在")
+				return
+			}
+			response.InternalError(c, err)
+			return
+		}
+		response.SuccessWithMessage(c, "浏览量增加成功", nil)
 		return
 	}
 
-	err = api.service.IncrementViewCount(c.Request.Context(), id.Hex())
-	if err != nil {
-		response.InternalError(c, err)
+	// 降级方案：使用BookDetailService
+	if api.bookDetailService != nil {
+		_, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			response.BadRequest(c, "参数错误", "无效的书籍ID格式")
+			return
+		}
+
+		err = api.bookDetailService.IncrementViewCount(c.Request.Context(), idStr)
+		if err != nil {
+			response.InternalError(c, err)
+			return
+		}
+		response.SuccessWithMessage(c, "浏览量增加成功", nil)
 		return
 	}
 
-	response.SuccessWithMessage(c, "浏览量增加成功", nil)
+	response.InternalError(c, errors.New("服务未初始化"))
 }
 
 // IncrementLikeCount 增加书籍点赞数
@@ -656,7 +702,7 @@ func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
 		return
 	}
 
-	err = api.service.IncrementLikeCount(c.Request.Context(), id.Hex())
+	err = api.bookDetailService.IncrementLikeCount(c.Request.Context(), id.Hex())
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -691,7 +737,7 @@ func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
 		return
 	}
 
-	err = api.service.DecrementLikeCount(c.Request.Context(), id.Hex())
+	err = api.bookDetailService.DecrementLikeCount(c.Request.Context(), id.Hex())
 	if err != nil {
 		response.InternalError(c, err)
 		return

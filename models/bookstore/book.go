@@ -24,10 +24,10 @@ type Book struct {
 	shared.IdentifiedEntity `bson:",inline"`
 	shared.BaseEntity       `bson:",inline"`
 
-	Title         string               `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
-	Author        string               `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者
-	AuthorID      primitive.ObjectID   `bson:"author_id,omitempty" json:"authorId,omitempty"`        // 作者ID
-	Introduction  string               `bson:"introduction" json:"introduction" validate:"max=1000"` // 简介
+	Title         string `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
+	Author        string `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者
+	AuthorID      string `bson:"author_id,omitempty" json:"authorId,omitempty"`        // 作者ID（字符串格式，支持UUID）
+	Introduction  string `bson:"introduction" json:"introduction" validate:"max=1000"` // 简介
 	Cover         string               `bson:"cover" json:"cover" validate:"url"`                    // 封面URL
 	CategoryIDs   []primitive.ObjectID `bson:"category_ids" json:"categoryIds"`                     // 分类ID列表
 	Categories    []string             `bson:"categories" json:"categories"`                        // 分类名称（冗余字段，便于展示）
@@ -65,6 +65,7 @@ type BookFilter struct {
 	SortOrder     string      `json:"sortOrder,omitempty"` // asc, desc
 	Limit         int         `json:"limit,omitempty"`
 	Offset        int         `json:"offset,omitempty"`
+	Cursor        *string     `json:"cursor,omitempty"` // 流式搜索游标
 }
 
 // BookStats 书籍统计信息

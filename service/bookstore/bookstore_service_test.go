@@ -1070,12 +1070,27 @@ func TestBookstoreService_SearchBooksWithFilter(t *testing.T) {
 
 	filter := &bookstoreModel.BookFilter{
 		Keyword: stringPtr("测试"),
+		Limit:   20,
+		Offset:  0,
 	}
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{
+				Title:  "测试书籍",
+				Author: "测试作者",
+				Status: bookstoreModel.BookStatusOngoing,
+			}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
-	mockBookRepo.On("SearchWithFilter", ctx, filter).Return(books, nil)
+	// SearchBooksWithFilter会先调用SearchWithFilter获取所有符合条件的书籍（不包含关键词）
+	// 然后在Go代码中进行关键词过滤
+	// 注意：实现会把Limit设置为0以获取所有书籍
+	mockBookRepo.On("SearchWithFilter", ctx, mock.MatchedBy(func(f *bookstoreModel.BookFilter) bool {
+		return f.Keyword == nil && f.Limit == 0 && f.Offset == 0
+	})).Return(books, nil)
 
 	// Act
 	result, total, err := service.SearchBooksWithFilter(ctx, filter)

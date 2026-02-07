@@ -53,20 +53,35 @@ func (r *MongoBookRepository) Create(ctx context.Context, book *bookstore.Book) 
 
 // GetByID 根据ID获取书籍
 func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstore.Book, error) {
-	objectID, err := r.ParseID(id)
+	log.Printf("[DEBUG] GetByID(%s) database: %s, collection: %s\n",
+		id, r.GetDB().Name(), r.GetCollection().Name())
+
+	// 由于数据库中的 _id 字段是字符串类型，直接使用字符串查询
+	// 而不是转换为 ObjectID
+	var book bookstore.Book
+	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&book)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("[DEBUG] GetByID(%s) no documents found for query: {_id: %s}\n", id, id)
+			return nil, nil
+		}
+		log.Printf("[DEBUG] GetByID(%s) decode error: %v\n", id, err)
 		return nil, err
 	}
 
-	var book bookstore.Book
-	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&book)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil
-		}
-		return nil, err
-	}
+	log.Printf("[DEBUG] GetByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status)
 	return &book, nil
+}
+
+// getSampleBookIDs 辅助函数：从 BSON 文档中提取 ID
+func getSampleBookIDs(docs []bson.M) []string {
+	ids := make([]string, 0, len(docs))
+	for _, doc := range docs {
+		if id, ok := doc["_id"].(primitive.ObjectID); ok {
+			ids = append(ids, id.Hex())
+		}
+	}
+	return ids
 }
 
 // Update 更新书籍
@@ -278,15 +293,28 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
 	}, opts)
 	if err != nil {
+		log.Printf("[DEBUG] GetHotBooks failed: %v\n", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var books []*bookstore.Book
 	if err = cursor.All(ctx, &books); err != nil {
+		log.Printf("[DEBUG] GetHotBooks decode failed: %v\n", err)
 		return nil, err
 	}
+
+	log.Printf("[DEBUG] GetHotBooks found %d books, IDs: %v\n", len(books), getHotBookIDs(books))
 	return books, nil
+}
+
+// getHotBookIDs 辅助函数：从 Book 指针切片中提取 ID
+func getHotBookIDs(books []*bookstore.Book) []string {
+	ids := make([]string, 0, len(books))
+	for _, book := range books {
+		ids = append(ids, book.ID.Hex())
+	}
+	return ids
 }
 
 // GetNewReleases 获取新上架书籍

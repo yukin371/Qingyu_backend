@@ -120,6 +120,21 @@ func (r *MongoCommentRepository) GetByID(ctx context.Context, id string) (*socia
 	return &comment, nil
 }
 
+// Exists 检查评论是否存在
+func (r *MongoCommentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid id: %w", err)
+	}
+
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		return false, fmt.Errorf("failed to check comment existence: %w", err)
+	}
+
+	return count > 0, nil
+}
+
 // Update 更新评论
 func (r *MongoCommentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	objectID, err := primitive.ObjectIDFromHex(id)

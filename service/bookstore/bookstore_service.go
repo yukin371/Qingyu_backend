@@ -115,18 +115,24 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 	// Repository 层现在接受 string 类型的 ID
 	book, err := s.bookRepo.GetByID(ctx, id)
 	if err != nil {
+		fmt.Printf("[DEBUG] GetBookByID(%s) repository error: %v\n", id, err)
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
 
 	if book == nil {
+		fmt.Printf("[DEBUG] GetBookByID(%s) book not found (nil)\n", id)
 		return nil, errors.New("book not found")
 	}
 
+	fmt.Printf("[DEBUG] GetBookByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status)
+
 	// 只有连载中和已完结的书籍可以访问
 	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
+		fmt.Printf("[DEBUG] GetBookByID(%s) book status check failed: %s not in [ongoing, completed]\n", id, book.Status)
 		return nil, errors.New("book not available")
 	}
 
+	fmt.Printf("[DEBUG] GetBookByID(%s) returning book successfully\n", id)
 	return book, nil
 }
 
@@ -672,12 +678,23 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 	}()
 
 	// 等待所有goroutine完成
+	var firstError error
 	for i := 0; i < 8; i++ {
 		if err := <-errChan; err != nil {
-			return nil, err
+			// 记录错误但不中断，让其他goroutine继续
+			fmt.Printf("[WARNING] GetHomepageData部分数据获取失败: %v\n", err)
+			if firstError == nil {
+				firstError = err
+			}
 		}
 	}
 
+	// 只在所有关键数据都失败时才返回错误
+	// 关键数据：推荐书籍、精选书籍
+	if data.RecommendedBooks == nil && data.FeaturedBooks == nil {
+		return nil, firstError
+	}
+	// 其他数据缺失是可以接受的，返回部分数据
 	return data, nil
 }
 

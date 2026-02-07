@@ -43,7 +43,7 @@ func ToBookDTO(book *bookstore.Book) *dto.BookDTO {
 		// 基本信息
 		Title:        book.Title,
 		Author:       book.Author,
-		AuthorID:     converter.ModelIDToDTO(book.AuthorID),
+		AuthorID:     book.AuthorID, // AuthorID 现在是 string 类型，直接赋值
 		Introduction: book.Introduction,
 		Cover:        book.Cover,
 
@@ -114,10 +114,8 @@ func ToBookModel(dto *dto.BookDTO) (*bookstore.Book, error) {
 		return nil, err
 	}
 
-	authorID, err := converter.DTOIDToModel(dto.AuthorID)
-	if err != nil {
-		return nil, err
-	}
+	// AuthorID 现在是 string 类型，直接使用
+	authorID := dto.AuthorID
 
 	// 转换分类 ID 列表
 	categoryIDs, err := converter.DTOIDsToModel(dto.CategoryIDs)
@@ -210,10 +208,8 @@ func ToBookModelWithoutID(dto *dto.BookDTO) (*bookstore.Book, error) {
 
 	var converter types.DTOConverter
 
-	authorID, err := converter.DTOIDToModel(dto.AuthorID)
-	if err != nil {
-		return nil, err
-	}
+	// AuthorID 现在是 string 类型，直接使用
+	authorID := dto.AuthorID
 
 	// 转换分类 ID 列表
 	categoryIDs, err := converter.DTOIDsToModel(dto.CategoryIDs)
