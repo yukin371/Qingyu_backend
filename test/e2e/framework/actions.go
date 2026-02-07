@@ -113,7 +113,7 @@ func (ba *BusinessActions) SearchBooks(keyword string) map[string]interface{} {
 
 // GetChapter 获取章节内容
 func (ba *BusinessActions) GetChapter(chapterID, token string) map[string]interface{} {
-	path := fmt.Sprintf("/api/v1/bookstore/chapters/%s", chapterID)
+	path := fmt.Sprintf("/api/v1/bookstore/chapters/%s/content", chapterID)
 	w := ba.env.DoRequest("GET", path, nil, token)
 	require.Equal(ba.env.T, 200, w.Code, "获取章节内容失败")
 
