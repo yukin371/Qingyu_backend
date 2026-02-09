@@ -66,6 +66,9 @@ type ServiceContainer struct {
 	initialized       bool
 	mu                sync.RWMutex // 保护并发访问
 
+	// Provider注册表（ARCH-003重构）
+	providerRegistry *ProviderRegistry
+
 	// 基础设施
 	eventBus    serviceInterfaces.EventBus
 	redisClient cache.RedisClient
