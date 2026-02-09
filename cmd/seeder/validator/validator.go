@@ -21,24 +21,24 @@ type DataValidator struct {
 
 // ValidationReport 验证报告
 type ValidationReport struct {
-	IsValid               bool      `json:"is_valid"`                 // 总体是否通过验证
-	TotalOrphanedRecords  int       `json:"total_orphaned_records"`   // 孤儿记录总数
-	InconsistentFields    []string  `json:"inconsistent_fields"`      // 格式不一致的字段
-	InconsistentRecords   []string  `json:"inconsistent_records"`     // 格式不一致的记录
-	OrphanDetails         []string  `json:"orphan_details"`           // 孤儿记录详情
-	Errors                []error   `json:"errors"`                   // 错误列表
-	CollectionStats       map[string]int64 `json:"collection_stats"` // 集合统计信息
-	Summary               string    `json:"summary"`                  // 验证摘要
-	ValidatedAt           time.Time `json:"validated_at"`             // 验证时间
+	IsValid              bool             `json:"is_valid"`               // 总体是否通过验证
+	TotalOrphanedRecords int              `json:"total_orphaned_records"` // 孤儿记录总数
+	InconsistentFields   []string         `json:"inconsistent_fields"`    // 格式不一致的字段
+	InconsistentRecords  []string         `json:"inconsistent_records"`   // 格式不一致的记录
+	OrphanDetails        []string         `json:"orphan_details"`         // 孤儿记录详情
+	Errors               []error          `json:"errors"`                 // 错误列表
+	CollectionStats      map[string]int64 `json:"collection_stats"`       // 集合统计信息
+	Summary              string           `json:"summary"`                // 验证摘要
+	ValidatedAt          time.Time        `json:"validated_at"`           // 验证时间
 }
 
 // OrphanRecordDetail 孤儿记录详情
 type OrphanRecordDetail struct {
-	Collection string    `json:"collection"`  // 集合名称
-	RecordID   string    `json:"record_id"`   // 记录ID
-	Field      string    `json:"field"`       // 外键字段名
-	ForeignKey string    `json:"foreign_key"` // 外键值
-	TargetColl string    `json:"target_coll"` // 目标集合
+	Collection string `json:"collection"`  // 集合名称
+	RecordID   string `json:"record_id"`   // 记录ID
+	Field      string `json:"field"`       // 外键字段名
+	ForeignKey string `json:"foreign_key"` // 外键值
+	TargetColl string `json:"target_coll"` // 目标集合
 }
 
 // IDFormatIssue ID格式问题
@@ -60,9 +60,9 @@ func NewDataValidator(db *mongo.Database) *DataValidator {
 // 检查所有外键引用是否都指向存在的记录
 func (v *DataValidator) ValidateNoOrphanedRecords(ctx context.Context) (*ValidationReport, error) {
 	report := &ValidationReport{
-		ValidatedAt: time.Now(),
+		ValidatedAt:   time.Now(),
 		OrphanDetails: make([]string, 0),
-		Errors:       make([]error, 0),
+		Errors:        make([]error, 0),
 	}
 
 	// 验证各个集合的孤儿记录
@@ -139,10 +139,10 @@ func (v *DataValidator) ValidateNoOrphanedRecords(ctx context.Context) (*Validat
 // 检查外键字段是否使用正确的类型（string vs ObjectID）
 func (v *DataValidator) ValidateIDFormatConsistency(ctx context.Context) (*ValidationReport, error) {
 	report := &ValidationReport{
-		ValidatedAt:       time.Now(),
-		InconsistentFields: make([]string, 0),
+		ValidatedAt:         time.Now(),
+		InconsistentFields:  make([]string, 0),
 		InconsistentRecords: make([]string, 0),
-		Errors:            make([]error, 0),
+		Errors:              make([]error, 0),
 	}
 
 	// 检查 likes 集合（应该使用 string 类型）
@@ -188,12 +188,12 @@ func (v *DataValidator) ValidateRelationships(ctx context.Context) (*ValidationR
 
 	// 3. 合并报告
 	report := &ValidationReport{
-		ValidatedAt:     time.Now(),
+		ValidatedAt:          time.Now(),
 		TotalOrphanedRecords: orphanReport.TotalOrphanedRecords,
-		OrphanDetails:   orphanReport.OrphanDetails,
-		InconsistentFields: formatReport.InconsistentFields,
-		InconsistentRecords: formatReport.InconsistentRecords,
-		Errors:          append(orphanReport.Errors, formatReport.Errors...),
+		OrphanDetails:        orphanReport.OrphanDetails,
+		InconsistentFields:   formatReport.InconsistentFields,
+		InconsistentRecords:  formatReport.InconsistentRecords,
+		Errors:               append(orphanReport.Errors, formatReport.Errors...),
 	}
 
 	// 获取集合统计信息
@@ -261,22 +261,39 @@ func (v *DataValidator) ValidateLikeOrphans(ctx context.Context) (int64, error) 
 	collection := v.db.Collection("likes")
 
 	// 聚合查询：查找孤儿记录
-	// Like 使用 string 类型的 user_id 和 target_id
+	// Like 使用 string 类型的 user_id 和 target_id，需要先转换为 ObjectID 再关联
 	pipeline := mongo.Pipeline{
+		bson.D{{"$addFields", bson.D{
+			{"user_oid", bson.D{{"$convert", bson.D{
+				{"input", "$user_id"},
+				{"to", "objectId"},
+				{"onError", nil},
+				{"onNull", nil},
+			}}}},
+			{"target_oid", bson.D{{"$convert", bson.D{
+				{"input", "$target_id"},
+				{"to", "objectId"},
+				{"onError", nil},
+				{"onNull", nil},
+			}}}},
+		}}},
 		bson.D{{"$lookup", bson.D{
 			{"from", "users"},
-			{"localField", "user_id"},
+			{"localField", "user_oid"},
 			{"foreignField", "_id"},
 			{"as", "user"},
 		}}},
 		bson.D{{"$lookup", bson.D{
 			{"from", "books"},
-			{"localField", "target_id"},
+			{"localField", "target_oid"},
 			{"foreignField", "_id"},
 			{"as", "book"},
 		}}},
 		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+			{"$or", bson.A{
+				bson.D{{"user", bson.D{{"$size", 0}}}},
+				bson.D{{"book", bson.D{{"$size", 0}}}},
+			}},
 		}}},
 		bson.D{{"$count", "orphan_count"}},
 	}
@@ -384,16 +401,27 @@ func (v *DataValidator) validateOrphansByCollection(
 	// 构建聚合管道来查找孤儿记录
 	pipeline := mongo.Pipeline{}
 
-	// 为每个外键字段添加 $lookup
+	// 为每个外键字段添加 ObjectID 转换和 $lookup
 	for i := 0; i < len(fieldPairs); i += 2 {
 		localField := fieldPairs[i]
 		targetColl := fieldPairs[i+1]
+		convertedField := fmt.Sprintf("__oid_%s", localField)
+
+		addFieldStage := bson.D{{"$addFields", bson.D{
+			{convertedField, bson.D{{"$convert", bson.D{
+				{"input", fmt.Sprintf("$%s", localField)},
+				{"to", "objectId"},
+				{"onError", nil},
+				{"onNull", nil},
+			}}}},
+		}}}
+		pipeline = append(pipeline, addFieldStage)
 
 		lookupStage := bson.D{{"$lookup", bson.D{
 			{"from", targetColl},
-			{"localField", localField},
+			{"localField", convertedField},
 			{"foreignField", "_id"},
-			{"as", fmt.Sprintf("ref_%s", targetColl)},
+			{"as", fmt.Sprintf("ref_%s_%s", targetColl, localField)},
 		}}}
 		pipeline = append(pipeline, lookupStage)
 	}
@@ -401,9 +429,10 @@ func (v *DataValidator) validateOrphansByCollection(
 	// 添加匹配条件：任意引用为空
 	matchConditions := bson.A{}
 	for i := 0; i < len(fieldPairs); i += 2 {
+		localField := fieldPairs[i]
 		targetColl := fieldPairs[i+1]
 		matchConditions = append(matchConditions, bson.D{
-			{fmt.Sprintf("ref_%s", targetColl), bson.D{{"$size", 0}}},
+			{fmt.Sprintf("ref_%s_%s", targetColl, localField), bson.D{{"$size", 0}}},
 		})
 	}
 
@@ -519,7 +548,7 @@ func (v *DataValidator) validateNotificationsIDFormat(ctx context.Context, repor
 }
 
 // validateReadingProgressIDFormat 验证 reading_progress 集合的ID格式
-// ReadingProgress 使用 ObjectID 类型（旧格式）
+// ReadingProgress 使用 string 类型存储外键，且应为 ObjectID.Hex() 字符串
 func (v *DataValidator) validateReadingProgressIDFormat(ctx context.Context, report *ValidationReport) error {
 	collection := v.db.Collection("reading_progress")
 
@@ -536,11 +565,17 @@ func (v *DataValidator) validateReadingProgressIDFormat(ctx context.Context, rep
 	}
 
 	for _, doc := range results {
-		// 检查 user_id, book_id, chapter_id 是否为 ObjectID 类型
-		for _, field := range []string{"user_id", "book_id", "chapter_id"} {
-			if _, ok := doc[field].(primitive.ObjectID); !ok {
+		// 检查 user_id, book_id 是否为 string 且格式为 ObjectID.Hex()
+		for _, field := range []string{"user_id", "book_id"} {
+			value, ok := doc[field].(string)
+			if !ok {
 				report.InconsistentRecords = append(report.InconsistentRecords,
-					fmt.Sprintf("reading_progress[%s]: %s 应该是 ObjectID 类型", doc["_id"], field))
+					fmt.Sprintf("reading_progress[%s]: %s 应该是 string 类型", doc["_id"], field))
+				continue
+			}
+			if _, err := primitive.ObjectIDFromHex(value); err != nil {
+				report.InconsistentRecords = append(report.InconsistentRecords,
+					fmt.Sprintf("reading_progress[%s]: %s '%s' 不是有效的 ObjectID.Hex()", doc["_id"], field, value))
 			}
 		}
 	}

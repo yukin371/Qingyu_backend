@@ -40,10 +40,10 @@ func (s *RankingSeeder) SeedRankings() error {
 	defer cursor.Close(ctx)
 
 	var books []struct {
-		ID        string `bson:"_id"`
-		Title     string             `bson:"title"`
-		Rating    float64            `bson:"rating"`
-		ViewCount int64              `bson:"view_count"`
+		ID        string  `bson:"_id"`
+		Title     string  `bson:"title"`
+		Rating    float64 `bson:"rating"`
+		ViewCount int64   `bson:"view_count"`
 	}
 	if err := cursor.All(ctx, &books); err != nil {
 		return fmt.Errorf("解析书籍列表失败: %w", err)
@@ -54,7 +54,7 @@ func (s *RankingSeeder) SeedRankings() error {
 		return nil
 	}
 
-	collection := s.db.Collection("rankings")
+	collection := s.db.Collection("ranking_items")
 
 	// 清空现有榜单数据
 	_, _ = collection.DeleteMany(ctx, bson.M{})
@@ -75,11 +75,9 @@ func (s *RankingSeeder) SeedRankings() error {
 		MaxRank     int
 	}{
 		{"realtime", today, "实时榜", 50},
-		{"daily", today, "日榜", 30},
 		{"weekly", weeklyPeriod, "周榜", 50},
 		{"monthly", monthlyPeriod, "月榜", 100},
 		{"newbie", monthlyPeriod, "新人榜", 30},
-		{"completed", monthlyPeriod, "完结榜", 50},
 	}
 
 	for _, rankingType := range rankingTypes {
@@ -107,16 +105,16 @@ func (s *RankingSeeder) SeedRankings() error {
 			}
 
 			rankings = append(rankings, bson.M{
-				"_id":         primitive.NewObjectID(),
-				"book_id":     bookID,
-				"type":        rankingType.Type,
-				"rank":        i + 1,
-				"score":       score,
-				"view_count":  viewCount,
-				"like_count":  likeCount,
-				"period":      rankingType.Period,
-				"created_at":  now,
-				"updated_at":  now,
+				"_id":        primitive.NewObjectID(),
+				"book_id":    bookID,
+				"type":       rankingType.Type,
+				"rank":       i + 1,
+				"score":      score,
+				"view_count": viewCount,
+				"like_count": likeCount,
+				"period":     rankingType.Period,
+				"created_at": now,
+				"updated_at": now,
 			})
 		}
 
@@ -144,22 +142,22 @@ func (s *RankingSeeder) SeedRankings() error {
 
 // sortBooksForRanking 根据榜单类型排序书籍
 func (s *RankingSeeder) sortBooksForRanking(books []struct {
-	ID        string `bson:"_id"`
-	Title     string             `bson:"title"`
-	Rating    float64            `bson:"rating"`
-	ViewCount int64              `bson:"view_count"`
+	ID        string  `bson:"_id"`
+	Title     string  `bson:"title"`
+	Rating    float64 `bson:"rating"`
+	ViewCount int64   `bson:"view_count"`
 }, rankingType string) []struct {
-	ID        string `bson:"_id"`
-	Title     string             `bson:"title"`
-	Rating    float64            `bson:"rating"`
-	ViewCount int64              `bson:"view_count"`
+	ID        string  `bson:"_id"`
+	Title     string  `bson:"title"`
+	Rating    float64 `bson:"rating"`
+	ViewCount int64   `bson:"view_count"`
 } {
 	// 简单排序：按评分和浏览量排序
 	sorted := make([]struct {
-		ID        string `bson:"_id"`
-		Title     string             `bson:"title"`
-		Rating    float64            `bson:"rating"`
-		ViewCount int64              `bson:"view_count"`
+		ID        string  `bson:"_id"`
+		Title     string  `bson:"title"`
+		Rating    float64 `bson:"rating"`
+		ViewCount int64   `bson:"view_count"`
 	}, len(books))
 	copy(sorted, books)
 
@@ -177,10 +175,10 @@ func (s *RankingSeeder) sortBooksForRanking(books []struct {
 
 // calculateScore 计算榜单分数
 func (s *RankingSeeder) calculateScore(book struct {
-	ID        string `bson:"_id"`
-	Title     string             `bson:"title"`
-	Rating    float64            `bson:"rating"`
-	ViewCount int64              `bson:"view_count"`
+	ID        string  `bson:"_id"`
+	Title     string  `bson:"title"`
+	Rating    float64 `bson:"rating"`
+	ViewCount int64   `bson:"view_count"`
 }, rank int, rankingType string) float64 {
 	// 基础分数为评分
 	score := book.Rating
@@ -194,8 +192,6 @@ func (s *RankingSeeder) calculateScore(book struct {
 		score += float64(book.ViewCount/10000) * 0.1
 	case "newbie":
 		score += 0.5 // 新书奖励
-	case "completed":
-		score += 0.3 // 完结书奖励
 	}
 
 	// 确保分数在合理范围内
@@ -213,11 +209,11 @@ func (s *RankingSeeder) calculateScore(book struct {
 func (s *RankingSeeder) Clean() error {
 	ctx := context.Background()
 
-	_, err := s.db.Collection("rankings").DeleteMany(ctx, bson.M{})
+	_, err := s.db.Collection("ranking_items").DeleteMany(ctx, bson.M{})
 	if err != nil {
-		return fmt.Errorf("清空 rankings 集合失败: %w", err)
+		return fmt.Errorf("清空 ranking_items 集合失败: %w", err)
 	}
 
-	fmt.Println("  已清空 rankings 集合")
+	fmt.Println("  已清空 ranking_items 集合")
 	return nil
 }

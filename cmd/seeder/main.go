@@ -596,6 +596,14 @@ func runSocial(cmd *cobra.Command, args []string) {
 
 	seeder := NewSocialSeeder(db, cfg)
 
+	if cfg.Clean {
+		fmt.Println("\n清空社交数据...")
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空社交数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	if err := seeder.SeedSocialData(); err != nil {
 		fmt.Printf("填充社交数据失败: %v\n", err)
 		os.Exit(1)
@@ -637,6 +645,14 @@ func runRankings(cmd *cobra.Command, args []string) {
 	defer db.Disconnect()
 
 	seeder := NewRankingSeeder(db, cfg)
+
+	if cfg.Clean {
+		fmt.Println("\n清空榜单数据...")
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("清空榜单数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
 
 	if err := seeder.SeedRankings(); err != nil {
 		fmt.Printf("填充榜单数据失败: %v\n", err)

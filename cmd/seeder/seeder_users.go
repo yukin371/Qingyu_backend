@@ -29,9 +29,9 @@ type UserSeeder struct {
 func NewUserSeeder(db *utils.Database, cfg *config.Config) *UserSeeder {
 	collection := db.Collection("users")
 	return &UserSeeder{
-		db:     db,
-		config: cfg,
-		gen:    generators.NewUserGenerator(),
+		db:       db,
+		config:   cfg,
+		gen:      generators.NewUserGenerator(),
 		inserter: utils.NewBulkInserter(collection, cfg.BatchSize),
 	}
 }
@@ -92,10 +92,11 @@ func (s *UserSeeder) SeedRealUsers() error {
 		if json.Unmarshal(data, &testData) == nil {
 			for _, u := range testData.TestUsers {
 				testUsers = append(testUsers, models.User{
-					ID:        primitive.NewObjectID(),
-					Username:  u["username"].(string),
-					Email:     u["email"].(string),
-					Password:  u["password"].(string),
+					ID:       primitive.NewObjectID(),
+					Username: u["username"].(string),
+					Email:    u["email"].(string),
+					// 为避免历史 hash 与文档密码不一致，统一使用默认测试密码 "password"
+					Password:  defaultPassword,
 					Roles:     []string{u["role"].(string)},
 					Status:    models.UserStatusActive,
 					Nickname:  u["nickname"].(string),
