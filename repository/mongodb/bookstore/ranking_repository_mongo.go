@@ -29,7 +29,7 @@ type MongoRankingRepository struct {
 func NewMongoRankingRepository(client *mongo.Client, database string) BookstoreInterface.RankingRepository {
 	db := client.Database(database)
 	return &MongoRankingRepository{
-		BaseMongoRepository: base.NewBaseMongoRepository(db, "rankings"),
+		BaseMongoRepository: base.NewBaseMongoRepository(db, "ranking_items"),
 		bookCollection:      db.Collection("books"),
 		client:              client,
 	}
@@ -164,6 +164,22 @@ func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType book
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
+	// 调试日志
+	collName := r.GetCollection().Name()
+	fmt.Printf("[DEBUG] GetByType - collection: %s, type: %s (%T), period: %s, filter: %v\n", collName, rankingType, rankingType, period, filter)
+
+	// 打印集合中的所有文档以调试
+	allDocs, _ := r.GetCollection().Find(ctx, bson.M{})
+	var allItems []*bookstore2.RankingItem
+	if allDocs != nil {
+		defer allDocs.Close(ctx)
+		allDocs.All(ctx, &allItems)
+		fmt.Printf("[DEBUG] Total documents in collection: %d\n", len(allItems))
+		for i, item := range allItems {
+			fmt.Printf("[DEBUG]   Item %d: type=%s, period=%s\n", i, item.Type, item.Period)
+		}
+	}
+
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rankings by type: %w", err)
@@ -175,6 +191,7 @@ func (r *MongoRankingRepository) GetByType(ctx context.Context, rankingType book
 		return nil, fmt.Errorf("failed to decode ranking items: %w", err)
 	}
 
+	fmt.Printf("[DEBUG] GetByType - found %d items\n", len(items))
 	return items, nil
 }
 
