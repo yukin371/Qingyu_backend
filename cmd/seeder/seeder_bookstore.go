@@ -95,8 +95,8 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 func (s *BookstoreSeeder) getAuthorUsers() ([]primitive.ObjectID, error) {
 	ctx := context.Background()
 
-	// 查询role为author的用户
-	cursor, err := s.db.Collection("users").Find(ctx, bson.M{"role": "author"})
+	// 查询roles包含author的用户
+	cursor, err := s.db.Collection("users").Find(ctx, bson.M{"roles": bson.M{"$in": []string{"author"}}})
 	if err != nil {
 		return nil, fmt.Errorf("查询author用户失败: %w", err)
 	}
