@@ -7,22 +7,21 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 
 	usersModel "Qingyu_backend/models/users"
+	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 )
 
 // UserValidator 用户数据验证器
 type UserValidator struct {
-	db *mongo.Database
+	repo repoInterfaces.UserRepository
 }
 
 // NewUserValidator 创建用户验证器实例
-func NewUserValidator(db *mongo.Database) *UserValidator {
+func NewUserValidator(repo repoInterfaces.UserRepository) *UserValidator {
 	return &UserValidator{
-		db: db,
+		repo: repo,
 	}
 }
 
@@ -160,7 +159,7 @@ func (v *UserValidator) validateUsername(username string) *ValidationError {
 		}
 	}
 
-	if len(username) < 3 {
+	if len(username) < UsernameMinLength {
 		return &ValidationError{
 			Field:   "username",
 			Message: "用户名长度不能少于3个字符",
@@ -168,7 +167,7 @@ func (v *UserValidator) validateUsername(username string) *ValidationError {
 		}
 	}
 
-	if len(username) > 30 {
+	if len(username) > UsernameMaxLength {
 		return &ValidationError{
 			Field:   "username",
 			Message: "用户名长度不能超过30个字符",
@@ -177,7 +176,7 @@ func (v *UserValidator) validateUsername(username string) *ValidationError {
 	}
 
 	// 用户名只能包含字母、数字和下划线
-	matched, _ := regexp.MatchString("^[a-zA-Z0-9_]+$", username)
+	matched, _ := regexp.MatchString(UsernamePattern, username)
 	if !matched {
 		return &ValidationError{
 			Field:   "username",
@@ -196,8 +195,7 @@ func (v *UserValidator) validateUsername(username string) *ValidationError {
 	}
 
 	// 检查保留用户名
-	reservedNames := []string{"admin", "root", "system", "api", "www", "mail", "ftp"}
-	for _, reserved := range reservedNames {
+	for _, reserved := range ReservedUsernames {
 		if strings.ToLower(username) == reserved {
 			return &ValidationError{
 				Field:   "username",
@@ -220,7 +218,7 @@ func (v *UserValidator) validateEmail(email string) *ValidationError {
 		}
 	}
 
-	if len(email) > 100 {
+	if len(email) > EmailMaxLength {
 		return &ValidationError{
 			Field:   "email",
 			Message: "邮箱长度不能超过100个字符",
@@ -229,8 +227,7 @@ func (v *UserValidator) validateEmail(email string) *ValidationError {
 	}
 
 	// 邮箱格式验证
-	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	matched, _ := regexp.MatchString(emailRegex, email)
+	matched, _ := regexp.MatchString(EmailPattern, email)
 	if !matched {
 		return &ValidationError{
 			Field:   "email",
@@ -252,7 +249,7 @@ func (v *UserValidator) validatePassword(password string) *ValidationError {
 		}
 	}
 
-	if len(password) < 8 {
+	if len(password) < PasswordMinLength {
 		return &ValidationError{
 			Field:   "password",
 			Message: "密码长度不能少于8个字符",
@@ -260,7 +257,7 @@ func (v *UserValidator) validatePassword(password string) *ValidationError {
 		}
 	}
 
-	if len(password) > 128 {
+	if len(password) > PasswordMaxLength {
 		return &ValidationError{
 			Field:   "password",
 			Message: "密码长度不能超过128个字符",
@@ -281,8 +278,7 @@ func (v *UserValidator) validatePassword(password string) *ValidationError {
 	}
 
 	// 检查常见弱密码
-	weakPasswords := []string{"12345678", "password", "qwerty123", "abc123456"}
-	for _, weak := range weakPasswords {
+	for _, weak := range WeakPasswords {
 		if strings.ToLower(password) == weak {
 			return &ValidationError{
 				Field:   "password",
@@ -335,9 +331,7 @@ func (v *UserValidator) validateUniquenessForUpdate(ctx context.Context, userID 
 
 // checkUsernameUnique 检查用户名唯一性
 func (v *UserValidator) checkUsernameUnique(ctx context.Context, username string) *ValidationError {
-	count, err := v.db.Collection("users").CountDocuments(ctx, bson.M{
-		"username": username,
-	})
+	exists, err := v.repo.ExistsByUsername(ctx, username)
 	if err != nil {
 		return &ValidationError{
 			Field:   "username",
@@ -346,7 +340,7 @@ func (v *UserValidator) checkUsernameUnique(ctx context.Context, username string
 		}
 	}
 
-	if count > 0 {
+	if exists {
 		return &ValidationError{
 			Field:   "username",
 			Message: "用户名已存在",
@@ -359,9 +353,7 @@ func (v *UserValidator) checkUsernameUnique(ctx context.Context, username string
 
 // checkEmailUnique 检查邮箱唯一性
 func (v *UserValidator) checkEmailUnique(ctx context.Context, email string) *ValidationError {
-	count, err := v.db.Collection("users").CountDocuments(ctx, bson.M{
-		"email": email,
-	})
+	exists, err := v.repo.ExistsByEmail(ctx, email)
 	if err != nil {
 		return &ValidationError{
 			Field:   "email",
@@ -370,7 +362,7 @@ func (v *UserValidator) checkEmailUnique(ctx context.Context, email string) *Val
 		}
 	}
 
-	if count > 0 {
+	if exists {
 		return &ValidationError{
 			Field:   "email",
 			Message: "邮箱已被使用",
@@ -383,19 +375,8 @@ func (v *UserValidator) checkEmailUnique(ctx context.Context, email string) *Val
 
 // checkUsernameUniqueExcluding 检查用户名唯一性（排除指定用户）
 func (v *UserValidator) checkUsernameUniqueExcluding(ctx context.Context, username, excludeUserID string) *ValidationError {
-	objectID, err := primitive.ObjectIDFromHex(excludeUserID)
-	if err != nil {
-		return &ValidationError{
-			Field:   "username",
-			Message: "用户ID格式错误",
-			Code:    "INVALID_ID",
-		}
-	}
-
-	count, err := v.db.Collection("users").CountDocuments(ctx, bson.M{
-		"username": username,
-		"_id":      bson.M{"$ne": objectID},
-	})
+	// 首先检查用户名是否存在
+	exists, err := v.repo.ExistsByUsername(ctx, username)
 	if err != nil {
 		return &ValidationError{
 			Field:   "username",
@@ -404,32 +385,37 @@ func (v *UserValidator) checkUsernameUniqueExcluding(ctx context.Context, userna
 		}
 	}
 
-	if count > 0 {
+	if !exists {
+		return nil
+	}
+
+	// 如果存在，检查是否是当前用户
+	existingUser, err := v.repo.GetByUsername(ctx, username)
+	if err != nil {
 		return &ValidationError{
 			Field:   "username",
-			Message: "用户名已存在",
-			Code:    "DUPLICATE",
+			Message: "验证用户名唯一性时发生错误",
+			Code:    "VALIDATION_ERROR",
 		}
 	}
 
-	return nil
+	// 如果是当前用户，则不冲突
+	if existingUser.ID.Hex() == excludeUserID {
+		return nil
+	}
+
+	// 用户名被其他用户占用
+	return &ValidationError{
+		Field:   "username",
+		Message: "用户名已存在",
+		Code:    "DUPLICATE",
+	}
 }
 
 // checkEmailUniqueExcluding 检查邮箱唯一性（排除指定用户）
 func (v *UserValidator) checkEmailUniqueExcluding(ctx context.Context, email, excludeUserID string) *ValidationError {
-	objectID, err := primitive.ObjectIDFromHex(excludeUserID)
-	if err != nil {
-		return &ValidationError{
-			Field:   "email",
-			Message: "用户ID格式错误",
-			Code:    "INVALID_ID",
-		}
-	}
-
-	count, err := v.db.Collection("users").CountDocuments(ctx, bson.M{
-		"email": email,
-		"_id":   bson.M{"$ne": objectID},
-	})
+	// 首先检查邮箱是否存在
+	exists, err := v.repo.ExistsByEmail(ctx, email)
 	if err != nil {
 		return &ValidationError{
 			Field:   "email",
@@ -438,15 +424,31 @@ func (v *UserValidator) checkEmailUniqueExcluding(ctx context.Context, email, ex
 		}
 	}
 
-	if count > 0 {
+	if !exists {
+		return nil
+	}
+
+	// 如果存在，检查是否是当前用户
+	existingUser, err := v.repo.GetByEmail(ctx, email)
+	if err != nil {
 		return &ValidationError{
 			Field:   "email",
-			Message: "邮箱已被使用",
-			Code:    "DUPLICATE",
+			Message: "验证邮箱唯一性时发生错误",
+			Code:    "VALIDATION_ERROR",
 		}
 	}
 
-	return nil
+	// 如果是当前用户，则不冲突
+	if existingUser.ID.Hex() == excludeUserID {
+		return nil
+	}
+
+	// 邮箱被其他用户占用
+	return &ValidationError{
+		Field:   "email",
+		Message: "邮箱已被使用",
+		Code:    "DUPLICATE",
+	}
 }
 
 // validateBusinessRules 验证业务规则
