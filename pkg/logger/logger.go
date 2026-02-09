@@ -2,8 +2,10 @@ package logger
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -15,6 +17,23 @@ var (
 	strictStats  StrictStats
 )
 
+// 自定义时间编码器 - 简洁的 HH:MM:SS 格式
+func encodeShortTime(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("15:04:05"))
+}
+
+// 自定义Caller编码器 - 只显示文件名和行号
+func encodeShortCaller(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	if !caller.Defined {
+		enc.AppendString("???")
+		return
+	}
+	// 获取文件名（不含路径）
+	parts := strings.Split(caller.File, "/")
+	filename := parts[len(parts)-1]
+	enc.AppendString(filename)
+}
+
 // Logger 结构化日志记录器
 type Logger struct {
 	*zap.Logger
@@ -25,7 +44,7 @@ type Logger struct {
 type Config struct {
 	Level       string `json:"level"`       // debug/info/warn/error/dpanic/panic/fatal
 	Format      string `json:"format"`      // json/console
-	Output      string `json:"output"`      // stdout/stderr/file
+	Output      string `json:"output"`      // stdout/stderr/file/dual
 	Filename    string `json:"filename"`    // 日志文件路径
 	MaxSize     int    `json:"maxSize"`     // 单个日志文件最大大小(MB)
 	MaxBackups  int    `json:"maxBackups"`  // 保留的旧日志文件最大数量
@@ -128,6 +147,80 @@ func NewLogger(config *Config) (*Logger, error) {
 			return nil, err
 		}
 		writeSyncer = zapcore.AddSync(file)
+	case "dual":
+		// 双输出模式：控制台使用简洁的console格式，文件使用json格式
+
+		// 控制台编码器配置（超简洁格式）
+		consoleEncoderConfig := zapcore.EncoderConfig{
+			TimeKey:        "T",
+			LevelKey:       "L",
+			NameKey:        "",     // 隐藏logger名称
+			CallerKey:      "",     // 隐藏caller信息（更简洁）
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "M",
+			StacktraceKey:  "S",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalColorLevelEncoder, // 彩色级别
+			EncodeTime:     encodeShortTime,                  // HH:MM:SS格式
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+			// 隐藏Console键名，只显示值
+			ConsoleSeparator: " ",
+		}
+
+		// 文件编码器配置（完整JSON格式，用于日志分析）
+		fileEncoderConfig := zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		}
+
+		// 打开日志文件
+		if config.Filename == "" {
+			config.Filename = "logs/app.log"
+		}
+		file, err := os.OpenFile(config.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+
+		// 创建双Core：控制台console + 文件json
+		consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
+		fileEncoder := zapcore.NewJSONEncoder(fileEncoderConfig)
+
+		consoleCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level)
+		fileCore := zapcore.NewCore(fileEncoder, zapcore.AddSync(file), level)
+
+		// 合并两个Core
+		core := zapcore.NewTee(consoleCore, fileCore)
+
+		if config.StrictMode {
+			core = zapcore.RegisterHooks(core, strictHook)
+		}
+
+		// 创建Logger
+		zapLogger := zap.New(core,
+			zap.AddCaller(),
+			zap.AddCallerSkip(1),
+			zap.AddStacktrace(zapcore.ErrorLevel),
+		)
+
+		if config.Development {
+			zapLogger = zapLogger.WithOptions(zap.Development())
+		}
+
+		return &Logger{
+			Logger: zapLogger,
+			sugar:  zapLogger.Sugar(),
+		}, nil
 	default:
 		writeSyncer = zapcore.AddSync(os.Stdout)
 	}
