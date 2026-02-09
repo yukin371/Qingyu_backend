@@ -21,7 +21,7 @@ scrape_configs:
   # ============ Qingyu Backend应用 ============
   - job_name: 'qingyu_backend'
     static_configs:
-      - targets: ['host.docker.internal:8080']  # Windows/Mac Docker需要使用host.docker.internal
+      - targets: ['host.docker.internal:9090']  # Windows/Mac Docker需要使用host.docker.internal
         labels:
           service: 'qingyu_backend'
           version: 'v1.0'

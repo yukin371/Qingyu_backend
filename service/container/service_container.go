@@ -934,7 +934,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	storageRepo := c.repositoryFactory.CreateStorageRepository()
 
 	// 使用本地文件系统Backend（快速通道方案）
-	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:8080/api/v1/files")
+	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:9090/api/v1/files")
 
 	// 适配StorageRepository到FileRepository接口
 	fileRepo := storage.NewRepositoryAdapter(storageRepo)

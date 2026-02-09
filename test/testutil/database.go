@@ -39,7 +39,7 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 				},
 			},
 			Server: &config.ServerConfig{
-				Port: ":8080",
+				Port: ":9090",
 				Mode: "test",
 			},
 		}
@@ -157,7 +157,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 				},
 			},
 			Server: &config.ServerConfig{
-				Port: ":8080",
+				Port: ":9090",
 				Mode: "test",
 			},
 		}

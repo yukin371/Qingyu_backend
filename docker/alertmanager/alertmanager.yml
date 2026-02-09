@@ -35,12 +35,12 @@ route:
 receivers:
   - name: 'default'
     webhook_configs:
-      - url: 'http://qingyu_backend:8080/api/v1/webhook/alert'
+      - url: 'http://qingyu_backend:9090/api/v1/webhook/alert'
         send_resolved: true
 
   - name: 'critical'
     webhook_configs:
-      - url: 'http://qingyu_backend:8080/api/v1/webhook/alert/critical'
+      - url: 'http://qingyu_backend:9090/api/v1/webhook/alert/critical'
         send_resolved: true
     # 可以添加邮件通知
     # email_configs:
@@ -52,12 +52,12 @@ receivers:
 
   - name: 'warning'
     webhook_configs:
-      - url: 'http://qingyu_backend:8080/api/v1/webhook/alert/warning'
+      - url: 'http://qingyu_backend:9090/api/v1/webhook/alert/warning'
         send_resolved: true
 
   - name: 'info'
     webhook_configs:
-      - url: 'http://qingyu_backend:8080/api/v1/webhook/alert/info'
+      - url: 'http://qingyu_backend:9090/api/v1/webhook/alert/info'
         send_resolved: true
 
 # 抑制规则

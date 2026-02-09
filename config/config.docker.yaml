@@ -30,7 +30,7 @@ redis:
 
 # 服务器配置
 server:
-  port: "8080"
+  port: "9090"
   mode: "debug"  # debug or release
 
 # JWT配置

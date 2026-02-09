@@ -775,7 +775,7 @@ func printQuickStartGuide() {
 	fmt.Println()
 	fmt.Println("【下一步】")
 	fmt.Println("1. 启动服务器: go run cmd/server/main.go")
-	fmt.Println("2. 访问 API: http://localhost:8080")
+	fmt.Println("2. 访问 API: http://localhost:9090")
 	fmt.Println("3. 使用上述账号登录测试")
 	fmt.Println()
 	fmt.Println("【如需导入更多书籍】")

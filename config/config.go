@@ -384,7 +384,7 @@ func setDefaults() {
 	v.SetDefault("database.sync.conflict_resolution", "latest_wins")
 
 	// 服务器默认配置
-	v.SetDefault("server.port", "8080")
+	v.SetDefault("server.port", "9090")
 	v.SetDefault("server.mode", "debug")
 
 	// 日志默认配置

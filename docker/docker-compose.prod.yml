@@ -48,7 +48,7 @@ services:
     container_name: qingyu-backend-prod
     restart: always
     ports:
-      - "8080:8080"
+      - "9090:9090"
     environment:
       - GIN_MODE=release
     depends_on:

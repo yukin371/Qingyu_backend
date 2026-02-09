@@ -144,7 +144,7 @@ func setConfigDefaults(cfg *Config) {
 		cfg.Server = &ServerConfig{}
 	}
 	if cfg.Server.Port == "" {
-		cfg.Server.Port = "8080"
+		cfg.Server.Port = "9090"
 	}
 	if cfg.Server.Mode == "" {
 		cfg.Server.Mode = "debug"

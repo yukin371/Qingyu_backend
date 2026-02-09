@@ -48,7 +48,7 @@ func InitTestConfig() {
 				},
 			},
 			Server: &config.ServerConfig{
-				Port: ":8080",
+				Port: ":9090",
 				Mode: "test",
 			},
 		}

@@ -25,7 +25,7 @@ type Config struct {
 func parseFlags() *Config {
 	config := &Config{}
 
-	flag.StringVar(&config.BaseURL, "base-url", "http://localhost:8080", "Base URL for testing")
+	flag.StringVar(&config.BaseURL, "base-url", "http://localhost:9090", "Base URL for testing")
 	flag.StringVar(&config.Name, "name", "Performance Test", "Test scenario name")
 	flag.IntVar(&config.Requests, "requests", 1000, "Total number of requests")
 	flag.IntVar(&config.Concurrent, "concurrent", 50, "Number of concurrent requests")

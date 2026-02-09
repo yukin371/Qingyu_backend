@@ -136,7 +136,7 @@ func (m *ViperConfigManager) setViperDefaults() {
 	m.viper.SetDefault("database.sync.conflict_resolution", "latest_wins")
 
 	// 服务器配置
-	m.viper.SetDefault("server.port", "8080")
+	m.viper.SetDefault("server.port", "9090")
 	m.viper.SetDefault("server.mode", "debug")
 
 	// JWT配置

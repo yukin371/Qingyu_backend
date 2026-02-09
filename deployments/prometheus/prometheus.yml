@@ -17,7 +17,7 @@ scrape_configs:
   # Qingyu后端API指标
   - job_name: 'qingyu-backend'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['host.docker.internal:9090']
         labels:
           service: 'qingyu-backend'
           team: 'backend'

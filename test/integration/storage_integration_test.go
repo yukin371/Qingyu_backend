@@ -21,7 +21,7 @@ func TestStorageIntegration(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// 创建LocalBackend
-	backend := storage.NewLocalBackend(tempDir, "http://localhost:8080/files")
+	backend := storage.NewLocalBackend(tempDir, "http://localhost:9090/files")
 	ctx := context.Background()
 
 	t.Run("Save_Load_Delete_流程测试", func(t *testing.T) {
@@ -145,7 +145,7 @@ func TestStorageBackendPerformance(t *testing.T) {
 	tempDir := "./test_perf"
 	defer os.RemoveAll(tempDir)
 
-	backend := storage.NewLocalBackend(tempDir, "http://localhost:8080/files")
+	backend := storage.NewLocalBackend(tempDir, "http://localhost:9090/files")
 	ctx := context.Background()
 
 	// 准备不同大小的测试数据
