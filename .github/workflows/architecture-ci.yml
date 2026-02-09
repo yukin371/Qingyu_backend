@@ -1,0 +1,171 @@
+name: Architecture CI
+
+on:
+  push:
+    branches: [ main, dev, architecture-refactor ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  dependency-check:
+    name: 依赖关系检查
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v3
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: 检查代码依赖关系
+        run: |
+          echo "🔍 检查代码依赖关系..."
+          go run ./scripts/check-dependencies
+
+      - name: 上传检查报告
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-report
+          path: |
+            check-dependencies.log
+            scripts/check-dependencies/report.txt
+          if-no-files-found: ignore
+
+  unit-tests:
+    name: 单元测试
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v3
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: 下载依赖
+        run: go mod download
+
+      - name: 运行单元测试
+        run: |
+          echo "🧪 运行单元测试..."
+          make test-unit
+
+      - name: 上传覆盖率报告
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.html
+
+  lint:
+    name: 代码质量检查
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v3
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: 运行golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: 运行go vet
+        run: make vet
+
+  security-scan:
+    name: 安全扫描
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v3
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: 运行Gosec安全扫描
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+      - name: 上传安全报告
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
+
+  architecture-validation:
+    name: 架构验证
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v3
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: 验证接口契约
+        run: |
+          echo "🔍 验证接口契约..."
+          go test -v ./service/interfaces/shared/...
+
+      - name: 验证Provider依赖
+        run: |
+          echo "🔍 验证Provider依赖..."
+          go test -v ./service/container/...
+
+      - name: 验证Port/Adapter模式
+        run: |
+          echo "🔍 验证Port/Adapter模式..."
+          go test -v ./pkg/quota/...
+
+  # 汇总所有检查结果
+  summary:
+    name: 检查结果汇总
+    runs-on: ubuntu-latest
+    needs: [dependency-check, unit-tests, lint, security-scan, architecture-validation]
+    if: always()
+
+    steps:
+      - name: 检查所有任务状态
+        run: |
+          echo "📊 架构CI检查结果汇总"
+          echo ""
+          echo "依赖关系检查: ${{ needs.dependency-check.result }}"
+          echo "单元测试: ${{ needs.unit-tests.result }}"
+          echo "代码质量检查: ${{ needs.lint.result }}"
+          echo "安全扫描: ${{ needs.security-scan.result }}"
+          echo "架构验证: ${{ needs.architecture-validation.result }}"
+          echo ""
+
+          if [ "${{ needs.dependency-check.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.architecture-validation.result }}" != "success" ]; then
+            echo "❌ CI检查失败，请修复后重试"
+            exit 1
+          fi
+
+          echo "✅ 所有CI检查通过！"

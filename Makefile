@@ -33,6 +33,7 @@ help:
 	@echo "  make test-e2e-layer3  - 运行Layer3边界场景测试"
 	@echo ""
 	@echo "代码质量:"
+	@echo "  make deps-check      - 检查代码依赖关系"
 	@echo "  make fmt             - 格式化代码"
 	@echo "  make vet             - 运行 go vet 检查"
 	@echo "  make lint            - 运行代码质量检查"
@@ -179,6 +180,12 @@ benchmark:
 		-run=^$$ \
 		./... | tee benchmark.txt
 
+# 检查代码依赖关系
+deps-check:
+	@echo "🔍 检查代码依赖关系..."
+	@go run ./scripts/check-dependencies
+	@echo "✅ 依赖检查完成！"
+
 # 格式化代码
 fmt:
 	@echo "格式化代码..."
@@ -205,7 +212,7 @@ lint:
 	@echo "代码质量检查完成！"
 
 # 运行所有代码检查
-check: fmt vet lint
+check: deps-check fmt vet lint
 	@echo "所有代码检查完成！"
 
 # 运行安全扫描
