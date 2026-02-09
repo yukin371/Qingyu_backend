@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"

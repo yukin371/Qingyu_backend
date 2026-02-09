@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 )
 
 // MockAuthService 模拟AuthService

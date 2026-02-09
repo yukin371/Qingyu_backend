@@ -8,8 +8,9 @@
 
 - ✅ 检查业务服务是否直接依赖shared模块实现
 - ✅ 识别应该使用Port接口的违规导入
+- ✅ 检测已废弃的导入路径（如旧的auth模块路径）
 - ✅ 生成详细的违规报告
-- ✅ 提供修复建议
+- ✅ 提供修复建议和迁移指南
 
 ## 使用方法
 
@@ -53,23 +54,54 @@ go run ./scripts/check-dependencies
 ```
 🔍 检查代码依赖关系...
 
-❌ 发现 3 个错误, 1 个警告
+❌ 发现 2 个错误, 1 个警告, 3 个废弃提示
 
 ❌ [1] service/user/user_service.go:15
-   导入: Qingyu_backend/service/shared/auth
-   规则: 不应该直接导入shared模块，请使用service/interfaces/shared中的Port接口
-
-❌ [2] service/writer/book_service.go:20
    导入: Qingyu_backend/service/shared/storage
    规则: 不应该直接导入shared模块，请使用service/interfaces/shared中的Port接口
 
+⚠️  [2] service/writer/book_service.go:20
+   导入: Qingyu_backend/service/shared/auth
+   规则: auth模块已迁移到service/auth，请使用新的导入路径
+
+ℹ️  [3] test/api/auth_test.go:10
+   导入: Qingyu_backend/service/shared/auth
+   规则: auth模块已迁移到service/auth，请使用新的导入路径 (测试文件可以继续使用，但建议迁移)
+
 💡 修复建议:
+   废弃路径迁移:
+   - 将 Qingyu_backend/service/shared/auth 改为 Qingyu_backend/service/auth
+   - 兼容层会继续工作，但建议尽快迁移
+   - 迁移指南: docs/migration/auth-module-migration.md
+   依赖规范:
    1. 使用service/interfaces/shared中定义的Port接口
    2. 通过依赖注入而非直接导入
    3. 参考文档: docs/architecture/dependency-rules.md
 ```
 
 ## 依赖规则
+
+### 废弃路径警告
+
+以下导入路径已**废弃**，但仍可工作（向后兼容）：
+
+- `Qingyu_backend/service/shared/auth` → 应迁移到 `Qingyu_backend/service/auth`
+
+#### 迁移指南
+
+```go
+// ❌ 已废弃：旧的auth模块路径
+import "Qingyu_backend/service/shared/auth"
+
+// ✅ 推荐：新的auth模块路径
+import "Qingyu_backend/service/auth"
+```
+
+**注意**：
+- 兼容层确保旧代码继续工作
+- 生产代码使用旧路径会收到**警告**
+- 测试代码使用旧路径会收到**信息提示**（不影响CI）
+- 建议尽快迁移到新路径
 
 ### 允许直接导入shared的模块
 
@@ -152,16 +184,32 @@ fi
 要添加新的依赖规则，修改`main.go`中的配置：
 
 ```go
+// 添加废弃路径
+var deprecatedImports = map[string]string{
+    `Qingyu_backend/service/old-path`: `旧路径已废弃，请使用新路径`,
+}
+
+// 添加禁止规则
 var forbiddenImports = map[string]string{
-    `service/user`:     `不应该直接导入shared模块`,
+    `service/user`:       `不应该直接导入shared模块`,
     `service/new-module`: `添加新模块的规则`,
 }
 
+// 添加允许规则
 var allowedSharedImporters = map[string]bool{
-    `service/container`:  true,
-    `service/new-allowed`: true,
+    `service/container`:    true,
+    `service/new-allowed`:  true,
 }
 ```
+
+### 添加新的废弃模块检测
+
+当模块迁移时，可以添加废弃路径检测：
+
+1. 在`deprecatedImports`中添加旧路径
+2. 检查工具会自动检测并发出警告
+3. 更新README文档说明迁移路径
+4. 确保兼容层正常工作
 
 ## 测试
 

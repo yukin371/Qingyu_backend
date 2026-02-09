@@ -5,7 +5,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 )
 
 // AuthAPI 认证服务API处理器

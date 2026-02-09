@@ -78,36 +78,63 @@ func TestImportPatterns(t *testing.T) {
 		fileDir       string
 		importPath    string
 		shouldViolate bool
+		expectedSeverity string
 	}{
 		{
-			name:          "业务服务导入shared应该违规",
+			name:          "业务服务导入shared/storage应该违规",
+			fileDir:       "service/user",
+			importPath:    "Qingyu_backend/service/shared/storage",
+			shouldViolate: true,
+			expectedSeverity: "error",
+		},
+		{
+			name:          "业务服务导入废弃的shared/auth应该警告",
 			fileDir:       "service/user",
 			importPath:    "Qingyu_backend/service/shared/auth",
 			shouldViolate: true,
+			expectedSeverity: "warning",
 		},
 		{
-			name:          "容器导入shared不应该违规",
+			name:          "容器导入shared/auth应该警告(废弃路径)",
 			fileDir:       "service/container",
 			importPath:    "Qingyu_backend/service/shared/auth",
+			shouldViolate: true,
+			expectedSeverity: "warning",
+		},
+		{
+			name:          "容器导入shared/storage不应该违规",
+			fileDir:       "service/container",
+			importPath:    "Qingyu_backend/service/shared/storage",
 			shouldViolate: false,
+			expectedSeverity: "",
 		},
 		{
 			name:          "接口层导入shared不应该违规",
 			fileDir:       "service/interfaces/shared",
-			importPath:    "Qingyu_backend/service/shared/auth",
+			importPath:    "Qingyu_backend/service/shared/storage",
 			shouldViolate: false,
+			expectedSeverity: "",
 		},
 		{
 			name:          "导入外部包不应该违规",
 			fileDir:       "service/user",
 			importPath:    "github.com/gin-gonic/gin",
 			shouldViolate: false,
+			expectedSeverity: "",
 		},
 		{
 			name:          "导入models不应该违规",
 			fileDir:       "service/user",
 			importPath:    "Qingyu_backend/models/user",
 			shouldViolate: false,
+			expectedSeverity: "",
+		},
+		{
+			name:          "导入新的auth路径不应该违规",
+			fileDir:       "service/user",
+			importPath:    "Qingyu_backend/service/auth",
+			shouldViolate: false,
+			expectedSeverity: "",
 		},
 	}
 
@@ -116,7 +143,7 @@ func TestImportPatterns(t *testing.T) {
 			violation := checkImport(tc.fileDir+".go", tc.fileDir, tc.importPath, 1)
 			if tc.shouldViolate {
 				assert.NotNil(t, violation, "应该检测到违规")
-				assert.Equal(t, "error", violation.Severity)
+				assert.Equal(t, tc.expectedSeverity, violation.Severity, "严重级别应该匹配")
 			} else {
 				assert.Nil(t, violation, "不应该检测到违规")
 			}
@@ -197,4 +224,26 @@ func BenchmarkCheckFile(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = checkFile(filePath)
 	}
+}
+
+// TestDeprecatedImports 测试废弃导入检测
+func TestDeprecatedImports(t *testing.T) {
+	t.Run("应该检测到废弃的auth路径", func(t *testing.T) {
+		violation := checkImport("service/user/service.go", "service/user", "Qingyu_backend/service/shared/auth", 1)
+		assert.NotNil(t, violation, "应该检测到废弃的auth路径")
+		assert.Equal(t, "warning", violation.Severity, "生产代码应该是warning级别")
+		assert.Contains(t, violation.Rule, "迁移", "规则应该包含迁移建议")
+	})
+
+	t.Run("测试文件使用废弃路径应该是deprecated级别", func(t *testing.T) {
+		violation := checkImport("service/user/service_test.go", "service/user", "Qingyu_backend/service/shared/auth", 1)
+		assert.NotNil(t, violation, "应该检测到废弃的auth路径")
+		assert.Equal(t, "deprecated", violation.Severity, "测试文件应该是deprecated级别")
+		assert.Contains(t, violation.Rule, "测试文件", "规则应该说明是测试文件")
+	})
+
+	t.Run("新的auth路径不应该被标记为违规", func(t *testing.T) {
+		violation := checkImport("service/user/service.go", "service/user", "Qingyu_backend/service/auth", 1)
+		assert.Nil(t, violation, "新的auth路径不应该被标记为违规")
+	})
 }

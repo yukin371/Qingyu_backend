@@ -9,7 +9,7 @@ import (
 	"Qingyu_backend/internal/middleware/ratelimit"
 	mw "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/pkg/response"
-	sharedAuth "Qingyu_backend/service/shared/auth"
+	sharedAuth "Qingyu_backend/service/auth"
 	"Qingyu_backend/service/shared/storage"
 	walletService "Qingyu_backend/service/finance/wallet"
 )

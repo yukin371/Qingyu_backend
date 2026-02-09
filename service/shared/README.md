@@ -194,7 +194,7 @@ service/shared/
 import (
     authService "Qingyu_backend/service/shared/auth"
     cacheService "Qingyu_backend/service/shared/cache"
-    messagingService "Qingyu_backend/service/shared/messaging"
+    channelsService "Qingyu_backend/service/channels"  // 消息通知服务
     storageService "Qingyu_backend/service/shared/storage"
 )
 ```

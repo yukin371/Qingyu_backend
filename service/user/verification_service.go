@@ -7,14 +7,14 @@ import (
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
-	"Qingyu_backend/service/shared/messaging"
+	"Qingyu_backend/service/channels"
 	"Qingyu_backend/config"
 	"go.uber.org/zap"
 )
 
 // VerificationService 验证服务
 type VerificationService struct {
-	emailService         messaging.EmailService // 邮件服务（可选，用于发送验证邮件）
+	emailService         channels.EmailService // 邮件服务（可选，用于发送验证邮件）
 	userRepo             repoInterfaces.UserRepository
 	authRepo             sharedRepo.AuthRepository
 	tokenManager         *EmailVerificationTokenManager
@@ -24,7 +24,7 @@ type VerificationService struct {
 func NewVerificationService(
 	userRepo repoInterfaces.UserRepository,
 	authRepo sharedRepo.AuthRepository,
-	emailService messaging.EmailService,
+	emailService channels.EmailService,
 ) *VerificationService {
 	return &VerificationService{
 		userRepo:     userRepo,

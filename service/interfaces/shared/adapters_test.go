@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	sharedAuth "Qingyu_backend/service/shared/auth"
+	sharedAuth "Qingyu_backend/service/auth"
 	sharedStorage "Qingyu_backend/service/shared/storage"
 
 	"github.com/stretchr/testify/assert"
