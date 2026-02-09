@@ -14,16 +14,16 @@ database:
 
 # 服务器配置
 server:
-  port: "8080"
+  port: "9090"
   mode: "debug"  # debug or release
 
 # 日志配置
 log:
   level: "info"
-  format: "json"
-  output: "stdout"
+  format: "console"  # 控制台使用友好格式
+  output: "dual"     # dual模式：控制台console格式 + 文件json格式
   filename: "logs/app.log"
-  development: false
+  development: true  # 开发模式，启用彩色输出和debug级别
   mode: "normal"  # normal or strict
   request:
     enable_body: false
