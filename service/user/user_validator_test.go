@@ -33,7 +33,7 @@ func TestValidateUsername(t *testing.T) {
 		{"用户名太短", "ab", true, "MIN_LENGTH", "username"},
 		{"用户名刚好3字符", "abc", false, "", ""},
 		{"用户名刚好30字符", "this_is_exactly_thirty_char_ok", false, "", ""},
-		{"用户名31字符", "this_is_thirty_one_characters!", true, "MAX_LENGTH", "username"},
+		{"用户名31字符(无特殊字符)", "this_is_thirty_one_characters_x", true, "MAX_LENGTH", "username"},
 		{"用户名包含特殊字符", "user@name", true, "INVALID_FORMAT", "username"},
 		{"用户名包含空格", "user name", true, "INVALID_FORMAT", "username"},
 		{"用户名以数字开头", "123user", true, "INVALID_FORMAT", "username"},
@@ -57,7 +57,8 @@ func TestValidateUsername(t *testing.T) {
 					assert.Equal(t, tt.errField, err.Field)
 				}
 			} else {
-				assert.NoError(t, err)
+				// validateUsername 返回 *ValidationError 类型，需要使用 Nil 而不是 NoError
+				assert.Nil(t, err)
 			}
 		})
 	}
@@ -108,7 +109,8 @@ func TestValidateEmail(t *testing.T) {
 					assert.Equal(t, tt.errField, err.Field)
 				}
 			} else {
-				assert.NoError(t, err)
+				// validateEmail 返回 *ValidationError 类型，需要使用 Nil 而不是 NoError
+				assert.Nil(t, err)
 			}
 		})
 	}
@@ -159,7 +161,8 @@ func TestValidatePassword(t *testing.T) {
 					assert.Equal(t, tt.errField, err.Field)
 				}
 			} else {
-				assert.NoError(t, err)
+				// validatePassword 返回 *ValidationError 类型，需要使用 Nil 而不是 NoError
+				assert.Nil(t, err)
 			}
 		})
 	}
@@ -432,7 +435,8 @@ func TestValidateUserStatus(t *testing.T) {
 					assert.Equal(t, tt.errField, err.Field)
 				}
 			} else {
-				assert.NoError(t, err)
+				// ValidateUserStatus 返回 *ValidationError 类型，需要使用 Nil 而不是 NoError
+				assert.Nil(t, err)
 			}
 		})
 	}
@@ -476,7 +480,8 @@ func TestValidateUserID(t *testing.T) {
 					assert.Equal(t, tt.errField, err.Field)
 				}
 			} else {
-				assert.NoError(t, err)
+				// ValidateUserID 返回 *ValidationError 类型，需要使用 Nil 而不是 NoError
+				assert.Nil(t, err)
 			}
 		})
 	}
