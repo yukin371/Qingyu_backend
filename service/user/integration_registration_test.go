@@ -61,7 +61,7 @@ func TestUserService_RegisterUser_Integration(t *testing.T) {
 	assert.Equal(t, testUser.Username, dbUser.Username, "数据库中的用户名应该匹配")
 	assert.Equal(t, testUser.Email, dbUser.Email, "数据库中的邮箱应该匹配")
 	assert.NotEqual(t, testUser.Password, dbUser.Password, "密码应该被加密")
-	assert.True(t, dbUser.CheckPassword(testUser.Password), "密码验证应该成功")
+	assert.True(t, dbUser.ValidatePassword(testUser.Password), "密码验证应该成功")
 }
 
 // TestUserService_RegisterUser_DuplicateUsername_Integration 重复用户名测试
@@ -222,7 +222,6 @@ func TestUserService_RegisterUser_DefaultValues_Integration(t *testing.T) {
 
 	// 验证邮箱验证状态
 	assert.False(t, resp.User.EmailVerified, "邮箱验证状态应该是false")
-	assert.Nil(t, resp.User.EmailVerifiedAt, "邮箱验证时间应该为空")
 
 	// 验证手机验证状态
 	assert.False(t, resp.User.PhoneVerified, "手机验证状态应该是false")

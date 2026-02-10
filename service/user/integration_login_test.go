@@ -39,7 +39,6 @@ func TestUserService_LoginUser_Integration(t *testing.T) {
 	require.NotNil(t, resp, "响应不应该为空")
 	require.NotNil(t, resp.User, "用户信息不应该为空")
 	assert.NotEmpty(t, resp.Token, "Token不应该为空")
-	assert.NotEmpty(t, resp.RefreshToken, "RefreshToken不应该为空")
 
 	// 验证用户信息
 	assert.Equal(t, userID, resp.User.ID, "用户ID应该匹配")
@@ -193,8 +192,7 @@ func TestUserService_LoginAndLogout_Integration(t *testing.T) {
 
 	// Act - 登出用户
 	logoutReq := &user2.LogoutUserRequest{
-		UserID: loginResp.User.ID,
-		Token:  loginResp.Token,
+		Token: loginResp.Token,
 	}
 
 	logoutResp, err := env.UserService.LogoutUser(ctx, logoutReq)

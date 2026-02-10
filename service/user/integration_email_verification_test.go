@@ -24,7 +24,7 @@ func TestUserService_EmailVerificationFlow_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个未验证邮箱的用户
-	userID, username, email, _ := env.CreateDefaultTestUser(t)
+	userID, _, email, _ := env.CreateDefaultTestUser(t)
 
 	// 确保邮箱未验证
 	user := env.AssertUserExists(t, userID)

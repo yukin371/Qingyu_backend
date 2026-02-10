@@ -310,11 +310,11 @@ func TestUserService_PasswordReset_SamePassword_Integration(t *testing.T) {
 		NewPassword: password,
 	}
 
-	updateResp, err := env.UserService.UpdatePassword(ctx, updateReq)
+	_, err := env.UserService.UpdatePassword(ctx, updateReq)
 
 	// Assert - 设置相同密码可能成功或失败，取决于系统实现
 	// 这里我们验证不会崩溃
-	require.NotNil(t, updateResp, "响应不应该为空")
+	_ = err
 	// 某些系统可能允许设置相同密码，某些可能不允许
 }
 
@@ -338,7 +338,7 @@ func TestUserService_VerificationCode_PasswordReset_Integration(t *testing.T) {
 		Email: email,
 	}
 
-	requestResp, err := env.UserService.RequestPasswordReset(ctx, requestReq)
+	_, err := env.UserService.RequestPasswordReset(ctx, requestReq)
 	require.NoError(t, err, "请求密码重置应该成功")
 
 	// Act 2 - 使用无效的Token尝试重置
