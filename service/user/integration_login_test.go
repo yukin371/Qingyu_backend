@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -242,6 +243,12 @@ func TestUserService_MultipleLogins_Integration(t *testing.T) {
 		}
 
 		tokens = append(tokens, resp.Token)
+
+		// 添加延迟确保时间戳不同，避免JWT Token相同
+		// JWT使用秒级时间戳，需要等待至少1秒
+		if i < 2 {
+			time.Sleep(1100 * time.Millisecond)
+		}
 	}
 
 	// 所有Token都应该有效

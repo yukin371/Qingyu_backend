@@ -5,6 +5,7 @@ import (
 	user2 "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"Qingyu_backend/internal/middleware/auth"
@@ -787,6 +788,12 @@ func (s *UserServiceImpl) validateRegisterUserRequest(req *user2.RegisterUserReq
 	}
 	if req.Email == "" {
 		return fmt.Errorf("邮箱不能为空")
+	}
+	// 验证邮箱格式
+	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	matched, _ := regexp.MatchString(emailRegex, req.Email)
+	if !matched {
+		return fmt.Errorf("邮箱格式不正确")
 	}
 	if req.Password == "" {
 		return fmt.Errorf("密码不能为空")
