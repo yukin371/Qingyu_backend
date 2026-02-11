@@ -152,6 +152,11 @@ func (b *PersistedEventBus) storeBatch(ctx context.Context, events []base.Event)
 	}
 }
 
+// Replay 事件回放（从存储中重放事件到处理器）
+func (b *PersistedEventBus) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
+	return b.store.Replay(ctx, handler, filter)
+}
+
 // Close 关闭事件总线
 func (b *PersistedEventBus) Close() error {
 	close(b.stopCh)

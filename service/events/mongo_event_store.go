@@ -266,7 +266,9 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 }
 
 // Replay 事件回放
-func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) error {
+func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
+	startTime := time.Now()
+
 	// 构建查询条件
 	mongoFilter := bson.M{}
 	if filter.EventType != "" {
@@ -300,15 +302,28 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 	cursor, err := s.collection.Find(ctx, mongoFilter, opts)
 	if err != nil {
-		return fmt.Errorf("failed to replay events: %w", err)
+		return nil, fmt.Errorf("failed to replay events: %w", err)
 	}
 	defer cursor.Close(ctx)
+
+	result := &ReplayResult{
+		ReplayedCount: 0,
+		FailedCount:   0,
+		SkippedCount:  0,
+	}
 
 	// 逐个处理事件
 	for cursor.Next(ctx) {
 		var storedEvent StoredEvent
 		if err := cursor.Decode(&storedEvent); err != nil {
-			return fmt.Errorf("failed to decode event: %w", err)
+			result.FailedCount++
+			continue
+		}
+
+		// DryRun模式：只统计不执行
+		if filter.DryRun {
+			result.SkippedCount++
+			continue
 		}
 
 		// 重建事件对象
@@ -321,8 +336,12 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 		// 调用处理器处理事件
 		if err := handler.Handle(ctx, event); err != nil {
-			return fmt.Errorf("handler failed for event %s: %w", storedEvent.ID, err)
+			result.FailedCount++
+			// 继续处理下一个事件，不中断整个回放过程
+			continue
 		}
+
+		result.ReplayedCount++
 
 		// 标记事件为已处理
 		_, _ = s.collection.UpdateOne(ctx,
@@ -330,7 +349,8 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 			bson.M{"$set": bson.M{"processed": true}})
 	}
 
-	return nil
+	result.Duration = time.Since(startTime)
+	return result, nil
 }
 
 // Cleanup 清理过期事件
@@ -401,7 +421,8 @@ func (r *MongoEventReplayer) ReplayFromTimestamp(ctx context.Context, timestamp 
 	filter := EventFilter{
 		StartTime: &timestamp,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err := r.store.Replay(ctx, handler, filter)
+	return err
 }
 
 // ReplayFromEventID 从指定事件ID回放事件
@@ -419,7 +440,8 @@ func (r *MongoEventReplayer) ReplayFromEventID(ctx context.Context, eventID stri
 	filter := EventFilter{
 		StartTime: &event.Timestamp,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err = r.store.Replay(ctx, handler, filter)
+	return err
 }
 
 // ReplayWithType 回放指定类型的事件
@@ -427,5 +449,6 @@ func (r *MongoEventReplayer) ReplayWithType(ctx context.Context, eventType strin
 	filter := EventFilter{
 		EventType: eventType,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err := r.store.Replay(ctx, handler, filter)
+	return err
 }

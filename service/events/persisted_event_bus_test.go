@@ -118,9 +118,12 @@ func (m *MockEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType st
 	return args.Get(0).([]*StoredEvent), args.Error(1)
 }
 
-func (m *MockEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) error {
+func (m *MockEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
 	args := m.Called(ctx, handler, filter)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*ReplayResult), args.Error(1)
 }
 
 func (m *MockEventStore) Cleanup(ctx context.Context, before time.Time) (int64, error) {
@@ -870,6 +873,7 @@ func TestPersistedEventBus_Replay_Combinations(t *testing.T) {
 			mockHandler.On("GetHandlerName").Return("test-handler")
 			mockHandler.On("GetSupportedEventTypes").Return([]string{"test.event"})
 
+			_ = newTestPersistedEventBus(mockStore, false)
 
 			// Act
 			// err := bus.Replay(ctx, mockHandler, tt.filter)
