@@ -8,6 +8,7 @@ import (
 	adminservice "Qingyu_backend/service/admin"
 	aiService "Qingyu_backend/service/ai"
 	auditService "Qingyu_backend/service/interfaces/audit"
+	eventservice "Qingyu_backend/service/events"
 	userService "Qingyu_backend/service/interfaces/user"
 	messagingService "Qingyu_backend/service/messaging"
 	sharedService "Qingyu_backend/service/shared"
@@ -24,6 +25,7 @@ func RegisterAdminRoutes(
 	announcementSvc messagingService.AnnouncementService,
 	userAdminSvc adminservice.UserAdminService,
 	permissionSvc sharedService.PermissionService,
+	eventBus eventservice.PersistedEventBusInterface,
 ) {
 	// 创建admin API实例
 	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
@@ -36,6 +38,12 @@ func RegisterAdminRoutes(
 	var permissionAPI *admin.PermissionAPI
 	if permissionSvc != nil {
 		permissionAPI = admin.NewPermissionAPI(permissionSvc)
+	}
+
+	// 事件管理API
+	var eventsAPI *admin.EventsAdminAPI
+	if eventBus != nil {
+		eventsAPI = admin.NewEventsAdminAPI(eventBus)
 	}
 
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
@@ -180,6 +188,16 @@ func RegisterAdminRoutes(
 				rolesGroup.GET("/:id/permissions", permissionAPI.GetRolePermissions)                          // 获取角色权限
 				rolesGroup.POST("/:id/permissions/:permissionCode", permissionAPI.AssignPermissionToRole)     // 为角色分配权限
 				rolesGroup.DELETE("/:id/permissions/:permissionCode", permissionAPI.RemovePermissionFromRole) // 移除角色权限
+			}
+		}
+
+		// ===========================
+		// 事件管理
+		// ===========================
+		if eventsAPI != nil {
+			eventsGroup := adminGroup.Group("/events")
+			{
+				eventsGroup.POST("/replay", eventsAPI.ReplayEvents) // 事件回放
 			}
 		}
 	}
