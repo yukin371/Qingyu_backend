@@ -159,7 +159,29 @@ func (b *PersistedEventBus) storeBatch(ctx context.Context, events []base.Event)
 	}
 }
 
-// Replay 事件回放（从存储中重放事件到处理器）
+// Replay 从存储中重放事件到处理器
+// 该方法将请求转发到底层的事件存储实现
+//
+// 参数:
+//   ctx - 上下文，用于超时控制和取消
+//   handler - 事件处理器，用于处理每个重放的事件
+//   filter - 过滤条件，可选的类型、来源、时间范围等
+//
+// 返回:
+//   *ReplayResult - 重放结果统计
+//   error - 错误信息，如果有的话
+//
+// 注意:
+//   - 该方法线程安全，转发给底层store实现
+//   - 具体的并发安全性取决于底层store实现
+//   - 指标和日志由底层store实现处理
+//   - 请参考底层store的Replay方法文档了解详细的参数验证和错误处理
+//
+// 示例:
+//   result, err := bus.Replay(ctx, myHandler, EventFilter{
+//       EventType: "ChapterPublishedEvent",
+//       Limit: 1000,
+//   })
 func (b *PersistedEventBus) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
 	// 指标和日志由底层store实现，这里只做转发
 	return b.store.Replay(ctx, handler, filter)

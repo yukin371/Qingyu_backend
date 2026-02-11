@@ -272,7 +272,33 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 	return events, nil
 }
 
-// Replay 事件回放
+// Replay 从存储中重放事件到处理器
+// 支持按类型、来源、时间范围等条件过滤
+// 返回重放结果，包含成功/失败/跳过的事件数量和执行耗时
+//
+// 参数:
+//   ctx - 上下文，用于超时控制和取消
+//   handler - 事件处理器，用于处理每个重放的事件
+//   filter - 过滤条件，可选的类型、来源、时间范围等
+//
+// 返回:
+//   *ReplayResult - 重放结果统计
+//   error - 错误信息，如果有的话
+//
+// 注意:
+//   - handler不能为nil
+//   - filter.Limit不能为负数
+//   - filter.Offset不能为负数
+//   - 时间范围必须有效(StartTime < EndTime)
+//   - 如果context没有设置deadline，会自动添加5分钟超时
+//   - 并发安全：多个goroutine可以同时调用Replay方法，不会产生竞态条件
+//   - 事件处理失败时会继续处理下一个事件，不会中断整个回放过程
+//
+// 示例:
+//   result, err := store.Replay(ctx, myHandler, EventFilter{
+//       EventType: "ChapterPublishedEvent",
+//       Limit: 1000,
+//   })
 func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
 	// 参数验证（P1-2: 防御性检查）
 	if handler == nil {
@@ -354,6 +380,11 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 		SkippedCount:  0,
 	}
 
+	// 收集成功处理的事件ID（用于批量更新processed标志）
+	var successIDs []interface{}
+	// 使用map去重
+	successIDSet := make(map[string]bool)
+
 	// 逐个处理事件
 	for cursor.Next(ctx) {
 		var storedEvent StoredEvent
@@ -385,14 +416,22 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 		result.ReplayedCount++
 
-		// 标记事件为已处理
-		_, err := s.collection.UpdateOne(ctx,
-			bson.M{"_id": storedEvent.ID},
+		// 收集成功处理的事件ID（用于后续批量更新）
+		if !successIDSet[storedEvent.ID] {
+			successIDSet[storedEvent.ID] = true
+			successIDs = append(successIDs, storedEvent.ID)
+		}
+	}
+
+	// 批量更新processed标志（P2-3优化：减少数据库操作次数）
+	if len(successIDs) > 0 {
+		_, err := s.collection.UpdateMany(ctx,
+			bson.M{"_id": bson.M{"$in": successIDs}},
 			bson.M{"$set": bson.M{"processed": true}})
 		if err != nil {
-			// 使用EventLogger记录标记失败错误
-			s.logger.logger.Error("Failed to mark event as processed",
-				zap.String("event_id", storedEvent.ID),
+			// 使用EventLogger记录批量标记失败错误
+			s.logger.logger.Error("Failed to batch mark events as processed",
+				zap.Int("count", len(successIDs)),
 				zap.Error(err))
 		}
 	}
