@@ -39,8 +39,8 @@ import (
 	"Qingyu_backend/service/admin"
 	financeWalletService "Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/recommendation"
-	"Qingyu_backend/service/shared/auth"
-	sharedMessaging "Qingyu_backend/service/shared/messaging"
+	"Qingyu_backend/service/auth"
+	channelsService "Qingyu_backend/service/channels"
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/storage"
 
@@ -49,7 +49,6 @@ import (
 
 	// Infrastructure
 	"Qingyu_backend/config"
-	"Qingyu_backend/global"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
 
@@ -66,6 +65,9 @@ type ServiceContainer struct {
 	services          map[string]serviceInterfaces.BaseService
 	initialized       bool
 	mu                sync.RWMutex // 保护并发访问
+
+	// Provider注册表（ARCH-003重构）
+	providerRegistry *ProviderRegistry
 
 	// 基础设施
 	eventBus    serviceInterfaces.EventBus
@@ -104,7 +106,7 @@ type ServiceContainer struct {
 	oauthService          *auth.OAuthService
 	walletService         financeWalletService.WalletService
 	recommendationService recommendation.RecommendationService
-	messagingService      sharedMessaging.MessagingService
+	messagingService      channelsService.MessagingService
 	storageService        storage.StorageService
 	adminService          admin.AdminService
 	announcementService   messagingSvc.AnnouncementService
@@ -355,7 +357,7 @@ func (c *ServiceContainer) GetRecommendationService() (recommendation.Recommenda
 }
 
 // GetMessagingService 获取消息服务
-func (c *ServiceContainer) GetMessagingService() (sharedMessaging.MessagingService, error) {
+func (c *ServiceContainer) GetMessagingService() (channelsService.MessagingService, error) {
 	if c.messagingService == nil {
 		return nil, fmt.Errorf("MessagingService未初始化")
 	}
@@ -527,9 +529,9 @@ func (c *ServiceContainer) initMongoDB() error {
 	c.mongoClient = client
 	c.mongoDB = client.Database(mongoCfg.Database)
 
-	// 设置全局DB变量（兼容测试和旧代码）
-	// 注意：需要导入global包
-	return c.setGlobalDB()
+	// 不再设置全局DB变量（ARCH-002重构）
+	// 所有依赖应该通过容器注入，而不是使用全局变量
+	return nil
 }
 
 // initRedis 初始化Redis客户端
@@ -545,15 +547,6 @@ func (c *ServiceContainer) initRedis() error {
 	}
 
 	c.redisClient = client
-	return nil
-}
-
-// setGlobalDB 设置全局DB变量（用于测试和向后兼容）
-func (c *ServiceContainer) setGlobalDB() error {
-	if c.mongoDB == nil {
-		return fmt.Errorf("MongoDB未初始化")
-	}
-	global.DB = c.mongoDB
 	return nil
 }
 
@@ -983,12 +976,12 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 	fmt.Println("  ✓ AdminService初始化完成")
 
-	// 5.6 MessagingService
+	// 5.6 MessagingService (使用channels包)
 	if c.redisClient != nil {
 		rawClient := c.redisClient.GetClient()
 		if redisClient, ok := rawClient.(*redis.Client); ok {
-			queueClient := sharedMessaging.NewRedisQueueClient(redisClient)
-			messagingSvc := sharedMessaging.NewMessagingService(queueClient)
+			queueClient := channelsService.NewRedisQueueClient(redisClient)
+			messagingSvc := channelsService.NewMessagingService(queueClient)
 			c.messagingService = messagingSvc
 
 			if baseMessagingSvc, ok := messagingSvc.(serviceInterfaces.BaseService); ok {
@@ -996,7 +989,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 					return fmt.Errorf("注册消息服务失败: %w", err)
 				}
 			}
-			fmt.Println("  ✓ MessagingService初始化完成（Redis Stream）")
+			fmt.Println("  ✓ MessagingService初始化完成（Redis Stream - channels包）")
 		} else {
 			fmt.Println("警告: Redis客户端类型转换失败，跳过MessagingService创建")
 		}
@@ -1106,7 +1099,7 @@ func (c *ServiceContainer) SetRecommendationService(service recommendation.Recom
 }
 
 // SetMessagingService 设置消息服务
-func (c *ServiceContainer) SetMessagingService(service sharedMessaging.MessagingService) {
+func (c *ServiceContainer) SetMessagingService(service channelsService.MessagingService) {
 	c.messagingService = service
 }
 

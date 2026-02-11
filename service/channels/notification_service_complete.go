@@ -1,4 +1,4 @@
-package messaging
+package channels
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"

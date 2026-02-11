@@ -20,6 +20,32 @@ const (
 	TokenDefaultExpiry           = 3600 * 24 * 7 // Token默认有效期：7天
 )
 
+// UserValidator相关常量
+const (
+	// 用户名验证规则
+	UsernameMinLength          = 3             // 用户名最小长度
+	UsernameMaxLength          = 30            // 用户名最大长度
+	UsernamePattern            = "^[a-zA-Z0-9_]+$" // 用户名格式正则
+
+	// 邮箱验证规则
+	EmailMaxLength             = 100           // 邮箱最大长度
+	EmailPattern               = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$` // 邮箱格式正则
+
+	// 密码验证规则
+	PasswordMinLength          = 8             // 密码最小长度
+	PasswordMaxLength          = 128           // 密码最大长度
+)
+
+// 保留用户名列表（系统保留，不允许用户注册使用）
+var ReservedUsernames = []string{
+	"admin", "root", "system", "api", "www", "mail", "ftp",
+}
+
+// 常见弱密码列表（不允许用户使用）
+var WeakPasswords = []string{
+	"12345678", "password", "qwerty123", "abc123456",
+}
+
 // 验证目的常量
 const (
 	VerificationPurposeEmail   = "verify_email"   // 邮箱验证

@@ -6,7 +6,7 @@ import (
 
 	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 )
 
 // OAuthAPI OAuth认证API处理器

@@ -16,7 +16,7 @@ import (
 	"golang.org/x/oauth2"
 
 	authModel "Qingyu_backend/models/auth"
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 )
 
 // MockOAuthService 模拟OAuthService

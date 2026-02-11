@@ -2,7 +2,7 @@ package shared
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"
-	"Qingyu_backend/service/shared/messaging"
+	"Qingyu_backend/service/channels"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,11 +10,11 @@ import (
 
 // NotificationAPI 通知API处理器
 type NotificationAPI struct {
-	notificationService messaging.NotificationService
+	notificationService channels.NotificationService
 }
 
 // NewNotificationAPI 创建通知API实例
-func NewNotificationAPI(notificationService messaging.NotificationService) *NotificationAPI {
+func NewNotificationAPI(notificationService channels.NotificationService) *NotificationAPI {
 	return &NotificationAPI{
 		notificationService: notificationService,
 	}

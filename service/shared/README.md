@@ -26,8 +26,8 @@
 
 | 模块 | 状态 | 说明 | 主要文件 |
 |------|------|------|---------|
-| **Auth** | ✅ 实现 | 认证与权限管理 | [interfaces.go](./auth/interfaces.go) |
-| **Messaging** | ✅ 实现 | 消息队列与通知 | [interfaces.go](./messaging/interfaces.go) |
+| **Auth** | 📦 已迁移 | 认证与权限管理 | 已迁移至 [service/auth/](../auth/) |
+| **Messaging** | 📦 已迁移 | 消息队列与通知 | 已迁移至 [service/channels/](../channels/) |
 | **Storage** | ✅ 接口 | 文件存储接口 | [interfaces.go](./storage/interfaces.go) |
 | **Cache** | ✅ 实现 | Redis 缓存服务 | [redis_cache_service.go](./cache/redis_cache_service.go) |
 | **Search** | ✅ 实现 | 搜索服务 | [search_service.go](./search/search_service.go) |
@@ -40,16 +40,6 @@
 
 ```
 service/shared/
-├── auth/                      # 认证与权限模块
-│   ├── interfaces.go          # 服务接口定义
-│   └── permission_service.go  # 权限服务实现
-│
-├── messaging/                 # 消息队列模块
-│   ├── interfaces.go          # 消息队列接口
-│   ├── email_service.go       # 邮件服务
-│   ├── notification_service.go    # 通知服务
-│   └── redis_queue_client.go     # Redis 队列客户端
-│
 ├── storage/                   # 文件存储模块
 │   └── interfaces.go          # 存储服务接口
 │
@@ -67,15 +57,22 @@ service/shared/
 │
 ├── config_service.go          # 动态配置管理服务
 ├── permission_service.go      # 权限服务（完整 RBAC）
+├── messaging_compat.go        # 消息模块兼容层
 │
 └── README.md                  # 本文档
 ```
+
+**已迁移模块**:
+- **auth/** → 已迁移至 [`service/auth/`](../auth/)
+- **messaging/** → 已迁移至 [`service/channels/`](../channels/)
 
 ---
 
 ## 🎯 各模块功能
 
-### 1. Auth 模块
+### 已迁移模块
+
+#### 1. Auth 模块 (已迁移至 `service/auth/`)
 
 **核心功能**:
 - JWT Token 生成与验证
@@ -84,13 +81,9 @@ service/shared/
 - 会话管理（Redis）
 - 角色与权限管理
 
-**主要文件**:
-- `auth/interfaces.go` - 服务接口定义
-- `auth/permission_service.go` - 权限服务实现
+**新位置**: [`service/auth/`](../auth/)
 
----
-
-### 2. Messaging 模块
+#### 2. Messaging 模块 (已迁移至 `service/channels/`)
 
 **核心功能**:
 - 消息发布订阅（基于 Redis Streams）
@@ -98,15 +91,13 @@ service/shared/
 - 通知发送服务
 - 延迟消息支持
 
-**主要文件**:
-- `messaging/interfaces.go` - 消息队列接口
-- `messaging/email_service.go` - 邮件服务
-- `messaging/notification_service.go` - 通知服务
-- `messaging/redis_queue_client.go` - Redis 队列客户端
+**新位置**: [`service/channels/`](../channels/)
+
+**兼容层**: 本目录的 `messaging_compat.go` 提供了向后兼容的别名和类型
 
 ---
 
-### 3. Storage 模块
+### 1. Storage 模块
 
 **核心功能**:
 - 文件上传下载接口定义
@@ -119,7 +110,7 @@ service/shared/
 
 ---
 
-### 4. Cache 模块
+### 2. Cache 模块
 
 **核心功能**:
 - 通用 Redis 缓存服务
@@ -132,7 +123,7 @@ service/shared/
 
 ---
 
-### 5. Search 模块
+### 3. Search 模块
 
 **核心功能**:
 - 搜索服务接口定义
@@ -142,7 +133,7 @@ service/shared/
 
 ---
 
-### 6. Metrics 模块
+### 4. Metrics 模块
 
 **核心功能**:
 - 服务指标收集与上报
@@ -152,7 +143,7 @@ service/shared/
 
 ---
 
-### 7. Stats 模块
+### 5. Stats 模块
 
 **核心功能**:
 - 平台统计数据服务
@@ -162,7 +153,7 @@ service/shared/
 
 ---
 
-### 8. Config 服务
+### 6. Config 服务
 
 **核心功能**:
 - 动态配置管理
@@ -174,7 +165,7 @@ service/shared/
 
 ---
 
-### 9. Permission 服务
+### 7. Permission 服务
 
 **核心功能**:
 - 完整 RBAC 权限实现
@@ -192,12 +183,18 @@ service/shared/
 
 ```go
 import (
-    authService "Qingyu_backend/service/shared/auth"
-    cacheService "Qingyu_backend/service/shared/cache"
-    messagingService "Qingyu_backend/service/shared/messaging"
-    storageService "Qingyu_backend/service/shared/storage"
+    authService "Qingyu_backend/service/auth"           // 认证服务
+    cacheService "Qingyu_backend/service/shared/cache"  // 缓存服务
+    channelsService "Qingyu_backend/service/channels"   // 消息通知服务
+    storageService "Qingyu_backend/service/shared/storage" // 存储服务
 )
 ```
+
+**注意**:
+- Auth模块已迁移至 `service/auth`
+- Messaging模块已迁移至 `service/channels`
+- 旧的import路径 `service/shared/auth` 和 `service/shared/messaging` 不再可用
+- 可使用 `service/shared` 的兼容层作为过渡（`messaging_compat.go`）
 
 ---
 

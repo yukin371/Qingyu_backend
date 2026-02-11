@@ -1,10 +1,11 @@
-package messaging
+package channels
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
 	"net/smtp"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -166,17 +167,26 @@ func (s *EmailServiceImpl) ValidateEmail(email string) bool {
 		return false
 	}
 
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
+	// 检查是否包含空格
+	if strings.Contains(email, " ") {
 		return false
 	}
 
-	if parts[0] == "" || parts[1] == "" {
+	// 检查是否有连续的点
+	if strings.Contains(email, "..") {
 		return false
 	}
 
-	// TODO(Phase3): 使用更严格的邮箱验证（正则表达式或第三方库）
-	return true
+	// 使用正则表达式进行更严格的验证
+	// 正则说明：
+	// ^[a-zA-Z0-9._%+-]+  - 用户名部分：允许字母、数字、点、下划线、百分号、加号、减号
+	// @                     - @符号
+	// [a-zA-Z0-9.-]+        - 域名主体：允许字母、数字、点、减号
+	// \.                    - 点
+	// [a-zA-Z]{2,}$         - 顶级域名：至少2个字母
+	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	matched, _ := regexp.MatchString(pattern, email)
+	return matched
 }
 
 // Health 健康检查
