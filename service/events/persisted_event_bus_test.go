@@ -695,6 +695,8 @@ func TestPersistedEventBus_Unsubscribe(t *testing.T) {
 
 // ============ PersistedEventBus Close 测试 ============
 
+
+
 // TestPersistedEventBus_Close 测试关闭事件总线
 func TestPersistedEventBus_Close(t *testing.T) {
 	// Arrange

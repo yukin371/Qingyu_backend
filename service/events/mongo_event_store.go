@@ -274,6 +274,31 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 
 // Replay 事件回放
 func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
+	// 参数验证（P1-2: 防御性检查）
+	if handler == nil {
+		return nil, fmt.Errorf("handler cannot be nil")
+	}
+	if filter.Limit < 0 {
+		return nil, fmt.Errorf("filter limit cannot be negative: %d", filter.Limit)
+	}
+	if filter.Offset < 0 {
+		return nil, fmt.Errorf("filter offset cannot be negative: %d", filter.Offset)
+	}
+	// 验证时间范围有效性
+	if filter.StartTime != nil && filter.EndTime != nil {
+		if filter.StartTime.After(*filter.EndTime) {
+			return nil, fmt.Errorf("filter start time cannot be after end time: start=%v, end=%v", filter.StartTime, filter.EndTime)
+		}
+	}
+
+	// 添加默认超时（P1-1: 超时控制）
+	// 如果context没有设置deadline，则添加默认5分钟超时
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+	}
+
 	startTime := time.Now()
 
 	// 记录回放开始
