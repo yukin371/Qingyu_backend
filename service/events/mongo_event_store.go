@@ -17,6 +17,8 @@ type MongoEventStore struct {
 	db         *mongo.Database
 	collection *mongo.Collection
 	config     *EventStoreConfig
+	metrics    *Metrics
+	logger     *EventLogger
 }
 
 // NewMongoEventStore 创建 MongoDB 事件存储
@@ -25,10 +27,14 @@ func NewMongoEventStore(db *mongo.Database, config *EventStoreConfig) EventStore
 		config = DefaultEventStoreConfig()
 	}
 
+	logger, _ := NewEventLogger(DefaultLoggingConfig())
+
 	store := &MongoEventStore{
 		db:         db,
 		collection: db.Collection("events_log"),
 		config:     config,
+		metrics:    GetGlobalMetrics(),
+		logger:     logger,
 	}
 
 	// 创建索引
@@ -269,6 +275,13 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
 	startTime := time.Now()
 
+	// 记录回放开始
+	eventType := filter.EventType
+	if eventType == "" {
+		eventType = "all"
+	}
+	s.logger.LogReplayStarted(ctx, eventType, filter.StartTime, filter.EndTime)
+
 	// 构建查询条件
 	mongoFilter := bson.M{}
 	if filter.EventType != "" {
@@ -302,6 +315,9 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 	cursor, err := s.collection.Find(ctx, mongoFilter, opts)
 	if err != nil {
+		duration := time.Since(startTime)
+		s.logger.LogReplayFailed(ctx, eventType, err, duration)
+		s.metrics.RecordEventReplayFailed(eventType, "query_error")
 		return nil, fmt.Errorf("failed to replay events: %w", err)
 	}
 	defer cursor.Close(ctx)
@@ -350,6 +366,13 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 	}
 
 	result.Duration = time.Since(startTime)
+
+	// 记录回放完成
+	s.logger.LogReplayCompleted(ctx, eventType, result)
+
+	// 记录指标
+	s.metrics.RecordEventReplayed(eventType, result.ReplayedCount, result.FailedCount, result.Duration)
+
 	return result, nil
 }
 

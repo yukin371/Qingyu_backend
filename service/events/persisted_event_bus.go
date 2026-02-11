@@ -154,6 +154,7 @@ func (b *PersistedEventBus) storeBatch(ctx context.Context, events []base.Event)
 
 // Replay 事件回放（从存储中重放事件到处理器）
 func (b *PersistedEventBus) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
+	// 指标和日志由底层store实现，这里只做转发
 	return b.store.Replay(ctx, handler, filter)
 }
 

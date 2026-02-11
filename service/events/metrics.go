@@ -36,6 +36,11 @@ type Metrics struct {
 
 	// 处理器指标
 	HandlerActiveCount *prometheus.GaugeVec
+
+	// Replay 指标
+	EventsReplayTotal    *prometheus.CounterVec
+	EventsReplayFailed   *prometheus.CounterVec
+	EventsReplayDuration *prometheus.HistogramVec
 }
 
 // NewMetrics 创建事件指标
@@ -165,6 +170,30 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"handler", "event_type"},
 		),
+
+		// Replay 指标
+		EventsReplayTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "events_replay_total",
+				Help: "Total number of events replayed.",
+			},
+			[]string{"event_type", "status"},
+		),
+		EventsReplayFailed: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "events_replay_failed_total",
+				Help: "Total number of failed event replay attempts.",
+			},
+			[]string{"event_type", "error_type"},
+		),
+		EventsReplayDuration: promauto.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "events_replay_duration_seconds",
+				Help:    "Duration of event replay in seconds.",
+				Buckets: []float64{0.1, 0.5, 1, 2.5, 5, 10, 30, 60, 120, 300},
+			},
+			[]string{"event_type"},
+		),
 	}
 }
 
@@ -244,6 +273,21 @@ func (m *Metrics) IncrementHandlerActive(handler, eventType string) {
 // DecrementHandlerActive 减少活跃处理器计数
 func (m *Metrics) DecrementHandlerActive(handler, eventType string) {
 	m.HandlerActiveCount.WithLabelValues(handler, eventType).Dec()
+}
+
+// RecordEventReplayed 记录事件回放
+func (m *Metrics) RecordEventReplayed(eventType string, replayedCount, failedCount int64, duration time.Duration) {
+	status := "success"
+	if failedCount > 0 {
+		status = "partial_failure"
+	}
+	m.EventsReplayTotal.WithLabelValues(eventType, status).Add(float64(replayedCount))
+	m.EventsReplayDuration.WithLabelValues(eventType).Observe(duration.Seconds())
+}
+
+// RecordEventReplayFailed 记录事件回放失败
+func (m *Metrics) RecordEventReplayFailed(eventType, errorType string) {
+	m.EventsReplayFailed.WithLabelValues(eventType, errorType).Inc()
 }
 
 // 全局指标实例
