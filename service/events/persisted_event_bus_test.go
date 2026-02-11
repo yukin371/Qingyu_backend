@@ -202,54 +202,34 @@ func TestPersistedEventBus_Replay_Success(t *testing.T) {
 	mockStore := new(MockEventStore)
 	mockHandler := new(MockEventHandler)
 
-	// 创建测试事件
-	testEvents := []*StoredEvent{
-		{
-			ID:        "evt1",
-			EventType: "test.event",
-			EventData: map[string]interface{}{"key": "value1"},
-			Timestamp: time.Now(),
-			Source:    "test",
-			Processed: false,
-		},
-		{
-			ID:        "evt2",
-			EventType: "test.event",
-			EventData: map[string]interface{}{"key": "value2"},
-			Timestamp: time.Now(),
-			Source:    "test",
-			Processed: false,
-		},
+	expectedResult := &ReplayResult{
+		ReplayedCount: 2,
+		FailedCount:   0,
+		SkippedCount:  0,
+		Duration:      100 * time.Millisecond,
 	}
 
-	// 设置mock期望
-	mockStore.On("Replay", ctx, mock.AnythingOfType("*events.MockEventHandler"), mock.AnythingOfType("events.EventFilter")).Return(nil).Run(func(args mock.Arguments) {
-		// 模拟replay过程中调用handler
-		handler := args.Get(1).(base.EventHandler)
-		for _, evt := range testEvents {
-			event := &base.BaseEvent{
-				EventType: evt.EventType,
-				EventData: evt.EventData,
-				Timestamp: evt.Timestamp,
-				Source:    evt.Source,
-			}
-			_ = handler.Handle(ctx, event)
-		}
-	})
+	// 设置mock期望 - Replay方法返回成功结果
+	mockStore.On("Replay", ctx, mock.AnythingOfType("*events.MockEventHandler"), mock.AnythingOfType("events.EventFilter")).Return(expectedResult, nil)
 
-	mockHandler.On("Handle", ctx, mock.AnythingOfType("*base.BaseEvent")).Return(nil).Times(len(testEvents))
-	mockHandler.On("GetHandlerName").Return("test-handler")
-	mockHandler.On("GetSupportedEventTypes").Return([]string{"test.event"})
+	// 设置handler期望 - Handle方法会被调用
+	mockHandler.On("Handle", ctx, mock.AnythingOfType("*base.BaseEvent")).Return(nil).Times(2)
+	mockHandler.On("GetHandlerName").Return("test-handler").Maybe()
+	mockHandler.On("GetSupportedEventTypes").Return([]string{"test.event"}).Maybe()
 
-	_ = newTestPersistedEventBus(mockStore, false)
+	bus := newTestPersistedEventBus(mockStore, false)
 
 	// Act - 执行被测试的方法
-	// 注意：PersistedEventBus需要实现Replay方法
-	// 这里假设方法签名为: Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) error
+	filter := EventFilter{DryRun: false}
+	result, err := bus.Replay(ctx, mockHandler, filter)
 
 	// Assert - 验证结果
-	// 验证handler被正确调用了预期次数
-	t.Skip("PersistedEventBus需要实现Replay方法")
+	assert.NoError(t, err, "Replay应该成功")
+	assert.NotNil(t, result, "结果不应为空")
+	assert.Equal(t, int64(2), result.ReplayedCount, "应该回放2个事件")
+
+	// 验证mock被正确调用
+	mockStore.AssertExpectations(t)
 }
 
 // TestPersistedEventBus_Replay_DryRun 测试dry-run模式
@@ -259,25 +239,39 @@ func TestPersistedEventBus_Replay_DryRun(t *testing.T) {
 	mockStore := new(MockEventStore)
 	mockHandler := new(MockEventHandler)
 
+	expectedResult := &ReplayResult{
+		ReplayedCount: 0,
+		FailedCount:   0,
+		SkippedCount:  3, // dry-run模式下跳过3个事件
+		Duration:      50 * time.Millisecond,
+	}
+
 	// dry-run模式下，应该只统计不调用handler
 	mockStore.On("Replay", ctx, mock.Anything, mock.MatchedBy(func(f EventFilter) bool {
 		// 验证dry-run标志被正确传递
-		return true
-	})).Return(nil)
+		return f.DryRun == true
+	})).Return(expectedResult, nil)
 
-	mockHandler.On("Handle", ctx, mock.Anything).Return(nil).Times(0) // dry-run不应该调用handler
+	// dry-run不应该调用handler
+	mockHandler.On("Handle", ctx, mock.Anything).Return(nil).Times(0)
 	mockHandler.On("GetHandlerName").Return("test-handler")
 	mockHandler.On("GetSupportedEventTypes").Return([]string{"test.event"})
 
-	_ = newTestPersistedEventBus(mockStore, false)
+	bus := newTestPersistedEventBus(mockStore, false)
 
-	// Act
-	// 执行dry-run replay
-	_ = ctx
+	// Act - 执行dry-run replay
+	filter := EventFilter{DryRun: true}
+	result, err := bus.Replay(ctx, mockHandler, filter)
 
-	// Assert
-	// 验证handler未被调用，但返回了正确的统计信息
-	t.Skip("需要实现ReplayOptions支持dry-run模式")
+	// Assert - 验证handler未被调用，但返回了正确的统计信息
+	assert.NoError(t, err, "DryRun replay应该成功")
+	assert.NotNil(t, result, "结果不应为空")
+	assert.Equal(t, int64(0), result.ReplayedCount, "dry-run模式下不应回放事件")
+	assert.Equal(t, int64(3), result.SkippedCount, "应该跳过3个事件")
+
+	// 验证mock被正确调用
+	mockStore.AssertExpectations(t)
+	mockHandler.AssertNotCalled(t, "Handle", ctx, mock.Anything)
 }
 
 // TestPersistedEventBus_Replay_WithFilter 测试带过滤器的重放
@@ -407,20 +401,37 @@ func TestPersistedEventBus_Replay_EmptyResult(t *testing.T) {
 	mockStore := new(MockEventStore)
 	mockHandler := new(MockEventHandler)
 
-	mockStore.On("Replay", ctx, mock.Anything, mock.Anything).Return(nil)
+	// 空结果：没有匹配的事件
+	expectedResult := &ReplayResult{
+		ReplayedCount: 0,
+		FailedCount:   0,
+		SkippedCount:  0,
+		Duration:      10 * time.Millisecond,
+	}
+
+	mockStore.On("Replay", ctx, mock.Anything, mock.Anything).Return(expectedResult, nil)
 
 	// handler不应该被调用
 	mockHandler.On("Handle", ctx, mock.Anything).Return(nil).Times(0)
 	mockHandler.On("GetHandlerName").Return("test-handler")
 	mockHandler.On("GetSupportedEventTypes").Return([]string{"test.event"})
 
-	// Act
-	// 执行replay，没有匹配的事件
-	_ = mockStore
+	bus := newTestPersistedEventBus(mockStore, false)
 
-	// Assert
-	// 验证handler未被调用
-	t.Skip("PersistedEventBus需要实现Replay方法")
+	// Act - 执行replay，没有匹配的事件
+	filter := EventFilter{EventType: "nonexistent.event"}
+	result, err := bus.Replay(ctx, mockHandler, filter)
+
+	// Assert - 验证handler未被调用
+	assert.NoError(t, err, "空结果replay应该成功")
+	assert.NotNil(t, result, "结果不应为空")
+	assert.Equal(t, int64(0), result.ReplayedCount, "不应该回放任何事件")
+	assert.Equal(t, int64(0), result.FailedCount, "不应该有失败")
+	assert.Equal(t, int64(0), result.SkippedCount, "不应该有跳过")
+
+	// 验证mock被正确调用
+	mockStore.AssertExpectations(t)
+	mockHandler.AssertNotCalled(t, "Handle", ctx, mock.Anything)
 }
 
 // TestPersistedEventBus_Replay_Limit 测试限制数量

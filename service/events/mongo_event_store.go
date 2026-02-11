@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/service/base"
 )
@@ -360,9 +361,15 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 		result.ReplayedCount++
 
 		// 标记事件为已处理
-		_, _ = s.collection.UpdateOne(ctx,
+		_, err := s.collection.UpdateOne(ctx,
 			bson.M{"_id": storedEvent.ID},
 			bson.M{"$set": bson.M{"processed": true}})
+		if err != nil {
+			// 使用EventLogger记录标记失败错误
+			s.logger.logger.Error("Failed to mark event as processed",
+				zap.String("event_id", storedEvent.ID),
+				zap.Error(err))
+		}
 	}
 
 	result.Duration = time.Since(startTime)
