@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"Qingyu_backend/api/v1/shared"
-	sharedService "Qingyu_backend/service/shared"
 	"Qingyu_backend/pkg/response"
+	sharedService "Qingyu_backend/service/shared"
 
 	"github.com/gin-gonic/gin"
 )

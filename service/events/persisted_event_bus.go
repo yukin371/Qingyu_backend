@@ -10,6 +10,13 @@ import (
 	"Qingyu_backend/service/base"
 )
 
+// PersistedEventBusInterface 持久化事件总线接口
+// 定义用于事件管理和回放的接口
+type PersistedEventBusInterface interface {
+	// Replay 事件回放（从存储中重放事件到处理器）
+	Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error)
+}
+
 // PersistedEventBus 持久化事件总线
 // 在发布事件的同时持久化到存储
 type PersistedEventBus struct {

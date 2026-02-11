@@ -1,30 +1,22 @@
 package admin
 
 import (
-	"context"
 	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/events"
+	eventservice "Qingyu_backend/service/events"
 )
 
 // EventsAdminAPI 事件管理API
 type EventsAdminAPI struct {
-	eventBus PersistedEventBusInterface
-}
-
-// PersistedEventBusInterface PersistedEventBus接口
-// 用于测试时Mock
-type PersistedEventBusInterface interface {
-	Replay(ctx context.Context, handler base.EventHandler, filter events.EventFilter) (*events.ReplayResult, error)
+	eventBus eventservice.PersistedEventBusInterface
 }
 
 // NewEventsAdminAPI 创建事件管理API实例
-func NewEventsAdminAPI(eventBus PersistedEventBusInterface) *EventsAdminAPI {
+func NewEventsAdminAPI(eventBus eventservice.PersistedEventBusInterface) *EventsAdminAPI {
 	return &EventsAdminAPI{
 		eventBus: eventBus,
 	}
@@ -33,10 +25,10 @@ func NewEventsAdminAPI(eventBus PersistedEventBusInterface) *EventsAdminAPI {
 // ReplayEventsRequest 事件回放请求
 type ReplayEventsRequest struct {
 	EventType string `json:"event_type" binding:"omitempty"` // 事件类型（可选）
-	From      string `json:"from" binding:"omitempty"`      // 开始时间（ISO8601格式，可选）
-	To        string `json:"to" binding:"omitempty"`        // 结束时间（ISO8601格式，可选）
-	Limit     int    `json:"limit" binding:"omitempty"`     // 限制数量（可选，默认1000，最大10000）
-	DryRun    bool   `json:"dry_run" binding:"omitempty"`   // 是否为dry-run模式（可选，默认false）
+	From      string `json:"from" binding:"omitempty"`       // 开始时间（ISO8601格式，可选）
+	To        string `json:"to" binding:"omitempty"`         // 结束时间（ISO8601格式，可选）
+	Limit     int    `json:"limit" binding:"omitempty"`      // 限制数量（可选，默认1000，最大10000）
+	DryRun    bool   `json:"dry_run" binding:"omitempty"`    // 是否为dry-run模式（可选，默认false）
 }
 
 // ReplayEvents 事件回放
@@ -70,7 +62,7 @@ func (api *EventsAdminAPI) ReplayEvents(c *gin.Context) {
 	}
 
 	// 构建EventFilter
-	filter := events.EventFilter{
+	filter := eventservice.EventFilter{
 		EventType: req.EventType,
 		Limit:     int64(req.Limit),
 		DryRun:    req.DryRun,
