@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/service/admin"
 	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/auth"
@@ -75,7 +74,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	walletCreated := &wallet.Wallet{
 		ID:        "wallet_alice_001",
 		UserID:    user.User.ID,
-		Balance:   0.0,
+		Balance:   0, // 0分 = 0元
 		Frozen:    false,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -87,8 +86,8 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	userWallet, err := walletService.CreateWallet(ctx, user.User.ID)
 	assert.NoError(t, err, "创建钱包应该成功")
 	assert.Equal(t, user.User.ID, userWallet.UserID)
-	assert.Equal(t, 0.0, userWallet.Balance, "新钱包余额应为0")
-	t.Logf("✓ 钱包创建成功: ID=%s, 余额=%.2f", userWallet.ID, float64(userWallet.Balance)/100)
+	assert.Equal(t, int64(0), userWallet.Balance, "新钱包余额应为0")
+	t.Logf("✓ 钱包创建成功: ID=%s, 余额=%d分", userWallet.ID, userWallet.Balance)
 
 	// ========== 阶段3：用户登录 ==========
 	t.Log("阶段3: 用户登录")
@@ -131,96 +130,97 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 
 	authService.On("ValidateToken", ctx, currentToken).Return(tokenClaims, nil)
 
-	// 充值操作
+	// 充值操作 (500元 = 50000分)
 	rechargeTransaction := &wallet.Transaction{
 		ID:              "txn_recharge_001",
 		UserID:          user.User.ID,
 		Type:            "recharge",
-		Amount:          500.0,
-		Balance:         500.0,
+		Amount:          50000, // 500元 = 50000分
+		Balance:         50000, // 充值后余额 500元
 		Method:          "alipay",
 		Status:          "success",
 		TransactionTime: time.Now(),
 		CreatedAt:       time.Now(),
 	}
 
-	walletService.On("Recharge", ctx, user.User.ID, 500.0, "alipay").Return(rechargeTransaction, nil)
+	walletService.On("Recharge", ctx, user.User.ID, int64(50000), "alipay").Return(rechargeTransaction, nil)
 
 	// 验证Token并充值
 	claims, err := authService.ValidateToken(ctx, currentToken)
 	assert.NoError(t, err)
 	assert.Equal(t, user.User.ID, claims.UserID)
 
-	rechargeTxn, err := walletService.Recharge(ctx, claims.UserID, 500.0, "alipay")
+	rechargeTxn, err := walletService.Recharge(ctx, claims.UserID, 50000, "alipay")
 	assert.NoError(t, err)
 	assert.Equal(t, "success", rechargeTxn.Status)
-	assert.Equal(t, 500.0, rechargeTxn.Balance, "充值后余额应为500")
-	t.Logf("✓ 充值成功: 金额=%.2f, 余额=%.2f", float64(rechargeTxn.Amount)/100, float64(rechargeTxn.Balance)/100)
+	assert.Equal(t, int64(50000), rechargeTxn.Balance, "充值后余额应为500元")
+	t.Logf("✓ 充值成功: 金额=%d分, 余额=%d分", rechargeTxn.Amount, rechargeTxn.Balance)
 
 	// ========== 阶段5：消费 ==========
 	t.Log("阶段5: 用户消费")
 
-	// 第一次消费
+	// 第一次消费 (150元 = 15000分，消费后余额 350元 = 35000分)
 	consume1Transaction := &wallet.Transaction{
 		ID:              "txn_consume_001",
 		UserID:          user.User.ID,
 		Type:            "consume",
-		Amount:          -150.0,
-		Balance:         350.0,
+		Amount:          -15000, // 消费150元
+		Balance:         35000,  // 消费后余额 350元
 		Reason:          "购买VIP会员",
 		Status:          "success",
 		TransactionTime: time.Now(),
 		CreatedAt:       time.Now(),
 	}
 
-	walletService.On("Consume", ctx, user.User.ID, 150.0, "购买VIP会员").Return(consume1Transaction, nil)
+	walletService.On("Consume", ctx, user.User.ID, int64(15000), "购买VIP会员").Return(consume1Transaction, nil)
 
-	consumeTxn1, err := walletService.Consume(ctx, user.User.ID, 150.0, "购买VIP会员")
+	consumeTxn1, err := walletService.Consume(ctx, user.User.ID, 15000, "购买VIP会员")
 	assert.NoError(t, err)
 	assert.Equal(t, "success", consumeTxn1.Status)
-	assert.Equal(t, 350.0, consumeTxn1.Balance, "消费后余额应为350")
-	t.Logf("✓ 第1次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn1.Amount)/100, float64(consumeTxn1.Balance)/100, consumeTxn1.Reason)
+	assert.Equal(t, int64(35000), consumeTxn1.Balance, "消费后余额应为350元")
+	t.Logf("✓ 第1次消费成功: 金额=%d分, 剩余余额=%d分, 原因=%s", -consumeTxn1.Amount, consumeTxn1.Balance, consumeTxn1.Reason)
 
-	// 第二次消费
+	// 第二次消费 (50元 = 5000分，消费后余额 300元 = 30000分)
 	consume2Transaction := &wallet.Transaction{
 		ID:              "txn_consume_002",
 		UserID:          user.User.ID,
 		Type:            "consume",
-		Amount:          -50.0,
-		Balance:         300.0,
+		Amount:          -5000, // 消费50元
+		Balance:         30000, // 消费后余额 300元
 		Reason:          "购买书籍",
 		Status:          "success",
 		TransactionTime: time.Now(),
 		CreatedAt:       time.Now(),
 	}
 
-	walletService.On("Consume", ctx, user.User.ID, 50.0, "购买书籍").Return(consume2Transaction, nil)
+	walletService.On("Consume", ctx, user.User.ID, int64(5000), "购买书籍").Return(consume2Transaction, nil)
 
-	consumeTxn2, err := walletService.Consume(ctx, user.User.ID, 50.0, "购买书籍")
+	consumeTxn2, err := walletService.Consume(ctx, user.User.ID, 5000, "购买书籍")
 	assert.NoError(t, err)
-	assert.Equal(t, 300.0, consumeTxn2.Balance, "消费后余额应为300")
-	t.Logf("✓ 第2次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn2.Amount)/100, float64(consumeTxn2.Balance)/100, consumeTxn2.Reason)
+	assert.Equal(t, int64(30000), consumeTxn2.Balance, "消费后余额应为300元")
+	t.Logf("✓ 第2次消费成功: 金额=%d分, 剩余余额=%d分, 原因=%s", -consumeTxn2.Amount, consumeTxn2.Balance, consumeTxn2.Reason)
 
 	// ========== 阶段6：申请提现 ==========
 	t.Log("阶段6: 申请提现")
 
+	// 提现100元 = 10000分
 	withdrawRequest := &wallet.WithdrawRequest{
 		ID:        "withdraw_alice_001",
 		UserID:    user.User.ID,
-		Amount:    100.0,
+		Amount:    10000, // 100元 = 10000分
 		Account:   "alipay_account_alice",
 		Status:    "pending",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	walletService.On("RequestWithdraw", ctx, user.User.ID, 100.0, "alipay_account_alice").Return(withdrawRequest, nil)
+	walletService.On("RequestWithdraw", ctx, user.User.ID, int64(10000), "alipay_account_alice").Return(withdrawRequest, nil)
 
-	withdrawReq, err := walletService.RequestWithdraw(ctx, user.User.ID, 100.0, "alipay_account_alice")
+	withdrawReq, err := walletService.RequestWithdraw(ctx, user.User.ID, 10000, "alipay_account_alice")
 	assert.NoError(t, err)
 	assert.Equal(t, "pending", withdrawReq.Status)
-	assert.Equal(t, 100.0, withdrawReq.Amount)
-	t.Logf("✓ 提现申请已提交: ID=%s, 金额=%.2f, 状态=%s", withdrawReq.ID, float64(withdrawReq.Amount)/100, withdrawReq.Status)
+	assert.Equal(t, int64(10000), withdrawReq.Amount)
+	t.Logf("✓ 提现申请已提交: ID=%s, 金额=%d分, 状态=%s", withdrawReq.ID, withdrawReq.Amount, withdrawReq.Status)
 
 	// ========== 阶段7：登出 ==========
 	t.Log("阶段7: 用户登出")
@@ -234,11 +234,11 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	// ========== 总结 ==========
 	t.Log("\n========== 用户生命周期测试完成 ==========")
 	t.Logf("用户: %s (ID: %s)", user.User.Username, user.User.ID)
-	t.Logf("最终余额: %.2f", float64(consumeTxn2.Balance)/100)
+	t.Logf("最终余额: %d分", consumeTxn2.Balance)
 	t.Logf("交易记录: 充值1次, 消费2次, 提现申请1次")
-	t.Logf("总充值: %.2f", float64(rechargeTxn.Amount)/100)
-	t.Logf("总消费: %.2f", float64(-consumeTxn1.Amount-consumeTxn2.Amount)/100)
-	t.Logf("待提现: %.2f", float64(withdrawReq.Amount)/100)
+	t.Logf("总充值: %d分", rechargeTxn.Amount)
+	t.Logf("总消费: %d分", -consumeTxn1.Amount-consumeTxn2.Amount)
+	t.Logf("待提现: %d分", withdrawReq.Amount)
 
 	// 验证所有Mock调用
 	authService.AssertExpectations(t)
@@ -565,16 +565,16 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 
 	authService.On("ValidateToken", ctx, userA.Token).Return(claimsA, nil)
 
-	// 转账操作
-	transferAmount := 100.0
+	// 转账操作 (100元 = 10000分，转账前余额500元，转账后余额400元)
+	transferAmount := int64(10000) // 100元 = 10000分
 	transferReason := "感谢打赏"
 
 	transferTransaction := &wallet.Transaction{
 		ID:              "txn_transfer_001",
 		UserID:          userA.User.ID,
 		Type:            "transfer_out",
-		Amount:          -int64(types.NewMoneyFromYuan(transferAmount)),
-		Balance:         int64(types.NewMoneyFromYuan(400.0)), // 假设转账前余额是500
+		Amount:          -transferAmount,           // 转出100元
+		Balance:         40000,                     // 转账后余额 400元
 		RelatedUserID:   userB.User.ID,
 		Reason:          transferReason,
 		Status:          "success",
@@ -593,16 +593,16 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", txn.Status)
 	assert.Equal(t, "transfer_out", txn.Type)
-	assert.Equal(t, -types.NewMoneyFromYuan(transferAmount), txn.Amount)
-	t.Logf("✓ 转账成功: %s -> %s, 金额=%.2f, 原因=%s",
+	assert.Equal(t, -transferAmount, txn.Amount)
+	t.Logf("✓ 转账成功: %s -> %s, 金额=%d分, 原因=%s",
 		userA.User.Username, userB.User.Username, transferAmount, transferReason)
-	t.Logf("  用户A余额: %.2f", float64(txn.Balance)/100)
+	t.Logf("  用户A余额: %d分", txn.Balance)
 
 	// ========== 总结 ==========
 	t.Log("\n========== 转账流程完成 ==========")
 	t.Logf("发起人: %s", userA.User.Username)
 	t.Logf("接收人: %s", userB.User.Username)
-	t.Logf("转账金额: %.2f", transferAmount)
+	t.Logf("转账金额: %d分", transferAmount)
 	t.Logf("交易状态: %s", txn.Status)
 
 	// 验证所有Mock调用

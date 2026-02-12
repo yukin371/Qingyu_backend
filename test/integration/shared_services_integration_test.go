@@ -154,9 +154,9 @@ func (m *MockWalletService) GetWallet(ctx context.Context, userID string) (*wall
 	return args.Get(0).(*wallet.Wallet), args.Error(1)
 }
 
-func (m *MockWalletService) GetBalance(ctx context.Context, userID string) (float64, error) {
+func (m *MockWalletService) GetBalance(ctx context.Context, userID string) (int64, error) {
 	args := m.Called(ctx, userID)
-	return args.Get(0).(float64), args.Error(1)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockWalletService) FreezeWallet(ctx context.Context, userID string) error {
@@ -167,7 +167,7 @@ func (m *MockWalletService) UnfreezeWallet(ctx context.Context, userID string) e
 	return m.Called(ctx, userID).Error(0)
 }
 
-func (m *MockWalletService) Recharge(ctx context.Context, userID string, amount float64, method string) (*wallet.Transaction, error) {
+func (m *MockWalletService) Recharge(ctx context.Context, userID string, amount int64, method string) (*wallet.Transaction, error) {
 	args := m.Called(ctx, userID, amount, method)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -175,7 +175,7 @@ func (m *MockWalletService) Recharge(ctx context.Context, userID string, amount 
 	return args.Get(0).(*wallet.Transaction), args.Error(1)
 }
 
-func (m *MockWalletService) Consume(ctx context.Context, userID string, amount float64, reason string) (*wallet.Transaction, error) {
+func (m *MockWalletService) Consume(ctx context.Context, userID string, amount int64, reason string) (*wallet.Transaction, error) {
 	args := m.Called(ctx, userID, amount, reason)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -183,7 +183,7 @@ func (m *MockWalletService) Consume(ctx context.Context, userID string, amount f
 	return args.Get(0).(*wallet.Transaction), args.Error(1)
 }
 
-func (m *MockWalletService) Transfer(ctx context.Context, fromUserID, toUserID string, amount float64, reason string) (*wallet.Transaction, error) {
+func (m *MockWalletService) Transfer(ctx context.Context, fromUserID, toUserID string, amount int64, reason string) (*wallet.Transaction, error) {
 	args := m.Called(ctx, fromUserID, toUserID, amount, reason)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -207,7 +207,7 @@ func (m *MockWalletService) ListTransactions(ctx context.Context, userID string,
 	return args.Get(0).([]*wallet.Transaction), args.Error(1)
 }
 
-func (m *MockWalletService) RequestWithdraw(ctx context.Context, userID string, amount float64, account string) (*wallet.WithdrawRequest, error) {
+func (m *MockWalletService) RequestWithdraw(ctx context.Context, userID string, amount int64, account string) (*wallet.WithdrawRequest, error) {
 	args := m.Called(ctx, userID, amount, account)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

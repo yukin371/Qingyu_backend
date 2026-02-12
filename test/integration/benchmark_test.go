@@ -106,7 +106,7 @@ func BenchmarkWalletService_GetBalance(b *testing.B) {
 	walletService := new(MockWalletService)
 
 	userID := "user_benchmark"
-	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(1000.0, nil)
+	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(int64(100000), nil) // 1000元 = 100000分
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -127,8 +127,8 @@ func BenchmarkWalletService_Recharge(b *testing.B) {
 		ID:      "txn_benchmark",
 		UserID:  userID,
 		Type:    "recharge",
-		Amount:  100.0,
-		Balance: 1100.0,
+		Amount:  10000,  // 100元
+		Balance: 110000, // 充值后余额 1100元
 		Status:  "success",
 	}
 
@@ -137,7 +137,7 @@ func BenchmarkWalletService_Recharge(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := walletService.Recharge(ctx, userID, 100.0, "alipay")
+		_, err := walletService.Recharge(ctx, userID, int64(10000), "alipay")
 		if err != nil {
 			b.Fatalf("Recharge failed: %v", err)
 		}
@@ -154,8 +154,8 @@ func BenchmarkWalletService_Consume(b *testing.B) {
 		ID:      "txn_consume",
 		UserID:  userID,
 		Type:    "consume",
-		Amount:  -50.0,
-		Balance: 950.0,
+		Amount:  -5000, // 消费50元
+		Balance: 95000,  // 消费后余额 950元
 		Status:  "success",
 	}
 
@@ -164,7 +164,7 @@ func BenchmarkWalletService_Consume(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := walletService.Consume(ctx, userID, 50.0, "购买商品")
+		_, err := walletService.Consume(ctx, userID, int64(5000), "购买商品")
 		if err != nil {
 			b.Fatalf("Consume failed: %v", err)
 		}
@@ -182,8 +182,8 @@ func BenchmarkWalletService_Transfer(b *testing.B) {
 		ID:            "txn_transfer",
 		UserID:        fromUserID,
 		Type:          "transfer_out",
-		Amount:        -100.0,
-		Balance:       900.0,
+		Amount:        -10000, // 转账100元
+		Balance:       90000,  // 转账后余额 900元
 		RelatedUserID: toUserID,
 		Status:        "success",
 	}
@@ -193,7 +193,7 @@ func BenchmarkWalletService_Transfer(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := walletService.Transfer(ctx, fromUserID, toUserID, 100.0, "转账")
+		_, err := walletService.Transfer(ctx, fromUserID, toUserID, int64(10000), "转账")
 		if err != nil {
 			b.Fatalf("Transfer failed: %v", err)
 		}
@@ -253,14 +253,14 @@ func TestConcurrent_WalletOperations(t *testing.T) {
 	walletService := new(MockWalletService)
 
 	// Mock余额查询
-	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(1000.0, nil)
+	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(int64(100000), nil) // 1000元 = 100000分
 
 	// Mock充值
 	rechargeTransaction := &wallet.Transaction{
 		ID:      "txn_recharge",
 		Type:    "recharge",
-		Amount:  100.0,
-		Balance: 1100.0,
+		Amount:  10000,  // 100元
+		Balance: 110000, // 充值后 1100元
 		Status:  "success",
 	}
 	walletService.On("Recharge", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -270,8 +270,8 @@ func TestConcurrent_WalletOperations(t *testing.T) {
 	consumeTransaction := &wallet.Transaction{
 		ID:      "txn_consume",
 		Type:    "consume",
-		Amount:  -50.0,
-		Balance: 950.0,
+		Amount:  -5000, // 消费50元
+		Balance: 95000, // 消费后 950元
 		Status:  "success",
 	}
 	walletService.On("Consume", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -300,7 +300,7 @@ func TestConcurrent_WalletOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			userID := fmt.Sprintf("user_%d", id)
-			_, err := walletService.Recharge(ctx, userID, 100.0, "alipay")
+			_, err := walletService.Recharge(ctx, userID, int64(10000), "alipay")
 			if err != nil {
 				t.Errorf("Recharge failed for user %d: %v", id, err)
 			}
@@ -313,7 +313,7 @@ func TestConcurrent_WalletOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			userID := fmt.Sprintf("user_%d", id)
-			_, err := walletService.Consume(ctx, userID, 50.0, "购买商品")
+			_, err := walletService.Consume(ctx, userID, int64(5000), "购买商品")
 			if err != nil {
 				t.Errorf("Consume failed for user %d: %v", id, err)
 			}
@@ -355,13 +355,13 @@ func TestConcurrent_MixedOperations(t *testing.T) {
 	authService.On("ValidateToken", mock.Anything, mock.Anything).Return(tokenClaims, nil)
 
 	// Mock Wallet服务
-	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(1000.0, nil)
+	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(int64(100000), nil) // 1000元
 
 	rechargeTransaction := &wallet.Transaction{
 		ID:      "txn_recharge",
 		Type:    "recharge",
-		Amount:  100.0,
-		Balance: 1100.0,
+		Amount:  10000,  // 100元
+		Balance: 110000, // 充值后 1100元
 		Status:  "success",
 	}
 	walletService.On("Recharge", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -404,7 +404,7 @@ func TestConcurrent_MixedOperations(t *testing.T) {
 			}
 
 			// 4. 充值
-			_, err = walletService.Recharge(ctx, userID, 100.0, "alipay")
+			_, err = walletService.Recharge(ctx, userID, int64(10000), "alipay")
 			if err != nil {
 				t.Errorf("Recharge failed: %v", err)
 				return
@@ -491,7 +491,7 @@ func TestStress_SustainedLoad(t *testing.T) {
 	ctx := context.Background()
 	walletService := new(MockWalletService)
 
-	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(1000.0, nil)
+	walletService.On("GetBalance", mock.Anything, mock.Anything).Return(int64(100000), nil) // 1000元
 
 	duration := 5 * time.Second
 	concurrency := 50

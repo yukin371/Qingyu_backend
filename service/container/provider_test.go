@@ -2,6 +2,7 @@ package container
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -152,21 +153,26 @@ func TestSingletonProvider(t *testing.T) {
 			Singleton: true,
 			Factory: func(c *ServiceContainer) (interface{}, error) {
 				callCount++
-				lastInstance = "instance-" + string(rune(callCount))
+				lastInstance = "instance-" + fmt.Sprint(callCount)
 			return lastInstance, nil
 			},
 		}
 
 		container := NewServiceContainer()
+		// 注册Provider到容器
+		err := container.RegisterProvider(provider)
+		require.NoError(t, err)
 
-		// 第一次调用
-		instance1, _ := provider.Factory(container)
-		assert.Equal(t, 1, callCount)
+		// 第一次获取（通过Registry，会调用Factory）
+		instance1, err := container.providerRegistry.GetOrCreate("singleton-service", container)
+		require.NoError(t, err)
+		assert.Equal(t, 1, callCount, "第一次应该创建实例")
 
-		// 第二次调用（单例应该返回相同实例）
-		instance2, _ := provider.Factory(container)
+		// 第二次获取（单例应该返回缓存的实例，不调用Factory）
+		instance2, err := container.providerRegistry.GetOrCreate("singleton-service", container)
+		require.NoError(t, err)
 		assert.Equal(t, 1, callCount, "单例不应该重复创建")
-		assert.Equal(t, instance1, instance2)
+		assert.Equal(t, instance1, instance2, "应该返回相同的实例")
 	})
 }
 
