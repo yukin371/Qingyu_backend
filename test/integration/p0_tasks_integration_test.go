@@ -532,7 +532,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 	// 获取MongoDB连接
 	mongoDB, err := getMongoDB()
 	if err != nil {
-		t.Fatalf("获取MongoDB连接失败: %v", err)
+		t.Skipf("获取MongoDB连接失败，跳过测试: %v", err)
 	}
 
 	// 准备测试数据
