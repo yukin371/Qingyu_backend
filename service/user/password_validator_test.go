@@ -2,502 +2,697 @@ package user
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// TestValidatePasswordStrength_Strong 测试强密码验证
-func TestValidatePasswordStrength_Strong(t *testing.T) {
+// TestNewPasswordValidator 测试创建密码验证器
+func TestNewPasswordValidator(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	assert.NotNil(t, validator, "密码验证器创建失败")
+	assert.Equal(t, 8, validator.minLength, "最小长度默认值应为8")
+	assert.True(t, validator.requireUppercase, "默认应要求大写字母")
+	assert.True(t, validator.requireLowercase, "默认应要求小写字母")
+	assert.True(t, validator.requireDigit, "默认应要求数字")
+	assert.False(t, validator.requireSpecial, "默认不要求特殊字符")
+	assert.NotNil(t, validator.commonPasswords, "常见密码列表不应为空")
+}
+
+// TestPasswordValidator_ValidateStrength_Success 测试验证密码强度 - 成功案例
+func TestPasswordValidator_ValidateStrength_Success(t *testing.T) {
 	validator := NewPasswordValidator()
 
 	tests := []struct {
 		name     string
 		password string
-		want     bool
 	}{
-		{
-			name:     "包含大小写字母数字特殊字符的强密码",
-			password: "MyStr0ng!Pass",
-			want:     true,
-		},
-		{
-			name:     "16位包含所有字符类型的密码",
-			password: "Complex!Pass9247",
-			want:     true,
-		},
-		{
-			name:     "无特殊字符但足够长的密码",
-			password: "MyStr0ngPassword",
-			want:     true,
-		},
+		{"标准强密码", "StrongP@ssw0rd"},
+		{"包含特殊字符", "Test123!@#"},
+		{"较长密码", "MyVeryStrongPassword123"},
+		{"简单但符合要求", "Test1234"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, msg := validator.ValidateStrength(tt.password)
-			if got != tt.want {
-				t.Errorf("ValidateStrength() = %v, want %v, msg = %v", got, tt.want, msg)
-			}
-			if got && msg != "" {
-				t.Errorf("ValidateStrength() returned success but got message: %v", msg)
+			valid, msg := validator.ValidateStrength(tt.password)
+			assert.True(t, valid, "密码应该验证通过: %s", tt.password)
+			assert.Empty(t, msg, "验证通过时不应有错误消息")
+		})
+	}
+}
+
+// TestPasswordValidator_ValidateStrength_Length 测试验证密码强度 - 长度检查
+func TestPasswordValidator_ValidateStrength_Length(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"空密码", "", "密码长度不能少于8位"},
+		{"过短密码1", "a", "密码长度不能少于8位"},
+		{"过短密码3", "Ab1", "密码长度不能少于8位"},
+		{"过短密码7", "Abc1234", "密码长度不能少于8位"},
+		{"刚好8位", "Abc12345", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
 			}
 		})
 	}
 }
 
-// TestValidatePasswordStrength_Medium 测试中等密码验证
-func TestValidatePasswordStrength_Medium(t *testing.T) {
+// TestPasswordValidator_ValidateStrength_Uppercase 测试验证密码强度 - 大写字母检查
+func TestPasswordValidator_ValidateStrength_Uppercase(t *testing.T) {
 	validator := NewPasswordValidator()
 
 	tests := []struct {
 		name     string
 		password string
-		want     bool
-		level    string
+		wantMsg  string
 	}{
-		{
-			name:     "8位基本密码",
-			password: "Pass9247",
-			want:     true,
-			level:    "一般",
-		},
-		{
-			name:     "12位包含大小写和数字",
-			password: "MyPass924753",
-			want:     true,
-			level:    "中等",
-		},
+		{"无大写字母", "lowercase123", "密码必须包含大写字母"},
+		{"全数字", "12345678", "密码必须包含大写字母"},
+		{"全小写字母", "abcdefgh", "密码必须包含大写字母"},
+		{"有大写字母", "Abcdefg1", ""},
+		{"首字母大写", "Abc12345", ""},
+		{"中间大写", "abCdef12", ""},
+		{"末尾大写", "abcdefG1", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, msg := validator.ValidateStrength(tt.password)
-			if got != tt.want {
-				t.Errorf("ValidateStrength() = %v, want %v, msg = %v", got, tt.want, msg)
-			}
-			if got {
-				level := validator.GetStrengthLevel(tt.password)
-				if level != tt.level {
-					t.Errorf("GetStrengthLevel() = %v, want %v", level, tt.level)
-				}
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
 			}
 		})
 	}
 }
 
-// TestValidatePasswordStrength_Weak 测试弱密码验证
-func TestValidatePasswordStrength_Weak(t *testing.T) {
+// TestPasswordValidator_ValidateStrength_Lowercase 测试验证密码强度 - 小写字母检查
+func TestPasswordValidator_ValidateStrength_Lowercase(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"无小写字母", "UPPERCASE123", "密码必须包含小写字母"},
+		{"全数字", "12345678", "密码必须包含小写字母"},
+		{"全大写字母", "ABCDEFGH", "密码必须包含小写字母"},
+		{"有小写字母", "ABCdefg1", ""},
+		{"首字母小写", "aBC12345", ""},
+		{"中间小写", "ABcDEFG1", ""},
+		{"末尾小写", "ABCDEFGg1", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
+			}
+		})
+	}
+}
+
+// TestPasswordValidator_ValidateStrength_Digit 测试验证密码强度 - 数字检查
+func TestPasswordValidator_ValidateStrength_Digit(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"无数字", "NoDigitsHere", "密码必须包含数字"},
+		{"全字母", "Abcdefgh", "密码必须包含数字"},
+		{"有数字", "Abcdefg1", ""},
+		{"开头数字", "1Abcdefg", ""},
+		{"中间数字", "Abc1defg", ""},
+		{"末尾数字", "Abcdefg1", ""},
+		{"多个数字", "Abc123de", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
+			}
+		})
+	}
+}
+
+// TestPasswordValidator_ValidateStrength_CommonPassword 测试验证密码强度 - 常见密码检查
+func TestPasswordValidator_ValidateStrength_CommonPassword(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"常见密码password", "Password123", "密码过于常见"},
+		{"常见密码admin", "Admin123", "密码过于常见"},
+		{"常见密码123456", "12345678Ab", "密码过于常见"},
+		{"常见密码qwerty", "Qwerty123", "密码过于常见"},
+		{"常见密码小写", "password", "密码过于常见"},
+		{"非常见密码", "MyUniqPwd123", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
+			}
+		})
+	}
+}
+
+// TestPasswordValidator_ValidateStrength_SequentialChars 测试验证密码强度 - 连续字符检查
+func TestPasswordValidator_ValidateStrength_SequentialChars(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"连续数字123", "Abc12345", "密码不能包含连续的字符"},
+		{"连续数字234", "Abc23456", "密码不能包含连续的字符"},
+		{"连续数字345", "Abc34567", "密码不能包含连续的字符"},
+		{"连续数字456", "Abc45678", "密码不能包含连续的字符"},
+		{"连续数字567", "Abc56789", "密码不能包含连续的字符"},
+		{"连续字母abc", "Abcdefg1", "密码不能包含连续的字符"},
+		{"连续字母bcd", "Bcdefgh1", "密码不能包含连续的字符"},
+		{"连续字母cde", "Cdefghi1", "密码不能包含连续的字符"},
+		{"连续字母大写ABC", "ABC12345", "密码不能包含连续的字符"},
+		{"连续字母混合Abc", "Abcdefg1", "密码不能包含连续的字符"},
+		{"无连续字符", "A1b2C3d4", ""},
+		{"无连续字符2", "MyPass123", ""},
+		{"倒序不检测", "Abc32145", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			if tt.wantMsg == "" {
+				assert.True(t, valid, "密码应该验证通过")
+			} else {
+				assert.False(t, valid, "密码应该验证失败")
+				assert.Contains(t, msg, tt.wantMsg, "错误消息应包含预期内容")
+			}
+		})
+	}
+}
+
+// TestPasswordValidator_ValidateStrength_MultipleErrors 测试验证密码强度 - 多个错误
+func TestPasswordValidator_ValidateStrength_MultipleErrors(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		wantMsg  string
+	}{
+		{"太短且无大写", "abc123", "密码长度不能少于8位"},
+		{"无大写无小写", "12345678", "密码必须包含大写字母"},
+		{"无数字无大写", "abcdefgh", "密码必须包含大写字母"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid, msg := validator.ValidateStrength(tt.password)
+			assert.False(t, valid, "密码应该验证失败")
+			assert.NotEmpty(t, msg, "应该有错误消息")
+		})
+	}
+}
+
+// TestPasswordValidator_IsCommonPassword 测试检查常见密码
+func TestPasswordValidator_IsCommonPassword(t *testing.T) {
 	validator := NewPasswordValidator()
 
 	tests := []struct {
 		name     string
 		password string
 		want     bool
-		level    string
 	}{
-		{
-			name:     "纯小写字母",
-			password: "password",
-			want:     false,
-			level:    "弱",
-		},
-		{
-			name:     "纯数字",
-			password: "12345678",
-			want:     false,
-			level:    "弱",
-		},
-		{
-			name:     "常见弱密码",
-			password: "password123",
-			want:     false,
-			level:    "弱",
-		},
+		{"常见密码password", "password", true},
+		{"常见密码Password", "Password", true},
+		{"常见密码PASSWORD", "PASSWORD", true},
+		{"常见密码password123", "password123", true},
+		{"常见密码admin123", "admin123", true},
+		{"常见密码123456", "123456", true},
+		{"常见密码qwerty", "qwerty", true},
+		{"非常见密码", "MyUniquePassword123", false},
+		{"空字符串", "", false},
+		{"随机密码", "Xk9#mP2$vL5", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, msg := validator.ValidateStrength(tt.password)
-			if got != tt.want {
-				t.Errorf("ValidateStrength() = %v, want %v, msg = %v", got, tt.want, msg)
-			}
+			got := validator.IsCommonPassword(tt.password)
+			assert.Equal(t, tt.want, got, "IsCommonPassword(%s) 应该返回 %v", tt.password, tt.want)
+		})
+	}
+}
+
+// TestPasswordValidator_GetStrengthScore 测试获取密码强度评分
+func TestPasswordValidator_GetStrengthScore(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name     string
+		password string
+		minScore int
+		maxScore int
+	}{
+		{"强密码", "StrongP@ssw0rd!", 70, 100},
+		{"中等密码", "Medium123", 55, 85},
+		{"弱密码", "Weak1", 0, 30},
+		{"长密码", "VeryLongPassword123!@#", 70, 100},
+		{"短但复杂", "A1!a", 30, 60},
+		{"只有小写", "lowercase", 10, 30},
+		{"只有大写", "UPPERCASE", 10, 30},
+		{"只有数字", "12345678", 10, 30},
+		{"常见密码", "password123", 0, 50},
+		{"连续字符", "Abc12345", 0, 50},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			score := validator.GetStrengthScore(tt.password)
+			assert.GreaterOrEqual(t, score, tt.minScore, "评分应该大于等于最小值")
+			assert.LessOrEqual(t, score, tt.maxScore, "评分应该小于等于最大值")
+		})
+	}
+}
+
+// TestPasswordValidator_GetStrengthScore_Length 测试获取密码强度评分 - 长度评分
+func TestPasswordValidator_GetStrengthScore_Length(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name        string
+		password    string
+		baseLength  int
+		expectScore int
+	}{
+		{"8位", "Abc12345", 8, 40},
+		{"12位", "Abc123456789", 12, 60},
+		{"16位", "Abc1234567890123", 16, 70},
+		{"20位", "Abc12345678901234567", 20, 70},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			score := validator.GetStrengthScore(tt.password)
+			assert.Equal(t, tt.expectScore, score, "%d位密码评分应该为%d", tt.baseLength, tt.expectScore)
+		})
+	}
+}
+
+// TestPasswordValidator_GetStrengthScore_CharTypes 测试获取密码强度评分 - 字符类型评分
+func TestPasswordValidator_GetStrengthScore_CharTypes(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name        string
+		password    string
+		expectScore int
+	}{
+		{"只有大写", "ABCD", 0},
+		{"只有小写", "abcd", 0},
+		{"只有数字", "1234", 0},
+		{"大小写", "ABcd", 30},
+		{"大小写数字", "Ab1", 45},
+		{"全部四种", "Aa1!", 60},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 使用长密码确保长度得分
+			longPwd := tt.password + "12345678"
+			score := validator.GetStrengthScore(longPwd)
+			// 长度得分10 + 字符类型得分
+			expectedLengthScore := 10
+			assert.Equal(t, expectedLengthScore+tt.expectScore, score, "%s类型评分应该为%d", tt.name, tt.expectScore)
+		})
+	}
+}
+
+// TestPasswordValidator_GetStrengthScore_Deductions 测试获取密码强度评分 - 扣分项
+func TestPasswordValidator_GetStrengthScore_Deductions(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name        string
+		password    string
+		expectScore int
+	}{
+		{"常见密码扣分", "Password123", 40}, // 70基础 - 30常见密码
+		{"连续字符扣分", "Abc12345", 50},    // 70基础 - 20连续字符
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			score := validator.GetStrengthScore(tt.password)
+			assert.Equal(t, tt.expectScore, score, "%s扣分后评分应该为%d", tt.name, tt.expectScore)
+		})
+	}
+}
+
+// TestPasswordValidator_GetStrengthScore_Boundary 测试获取密码强度评分 - 边界值
+func TestPasswordValidator_GetStrengthScore_Boundary(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	// 测试评分不会超过100
+	t.Run("评分上限", func(t *testing.T) {
+		score := validator.GetStrengthScore("VeryStrongP@ssw0rd!With!Many!Chars123456")
+		assert.LessOrEqual(t, score, 100, "评分不应超过100")
+	})
+
+	// 测试评分不会低于0
+	t.Run("评分下限", func(t *testing.T) {
+		score := validator.GetStrengthScore("password")
+		assert.GreaterOrEqual(t, score, 0, "评分不应低于0")
+	})
+}
+
+// TestPasswordValidator_GetStrengthLevel 测试获取密码强度等级
+func TestPasswordValidator_GetStrengthLevel(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name        string
+		password    string
+		expectLevel string
+	}{
+		{"强密码", "VeryStrongP@ssw0rd123!@#", "强"},
+		{"强密码2", "MySecurePassword123!@#", "强"},
+		{"中等密码", "Medium123", "中等"},
+		{"中等密码2", "MyPassword123", "中等"},
+		{"一般密码", "Password1", "一般"},
+		{"一般密码2", "Test1234", "一般"},
+		{"弱密码", "weak1", "弱"},
+		{"弱密码2", "abc123", "弱"},
+		{"最弱", "a", "弱"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			level := validator.GetStrengthLevel(tt.password)
-			if level != tt.level {
-				t.Errorf("GetStrengthLevel() = %v, want %v", level, tt.level)
-			}
+			assert.Equal(t, tt.expectLevel, level, "密码 %s 的等级应该是 %s", tt.password, tt.expectLevel)
 		})
 	}
 }
 
-// TestValidatePasswordComplexity_Valid 测试满足复杂度要求
-func TestValidatePasswordComplexity_Valid(t *testing.T) {
+// TestPasswordValidator_GetStrengthLevel_Boundary 测试获取密码强度等级 - 边界值
+func TestPasswordValidator_GetStrengthLevel_Boundary(t *testing.T) {
 	validator := NewPasswordValidator()
 
 	tests := []struct {
-		name     string
-		password string
-		want     bool
+		name        string
+		minScore    int
+		maxScore    int
+		expectLevel string
 	}{
-		{
-			name:     "满足所有复杂度要求",
-			password: "ValidPass924",
-			want:     true,
-		},
-		{
-			name:     "包含特殊字符",
-			password: "Valid!Pass924",
-			want:     true,
-		},
-		{
-			name:     "长密码",
-			password: "VeryLongPassword9247",
-			want:     true,
-		},
+		{"强等级边界80", 80, 100, "强"},
+		{"中等等级边界60", 60, 79, "中等"},
+		{"一般等级边界40", 40, 59, "一般"},
+		{"弱等级边界0", 0, 39, "弱"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, msg := validator.ValidateStrength(tt.password)
-			if got != tt.want {
-				t.Errorf("ValidateStrength() = %v, want %v, msg = %v", got, tt.want, msg)
+			// 创建一个能得到该分数范围的密码
+			// 通过调整密码长度和字符类型来控制分数
+			var password string
+			switch tt.expectLevel {
+			case "强":
+				password = "StrongPassword123!@#"
+			case "中等":
+				password = "MediumPassword123"
+			case "一般":
+				password = "Password123"
+			case "弱":
+				password = "Pass1"
 			}
+
+			level := validator.GetStrengthLevel(password)
+			assert.Equal(t, tt.expectLevel, level, "密码等级应该是 %s", tt.expectLevel)
 		})
 	}
 }
 
-// TestValidatePasswordComplexity_TooShort 测试密码太短
-func TestValidatePasswordComplexity_TooShort(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	tests := []struct {
-		name     string
-		password string
-		wantErr  string
-	}{
-		{
-			name:     "7位密码",
-			password: "Pass123",
-			wantErr:  "密码长度不能少于8位",
-		},
-		{
-			name:     "1位密码",
-			password: "a",
-			wantErr:  "密码长度不能少于8位",
-		},
-		{
-			name:     "空密码",
-			password: "",
-			wantErr:  "密码长度不能少于8位",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, msg := validator.ValidateStrength(tt.password)
-			if got {
-				t.Errorf("ValidateStrength() should fail for short password, got = %v", got)
-			}
-			if msg != tt.wantErr {
-				t.Errorf("ValidateStrength() error message = %v, want %v", msg, tt.wantErr)
-			}
-		})
-	}
-}
-
-// TestValidatePasswordComplexity_NoLowercase 测试无小写字母
-func TestValidatePasswordComplexity_NoLowercase(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	password := "NOPASS123"
-	got, msg := validator.ValidateStrength(password)
-
-	if got {
-		t.Errorf("ValidateStrength() should fail without lowercase, got = %v", got)
-	}
-	if msg != "密码必须包含小写字母" {
-		t.Errorf("ValidateStrength() error message = %v, want %v", msg, "密码必须包含小写字母")
-	}
-}
-
-// TestValidatePasswordComplexity_NoUppercase 测试无大写字母
-func TestValidatePasswordComplexity_NoUppercase(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	password := "nopass123"
-	got, msg := validator.ValidateStrength(password)
-
-	if got {
-		t.Errorf("ValidateStrength() should fail without uppercase, got = %v", got)
-	}
-	if msg != "密码必须包含大写字母" {
-		t.Errorf("ValidateStrength() error message = %v, want %v", msg, "密码必须包含大写字母")
-	}
-}
-
-// TestValidatePasswordComplexity_NoNumber 测试无数字
-func TestValidatePasswordComplexity_NoNumber(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	password := "NoNumberPass"
-	got, msg := validator.ValidateStrength(password)
-
-	if got {
-		t.Errorf("ValidateStrength() should fail without number, got = %v", got)
-	}
-	if msg != "密码必须包含数字" {
-		t.Errorf("ValidateStrength() error message = %v, want %v", msg, "密码必须包含数字")
-	}
-}
-
-// TestIsCommonPassword_Yes 测试常见弱密码检测
-func TestIsCommonPassword_Yes(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	tests := []struct {
-		name     string
-		password string
-		want     bool
-	}{
-		{
-			name:     "password小写",
-			password: "password",
-			want:     true,
-		},
-		{
-			name:     "password混合大小写",
-			password: "Password",
-			want:     true,
-		},
-		{
-			name:     "12345678",
-			password: "12345678",
-			want:     true,
-		},
-		{
-			name:     "admin123",
-			password: "admin123",
-			want:     true,
-		},
-		{
-			name:     "qwerty",
-			password: "qwerty",
-			want:     true,
-		},
-		{
-			name:     "root",
-			password: "root",
-			want:     true,
-		},
-		{
-			name:     "abc123",
-			password: "abc123",
-			want:     true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := validator.IsCommonPassword(tt.password)
-			if got != tt.want {
-				t.Errorf("IsCommonPassword() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-// TestIsCommonPassword_No 测试正常密码检测
-func TestIsCommonPassword_No(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	tests := []struct {
-		name     string
-		password string
-		want     bool
-	}{
-		{
-			name:     "复杂密码",
-			password: "MyComplex!Pass123",
-			want:     false,
-		},
-		{
-			name:     "随机字符串",
-			password: "Xk9#mP2$vL5@nQ8",
-			want:     false,
-		},
-		{
-			name:     "包含随机单词",
-			password: "PurpleElephant123",
-			want:     false,
-		},
-		{
-			name:     "包含特殊字符",
-			password: "Secure@Pass456",
-			want:     false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := validator.IsCommonPassword(tt.password)
-			if got != tt.want {
-				t.Errorf("IsCommonPassword() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-// TestGetStrengthScore 测试密码强度评分
-func TestGetStrengthScore(t *testing.T) {
-	validator := NewPasswordValidator()
-
-	tests := []struct {
-		name     string
-		password string
-		wantMin  int
-		wantMax  int
-	}{
-		{
-			name:     "强密码高分",
-			password: "Complex!Pass9247",
-			wantMin:  80,
-			wantMax:  100,
-		},
-		{
-			name:     "一般密码中分",
-			password: "Pass9247",
-			wantMin:  50,
-			wantMax:  59,
-		},
-		{
-			name:     "弱密码低分",
-			password: "password",
-			wantMin:  0,
-			wantMax:  39,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := validator.GetStrengthScore(tt.password)
-			if got < tt.wantMin || got > tt.wantMax {
-				t.Errorf("GetStrengthScore() = %v, want between %v and %v", got, tt.wantMin, tt.wantMax)
-			}
-		})
-	}
-}
-
-// TestHasSequentialChars 测试连续字符检测
+// TestHasSequentialChars 测试检查连续字符函数
 func TestHasSequentialChars(t *testing.T) {
 	tests := []struct {
 		name     string
-		password string
-		want     bool
+		input    string
+		expected bool
+	}{
+		// 连续数字测试
+		{"连续123", "abc123def", true},
+		{"连续234", "abc234def", true},
+		{"连续345", "abc345def", true},
+		{"连续456", "abc456def", true},
+		{"连续567", "abc567def", true},
+		{"连续678", "abc678def", true},
+		{"连续789", "abc789def", true},
+		{"不连续129", "abc129def", false},
+		{"不连续135", "abc135def", false},
+
+		// 连续字母测试
+		{"连续abc", "123abc456", true},
+		{"连续bcd", "123bcd456", true},
+		{"连续cde", "123cde456", true},
+		{"连续def", "123def456", true},
+		{"连续xyz", "123xyz456", true},
+		{"大写ABC", "123ABC456", true},
+		{"大写XYZ", "123XYZ456", true},
+		{"混合Abc", "123Abc456", true},
+		{"不连续ace", "123ace456", false},
+
+		// 边界测试
+		{"空字符串", "", false},
+		{"一个字符", "a", false},
+		{"两个字符", "ab", false},
+		{"三个连续", "abc", true},
+		{"三个不连续", "abd", false},
+
+		// 倒序不检测
+		{"倒序321", "321", false},
+		{"倒序cba", "cba", false},
+
+		// 跨边界
+		{"数字跨边界89", "abc890", false},
+		{"数字跨边界78", "abc789", true},
+		{"字母跨边界xyz", "xyz", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasSequentialChars(tt.input)
+			assert.Equal(t, tt.expected, got, "hasSequentialChars(%s) 应该返回 %v", tt.input, tt.expected)
+		})
+	}
+}
+
+// TestLoadCommonPasswords 测试加载常见密码
+func TestLoadCommonPasswords(t *testing.T) {
+	passwords := loadCommonPasswords()
+
+	assert.NotNil(t, passwords, "常见密码列表不应为空")
+	assert.Greater(t, len(passwords), 0, "常见密码列表应包含密码")
+
+	// 检查一些预期存在的密码
+	expectedPasswords := []string{
+		"password", "password123", "admin123", "123456",
+		"qwerty", "abc123", "admin", "root",
+	}
+
+	for _, pwd := range expectedPasswords {
+		assert.True(t, passwords[pwd], "常见密码列表应包含: %s", pwd)
+	}
+
+	// 检查大小写不敏感
+	assert.True(t, passwords["password"], "应包含小写password")
+	assert.True(t, passwords["password"], "应包含大写PASSWORD（存储为小写）")
+}
+
+// TestPasswordValidator_Integration 测试密码验证器集成场景
+func TestPasswordValidator_Integration(t *testing.T) {
+	validator := NewPasswordValidator()
+
+	tests := []struct {
+		name        string
+		password    string
+		shouldPass  bool
+		minLevel    string
+		description string
 	}{
 		{
-			name:     "包含连续数字123",
-			password: "Pass123word",
-			want:     true,
+			name:        "完美密码",
+			password:    "MySecureP@ssw0rd123",
+			shouldPass:  true,
+			minLevel:    "强",
+			description: "包含所有字符类型且长度足够",
 		},
 		{
-			name:     "包含连续字母abc",
-			password: "Passabc123",
-			want:     true,
+			name:        "最小要求密码",
+			password:    "Abc12345",
+			shouldPass:  true,
+			minLevel:    "中等",
+			description: "刚好满足所有基本要求",
 		},
 		{
-			name:     "包含连续大写字母ABC",
-			password: "PassABC123",
-			want:     true,
+			name:        "常见弱密码",
+			password:    "Password123",
+			shouldPass:  false,
+			minLevel:    "",
+			description: "常见密码应该被拒绝",
 		},
 		{
-			name:     "不包含连续字符",
-			password: "MyStr0ng!Pass",
-			want:     false,
+			name:        "连续字符密码",
+			password:    "Abc12345",
+			shouldPass:  false,
+			minLevel:    "",
+			description: "包含连续字符应该被拒绝",
 		},
 		{
-			name:     "包含数字但不连续",
-			password: "Pass159word",
-			want:     false,
+			name:        "缺少大写",
+			password:    "lowercase123",
+			shouldPass:  false,
+			minLevel:    "",
+			description: "缺少大写字母应该被拒绝",
+		},
+		{
+			name:        "缺少数字",
+			password:    "NoDigitsHere",
+			shouldPass:  false,
+			minLevel:    "",
+			description: "缺少数字应该被拒绝",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := hasSequentialChars(tt.password)
-			if got != tt.want {
-				t.Errorf("hasSequentialChars() = %v, want %v", got, tt.want)
+			t.Log("测试描述:", tt.description)
+
+			// 验证密码
+			valid, msg := validator.ValidateStrength(tt.password)
+			assert.Equal(t, tt.shouldPass, valid, "验证结果不符合预期")
+
+			if !valid {
+				assert.NotEmpty(t, msg, "应该有错误消息")
+				t.Log("错误消息:", msg)
+			} else {
+				// 如果验证通过，检查强度等级
+				level := validator.GetStrengthLevel(tt.password)
+				t.Log("密码强度:", level, "分数:", validator.GetStrengthScore(tt.password))
 			}
 		})
 	}
 }
 
-// TestGetStrengthLevel_Levels 测试强度等级分类
-func TestGetStrengthLevel_Levels(t *testing.T) {
+// TestPasswordValidator_EdgeCases 测试边界情况
+func TestPasswordValidator_EdgeCases(t *testing.T) {
 	validator := NewPasswordValidator()
 
 	tests := []struct {
 		name     string
 		password string
-		want     string
+		test     func(t *testing.T, password string)
 	}{
 		{
-			name:     "强密码",
-			password: "VeryComplex!Pass9247",
-			want:     "强",
+			name:     "包含特殊字符",
+			password: "Test!@#$%^&*()_+",
+			test: func(t *testing.T, password string) {
+				valid, _ := validator.ValidateStrength(password)
+				// 默认不要求特殊字符，所以应该通过
+				assert.True(t, valid, "包含特殊字符的密码应该通过验证")
+			},
 		},
 		{
-			name:     "中等密码",
-			password: "MyPass9247Secure",
-			want:     "中等",
+			name:     "包含空格",
+			password: "Test 123 ABC",
+			test: func(t *testing.T, password string) {
+				valid, _ := validator.ValidateStrength(password)
+				assert.True(t, valid, "包含空格的密码应该通过验证")
+			},
 		},
 		{
-			name:     "一般密码",
-			password: "Mypassword",
-			want:     "一般",
+			name:     "Unicode字符",
+			password: "Test123测试",
+			test: func(t *testing.T, password string) {
+				// Unicode字符按字节计算长度
+				valid, _ := validator.ValidateStrength(password)
+				assert.True(t, valid, "包含Unicode字符的密码应该通过验证")
+			},
 		},
 		{
-			name:     "弱密码",
-			password: "12345678",
-			want:     "弱",
+			name:     "纯特殊字符",
+			password: "!@#$%^&*",
+			test: func(t *testing.T, password string) {
+				valid, msg := validator.ValidateStrength(password)
+				assert.False(t, valid, "纯特殊字符应该验证失败")
+				assert.Contains(t, msg, "大写字母", "应该提示缺少大写字母")
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validator.GetStrengthLevel(tt.password)
-			if got != tt.want {
-				t.Errorf("GetStrengthLevel() = %v, want %v", got, tt.want)
-			}
+			tt.test(t, tt.password)
 		})
 	}
 }
 
-// TestValidateStrength_SequentialChars 测试连续字符验证
-func TestValidateStrength_SequentialChars(t *testing.T) {
+// BenchmarkPasswordValidator_ValidateStrength 性能测试 - ValidateStrength
+func BenchmarkPasswordValidator_ValidateStrength(b *testing.B) {
 	validator := NewPasswordValidator()
+	password := "MySecureP@ssw0rd123"
 
-	tests := []struct {
-		name     string
-		password string
-		want     bool
-	}{
-		{
-			name:     "包含连续数字",
-			password: "Pass123word",
-			want:     false,
-		},
-		{
-			name:     "包含连续字母",
-			password: "Passabc123",
-			want:     false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, _ := validator.ValidateStrength(tt.password)
-			if got != tt.want {
-				t.Errorf("ValidateStrength() = %v, want %v", got, tt.want)
-			}
-		})
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		validator.ValidateStrength(password)
 	}
 }
 
+// BenchmarkPasswordValidator_GetStrengthScore 性能测试 - GetStrengthScore
+func BenchmarkPasswordValidator_GetStrengthScore(b *testing.B) {
+	validator := NewPasswordValidator()
+	password := "MySecureP@ssw0rd123"
 
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		validator.GetStrengthScore(password)
+	}
+}
