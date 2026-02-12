@@ -82,6 +82,15 @@ func (m *MockUserService) DeleteUser(ctx context.Context, req *userServiceInterf
 	return args.Get(0).(*userServiceInterface.DeleteUserResponse), args.Error(1)
 }
 
+// DowngradeRole 角色降级（新增方法以修复编译错误）
+func (m *MockUserService) DowngradeRole(ctx context.Context, req *userServiceInterface.DowngradeRoleRequest) (*userServiceInterface.DowngradeRoleResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*userServiceInterface.DowngradeRoleResponse), args.Error(1)
+}
+
 func (m *MockUserService) ListUsers(ctx context.Context, req *userServiceInterface.ListUsersRequest) (*userServiceInterface.ListUsersResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {

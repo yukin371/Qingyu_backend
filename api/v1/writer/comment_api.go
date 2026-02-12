@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,19 @@ import (
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/pkg/response"
 )
+
+// isWriterErrorCode 检查错误是否为特定的 Writer 错误码
+func isWriterErrorCode(err error, targetCode writerservice.ErrorCode) bool {
+	if err == nil {
+		return false
+	}
+	// 尝试类型断言为 WriterError
+	var writerErr *writerservice.WriterError
+	if errors.As(err, &writerErr) {
+		return writerErr.Code == targetCode
+	}
+	return false
+}
 
 // CommentAPI 批注API
 type CommentAPI struct {
@@ -161,7 +175,7 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 
 	comment, err := api.commentService.GetComment(c.Request.Context(), commentID)
 	if err != nil {
-		if err == writerservice.ErrCommentNotFound {
+		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
@@ -206,7 +220,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	}
 
 	if err := api.commentService.UpdateComment(c.Request.Context(), commentID, comment); err != nil {
-		if err == writerservice.ErrCommentNotFound {
+		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
@@ -237,7 +251,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	}
 
 	if err := api.commentService.DeleteComment(c.Request.Context(), commentID); err != nil {
-		if err == writerservice.ErrCommentNotFound {
+		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
 		}

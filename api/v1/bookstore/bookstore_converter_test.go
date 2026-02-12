@@ -29,7 +29,7 @@ func TestToBookDTO(t *testing.T) {
 		BaseEntity:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
 		Title:            "测试书籍",
 		Author:           "测试作者",
-		AuthorID:         authorID,
+		AuthorID:         authorID.Hex(),
 		Introduction:     "这是一本测试书籍的简介",
 		Cover:            "https://example.com/cover.jpg",
 		CategoryIDs:      []primitive.ObjectID{categoryID1, categoryID2},
