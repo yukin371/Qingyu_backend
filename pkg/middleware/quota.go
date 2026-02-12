@@ -7,9 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/ai"
 	"Qingyu_backend/pkg/quota"
-	aiService "Qingyu_backend/service/ai"
 )
 
 // QuotaMiddleware 配额中间件
@@ -19,10 +17,10 @@ type QuotaMiddleware struct {
 	checker quota.Checker // 配额检查器接口注入
 }
 
-// NewQuotaMiddleware 创建配额中间件（向后兼容）
-func NewQuotaMiddleware(quotaService *aiService.QuotaService) *QuotaMiddleware {
+// NewQuotaMiddleware 创建配额中间件
+func NewQuotaMiddleware(checker quota.Checker) *QuotaMiddleware {
 	return &QuotaMiddleware{
-		quotaService: quotaService,
+		checker: checker,
 	}
 }
 
@@ -32,6 +30,20 @@ func NewQuotaMiddlewareWithChecker(checker quota.Checker) *QuotaMiddleware {
 	return &QuotaMiddleware{
 		checker: checker,
 	}
+}
+
+// QuotaCheckMiddleware 创建标准配额检查中间件（估计消耗1000个Token）
+// 用于AI写作、内容审核等高消耗操作
+func QuotaCheckMiddleware(checker quota.Checker) gin.HandlerFunc {
+	m := NewQuotaMiddleware(checker)
+	return m.CheckQuota(1000) // 标准配额消耗
+}
+
+// LightQuotaCheckMiddleware 创建轻量级配额检查中间件（估计消耗100个Token）
+// 用于AI聊天等低消耗操作
+func LightQuotaCheckMiddleware(checker quota.Checker) gin.HandlerFunc {
+	m := NewQuotaMiddleware(checker)
+	return m.CheckQuota(100) // 轻量级配额消耗
 }
 
 // CheckQuota 检查配额中间件
@@ -56,7 +68,7 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 		}
 
 		// 使用 checker 检查配额
-		allowed, remaining, err := m.checker.Check(c.Request.Context(), userID.(string), estimatedAmount)
+		err := m.checker.Check(c.Request.Context(), userID.(string), estimatedAmount)
 
 		if err != nil {
 			// 检查错误类型
@@ -76,8 +88,6 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 		}
 
 		// 配额检查通过，继续处理请求
-		c.Set("quota_allowed", allowed)
-		c.Set("quota_remaining", remaining)
 		c.Next()
 	}
 }
