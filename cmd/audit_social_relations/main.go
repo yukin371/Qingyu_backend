@@ -152,13 +152,13 @@ func auditLikesUserID(ctx context.Context) AuditResult {
 	// 查找孤儿记录 (user_id 不在 users._id 中)
 	pipeline := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "user_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "user"},
 		}}},
 		{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+			{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -203,15 +203,15 @@ func auditLikesTargetID(ctx context.Context) AuditResult {
 
 	// 审查 book 类型
 	pipelineBook := mongo.Pipeline{
-		{{"$match", bson.D{{"target_type", "book"}}}},
+		{{"$match", bson.D{{Key: "target_type", Value: "book"}}}},
 		{{"$lookup", bson.D{
-			{"from", "books"},
-			{"localField", "target_id"},
-			{"foreignField", "_id"},
-			{"as", "book"},
+			{Key: "from", Value: "books"},
+			{Key: "localField", Value: "target_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "book"},
 		}}},
 		{{"$match", bson.D{
-			{"book", bson.D{{"$size", 0}}},
+			{Key: "book", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -228,15 +228,15 @@ func auditLikesTargetID(ctx context.Context) AuditResult {
 
 	// 审查 comment 类型
 	pipelineComment := mongo.Pipeline{
-		{{"$match", bson.D{{"target_type", "comment"}}}},
+		{{"$match", bson.D{{Key: "target_type", Value: "comment"}}}},
 		{{"$lookup", bson.D{
-			{"from", "comments"},
-			{"localField", "target_id"},
-			{"foreignField", "_id"},
-			{"as", "comment"},
+			{Key: "from", Value: "comments"},
+			{Key: "localField", Value: "target_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "comment"},
 		}}},
 		{{"$match", bson.D{
-			{"comment", bson.D{{"$size", 0}}},
+			{Key: "comment", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -262,13 +262,13 @@ func auditCommentsAuthorID(ctx context.Context) AuditResult {
 
 	pipeline := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "author_id"},
-			{"foreignField", "_id"},
-			{"as", "author"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "author_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "author"},
 		}}},
 		{{"$match", bson.D{
-			{"author", bson.D{{"$size", 0}}},
+			{Key: "author", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -305,15 +305,15 @@ func auditCommentsTargetID(ctx context.Context) AuditResult {
 
 	// 审查 book 类型
 	pipelineBook := mongo.Pipeline{
-		{{"$match", bson.D{{"target_type", "book"}}}},
+		{{"$match", bson.D{{Key: "target_type", Value: "book"}}}},
 		{{"$lookup", bson.D{
-			{"from", "books"},
-			{"localField", "target_id"},
-			{"foreignField", "_id"},
-			{"as", "target"},
+			{Key: "from", Value: "books"},
+			{Key: "localField", Value: "target_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "target"},
 		}}},
 		{{"$match", bson.D{
-			{"target", bson.D{{"$size", 0}}},
+			{Key: "target", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -339,15 +339,15 @@ func auditFollowsForeignKeys(ctx context.Context, report *SocialAuditReport) {
 
 	// 审查 follower_id
 	pipelineFollower := mongo.Pipeline{
-		{{"$match", bson.D{{"status", "active"}}}},
+		{{"$match", bson.D{{Key: "status", Value: "active"}}}},
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "follower_id"},
-			{"foreignField", "_id"},
-			{"as", "follower"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "follower_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "follower"},
 		}}},
 		{{"$match", bson.D{
-			{"follower", bson.D{{"$size", 0}}},
+			{Key: "follower", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -367,15 +367,15 @@ func auditFollowsForeignKeys(ctx context.Context, report *SocialAuditReport) {
 
 	// 审查 following_id (followee_id)
 	pipelineFollowing := mongo.Pipeline{
-		{{"$match", bson.D{{"status", "active"}}}},
+		{{"$match", bson.D{{Key: "status", Value: "active"}}}},
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "followee_id"},
-			{"foreignField", "_id"},
-			{"as", "following"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "followee_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "following"},
 		}}},
 		{{"$match", bson.D{
-			{"following", bson.D{{"$size", 0}}},
+			{Key: "following", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -404,13 +404,13 @@ func auditConversationsParticipants(ctx context.Context) AuditResult {
 	pipeline := mongo.Pipeline{
 		{{"$unwind", "$participant_ids"}},
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "participant_ids"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "participant_ids"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "user"},
 		}}},
 		{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+			{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "invalid_participants"}},
 	}
@@ -439,13 +439,13 @@ func auditMessagesForeignKeys(ctx context.Context, report *SocialAuditReport) {
 	// 审查 conversation_id
 	pipelineConv := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "conversations"},
-			{"localField", "conversation_id"},
-			{"foreignField", "_id"},
-			{"as", "conversation"},
+			{Key: "from", Value: "conversations"},
+			{Key: "localField", Value: "conversation_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "conversation"},
 		}}},
 		{{"$match", bson.D{
-			{"conversation", bson.D{{"$size", 0}}},
+			{Key: "conversation", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -466,13 +466,13 @@ func auditMessagesForeignKeys(ctx context.Context, report *SocialAuditReport) {
 	// 审查 sender_id
 	pipelineSender := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "sender_id"},
-			{"foreignField", "_id"},
-			{"as", "sender"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "sender_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "sender"},
 		}}},
 		{{"$match", bson.D{
-			{"sender", bson.D{{"$size", 0}}},
+			{Key: "sender", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -499,13 +499,13 @@ func auditNotificationsUserID(ctx context.Context) AuditResult {
 
 	pipeline := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "user_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "user"},
 		}}},
 		{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+			{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$count", "orphaned"}},
 	}
@@ -538,15 +538,15 @@ func auditBusinessRules(ctx context.Context, report *SocialAuditReport) {
 
 	pipeline := mongo.Pipeline{
 		{{"$group", bson.D{
-			{"_id", bson.D{
-				{"user_id", "$user_id"},
-				{"target_id", "$target_id"},
-				{"target_type", "$target_type"},
+			{Key: "_id", Value: bson.D{
+				{Key: "user_id", Value: "$user_id"},
+				{Key: "target_id", Value: "$target_id"},
+				{Key: "target_type", Value: "$target_type"},
 			}},
-			{"count", bson.D{{"$sum", 1}}},
+			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
 		}}},
 		{{"$match", bson.D{
-			{"count", bson.D{{"$gt", 1}}},
+			{Key: "count", Value: bson.D{{Key: "$gt", Value: 1}}},
 		}}},
 		{{"$count", "duplicates"}},
 	}
@@ -569,20 +569,20 @@ func auditBusinessRules(ctx context.Context, report *SocialAuditReport) {
 	totalComments, _ := collection.CountDocuments(ctx, bson.M{})
 
 	emptyComments, _ := collection.CountDocuments(ctx, bson.D{
-		{"$or", bson.A{
-			bson.D{{"content", ""}},
-			bson.D{{"content", nil}},
+		{Key: "$or", Value: bson.A{
+			bson.D{{Key: "content", Value: ""}},
+			bson.D{{Key: "content", Value: nil}},
 		}},
 	})
 	report.EmptyComments = calculateResult(totalComments, emptyComments, []Issue{})
 
 	// 检查自己关注自己
 	collection = db.Collection("user_relations")
-	totalFollows, _ := collection.CountDocuments(ctx, bson.D{{"status", "active"}})
+	totalFollows, _ := collection.CountDocuments(ctx, bson.D{{Key: "status", Value: "active"}})
 
 	selfFollows, _ := collection.CountDocuments(ctx, bson.D{
-		{"$expr", bson.D{{"$eq", bson.A{"$follower_id", "$followee_id"}}}},
-		{"status", "active"},
+		{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{"$follower_id", "$followee_id"}}}},
+		{Key: "status", Value: "active"},
 	})
 	report.SelfFollows = calculateResult(totalFollows, selfFollows, []Issue{})
 }
@@ -595,20 +595,20 @@ func auditStatisticsAccuracy(ctx context.Context, report *SocialAuditReport) {
 
 	pipeline := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "likes"},
-			{"localField", "_id"},
-			{"foreignField", "target_id"},
-			{"as", "likes"},
+			{Key: "from", Value: "likes"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "target_id"},
+			{Key: "as", Value: "likes"},
 		}}},
 		{{"$project", bson.D{
-			{"_id", 1},
-			{"title", 1},
-			{"stored_count", "$like_count"},
-			{"actual_count", bson.D{{"$size", bson.A{"$likes"}}}},
-			{"diff", bson.D{{"$subtract", bson.A{"$like_count", bson.D{{"$size", bson.A{"$likes"}}}}}}},
+			{Key: "_id", Value: 1},
+			{Key: "title", Value: 1},
+			{Key: "stored_count", Value: "$like_count"},
+			{Key: "actual_count", Value: bson.D{{Key: "$size", Value: bson.A{"$likes"}}}},
+			{Key: "diff", Value: bson.D{{Key: "$subtract", Value: bson.A{"$like_count", bson.D{{Key: "$size", Value: bson.A{"$likes"}}}}}}},
 		}}},
 		{{"$match", bson.D{
-			{"diff", bson.D{{"$ne", 0}}},
+			{Key: "diff", Value: bson.D{{Key: "$ne", Value: 0}}},
 		}}},
 		{{"$count", "mismatch"}},
 	}
@@ -632,20 +632,20 @@ func auditStatisticsAccuracy(ctx context.Context, report *SocialAuditReport) {
 
 	pipelineFollowers := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "user_relations"},
-			{"localField", "_id"},
-			{"foreignField", "followee_id"},
-			{"as", "followers"},
+			{Key: "from", Value: "user_relations"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "followee_id"},
+			{Key: "as", Value: "followers"},
 		}}},
 		{{"$project", bson.D{
-			{"_id", 1},
-			{"username", 1},
-			{"stored_count", "$followers_count"},
-			{"actual_count", bson.D{{"$size", bson.A{"$followers"}}}},
-			{"diff", bson.D{{"$subtract", bson.A{"$followers_count", bson.D{{"$size", bson.A{"$followers"}}}}}}},
+			{Key: "_id", Value: 1},
+			{Key: "username", Value: 1},
+			{Key: "stored_count", Value: "$followers_count"},
+			{Key: "actual_count", Value: bson.D{{Key: "$size", Value: bson.A{"$followers"}}}},
+			{Key: "diff", Value: bson.D{{Key: "$subtract", Value: bson.A{"$followers_count", bson.D{{Key: "$size", Value: bson.A{"$followers"}}}}}}},
 		}}},
 		{{"$match", bson.D{
-			{"diff", bson.D{{"$ne", 0}}},
+			{Key: "diff", Value: bson.D{{Key: "$ne", Value: 0}}},
 		}}},
 		{{"$count", "mismatch"}},
 	}
@@ -666,20 +666,20 @@ func auditStatisticsAccuracy(ctx context.Context, report *SocialAuditReport) {
 	// 检查用户关注数
 	pipelineFollowing := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", "user_relations"},
-			{"localField", "_id"},
-			{"foreignField", "follower_id"},
-			{"as", "following"},
+			{Key: "from", Value: "user_relations"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "follower_id"},
+			{Key: "as", Value: "following"},
 		}}},
 		{{"$project", bson.D{
-			{"_id", 1},
-			{"username", 1},
-			{"stored_count", "$following_count"},
-			{"actual_count", bson.D{{"$size", bson.A{"$following"}}}},
-			{"diff", bson.D{{"$subtract", bson.A{"$following_count", bson.D{{"$size", bson.A{"$following"}}}}}}},
+			{Key: "_id", Value: 1},
+			{Key: "username", Value: 1},
+			{Key: "stored_count", Value: "$following_count"},
+			{Key: "actual_count", Value: bson.D{{Key: "$size", Value: bson.A{"$following"}}}},
+			{Key: "diff", Value: bson.D{{Key: "$subtract", Value: bson.A{"$following_count", bson.D{{Key: "$size", Value: bson.A{"$following"}}}}}}},
 		}}},
 		{{"$match", bson.D{
-			{"diff", bson.D{{"$ne", 0}}},
+			{Key: "diff", Value: bson.D{{Key: "$ne", Value: 0}}},
 		}}},
 		{{"$count", "mismatch"}},
 	}
@@ -718,18 +718,18 @@ func getOrphanedIssues(ctx context.Context, collection *mongo.Collection, field,
 
 	pipeline := mongo.Pipeline{
 		{{"$lookup", bson.D{
-			{"from", targetCollection},
-			{"localField", field},
-			{"foreignField", "_id"},
-			{"as", "ref"},
+			{Key: "from", Value: targetCollection},
+			{Key: "localField", Value: field},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "ref"},
 		}}},
 		{{"$match", bson.D{
-			{"ref", bson.D{{"$size", 0}}},
+			{Key: "ref", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		{{"$limit", limit}},
 		{{"$project", bson.D{
-			{"_id", 1},
-			{field, 1},
+			{Key: "_id", Value: 1},
+			{Key: field, Value: 1},
 		}}},
 	}
 

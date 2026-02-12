@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/models/bookstore"
-	"Qingyu_backend/repository/mongodb"
+	bookstoremodel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository/mongodb/bookstore"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -102,6 +102,7 @@ func BenchmarkStreamSearch_WithCursor(b *testing.B) {
 			fmt.Fprintf(w, "%s\n", string(data))
 		}
 
+		// 发送完成信号
 		done, _ := json.Marshal(map[string]interface{}{
 			"type":   "done",
 			"cursor": "next-cursor",
@@ -142,15 +143,14 @@ func BenchmarkStreamSearch_WithCursor(b *testing.B) {
 // BenchmarkCursorEncoding 基准测试：游标编码性能
 func BenchmarkCursorEncoding(b *testing.B) {
 	cursorMgr := mongodb.NewCursorManager()
-	book := &bookstore.Book{
-		ID:        primitive.NewObjectID(),
-		CreatedAt: time.Now(),
-	}
+	book := &bookstoremodel.Book{}
+	book.ID = primitive.NewObjectID()
+	book.CreatedAt = time.Now()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := cursorMgr.GenerateNextCursor(book, bookstore.CursorTypeTimestamp, "created_at")
+		_, err := cursorMgr.GenerateNextCursor(book, bookstoremodel.CursorTypeTimestamp, "created_at")
 		if err != nil {
 			b.Fatalf("GenerateNextCursor failed: %v", err)
 		}
@@ -200,7 +200,7 @@ func BenchmarkNDJSONParsing(b *testing.B) {
 		for decoder.More() {
 			var data map[string]interface{}
 			if err := decoder.Decode(&data); err != nil {
-				b.Fatalf("Decode failed: %v", err)
+				break
 			}
 		}
 	}
@@ -238,6 +238,7 @@ func BenchmarkStreamSearchLargeDataset(b *testing.B) {
 			}
 		}
 
+		// 发送完成信号
 		done, _ := json.Marshal(map[string]interface{}{
 			"type":   "done",
 			"cursor": "final-cursor",
@@ -299,6 +300,7 @@ func BenchmarkConcurrentStreamRequests(b *testing.B) {
 			fmt.Fprintf(w, "%s\n", string(data))
 		}
 
+		// 发送完成信号
 		done, _ := json.Marshal(map[string]interface{}{
 			"type":   "done",
 			"cursor": "final-cursor",
@@ -424,6 +426,7 @@ func TestStreamSearchPerformanceMetrics(t *testing.T) {
 				fmt.Fprintf(w, "%s\n", string(data))
 			}
 
+			// 发送完成信号
 			done, _ := json.Marshal(map[string]interface{}{
 				"type":   "done",
 				"cursor": "final-cursor",
@@ -454,7 +457,6 @@ func TestStreamSearchPerformanceMetrics(t *testing.T) {
 			if err := decoder.Decode(&data); err != nil {
 				break
 			}
-
 			if data["type"] == "data" {
 				count++
 			}

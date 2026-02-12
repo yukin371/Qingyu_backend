@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"Qingyu_backend/models/writer"
 	writeriface "Qingyu_backend/service/interfaces/writer"
 	writermigration "Qingyu_backend/service/writer/_migration"
 )
@@ -19,28 +20,25 @@ func (m *mockFactoryProjectPort) GetVersion() string                  { return "
 func (m *mockFactoryProjectPort) CreateProject(ctx context.Context, req *writeriface.CreateProjectRequest) (*writeriface.CreateProjectResponse, error) {
 	return &writeriface.CreateProjectResponse{}, nil
 }
-func (m *mockFactoryProjectPort) GetProject(ctx context.Context, projectID string) (*interface{}, error) {
-	var result interface{}
-	return &result, nil
+func (m *mockFactoryProjectPort) GetProject(ctx context.Context, projectID string) (*writer.Project, error) {
+	return &writer.Project{}, nil
 }
-func (m *mockFactoryProjectPort) GetProjectByID(ctx context.Context, projectID string) (*interface{}, error) {
-	var result interface{}
-	return &result, nil
+func (m *mockFactoryProjectPort) GetProjectByID(ctx context.Context, projectID string) (*writer.Project, error) {
+	return &writer.Project{}, nil
 }
-func (m *mockFactoryProjectPort) GetByIDWithoutAuth(ctx context.Context, projectID string) (*interface{}, error) {
-	var result interface{}
-	return &result, nil
+func (m *mockFactoryProjectPort) GetByIDWithoutAuth(ctx context.Context, projectID string) (*writer.Project, error) {
+	return &writer.Project{}, nil
 }
 func (m *mockFactoryProjectPort) ListMyProjects(ctx context.Context, req *writeriface.ListProjectsRequest) (*writeriface.ListProjectsResponse, error) {
 	return &writeriface.ListProjectsResponse{}, nil
 }
-func (m *mockFactoryProjectPort) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*interface{}, error) {
-	return []*interface{}{}, nil
+func (m *mockFactoryProjectPort) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*writer.Project, error) {
+	return []*writer.Project{}, nil
 }
 func (m *mockFactoryProjectPort) UpdateProject(ctx context.Context, projectID string, req *writeriface.UpdateProjectRequest) error {
 	return nil
 }
-func (m *mockFactoryProjectPort) UpdateProjectByID(ctx context.Context, projectID, userID string, req *interface{}) error {
+func (m *mockFactoryProjectPort) UpdateProjectByID(ctx context.Context, projectID, userID string, req *writer.Project) error {
 	return nil
 }
 func (m *mockFactoryProjectPort) DeleteProject(ctx context.Context, projectID string) error {
