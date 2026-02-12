@@ -13,11 +13,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/global"
 	"Qingyu_backend/models/shared"
+	"Qingyu_backend/service"
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/models/writer"
-	"Qingyu_backend/service"
 	writerBase "Qingyu_backend/models/writer/base"
 	"Qingyu_backend/pkg/cache"
 	repository "Qingyu_backend/repository/mongodb/user"
@@ -198,11 +197,11 @@ func getEnvInt(key string, defaultValue int) int {
 
 // getMongoDB 获取MongoDB数据库连接
 func getMongoDB() (*mongo.Database, error) {
-	// 从global获取已初始化的MongoDB连接
-	if global.DB == nil {
-		return nil, fmt.Errorf("MongoDB未初始化")
+	// 从 service.ServiceManager 获取已初始化的 MongoDB 连接
+	if service.ServiceManager == nil {
+		return nil, fmt.Errorf("ServiceContainer未初始化")
 	}
-	return global.DB, nil
+	return service.ServiceManager.GetMongoDB(), nil
 }
 
 // ============ SessionService集成测试 ============

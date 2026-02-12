@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"Qingyu_backend/global"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -130,12 +128,12 @@ func TestBookstoreScenario(t *testing.T) {
 
 	// 验证数据库中有数据
 	t.Run("10.验证_数据库书籍统计", func(t *testing.T) {
-		bookCount, err := global.DB.Collection("books").CountDocuments(helper.ctx, bson.M{})
+		bookCount, err := helper.db.Collection("books").CountDocuments(helper.ctx, bson.M{})
 		if err != nil {
 			t.Fatalf("统计书籍失败: %v", err)
 		}
 
-		chapterCount, err := global.DB.Collection("chapters").CountDocuments(helper.ctx, bson.M{})
+		chapterCount, err := helper.db.Collection("chapters").CountDocuments(helper.ctx, bson.M{})
 		if err != nil {
 			t.Fatalf("统计章节失败: %v", err)
 		}
@@ -168,7 +166,7 @@ func TestBookstoreCategoryFilter(t *testing.T) {
 
 		for _, category := range categories {
 			// 直接从数据库查询该分类的书籍
-			cursor, err := global.DB.Collection("books").Find(helper.ctx, bson.M{
+			cursor, err := helper.db.Collection("books").Find(helper.ctx, bson.M{
 				"categories": category,
 			})
 

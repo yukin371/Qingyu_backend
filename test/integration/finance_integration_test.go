@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/global"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/container"
 	"Qingyu_backend/service/finance"
@@ -183,10 +182,8 @@ func initServiceContainer(t *testing.T) *container.ServiceContainer {
 		t.Fatalf("设置默认服务失败: %v", err)
 	}
 
-	// 设置全局数据库（如果需要）
-	if db := serviceContainer.GetMongoDB(); db != nil {
-		global.DB = db
-	}
+	// 注意：不再设置全局变量 global.DB
+	// 数据库连接已由 service.ServiceManager 管理
 
 	return serviceContainer
 }

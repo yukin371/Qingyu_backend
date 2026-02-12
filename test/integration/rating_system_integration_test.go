@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 )
 
 // TestRatingSystem_E2E 端到端测试：完整的评分流程
@@ -38,7 +38,8 @@ func TestRatingSystem_E2E(t *testing.T) {
 
 	// 获取一本测试书籍
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	db := service.ServiceManager.GetMongoDB()
+	cursor, err := db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)
@@ -212,7 +213,8 @@ func TestRatingSystem_Performance(t *testing.T) {
 
 	// 获取测试书籍
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	db := service.ServiceManager.GetMongoDB()
+	cursor, err := db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)
@@ -311,7 +313,8 @@ func TestRatingSystem_DataConsistency(t *testing.T) {
 
 	// 获取测试书籍
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	db := service.ServiceManager.GetMongoDB()
+	cursor, err := db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)
@@ -441,7 +444,8 @@ func TestRatingStats_DistributionValidation(t *testing.T) {
 
 	// 获取测试书籍
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	db := service.ServiceManager.GetMongoDB()
+	cursor, err := db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)

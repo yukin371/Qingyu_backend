@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"Qingyu_backend/global"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -34,7 +32,7 @@ func TestInteractionScenario(t *testing.T) {
 
 	// 获取一本测试书籍
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	cursor, err := helper.db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)
@@ -215,10 +213,10 @@ func TestInteractionScenario(t *testing.T) {
 
 	t.Run("13.统计_数据库互动数据", func(t *testing.T) {
 		// 统计数据库中的互动数据
-		collectionCount, _ := global.DB.Collection("collections").CountDocuments(ctx, bson.M{})
-		commentCount, _ := global.DB.Collection("comments").CountDocuments(ctx, bson.M{})
-		likeCount, _ := global.DB.Collection("likes").CountDocuments(ctx, bson.M{})
-		historyCount, _ := global.DB.Collection("reading_histories").CountDocuments(ctx, bson.M{})
+		collectionCount, _ := helper.db.Collection("collections").CountDocuments(ctx, bson.M{})
+		commentCount, _ := helper.db.Collection("comments").CountDocuments(ctx, bson.M{})
+		likeCount, _ := helper.db.Collection("likes").CountDocuments(ctx, bson.M{})
+		historyCount, _ := helper.db.Collection("reading_histories").CountDocuments(ctx, bson.M{})
 
 		t.Logf("✓ 互动数据统计:")
 		t.Logf("  收藏记录: %d", collectionCount)

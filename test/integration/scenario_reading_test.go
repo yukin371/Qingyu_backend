@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"Qingyu_backend/global"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -35,7 +33,7 @@ func TestReadingScenario(t *testing.T) {
 	// 获取一本测试书籍
 	var testBook map[string]interface{}
 	var testBookID string
-	cursor, err := global.DB.Collection("books").Find(ctx, bson.M{}, nil)
+	cursor, err := helper.db.Collection("books").Find(ctx, bson.M{}, nil)
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(ctx, &books)
@@ -110,7 +108,7 @@ func TestReadingScenario(t *testing.T) {
 
 	// 获取第一章的ID用于后续测试
 	var firstChapterID string
-	cursor2, err := global.DB.Collection("chapters").Find(ctx, bson.M{"book_id": testBookID}, nil)
+	cursor2, err := helper.db.Collection("chapters").Find(ctx, bson.M{"book_id": testBookID}, nil)
 	if err == nil {
 		var chapters []map[string]interface{}
 		cursor2.All(ctx, &chapters)

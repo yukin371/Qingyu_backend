@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/global"
 	writerModel "Qingyu_backend/models/writer"
 	writerRepo "Qingyu_backend/repository/mongodb/writer"
 	writerInterfaces "Qingyu_backend/repository/interfaces/writer"
 	documentService "Qingyu_backend/service/writer/document"
+	"Qingyu_backend/service"
 	"Qingyu_backend/test/testutil"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -55,13 +55,13 @@ func TestMain(m *testing.M) {
 		fmt.Println("Skipping integration tests: cannot ping MongoDB:", err)
 		os.Exit(0)
 	}
-	global.MongoClient = client
-	global.DB = client.Database(mongoCfg.Database)
+	// 注意：不再设置全局变量 global.MongoClient 和 global.DB
+	// 数据库连接已由 service.ServiceManager 管理
 
 	code := m.Run()
 	code = testutil.CheckStrictLogViolations(code)
 
-	_ = global.MongoClient.Disconnect(ctx)
+	_ = client.Disconnect(ctx)
 	os.Exit(code)
 }
 
@@ -72,10 +72,13 @@ func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperatio
 	// 创建测试项目ID
 	projectID := primitive.NewObjectID()
 
+	// 获取数据库连接
+	db := service.ServiceManager.GetMongoDB()
+
 	// 创建仓储
-	batchOpRepo := writerRepo.NewMongoBatchOperationRepository(global.DB)
-	docRepo := writerRepo.NewMongoDocumentRepository(global.DB)
-	projectRepo := writerRepo.NewMongoProjectRepository(global.DB)
+	batchOpRepo := writerRepo.NewMongoBatchOperationRepository(db)
+	docRepo := writerRepo.NewMongoDocumentRepository(db)
+	projectRepo := writerRepo.NewMongoProjectRepository(db)
 
 	// 创建服务
 	batchOpService := documentService.NewBatchOperationService(batchOpRepo, docRepo, projectRepo, nil)
@@ -86,9 +89,10 @@ func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperatio
 // cleanupTestData 清理测试数据
 func cleanupTestData(t *testing.T, projectID primitive.ObjectID, batchOpID primitive.ObjectID) {
 	ctx := context.Background()
-	global.DB.Collection("batch_operations").DeleteMany(ctx, bson.M{"project_id": projectID})
-	global.DB.Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})
-	global.DB.Collection("document_contents").DeleteMany(ctx, bson.M{})
+	db := service.ServiceManager.GetMongoDB()
+	db.Collection("batch_operations").DeleteMany(ctx, bson.M{"project_id": projectID})
+	db.Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})
+	db.Collection("document_contents").DeleteMany(ctx, bson.M{})
 }
 
 // createTestDocuments 创建测试文档

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +31,7 @@ func TestUserAPI_Integration(t *testing.T) {
 	defer cleanup()
 
 	// 获取数据库连接用于清理
-	mongoDB := global.DB
+	mongoDB := service.ServiceManager.GetMongoDB()
 	require.NotNil(t, mongoDB, "数据库连接未初始化")
 
 	// 确保测试结束后清理
@@ -391,11 +391,11 @@ func testAdminUserManagement(t *testing.T, router *gin.Engine) {
 
 // getMongoDB 获取MongoDB数据库连接
 func getMongoDB() (*mongo.Database, error) {
-	// 从 global 包获取已初始化的数据库连接
-	if global.DB == nil {
-		return nil, fmt.Errorf("数据库未初始化，请先调用 core.InitDB()")
+	// 从 service.ServiceManager 获取已初始化的数据库连接
+	if service.ServiceManager == nil {
+		return nil, fmt.Errorf("ServiceContainer未初始化")
 	}
-	return global.DB, nil
+	return service.ServiceManager.GetMongoDB(), nil
 }
 
 // cleanupTestData 清理测试数据

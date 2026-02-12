@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 	"Qingyu_backend/service/writer/project"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,28 +14,37 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var db *mongo.Database
+
+func getDB() *mongo.Database {
+	if db == nil {
+		db = service.ServiceManager.GetMongoDB()
+	}
+	return db
+}
+
 func fileCol() *mongo.Collection {
-	return global.DB.Collection("novel_files")
+	return getDB().Collection("novel_files")
 }
 
 func contentCol() *mongo.Collection {
-	return global.DB.Collection("document_contents")
+	return getDB().Collection("document_contents")
 }
 
 func revCol() *mongo.Collection {
-	return global.DB.Collection("file_revisions")
+	return getDB().Collection("file_revisions")
 }
 
 func patchCol() *mongo.Collection {
-	return global.DB.Collection("file_patches")
+	return getDB().Collection("file_patches")
 }
 
 func cleanupCollections(t *testing.T, projectID string) {
 	ctx := context.Background()
-	global.DB.Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})
-	global.DB.Collection("document_contents").DeleteMany(ctx, bson.M{}) // 清理文档内容
-	global.DB.Collection("file_revisions").DeleteMany(ctx, bson.M{"project_id": projectID})
-	global.DB.Collection("file_patches").DeleteMany(ctx, bson.M{"project_id": projectID})
+	getDB().Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})
+	getDB().Collection("document_contents").DeleteMany(ctx, bson.M{}) // 清理文档内容
+	getDB().Collection("file_revisions").DeleteMany(ctx, bson.M{"project_id": projectID})
+	getDB().Collection("file_patches").DeleteMany(ctx, bson.M{"project_id": projectID})
 }
 
 func TestUpdateContentWithVersion_HappyPath(t *testing.T) {

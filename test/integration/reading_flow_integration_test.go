@@ -12,7 +12,7 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
-	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 	bookModel "Qingyu_backend/models/bookstore"
 )
 
@@ -31,6 +31,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	require.NoError(t, err, "初始化数据库失败")
 
 	ctx := context.Background()
+	db := service.ServiceManager.GetMongoDB()
 
 	// 清理测试数据
 	defer cleanupReadingFlowTestData(t, ctx)
@@ -44,7 +45,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	// ========== 阶段1：书城首页 - 获取榜单 ==========
 	t.Run("书城首页_获取热门榜单", func(t *testing.T) {
 		// 获取榜单数据
-		cursor, err := global.DB.Collection("ranking_items").Find(ctx, bson.M{
+		cursor, err := db.Collection("ranking_items").Find(ctx, bson.M{
 			"type": "realtime",
 		})
 		require.NoError(t, err)
@@ -62,7 +63,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	t.Run("从榜单进入书籍详情", func(t *testing.T) {
 		// 模拟从榜单获取书籍ID
 		var rankingItem bookModel.RankingItem
-		err := global.DB.Collection("ranking_items").FindOne(ctx, bson.M{
+		err := db.Collection("ranking_items").FindOne(ctx, bson.M{
 			"type": "realtime",
 		}).Decode(&rankingItem)
 		require.NoError(t, err)
@@ -71,7 +72,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 
 		// 获取书籍详情
 		var book bookModel.Book
-		err = global.DB.Collection("books").FindOne(ctx, bson.M{
+		err = db.Collection("books").FindOne(ctx, bson.M{
 			"_id": bookID,
 		}).Decode(&book)
 
@@ -86,7 +87,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	// ========== 阶段3：查看书籍章节列表 ==========
 	t.Run("查看书籍章节列表", func(t *testing.T) {
 		// 获取章节列表
-		cursor, err := global.DB.Collection("chapters").Find(ctx, bson.M{
+		cursor, err := db.Collection("chapters").Find(ctx, bson.M{
 			"book_id": testBook.ID,
 		})
 		require.NoError(t, err)
@@ -124,7 +125,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 			"updated_at": time.Now(),
 		}
 
-		_, err := global.DB.Collection("reading_progress").InsertOne(ctx, progress)
+		_, err := db.Collection("reading_progress").InsertOne(ctx, progress)
 		require.NoError(t, err, "记录阅读进度应该成功")
 
 		t.Logf("✓ 成功阅读第一章: %s (字数: %d)", chapter.Title, chapter.WordCount)
@@ -149,7 +150,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 			"updated_at": time.Now(),
 		}
 
-		_, err := global.DB.Collection("annotations").InsertOne(ctx, bookmark)
+		_, err := db.Collection("annotations").InsertOne(ctx, bookmark)
 		require.NoError(t, err, "添加书签应该成功")
 
 		// 添加笔记
@@ -166,7 +167,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 			"updated_at": time.Now(),
 		}
 
-		_, err = global.DB.Collection("annotations").InsertOne(ctx, note)
+		_, err = db.Collection("annotations").InsertOne(ctx, note)
 		require.NoError(t, err, "添加笔记应该成功")
 
 		t.Logf("✓ 成功添加书签")
@@ -190,7 +191,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	t.Run("查看阅读历史", func(t *testing.T) {
 		// 获取用户的阅读进度
 		var progress bson.M
-		err := global.DB.Collection("reading_progress").FindOne(ctx, bson.M{
+		err := db.Collection("reading_progress").FindOne(ctx, bson.M{
 			"user_id": testUserID,
 			"book_id": testBook.ID.Hex(),
 		}).Decode(&progress)
@@ -208,7 +209,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 	// ========== 阶段8：查看我的书签和笔记 ==========
 	t.Run("查看书签和笔记列表", func(t *testing.T) {
 		// 获取书签
-		cursor, err := global.DB.Collection("annotations").Find(ctx, bson.M{
+		cursor, err := db.Collection("annotations").Find(ctx, bson.M{
 			"user_id": testUserID,
 			"type":    "bookmark",
 		})
@@ -220,7 +221,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 		assert.Len(t, bookmarks, 1, "应该有1个书签")
 
 		// 获取笔记
-		cursor, err = global.DB.Collection("annotations").Find(ctx, bson.M{
+		cursor, err = db.Collection("annotations").Find(ctx, bson.M{
 			"user_id": testUserID,
 			"type":    "note",
 		})
@@ -241,6 +242,7 @@ func TestCompleteReadingFlow(t *testing.T) {
 
 // createTestBook 创建测试书籍
 func createTestBook(t *testing.T, ctx context.Context) *bookModel.Book {
+	db := service.ServiceManager.GetMongoDB()
 	now := time.Now()
 	book := &bookModel.Book{
 		Title:        "测试小说-完整流程测试",
@@ -255,7 +257,7 @@ func createTestBook(t *testing.T, ctx context.Context) *bookModel.Book {
 		LastUpdateAt: &now,
 	}
 
-	result, err := global.DB.Collection("books").InsertOne(ctx, book)
+	result, err := db.Collection("books").InsertOne(ctx, book)
 	require.NoError(t, err)
 
 	book.ID = result.InsertedID.(primitive.ObjectID)
@@ -264,6 +266,7 @@ func createTestBook(t *testing.T, ctx context.Context) *bookModel.Book {
 
 // createTestChapters 创建测试章节
 func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []bookModel.Chapter {
+	db := service.ServiceManager.GetMongoDB()
 	now := time.Now()
 	chapters := []bookModel.Chapter{
 		{
@@ -302,7 +305,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 	}
 
 	for i := range chapters {
-		result, err := global.DB.Collection("chapters").InsertOne(ctx, &chapters[i])
+		result, err := db.Collection("chapters").InsertOne(ctx, &chapters[i])
 		require.NoError(t, err)
 		// Chapter.ID 是 string 类型，从 InsertedID 获取
 		insertedID := result.InsertedID.(primitive.ObjectID)
@@ -314,6 +317,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 
 // createTestRanking 创建测试榜单
 func createTestRanking(t *testing.T, ctx context.Context, bookID primitive.ObjectID) {
+	db := service.ServiceManager.GetMongoDB()
 	now := time.Now()
 	period := bookModel.GetPeriodString(bookModel.RankingTypeRealtime, now)
 
@@ -329,7 +333,7 @@ func createTestRanking(t *testing.T, ctx context.Context, bookID primitive.Objec
 		UpdatedAt: now,
 	}
 
-	_, err := global.DB.Collection("ranking_items").InsertOne(ctx, ranking)
+	_, err := db.Collection("ranking_items").InsertOne(ctx, ranking)
 	require.NoError(t, err)
 }
 
@@ -344,30 +348,31 @@ func generateContent(length int) string {
 
 // cleanupReadingFlowTestData 清理测试数据
 func cleanupReadingFlowTestData(t *testing.T, ctx context.Context) {
+	db := service.ServiceManager.GetMongoDB()
 	// 删除测试书籍
-	global.DB.Collection("books").DeleteMany(ctx, bson.M{
+	db.Collection("books").DeleteMany(ctx, bson.M{
 		"title": bson.M{"$regex": "测试小说-完整流程测试"},
 	})
 
 	// 删除测试章节
-	global.DB.Collection("chapters").DeleteMany(ctx, bson.M{
+	db.Collection("chapters").DeleteMany(ctx, bson.M{
 		"title":      bson.M{"$regex": "^第.*章$"},
 		"created_at": bson.M{"$gte": time.Now().Add(-1 * time.Hour)},
 	})
 
 	// 删除测试榜单
-	global.DB.Collection("ranking_items").DeleteMany(ctx, bson.M{
+	db.Collection("ranking_items").DeleteMany(ctx, bson.M{
 		"type":       "realtime",
 		"updated_at": bson.M{"$gte": time.Now().Add(-1 * time.Hour)},
 	})
 
 	// 删除测试阅读进度
-	global.DB.Collection("reading_progress").DeleteMany(ctx, bson.M{
+	db.Collection("reading_progress").DeleteMany(ctx, bson.M{
 		"user_id": bson.M{"$regex": "^test_reader_"},
 	})
 
 	// 删除测试标注
-	global.DB.Collection("annotations").DeleteMany(ctx, bson.M{
+	db.Collection("annotations").DeleteMany(ctx, bson.M{
 		"user_id": bson.M{"$regex": "^test_reader_"},
 	})
 }
@@ -385,6 +390,7 @@ func TestBookstoreToReading(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
+	db := service.ServiceManager.GetMongoDB()
 	defer cleanupReadingFlowTestData(t, ctx)
 
 	// 创建测试数据
@@ -393,7 +399,7 @@ func TestBookstoreToReading(t *testing.T) {
 
 	t.Run("书城分类浏览", func(t *testing.T) {
 		// 按分类查询书籍（categories是数组）
-		cursor, err := global.DB.Collection("books").Find(ctx, bson.M{
+		cursor, err := db.Collection("books").Find(ctx, bson.M{
 			"categories": bson.M{"$in": []string{"玄幻"}},
 		})
 		require.NoError(t, err)
@@ -408,7 +414,7 @@ func TestBookstoreToReading(t *testing.T) {
 
 	t.Run("书籍搜索", func(t *testing.T) {
 		// 按标题搜索
-		cursor, err := global.DB.Collection("books").Find(ctx, bson.M{
+		cursor, err := db.Collection("books").Find(ctx, bson.M{
 			"title": bson.M{"$regex": "测试小说", "$options": "i"},
 		})
 		require.NoError(t, err)
@@ -433,12 +439,12 @@ func TestBookstoreToReading(t *testing.T) {
 			"created_at": time.Now(),
 		}
 
-		_, err := global.DB.Collection("user_collections").InsertOne(ctx, collection)
+		_, err := db.Collection("user_collections").InsertOne(ctx, collection)
 		require.NoError(t, err)
 
 		// 验证收藏
 		var result bson.M
-		err = global.DB.Collection("user_collections").FindOne(ctx, bson.M{
+		err = db.Collection("user_collections").FindOne(ctx, bson.M{
 			"user_id": testUserID,
 			"book_id": testBook.ID.Hex(),
 		}).Decode(&result)
@@ -447,7 +453,7 @@ func TestBookstoreToReading(t *testing.T) {
 		t.Logf("✓ 收藏成功")
 
 		// 清理
-		global.DB.Collection("user_collections").DeleteOne(ctx, bson.M{
+		db.Collection("user_collections").DeleteOne(ctx, bson.M{
 			"user_id": testUserID,
 		})
 	})

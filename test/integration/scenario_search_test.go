@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"Qingyu_backend/global"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -27,7 +25,7 @@ func TestSearchScenario(t *testing.T) {
 		Author string
 	}
 
-	cursor, err := global.DB.Collection("books").Find(helper.ctx, bson.M{})
+	cursor, err := helper.db.Collection("books").Find(helper.ctx, bson.M{})
 	if err == nil {
 		var books []map[string]interface{}
 		cursor.All(helper.ctx, &books)
@@ -224,7 +222,7 @@ func TestAdvancedSearch(t *testing.T) {
 		}
 
 		for _, tc := range testCases {
-			count, err := global.DB.Collection("books").CountDocuments(helper.ctx, tc.filter)
+			count, err := helper.db.Collection("books").CountDocuments(helper.ctx, tc.filter)
 			require.NoError(t, err, fmt.Sprintf("%s 查询失败", tc.name))
 			helper.LogSuccess(fmt.Sprintf("%s: %d 本", tc.name, count))
 		}
