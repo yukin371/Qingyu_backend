@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/service/base"
 )
@@ -17,6 +18,8 @@ type MongoEventStore struct {
 	db         *mongo.Database
 	collection *mongo.Collection
 	config     *EventStoreConfig
+	metrics    *Metrics
+	logger     *EventLogger
 }
 
 // NewMongoEventStore 创建 MongoDB 事件存储
@@ -25,10 +28,14 @@ func NewMongoEventStore(db *mongo.Database, config *EventStoreConfig) EventStore
 		config = DefaultEventStoreConfig()
 	}
 
+	logger, _ := NewEventLogger(DefaultLoggingConfig())
+
 	store := &MongoEventStore{
 		db:         db,
 		collection: db.Collection("events_log"),
 		config:     config,
+		metrics:    GetGlobalMetrics(),
+		logger:     logger,
 	}
 
 	// 创建索引
@@ -265,8 +272,68 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 	return events, nil
 }
 
-// Replay 事件回放
-func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) error {
+// Replay 从存储中重放事件到处理器
+// 支持按类型、来源、时间范围等条件过滤
+// 返回重放结果，包含成功/失败/跳过的事件数量和执行耗时
+//
+// 参数:
+//   ctx - 上下文，用于超时控制和取消
+//   handler - 事件处理器，用于处理每个重放的事件
+//   filter - 过滤条件，可选的类型、来源、时间范围等
+//
+// 返回:
+//   *ReplayResult - 重放结果统计
+//   error - 错误信息，如果有的话
+//
+// 注意:
+//   - handler不能为nil
+//   - filter.Limit不能为负数
+//   - filter.Offset不能为负数
+//   - 时间范围必须有效(StartTime < EndTime)
+//   - 如果context没有设置deadline，会自动添加5分钟超时
+//   - 并发安全：多个goroutine可以同时调用Replay方法，不会产生竞态条件
+//   - 事件处理失败时会继续处理下一个事件，不会中断整个回放过程
+//
+// 示例:
+//   result, err := store.Replay(ctx, myHandler, EventFilter{
+//       EventType: "ChapterPublishedEvent",
+//       Limit: 1000,
+//   })
+func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
+	// 参数验证（P1-2: 防御性检查）
+	if handler == nil {
+		return nil, fmt.Errorf("handler cannot be nil")
+	}
+	if filter.Limit < 0 {
+		return nil, fmt.Errorf("filter limit cannot be negative: %d", filter.Limit)
+	}
+	if filter.Offset < 0 {
+		return nil, fmt.Errorf("filter offset cannot be negative: %d", filter.Offset)
+	}
+	// 验证时间范围有效性
+	if filter.StartTime != nil && filter.EndTime != nil {
+		if filter.StartTime.After(*filter.EndTime) {
+			return nil, fmt.Errorf("filter start time cannot be after end time: start=%v, end=%v", filter.StartTime, filter.EndTime)
+		}
+	}
+
+	// 添加默认超时（P1-1: 超时控制）
+	// 如果context没有设置deadline，则添加默认5分钟超时
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+	}
+
+	startTime := time.Now()
+
+	// 记录回放开始
+	eventType := filter.EventType
+	if eventType == "" {
+		eventType = "all"
+	}
+	s.logger.LogReplayStarted(ctx, eventType, filter.StartTime, filter.EndTime)
+
 	// 构建查询条件
 	mongoFilter := bson.M{}
 	if filter.EventType != "" {
@@ -300,15 +367,36 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 	cursor, err := s.collection.Find(ctx, mongoFilter, opts)
 	if err != nil {
-		return fmt.Errorf("failed to replay events: %w", err)
+		duration := time.Since(startTime)
+		s.logger.LogReplayFailed(ctx, eventType, err, duration)
+		s.metrics.RecordEventReplayFailed(eventType, "query_error")
+		return nil, fmt.Errorf("failed to replay events: %w", err)
 	}
 	defer cursor.Close(ctx)
+
+	result := &ReplayResult{
+		ReplayedCount: 0,
+		FailedCount:   0,
+		SkippedCount:  0,
+	}
+
+	// 收集成功处理的事件ID（用于批量更新processed标志）
+	var successIDs []interface{}
+	// 使用map去重
+	successIDSet := make(map[string]bool)
 
 	// 逐个处理事件
 	for cursor.Next(ctx) {
 		var storedEvent StoredEvent
 		if err := cursor.Decode(&storedEvent); err != nil {
-			return fmt.Errorf("failed to decode event: %w", err)
+			result.FailedCount++
+			continue
+		}
+
+		// DryRun模式：只统计不执行
+		if filter.DryRun {
+			result.SkippedCount++
+			continue
 		}
 
 		// 重建事件对象
@@ -321,16 +409,42 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 
 		// 调用处理器处理事件
 		if err := handler.Handle(ctx, event); err != nil {
-			return fmt.Errorf("handler failed for event %s: %w", storedEvent.ID, err)
+			result.FailedCount++
+			// 继续处理下一个事件，不中断整个回放过程
+			continue
 		}
 
-		// 标记事件为已处理
-		_, _ = s.collection.UpdateOne(ctx,
-			bson.M{"_id": storedEvent.ID},
-			bson.M{"$set": bson.M{"processed": true}})
+		result.ReplayedCount++
+
+		// 收集成功处理的事件ID（用于后续批量更新）
+		if !successIDSet[storedEvent.ID] {
+			successIDSet[storedEvent.ID] = true
+			successIDs = append(successIDs, storedEvent.ID)
+		}
 	}
 
-	return nil
+	// 批量更新processed标志（P2-3优化：减少数据库操作次数）
+	if len(successIDs) > 0 {
+		_, err := s.collection.UpdateMany(ctx,
+			bson.M{"_id": bson.M{"$in": successIDs}},
+			bson.M{"$set": bson.M{"processed": true}})
+		if err != nil {
+			// 使用EventLogger记录批量标记失败错误
+			s.logger.logger.Error("Failed to batch mark events as processed",
+				zap.Int("count", len(successIDs)),
+				zap.Error(err))
+		}
+	}
+
+	result.Duration = time.Since(startTime)
+
+	// 记录回放完成
+	s.logger.LogReplayCompleted(ctx, eventType, result)
+
+	// 记录指标
+	s.metrics.RecordEventReplayed(eventType, result.ReplayedCount, result.FailedCount, result.Duration)
+
+	return result, nil
 }
 
 // Cleanup 清理过期事件
@@ -401,7 +515,8 @@ func (r *MongoEventReplayer) ReplayFromTimestamp(ctx context.Context, timestamp 
 	filter := EventFilter{
 		StartTime: &timestamp,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err := r.store.Replay(ctx, handler, filter)
+	return err
 }
 
 // ReplayFromEventID 从指定事件ID回放事件
@@ -419,7 +534,8 @@ func (r *MongoEventReplayer) ReplayFromEventID(ctx context.Context, eventID stri
 	filter := EventFilter{
 		StartTime: &event.Timestamp,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err = r.store.Replay(ctx, handler, filter)
+	return err
 }
 
 // ReplayWithType 回放指定类型的事件
@@ -427,5 +543,6 @@ func (r *MongoEventReplayer) ReplayWithType(ctx context.Context, eventType strin
 	filter := EventFilter{
 		EventType: eventType,
 	}
-	return r.store.Replay(ctx, handler, filter)
+	_, err := r.store.Replay(ctx, handler, filter)
+	return err
 }

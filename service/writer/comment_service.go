@@ -12,8 +12,6 @@ import (
 )
 
 var (
-	// ErrCommentNotFound 批注不存在
-	ErrCommentNotFound = fmt.Errorf("comment not found")
 	// ErrCommentAlreadyResolved 批注已解决
 	ErrCommentAlreadyResolved = fmt.Errorf("comment already resolved")
 	// ErrInvalidPosition 位置信息无效
@@ -118,7 +116,7 @@ func (s *CommentServiceImpl) GetComment(ctx context.Context, commentID string) (
 
 	comment, err := s.commentRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, ErrCommentNotFound
+		return nil, CommentNotFound()
 	}
 
 	return comment, nil
@@ -134,7 +132,7 @@ func (s *CommentServiceImpl) UpdateComment(ctx context.Context, commentID string
 	// 只允许更新内容和元数据
 	existing, err := s.commentRepo.GetByID(ctx, id)
 	if err != nil {
-		return ErrCommentNotFound
+		return CommentNotFound()
 	}
 
 	// 更新允许的字段
@@ -203,7 +201,7 @@ func (s *CommentServiceImpl) ResolveComment(ctx context.Context, commentID, user
 
 	comment, err := s.commentRepo.GetByID(ctx, commentIDObj)
 	if err != nil {
-		return ErrCommentNotFound
+		return CommentNotFound()
 	}
 
 	if comment.Resolved {

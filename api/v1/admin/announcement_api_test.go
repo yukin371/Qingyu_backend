@@ -17,8 +17,8 @@ import (
 
 	messagingModel "Qingyu_backend/models/messaging"
 	messagingBase "Qingyu_backend/models/messaging/base"
-	messagingService "Qingyu_backend/service/messaging"
 	apperrors "Qingyu_backend/pkg/errors"
+	messagingService "Qingyu_backend/service/messaging"
 )
 
 // MockAnnouncementService 模拟AnnouncementService
@@ -305,13 +305,13 @@ func TestAnnouncementAPI_CreateAnnouncement_Success(t *testing.T) {
 	endTime := time.Now().Add(24 * time.Hour)
 	title := "新公告"
 	req := messagingService.CreateAnnouncementRequest{
-		Title:       title,
-		Content:     "公告内容",
-		Type:        string(messagingModel.AnnouncementTypeInfo),
-		TargetRole:  "all",
-		Priority:    1,
-		IsActive:    true,
-		EndTime:     &endTime,
+		Title:      title,
+		Content:    "公告内容",
+		Type:       string(messagingModel.AnnouncementTypeInfo),
+		TargetRole: "all",
+		Priority:   1,
+		IsActive:   true,
+		EndTime:    &endTime,
 	}
 
 	objID := primitive.NewObjectID()
@@ -498,7 +498,7 @@ func TestAnnouncementAPI_BatchUpdateStatus_Success(t *testing.T) {
 
 	req := messagingService.BatchUpdateAnnouncementStatusRequest{
 		AnnouncementIDs: []string{primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex()},
-		IsActive: false,
+		IsActive:        false,
 	}
 
 	mockService.On("BatchUpdateStatus", mock.Anything, mock.MatchedBy(func(r *messagingService.BatchUpdateAnnouncementStatusRequest) bool {
@@ -525,7 +525,7 @@ func TestAnnouncementAPI_BatchUpdateStatus_ValidationError(t *testing.T) {
 
 	req := messagingService.BatchUpdateAnnouncementStatusRequest{
 		AnnouncementIDs: []string{"invalid-id"},
-		IsActive: true,
+		IsActive:        true,
 	}
 
 	mockService.On("BatchUpdateStatus", mock.Anything, mock.AnythingOfType("*messaging.BatchUpdateAnnouncementStatusRequest")).Return(

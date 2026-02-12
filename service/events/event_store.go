@@ -32,7 +32,7 @@ type EventStore interface {
 	GetByTypeAndTimeRange(ctx context.Context, eventType string, start, end time.Time, limit, offset int64) ([]*StoredEvent, error)
 
 	// Replay 事件回放（重放事件到处理器）
-	Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) error
+	Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error)
 
 	// Cleanup 清理过期事件
 	Cleanup(ctx context.Context, before time.Time) (int64, error)
@@ -65,6 +65,22 @@ type EventFilter struct {
 	Processed *bool      `bson:"processed,omitempty"`
 	Limit     int64      `bson:"limit,omitempty"`
 	Offset    int64      `bson:"offset,omitempty"`
+	DryRun    bool       `bson:"dry_run,omitempty"` // DryRun模式：只统计不执行处理器
+}
+
+// ReplayResult 事件回放结果
+type ReplayResult struct {
+	// ReplayedCount 成功重放的事件数量
+	ReplayedCount int64
+
+	// FailedCount 失败的事件数量
+	FailedCount int64
+
+	// SkippedCount 跳过的事件数量（DryRun模式）
+	SkippedCount int64
+
+	// Duration 执行耗时
+	Duration time.Duration
 }
 
 // EventStoreConfig 事件存储配置

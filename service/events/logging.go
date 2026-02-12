@@ -178,6 +178,88 @@ func (l *EventLogger) LogBatchComplete(ctx context.Context, batchSize int, succe
 	)
 }
 
+// LogReplayStarted 记录事件回放开始
+func (l *EventLogger) LogReplayStarted(ctx context.Context, eventType string, startTime, endTime *time.Time) {
+	fields := []zap.Field{
+		zap.String("event_type", eventType),
+	}
+
+	// 添加trace_id（如果可用）
+	if traceID := getTraceID(ctx); traceID != "" {
+		fields = append(fields, zap.String("trace_id", traceID))
+	}
+
+	// 添加时间范围
+	if startTime != nil {
+		fields = append(fields, zap.Time("start_time", *startTime))
+	}
+	if endTime != nil {
+		fields = append(fields, zap.Time("end_time", *endTime))
+	}
+
+	// 添加时间范围描述
+	if startTime != nil && endTime != nil {
+		duration := endTime.Sub(*startTime)
+		fields = append(fields, zap.Duration("range", duration))
+	}
+
+	l.logger.Info("Event replay started", fields...)
+}
+
+// LogReplayCompleted 记录事件回放完成
+func (l *EventLogger) LogReplayCompleted(ctx context.Context, eventType string, result *ReplayResult) {
+	fields := []zap.Field{
+		zap.String("event_type", eventType),
+		zap.String("result", "success"),
+		zap.Int64("replayed_count", result.ReplayedCount),
+		zap.Int64("failed_count", result.FailedCount),
+		zap.Int64("skipped_count", result.SkippedCount),
+		zap.Duration("duration", result.Duration),
+		zap.Int64("duration_ms", result.Duration.Milliseconds()),
+	}
+
+	// 添加trace_id（如果可用）
+	if traceID := getTraceID(ctx); traceID != "" {
+		fields = append(fields, zap.String("trace_id", traceID))
+	}
+
+	// 根据结果确定日志级别
+	if result.FailedCount > 0 {
+		l.logger.Warn("Event replay completed with failures", fields...)
+	} else {
+		l.logger.Info("Event replay completed successfully", fields...)
+	}
+}
+
+// LogReplayFailed 记录事件回放失败
+func (l *EventLogger) LogReplayFailed(ctx context.Context, eventType string, err error, duration time.Duration) {
+	fields := []zap.Field{
+		zap.String("event_type", eventType),
+		zap.String("result", "failed"),
+		zap.Error(err),
+		zap.Duration("duration", duration),
+		zap.Int64("duration_ms", duration.Milliseconds()),
+	}
+
+	// 添加trace_id（如果可用）
+	if traceID := getTraceID(ctx); traceID != "" {
+		fields = append(fields, zap.String("trace_id", traceID))
+	}
+
+	l.logger.Error("Event replay failed", fields...)
+}
+
+// getTraceID 从context中获取trace_id
+func getTraceID(ctx context.Context) string {
+	// TODO: 从context中提取trace_id
+	// 这里可以根据实际使用的tracing库（如OpenTelemetry）来实现
+	// 例如：
+	// if span := trace.SpanFromContext(ctx); span != nil {
+	//     return span.SpanContext().TraceID().String()
+	// }
+	return ""
+}
+
 // GetOutputWriter 获取输出写入器
 func GetOutputWriter(paths ...string) zapcore.WriteSyncer {
 	var writers []zapcore.WriteSyncer

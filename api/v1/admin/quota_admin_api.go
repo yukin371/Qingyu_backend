@@ -1,12 +1,11 @@
 package admin
 
 import (
-
 	"github.com/gin-gonic/gin"
 
 	aiModels "Qingyu_backend/models/ai"
-	ai "Qingyu_backend/service/ai"
 	"Qingyu_backend/pkg/response"
+	ai "Qingyu_backend/service/ai"
 )
 
 // QuotaAdminAPI AI配额管理API处理器（管理员）
@@ -40,13 +39,13 @@ func NewQuotaAdminAPI(quotaService *ai.QuotaService) *QuotaAdminAPI {
 func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		response.BadRequest(c,  "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
 	var req UpdateQuotaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -60,7 +59,7 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 	case "total":
 		quotaType = aiModels.QuotaTypeTotal
 	default:
-		response.BadRequest(c,  "参数错误", "无效的配额类型")
+		response.BadRequest(c, "参数错误", "无效的配额类型")
 		return
 	}
 
@@ -91,7 +90,7 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		response.BadRequest(c,  "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -122,7 +121,7 @@ func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		response.BadRequest(c,  "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -153,7 +152,7 @@ func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 	targetUserID := c.Param("userId")
 	if targetUserID == "" {
-		response.BadRequest(c,  "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
