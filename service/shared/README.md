@@ -120,6 +120,15 @@ service/shared/
 
 **主要文件**:
 - `cache/redis_cache_service.go` - Redis 缓存实现
+- `cache/redis_cache_service_test.go` - 基础操作测试
+- `cache/redis_cache_advanced_test.go` - 批量操作、高级操作、哈希和集合测试
+- `cache/redis_cache_sorted_set_test.go` - 有序集合和服务管理测试
+
+**测试覆盖**:
+- 测试覆盖率: 82.9%
+- 测试用例数: 60+
+- 测试框架: miniredis + testify
+- 详细测试报告: 参见 `docs/plans/shared-cache-tdd-plan.md`
 
 ---
 
