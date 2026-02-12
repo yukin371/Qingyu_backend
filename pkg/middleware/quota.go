@@ -24,26 +24,16 @@ func NewQuotaMiddleware(checker quota.Checker) *QuotaMiddleware {
 	}
 }
 
-// NewQuotaMiddlewareWithChecker 使用接口创建配额中间件（推荐）
-// 这是Port/Adapter模式的核心：依赖接口而非具体实现
-func NewQuotaMiddlewareWithChecker(checker quota.Checker) *QuotaMiddleware {
-	return &QuotaMiddleware{
-		checker: checker,
-	}
-}
-
 // QuotaCheckMiddleware 创建标准配额检查中间件（估计消耗1000个Token）
 // 用于AI写作、内容审核等高消耗操作
 func QuotaCheckMiddleware(checker quota.Checker) gin.HandlerFunc {
-	m := NewQuotaMiddleware(checker)
-	return m.CheckQuota(1000) // 标准配额消耗
+	return NewQuotaMiddleware(checker).CheckQuota(1000) // 标准配额消耗
 }
 
 // LightQuotaCheckMiddleware 创建轻量级配额检查中间件（估计消耗100个Token）
 // 用于AI聊天等低消耗操作
 func LightQuotaCheckMiddleware(checker quota.Checker) gin.HandlerFunc {
-	m := NewQuotaMiddleware(checker)
-	return m.CheckQuota(100) // 轻量级配额消耗
+	return NewQuotaMiddleware(checker).CheckQuota(100) // 轻量级配额消耗
 }
 
 // CheckQuota 检查配额中间件

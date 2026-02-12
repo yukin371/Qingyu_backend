@@ -71,11 +71,9 @@
 - Modify: `pkg/middleware/quota.go`
 
 **Implementation**
-1. 新增接口构造器：`NewQuotaMiddlewareWithChecker(checker quota.Checker)`.
-2. 保留旧构造器：
-   - `NewQuotaMiddleware(quotaService *aiService.QuotaService)` 内部创建 adapter。
-3. 兼容现有路由函数签名，但内部必须统一走 `checker.Check(...)`。
-4. 不新增新的中间件变体函数；轻量/标准差异通过参数表达。
+1. 统一使用单一构造器：`NewQuotaMiddleware(checker quota.Checker)`。
+2. 兼容现有路由函数签名，但内部必须统一走 `checker.Check(...)`。
+3. 不新增新的中间件变体函数；轻量/标准差异通过参数表达。
 
 ### Task 1.4 验证
 
