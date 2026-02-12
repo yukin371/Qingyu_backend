@@ -10,7 +10,6 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
-	"Qingyu_backend/global"
 	"Qingyu_backend/service"
 	"Qingyu_backend/test/testutil"
 )
@@ -33,10 +32,7 @@ func SetupTestEnvironment(t *testing.T) {
 	err = core.InitServices()
 	require.NoError(t, err, "初始化服务失败")
 
-	// 设置全局DB变量（向后兼容）
-	if service.ServiceManager != nil {
-		global.DB = service.ServiceManager.GetMongoDB()
-		global.MongoClient = service.ServiceManager.GetMongoClient()
-	}
+	// 服务容器已初始化，可以通过 service.ServiceManager 获取依赖
+	// 不再设置全局DB变量（ARCH-002重构）
 }
 

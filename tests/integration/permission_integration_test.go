@@ -17,7 +17,7 @@ import (
 	authModel "Qingyu_backend/models/auth"
 	middlewareAuth "Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/repository/mongodb/auth"
-	permService "Qingyu_backend/service/shared/auth"
+	permService "Qingyu_backend/service/auth"
 )
 
 // TestPermissionDatabaseIntegration 测试完整的权限数据库集成

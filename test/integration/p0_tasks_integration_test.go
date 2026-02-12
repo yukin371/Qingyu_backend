@@ -22,7 +22,7 @@ import (
 	"Qingyu_backend/pkg/cache"
 	repository "Qingyu_backend/repository/mongodb/user"
 	repoWriter "Qingyu_backend/repository/mongodb/writer"
-	authService "Qingyu_backend/service/shared/auth"
+	authService "Qingyu_backend/service/auth"
 	documentService "Qingyu_backend/service/writer/document"
 	"Qingyu_backend/service/shared/stats"
 )

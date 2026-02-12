@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sharedAPI "Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 )
 
 // === Mock AuthService ===

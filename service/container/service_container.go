@@ -50,6 +50,7 @@ import (
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
+	"Qingyu_backend/pkg/quota"
 	"Qingyu_backend/repository/mongodb"
 
 	"github.com/redis/go-redis/v9"
@@ -300,6 +301,15 @@ func (c *ServiceContainer) GetBookmarkService() (readingService.BookmarkService,
 
 // GetQuotaService 获取配额服务
 func (c *ServiceContainer) GetQuotaService() (*aiService.QuotaService, error) {
+	if c.quotaService == nil {
+		return nil, fmt.Errorf("QuotaService未初始化")
+	}
+	return c.quotaService, nil
+}
+
+// GetQuotaChecker 获取配额检查器接口
+// QuotaService 实现了 quota.Checker 接口，可以直接返回
+func (c *ServiceContainer) GetQuotaChecker() (quota.Checker, error) {
 	if c.quotaService == nil {
 		return nil, fmt.Errorf("QuotaService未初始化")
 	}
@@ -799,7 +809,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// 创建AI配额服务
 	quotaRepo := c.repositoryFactory.CreateQuotaRepository()
 	c.quotaService = aiService.NewQuotaService(quotaRepo)
-	// 注意：QuotaService 不完全实现 BaseService，不注册到 services map
+	// 注意：QuotaService 实现了 quota.Checker 接口，可以直接作为 Checker 注册
 
 	// 创建聊天服务（使用临时内存存储）
 	chatRepo := aiService.NewInMemoryChatRepository()

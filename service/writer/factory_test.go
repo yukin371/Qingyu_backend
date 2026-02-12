@@ -20,13 +20,16 @@ func (m *mockFactoryProjectPort) CreateProject(ctx context.Context, req *writeri
 	return &writeriface.CreateProjectResponse{}, nil
 }
 func (m *mockFactoryProjectPort) GetProject(ctx context.Context, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryProjectPort) GetProjectByID(ctx context.Context, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryProjectPort) GetByIDWithoutAuth(ctx context.Context, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryProjectPort) ListMyProjects(ctx context.Context, req *writeriface.ListProjectsRequest) (*writeriface.ListProjectsResponse, error) {
 	return &writeriface.ListProjectsResponse{}, nil
@@ -70,7 +73,8 @@ func (m *mockFactoryDocumentPort) CreateDocument(ctx context.Context, req *write
 	return &writeriface.CreateDocumentResponse{}, nil
 }
 func (m *mockFactoryDocumentPort) GetDocument(ctx context.Context, documentID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) GetDocumentTree(ctx context.Context, projectID string) (*writeriface.DocumentTreeResponse, error) {
 	return &writeriface.DocumentTreeResponse{}, nil
@@ -106,13 +110,16 @@ func (m *mockFactoryDocumentPort) DuplicateDocument(ctx context.Context, documen
 	return &writeriface.DuplicateResponse{}, nil
 }
 func (m *mockFactoryDocumentPort) BumpVersionAndCreateRevision(projectID, nodeID, authorID, message string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) UpdateContentWithVersion(projectID, nodeID, authorID, message, newContent string, expectedVersion int) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) RollbackToVersion(projectID, nodeID string, targetVersion int, authorID, message string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) ListRevisions(ctx context.Context, projectID, nodeID string, limit, offset int64) ([]*interface{}, error) {
 	return []*interface{}{}, nil
@@ -130,22 +137,27 @@ func (m *mockFactoryDocumentPort) RestoreVersion(ctx context.Context, documentID
 	return nil
 }
 func (m *mockFactoryDocumentPort) CreatePatch(projectID, nodeID string, baseVersion int, diffFormat, diffPayload, createdBy, message string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) ApplyPatch(projectID, patchID, applierID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) DetectConflicts(ctx context.Context, projectID, nodeID string, expectedVersion int) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) CreateCommit(ctx context.Context, projectID, authorID, message string, files []interface{}) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryDocumentPort) ListCommits(ctx context.Context, projectID string, authorID string, limit, offset int64) ([]*interface{}, error) {
 	return []*interface{}{}, nil
 }
 func (m *mockFactoryDocumentPort) GetCommitDetails(ctx context.Context, projectID, commitID string) (*interface{}, []*interface{}, error) {
-	return &interface{}{}, []*interface{}{}, nil
+	var result interface{}
+	return &result, []*interface{}{}, nil
 }
 func (m *mockFactoryDocumentPort) StartAutoSave(documentID, projectID, nodeID, userID string) error {
 	return nil
@@ -168,10 +180,12 @@ func (m *mockFactoryCollaborationPort) Close(ctx context.Context) error       { 
 func (m *mockFactoryCollaborationPort) GetServiceName() string               { return "mock" }
 func (m *mockFactoryCollaborationPort) GetVersion() string                  { return "1.0.0" }
 func (m *mockFactoryCollaborationPort) CreateComment(ctx context.Context, comment *interface{}) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryCollaborationPort) GetComment(ctx context.Context, commentID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryCollaborationPort) UpdateComment(ctx context.Context, commentID string, comment *interface{}) error {
 	return nil
@@ -195,16 +209,19 @@ func (m *mockFactoryCollaborationPort) UnresolveComment(ctx context.Context, com
 	return nil
 }
 func (m *mockFactoryCollaborationPort) ReplyComment(ctx context.Context, parentID, content, userID, userName string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryCollaborationPort) GetCommentThread(ctx context.Context, threadID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryCollaborationPort) GetCommentReplies(ctx context.Context, parentID string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
 }
 func (m *mockFactoryCollaborationPort) GetCommentStats(ctx context.Context, documentID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryCollaborationPort) BatchDeleteComments(ctx context.Context, commentIDs []string) error {
 	return nil
@@ -221,22 +238,26 @@ func (m *mockFactoryContentPort) Close(ctx context.Context) error       { return
 func (m *mockFactoryContentPort) GetServiceName() string               { return "mock" }
 func (m *mockFactoryContentPort) GetVersion() string                  { return "1.0.0" }
 func (m *mockFactoryContentPort) CreateCharacter(ctx context.Context, projectID, userID string, req *writeriface.CreateCharacterRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) GetCharacterByID(ctx context.Context, characterID, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListCharacters(ctx context.Context, projectID string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
 }
 func (m *mockFactoryContentPort) UpdateCharacter(ctx context.Context, characterID, projectID string, req *writeriface.UpdateCharacterRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) DeleteCharacter(ctx context.Context, characterID, projectID string) error {
 	return nil
 }
 func (m *mockFactoryContentPort) CreateCharacterRelation(ctx context.Context, projectID string, req *writeriface.CreateRelationRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListCharacterRelations(ctx context.Context, projectID string, characterID *string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
@@ -248,16 +269,19 @@ func (m *mockFactoryContentPort) GetCharacterGraph(ctx context.Context, projectI
 	return &writeriface.CharacterGraph{}, nil
 }
 func (m *mockFactoryContentPort) CreateLocation(ctx context.Context, projectID, userID string, req *writeriface.CreateLocationRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) GetLocationByID(ctx context.Context, locationID, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListLocations(ctx context.Context, projectID string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
 }
 func (m *mockFactoryContentPort) UpdateLocation(ctx context.Context, locationID, projectID string, req *writeriface.UpdateLocationRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) DeleteLocation(ctx context.Context, locationID, projectID string) error {
 	return nil
@@ -269,7 +293,8 @@ func (m *mockFactoryContentPort) GetLocationPath(ctx context.Context, locationID
 	return []string{}, nil
 }
 func (m *mockFactoryContentPort) CreateLocationRelation(ctx context.Context, projectID string, req *writeriface.CreateLocationRelationRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListLocationRelations(ctx context.Context, projectID string, locationID *string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
@@ -278,10 +303,12 @@ func (m *mockFactoryContentPort) DeleteLocationRelation(ctx context.Context, rel
 	return nil
 }
 func (m *mockFactoryContentPort) CreateTimeline(ctx context.Context, projectID string, req *writeriface.CreateTimelineRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) GetTimeline(ctx context.Context, timelineID, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListTimelines(ctx context.Context, projectID string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
@@ -290,16 +317,19 @@ func (m *mockFactoryContentPort) DeleteTimeline(ctx context.Context, timelineID,
 	return nil
 }
 func (m *mockFactoryContentPort) CreateTimelineEvent(ctx context.Context, projectID string, req *writeriface.CreateTimelineEventRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) GetTimelineEvent(ctx context.Context, eventID, projectID string) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) ListTimelineEvents(ctx context.Context, timelineID string) ([]*interface{}, error) {
 	return []*interface{}{}, nil
 }
 func (m *mockFactoryContentPort) UpdateTimelineEvent(ctx context.Context, eventID, projectID string, req *writeriface.UpdateTimelineEventRequest) (*interface{}, error) {
-	return &interface{}{}, nil
+	var result interface{}
+	return &result, nil
 }
 func (m *mockFactoryContentPort) DeleteTimelineEvent(ctx context.Context, eventID, projectID string) error {
 	return nil

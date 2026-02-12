@@ -76,13 +76,21 @@ func TestQuotaMiddlewareWithInterface(t *testing.T) {
 // passingMockChecker 总是通过的配额检查器
 type passingMockChecker struct{}
 
-func (m *passingMockChecker) Check(ctx context.Context, userID string, amount int) error {
-	return nil
+func (m *passingMockChecker) Check(ctx context.Context, userID string, amount int) *quota.CheckResult {
+	return &quota.CheckResult{
+		Allowed:   true,
+		Remaining: 1000,
+		Error:     nil,
+	}
 }
 
 // failingMockChecker 总是失败的配额检查器
 type failingMockChecker struct{}
 
-func (m *failingMockChecker) Check(ctx context.Context, userID string, amount int) error {
-	return quota.ErrInsufficientQuota
+func (m *failingMockChecker) Check(ctx context.Context, userID string, amount int) *quota.CheckResult {
+	return &quota.CheckResult{
+		Allowed:   false,
+		Remaining: 0,
+		Error:     quota.ErrInsufficientQuota,
+	}
 }

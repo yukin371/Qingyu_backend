@@ -9,6 +9,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/pkg/cache"
+	"Qingyu_backend/pkg/quota"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	"Qingyu_backend/service/base"
 
@@ -140,7 +141,7 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 			// 更新到数据库
 			if updateErr := s.quotaRepo.UpdateQuota(ctx, quota); updateErr != nil {
 				// 升级失败不影响检查，继续使用旧值
-				fmt.Printf("警告: 配额升级失败: %v\n", updateErr)
+				fmt.Printf("警告: 配额升级失败: %v\\n", updateErr)
 			}
 		}
 	}
@@ -157,6 +158,38 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 	}
 
 	return nil
+}
+
+// Check 实现 quota.Checker 接口
+// 检查用户配额并返回结构化结果
+func (s *QuotaService) Check(ctx context.Context, userID string, amount int) *quota.CheckResult {
+	// 调用现有的 CheckQuota 方法
+	err := s.CheckQuota(ctx, userID, amount)
+	if err != nil {
+		// 返回错误结果
+		return &quota.CheckResult{
+			Allowed:   false,
+			Remaining: 0,
+			Error:     err,
+		}
+	}
+
+	// 获取剩余配额
+	userQuota, quotaErr := s.quotaRepo.GetQuotaByUserID(ctx, userID, ai.QuotaTypeDaily)
+	if quotaErr != nil {
+		// 获取配额失败，但检查已通过，返回默认值
+		return &quota.CheckResult{
+			Allowed:   true,
+			Remaining: 0,
+			Error:     nil,
+		}
+	}
+
+	return &quota.CheckResult{
+		Allowed:   true,
+		Remaining: userQuota.RemainingQuota,
+		Error:     nil,
+	}
 }
 
 // ConsumeQuota 消费配额（增强版：支持缓存失效和预警）

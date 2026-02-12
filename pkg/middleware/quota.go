@@ -7,9 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/ai"
 	"Qingyu_backend/pkg/quota"
-	aiService "Qingyu_backend/service/ai"
 )
 
 // QuotaMiddleware 配额中间件
@@ -17,13 +15,6 @@ import (
 // 修复 P0-1: 移除对 container 的直接依赖
 type QuotaMiddleware struct {
 	checker quota.Checker // 配额检查器接口注入
-}
-
-// NewQuotaMiddleware 创建配额中间件（向后兼容）
-func NewQuotaMiddleware(quotaService *aiService.QuotaService) *QuotaMiddleware {
-	return &QuotaMiddleware{
-		quotaService: quotaService,
-	}
 }
 
 // NewQuotaMiddlewareWithChecker 使用接口创建配额中间件（推荐）
@@ -56,18 +47,19 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 		}
 
 		// 使用 checker 检查配额
-		allowed, remaining, err := m.checker.Check(c.Request.Context(), userID.(string), estimatedAmount)
+		result := m.checker.Check(c.Request.Context(), userID.(string), estimatedAmount)
 
-		if err != nil {
+		// 检查错误
+		if result.Error != nil {
 			// 检查错误类型
-			if errors.Is(err, quota.ErrQuotaExhausted) || errors.Is(err, quota.ErrQuotaSuspended) {
+			if errors.Is(result.Error, quota.ErrQuotaExhausted) || errors.Is(result.Error, quota.ErrQuotaSuspended) {
 				// 已用尽或暂停，禁止继续
-				m.handleQuotaError(c, err)
+				m.handleQuotaError(c, result.Error)
 				return
 			}
-			if errors.Is(err, quota.ErrInsufficientQuota) {
+			if errors.Is(result.Error, quota.ErrInsufficientQuota) {
 				// 配额不足
-				m.handleQuotaError(c, err)
+				m.handleQuotaError(c, result.Error)
 				return
 			}
 			// 其他错误视为内部错误
@@ -75,9 +67,15 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 			return
 		}
 
+		// 检查是否允许
+		if !result.Allowed {
+			m.handleQuotaError(c, quota.ErrInsufficientQuota)
+			return
+		}
+
 		// 配额检查通过，继续处理请求
-		c.Set("quota_allowed", allowed)
-		c.Set("quota_remaining", remaining)
+		c.Set("quota_allowed", result.Allowed)
+		c.Set("quota_remaining", result.Remaining)
 		c.Next()
 	}
 }
@@ -95,4 +93,19 @@ func (m *QuotaMiddleware) handleQuotaError(c *gin.Context, err error) {
 		shared.Error(c, http.StatusInternalServerError, "配额检查失败", err.Error())
 	}
 	c.Abort()
+}
+
+// QuotaCheckMiddleware 标准配额检查中间件（便捷函数）
+// 直接接受 QuotaService 并自动注入 Checker 接口
+// 用于标准消耗操作（默认预估消耗 1000 token）
+func QuotaCheckMiddleware(quotaService quota.Checker) gin.HandlerFunc {
+	m := &QuotaMiddleware{checker: quotaService}
+	return m.CheckQuota(1000)
+}
+
+// LightQuotaCheckMiddleware 轻量级配额检查中间件（便捷函数）
+// 用于聊天等低消耗操作（默认预估消耗 10 token）
+func LightQuotaCheckMiddleware(quotaService quota.Checker) gin.HandlerFunc {
+	m := &QuotaMiddleware{checker: quotaService}
+	return m.CheckQuota(10)
 }

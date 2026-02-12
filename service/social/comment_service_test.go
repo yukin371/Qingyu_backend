@@ -44,6 +44,12 @@ func (m *MockCommentRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
+// Exists 检查评论是否存在
+func (m *MockCommentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockCommentRepository) GetCommentsByBookID(ctx context.Context, bookID string, page, size int) ([]*social.Comment, int64, error) {
 	args := m.Called(ctx, bookID, page, size)
 	if args.Get(0) == nil {

@@ -15,6 +15,14 @@ var (
 	ErrQuotaSuspended = errors.New("配额已暂停")
 )
 
+// CheckResult 配额检查结果
+// 封装了配额检查的所有返回信息，便于扩展
+type CheckResult struct {
+	Allowed   bool   // 是否允许操作
+	Remaining int    // 剩余配额数量
+	Error     error  // 错误信息（如果有）
+}
+
 // Checker 配额检查器接口
 // 定义了检查用户配额的抽象行为，不依赖具体实现
 type Checker interface {
@@ -26,8 +34,8 @@ type Checker interface {
 	//   amount - 预估消耗的配额数量（Token数或次数）
 	//
 	// 返回:
-	//   error - 配额不足时返回错误，nil表示检查通过
-	Check(ctx context.Context, userID string, amount int) error
+	//   *CheckResult - 配额检查结果，包含是否允许、剩余配额和错误信息
+	Check(ctx context.Context, userID string, amount int) *CheckResult
 }
 
 // ErrorCode 配额错误码

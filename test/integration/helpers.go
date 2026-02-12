@@ -16,10 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
-	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 )
 
 // ========================================
@@ -64,15 +65,25 @@ type TestHelper struct {
 	t      *testing.T
 	router *gin.Engine
 	ctx    context.Context
+	db     *mongo.Database  // 从服务容器获取的数据库连接
+	client *mongo.Client    // 从服务容器获取的MongoDB客户端
 }
 
 // NewTestHelper 创建测试辅助工具
 func NewTestHelper(t *testing.T, router *gin.Engine) *TestHelper {
-	return &TestHelper{
+	helper := &TestHelper{
 		t:      t,
 		router: router,
 		ctx:    context.Background(),
 	}
+
+	// 从服务容器获取数据库连接
+	if service.ServiceManager != nil {
+		helper.db = service.ServiceManager.GetMongoDB()
+		helper.client = service.ServiceManager.GetMongoClient()
+	}
+
+	return helper
 }
 
 // ========================================
@@ -234,7 +245,7 @@ func (h *TestHelper) GetTestBook() string {
 		ID primitive.ObjectID `bson:"_id"`
 	}
 
-	err := global.DB.Collection("books").FindOne(h.ctx, bson.M{}).Decode(&book)
+	err := h.db.Collection("books").FindOne(h.ctx, bson.M{}).Decode(&book)
 	if err != nil {
 		h.t.Logf("⚠ 数据库中没有测试书籍")
 		return ""
@@ -245,7 +256,7 @@ func (h *TestHelper) GetTestBook() string {
 
 // GetTestBooks 获取多本测试书籍
 func (h *TestHelper) GetTestBooks(limit int) []string {
-	cursor, err := global.DB.Collection("books").Find(h.ctx, bson.M{})
+	cursor, err := h.db.Collection("books").Find(h.ctx, bson.M{})
 	if err != nil {
 		h.t.Logf("⚠ 查询测试书籍失败: %v", err)
 		return nil
@@ -282,7 +293,7 @@ func (h *TestHelper) CleanupTestData(collections ...string) {
 	for _, coll := range collections {
 		// 先获取测试用户的ObjectID
 		var userIDs []string
-		cursor, _ := global.DB.Collection("users").Find(h.ctx, bson.M{
+		cursor, _ := h.db.Collection("users").Find(h.ctx, bson.M{
 			"username": bson.M{"$in": testUsers},
 		})
 		if cursor != nil {
@@ -298,7 +309,7 @@ func (h *TestHelper) CleanupTestData(collections ...string) {
 
 		// 使用获取到的user_id清理
 		if len(userIDs) > 0 {
-			_, err := global.DB.Collection(coll).DeleteMany(h.ctx, bson.M{
+			_, err := h.db.Collection(coll).DeleteMany(h.ctx, bson.M{
 				"user_id": bson.M{"$in": userIDs},
 			})
 			if err != nil {
@@ -370,7 +381,7 @@ func (h *TestHelper) CleanupTestCollections(bookID string) {
 
 	// 获取测试用户的ID
 	var userIDs []string
-	cursor, err := global.DB.Collection("users").Find(h.ctx, bson.M{
+	cursor, err := h.db.Collection("users").Find(h.ctx, bson.M{
 		"username": bson.M{"$in": testUsers},
 	})
 	if err != nil {
@@ -389,7 +400,7 @@ func (h *TestHelper) CleanupTestCollections(bookID string) {
 
 	// 删除指定书籍的收藏
 	if len(userIDs) > 0 {
-		result, _ := global.DB.Collection("collections").DeleteMany(h.ctx, bson.M{
+		result, _ := h.db.Collection("collections").DeleteMany(h.ctx, bson.M{
 			"user_id": bson.M{"$in": userIDs},
 			"book_id": bookID,
 		})
@@ -410,7 +421,7 @@ func (h *TestHelper) VerifyBookExists(bookID string) bool {
 		return false
 	}
 
-	count, err := global.DB.Collection("books").CountDocuments(h.ctx, bson.M{"_id": objectID})
+	count, err := h.db.Collection("books").CountDocuments(h.ctx, bson.M{"_id": objectID})
 	return err == nil && count > 0
 }
 
@@ -421,7 +432,7 @@ func (h *TestHelper) VerifyUserExists(userID string) bool {
 		return false
 	}
 
-	count, err := global.DB.Collection("users").CountDocuments(h.ctx, bson.M{"_id": objectID})
+	count, err := h.db.Collection("users").CountDocuments(h.ctx, bson.M{"_id": objectID})
 	return err == nil && count > 0
 }
 
@@ -555,7 +566,7 @@ func LoginAsTestUser(t *testing.T, router *gin.Engine) string {
 	return helper.LoginTestUser()
 }
 
-// setupTestEnvironment 设置测试环境
+// setupTestEnvironment 设置测试环境（使用服务容器）
 func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 	// 加载配置
 	_, err := config.LoadConfig("../..")
@@ -563,10 +574,10 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 		t.Fatalf("加载配置失败: %v", err)
 	}
 
-	// 初始化数据库
-	err = core.InitDB()
+	// 初始化服务（包括数据库连接）
+	err = core.InitServices()
 	if err != nil {
-		t.Fatalf("初始化数据库失败: %v", err)
+		t.Fatalf("初始化服务失败: %v", err)
 	}
 
 	// 设置Gin为测试模式
@@ -581,9 +592,11 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 	// 清理函数
 	cleanup := func() {
 		// 关闭数据库连接
-		if global.DB != nil {
-			global.DB.Client().Disconnect(context.Background())
-			global.DB = nil // 重要：将global.DB设为nil，避免后续测试使用断开的连接
+		if service.ServiceManager != nil {
+			client := service.ServiceManager.GetMongoClient()
+			if client != nil {
+				client.Disconnect(context.Background())
+			}
 		}
 	}
 

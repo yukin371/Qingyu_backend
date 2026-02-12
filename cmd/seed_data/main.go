@@ -10,8 +10,8 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
-	"Qingyu_backend/global"
 	"Qingyu_backend/migration/seeds"
+	"Qingyu_backend/service"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -40,18 +40,19 @@ func main() {
 	fmt.Printf("  数据库名: %s\n", mongoConfig.Database)
 	fmt.Println()
 
-	// 初始化数据库
-	fmt.Println("🔗 连接数据库...")
-	if err := core.InitDB(); err != nil {
-		log.Fatalf("❌ 初始化数据库失败: %v\n", err)
+	// 初始化服务（包括数据库连接）
+	fmt.Println("🔗 初始化服务...")
+	if err := core.InitServices(); err != nil {
+		log.Fatalf("❌ 初始化服务失败: %v\n", err)
 	}
-	fmt.Println("✓ 数据库连接成功")
+	fmt.Println("✓ 服务初始化成功")
 	fmt.Println()
 
-	ctx := context.Background()
+		ctx := context.Background()
 
-	// 检查数据库连接
-	if global.DB == nil {
+	// 从服务容器获取数据库连接
+	db := service.ServiceManager.GetMongoDB()
+	if db == nil {
 		log.Fatal("❌ 数据库未初始化")
 	}
 
@@ -75,12 +76,15 @@ func main() {
 
 		switch choice {
 		case 1:
-			cleanAllData(ctx)
-			createAllData(ctx, global.DB)
+			db := service.ServiceManager.GetMongoDB()
+			cleanAllData(ctx, db)
+			createAllData(ctx, db)
 		case 2:
-			createAllData(ctx, global.DB)
+			db := service.ServiceManager.GetMongoDB()
+			createAllData(ctx, db)
 		case 3:
-			cleanAllData(ctx)
+			db := service.ServiceManager.GetMongoDB()
+			cleanAllData(ctx, db)
 		case 4:
 			showStatistics(ctx)
 		case 5:
@@ -96,7 +100,7 @@ func main() {
 	}
 }
 
-func cleanAllData(ctx context.Context) {
+func cleanAllData(ctx context.Context, db *mongo.Database) {
 	fmt.Println("🗑️  开始清理测试数据...")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
@@ -116,7 +120,7 @@ func cleanAllData(ctx context.Context) {
 	totalDeleted := 0
 
 	for _, collName := range collections {
-		collection := global.DB.Collection(collName)
+		collection := db.Collection(collName)
 		result, err := collection.DeleteMany(ctx, bson.M{})
 		if err != nil {
 			fmt.Printf("❌ 清理 %s 失败: %v\n", collName, err)
@@ -211,9 +215,12 @@ func showStatistics(ctx context.Context) {
 		{"follows", "关注"},
 	}
 
+	// 从服务容器获取数据库连接
+	db := service.ServiceManager.GetMongoDB()
+
 	total := 0
 	for _, coll := range collections {
-		count, err := global.DB.Collection(coll.Name).CountDocuments(ctx, bson.M{})
+		count, err := db.Collection(coll.Name).CountDocuments(ctx, bson.M{})
 		if err != nil {
 			fmt.Printf("❌ 统计 %s 失败: %v\n", coll.Alias, err)
 			continue

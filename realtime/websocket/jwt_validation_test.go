@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
