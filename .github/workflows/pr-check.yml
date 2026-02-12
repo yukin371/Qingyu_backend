@@ -129,6 +129,10 @@ jobs:
           go vet ./...
           go build -v ./...
 
+      - name: Architecture guard tests
+        run: |
+          make guard-arch
+
   test-docker-changes:
     name: Test Docker Changes
     needs: changed-files
