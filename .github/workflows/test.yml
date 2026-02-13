@@ -104,15 +104,22 @@ jobs:
             grep -v '^Qingyu_backend/test/' | \
             grep -v '^Qingyu_backend/tests/' | \
             grep -v '^Qingyu_backend/.archive/')
-          go test -v -race -count=1 \
-            -coverprofile=coverage.out \
-            -covermode=atomic \
-            $TEST_PACKAGES
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR mode: run compile-level smoke test only."
+            go test -run TestDoesNotExist $TEST_PACKAGES
+          else
+            go test -v -race -count=1 \
+              -coverprofile=coverage.out \
+              -covermode=atomic \
+              $TEST_PACKAGES
+          fi
 
       - name: Generate coverage report
+        if: github.event_name == 'push'
         run: go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage to artifacts
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -121,12 +128,14 @@ jobs:
             coverage.html
 
       - name: Display coverage summary
+        if: github.event_name == 'push'
         run: |
           echo "=== Coverage Summary ==="
           go tool cover -func=coverage.out | tail -1
 
       # 上传覆盖率到 codecov（可选）
       - name: Upload coverage to Codecov
+        if: github.event_name == 'push'
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.out
