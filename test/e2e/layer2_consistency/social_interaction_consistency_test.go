@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package layer2_consistency
@@ -36,7 +36,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 
 		// 创建作者和书籍
 		author := fixtures.CreateAdminUser()
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		chapter := fixtures.CreateChapter(book.ID.Hex())
 		t.Logf("✓ 书籍和章节创建成功: %s", book.Title)
 
@@ -60,8 +60,8 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		token1 := actions.Login(user1.Username, "Test1234")
 
 		// User1 发表评论
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论1：这本书很有趣！")
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论2：期待后续章节。")
+		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论1：这本书很有趣！")
+		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论2：期待后续章节。")
 
 		// User1 收藏书籍
 		actions.CollectBook(token1, book.ID.Hex())
@@ -75,7 +75,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		token2 := actions.Login(user2.Username, "Test1234")
 
 		// User2 发表评论
-		actions.AddComment(token2, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论3：我也很喜欢这本书。")
+		actions.AddComment(token2, book.ID.Hex(), chapter.ID, "E2E测试评论3：我也很喜欢这本书。")
 
 		// User2 收藏书籍
 		actions.CollectBook(token2, book.ID.Hex())
@@ -90,7 +90,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		book := env.GetTestData("test_book").(*bookstore.Book)
 
 		// 验证 user1 的评论数据
-		issues := validator.ValidateUserData(user1.ID)
+		issues := validator.ValidateUserData(user1.ID.Hex())
 		commentIssues := filterIssuesByType(issues, "comment_count_mismatch")
 
 		if len(commentIssues) > 0 {
@@ -101,7 +101,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 
 		// 验证评论确实存在于数据库中
 		assertions := env.Assert()
-		assertions.AssertCommentExists(user1.ID, book.ID.Hex())
+		assertions.AssertCommentExists(user1.ID.Hex(), book.ID.Hex())
 		t.Logf("✓ 评论数据验证通过")
 	})
 
@@ -112,7 +112,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		book := env.GetTestData("test_book").(*bookstore.Book)
 
 		// 验证收藏数据
-		issues := validator.ValidateUserData(user1.ID)
+		issues := validator.ValidateUserData(user1.ID.Hex())
 		collectionIssues := filterIssuesByType(issues, "collection_count_mismatch")
 
 		if len(collectionIssues) > 0 {
@@ -123,7 +123,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 
 		// 验证收藏确实存在
 		assertions := env.Assert()
-		assertions.AssertCollectionExists(user1.ID, book.ID.Hex())
+		assertions.AssertCollectionExists(user1.ID.Hex(), book.ID.Hex())
 		t.Logf("✓ 收藏数据验证通过")
 	})
 
@@ -133,7 +133,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		user1 := env.GetTestData("user1").(*users.User)
 
 		// 验证点赞数据
-		issues := validator.ValidateUserData(user1.ID)
+		issues := validator.ValidateUserData(user1.ID.Hex())
 		likeIssues := filterIssuesByType(issues, "like_count_mismatch")
 
 		if len(likeIssues) > 0 {
@@ -151,7 +151,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		user1 := env.GetTestData("user1").(*users.User)
 
 		// 完整的用户数据验证
-		issues := validator.ValidateUserData(user1.ID)
+		issues := validator.ValidateUserData(user1.ID.Hex())
 
 		// 统计各类问题
 		errorCount := 0
@@ -187,7 +187,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		user1 := env.GetTestData("user1").(*users.User)
 
 		// 验证用户的活动历史
-		issues := validator.ValidateUserData(user1.ID)
+		issues := validator.ValidateUserData(user1.ID.Hex())
 		timelineIssues := filterIssuesByType(issues, "timeline_inconsistent")
 
 		if len(timelineIssues) > 0 {
@@ -200,6 +200,3 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		}
 	})
 }
-
-
-

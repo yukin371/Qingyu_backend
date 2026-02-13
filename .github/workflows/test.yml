@@ -287,7 +287,7 @@ jobs:
           echo "=========================================="
           echo "E2E Layer 1: Basic Flow Tests (2-3 min)"
           echo "=========================================="
-          go test -v -race -count=1 -timeout 5m ./test/e2e/layer1_basic/...
+          go test -v -race -count=1 -tags=e2e -timeout 5m ./test/e2e/layer1_basic/...
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
@@ -298,7 +298,7 @@ jobs:
           echo "=========================================="
           echo "E2E Layer 2: Data Consistency Tests (3-5 min)"
           echo "=========================================="
-          go test -v -race -count=1 -timeout 8m ./test/e2e/layer2_consistency/...
+          go test -v -race -count=1 -tags=e2e -timeout 8m ./test/e2e/layer2_consistency/...
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
@@ -309,7 +309,7 @@ jobs:
           echo "=========================================="
           echo "E2E Layer 3: Boundary Scenario Tests (5-8 min)"
           echo "=========================================="
-          go test -v -race -count=1 -timeout 10m ./test/e2e/layer3_boundary/...
+          go test -v -race -count=1 -tags=e2e -timeout 10m ./test/e2e/layer3_boundary/...
 
   # 代码质量检查
   lint:

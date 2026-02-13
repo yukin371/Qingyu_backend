@@ -324,7 +324,7 @@ jobs:
           echo "=========================================="
           echo "Running E2E Layer 1: Basic Flow Tests"
           echo "=========================================="
-          go test -v -timeout 5m ./test/e2e/layer1_basic/...
+          go test -v -tags=e2e -timeout 5m ./test/e2e/layer1_basic/...
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
@@ -335,7 +335,7 @@ jobs:
           echo "=========================================="
           echo "Running E2E Layer 2: Data Consistency Tests"
           echo "=========================================="
-          go test -v -timeout 8m ./test/e2e/layer2_consistency/...
+          go test -v -tags=e2e -timeout 8m ./test/e2e/layer2_consistency/...
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
@@ -346,7 +346,7 @@ jobs:
           echo "=========================================="
           echo "Running E2E Layer 3: Boundary Scenario Tests"
           echo "=========================================="
-          go test -v -timeout 10m ./test/e2e/layer3_boundary/...
+          go test -v -tags=e2e -timeout 10m ./test/e2e/layer3_boundary/...
 
       - name: Show logs on failure
         if: failure()
