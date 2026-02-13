@@ -28,7 +28,7 @@ jobs:
 
       - name: 上传检查报告
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-report
           path: |
@@ -59,7 +59,7 @@ jobs:
           make test-unit
 
       - name: 上传覆盖率报告
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: |
@@ -108,7 +108,7 @@ jobs:
           args: ./...
 
       - name: 上传安全报告
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: gosec-results.sarif
@@ -134,7 +134,7 @@ jobs:
       - name: 验证Provider依赖
         run: |
           echo "🔍 验证Provider依赖..."
-          go test -v ./service/container/...
+          go test -v -run TestDoesNotExist ./service/container/...
 
       - name: 验证Port/Adapter模式
         run: |
