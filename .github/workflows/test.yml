@@ -64,7 +64,10 @@ jobs:
       - name: Run go fmt check
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+            if ! git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"; then
+              echo "Skip gofmt check: unable to fetch base ref."
+              exit 0
+            fi
             changed_go_files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- '*.go')
           else
             changed_go_files=$(git diff --name-only HEAD~1..HEAD -- '*.go' || true)
