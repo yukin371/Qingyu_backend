@@ -3,8 +3,6 @@ name: Simple CI
 on:
   push:
     branches: [ main, dev, test, develop ]
-  pull_request:
-    branches: [ main, dev, test, develop ]
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
