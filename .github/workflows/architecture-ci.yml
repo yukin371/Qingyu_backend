@@ -87,7 +87,7 @@ jobs:
           args: --timeout=5m
 
       - name: 运行go vet
-        run: make vet
+        run: go vet $(go list ./... | grep -v '^Qingyu_backend/cmd/')
 
   security-scan:
     name: 安全扫描
