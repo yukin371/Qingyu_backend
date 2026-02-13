@@ -7,44 +7,10 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/internal/middleware/ratelimit"
-	mw "Qingyu_backend/pkg/middleware"
-	"Qingyu_backend/pkg/response"
 	sharedAuth "Qingyu_backend/service/auth"
-	"Qingyu_backend/service/shared/storage"
 	walletService "Qingyu_backend/service/finance/wallet"
+	"Qingyu_backend/service/shared/storage"
 )
-
-// RegisterRoutes 注册共享服务路由（向后兼容）
-// 参数改为接收独立服务而不是整个容器，避免与全局 ServiceContainer 冲突
-func RegisterRoutes(
-	r *gin.RouterGroup,
-	authService sharedAuth.AuthService,
-	oauthService *sharedAuth.OAuthService,
-	logger *zap.Logger,
-	walletSvc walletService.WalletService,
-	storageService *storage.StorageServiceImpl,
-	multipartService *storage.MultipartUploadService,
-	imageProcessor *storage.ImageProcessor,
-) {
-	// 应用全局中间件
-	r.Use(mw.ResponseFormatterMiddleware()) // 响应格式化（RequestID生成）
-	r.Use(mw.ResponseTimingMiddleware())    // 响应时间记录
-	r.Use(mw.CORSMiddleware())              // 跨域处理
-	r.Use(mw.Recovery())                    // Panic恢复
-	r.Use(response.GzipMiddleware(5))       // Gzip压缩（压缩级别5）
-
-	// 调用各个独立的注册函数
-	if authService != nil && oauthService != nil {
-		RegisterAuthRoutes(r, authService, oauthService, logger)
-	}
-	if walletSvc != nil {
-		RegisterWalletRoutes(r, walletSvc)
-	}
-	if storageService != nil {
-		RegisterStorageRoutes(r, storageService, multipartService, imageProcessor)
-	}
-	// TODO: 注册搜索建议路由（需要SearchService，将在writer路由初始化后创建）
-}
 
 // RegisterAuthRoutes 注册认证服务路由
 func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, oauthService *sharedAuth.OAuthService, logger *zap.Logger) {
@@ -130,9 +96,9 @@ func RegisterWalletRoutes(r *gin.RouterGroup, walletService walletService.Wallet
 // RegisterStorageRoutes 注册存储服务路由
 func RegisterStorageRoutes(
 	r *gin.RouterGroup,
-	storageService *storage.StorageServiceImpl,
-	multipartService *storage.MultipartUploadService,
-	imageProcessor *storage.ImageProcessor,
+	storageService storage.StorageService,
+	multipartService storage.MultipartUploadManager,
+	imageProcessor storage.ImageProcessorService,
 ) {
 	// 创建API处理器
 	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)

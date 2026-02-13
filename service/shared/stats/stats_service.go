@@ -11,28 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// PlatformStatsService 平台统计服务接口
-// 职责：跨业务域的聚合统计、平台级数据分析
-// 领域：Platform/Shared
-type PlatformStatsService interface {
-	// 用户统计
-	GetUserStats(ctx context.Context, userID string) (*UserStats, error)
-	GetPlatformUserStats(ctx context.Context, startDate, endDate time.Time) (*PlatformUserStats, error)
-
-	// 内容统计
-	GetContentStats(ctx context.Context, userID string) (*ContentStats, error)
-	GetPlatformContentStats(ctx context.Context, startDate, endDate time.Time) (*PlatformContentStats, error)
-
-	// 活跃度统计
-	GetUserActivityStats(ctx context.Context, userID string, days int) (*ActivityStats, error)
-
-	// 收益统计
-	GetRevenueStats(ctx context.Context, userID string, startDate, endDate time.Time) (*RevenueStats, error)
-
-	// 健康检查
-	Health(ctx context.Context) error
-}
-
 // PlatformStatsServiceImpl 平台统计服务实现
 type PlatformStatsServiceImpl struct {
 	userRepo    userRepo.UserRepository
@@ -43,13 +21,15 @@ type PlatformStatsServiceImpl struct {
 	initialized bool
 }
 
+var _ StatsPort = (*PlatformStatsServiceImpl)(nil)
+
 // NewPlatformStatsService 创建平台统计服务
 func NewPlatformStatsService(
 	userRepository userRepo.UserRepository,
 	bookRepository bookstoreRepo.BookRepository,
 	projectRepository writerRepo.ProjectRepository,
 	chapterRepository bookstoreRepo.ChapterRepository,
-) PlatformStatsService {
+) StatsPort {
 	return &PlatformStatsServiceImpl{
 		userRepo:    userRepository,
 		bookRepo:    bookRepository,

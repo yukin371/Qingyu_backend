@@ -6,19 +6,27 @@ import (
 	"time"
 
 	serviceInterfaces "Qingyu_backend/service/interfaces"
+	"Qingyu_backend/service/shared/cache/strategies"
 
 	"github.com/redis/go-redis/v9"
 )
 
 // RedisCacheService Redis 缓存服务实现
 type RedisCacheService struct {
-	client *redis.Client
+	client          *redis.Client
+	strategyManager strategies.CacheManager
 }
 
 // NewRedisCacheService 创建 Redis 缓存服务
 func NewRedisCacheService(client *redis.Client) serviceInterfaces.CacheService {
+	return NewRedisCacheServiceWithStrategyManager(client, nil)
+}
+
+// NewRedisCacheServiceWithStrategyManager 创建带策略管理器的 Redis 缓存服务
+func NewRedisCacheServiceWithStrategyManager(client *redis.Client, manager strategies.CacheManager) serviceInterfaces.CacheService {
 	return &RedisCacheService{
-		client: client,
+		client:          client,
+		strategyManager: manager,
 	}
 }
 
@@ -38,6 +46,18 @@ func (s *RedisCacheService) Get(ctx context.Context, key string) (string, error)
 
 // Set 设置缓存
 func (s *RedisCacheService) Set(ctx context.Context, key string, value string, expiration time.Duration) error {
+	if s.strategyManager != nil {
+		strategy := s.strategyManager.GetStrategy(key)
+		if strategy != nil {
+			if !strategy.ShouldCache(key, value) {
+				return nil
+			}
+			if expiration <= 0 {
+				expiration = strategy.GetTTL(key)
+			}
+		}
+	}
+
 	err := s.client.Set(ctx, key, value, expiration).Err()
 	if err != nil {
 		return fmt.Errorf("设置缓存失败: %w", err)

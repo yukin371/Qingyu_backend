@@ -1,6 +1,7 @@
 package handler
 
 import (
+	bookstoreModel "Qingyu_backend/models/bookstore"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"context"
@@ -17,7 +18,12 @@ import (
 // PublicUserHandler 公开用户信息处理器
 type PublicUserHandler struct {
 	userService      userServiceInterface.UserService
-	bookstoreService interface{} // 可选依赖
+	bookstoreService BookstoreService // 可选依赖
+}
+
+// BookstoreService 公开用户作品查询端口（最小依赖）
+type BookstoreService interface {
+	GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstoreModel.Book, int64, error)
 }
 
 // NewPublicUserHandler 创建公开用户信息处理器实例
@@ -28,7 +34,7 @@ func NewPublicUserHandler(userService userServiceInterface.UserService) *PublicU
 }
 
 // SetBookstoreService 设置BookstoreService（可选依赖注入）
-func (h *PublicUserHandler) SetBookstoreService(bookstoreSvc interface{}) {
+func (h *PublicUserHandler) SetBookstoreService(bookstoreSvc BookstoreService) {
 	h.bookstoreService = bookstoreSvc
 }
 
@@ -188,19 +194,8 @@ func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 		return
 	}
 
-	// 使用类型断言调用BookstoreService的GetBooksByAuthorID方法
-	type BookstoreService interface {
-		GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) (interface{}, int64, error)
-	}
-
-	bookstoreSvc, ok := h.bookstoreService.(BookstoreService)
-	if !ok {
-		shared.InternalError(c, "服务配置错误", nil)
-		return
-	}
-
 	// 调用BookstoreService查询用户的已发布作品
-	booksRaw, total, err := bookstoreSvc.GetBooksByAuthorID(c.Request.Context(), userID, page, size)
+	booksRaw, total, err := h.bookstoreService.GetBooksByAuthorID(c.Request.Context(), userID, page, size)
 	if err != nil {
 		shared.InternalError(c, "获取用户作品失败", err)
 		return

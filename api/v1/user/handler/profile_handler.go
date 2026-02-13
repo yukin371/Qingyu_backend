@@ -4,20 +4,20 @@ import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
-	storageService "Qingyu_backend/service/shared/storage"
+	sharedStorage "Qingyu_backend/service/shared/storage"
 )
 
 // ProfileHandler 个人信息处理器
 type ProfileHandler struct {
 	userService    userServiceInterface.UserService
-	storageService storageService.StorageService
+	storageService sharedStorage.StorageService
 }
 
 // NewProfileHandler 创建个人信息处理器实例
@@ -28,8 +28,8 @@ func NewProfileHandler(userService userServiceInterface.UserService) *ProfileHan
 }
 
 // SetStorageService 设置存储服务（可选依赖）
-func (h *ProfileHandler) SetStorageService(storageService storageService.StorageService) {
-	h.storageService = storageService
+func (h *ProfileHandler) SetStorageService(storageSvc sharedStorage.StorageService) {
+	h.storageService = storageSvc
 }
 
 // GetProfile 获取当前用户信息
@@ -280,7 +280,7 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	defer file.Close()
 
 	// 上传到存储服务
-	uploadReq := &storageService.UploadRequest{
+	uploadReq := &sharedStorage.UploadRequest{
 		File:        file,
 		Filename:    fileHeader.Filename,
 		ContentType: contentType,
@@ -338,7 +338,7 @@ func isAllowedType(contentType string, allowedTypes []string) bool {
 // DowngradeRoleRequest 降级角色请求
 type DowngradeRoleRequest struct {
 	TargetRole string `json:"target_role" binding:"required,oneof=reader author"` // 只能降级到reader或author
-	Confirm    bool   `json:"confirm" binding:"required"`                          // 必须确认
+	Confirm    bool   `json:"confirm" binding:"required"`                         // 必须确认
 }
 
 // DowngradeRole 降级用户角色

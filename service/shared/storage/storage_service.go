@@ -1,15 +1,23 @@
 package storage
 
 import (
+	"bytes"
 	"context"
-	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
 	"time"
+)
+
+const (
+	defaultListPage     = 1
+	defaultListPageSize = 20
+	maxListPageSize     = 100
+	defaultDownloadTTL  = 15 * time.Minute
 )
 
 // TODO: 完善文件上传功能（分片上传、断点续传）
@@ -62,6 +70,27 @@ func NewStorageService(backend StorageBackend, fileRepo FileRepository) StorageS
 
 // Upload 上传文件
 func (s *StorageServiceImpl) Upload(ctx context.Context, req *UploadRequest) (*FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return nil, fmt.Errorf("upload request is required")
+	}
+	if req.File == nil {
+		return nil, fmt.Errorf("file is required")
+	}
+	if strings.TrimSpace(req.Filename) == "" {
+		return nil, fmt.Errorf("filename is required")
+	}
+	if strings.TrimSpace(req.UserID) == "" {
+		return nil, fmt.Errorf("user_id is required")
+	}
+
+	fileData, err := io.ReadAll(req.File)
+	if err != nil {
+		return nil, fmt.Errorf("读取文件失败: %w", err)
+	}
+
 	// 1. 生成文件ID和存储路径
 	fileID := generateFileID()
 	ext := filepath.Ext(req.Filename)
@@ -69,35 +98,36 @@ func (s *StorageServiceImpl) Upload(ctx context.Context, req *UploadRequest) (*F
 
 	// 按分类和日期组织目录
 	datePath := time.Now().Format("2006/01/02")
-	storagePath := filepath.Join(req.Category, datePath, storedFilename)
+	category := normalizeStorageCategory(req.Category)
+	storagePath := filepath.Join(category, datePath, storedFilename)
 
 	// 2. 计算MD5（用于去重）
-	var md5Hash string
-	if req.File != nil {
-		// 如果需要计算MD5，需要读取两次文件（或使用TeeReader）
-		// 这里简化处理，实际应用中可以使用TeeReader同时计算MD5和保存
-		md5Hash = s.calculateMD5(req.File)
+	md5Hash := calculateBytesMD5(fileData)
+	size := req.Size
+	if size <= 0 {
+		size = int64(len(fileData))
 	}
 
 	// 3. 保存文件到存储后端
-	if err := s.backend.Save(ctx, storagePath, req.File); err != nil {
+	if err := s.backend.Save(ctx, storagePath, bytes.NewReader(fileData)); err != nil {
 		return nil, fmt.Errorf("保存文件失败: %w", err)
 	}
 
 	// 4. 创建文件元数据
+	now := time.Now()
 	fileInfo := &FileInfo{
 		ID:           fileID,
 		Filename:     storedFilename,
 		OriginalName: req.Filename,
 		ContentType:  req.ContentType,
-		Size:         req.Size,
+		Size:         size,
 		Path:         storagePath,
 		UserID:       req.UserID,
 		IsPublic:     req.IsPublic,
-		Category:     req.Category,
+		Category:     category,
 		MD5:          md5Hash,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	// 5. 保存元数据到数据库
@@ -112,6 +142,13 @@ func (s *StorageServiceImpl) Upload(ctx context.Context, req *UploadRequest) (*F
 
 // Download 下载文件
 func (s *StorageServiceImpl) Download(ctx context.Context, fileID string) (io.ReadCloser, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(fileID) == "" {
+		return nil, fmt.Errorf("fileID is required")
+	}
+
 	// 1. 获取文件元数据
 	fileInfo, err := s.fileRepo.Get(ctx, fileID)
 	if err != nil {
@@ -136,6 +173,13 @@ func (s *StorageServiceImpl) Download(ctx context.Context, fileID string) (io.Re
 
 // Delete 删除文件
 func (s *StorageServiceImpl) Delete(ctx context.Context, fileID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if strings.TrimSpace(fileID) == "" {
+		return fmt.Errorf("fileID is required")
+	}
+
 	// 1. 获取文件元数据
 	fileInfo, err := s.fileRepo.Get(ctx, fileID)
 	if err != nil {
@@ -143,14 +187,17 @@ func (s *StorageServiceImpl) Delete(ctx context.Context, fileID string) error {
 	}
 
 	// 2. 删除存储后端的文件
-	if err := s.backend.Delete(ctx, fileInfo.Path); err != nil {
-		// 记录错误但继续删除元数据
-		fmt.Printf("删除文件失败: %v\n", err)
-	}
+	backendErr := s.backend.Delete(ctx, fileInfo.Path)
 
 	// 3. 删除元数据
 	if err := s.fileRepo.Delete(ctx, fileID); err != nil {
+		if backendErr != nil {
+			return fmt.Errorf("删除文件元数据失败: %w", errors.Join(err, backendErr))
+		}
 		return fmt.Errorf("删除文件元数据失败: %w", err)
+	}
+	if backendErr != nil {
+		return fmt.Errorf("删除文件失败: %w", backendErr)
 	}
 
 	return nil
@@ -158,6 +205,13 @@ func (s *StorageServiceImpl) Delete(ctx context.Context, fileID string) error {
 
 // GetFileInfo 获取文件信息
 func (s *StorageServiceImpl) GetFileInfo(ctx context.Context, fileID string) (*FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(fileID) == "" {
+		return nil, fmt.Errorf("fileID is required")
+	}
+
 	fileInfo, err := s.fileRepo.Get(ctx, fileID)
 	if err != nil {
 		return nil, fmt.Errorf("文件不存在: %w", err)
@@ -169,16 +223,35 @@ func (s *StorageServiceImpl) GetFileInfo(ctx context.Context, fileID string) (*F
 
 // GrantAccess 授予访问权限
 func (s *StorageServiceImpl) GrantAccess(ctx context.Context, fileID, userID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if strings.TrimSpace(fileID) == "" || strings.TrimSpace(userID) == "" {
+		return fmt.Errorf("fileID and userID are required")
+	}
 	return s.fileRepo.GrantAccess(ctx, fileID, userID)
 }
 
 // RevokeAccess 撤销访问权限
 func (s *StorageServiceImpl) RevokeAccess(ctx context.Context, fileID, userID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if strings.TrimSpace(fileID) == "" || strings.TrimSpace(userID) == "" {
+		return fmt.Errorf("fileID and userID are required")
+	}
 	return s.fileRepo.RevokeAccess(ctx, fileID, userID)
 }
 
 // CheckAccess 检查访问权限
 func (s *StorageServiceImpl) CheckAccess(ctx context.Context, fileID, userID string) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	if strings.TrimSpace(fileID) == "" || strings.TrimSpace(userID) == "" {
+		return false, fmt.Errorf("fileID and userID are required")
+	}
+
 	// 1. 获取文件信息
 	fileInfo, err := s.fileRepo.Get(ctx, fileID)
 	if err != nil {
@@ -203,24 +276,41 @@ func (s *StorageServiceImpl) CheckAccess(ctx context.Context, fileID, userID str
 
 // ListFiles 查询文件列表
 func (s *StorageServiceImpl) ListFiles(ctx context.Context, req *ListFilesRequest) ([]*FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return nil, fmt.Errorf("list request is required")
+	}
+
 	// 设置默认分页
 	page := req.Page
 	if page <= 0 {
-		page = 1
+		page = defaultListPage
 	}
 	pageSize := req.PageSize
 	if pageSize <= 0 {
-		pageSize = 20
+		pageSize = defaultListPageSize
 	}
-	if pageSize > 100 {
-		pageSize = 100
+	if pageSize > maxListPageSize {
+		pageSize = maxListPageSize
 	}
 
-	return s.fileRepo.List(ctx, req.UserID, req.Category, page, pageSize)
+	return s.fileRepo.List(ctx, req.UserID, normalizeStorageCategory(req.Category), page, pageSize)
 }
 
 // GetDownloadURL 生成下载链接
 func (s *StorageServiceImpl) GetDownloadURL(ctx context.Context, fileID string, expiresIn time.Duration) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(fileID) == "" {
+		return "", fmt.Errorf("fileID is required")
+	}
+	if expiresIn <= 0 {
+		expiresIn = defaultDownloadTTL
+	}
+
 	// 1. 获取文件信息
 	fileInfo, err := s.fileRepo.Get(ctx, fileID)
 	if err != nil {
@@ -237,13 +327,6 @@ func (s *StorageServiceImpl) GetDownloadURL(ctx context.Context, fileID string, 
 }
 
 // ============ 辅助方法 ============
-
-// calculateMD5 计算文件MD5
-func (s *StorageServiceImpl) calculateMD5(reader io.Reader) string {
-	hash := md5.New()
-	io.Copy(hash, reader)
-	return hex.EncodeToString(hash.Sum(nil))
-}
 
 // getFileExtension 获取文件扩展名
 func getFileExtension(filename string) string {
@@ -271,6 +354,13 @@ func generateFileID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+func normalizeStorageCategory(category string) string {
+	if strings.TrimSpace(category) == "" {
+		return defaultCategory
+	}
+	return category
 }
 
 // ============ BaseService 接口实现 ============
