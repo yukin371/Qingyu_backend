@@ -101,7 +101,7 @@ func TestNewCachedRepository(t *testing.T) {
 func TestCachedRepository_GetByID_CacheMiss(t *testing.T) {
 	base := NewMockBookRepository()
 	book := &TestBook{ID: "123", Title: "Test Book"}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	config := &CacheConfig{
@@ -123,7 +123,7 @@ func TestCachedRepository_GetByID_CacheMiss(t *testing.T) {
 func TestCachedRepository_GetByID_CacheHit(t *testing.T) {
 	base := NewMockBookRepository()
 	book := &TestBook{ID: "123", Title: "Test Book"}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	config := &CacheConfig{
@@ -136,7 +136,7 @@ func TestCachedRepository_GetByID_CacheHit(t *testing.T) {
 	repo := NewCachedRepository[*TestBook](base, redisClient, 3600*time.Second, "book", config)
 
 	// 第一次查询（填充缓存）
-	repo.GetByID(context.Background(), "123")
+	_, _ = repo.GetByID(context.Background(), "123")
 	time.Sleep(100 * time.Millisecond) // 等待异步写入
 
 	// 第二次查询（缓存命中）
@@ -166,7 +166,7 @@ func TestCachedRepository_GetByID_NotFound(t *testing.T) {
 func TestCachedRepository_Update(t *testing.T) {
 	base := NewMockBookRepository()
 	book := &TestBook{ID: "123", Title: "Test Book"}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	config := &CacheConfig{
@@ -179,7 +179,7 @@ func TestCachedRepository_Update(t *testing.T) {
 	repo := NewCachedRepository[*TestBook](base, redisClient, 3600*time.Second, "book", config)
 
 	// 先填充缓存
-	repo.GetByID(context.Background(), "123")
+	_, _ = repo.GetByID(context.Background(), "123")
 	time.Sleep(100 * time.Millisecond)
 
 	// 更新数据

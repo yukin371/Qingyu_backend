@@ -35,13 +35,13 @@ func TestMongoDBConfigProfilingDefaults_FromBlock3(t *testing.T) {
 // TestMongoDBConfigProfilingEnvOverrides 测试从环境变量覆盖profiling配置
 func TestMongoDBConfigProfilingEnvOverrides(t *testing.T) {
 	// 设置测试环境变量
-	os.Setenv("MONGODB_PROFILING_LEVEL", "2")
-	os.Setenv("MONGODB_SLOW_MS", "200")
-	os.Setenv("MONGODB_PROFILER_SIZE_MB", "200")
+	_ = os.Setenv("MONGODB_PROFILING_LEVEL", "2")
+	_ = os.Setenv("MONGODB_SLOW_MS", "200")
+	_ = os.Setenv("MONGODB_PROFILER_SIZE_MB", "200")
 	defer func() {
-		os.Unsetenv("MONGODB_PROFILING_LEVEL")
-		os.Unsetenv("MONGODB_SLOW_MS")
-		os.Unsetenv("MONGODB_PROFILER_SIZE_MB")
+		_ = os.Unsetenv("MONGODB_PROFILING_LEVEL")
+		_ = os.Unsetenv("MONGODB_SLOW_MS")
+		_ = os.Unsetenv("MONGODB_PROFILER_SIZE_MB")
 	}()
 
 	config := getDefaultDatabaseConfig()
@@ -71,90 +71,90 @@ func TestMongoDBConfigProfilingValidation(t *testing.T) {
 		{
 			name: "有效的profiling配置",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  1,
-				SlowMS:          100,
-				ProfilerSizeMB:  100,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 1,
+				SlowMS:         100,
+				ProfilerSizeMB: 100,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: false,
 		},
 		{
 			name: "ProfilingLevel=0是有效的",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  0,
-				SlowMS:          100,
-				ProfilerSizeMB:  100,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 0,
+				SlowMS:         100,
+				ProfilerSizeMB: 100,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: false,
 		},
 		{
 			name: "ProfilingLevel=2是有效的",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  2,
-				SlowMS:          100,
-				ProfilerSizeMB:  100,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 2,
+				SlowMS:         100,
+				ProfilerSizeMB: 100,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: false,
 		},
 		{
 			name: "无效的ProfilingLevel应该被拒绝",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  3, // 无效值
-				SlowMS:          100,
-				ProfilerSizeMB:  100,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 3, // 无效值
+				SlowMS:         100,
+				ProfilerSizeMB: 100,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: true,
 		},
 		{
 			name: "负数的SlowMS应该被拒绝",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  1,
-				SlowMS:          -100, // 无效值
-				ProfilerSizeMB:  100,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 1,
+				SlowMS:         -100, // 无效值
+				ProfilerSizeMB: 100,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: true,
 		},
 		{
 			name: "过小的ProfilerSizeMB应该被拒绝",
 			config: MongoDBConfig{
-				URI:             "mongodb://localhost:27017",
-				Database:        "test",
-				ProfilingLevel:  1,
-				SlowMS:          100,
-				ProfilerSizeMB:  0, // 无效值
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
+				URI:            "mongodb://localhost:27017",
+				Database:       "test",
+				ProfilingLevel: 1,
+				SlowMS:         100,
+				ProfilerSizeMB: 0, // 无效值
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
 			},
 			expectError: true,
 		},
@@ -176,15 +176,15 @@ func TestMongoDBConfigProfilingValidation(t *testing.T) {
 // TestMongoDBConfigToRepositoryConfigWithProfiling 测试转换配置包含profiling设置
 func TestMongoDBConfigToRepositoryConfigWithProfiling(t *testing.T) {
 	config := MongoDBConfig{
-		URI:             "mongodb://localhost:27017",
-		Database:        "test",
-		ProfilingLevel:  1,
-		SlowMS:          150,
-		ProfilerSizeMB:  200,
-		ConnectTimeout:  10 * time.Second,
-		ServerTimeout:   30 * time.Second,
-		MaxPoolSize:     100,
-		MinPoolSize:     5,
+		URI:            "mongodb://localhost:27017",
+		Database:       "test",
+		ProfilingLevel: 1,
+		SlowMS:         150,
+		ProfilerSizeMB: 200,
+		ConnectTimeout: 10 * time.Second,
+		ServerTimeout:  30 * time.Second,
+		MaxPoolSize:    100,
+		MinPoolSize:    5,
 	}
 
 	repoConfig := config.ToRepositoryConfig()

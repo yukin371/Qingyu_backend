@@ -63,9 +63,22 @@ jobs:
 
       - name: Run go fmt check
         run: |
-          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-            echo "The following files are not formatted:"
-            gofmt -s -l .
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+            changed_go_files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- '*.go')
+          else
+            changed_go_files=$(git diff --name-only HEAD~1..HEAD -- '*.go' || true)
+          fi
+
+          if [ -z "$changed_go_files" ]; then
+            echo "No changed Go files to format-check."
+            exit 0
+          fi
+
+          unformatted_files=$(echo "$changed_go_files" | xargs gofmt -s -l)
+          if [ -n "$unformatted_files" ]; then
+            echo "The following changed files are not formatted:"
+            echo "$unformatted_files"
             exit 1
           fi
 
