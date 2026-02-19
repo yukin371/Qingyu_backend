@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -28,6 +29,12 @@ var (
 type UserAdminService interface {
 	// GetUserList 获取用户列表
 	GetUserList(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error)
+
+	// CreateUser 创建用户
+	CreateUser(ctx context.Context, req *CreateUserRequest) (*users.User, error)
+
+	// BatchCreateUsers 批量创建用户
+	BatchCreateUsers(ctx context.Context, req *BatchCreateUserRequest) ([]*users.User, error)
 
 	// GetUserDetail 获取用户详情
 	GetUserDetail(ctx context.Context, userID string) (*users.User, error)
@@ -345,4 +352,135 @@ func generateRandomPassword(length int) (string, error) {
 	}
 
 	return string(b), nil
+}
+
+// ============ 创建用户相关 ============
+
+// CreateUserRequest 创建用户请求
+type CreateUserRequest struct {
+	Username string         `json:"username" binding:"required,min=3,max=50"`
+	Email    string         `json:"email" binding:"required,email"`
+	Password string         `json:"password" binding:"min=6,max=100"`
+	Nickname string         `json:"nickname"`
+	Role     string         `json:"role" binding:"required,oneof=reader author admin"`
+	Status   users.UserStatus `json:"status"`
+	Bio      string         `json:"bio"`
+}
+
+// BatchCreateUserRequest 批量创建用户请求
+type BatchCreateUserRequest struct {
+	Count   int              `json:"count" binding:"required,min=1,max=100"`
+	Prefix  string           `json:"prefix"`
+	Role    string           `json:"role" binding:"required,oneof=reader author admin"`
+	Status  users.UserStatus `json:"status"`
+}
+
+// CreateUser 创建用户
+func (s *UserAdminServiceImpl) CreateUser(ctx context.Context, req *CreateUserRequest) (*users.User, error) {
+	// 验证角色
+	if !isValidRole(req.Role) {
+		return nil, ErrInvalidRole
+	}
+
+	// 检查邮箱是否已存在
+	existingUser, _ := s.userRepo.GetByEmail(ctx, req.Email)
+	if existingUser != nil {
+		return nil, ErrUserAlreadyExists
+	}
+
+	// 设置默认密码
+	password := req.Password
+	if password == "" {
+		var err error
+		password, err = generateRandomPassword(12)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate password: %w", err)
+		}
+	}
+
+	// 创建用户
+	user := &users.User{
+		Username:      req.Username,
+		Email:         req.Email,
+		Nickname:      req.Nickname,
+		Roles:         []string{req.Role},
+		Status:        req.Status,
+		Bio:           req.Bio,
+		EmailVerified: false,
+	}
+
+	if user.Status == "" {
+		user.Status = users.UserStatusActive
+	}
+	if user.Nickname == "" {
+		user.Nickname = req.Username
+	}
+
+	// 设置密码
+	if err := user.SetPassword(password); err != nil {
+		return nil, fmt.Errorf("failed to set password: %w", err)
+	}
+
+	// 保存用户
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	return user, nil
+}
+
+// BatchCreateUsers 批量创建用户
+func (s *UserAdminServiceImpl) BatchCreateUsers(ctx context.Context, req *BatchCreateUserRequest) ([]*users.User, error) {
+	// 验证角色
+	if !isValidRole(req.Role) {
+		return nil, ErrInvalidRole
+	}
+
+	// 设置默认值
+	prefix := req.Prefix
+	if prefix == "" {
+		prefix = "batch_user"
+	}
+	status := req.Status
+	if status == "" {
+		status = users.UserStatusActive
+	}
+
+	// 获取当前最大用户数来确定起始ID
+	// 这里简化处理，使用时间戳作为唯一标识
+	baseID := time.Now().Unix()
+
+	usersList := make([]*users.User, req.Count)
+	for i := 0; i < req.Count; i++ {
+		userID := baseID + int64(i)
+
+		// 生成随机密码
+		password, err := generateRandomPassword(12)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate password: %w", err)
+		}
+
+		user := &users.User{
+			Username:      fmt.Sprintf("%s_%d", prefix, userID),
+			Email:         fmt.Sprintf("%s_%d@example.com", prefix, userID),
+			Nickname:      fmt.Sprintf("批量用户%d", i+1),
+			Roles:         []string{req.Role},
+			Status:        status,
+			Bio:           "批量创建的用户",
+			EmailVerified: false,
+		}
+
+		if err := user.SetPassword(password); err != nil {
+			return nil, fmt.Errorf("failed to set password: %w", err)
+		}
+
+		usersList[i] = user
+	}
+
+	// 批量保存
+	if err := s.userRepo.BatchCreate(ctx, usersList); err != nil {
+		return nil, fmt.Errorf("failed to batch create users: %w", err)
+	}
+
+	return usersList, nil
 }

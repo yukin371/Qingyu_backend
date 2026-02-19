@@ -56,6 +56,34 @@ func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.U
 	return userList, total, nil
 }
 
+// Create 创建用户
+func (r *MongoUserAdminRepository) Create(ctx context.Context, user *users.User) error {
+	user.ID = primitive.NewObjectID()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+
+	_, err := r.db.Collection(UserCollection).InsertOne(ctx, user)
+	return err
+}
+
+// BatchCreate 批量创建用户
+func (r *MongoUserAdminRepository) BatchCreate(ctx context.Context, usersList []*users.User) error {
+	if len(usersList) == 0 {
+		return nil
+	}
+
+	documents := make([]interface{}, len(usersList))
+	for i, user := range usersList {
+		user.ID = primitive.NewObjectID()
+		user.CreatedAt = time.Now()
+		user.UpdatedAt = time.Now()
+		documents[i] = user
+	}
+
+	_, err := r.db.Collection(UserCollection).InsertMany(ctx, documents)
+	return err
+}
+
 // GetByID 根据ID获取用户
 func (r *MongoUserAdminRepository) GetByID(ctx context.Context, userID primitive.ObjectID) (*users.User, error) {
 	var user users.User

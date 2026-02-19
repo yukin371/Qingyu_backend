@@ -499,3 +499,114 @@ type BatchUpdateStatusRequest struct {
 type BatchDeleteUsersRequest struct {
 	UserIds []string `json:"userIds" binding:"required"`
 }
+
+// CreateUserRequest 创建用户请求
+type CreateUserRequest struct {
+	Username string `json:"username" binding:"required,min=3,max=50"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password"`
+	Nickname string `json:"nickname"`
+	Role     string `json:"role" binding:"required,oneof=reader author admin"`
+	Status   string `json:"status"`
+	Bio      string `json:"bio"`
+}
+
+// BatchCreateUserRequest 批量创建用户请求
+type BatchCreateUserRequest struct {
+	Count  int    `json:"count" binding:"required,min=1,max=100"`
+	Prefix string `json:"prefix"`
+	Role   string `json:"role" binding:"required,oneof=reader author admin"`
+	Status string `json:"status"`
+}
+
+// CreateUser 创建用户
+//
+//	@Summary		创建用户
+//	@Description	管理员创建新用户
+//	@Tags			Admin-User
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		CreateUserRequest	true	"用户信息"
+//	@Success		200		{object}	shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		401		{object}	shared.APIResponse
+//	@Failure		403		{object}	shared.APIResponse
+//	@Router			/api/v1/admin/users [post]
+func (api *UserAdminAPI) CreateUser(c *gin.Context) {
+	var req CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	serviceReq := &adminservice.CreateUserRequest{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Nickname: req.Nickname,
+		Role:     req.Role,
+		Status:   users.UserStatus(req.Status),
+		Bio:      req.Bio,
+	}
+
+	user, err := api.userAdminService.CreateUser(c.Request.Context(), serviceReq)
+	if err != nil {
+		if err == adminservice.ErrUserAlreadyExists {
+			response.BadRequest(c, "用户已存在", err.Error())
+			return
+		}
+		if err == adminservice.ErrInvalidRole {
+			response.BadRequest(c, "无效的角色", err.Error())
+			return
+		}
+		response.InternalError(c, err)
+		return
+	}
+
+	response.Success(c, user)
+}
+
+// BatchCreateUsers 批量创建用户
+//
+//	@Summary		批量创建用户
+//	@Description	管理员批量创建用户
+//	@Tags			Admin-User
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		BatchCreateUserRequest	true	"批量创建请求"
+//	@Success		200		{object}	shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Failure		401		{object}	shared.APIResponse
+//	@Failure		403		{object}	shared.APIResponse
+//	@Router			/api/v1/admin/users/batch-create [post]
+func (api *UserAdminAPI) BatchCreateUsers(c *gin.Context) {
+	var req BatchCreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	serviceReq := &adminservice.BatchCreateUserRequest{
+		Count:  req.Count,
+		Prefix: req.Prefix,
+		Role:   req.Role,
+		Status: users.UserStatus(req.Status),
+	}
+
+	usersList, err := api.userAdminService.BatchCreateUsers(c.Request.Context(), serviceReq)
+	if err != nil {
+		if err == adminservice.ErrInvalidRole {
+			response.BadRequest(c, "无效的角色", err.Error())
+			return
+		}
+		response.InternalError(c, err)
+		return
+	}
+
+	result := gin.H{
+		"users": usersList,
+		"count": len(usersList),
+	}
+
+	response.Success(c, result)
+}
