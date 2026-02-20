@@ -1,0 +1,36 @@
+# 青羽写作系统 - 论文答辩演示配置
+# 此配置文件用于演示模式，使用内存存储
+
+# 数据库配置（演示模式不使用）
+database:
+  uri: "memory://demo"
+  name: "qingyu_demo"
+
+# 服务器配置
+server:
+  port: "9090"
+  mode: "debug"
+
+# 日志配置
+log:
+  level: "info"
+  format: "console"
+  output: "stdout"
+  development: true
+  mode: "normal"
+
+# JWT配置
+jwt:
+  secret: "qingyu_demo_secret_key_for_thesis_defense"
+  expiration_hours: 24
+
+# Redis配置（演示模式不使用）
+redis:
+  host: "memory"
+  port: 0
+
+# 速率限制配置
+rate_limit:
+  enabled: false
+  requests_per_sec: 1000
+  burst: 2000

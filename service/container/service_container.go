@@ -805,6 +805,21 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.chatService = aiService.NewChatService(c.aiService, chatRepo)
 	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
 
+	// ============ 5.1 初始化 Phase3 gRPC 客户端 ============
+	aiCfg := config.GlobalConfig.AI
+	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
+		phase3Client, err := aiService.NewPhase3Client(aiCfg.AIService.Endpoint)
+		if err != nil {
+			fmt.Printf("警告: Phase3Client初始化失败: %v\n", err)
+			fmt.Println("  AI服务将不可用，请确保Python AI服务已启动")
+		} else {
+			c.phase3Client = phase3Client
+			fmt.Printf("  ✓ Phase3Client初始化完成 (endpoint: %s)\n", aiCfg.AIService.Endpoint)
+		}
+	} else {
+		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
+	}
+
 	// ============ 5. 共享服务初始化 ============
 
 	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
