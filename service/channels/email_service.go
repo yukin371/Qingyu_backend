@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/smtp"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,6 +40,7 @@ type EmailConfig struct {
 	FromName     string        // 发件人名称
 	UseTLS       bool          // 是否使用TLS
 	Timeout      time.Duration // 超时时间
+	EnableSMTP   bool          // 是否启用真实SMTP发送（默认false，兼容旧行为）
 }
 
 // EmailRequest 邮件请求
@@ -94,19 +96,57 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 		return fmt.Errorf("邮件内容不能为空")
 	}
 
-	// 2. TODO(Phase3): 实现真实SMTP发送
-	// 当前在测试环境下直接返回成功
-	// 生产环境需要实现完整的SMTP发送逻辑
-	//
-	// 实现示例：
-	// auth := smtp.PlainAuth("", s.config.SMTPUsername, s.config.SMTPPassword, s.config.SMTPHost)
-	// message := buildEmailMessage(s.config.FromAddress, req)
-	// addr := fmt.Sprintf("%s:%d", s.config.SMTPHost, s.config.SMTPPort)
-	// err := smtp.SendMail(addr, auth, s.config.FromAddress, req.To, []byte(message))
-	// if err != nil {
-	//     return fmt.Errorf("发送邮件失败: %w", err)
-	// }
+	// 2. SMTP配置验证
+	if !s.config.EnableSMTP {
+		return nil
+	}
 
+	// 3. SMTP配置验证
+	if s.config.SMTPHost == "" || s.config.SMTPPort <= 0 {
+		return fmt.Errorf("SMTP配置不完整")
+	}
+	if s.config.FromAddress == "" {
+		return fmt.Errorf("发件人地址未配置")
+	}
+
+	// 4. 构建收件人列表
+	recipients := make([]string, 0, len(req.To)+len(req.Cc)+len(req.Bcc))
+	recipients = append(recipients, req.To...)
+	recipients = append(recipients, req.Cc...)
+	recipients = append(recipients, req.Bcc...)
+	if len(recipients) == 0 {
+		return fmt.Errorf("收件人不能为空")
+	}
+
+	// 5. 组装邮件内容
+	contentType := "text/plain; charset=UTF-8"
+	if req.IsHTML {
+		contentType = "text/html; charset=UTF-8"
+	}
+
+	headers := []string{
+		fmt.Sprintf("From: %s", formatAddress(s.config.FromName, s.config.FromAddress)),
+		fmt.Sprintf("To: %s", strings.Join(req.To, ", ")),
+		fmt.Sprintf("Subject: %s", req.Subject),
+		"MIME-Version: 1.0",
+		fmt.Sprintf("Content-Type: %s", contentType),
+	}
+	if len(req.Cc) > 0 {
+		headers = append(headers, fmt.Sprintf("Cc: %s", strings.Join(req.Cc, ", ")))
+	}
+
+	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + req.Body
+
+	// 6. 执行发送
+	addr := s.config.SMTPHost + ":" + strconv.Itoa(s.config.SMTPPort)
+	var auth smtp.Auth
+	if s.config.SMTPUsername != "" && s.config.SMTPPassword != "" {
+		auth = smtp.PlainAuth("", s.config.SMTPUsername, s.config.SMTPPassword, s.config.SMTPHost)
+	}
+
+	if err := smtp.SendMail(addr, auth, s.config.FromAddress, recipients, []byte(message)); err != nil {
+		return fmt.Errorf("SMTP发送失败: %w", err)
+	}
 	return nil
 }
 
@@ -218,6 +258,13 @@ func renderTemplate(template string, variables map[string]string) string {
 // plainAuth 明文认证
 func plainAuth(username, password, host string) smtp.Auth {
 	return smtp.PlainAuth("", username, password, host)
+}
+
+func formatAddress(name, email string) string {
+	if name == "" {
+		return email
+	}
+	return fmt.Sprintf("%s <%s>", name, email)
 }
 
 // TODO(Phase3): 支持更多SMTP功能

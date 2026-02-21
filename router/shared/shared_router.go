@@ -25,6 +25,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 		publicAuth := authGroup.Group("")
 		publicAuth.Use(ratelimit.RateLimitMiddlewareSimple(10, 60)) // 10次/分钟
 		{
+			publicAuth.POST("/send-verification-code", authAPI.SendVerificationCode)
 			publicAuth.POST("/register", authAPI.Register)
 			publicAuth.POST("/login", authAPI.Login)
 		}
@@ -76,7 +77,7 @@ func RegisterWalletRoutes(r *gin.RouterGroup, walletService walletService.Wallet
 
 	// ============ 钱包服务路由 ============
 	walletGroup := r.Group("/wallet")
-	walletGroup.Use(auth.JWTAuth())                   // 所有钱包接口都需要认证
+	walletGroup.Use(auth.JWTAuth())                              // 所有钱包接口都需要认证
 	walletGroup.Use(ratelimit.RateLimitMiddlewareSimple(50, 60)) // 50次/分钟
 	{
 		// 查询接口
@@ -105,7 +106,7 @@ func RegisterStorageRoutes(
 
 	// ============ 存储服务路由 ============
 	storageGroup := r.Group("/storage")
-	storageGroup.Use(auth.JWTAuth())                   // 所有存储接口都需要认证
+	storageGroup.Use(auth.JWTAuth())                              // 所有存储接口都需要认证
 	storageGroup.Use(ratelimit.RateLimitMiddlewareSimple(20, 60)) // 20次/分钟（文件操作限制更严格）
 	{
 		// 文件操作
