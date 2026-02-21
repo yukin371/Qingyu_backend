@@ -34,6 +34,7 @@ import (
 	searchprovider "Qingyu_backend/service/search/provider"
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
+	sharedStorage "Qingyu_backend/service/shared/storage"
 
 	versionAPI "Qingyu_backend/api/v1"
 	financeApi "Qingyu_backend/api/v1/finance"
@@ -77,12 +78,11 @@ func RegisterRoutes(r *gin.Engine) {
 	oauthSvc, oauthErr := serviceContainer.GetOAuthService()
 
 	// 获取存储相关服务
-	storageServiceImpl, storageErr := serviceContainer.GetStorageServiceImpl()
-	multipartService, multipartErr := serviceContainer.GetMultipartUploadService()
-	imageProcessor, imageErr := serviceContainer.GetImageProcessor()
+	sharedStorageSvc, sharedStorageErr := serviceContainer.GetStorageService()
+	multipartUploadSvc, multipartUploadErr := serviceContainer.GetMultipartUploadService()
+	imageProcessorSvc, imageProcessorErr := serviceContainer.GetImageProcessor()
 
-	// 搜索服务（SearchService）将在writer路由初始化时创建
-	// TODO: 将SearchService添加到服务容器，以便在shared路由中注册搜索建议功能
+	// 搜索服务当前在 writer 路由阶段初始化，shared 路由暂不直接依赖容器中的 SearchService。
 
 	// 创建共享路由组（即使部分服务不可用也创建）
 	sharedGroup := v1.Group("/shared")
@@ -104,20 +104,20 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 2. 注册存储服务路由
-	if storageErr == nil && storageServiceImpl != nil && multipartErr == nil && multipartService != nil && imageErr == nil && imageProcessor != nil {
-		sharedRouter.RegisterStorageRoutes(sharedGroup, storageServiceImpl, multipartService, imageProcessor)
+	if sharedStorageErr == nil && sharedStorageSvc != nil && multipartUploadErr == nil && multipartUploadSvc != nil && imageProcessorErr == nil && imageProcessorSvc != nil {
+		sharedRouter.RegisterStorageRoutes(sharedGroup, sharedStorageSvc, multipartUploadSvc, imageProcessorSvc)
 		logger.Info("✓ 存储服务路由已注册: /api/v1/shared/storage/*")
 		registeredCount++
 	} else {
 		logger.Warn("⚠ 存储服务未完全配置，跳过存储路由注册")
-		if storageErr != nil {
-			logger.Warn("  - StorageService", zap.Error(storageErr))
+		if sharedStorageErr != nil {
+			logger.Warn("  - StorageService", zap.Error(sharedStorageErr))
 		}
-		if multipartErr != nil {
-			logger.Warn("  - MultipartUploadService", zap.Error(multipartErr))
+		if multipartUploadErr != nil {
+			logger.Warn("  - MultipartUploadService", zap.Error(multipartUploadErr))
 		}
-		if imageErr != nil {
-			logger.Warn("  - ImageProcessor", zap.Error(imageErr))
+		if imageProcessorErr != nil {
+			logger.Warn("  - ImageProcessor", zap.Error(imageProcessorErr))
 		}
 	}
 
@@ -132,7 +132,7 @@ func RegisterRoutes(r *gin.Engine) {
 	walletSvc, walletErr := serviceContainer.GetWalletService()
 	if walletErr != nil {
 		logger.Warn("获取钱包服务失败", zap.Error(walletErr))
-		logger.Info("财务路由未注册")
+		logger.Info("跳过财务路由注册")
 	} else {
 		walletAPI := financeApi.NewWalletAPI(walletSvc)
 
@@ -175,7 +175,7 @@ func RegisterRoutes(r *gin.Engine) {
 	bookstoreSvc, err := serviceContainer.GetBookstoreService()
 	if err != nil {
 		logger.Warn("获取书店服务失败", zap.Error(err))
-		logger.Info("书店路由未注册")
+		logger.Info("跳过书店路由注册")
 	} else {
 		// 初始化其他书店服务
 		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
@@ -188,12 +188,8 @@ func RegisterRoutes(r *gin.Engine) {
 			chapterSvc = svc
 		}
 
-		// 获取章节购买服务（如果可用）
+		// 获取章节购买服务（当前容器未提供 Getter，保持 nil）
 		var chapterPurchaseSvc bookstore.ChapterPurchaseService
-		// TODO: 添加 GetChapterPurchaseService 到服务容器
-		// if svc, err := serviceContainer.GetChapterPurchaseService(); err == nil {
-		//     chapterPurchaseSvc = svc
-		// }
 
 		// 注册书店路由，传入搜索服务
 		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)
@@ -218,7 +214,7 @@ func RegisterRoutes(r *gin.Engine) {
 	readerSvc, err := serviceContainer.GetReaderService()
 	if err != nil {
 		logger.Warn("获取阅读器服务失败", zap.Error(err))
-		logger.Info("阅读器路由未注册")
+		logger.Info("跳过阅读器路由注册")
 	} else {
 		// 获取章节服务（用于章节阅读）
 		var chapterSvc bookstore.ChapterService
@@ -266,8 +262,8 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("✓ 书签服务已配置")
 		}
 
-		// 进度同步服务（TODO: 需要添加到服务容器）
-		var progressSyncSvc *syncService.ProgressSyncService = nil
+		// 进度同步服务当前未接入容器，保持 nil 以关闭相关同步路由。
+		var progressSyncSvc *syncService.ProgressSyncService
 
 		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc)
 
@@ -281,7 +277,6 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("    - GET /by-number/:chapterNum (按章节号获取)")
 		}
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
-		//nolint:nilness // 待实现服务
 		if progressSyncSvc != nil {
 			logger.Info("  - /api/v1/reader/progress/ws (WebSocket同步)")
 			logger.Info("  - /api/v1/reader/progress/sync (进度同步)")
@@ -298,7 +293,7 @@ func RegisterRoutes(r *gin.Engine) {
 		readingStatsSvc, readingStatsErr := serviceContainer.GetReadingStatsService()
 		if readingStatsErr != nil {
 			logger.Warn("获取阅读统计服务失败", zap.Error(readingStatsErr))
-			logger.Info("阅读统计路由未注册")
+			logger.Info("跳过阅读统计路由注册")
 		} else {
 			readingstatsRouter.RegisterReadingStatsRoutes(v1, readingStatsSvc)
 			logger.Info("✓ 阅读统计路由已注册到: /api/v1/reading-stats/")
@@ -333,13 +328,8 @@ func RegisterRoutes(r *gin.Engine) {
 		collectionAPI = socialApi.NewCollectionAPI(collectionSvc)
 	}
 
-	// 尝试获取用户关系服务（新功能）
+	// 用户关系服务当前未接入容器，保持 nil（相关路由将跳过注册）。
 	var relationAPI *socialApi.UserRelationAPI
-	// TODO: 添加 UserRelationService 到服务容器后获取
-	// relationSvc, relationErr := serviceContainer.GetUserRelationService()
-	// if relationErr == nil && relationSvc != nil {
-	//     relationAPI = socialApi.NewUserRelationAPI(relationSvc)
-	// }
 
 	// 关注服务
 	followSvc, followErr := serviceContainer.GetFollowService()
@@ -348,11 +338,11 @@ func RegisterRoutes(r *gin.Engine) {
 		followAPI = socialApi.NewFollowAPI(followSvc)
 	}
 
-	// 新增社交 API（待实现）
-	var messageAPI *messagesApi.MessageAPI //nolint:ineffassign // 待实现
+	// 新增社交 API（未接入实现，保持 nil）
+	var messageAPI *messagesApi.MessageAPI
 	var messageAPIV2 *socialApi.MessageAPIV2
-	var reviewAPI *socialApi.ReviewAPI     //nolint:ineffassign // 待实现
-	var booklistAPI *socialApi.BookListAPI //nolint:ineffassign // 待实现
+	var reviewAPI *socialApi.ReviewAPI
+	var booklistAPI *socialApi.BookListAPI
 
 	// 初始化MessageAPIV2（消息服务V2）
 	messagingWSHub, wsHubErr := serviceContainer.GetMessagingWSHub()
@@ -384,7 +374,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil { //nolint:nilness // 待实现服务已排除
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil {
 		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
@@ -397,7 +387,6 @@ func RegisterRoutes(r *gin.Engine) {
 		if collectionAPI != nil {
 			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
 		}
-		//nolint:nilness // 待实现服务
 		if relationAPI != nil {
 			logger.Info("  - /api/v1/social/follow/* (关注系统)")
 		}
@@ -436,14 +425,14 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/stats (获取评分统计)")
 		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/user-rating (获取用户评分)")
 	} else {
-		logger.Warn("⚠ Redis客户端未配置，评分路由未注册")
+		logger.Warn("⚠ Redis客户端未配置，跳过评分路由注册")
 	}
 
 	// ============ 注册推荐系统路由 ============
 	recommendationSvc, err := serviceContainer.GetRecommendationService()
 	if err != nil {
 		logger.Warn("获取推荐服务失败", zap.Error(err))
-		logger.Info("推荐系统路由未注册")
+		logger.Info("跳过推荐系统路由注册")
 	} else {
 		// 创建推荐API
 		recommendationApi := recommendationAPI.NewRecommendationAPI(recommendationSvc)
@@ -462,7 +451,7 @@ func RegisterRoutes(r *gin.Engine) {
 	announcementSvc, announcementErr := serviceContainer.GetAnnouncementService()
 	if announcementErr != nil {
 		logger.Warn("获取公告服务失败", zap.Error(announcementErr))
-		logger.Info("Announcements路由未注册")
+		logger.Info("跳过Announcements路由注册")
 	} else {
 		announcementsRouter.RegisterAnnouncementRoutes(v1, announcementSvc)
 		logger.Info("✓ Announcements路由已注册到: /api/v1/announcements/")
@@ -475,7 +464,7 @@ func RegisterRoutes(r *gin.Engine) {
 	notificationSvc, notificationErr := serviceContainer.GetNotificationService()
 	if notificationErr != nil {
 		logger.Warn("获取通知服务失败", zap.Error(notificationErr))
-		logger.Info("通知路由未注册")
+		logger.Info("跳过通知路由注册")
 	} else {
 		notificationAPI := notificationsAPI.NewNotificationAPI(notificationSvc)
 		notificationsRouter.RegisterRoutes(v1, notificationAPI)
@@ -516,7 +505,7 @@ func RegisterRoutes(r *gin.Engine) {
 	aiSvc, err := serviceContainer.GetAIService()
 	if err != nil {
 		logger.Warn("获取AI服务失败", zap.Error(err))
-		logger.Info("AI路由未注册")
+		logger.Info("跳过AI路由注册")
 	} else {
 		chatService, err := serviceContainer.GetChatService()
 		if err != nil {
@@ -557,7 +546,7 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/search/batch (批量搜索)")
 		logger.Info("  - /api/v1/search/health (健康检查)")
 	} else {
-		logger.Warn("⚠ 搜索服务初始化失败，搜索路由未注册")
+		logger.Warn("⚠ 搜索服务初始化失败，跳过搜索路由注册")
 	}
 
 	// ============ 注册管理员路由 ============
@@ -632,30 +621,34 @@ func RegisterRoutes(r *gin.Engine) {
 	// ============ 注册新的用户管理路由（按功能领域组织） ============
 	// ⭐ 新架构：按功能领域组织，而非按角色组织
 	// 获取书店服务（用于用户作品列表功能）
-	bookstoreSvcForUM, bookstoreErrForUM := serviceContainer.GetBookstoreService()
-	var bookstoreSvcInterface interface{}
-	if bookstoreErrForUM == nil && bookstoreSvcForUM != nil {
-		bookstoreSvcInterface = bookstoreSvcForUM
+	bookstoreSvcCandidate, bookstoreErrForUM := serviceContainer.GetBookstoreService()
+	var bookstoreSvcForUM userRouter.BookstoreService
+	if bookstoreErrForUM == nil && bookstoreSvcCandidate != nil {
+		bookstoreSvcForUM = bookstoreSvcCandidate
+	}
+	var storageSvcForUM sharedStorage.StorageService
+	if sharedStorageErr == nil && sharedStorageSvc != nil {
+		storageSvcForUM = sharedStorageSvc
 	}
 
 	// 获取统计服务（用于用户统计功能）
-	var statsSvc statsService.PlatformStatsService
-	var userRepoInstance userRepo.UserRepository // 用于用户路由
+	var statsSvc statsService.StatsPort
+	var userRepoForUM userRepo.UserRepository // 用于用户路由
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
-		userRepoInstance = repositoryFactory.CreateUserRepository()
+		userRepoForUM = repositoryFactory.CreateUserRepository()
 		bookRepo := repositoryFactory.CreateBookRepository()
 		projectRepo := repositoryFactory.CreateProjectRepository()
 		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
 
-		if userRepoInstance != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
-			statsSvc = statsService.NewPlatformStatsService(userRepoInstance, bookRepo, projectRepo, chapterRepo)
+		if userRepoForUM != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
+			statsSvc = statsService.NewPlatformStatsService(userRepoForUM, bookRepo, projectRepo, chapterRepo)
 		}
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, userRepoInstance, bookstoreSvcInterface, statsSvc)
+	userRouter.RegisterUserRoutes(v1, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, statsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")

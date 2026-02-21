@@ -289,7 +289,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 	}
 
 	if err := api.commentService.ResolveComment(c.Request.Context(), commentID, userID.(string)); err != nil {
-		if err == writerservice.ErrCommentNotFound {
+		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
@@ -325,7 +325,7 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 	}
 
 	if err := api.commentService.UnresolveComment(c.Request.Context(), commentID); err != nil {
-		if err == writerservice.ErrCommentNotFound {
+		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
 		}

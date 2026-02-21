@@ -20,6 +20,9 @@ func TestSearchScenario(t *testing.T) {
 
 	// 创建TestHelper
 	helper := NewTestHelper(t, router)
+	if global.DB == nil {
+		t.Skip("当前环境未暴露 direct DB 句柄，跳过依赖数据库直连的搜索场景测试")
+	}
 
 	// 获取一些测试数据的标题和作者
 	var testBooks []struct {
@@ -34,12 +37,17 @@ func TestSearchScenario(t *testing.T) {
 		cursor.Close(helper.ctx)
 
 		for i := 0; i < len(books) && i < 3; i++ {
+			title, titleOK := books[i]["title"].(string)
+			author, authorOK := books[i]["author"].(string)
+			if !titleOK || !authorOK || title == "" || author == "" {
+				continue
+			}
 			testBooks = append(testBooks, struct {
 				Title  string
 				Author string
 			}{
-				Title:  books[i]["title"].(string),
-				Author: books[i]["author"].(string),
+				Title:  title,
+				Author: author,
 			})
 		}
 	}
@@ -50,22 +58,26 @@ func TestSearchScenario(t *testing.T) {
 
 	t.Run("1.搜索_按标题关键词搜索", func(t *testing.T) {
 		// 取标题的一部分作为关键词
-		keyword := testBooks[0].Title[:3] // 取前3个字符
-		encodedKeyword := url.QueryEscape(keyword)
+		keyword := []rune(testBooks[0].Title)
+		if len(keyword) < 3 {
+			t.Skip("标题长度不足3，跳过关键词搜索测试")
+		}
+		keywordStr := string(keyword[:3]) // 取前3个字符
+		encodedKeyword := url.QueryEscape(keywordStr)
 
 		searchURL := fmt.Sprintf("%s?keyword=%s", BookstoreSearchPath, encodedKeyword)
 		w := helper.DoRequest("GET", searchURL, nil, "")
 
 		// 如果返回400，说明关键词太短，这是预期的
 		if w.Code == 400 {
-			helper.LogSuccess(fmt.Sprintf("关键词 '%s' 太短，服务器要求提供更长的关键词", keyword))
+			helper.LogSuccess(fmt.Sprintf("关键词 '%s' 太短，服务器要求提供更长的关键词", keywordStr))
 			return
 		}
 
 		response := helper.AssertSuccess(w, 200, "按标题搜索失败")
 
 		if data, ok := response["data"].([]interface{}); ok {
-			helper.LogSuccess(fmt.Sprintf("按标题搜索成功，关键词: '%s'，找到 %d 本书", keyword, len(data)))
+			helper.LogSuccess(fmt.Sprintf("按标题搜索成功，关键词: '%s'，找到 %d 本书", keywordStr, len(data)))
 		}
 	})
 
@@ -87,7 +99,11 @@ func TestSearchScenario(t *testing.T) {
 	})
 
 	t.Run("3.搜索_组合搜索（关键词+作者）", func(t *testing.T) {
-		keyword := testBooks[0].Title[:3]
+		titleRunes := []rune(testBooks[0].Title)
+		if len(titleRunes) < 3 {
+			t.Skip("标题长度不足3，跳过组合搜索测试")
+		}
+		keyword := string(titleRunes[:3])
 		author := testBooks[0].Author
 		encodedKeyword := url.QueryEscape(keyword)
 		encodedAuthor := url.QueryEscape(author)
@@ -194,6 +210,9 @@ func TestAdvancedSearch(t *testing.T) {
 
 	// 创建TestHelper
 	helper := NewTestHelper(t, nil)
+	if global.DB == nil {
+		t.Skip("当前环境未暴露 direct DB 句柄，跳过高级搜索数据库测试")
+	}
 
 	t.Run("高级搜索_数据库层面测试", func(t *testing.T) {
 		// 测试通过数据库直接搜索

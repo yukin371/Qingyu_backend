@@ -348,7 +348,7 @@ func TestAuthWallet_UserRegisterAndCreateWallet(t *testing.T) {
 	assert.NoError(t, err, "创建钱包应该成功")
 	assert.NotNil(t, userWallet, "钱包不应为空")
 	assert.Equal(t, "user123", userWallet.UserID)
-	assert.Equal(t, 0.0, userWallet.Balance, "新钱包余额应为0")
+	assert.EqualValues(t, 0, userWallet.Balance, "新钱包余额应为0")
 	assert.False(t, userWallet.Frozen, "新钱包不应被冻结")
 
 	// 验证Mock调用
@@ -409,7 +409,7 @@ func TestAuthWallet_UserLoginAndRecharge(t *testing.T) {
 	assert.NoError(t, err, "充值应该成功")
 	assert.NotNil(t, transaction, "交易记录不应为空")
 	assert.Equal(t, "recharge", transaction.Type)
-	assert.Equal(t, 100.0, transaction.Amount)
+	assert.EqualValues(t, 100, transaction.Amount)
 	assert.Equal(t, "success", transaction.Status)
 
 	// 验证Mock调用
@@ -462,8 +462,8 @@ func TestAuthWallet_UserConsumeAfterAuth(t *testing.T) {
 	assert.NoError(t, err, "消费应该成功")
 	assert.NotNil(t, transaction, "交易记录不应为空")
 	assert.Equal(t, "consume", transaction.Type)
-	assert.Equal(t, -50.0, transaction.Amount)
-	assert.Equal(t, 50.0, transaction.Balance, "消费后余额应为50")
+	assert.EqualValues(t, -50, transaction.Amount)
+	assert.EqualValues(t, 50, transaction.Balance, "消费后余额应为50")
 
 	// 验证Mock调用
 	authService.AssertExpectations(t)
@@ -507,7 +507,7 @@ func TestAdminWallet_ApproveWithdrawRequest(t *testing.T) {
 	request, err := walletService.GetWithdrawRequest(ctx, withdrawID)
 	assert.NoError(t, err, "获取提现请求应该成功")
 	assert.Equal(t, "pending", request.Status)
-	assert.Equal(t, 100.0, request.Amount)
+	assert.EqualValues(t, 100, request.Amount)
 
 	// 2. 管理员审核
 	err = adminService.ReviewWithdraw(ctx, withdrawID, adminID, true, "")
@@ -617,7 +617,7 @@ func TestAdminWallet_ReviewWithdrawWithWalletCheck(t *testing.T) {
 	// 1. 获取提现请求
 	request, err := walletService.GetWithdrawRequest(ctx, withdrawID)
 	assert.NoError(t, err)
-	assert.Equal(t, 500.0, request.Amount)
+	assert.EqualValues(t, 500, request.Amount)
 
 	// 2. 检查用户钱包状态
 	userWalletInfo, err := walletService.GetWallet(ctx, request.UserID)

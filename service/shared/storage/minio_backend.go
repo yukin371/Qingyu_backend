@@ -18,6 +18,9 @@ type MinIOBackend struct {
 	location   string // 存储桶位置 (例如: us-east-1)
 }
 
+// 编译期契约校验：MinIOBackend 必须实现 StorageBackend 端口。
+var _ StorageBackend = (*MinIOBackend)(nil)
+
 // MinIOConfig MinIO配置
 type MinIOConfig struct {
 	Endpoint   string // MinIO服务器地址 (例如: localhost:9000)

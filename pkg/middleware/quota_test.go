@@ -28,7 +28,7 @@ func TestQuotaMiddlewareWithInterface(t *testing.T) {
 		// 创建一个会通过检查的mock
 		checker := &passingMockChecker{}
 
-		middleware := NewQuotaMiddlewareWithChecker(checker)
+		middleware := NewQuotaMiddleware(checker)
 		router := gin.New()
 
 		// 注意：认证中间件必须在配额中间件之前
@@ -52,7 +52,7 @@ func TestQuotaMiddlewareWithInterface(t *testing.T) {
 		// 创建一个会失败的mock
 		checker := &failingMockChecker{}
 
-		middleware := NewQuotaMiddlewareWithChecker(checker)
+		middleware := NewQuotaMiddleware(checker)
 		router := gin.New()
 
 		// 注意：认证中间件必须在配额中间件之前

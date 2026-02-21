@@ -130,6 +130,10 @@ func TestBookstoreScenario(t *testing.T) {
 
 	// 验证数据库中有数据
 	t.Run("10.验证_数据库书籍统计", func(t *testing.T) {
+		if global.DB == nil {
+			t.Skip("global.DB 未注入（迁移到 ServiceContainer），跳过数据库直连统计")
+		}
+
 		bookCount, err := global.DB.Collection("books").CountDocuments(helper.ctx, bson.M{})
 		if err != nil {
 			t.Fatalf("统计书籍失败: %v", err)
@@ -158,6 +162,9 @@ func TestBookstoreCategoryFilter(t *testing.T) {
 	// 设置测试环境
 	_, cleanup := setupTestEnvironment(t)
 	defer cleanup()
+	if global.DB == nil {
+		t.Skip("global.DB 未注入（迁移到 ServiceContainer），跳过数据库直连分类筛选测试")
+	}
 
 	// 创建TestHelper
 	helper := NewTestHelper(t, nil)

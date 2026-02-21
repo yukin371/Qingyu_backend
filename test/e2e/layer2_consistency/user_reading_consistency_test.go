@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package layer2_consistency
@@ -35,7 +35,7 @@ func TestUserReadingConsistency(t *testing.T) {
 
 		// 创建作者和书籍
 		author := fixtures.CreateAdminUser()
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		chapter := fixtures.CreateChapter(book.ID.Hex())
 
 		t.Logf("✓ 书籍和章节创建成功: %s", book.Title)
@@ -59,10 +59,10 @@ func TestUserReadingConsistency(t *testing.T) {
 		// 模拟多次阅读操作
 		for i := 1; i <= 3; i++ {
 			// 更新阅读进度
-			actions.StartReading(user.ID, book.ID.Hex(), chapter.ID.Hex(), token)
+			actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
 
 			// 获取章节内容（模拟阅读）
-			actions.GetChapter(chapter.ID.Hex(), token)
+			actions.GetChapter(chapter.ID, token)
 		}
 
 		t.Logf("✓ 完成3次阅读操作")
@@ -74,7 +74,7 @@ func TestUserReadingConsistency(t *testing.T) {
 		user := env.GetTestData("test_user").(*users.User)
 
 		// 使用一致性验证器检查用户数据
-		issues := validator.ValidateUserData(user.ID)
+		issues := validator.ValidateUserData(user.ID.Hex())
 
 		// 统计问题数量
 		errorCount := 0
@@ -111,7 +111,7 @@ func TestUserReadingConsistency(t *testing.T) {
 		user := env.GetTestData("test_user").(*users.User)
 
 		// 验证阅读历史
-		issues := validator.ValidateUserData(user.ID)
+		issues := validator.ValidateUserData(user.ID.Hex())
 		historyIssues := filterIssuesByType(issues, "reading_history_inconsistent")
 
 		if len(historyIssues) > 0 {
@@ -130,10 +130,10 @@ func TestUserReadingConsistency(t *testing.T) {
 		user := env.GetTestData("test_user").(*users.User)
 
 		// 获取用户详细信息（从用户模块）
-		userDetail := actions.GetUser(user.ID)
+		userDetail := actions.GetUser(user.ID.Hex())
 
 		// 使用一致性验证器进行跨模块验证
-		issues := validator.ValidateUserData(user.ID)
+		issues := validator.ValidateUserData(user.ID.Hex())
 
 		// 验证没有严重的数据不一致问题
 		errorCount := 0
@@ -150,6 +150,3 @@ func TestUserReadingConsistency(t *testing.T) {
 		}
 	})
 }
-
-
-

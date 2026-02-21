@@ -183,7 +183,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, comment)
 	require.NotEmpty(t, comment.ID)
-	assert.Equal(t, 0, comment.LikeCount)
+	assert.EqualValues(t, 0, comment.LikeCount)
 	t.Logf("✓ 评论已创建，ID: %s", comment.ID)
 
 	commentID := comment.ID.Hex()
@@ -198,7 +198,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Log("Step 3: 验证点赞数")
 	updatedComment, err := commentRepo.GetByID(ctx, commentID)
 	require.NoError(t, err)
-	assert.Equal(t, 1, updatedComment.LikeCount)
+	assert.EqualValues(t, 1, updatedComment.LikeCount)
 	t.Logf("✓ 评论点赞数: %d", updatedComment.LikeCount)
 
 	// 验证点赞记录存在
@@ -217,7 +217,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Log("Step 5: 验证点赞数减少")
 	finalComment, err := commentRepo.GetByID(ctx, commentID)
 	require.NoError(t, err)
-	assert.Equal(t, 0, finalComment.LikeCount)
+	assert.EqualValues(t, 0, finalComment.LikeCount)
 	t.Logf("✓ 评论点赞数: %d", finalComment.LikeCount)
 
 	// 验证点赞记录已删除
@@ -236,7 +236,7 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	t.Log("Step 7: 验证软删除")
 	deletedComment, err := commentRepo.GetByID(ctx, commentID)
 	require.NoError(t, err)
-	assert.Equal(t, "deleted", deletedComment.State)
+	assert.Equal(t, social.CommentStateDeleted, deletedComment.State)
 	t.Logf("✓ 评论状态: %s", deletedComment.State)
 
 	t.Log("======================================")
@@ -356,7 +356,7 @@ func TestIntegration_SensitiveWordFilter(t *testing.T) {
 		5,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, "approved", goodComment.State)
+	assert.Equal(t, social.CommentStateNormal, goodComment.State)
 	t.Logf("✓ 正常评论状态: %s", goodComment.State)
 
 	// Step 3: 验证评论可以被查询
@@ -446,7 +446,7 @@ func TestIntegration_ConcurrentLikes(t *testing.T) {
 	t.Log("Step 3: 验证最终点赞数")
 	finalComment, err := commentRepo.GetByID(ctx, commentID)
 	require.NoError(t, err)
-	assert.Equal(t, 10, finalComment.LikeCount)
+	assert.EqualValues(t, 10, finalComment.LikeCount)
 	t.Logf("✓ 最终点赞数: %d", finalComment.LikeCount)
 
 	// Step 4: 验证点赞记录数

@@ -37,10 +37,10 @@ import (
 
 	// Shared services
 	"Qingyu_backend/service/admin"
-	financeWalletService "Qingyu_backend/service/finance/wallet"
-	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/service/auth"
 	channelsService "Qingyu_backend/service/channels"
+	financeWalletService "Qingyu_backend/service/finance/wallet"
+	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/service/shared/metrics"
 	"Qingyu_backend/service/shared/storage"
 
@@ -124,10 +124,9 @@ type ServiceContainer struct {
 	messagingWSHub    *websocketHub.MessagingWSHub
 	notificationWSHub *websocketHub.WSHub
 
-	// 存储相关具体实现（用于API层）
-	storageServiceImpl *storage.StorageServiceImpl
-	multipartService   *storage.MultipartUploadService
-	imageProcessor     *storage.ImageProcessor
+	// 存储相关服务端口（用于API层）
+	multipartService storage.MultipartUploadManager
+	imageProcessor   storage.ImageProcessorService
 }
 
 // NewServiceContainer 创建服务容器
@@ -640,7 +639,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 缓存装饰器集成
 	// 注意：当前缓存装饰器只实现了核心CRUD方法，完整接口兼容性待完善
-	// TODO: 完善缓存装饰器以实现完整的Repository接口
+	// 当前不在本次架构收敛范围内，后续按独立任务补齐。
 	if config.GetCacheConfig().Enabled && c.redisClient != nil {
 		fmt.Println("缓存配置已启用，但缓存装饰器暂未完全集成（接口兼容性问题待解决）")
 		fmt.Println("建议：手动在需要的地方应用缓存装饰器")
@@ -806,6 +805,21 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.chatService = aiService.NewChatService(c.aiService, chatRepo)
 	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
 
+	// ============ 5.1 初始化 Phase3 gRPC 客户端 ============
+	aiCfg := config.GlobalConfig.AI
+	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
+		phase3Client, err := aiService.NewPhase3Client(aiCfg.AIService.Endpoint)
+		if err != nil {
+			fmt.Printf("警告: Phase3Client初始化失败: %v\n", err)
+			fmt.Println("  AI服务将不可用，请确保Python AI服务已启动")
+		} else {
+			c.phase3Client = phase3Client
+			fmt.Printf("  ✓ Phase3Client初始化完成 (endpoint: %s)\n", aiCfg.AIService.Endpoint)
+		}
+	} else {
+		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
+	}
+
 	// ============ 5. 共享服务初始化 ============
 
 	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
@@ -922,36 +936,35 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
-	// 5.4 StorageService（Phase2快速通道）
-	fmt.Println("初始化 StorageService...")
-	storageRepo := c.repositoryFactory.CreateStorageRepository()
+	// 5.4 Shared Storage 服务初始化
+	fmt.Println("初始化 SharedStorage 服务...")
+	storageRepository := c.repositoryFactory.CreateStorageRepository()
 
-	// 使用本地文件系统Backend（快速通道方案）
-	localBackend := storage.NewLocalBackend("./uploads", "http://localhost:9090/api/v1/files")
+	// 使用本地文件系统后端（默认实现）
+	localStorageBackend := storage.NewLocalBackend("./uploads", "http://localhost:9090/api/v1/files")
 
 	// 适配StorageRepository到FileRepository接口
-	fileRepo := storage.NewRepositoryAdapter(storageRepo)
-	storageSvc := storage.NewStorageService(localBackend, fileRepo)
-	c.storageServiceImpl = storageSvc.(*storage.StorageServiceImpl)
-	c.storageService = storageSvc
+	fileRepositoryAdapter := storage.NewRepositoryAdapter(storageRepository)
+	sharedStorageSvc := storage.NewStorageService(localStorageBackend, fileRepositoryAdapter)
+	c.storageService = sharedStorageSvc
 
 	// 注册为BaseService
-	if baseStorageSvc, ok := storageSvc.(serviceInterfaces.BaseService); ok {
+	if baseStorageSvc, ok := sharedStorageSvc.(serviceInterfaces.BaseService); ok {
 		if err := c.RegisterService("StorageService", baseStorageSvc); err != nil {
 			return fmt.Errorf("注册存储服务失败: %w", err)
 		}
 		fmt.Println("  ✓ StorageService 已注册")
 	}
 
-	// 初始化MultipartUploadService
-	multipartSvc := storage.NewMultipartUploadService(localBackend, storageRepo)
-	c.multipartService = multipartSvc
+	// 初始化分片上传管理器
+	multipartUploadSvc := storage.NewMultipartUploadService(localStorageBackend, storageRepository)
+	c.multipartService = multipartUploadSvc
 
-	// 初始化ImageProcessor
-	imageProcessor := storage.NewImageProcessor(localBackend)
-	c.imageProcessor = imageProcessor
+	// 初始化图片处理服务
+	imageProcessorSvc := storage.NewImageProcessor(localStorageBackend)
+	c.imageProcessor = imageProcessorSvc
 
-	fmt.Println("  ✓ StorageService完整初始化完成（LocalBackend）")
+	fmt.Println("  ✓ SharedStorage相关服务初始化完成（LocalBackend）")
 
 	// 5.5 AdminService
 	// 使用 RepositoryFactory 获取 Admin Repository
@@ -1019,8 +1032,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.notificationWSHub = websocketHub.NewWSHub(jwtService)
 	notificationWSHub := c.notificationWSHub // 创建本地引用以便传递给NotificationService
 
-	// TODO: 初始化EmailService
-	// 暂时传入nil，后续需要完善
+	// EmailService 当前未接入，显式传 nil（后续独立任务补齐）。
 	var emailService notificationService.EmailService
 
 	notificationSvc := notificationService.NewNotificationService(
@@ -1062,8 +1074,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	fmt.Println("  ✓ Finance服务初始化完成")
 
-	// 5.11 AuditService - 暂时为可选，在service/audit实现完成后再完整初始化
-	// TODO: 完整的AuditService初始化逻辑需要在service/audit完全实现后添加
+	// 5.11 AuditService 当前为可选，待 service/audit 完整实现后再接入。
 	fmt.Println("  ℹ AuditService初始化跳过（标记为可选）")
 
 	// ============ 6. 初始化所有已注册的服务 ============
@@ -1108,31 +1119,18 @@ func (c *ServiceContainer) SetStorageService(service storage.StorageService) {
 	c.storageService = service
 }
 
-// SetStorageServiceImpl 设置存储服务实现
-func (c *ServiceContainer) SetStorageServiceImpl(service *storage.StorageServiceImpl) {
-	c.storageServiceImpl = service
-}
-
 // SetMultipartUploadService 设置分片上传服务
-func (c *ServiceContainer) SetMultipartUploadService(service *storage.MultipartUploadService) {
+func (c *ServiceContainer) SetMultipartUploadService(service storage.MultipartUploadManager) {
 	c.multipartService = service
 }
 
 // SetImageProcessor 设置图片处理器
-func (c *ServiceContainer) SetImageProcessor(processor *storage.ImageProcessor) {
+func (c *ServiceContainer) SetImageProcessor(processor storage.ImageProcessorService) {
 	c.imageProcessor = processor
 }
 
-// GetStorageServiceImpl 获取存储服务实现
-func (c *ServiceContainer) GetStorageServiceImpl() (*storage.StorageServiceImpl, error) {
-	if c.storageServiceImpl == nil {
-		return nil, fmt.Errorf("StorageServiceImpl未初始化")
-	}
-	return c.storageServiceImpl, nil
-}
-
 // GetMultipartUploadService 获取分片上传服务
-func (c *ServiceContainer) GetMultipartUploadService() (*storage.MultipartUploadService, error) {
+func (c *ServiceContainer) GetMultipartUploadService() (storage.MultipartUploadManager, error) {
 	if c.multipartService == nil {
 		return nil, fmt.Errorf("MultipartUploadService未初始化")
 	}
@@ -1140,7 +1138,7 @@ func (c *ServiceContainer) GetMultipartUploadService() (*storage.MultipartUpload
 }
 
 // GetImageProcessor 获取图片处理器
-func (c *ServiceContainer) GetImageProcessor() (*storage.ImageProcessor, error) {
+func (c *ServiceContainer) GetImageProcessor() (storage.ImageProcessorService, error) {
 	if c.imageProcessor == nil {
 		return nil, fmt.Errorf("ImageProcessor未初始化")
 	}
@@ -1181,11 +1179,11 @@ func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID s
 
 	return &admin.UserStatistics{
 		UserID:           user.ID.Hex(),
-		TotalBooks:       0,   // TODO: 从 BookRepository 获取
-		TotalChapters:    0,   // TODO: 从 ChapterRepository 获取
-		TotalWords:       0,   // TODO: 从统计数据获取
-		TotalReads:       0,   // TODO: 从 ReadingProgress 获取
-		TotalIncome:      0.0, // TODO: 从 Wallet 获取
+		TotalBooks:       0,   // 占位值：待接入 BookRepository 聚合
+		TotalChapters:    0,   // 占位值：待接入 ChapterRepository 聚合
+		TotalWords:       0,   // 占位值：待接入统计服务聚合
+		TotalReads:       0,   // 占位值：待接入 ReadingProgress 聚合
+		TotalIncome:      0.0, // 占位值：待接入 Wallet 聚合
 		RegistrationDate: user.CreatedAt,
 		LastLoginDate:    user.LastLoginAt,
 	}, nil

@@ -1,8 +1,8 @@
-# Architecture Refinement Implementation Plan (Revised v2)
+# Architecture Refinement Implementation Plan (Revised v3)
 
 **创建日期**: 2026-02-07  
-**修订日期**: 2026-02-07  
-**目标**: 在不破坏现有可运行路径的前提下，分阶段修复架构问题，优先解决可编译性、可观测性、可回滚性。
+**修订日期**: 2026-02-12  
+**目标**: 在不破坏现有可运行路径的前提下，分阶段修复架构问题，优先解决可编译性、可观测性、可回滚性，并显著降低开发/维护成本。
 
 ---
 
@@ -16,17 +16,24 @@
    - 可回滚（单独 PR）
 4. 启动验证统一使用当前入口：`cmd/server/main.go`。
 
+### 0.1 方向修正（2026-02-12）
+
+1. **冻结目录级重构**：暂停 `service/shared/*` 大规模迁移和 `git mv`，先解决接口一致性与编译稳定性。  
+2. **统一最小契约**：`quota.Checker` 固定为单一签名，禁止同阶段内变更返回语义。  
+3. **先减法再加法**：优先删除重复入口、重复抽象、重复适配器；新增组件必须有明确收益与替换路径。  
+4. **测试与实现同提交闭环**：接口变更必须同 PR 内完成 mock / factory / compile gate 修复。  
+
 ---
 
-## 阶段总览
+## 阶段总览（v3）
 
 | Phase | 问题 | 优先级 | 预计工期 | 交付形式 |
 |---|---|---|---|---|
-| 1 | 中间件跨层依赖 | P0 | 1-2 天 | 小步兼容重构 |
-| 2 | 服务初始化顺序隐式依赖 | P1 | 2-3 天 | 显式初始化计划 + 依赖校验 |
-| 3 | shared 模块职责过重 | P1 | 3-5 天 | 渐进拆分（先接口再迁移） |
-| 4 | Writer 服务耦合度高 | P2 | 3-4 天 | 基于现有 EventBus 的事件化 |
-| 5 | 事件总线持久化治理 | P2 | 2-3 天 | 复用已有 persisted bus 能力 |
+| 1 | 配额中间件契约统一 | P0 | 0.5-1 天 | 固定接口 + 删除重复路径 |
+| 2 | 编译与测试护栏 | P0 | 0.5-1 天 | writer/reader/quota 关键包门禁 |
+| 3 | shared 模块降复杂度 | P1 | 2-3 天 | 不迁目录，只做边界收口与 TODO 清偿 |
+| 4 | 容器初始化优化（轻量） | P2 | 1-2 天 | 只补验证与日志，不重写初始化框架 |
+| 5 | 事件治理增强（可选） | P2 | 2-3 天 | 在现有 persisted bus 上增量增强 |
 
 ---
 
@@ -42,45 +49,31 @@
   - `ConsumeQuota(ctx, userID, amount, service, model, requestID)`
   - `GetQuotaInfo(ctx, userID)`（不是 `GetUserQuota`）
 
-### Task 1.1 新增配额抽象接口（与现有签名一致）
+### Task 1.1 固定配额抽象接口（禁止继续漂移）
 
 **Files**
 - Create: `pkg/quota/checker.go`
 
 **Implementation**
-- 定义 `Checker`：
-  - `Check(ctx context.Context, userID string, estimatedAmount int) error`
-  - `Consume(ctx context.Context, userID string, amount int, service, model, requestID string) error`
-  - `GetInfo(ctx context.Context, userID string) (*ai.UserQuota, error)`
-- 错误不重复定义，沿用 `models/ai` 中已有错误（避免双重错误域）。
+- 固定 `Checker` 最小契约：`Check(ctx context.Context, userID string, estimatedAmount int) error`。
+- 当前阶段不在 `Checker` 中扩展 `Consume/GetInfo`，避免接口过宽导致 mock 与调用点同步成本过高。
+- 错误类型统一走 `pkg/quota`，避免双重错误域。
 
-### Task 1.2 实现 QuotaService 适配器
-
-**Files**
-- Create: `service/ai/quota_checker_adapter.go`
-- Create: `service/ai/quota_checker_adapter_test.go`
+### Task 1.2 精简适配层
 
 **Implementation**
-- `type QuotaCheckerAdapter struct { quotaService *QuotaService }`
-- `Check` -> `quotaService.CheckQuota`
-- `Consume` -> `quotaService.ConsumeQuota`
-- `GetInfo` -> `quotaService.GetQuotaInfo`
-- 测试使用可注入接口或 stub，不把 `*MockQuotaService` 强行当 `*QuotaService` 传入。
+- 若 `QuotaService` 已直接实现 `Checker`，删除冗余 adapter；若未实现，仅保留单一 adapter 路径。
+- 清理重复入口函数，避免“同功能多构造器”。
 
-### Task 1.3 重构中间件（保留兼容入口）
+### Task 1.3 重构中间件（兼容但不扩散）
 
 **Files**
 - Modify: `pkg/middleware/quota.go`
 
 **Implementation**
-1. 新增接口构造器：`NewQuotaMiddlewareWithChecker(checker quota.Checker)`.
-2. 保留旧构造器：
-   - `NewQuotaMiddleware(quotaService *aiService.QuotaService)` 内部创建 adapter。
-3. 兼容现有路由函数签名：
-   - `QuotaCheckMiddleware(quotaService *aiService.QuotaService)`
-   - `LightQuotaCheckMiddleware(quotaService *aiService.QuotaService)`
-   - `HeavyQuotaCheckMiddleware(quotaService *aiService.QuotaService)`
-4. 中间件内部改为统一走 `checker.Check(...)`。
+1. 统一使用单一构造器：`NewQuotaMiddleware(checker quota.Checker)`。
+2. 兼容现有路由函数签名，但内部必须统一走 `checker.Check(...)`。
+3. 不新增新的中间件变体函数；轻量/标准差异通过参数表达。
 
 ### Task 1.4 验证
 
@@ -97,72 +90,46 @@ go run cmd/server/main.go
 
 ---
 
-## Phase 2: 服务初始化顺序隐式依赖 (P1)
+## Phase 2: 编译与测试护栏 (P0)
 
 ### 目标
-把“隐式依赖 + 手工顺序”变成“显式依赖 + 可验证顺序”，避免一次性重写整个容器。
+用最小成本建立“防回归护栏”，减少维护人力消耗和返工。
 
-### 现状约束
-- `ServiceContainer.Initialize()` 与 `SetupDefaultServices()` 两段式初始化（`service/enter.go`）。
-- `SetupDefaultServices()` 内存在真实顺序依赖（例如 `ProjectService` 在 `AIService` 前）。
-- 不宜一次性替换为全量工厂注册系统（风险过大）。
-
-### Task 2.1 新增轻量初始化计划结构
-
-**Files**
-- Create: `service/container/init_plan.go`
-- Create: `service/container/init_plan_test.go`
-
-**Implementation**
-- 定义 `InitStep`：
-  - `Name string`
-  - `DependsOn []string`
-  - `Required bool`
-  - `Build func(*ServiceContainer) error`
-- 提供：
-  - `ValidatePlan(steps []InitStep) error`（依赖存在、循环依赖检测）
-  - `ResolveOrder(steps []InitStep) ([]InitStep, error)`（稳定拓扑排序）
-- 不使用“优先级分组后再拓扑”的算法，避免误判循环。
-
-### Task 2.2 在 SetupDefaultServices 中接入初始化计划
-
-**Files**
-- Modify: `service/container/service_container.go`
-
-**Implementation**
-1. 把现有大段初始化拆成多个 `BuildXxx` 私有函数。
-2. 在 `SetupDefaultServices()` 构建 `[]InitStep`，先验证、再排序、再执行。
-3. `Required=false` 的步骤失败仅告警，不阻塞（用于可选服务）。
-4. 增加初始化日志：输出最终执行顺序与失败项。
-
-### Task 2.3 启动时依赖图导出（仅调试用途）
-
-**Files**
-- Modify: `service/container/service_container.go`
-
-**Implementation**
-- 增加 `DumpInitPlan() string`，用于测试与排障。
-- 暂不在 `cmd/server/main.go` 增加新 flag，先通过日志与单测验证。
-
-### Task 2.4 验证
+### Task 2.1 关键包门禁
 
 **Commands**
 ```bash
-go test ./service/container/... -v
+go test ./service/writer ./service/reader ./pkg/middleware ./pkg/quota -v
+```
+
+**Rule**
+- 作为每次架构改动前置门禁；未通过不得推进下一步重构。
+
+### Task 2.2 接口变更闭环规则
+
+**Rule**
+- 任何 Port 签名变更必须同提交更新对应 mock 与 factory test。
+- 禁止“先改接口，后补测试”的跨提交做法。
+
+### Task 2.3 验证
+
+**Commands**
+```bash
+go test ./service/writer ./service/reader ./pkg/middleware ./pkg/quota -v
 go run cmd/server/main.go
 ```
 
 ### Phase 2 验收标准
-- [ ] 初始化顺序由可验证的数据结构驱动
-- [ ] 可检测循环依赖和缺失依赖
-- [ ] 不破坏现有 `service.InitializeServices()` 启动链路
+- [ ] 关键包门禁稳定通过
+- [ ] 接口变更不再引入跨包编译断裂
+- [ ] 不破坏现有启动链路
 
 ---
 
-## Phase 3: shared 模块职责过重 (P1)
+## Phase 3: shared 模块降复杂度 (P1)
 
 ### 目标
-渐进拆分 `service/shared/*`，先解决边界和依赖，再做目录迁移，避免大规模 `git mv` 引发冲突。
+在**不迁移目录**前提下，降低 shared 模块维护复杂度。
 
 ### 现状约束
 - `service/shared/auth`、`service/shared/storage`、`service/shared/messaging` 被大量引用。
@@ -179,44 +146,32 @@ go run cmd/server/main.go
 2. 容器字段尽量依赖接口而非具体实现。
 3. API 层逐步改为依赖这些接口包，减少直接耦合到 `service/shared/*` 具体实现。
 
-### Task 3.2 按模块分批迁移（每批单独 PR）
+### Task 3.2 暂停目录迁移（冻结策略）
 
-**Batch A（低风险）**
-- `service/shared/cache` -> `service/cache`
-- 更新导入并回归测试
+**Decision**
+- 冻结 `service/shared/* -> service/*` 迁移。
+- 冻结新增多云 adapter（S3/OSS/COS）与大规模策略框架扩展。
+- 优先清偿 `stats_service.go` 与 `storage_service.go` 中已识别 TODO。
 
-**Batch B（中风险）**
-- `service/shared/stats` -> `service/metrics`（或 `service/stats`，二选一并统一）
-
-**Batch C（高风险，最后做）**
-- `service/shared/auth`、`service/shared/storage`、`service/shared/messaging`
-- 先建立新包 re-export/适配层，再迁移调用，最后删旧路径
-
-### Task 3.3 删除旧目录（仅在全量引用清零后）
-
-**硬门槛**
-```bash
-rg -n "Qingyu_backend/service/shared/" -g "*.go"
-```
-结果必须为 0，才允许删旧目录。
-
-### Task 3.4 验证
+### Task 3.3 验证
 
 **Commands**
 ```bash
-go test ./... -run TestNonExistent -count=0
-go test ./api/... ./router/... ./service/... -v
+go test ./service/shared/... -v
+go test ./api/... ./router/... ./service/... -run TestNonExistent -count=0
 go run cmd/server/main.go
 ```
 
 ### Phase 3 验收标准
-- [ ] 模块依赖先收口到接口
-- [ ] 迁移按批次完成且每批可回滚
-- [ ] 不出现与现有 `service/messaging` 的目录冲突
+- [ ] 在不迁移目录的前提下，shared 关键模块编译与测试稳定
+- [ ] TODO 项按优先级持续下降
+- [ ] 无新增抽象层重复建设
 
 ---
 
 ## Phase 4: Writer 服务耦合度优化 (P2)
+
+> v3 说明：本阶段延后，只有在 Phase 1-3 连续稳定后再启动。
 
 ### 目标
 在不改写全局事件模型的前提下，让 Writer 相关跨模块动作通过现有 `EventBus` 事件驱动。
@@ -272,6 +227,8 @@ go run cmd/server/main.go
 ---
 
 ## Phase 5: 事件总线持久化治理 (P2)
+
+> v3 说明：本阶段延后，禁止并行启动以免分散维护资源。
 
 ### 目标
 基于现有 `service/events/persisted_event_bus.go` 增强可观测与运维能力，而不是重复造轮子。
@@ -366,8 +323,7 @@ go run cmd/server/main.go
 
 ## 本版相对 v1 的关键修正
 
-1. 对齐现有 `QuotaService`/`EventBus` 真实接口，移除不可编译示例。
-2. Phase 2 改为轻量可验证方案，避免一次性替换整个容器体系。
-3. Phase 3 改为“先收口再迁移”，规避 `service/messaging` 路径冲突。
-4. Phase 5 改为增强现有 `persisted_event_bus`，不重复建设并行实现。
-
+1. 固定 `Checker` 最小契约，停止接口语义漂移。  
+2. Phase 2 调整为“编译与测试护栏”，优先降低返工成本。  
+3. Phase 3 调整为“冻结目录迁移 + 清偿 TODO”，避免低收益大重构。  
+4. Phase 4/5 改为延后启动，集中资源先完成可编译、可测试、可维护。  

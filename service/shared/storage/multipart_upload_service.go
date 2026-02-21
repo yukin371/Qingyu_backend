@@ -3,12 +3,29 @@ package storage
 import (
 	storageModel "Qingyu_backend/models/storage"
 	"Qingyu_backend/repository/interfaces/shared"
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
+)
+
+const (
+	defaultChunkSize    int64 = 5 * 1024 * 1024
+	maxChunkSize        int64 = 100 * 1024 * 1024
+	minChunkSize        int64 = 1 * 1024 * 1024
+	uploadExpirationTTL       = 24 * time.Hour
+
+	statusPending   = "pending"
+	statusUploading = "uploading"
+	statusCompleted = "completed"
+	statusAborted   = "aborted"
+
+	defaultCategory = "general"
 )
 
 // MultipartUploadService 分片上传服务
@@ -25,9 +42,9 @@ func NewMultipartUploadService(backend StorageBackend, storageRepo shared.Storag
 	return &MultipartUploadService{
 		backend:      backend,
 		storageRepo:  storageRepo,
-		chunkSize:    5 * 1024 * 1024,   // 默认5MB
-		maxChunkSize: 100 * 1024 * 1024, // 最大100MB
-		minChunkSize: 1 * 1024 * 1024,   // 最小1MB
+		chunkSize:    defaultChunkSize,
+		maxChunkSize: maxChunkSize,
+		minChunkSize: minChunkSize,
 	}
 }
 
@@ -70,25 +87,32 @@ type CompleteMultipartUploadRequest struct {
 
 // InitiateMultipartUpload 初始化分片上传
 func (s *MultipartUploadService) InitiateMultipartUpload(ctx context.Context, req *InitiateMultipartUploadRequest) (*InitiateMultipartUploadResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+	if req.FileName == "" {
+		return nil, fmt.Errorf("file name is required")
+	}
+	if req.UploadedBy == "" {
+		return nil, fmt.Errorf("uploaded_by is required")
+	}
+
 	// 1. 验证参数
 	if req.FileSize <= 0 {
 		return nil, fmt.Errorf("invalid file size")
 	}
 
 	// 2. 确定分片大小
-	chunkSize := s.chunkSize
-	if req.ChunkSize > 0 {
-		if req.ChunkSize < s.minChunkSize || req.ChunkSize > s.maxChunkSize {
-			return nil, fmt.Errorf("chunk size must be between %d and %d bytes", s.minChunkSize, s.maxChunkSize)
-		}
-		chunkSize = req.ChunkSize
+	chunkSize, err := s.resolveChunkSize(req.ChunkSize)
+	if err != nil {
+		return nil, err
 	}
 
 	// 3. 计算分片数量
-	totalChunks := int(req.FileSize / chunkSize)
-	if req.FileSize%chunkSize != 0 {
-		totalChunks++
-	}
+	totalChunks := calculateTotalChunks(req.FileSize, chunkSize)
 
 	// 4. 生成文件ID和上传ID
 	fileID := generateFileID()
@@ -96,10 +120,10 @@ func (s *MultipartUploadService) InitiateMultipartUpload(ctx context.Context, re
 
 	// 5. 生成存储路径
 	datePath := time.Now().Format("2006/01/02")
-	storagePath := fmt.Sprintf("%s/%s/%s", req.Category, datePath, fileID)
+	storagePath := fmt.Sprintf("%s/%s/%s", normalizeCategory(req.Category), datePath, fileID)
 
 	// 6. 创建分片上传任务
-	expiresAt := time.Now().Add(24 * time.Hour) // 24小时过期
+	expiresAt := time.Now().Add(uploadExpirationTTL)
 	upload := &storageModel.MultipartUpload{
 		UploadID:    uploadID,
 		FileID:      fileID,
@@ -110,13 +134,12 @@ func (s *MultipartUploadService) InitiateMultipartUpload(ctx context.Context, re
 		MD5Hash:     req.MD5Hash,
 		StoragePath: storagePath,
 		UploadedBy:  req.UploadedBy,
-		Status:      "pending",
+		Status:      statusPending,
 		Metadata:    req.Metadata,
 		ExpiresAt:   expiresAt,
 	}
 
-	err := s.storageRepo.CreateMultipartUpload(ctx, upload)
-	if err != nil {
+	if err := s.storageRepo.CreateMultipartUpload(ctx, upload); err != nil {
 		return nil, fmt.Errorf("failed to create multipart upload: %w", err)
 	}
 
@@ -132,14 +155,27 @@ func (s *MultipartUploadService) InitiateMultipartUpload(ctx context.Context, re
 
 // UploadChunk 上传文件分片
 func (s *MultipartUploadService) UploadChunk(ctx context.Context, req *UploadChunkRequest) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if req == nil {
+		return fmt.Errorf("request is required")
+	}
+	if req.UploadID == "" {
+		return fmt.Errorf("upload_id is required")
+	}
+	if req.ChunkData == nil {
+		return fmt.Errorf("chunk data is required")
+	}
+
 	// 1. 获取上传任务
-	upload, err := s.storageRepo.GetMultipartUpload(ctx, req.UploadID)
+	upload, err := s.getUploadByID(ctx, req.UploadID)
 	if err != nil {
-		return fmt.Errorf("upload not found: %w", err)
+		return err
 	}
 
 	// 2. 验证上传任务状态
-	if upload.Status != "pending" && upload.Status != "uploading" {
+	if !isUploadInProgress(upload.Status) {
 		return fmt.Errorf("upload is not in progress (status: %s)", upload.Status)
 	}
 
@@ -154,31 +190,18 @@ func (s *MultipartUploadService) UploadChunk(ctx context.Context, req *UploadChu
 	}
 
 	// 5. 检查分片是否已上传
-	for _, uploadedIndex := range upload.UploadedChunks {
-		if uploadedIndex == req.ChunkIndex {
-			return nil // 分片已上传，跳过
-		}
+	if containsChunk(upload.UploadedChunks, req.ChunkIndex) {
+		return nil // 分片已上传，跳过
 	}
 
-	// 6. 验证分片MD5（如果提供）
-	if req.ChunkMD5 != "" {
-		calculatedMD5, err := calculateReaderMD5(req.ChunkData)
-		if err != nil {
-			return fmt.Errorf("failed to calculate chunk MD5: %w", err)
-		}
-		if calculatedMD5 != req.ChunkMD5 {
-			return fmt.Errorf("chunk MD5 mismatch")
-		}
-		// 重置reader（如果可能）
-		if seeker, ok := req.ChunkData.(io.Seeker); ok {
-			seeker.Seek(0, io.SeekStart)
-		}
+	chunkReader, err := s.buildChunkReader(req)
+	if err != nil {
+		return err
 	}
 
 	// 7. 保存分片到存储后端
-	chunkPath := fmt.Sprintf("%s.part%d", upload.StoragePath, req.ChunkIndex)
-	err = s.backend.Save(ctx, chunkPath, req.ChunkData)
-	if err != nil {
+	chunkPath := buildChunkPath(upload.StoragePath, req.ChunkIndex)
+	if err = s.backend.Save(ctx, chunkPath, chunkReader); err != nil {
 		return fmt.Errorf("failed to save chunk: %w", err)
 	}
 
@@ -186,7 +209,7 @@ func (s *MultipartUploadService) UploadChunk(ctx context.Context, req *UploadChu
 	uploadedChunks := append(upload.UploadedChunks, req.ChunkIndex)
 	err = s.storageRepo.UpdateMultipartUpload(ctx, req.UploadID, map[string]interface{}{
 		"uploaded_chunks": uploadedChunks,
-		"status":          "uploading",
+		"status":          statusUploading,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update upload status: %w", err)
@@ -197,10 +220,30 @@ func (s *MultipartUploadService) UploadChunk(ctx context.Context, req *UploadChu
 
 // CompleteMultipartUpload 完成分片上传
 func (s *MultipartUploadService) CompleteMultipartUpload(ctx context.Context, req *CompleteMultipartUploadRequest) (*storageModel.FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+	if req.UploadID == "" {
+		return nil, fmt.Errorf("upload_id is required")
+	}
+
 	// 1. 获取上传任务
-	upload, err := s.storageRepo.GetMultipartUpload(ctx, req.UploadID)
+	upload, err := s.getUploadByID(ctx, req.UploadID)
 	if err != nil {
-		return nil, fmt.Errorf("upload not found: %w", err)
+		return nil, err
+	}
+	if upload.Status == statusCompleted {
+		fileInfo, getErr := s.storageRepo.GetFile(ctx, upload.FileID)
+		if getErr != nil {
+			return nil, fmt.Errorf("upload already completed and file metadata missing: %w", getErr)
+		}
+		return fileInfo, nil
+	}
+	if upload.Status == statusAborted {
+		return nil, fmt.Errorf("upload is aborted")
 	}
 
 	// 2. 验证所有分片是否已上传
@@ -249,23 +292,32 @@ func (s *MultipartUploadService) CompleteMultipartUpload(ctx context.Context, re
 
 // AbortMultipartUpload 中止分片上传
 func (s *MultipartUploadService) AbortMultipartUpload(ctx context.Context, uploadID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if uploadID == "" {
+		return fmt.Errorf("upload_id is required")
+	}
+
 	// 1. 获取上传任务
-	upload, err := s.storageRepo.GetMultipartUpload(ctx, uploadID)
+	upload, err := s.getUploadByID(ctx, uploadID)
 	if err != nil {
-		return fmt.Errorf("upload not found: %w", err)
+		return err
+	}
+	if upload.Status == statusCompleted {
+		return fmt.Errorf("cannot abort completed upload")
 	}
 
 	// 2. 清理已上传的分片
-	err = s.cleanupChunks(ctx, upload)
-	if err != nil {
-		// 记录错误但继续
-		fmt.Printf("failed to cleanup chunks: %v\n", err)
-	}
+	cleanupErr := s.cleanupChunks(ctx, upload)
 
 	// 3. 标记上传任务为中止
 	err = s.storageRepo.AbortMultipartUpload(ctx, uploadID)
 	if err != nil {
 		return fmt.Errorf("failed to abort upload: %w", err)
+	}
+	if cleanupErr != nil {
+		return fmt.Errorf("upload aborted with cleanup errors: %w", cleanupErr)
 	}
 
 	return nil
@@ -273,12 +325,21 @@ func (s *MultipartUploadService) AbortMultipartUpload(ctx context.Context, uploa
 
 // ListMultipartUploads 列出用户的分片上传任务
 func (s *MultipartUploadService) ListMultipartUploads(ctx context.Context, userID string, status string) ([]*storageModel.MultipartUpload, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	return s.storageRepo.ListMultipartUploads(ctx, userID, status)
 }
 
 // GetUploadProgress 获取上传进度
 func (s *MultipartUploadService) GetUploadProgress(ctx context.Context, uploadID string) (float64, error) {
-	upload, err := s.storageRepo.GetMultipartUpload(ctx, uploadID)
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+	if uploadID == "" {
+		return 0, fmt.Errorf("upload_id is required")
+	}
+	upload, err := s.getUploadByID(ctx, uploadID)
 	if err != nil {
 		return 0, err
 	}
@@ -312,25 +373,30 @@ func (s *MultipartUploadService) mergeChunks(ctx context.Context, upload *storag
 
 // cleanupChunks 清理分片文件
 func (s *MultipartUploadService) cleanupChunks(ctx context.Context, upload *storageModel.MultipartUpload) error {
+	var cleanupErr error
+
 	// 删除所有分片文件
 	for i := 0; i < upload.TotalChunks; i++ {
-		chunkPath := fmt.Sprintf("%s.part%d", upload.StoragePath, i)
+		if ctx != nil {
+			if err := ctx.Err(); err != nil {
+				return errors.Join(cleanupErr, err)
+			}
+		}
+		chunkPath := buildChunkPath(upload.StoragePath, i)
 		err := s.backend.Delete(ctx, chunkPath)
 		if err != nil {
-			// 记录错误但继续删除其他分片
-			fmt.Printf("failed to delete chunk %d: %v\n", i, err)
+			cleanupErr = errors.Join(cleanupErr, fmt.Errorf("delete chunk %d: %w", i, err))
 		}
 	}
-	return nil
+	return cleanupErr
 }
 
-// calculateReaderMD5 计算Reader的MD5哈希
-func calculateReaderMD5(reader io.Reader) (string, error) {
-	hash := md5.New()
-	if _, err := io.Copy(hash, reader); err != nil {
-		return "", err
+func (s *MultipartUploadService) getUploadByID(ctx context.Context, uploadID string) (*storageModel.MultipartUpload, error) {
+	upload, err := s.storageRepo.GetMultipartUpload(ctx, uploadID)
+	if err != nil {
+		return nil, fmt.Errorf("upload not found: %w", err)
 	}
-	return hex.EncodeToString(hash.Sum(nil)), nil
+	return upload, nil
 }
 
 // generateUploadID 生成上传ID
@@ -340,6 +406,77 @@ func generateUploadID() string {
 
 // extractCategory 从路径提取分类
 func extractCategory(path string) string {
-	// 简单实现，实际应根据路径结构解析
-	return "general"
+	trimmed := strings.Trim(path, "/")
+	if trimmed == "" {
+		return defaultCategory
+	}
+	parts := strings.Split(trimmed, "/")
+	if len(parts) == 0 || parts[0] == "" {
+		return defaultCategory
+	}
+	return parts[0]
+}
+
+func (s *MultipartUploadService) resolveChunkSize(requestChunkSize int64) (int64, error) {
+	if requestChunkSize == 0 {
+		return s.chunkSize, nil
+	}
+	if requestChunkSize < s.minChunkSize || requestChunkSize > s.maxChunkSize {
+		return 0, fmt.Errorf("chunk size must be between %d and %d bytes", s.minChunkSize, s.maxChunkSize)
+	}
+	return requestChunkSize, nil
+}
+
+func (s *MultipartUploadService) buildChunkReader(req *UploadChunkRequest) (io.Reader, error) {
+	if req.ChunkMD5 == "" {
+		return req.ChunkData, nil
+	}
+
+	data, err := io.ReadAll(req.ChunkData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read chunk data: %w", err)
+	}
+	calculatedMD5 := calculateBytesMD5(data)
+	if calculatedMD5 != req.ChunkMD5 {
+		return nil, fmt.Errorf("chunk MD5 mismatch")
+	}
+
+	return bytes.NewReader(data), nil
+}
+
+func isUploadInProgress(status string) bool {
+	return status == statusPending || status == statusUploading
+}
+
+func containsChunk(chunks []int, chunkIndex int) bool {
+	for _, uploadedIndex := range chunks {
+		if uploadedIndex == chunkIndex {
+			return true
+		}
+	}
+	return false
+}
+
+func calculateTotalChunks(fileSize int64, chunkSize int64) int {
+	totalChunks := int(fileSize / chunkSize)
+	if fileSize%chunkSize != 0 {
+		totalChunks++
+	}
+	return totalChunks
+}
+
+func normalizeCategory(category string) string {
+	if strings.TrimSpace(category) == "" {
+		return defaultCategory
+	}
+	return category
+}
+
+func buildChunkPath(basePath string, chunkIndex int) string {
+	return fmt.Sprintf("%s.part%d", basePath, chunkIndex)
+}
+
+func calculateBytesMD5(data []byte) string {
+	hash := md5.Sum(data)
+	return hex.EncodeToString(hash[:])
 }

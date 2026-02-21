@@ -1,92 +1,62 @@
-# 自动标签配置
-# 根据文件变更自动添加标签
+# actions/labeler@v5 configuration
 
-# API相关
 api:
-  - api/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "api/**/*"
 
-# 服务层
 service:
-  - service/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "service/**/*"
 
-# Repository层
 repository:
-  - repository/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "repository/**/*"
 
-# 模型
 models:
-  - models/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "models/**/*"
 
-# 中间件
-middleware:
-  - middleware/**/*
-
-# 路由
 router:
-  - router/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "router/**/*"
 
-# 配置
 config:
-  - config/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "config/**/*"
 
-# 文档
 documentation:
-  - doc/**/*
-  - '**/*.md'
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**/*"
+          - "**/*.md"
 
-# 测试
 tests:
-  - test/**/*
-  - '**/*_test.go'
+  - changed-files:
+      - any-glob-to-any-file:
+          - "test/**/*"
+          - "tests/**/*"
+          - "**/*_test.go"
 
-# Docker
 docker:
-  - docker/**/*
-  - Dockerfile*
-  - docker-compose*.yml
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docker/**/*"
+          - "Dockerfile*"
+          - "docker-compose*.yml"
 
-# CI/CD
 ci/cd:
-  - .github/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**/*"
 
-# 依赖
 dependencies:
-  - go.mod
-  - go.sum
-
-# 数据库相关
-database:
-  - migration/**/*
-  - repository/mongodb/**/*
-
-# AI功能
-ai:
-  - service/ai/**/*
-  - api/v1/ai/**/*
-  - models/ai/**/*
-
-# 书店功能
-bookstore:
-  - service/bookstore/**/*
-  - api/v1/bookstore/**/*
-  - models/bookstore/**/*
-
-# 阅读功能
-reading:
-  - service/reading/**/*
-  - api/v1/reading/**/*
-  - models/reading/**/*
-
-# 写作功能
-writing:
-  - service/project/**/*
-  - service/document/**/*
-  - api/v1/writer/**/*
-  - models/document/**/*
-
-# 用户功能
-user:
-  - service/user/**/*
-  - api/v1/system/**/*
-  - models/users/**/*
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - "go.mod"
+          - "go.sum"

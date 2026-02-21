@@ -87,7 +87,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	userWallet, err := walletService.CreateWallet(ctx, user.User.ID)
 	assert.NoError(t, err, "创建钱包应该成功")
 	assert.Equal(t, user.User.ID, userWallet.UserID)
-	assert.Equal(t, 0.0, userWallet.Balance, "新钱包余额应为0")
+	assert.EqualValues(t, 0, userWallet.Balance, "新钱包余额应为0")
 	t.Logf("✓ 钱包创建成功: ID=%s, 余额=%.2f", userWallet.ID, float64(userWallet.Balance)/100)
 
 	// ========== 阶段3：用户登录 ==========
@@ -122,6 +122,11 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	// ========== 阶段4：充值 ==========
 	t.Log("阶段4: 用户充值")
 
+	rechargeAmount := int64(types.NewMoneyFromYuan(500.0))
+	consume1Amount := int64(types.NewMoneyFromYuan(150.0))
+	consume2Amount := int64(types.NewMoneyFromYuan(50.0))
+	withdrawAmount := int64(types.NewMoneyFromYuan(100.0))
+
 	// 验证Token
 	tokenClaims := &auth.TokenClaims{
 		UserID: user.User.ID,
@@ -136,8 +141,8 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 		ID:              "txn_recharge_001",
 		UserID:          user.User.ID,
 		Type:            "recharge",
-		Amount:          500.0,
-		Balance:         500.0,
+		Amount:          rechargeAmount,
+		Balance:         rechargeAmount,
 		Method:          "alipay",
 		Status:          "success",
 		TransactionTime: time.Now(),
@@ -154,7 +159,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	rechargeTxn, err := walletService.Recharge(ctx, claims.UserID, 500.0, "alipay")
 	assert.NoError(t, err)
 	assert.Equal(t, "success", rechargeTxn.Status)
-	assert.Equal(t, 500.0, rechargeTxn.Balance, "充值后余额应为500")
+	assert.EqualValues(t, rechargeAmount, rechargeTxn.Balance, "充值后余额应为500")
 	t.Logf("✓ 充值成功: 金额=%.2f, 余额=%.2f", float64(rechargeTxn.Amount)/100, float64(rechargeTxn.Balance)/100)
 
 	// ========== 阶段5：消费 ==========
@@ -165,8 +170,8 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 		ID:              "txn_consume_001",
 		UserID:          user.User.ID,
 		Type:            "consume",
-		Amount:          -150.0,
-		Balance:         350.0,
+		Amount:          -consume1Amount,
+		Balance:         rechargeAmount - consume1Amount,
 		Reason:          "购买VIP会员",
 		Status:          "success",
 		TransactionTime: time.Now(),
@@ -178,7 +183,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	consumeTxn1, err := walletService.Consume(ctx, user.User.ID, 150.0, "购买VIP会员")
 	assert.NoError(t, err)
 	assert.Equal(t, "success", consumeTxn1.Status)
-	assert.Equal(t, 350.0, consumeTxn1.Balance, "消费后余额应为350")
+	assert.EqualValues(t, rechargeAmount-consume1Amount, consumeTxn1.Balance, "消费后余额应为350")
 	t.Logf("✓ 第1次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn1.Amount)/100, float64(consumeTxn1.Balance)/100, consumeTxn1.Reason)
 
 	// 第二次消费
@@ -186,8 +191,8 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 		ID:              "txn_consume_002",
 		UserID:          user.User.ID,
 		Type:            "consume",
-		Amount:          -50.0,
-		Balance:         300.0,
+		Amount:          -consume2Amount,
+		Balance:         rechargeAmount - consume1Amount - consume2Amount,
 		Reason:          "购买书籍",
 		Status:          "success",
 		TransactionTime: time.Now(),
@@ -198,7 +203,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 
 	consumeTxn2, err := walletService.Consume(ctx, user.User.ID, 50.0, "购买书籍")
 	assert.NoError(t, err)
-	assert.Equal(t, 300.0, consumeTxn2.Balance, "消费后余额应为300")
+	assert.EqualValues(t, rechargeAmount-consume1Amount-consume2Amount, consumeTxn2.Balance, "消费后余额应为300")
 	t.Logf("✓ 第2次消费成功: 金额=%.2f, 剩余余额=%.2f, 原因=%s", float64(-consumeTxn2.Amount)/100, float64(consumeTxn2.Balance)/100, consumeTxn2.Reason)
 
 	// ========== 阶段6：申请提现 ==========
@@ -207,7 +212,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	withdrawRequest := &wallet.WithdrawRequest{
 		ID:        "withdraw_alice_001",
 		UserID:    user.User.ID,
-		Amount:    100.0,
+		Amount:    withdrawAmount,
 		Account:   "alipay_account_alice",
 		Status:    "pending",
 		CreatedAt: time.Now(),
@@ -219,7 +224,7 @@ func TestE2E_CompleteUserLifecycle(t *testing.T) {
 	withdrawReq, err := walletService.RequestWithdraw(ctx, user.User.ID, 100.0, "alipay_account_alice")
 	assert.NoError(t, err)
 	assert.Equal(t, "pending", withdrawReq.Status)
-	assert.Equal(t, 100.0, withdrawReq.Amount)
+	assert.EqualValues(t, withdrawAmount, withdrawReq.Amount)
 	t.Logf("✓ 提现申请已提交: ID=%s, 金额=%.2f, 状态=%s", withdrawReq.ID, float64(withdrawReq.Amount)/100, withdrawReq.Status)
 
 	// ========== 阶段7：登出 ==========
@@ -593,7 +598,7 @@ func TestE2E_TransferBetweenUsers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", txn.Status)
 	assert.Equal(t, "transfer_out", txn.Type)
-	assert.Equal(t, -types.NewMoneyFromYuan(transferAmount), txn.Amount)
+	assert.EqualValues(t, -types.NewMoneyFromYuan(transferAmount), txn.Amount)
 	t.Logf("✓ 转账成功: %s -> %s, 金额=%.2f, 原因=%s",
 		userA.User.Username, userB.User.Username, transferAmount, transferReason)
 	t.Logf("  用户A余额: %.2f", float64(txn.Balance)/100)

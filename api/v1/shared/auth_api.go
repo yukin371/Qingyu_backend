@@ -3,6 +3,7 @@ package shared
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/auth"
 )
@@ -10,12 +11,14 @@ import (
 // AuthAPI 认证服务API处理器
 type AuthAPI struct {
 	authService auth.AuthService
+	codeManager *emailcode.Manager
 }
 
 // NewAuthAPI 创建认证API实例
 func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 	return &AuthAPI{
 		authService: authService,
+		codeManager: emailcode.NewManager(),
 	}
 }
 
@@ -35,6 +38,17 @@ func (api *AuthAPI) Register(c *gin.Context) {
 	var req auth.RegisterRequest
 	if !ValidateRequest(c, &req) {
 		return
+	}
+
+	if api.codeManager.Enabled() {
+		if req.VerificationCode == "" {
+			response.BadRequest(c, "请先填写邮箱验证码", nil)
+			return
+		}
+		if err := api.codeManager.VerifyRegisterCode(req.Email, req.VerificationCode); err != nil {
+			response.BadRequest(c, "邮箱验证码校验失败: "+err.Error(), nil)
+			return
+		}
 	}
 
 	resp, err := api.authService.Register(c.Request.Context(), &req)
@@ -197,4 +211,37 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	}
 
 	response.SuccessWithMessage(c, "获取角色成功", roles)
+}
+
+type sendVerificationCodeRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// SendVerificationCode 发送注册邮箱验证码
+//
+//	@Summary		发送邮箱验证码
+//	@Description	发送用户注册验证码到邮箱
+//	@Tags			认证
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		sendVerificationCodeRequest	true	"邮箱信息"
+//	@Success 200 {object} APIResponse
+//	@Failure		400		{object}	APIResponse
+//	@Failure		500		{object}	APIResponse
+//	@Router			/api/v1/shared/auth/send-verification-code [post]
+func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
+	var req sendVerificationCodeRequest
+	if !ValidateRequest(c, &req) {
+		return
+	}
+
+	if err := api.codeManager.SendRegisterCode(c.Request.Context(), req.Email); err != nil {
+		response.BadRequest(c, err.Error(), nil)
+		return
+	}
+
+	response.SuccessWithMessage(c, "验证码发送成功", map[string]interface{}{
+		"expires_in_seconds":  600,
+		"cooldown_in_seconds": 60,
+	})
 }

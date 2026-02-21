@@ -135,6 +135,113 @@ func (m *MockDocumentRepository) GetByIDs(ctx context.Context, ids []string) ([]
 	return args.Get(0).([]*writer.Document), args.Error(1)
 }
 
+// MockProjectRepository 模拟ProjectRepository
+type MockProjectRepository struct {
+	mock.Mock
+}
+
+func (m *MockProjectRepository) Create(ctx context.Context, project *writer.Project) error {
+	args := m.Called(ctx, project)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) GetByID(ctx context.Context, id string) (*writer.Project, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*writer.Project), args.Error(1)
+}
+
+func (m *MockProjectRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.Project, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*writer.Project), args.Error(1)
+}
+
+func (m *MockProjectRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	args := m.Called(ctx, filter)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockProjectRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockProjectRepository) Health(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*writer.Project, error) {
+	args := m.Called(ctx, ownerID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*writer.Project), args.Error(1)
+}
+
+func (m *MockProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*writer.Project, error) {
+	args := m.Called(ctx, ownerID, status, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*writer.Project), args.Error(1)
+}
+
+func (m *MockProjectRepository) UpdateByOwner(ctx context.Context, projectID, ownerID string, updates map[string]interface{}) error {
+	args := m.Called(ctx, projectID, ownerID, updates)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) IsOwner(ctx context.Context, projectID, ownerID string) (bool, error) {
+	args := m.Called(ctx, projectID, ownerID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockProjectRepository) SoftDelete(ctx context.Context, projectID, ownerID string) error {
+	args := m.Called(ctx, projectID, ownerID)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) HardDelete(ctx context.Context, projectID string) error {
+	args := m.Called(ctx, projectID)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) Restore(ctx context.Context, projectID, ownerID string) error {
+	args := m.Called(ctx, projectID, ownerID)
+	return args.Error(0)
+}
+
+func (m *MockProjectRepository) CountByOwner(ctx context.Context, ownerID string) (int64, error) {
+	args := m.Called(ctx, ownerID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockProjectRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+	args := m.Called(ctx, status)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockProjectRepository) CreateWithTransaction(ctx context.Context, project *writer.Project, callback func(ctx context.Context) error) error {
+	args := m.Called(ctx, project, callback)
+	return args.Error(0)
+}
+
 
 // TestPreflightService_ValidateBatchOperation 测试批量操作验证
 func TestPreflightService_ValidateBatchOperation(t *testing.T) {

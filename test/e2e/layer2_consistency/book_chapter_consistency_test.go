@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package layer2_consistency
@@ -33,7 +33,7 @@ func TestBookChapterConsistency(t *testing.T) {
 		t.Logf("✓ 作者创建成功: %s", author.Username)
 
 		// 创建书籍
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 		t.Logf("✓ 书籍创建成功: %s", book.Title)
 
 		// 创建多个章节
@@ -138,10 +138,7 @@ func TestBookChapterConsistency(t *testing.T) {
 				t.Errorf("作者关系不一致: %s", issue.Description)
 			}
 		} else {
-			t.Logf("✓ 书籍-作者关系正确: 作者ID=%s", author.ID)
+			t.Logf("✓ 书籍-作者关系正确: 作者ID=%s", author.ID.Hex())
 		}
 	})
 }
-
-
-

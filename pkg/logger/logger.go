@@ -266,8 +266,17 @@ func strictHook(entry zapcore.Entry) error {
 // Get 获取全局日志记录器
 func Get() *Logger {
 	if globalLogger == nil {
-		// 使用默认配置初始化
-		_ = Init(DefaultConfig())
+		// 使用默认配置初始化（一次性初始化可能因历史失败状态而不生效）
+		if logger, err := NewLogger(DefaultConfig()); err == nil {
+			globalLogger = logger
+		} else {
+			// 最后兜底：确保调用方不会因nil logger发生panic
+			nop := zap.NewNop()
+			globalLogger = &Logger{
+				Logger: nop,
+				sugar:  nop.Sugar(),
+			}
+		}
 	}
 	return globalLogger
 }

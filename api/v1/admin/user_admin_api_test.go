@@ -125,6 +125,22 @@ func (m *MockUserAdminService) GetActiveUsers(ctx context.Context, days, limit i
 	return args.Get(0).([]*users.User), args.Error(1)
 }
 
+func (m *MockUserAdminService) CreateUser(ctx context.Context, req *adminservice.CreateUserRequest) (*users.User, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*users.User), args.Error(1)
+}
+
+func (m *MockUserAdminService) BatchCreateUsers(ctx context.Context, req *adminservice.BatchCreateUserRequest) ([]*users.User, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*users.User), args.Error(1)
+}
+
 // setupUserAdminTestRouter 设置用户管理测试路由
 func setupUserAdminTestRouter(userAdminService *MockUserAdminService) *gin.Engine {
 	gin.SetMode(gin.TestMode)

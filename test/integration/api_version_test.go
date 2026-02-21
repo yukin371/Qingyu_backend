@@ -253,7 +253,7 @@ func TestAPIVersioning_VersionInfoEndpoint(t *testing.T) {
 		var resp response.APIResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
-		assert.Equal(t, float64(0), resp.Code)
+		assert.EqualValues(t, 0, resp.Code)
 
 		data, ok := resp.Data.(map[string]interface{})
 		assert.True(t, ok)
@@ -274,7 +274,7 @@ func TestAPIVersioning_VersionInfoEndpoint(t *testing.T) {
 		var resp response.APIResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
-		assert.Equal(t, float64(0), resp.Code)
+		assert.EqualValues(t, 0, resp.Code)
 
 		data, ok := resp.Data.(map[string]interface{})
 		assert.True(t, ok)

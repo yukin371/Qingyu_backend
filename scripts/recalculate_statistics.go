@@ -1,5 +1,7 @@
 // 统计数据重新计算工具
 // 用于修复 books 和 users 集合中不准确的统计字段
+//go:build ignore
+
 package main
 
 import (

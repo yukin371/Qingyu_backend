@@ -18,16 +18,16 @@ var allBooks []bson.M // 全局变量，用于存储所有书籍
 
 // CategoryFixReport 修复报告
 type CategoryFixReport struct {
-	TotalBooks        int64
-	InvalidBooks      int64
-	TotalCategories   int64
-	BookCategories    map[string]int // 书籍使用的分类及数量
-	CategoryNames     []string       // 分类表中的分类名称
-	UnmatchedBooks    []string       // 未匹配的书籍
-	FixesApplied      []string       // 执行的修复操作
-	ProblemsFound     []string       // 发现的问题
-	FixedCount        int64          // 修复的书籍数量
-	VerificationPassed bool          // 验证是否通过
+	TotalBooks         int64
+	InvalidBooks       int64
+	TotalCategories    int64
+	BookCategories     map[string]int // 书籍使用的分类及数量
+	CategoryNames      []string       // 分类表中的分类名称
+	UnmatchedBooks     []string       // 未匹配的书籍
+	FixesApplied       []string       // 执行的修复操作
+	ProblemsFound      []string       // 发现的问题
+	FixedCount         int64          // 修复的书籍数量
+	VerificationPassed bool           // 验证是否通过
 }
 
 func main() {
@@ -551,7 +551,7 @@ func generateReport(report *CategoryFixReport) {
 
 	// 保存报告
 	reportPath := "docs/reports/2026-02-01-category-fix-report.md"
-	os.MkdirAll("docs/reports", 0755)
+	_ = os.MkdirAll("docs/reports", 0755)
 
 	err := os.WriteFile(reportPath, []byte(reportContent), 0644)
 	if err != nil {

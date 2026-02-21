@@ -31,7 +31,7 @@ func RunConcurrentReading(t *testing.T) {
 		author := fixtures.CreateAdminUser()
 
 		// 创建书籍
-		book := fixtures.CreateBook(author.ID)
+		book := fixtures.CreateBook(author.ID.Hex())
 
 		// 创建多个章节
 		for i := 1; i <= 10; i++ {
@@ -62,7 +62,7 @@ func RunConcurrentReading(t *testing.T) {
 
 				// 创建用户
 				user := fixtures.CreateUser()
-				userIDs[index] = user.ID
+				userIDs[index] = user.ID.Hex()
 
 				// 登录获取token
 				token := actions.Login(user.Username, "Test1234")
@@ -75,7 +75,7 @@ func RunConcurrentReading(t *testing.T) {
 					if chapters, ok := data["chapters"].([]interface{}); ok && len(chapters) > 0 {
 						if firstChapter, ok := chapters[0].(map[string]interface{}); ok {
 							if chapterID, ok := firstChapter["id"].(string); ok {
-								actions.StartReading(user.ID, book.ID.Hex(), chapterID, token)
+								actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapterID, token)
 							}
 						}
 					}

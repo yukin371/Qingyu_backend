@@ -1,7 +1,7 @@
 # Qingyu Backend Makefile
 
 .PHONY: help proto proto-go proto-python run-ai-service test-ai-service
-.PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run
+.PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run guard-arch
 .PHONY: docker-up docker-down docker-logs benchmark check security deps deps-update
 .PHONY: test-e2e test-e2e-quick test-e2e-standard test-e2e-layer1 test-e2e-layer2 test-e2e-layer3
 
@@ -22,6 +22,7 @@ help:
 	@echo "  make test-api        - 运行API测试"
 	@echo "  make test-all        - 运行所有测试"
 	@echo "  make test-coverage   - 生成测试覆盖率报告"
+	@echo "  make guard-arch      - 运行架构关键包门禁测试"
 	@echo "  make benchmark       - 运行性能基准测试"
 	@echo ""
 	@echo "E2E测试:"
@@ -158,6 +159,12 @@ test-api:
 # 运行所有测试（包括集成测试）
 test-all: test-unit test-integration test-api
 	@echo "所有测试完成！"
+
+# 架构关键包门禁（Phase 2）
+guard-arch:
+	@echo "运行架构关键包门禁测试..."
+	go test -v ./service/writer ./service/reader ./pkg/middleware ./pkg/quota
+	@echo "架构门禁通过！"
 
 # 生成测试覆盖率报告
 test-coverage:

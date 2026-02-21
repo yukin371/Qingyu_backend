@@ -17,8 +17,21 @@ type ExportService interface {
 	// 项目导出
 	ExportProject(ctx context.Context, projectID, userID string, req *ExportProjectRequest) (*ExportTask, error)
 
+	// 项目导出为ZIP（直接返回字节数据）
+	ExportProjectAsZip(ctx context.Context, projectID, userID string) ([]byte, error)
+
+	// 项目导入
+	ImportProject(ctx context.Context, userID string, zipData []byte) (*ImportResult, error)
+
 	// 任务管理
 	CancelExportTask(ctx context.Context, taskID, userID string) error
+}
+
+// ImportResult 导入结果
+type ImportResult struct {
+	ProjectID     string `json:"projectId"`
+	Title         string `json:"title"`
+	DocumentCount int    `json:"documentCount"`
 }
 
 // ExportDocumentRequest 导出文档请求

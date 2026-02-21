@@ -148,6 +148,12 @@ func (m *MockCommentRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
+// Exists 检查评论是否存在
+func (m *MockCommentRepository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
 // MockSensitiveWordRepository Mock敏感词Repository
 type MockSensitiveWordRepository struct {
 	mock.Mock

@@ -60,8 +60,14 @@ func RegisterAdminRoutes(
 			{
 				// 用户列表和搜索
 				usersGroup.GET("", userAdminAPI.ListUsers)                     // 获取用户列表
+				usersGroup.POST("", userAdminAPI.CreateUser)                   // 创建用户
 				usersGroup.GET("/search", userAdminAPI.SearchUsers)            // 搜索用户
 				usersGroup.GET("/count-by-status", userAdminAPI.CountByStatus) // 按状态统计
+
+				// 批量操作
+				usersGroup.POST("/batch-create", userAdminAPI.BatchCreateUsers)       // 批量创建
+				usersGroup.POST("/batch-update-status", userAdminAPI.BatchUpdateStatus) // 批量更新状态
+				usersGroup.POST("/batch-delete", userAdminAPI.BatchDeleteUsers)         // 批量删除
 
 				// 单个用户操作
 				usersGroup.GET("/:id", userAdminAPI.GetUserDetail)                     // 获取用户详情
@@ -71,10 +77,6 @@ func RegisterAdminRoutes(
 				usersGroup.POST("/:id/reset-password", userAdminAPI.ResetUserPassword) // 重置密码
 				usersGroup.GET("/:id/activities", userAdminAPI.GetUserActivities)      // 获取活动记录
 				usersGroup.GET("/:id/statistics", userAdminAPI.GetUserStatistics)      // 获取统计信息
-
-				// 批量操作
-				usersGroup.POST("/batch-update-status", userAdminAPI.BatchUpdateStatus) // 批量更新状态
-				usersGroup.POST("/batch-delete", userAdminAPI.BatchDeleteUsers)         // 批量删除
 			}
 		}
 

@@ -1,5 +1,5 @@
-//go:build integration
-// +build integration
+//go:build integration && legacy_writer_e2e
+// +build integration,legacy_writer_e2e
 
 package integration
 

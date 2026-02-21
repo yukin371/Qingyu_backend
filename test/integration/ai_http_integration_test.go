@@ -33,7 +33,7 @@ func NewAIServiceHTTPClient(baseURL string) *AIServiceHTTPClient {
 
 // ChatRequest 聊天请求
 type ChatRequest struct {
-	UserID  string `json:"user_id"`
+	UserID   string    `json:"user_id"`
 	Messages []Message `json:"messages"`
 }
 
@@ -45,10 +45,10 @@ type Message struct {
 
 // ChatResponse 聊天响应
 type ChatResponse struct {
-	Message         string `json:"message"`
-	Usage           Usage  `json:"usage"`
-	Model           string `json:"model"`
-	QuotaRemaining  int64  `json:"quota_remaining"`
+	Message        string `json:"message"`
+	Usage          Usage  `json:"usage"`
+	Model          string `json:"model"`
+	QuotaRemaining int64  `json:"quota_remaining"`
 }
 
 // Usage token使用情况
@@ -60,10 +60,10 @@ type Usage struct {
 
 // HealthResponse 健康检查响应
 type HealthResponse struct {
-	Status   string `json:"status"`
-	Service  string `json:"service"`
+	Status    string `json:"status"`
+	Service   string `json:"service"`
 	Timestamp string `json:"timestamp"`
-	Version  string `json:"version"`
+	Version   string `json:"version"`
 }
 
 // Chat 发送聊天请求
@@ -154,6 +154,11 @@ func TestAIHTTPIntegration(t *testing.T) {
 
 	// 创建AI服务客户端
 	client := NewAIServiceHTTPClient("http://localhost:8000")
+
+	// 预检查：外部AI HTTP服务不可达时跳过本组测试，避免环境依赖导致误报。
+	if _, err := client.Health(); err != nil {
+		t.Skipf("Skipping AI HTTP integration tests: service unavailable at %s (%v)", client.baseURL, err)
+	}
 
 	t.Run("健康检查", func(t *testing.T) {
 		resp, err := client.Health()

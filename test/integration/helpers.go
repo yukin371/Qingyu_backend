@@ -230,6 +230,11 @@ func (h *TestHelper) formatResponse(body string) string {
 
 // GetTestBook 获取测试书籍
 func (h *TestHelper) GetTestBook() string {
+	if global.DB == nil {
+		h.t.Logf("⚠ global.DB 不可用，跳过获取测试书籍")
+		return ""
+	}
+
 	var book struct {
 		ID primitive.ObjectID `bson:"_id"`
 	}
@@ -245,6 +250,11 @@ func (h *TestHelper) GetTestBook() string {
 
 // GetTestBooks 获取多本测试书籍
 func (h *TestHelper) GetTestBooks(limit int) []string {
+	if global.DB == nil {
+		h.t.Logf("⚠ global.DB 不可用，跳过获取测试书籍列表")
+		return nil
+	}
+
 	cursor, err := global.DB.Collection("books").Find(h.ctx, bson.M{})
 	if err != nil {
 		h.t.Logf("⚠ 查询测试书籍失败: %v", err)
@@ -276,6 +286,11 @@ func (h *TestHelper) GetTestBooks(limit int) []string {
 
 // CleanupTestData 清理测试数据
 func (h *TestHelper) CleanupTestData(collections ...string) {
+	if global.DB == nil {
+		h.t.Logf("⚠ global.DB 不可用，跳过清理测试数据")
+		return
+	}
+
 	// 获取当前测试用户的ID
 	testUsers := []string{"test_user01", "test_user02", "test_user03"}
 
@@ -365,6 +380,11 @@ func (h *TestHelper) RemoveCollectionByBookID(bookID, token string) {
 // CleanupTestCollections 清理测试用户的收藏数据（针对特定书籍）
 // 注意：这个方法直接操作数据库，主要用于defer清理
 func (h *TestHelper) CleanupTestCollections(bookID string) {
+	if global.DB == nil {
+		h.t.Logf("⚠ global.DB 不可用，跳过清理收藏测试数据")
+		return
+	}
+
 	// 直接删除测试用户的收藏
 	testUsers := []string{"test_user01", "test_user02", "test_user03"}
 
@@ -405,6 +425,10 @@ func (h *TestHelper) CleanupTestCollections(bookID string) {
 
 // VerifyBookExists 验证书籍是否存在
 func (h *TestHelper) VerifyBookExists(bookID string) bool {
+	if global.DB == nil {
+		return false
+	}
+
 	objectID, err := primitive.ObjectIDFromHex(bookID)
 	if err != nil {
 		return false
@@ -416,6 +440,10 @@ func (h *TestHelper) VerifyBookExists(bookID string) bool {
 
 // VerifyUserExists 验证用户是否存在
 func (h *TestHelper) VerifyUserExists(userID string) bool {
+	if global.DB == nil {
+		return false
+	}
+
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return false

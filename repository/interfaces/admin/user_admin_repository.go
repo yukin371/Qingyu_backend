@@ -14,6 +14,12 @@ type UserAdminRepository interface {
 	// List 获取用户列表（分页、筛选）
 	List(ctx context.Context, filter *UserFilter, page, pageSize int) ([]*users.User, int64, error)
 
+	// Create 创建用户
+	Create(ctx context.Context, user *users.User) error
+
+	// BatchCreate 批量创建用户
+	BatchCreate(ctx context.Context, usersList []*users.User) error
+
 	// GetByID 根据ID获取用户
 	GetByID(ctx context.Context, userID primitive.ObjectID) (*users.User, error)
 

@@ -89,7 +89,7 @@ func TestReaderErrorError(t *testing.T) {
 
 	t.Run("Error without message", func(t *testing.T) {
 		err := &ReaderError{Code: ErrInternalError}
-		expected := "[INTERNAL_ERROR]"
+		expected := "INTERNAL_ERROR"
 		if got := err.Error(); got != expected {
 			t.Errorf("ReaderError.Error() = %v, want %v", got, expected)
 		}

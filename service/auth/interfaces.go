@@ -113,10 +113,11 @@ type SessionService interface {
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Role     string `json:"role"` // 可选，默认为 "reader"
+	Username         string `json:"username" binding:"required"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required,min=6"`
+	Role             string `json:"role"` // 可选，默认为 "reader"
+	VerificationCode string `json:"verificationCode,omitempty"`
 }
 
 // RegisterResponse 注册响应
