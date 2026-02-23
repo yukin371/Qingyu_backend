@@ -69,7 +69,13 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 func (api *ProjectApi) GetProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	project, err := api.projectService.GetProject(c.Request.Context(), projectID)
+	// 从gin.Context获取userId并添加到context.Context
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userId", userID)
+	}
+
+	project, err := api.projectService.GetProject(ctx, projectID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
