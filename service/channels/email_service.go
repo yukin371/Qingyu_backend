@@ -85,12 +85,19 @@ func NewEmailService(config *EmailConfig) EmailService {
 
 // SendEmail 发送邮件
 func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) error {
+	if req == nil {
+		return fmt.Errorf("邮件请求不能为空")
+	}
+
 	// 1. 参数验证
 	if len(req.To) == 0 {
 		return fmt.Errorf("收件人不能为空")
 	}
 	if req.Subject == "" {
 		return fmt.Errorf("邮件主题不能为空")
+	}
+	if containsHeaderInjection(req.Subject) {
+		return fmt.Errorf("邮件主题包含非法换行符")
 	}
 	if req.Body == "" {
 		return fmt.Errorf("邮件内容不能为空")
@@ -107,6 +114,25 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 	}
 	if s.config.FromAddress == "" {
 		return fmt.Errorf("发件人地址未配置")
+	}
+	if containsHeaderInjection(s.config.FromName) || containsHeaderInjection(s.config.FromAddress) {
+		return fmt.Errorf("发件人信息包含非法换行符")
+	}
+
+	for _, email := range req.To {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("收件人邮箱格式无效")
+		}
+	}
+	for _, email := range req.Cc {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("抄送邮箱格式无效")
+		}
+	}
+	for _, email := range req.Bcc {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("密送邮箱格式无效")
+		}
 	}
 
 	// 4. 构建收件人列表
@@ -265,6 +291,10 @@ func formatAddress(name, email string) string {
 		return email
 	}
 	return fmt.Sprintf("%s <%s>", name, email)
+}
+
+func containsHeaderInjection(value string) bool {
+	return strings.ContainsAny(value, "\r\n")
 }
 
 // TODO(Phase3): 支持更多SMTP功能

@@ -2,17 +2,36 @@ package writer
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/mongodb/base"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	"Qingyu_backend/repository/mongodb/base"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var outlineQueryIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
+
+func normalizeAndValidateOutlineQueryID(field, value string, allowEmpty bool) (string, error) {
+	normalized := strings.TrimSpace(value)
+	if normalized == "" {
+		if allowEmpty {
+			return "", nil
+		}
+		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("%s is required", field), nil)
+	}
+	if !outlineQueryIDPattern.MatchString(normalized) {
+		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
+	}
+	return normalized, nil
+}
 
 // OutlineRepositoryMongo Outline Repository的MongoDB实现
 type OutlineRepositoryMongo struct {
@@ -63,7 +82,12 @@ func (r *OutlineRepositoryMongo) FindByID(ctx context.Context, outlineID string)
 
 // FindByProjectID 查询项目下的所有大纲节点
 func (r *OutlineRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.OutlineNode, error) {
-	filter := bson.M{"project_id": projectID}
+	safeProjectID, err := normalizeAndValidateOutlineQueryID("project id", projectID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"project_id": safeProjectID}
 
 	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
@@ -122,9 +146,18 @@ func (r *OutlineRepositoryMongo) Delete(ctx context.Context, outlineID string) e
 
 // FindByParentID 根据父节点ID查询子节点
 func (r *OutlineRepositoryMongo) FindByParentID(ctx context.Context, projectID, parentID string) ([]*writer.OutlineNode, error) {
+	safeProjectID, err := normalizeAndValidateOutlineQueryID("project id", projectID, false)
+	if err != nil {
+		return nil, err
+	}
+	safeParentID, err := normalizeAndValidateOutlineQueryID("parent id", parentID, true)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := bson.M{
-		"project_id": projectID,
-		"parent_id":  parentID,
+		"project_id": safeProjectID,
+		"parent_id":  safeParentID,
 	}
 
 	// 按order排序
@@ -146,8 +179,13 @@ func (r *OutlineRepositoryMongo) FindByParentID(ctx context.Context, projectID, 
 
 // FindRoots 查询项目的所有根节点（parent_id为空的节点）
 func (r *OutlineRepositoryMongo) FindRoots(ctx context.Context, projectID string) ([]*writer.OutlineNode, error) {
+	safeProjectID, err := normalizeAndValidateOutlineQueryID("project id", projectID, false)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := bson.M{
-		"project_id": projectID,
+		"project_id": safeProjectID,
 		"$or": []bson.M{
 			{"parent_id": ""},
 			{"parent_id": bson.M{"$exists": false}},
@@ -188,7 +226,12 @@ func (r *OutlineRepositoryMongo) ExistsByID(ctx context.Context, outlineID strin
 
 // CountByProjectID 统计项目下的大纲节点数量
 func (r *OutlineRepositoryMongo) CountByProjectID(ctx context.Context, projectID string) (int64, error) {
-	filter := bson.M{"project_id": projectID}
+	safeProjectID, err := normalizeAndValidateOutlineQueryID("project id", projectID, false)
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.M{"project_id": safeProjectID}
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count outlines failed", err)
@@ -198,12 +241,21 @@ func (r *OutlineRepositoryMongo) CountByProjectID(ctx context.Context, projectID
 
 // CountByParentID 统计指定父节点下的子节点数量
 func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID, parentID string) (int64, error) {
+	safeProjectID, err := normalizeAndValidateOutlineQueryID("project id", projectID, false)
+	if err != nil {
+		return 0, err
+	}
+	safeParentID, err := normalizeAndValidateOutlineQueryID("parent id", parentID, true)
+	if err != nil {
+		return 0, err
+	}
+
 	var filter bson.M
 
-	if parentID == "" {
+	if safeParentID == "" {
 		// 查询根节点（parent_id为空或不存在）
 		filter = bson.M{
-			"project_id": projectID,
+			"project_id": safeProjectID,
 			"$or": []bson.M{
 				{"parent_id": ""},
 				{"parent_id": bson.M{"$exists": false}},
@@ -212,8 +264,8 @@ func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID,
 	} else {
 		// 查询指定父节点的子节点
 		filter = bson.M{
-			"project_id": projectID,
-			"parent_id":  parentID,
+			"project_id": safeProjectID,
+			"parent_id":  safeParentID,
 		}
 	}
 
