@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // ============================================================================
@@ -307,7 +308,7 @@ func ToHTTPResponse(err *UnifiedError, requestID, traceID string) (int, HTTPErro
 		return http.StatusOK, HTTPErrorResponse{
 			Code:      "0",
 			Message:   "成功",
-			Timestamp: err.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
+			Timestamp: time.Now().Format("2006-01-02T15:04:05Z07:00"),
 		}
 	}
 

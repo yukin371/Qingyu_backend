@@ -405,13 +405,10 @@ func TestToHTTPResponse(t *testing.T) {
 		wantMessage  string
 	}{
 		{
-			name: "成功",
-			err: &errors.UnifiedError{
-				Code:    "0",
-				Message: "成功",
-			},
-			wantStatus:  http.StatusOK,
-			wantCode:    "0",
+			name:       "成功",
+			err:        nil,
+			wantStatus: http.StatusOK,
+			wantCode:   "0",
 			wantMessage: "成功",
 		},
 		{
