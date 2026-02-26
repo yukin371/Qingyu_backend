@@ -19,6 +19,9 @@ type CollectionRepository interface {
 	// GetByUserAndBook 根据用户ID和书籍ID获取收藏
 	GetByUserAndBook(ctx context.Context, userID, bookID string) (*social.Collection, error)
 
+	// GetByShareID 根据分享ID获取收藏
+	GetByShareID(ctx context.Context, shareID string) (*social.Collection, error)
+
 	// GetCollectionsByUser 获取用户的收藏列表
 	GetCollectionsByUser(ctx context.Context, userID string, folderID string, page, size int) ([]*social.Collection, int64, error)
 

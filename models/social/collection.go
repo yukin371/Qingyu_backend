@@ -15,6 +15,7 @@ type Collection struct {
 	Tags      []string           `bson:"tags" json:"tags"`
 	Note      string             `bson:"note" json:"note"`
 	IsPublic  bool               `bson:"is_public" json:"isPublic"`
+	ShareID   string             `bson:"share_id,omitempty" json:"share_id,omitempty"` // 分享ID，用于生成分享链接
 	CreatedAt time.Time          `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updatedAt"`
 }

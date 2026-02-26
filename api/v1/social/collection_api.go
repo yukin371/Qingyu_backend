@@ -1,6 +1,7 @@
 package social
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -79,6 +80,119 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	}
 
 	response.Created(c, collection)
+}
+
+// BatchAddCollectionsRequest 批量添加收藏请求
+type BatchAddCollectionsRequest struct {
+	Items []BatchCollectionItem `json:"items" binding:"required,min=1,max=50"`
+}
+
+// BatchCollectionItem 批量收藏项
+type BatchCollectionItem struct {
+	BookID   string   `json:"book_id" binding:"required"`
+	FolderID string   `json:"folder_id"`
+	Note     string   `json:"note" binding:"max=500"`
+	Tags     []string `json:"tags"`
+	IsPublic bool     `json:"is_public"`
+}
+
+// BatchAddCollectionsResult 批量添加收藏结果
+type BatchAddCollectionsResult struct {
+	SuccessCount int                       `json:"success_count"`
+	FailedCount  int                       `json:"failed_count"`
+	Results      []BatchCollectionItemResult `json:"results"`
+}
+
+// BatchCollectionItemResult 单个收藏项结果
+type BatchCollectionItemResult struct {
+	Index    int         `json:"index"`
+	BookID   string      `json:"book_id"`
+	Success  bool        `json:"success"`
+	Data     interface{} `json:"data,omitempty"`
+	Error    string      `json:"error,omitempty"`
+}
+
+// BatchAddCollections 批量添加收藏
+// @Summary 批量添加收藏
+// @Tags 阅读端-收藏
+// @Accept json
+// @Produce json
+// @Param request body BatchAddCollectionsRequest true "批量收藏信息"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/reader/collections/batch [post]
+// @Security Bearer
+func (api *CollectionAPI) BatchAddCollections(c *gin.Context) {
+	var req BatchAddCollectionsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	// 验证批量操作限制
+	if len(req.Items) == 0 {
+		response.BadRequest(c, "参数错误", "items不能为空")
+		return
+	}
+	if len(req.Items) > 50 {
+		response.BadRequest(c, "参数错误", "批量操作最多支持50个收藏项")
+		return
+	}
+
+	userID, ok := shared.GetUserID(c)
+	if !ok {
+		return
+	}
+
+	result := api.processBatchCollections(c.Request.Context(), userID, req.Items)
+	response.Success(c, result)
+}
+
+// processBatchCollections 处理批量收藏操作
+func (api *CollectionAPI) processBatchCollections(ctx context.Context, userID string, items []BatchCollectionItem) *BatchAddCollectionsResult {
+	result := &BatchAddCollectionsResult{
+		Results: make([]BatchCollectionItemResult, 0, len(items)),
+	}
+
+	for i, item := range items {
+		itemResult := api.processSingleCollection(ctx, userID, i, item)
+		result.Results = append(result.Results, itemResult)
+
+		if itemResult.Success {
+			result.SuccessCount++
+		} else {
+			result.FailedCount++
+		}
+	}
+
+	return result
+}
+
+// processSingleCollection 处理单个收藏操作
+func (api *CollectionAPI) processSingleCollection(ctx context.Context, userID string, index int, item BatchCollectionItem) BatchCollectionItemResult {
+	itemResult := BatchCollectionItemResult{
+		Index:   index,
+		BookID:  item.BookID,
+		Success: false,
+	}
+
+	collection, err := api.collectionService.AddToCollection(
+		ctx,
+		userID,
+		item.BookID,
+		item.FolderID,
+		item.Note,
+		item.Tags,
+		item.IsPublic,
+	)
+
+	if err != nil {
+		itemResult.Error = err.Error()
+		return itemResult
+	}
+
+	itemResult.Success = true
+	itemResult.Data = collection
+	return itemResult
 }
 
 // GetCollections 获取收藏列表
@@ -573,6 +687,67 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 	}
 
 	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+}
+
+// ShareCollectionWithURL 分享收藏并返回分享链接
+// @Summary 分享收藏并返回分享链接
+// @Tags 阅读端-收藏
+// @Accept json
+// @Produce json
+// @Param id path string true "收藏ID"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/reader/collections/{id}/share/url [post]
+// @Security Bearer
+func (api *CollectionAPI) ShareCollectionWithURL(c *gin.Context) {
+	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
+	if !ok {
+		return
+	}
+
+	userID, ok := shared.GetUserID(c)
+	if !ok {
+		return
+	}
+
+	shareInfo, err := api.collectionService.ShareCollectionWithURL(
+		c.Request.Context(),
+		userID,
+		collectionID,
+	)
+
+	if err != nil {
+		response.BadRequest(c, "分享收藏失败", err.Error())
+		return
+	}
+
+	response.Success(c, shareInfo)
+}
+
+// GetSharedCollection 获取分享的收藏详情
+// @Summary 获取分享的收藏详情
+// @Tags 阅读端-收藏
+// @Accept json
+// @Produce json
+// @Param share_id path string true "分享ID"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/reader/collections/shared/{share_id} [get]
+func (api *CollectionAPI) GetSharedCollection(c *gin.Context) {
+	shareID, ok := shared.GetRequiredParam(c, "share_id", "分享ID")
+	if !ok {
+		return
+	}
+
+	collection, err := api.collectionService.GetSharedCollection(
+		c.Request.Context(),
+		shareID,
+	)
+
+	if err != nil {
+		response.NotFound(c, "收藏不存在或未公开")
+		return
+	}
+
+	response.Success(c, collection)
 }
 
 // =========================

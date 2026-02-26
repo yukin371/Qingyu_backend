@@ -65,6 +65,13 @@ func NewMongoCollectionRepository(db *mongo.Database) *MongoCollectionRepository
 				{Key: "tags", Value: 1},
 			},
 		},
+		{
+			// 分享ID查询（唯一索引）
+			Keys: bson.D{
+				{Key: "share_id", Value: 1},
+			},
+			Options: options.Index().SetUnique(true).SetSparse(true),
+		},
 	}
 
 	collectionColl := db.Collection("collections")
@@ -170,6 +177,27 @@ func (r *MongoCollectionRepository) GetByUserAndBook(ctx context.Context, userID
 			return nil, nil // 未收藏不报错，返回nil
 		}
 		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+
+	return &collection, nil
+}
+
+// GetByShareID 根据分享ID获取收藏
+func (r *MongoCollectionRepository) GetByShareID(ctx context.Context, shareID string) (*social.Collection, error) {
+	if shareID == "" {
+		return nil, fmt.Errorf("分享ID不能为空")
+	}
+
+	var collection social.Collection
+	err := r.GetCollection().FindOne(ctx, bson.M{
+		"share_id": shareID,
+	}).Decode(&collection)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // 未找到不报错，返回nil
+		}
+		return nil, fmt.Errorf("failed to get collection by share_id: %w", err)
 	}
 
 	return &collection, nil

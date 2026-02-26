@@ -277,6 +277,51 @@ func (s *LikeService) GetUserLikedComments(ctx context.Context, userID string, p
 // 批量查询方法
 // =========================
 
+// BatchLikeBooksResult 批量点赞书籍结果
+type BatchLikeBooksResult struct {
+	BookID   string `json:"book_id"`
+	Success  bool   `json:"success"`
+	ErrorMsg string `json:"error_msg,omitempty"`
+}
+
+// BatchLikeBooks 批量点赞书籍
+func (s *LikeService) BatchLikeBooks(ctx context.Context, userID string, bookIDs []string) (map[string]interface{}, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("用户ID不能为空")
+	}
+	if len(bookIDs) == 0 {
+		return nil, fmt.Errorf("书籍ID列表不能为空")
+	}
+
+	results := make([]BatchLikeBooksResult, 0, len(bookIDs))
+	successCount := 0
+	failedCount := 0
+
+	for _, bookID := range bookIDs {
+		result := BatchLikeBooksResult{
+			BookID:  bookID,
+			Success: false,
+		}
+
+		// 尝试点赞单个书籍
+		if err := s.LikeBook(ctx, userID, bookID); err != nil {
+			result.ErrorMsg = err.Error()
+			failedCount++
+		} else {
+			result.Success = true
+			successCount++
+		}
+
+		results = append(results, result)
+	}
+
+	return map[string]interface{}{
+		"success_count": successCount,
+		"failed_count":  failedCount,
+		"results":       results,
+	}, nil
+}
+
 // GetBooksLikeCount 批量获取书籍点赞数
 func (s *LikeService) GetBooksLikeCount(ctx context.Context, bookIDs []string) (map[string]int64, error) {
 	if len(bookIDs) == 0 {

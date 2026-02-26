@@ -1,8 +1,6 @@
 package social
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -88,22 +86,20 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments [get]
 func (api *CommentAPI) GetCommentList(c *gin.Context) {
-	bookID := c.Query("book_id")
-	if bookID == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
+	bookID, ok := shared.GetRequiredQuery(c, "book_id", "书籍ID")
+	if !ok {
 		return
 	}
 
 	sortBy := c.DefaultQuery("sortBy", "latest")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	comments, total, err := api.commentService.GetCommentList(
 		c.Request.Context(),
 		bookID,
 		sortBy,
-		page,
-		size,
+		pagination.Page,
+		pagination.PageSize,
 	)
 
 	if err != nil {
@@ -114,8 +110,8 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 	response.Success(c, gin.H{
 		"comments": comments,
 		"total":    total,
-		"page":     page,
-		"size":     size,
+		"page":     pagination.Page,
+		"size":     pagination.PageSize,
 	})
 }
 
@@ -357,16 +353,12 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/top [get]
 func (api *CommentAPI) GetTopComments(c *gin.Context) {
-	bookID := c.Query("book_id")
-	if bookID == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
+	bookID, ok := shared.GetRequiredQuery(c, "book_id", "书籍ID")
+	if !ok {
 		return
 	}
 
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit > 50 {
-		limit = 50 // 限制最大返回数量
-	}
+	limit := shared.GetIntParam(c, "limit", true, 10, 1, 50)
 
 	// 获取热门评论（按点赞数、回复数等排序）
 	topComments, err := api.commentService.GetTopComments(c.Request.Context(), bookID, limit)
@@ -396,11 +388,10 @@ func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	// 获取评论的直接回复（分页）
-	replies, total, err := api.commentService.GetCommentReplies(c.Request.Context(), commentID, page, size)
+	replies, total, err := api.commentService.GetCommentReplies(c.Request.Context(), commentID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -409,7 +400,7 @@ func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 	response.Success(c, gin.H{
 		"replies": replies,
 		"total":   total,
-		"page":    page,
-		"size":    size,
+		"page":    pagination.Page,
+		"size":    pagination.PageSize,
 	})
 }

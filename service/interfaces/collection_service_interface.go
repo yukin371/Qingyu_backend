@@ -31,6 +31,8 @@ type CollectionService interface {
 	ShareCollection(ctx context.Context, userID, collectionID string) error
 	UnshareCollection(ctx context.Context, userID, collectionID string) error
 	GetPublicCollections(ctx context.Context, page, size int) ([]*readerModel.Collection, int64, error)
+	ShareCollectionWithURL(ctx context.Context, userID, collectionID string) (map[string]interface{}, error)
+	GetSharedCollection(ctx context.Context, shareID string) (*readerModel.Collection, error)
 
 	// =========================
 	// 统计
