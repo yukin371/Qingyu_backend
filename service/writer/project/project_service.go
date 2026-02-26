@@ -186,28 +186,28 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 	// 3. 构建更新数据
 	updates := make(map[string]interface{})
 
-	if req.Title != "" {
-		updates["title"] = req.Title
+	if req.Title != nil {
+		updates["title"] = *req.Title
 	}
-	if req.Summary != "" {
-		updates["summary"] = req.Summary
+	if req.Summary != nil {
+		updates["summary"] = *req.Summary
 	}
-	if req.CoverURL != "" {
-		updates["cover_url"] = req.CoverURL
+	if req.CoverURL != nil {
+		updates["cover_url"] = *req.CoverURL
 	}
-	if req.Category != "" {
-		updates["category"] = req.Category
+	if req.Category != nil {
+		updates["category"] = *req.Category
 	}
 	if req.Tags != nil {
 		updates["tags"] = req.Tags
 	}
-	if req.Status != "" {
+	if req.Status != nil {
 		// 验证状态值
-		status := writer.ProjectStatus(req.Status)
+		status := writer.ProjectStatus(*req.Status)
 		if !status.IsValid() {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目状态", "", nil)
 		}
-		updates["status"] = req.Status
+		updates["status"] = *req.Status
 	}
 
 	// 4. 更新项目
@@ -352,13 +352,19 @@ func (s *ProjectService) GetProjectList(ctx context.Context, userID, status stri
 // UpdateProjectByID 更新项目（兼容API层调用）
 func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userID string, req *writer.Project) error {
 	// 构建更新请求
+	title := req.Title
+	summary := req.Summary
+	coverURL := req.CoverURL
+	category := req.Category
+	status := string(req.Status)
+
 	updateReq := &UpdateProjectRequest{
-		Title:    req.Title,
-		Summary:  req.Summary,
-		CoverURL: req.CoverURL,
-		Category: req.Category,
+		Title:    &title,
+		Summary:  &summary,
+		CoverURL: &coverURL,
+		Category: &category,
 		Tags:     req.Tags,
-		Status:   string(req.Status),
+		Status:   &status,
 	}
 
 	// 使用上下文注入用户ID

@@ -6,6 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -38,7 +39,7 @@ type BookstoreClient interface {
 	PublishChapter(ctx context.Context, req *BookstorePublishChapterRequest) (*BookstorePublishResponse, error)
 	UnpublishChapter(ctx context.Context, chapterID, bookstoreID string) error
 	UpdateChapter(ctx context.Context, req *BookstoreUpdateChapterRequest) error
-	GetStatistics(ctx context.Context, projectID, bookstoreID string) (*serviceInterfaces.PublicationStatistics, error)
+	GetStatistics(ctx context.Context, projectID, bookstoreID string) (*dto.PublicationStatistics, error)
 }
 
 // EventBus 事件总线接口
@@ -141,7 +142,7 @@ func (s *PublishService) PublishProject(
 		BookstoreID:   req.BookstoreID,
 		Status:        serviceInterfaces.PublicationStatusPending,
 		ScheduledTime: req.PublishTime,
-		Metadata: serviceInterfaces.PublicationMetadata{
+		Metadata: dto.PublicationMetadata{
 			CategoryID:    req.CategoryID,
 			Tags:          req.Tags,
 			Description:   req.Description,
@@ -373,7 +374,7 @@ func (s *PublishService) PublishDocument(
 		BookstoreID:   bookstoreID,
 		Status:        serviceInterfaces.PublicationStatusPending,
 		ScheduledTime: req.PublishTime,
-		Metadata: serviceInterfaces.PublicationMetadata{
+		Metadata: dto.PublicationMetadata{
 			ChapterTitle:  req.ChapterTitle,
 			ChapterNumber: req.ChapterNumber,
 			IsFree:        req.IsFree,
