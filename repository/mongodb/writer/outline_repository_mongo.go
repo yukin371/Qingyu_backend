@@ -3,7 +3,6 @@ package writer
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"Qingyu_backend/models/writer"
@@ -17,8 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var outlineQueryIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
-
 func normalizeAndValidateOutlineQueryID(field, value string, allowEmpty bool) (string, error) {
 	normalized := strings.TrimSpace(value)
 	if normalized == "" {
@@ -27,10 +24,12 @@ func normalizeAndValidateOutlineQueryID(field, value string, allowEmpty bool) (s
 		}
 		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("%s is required", field), nil)
 	}
-	if !outlineQueryIDPattern.MatchString(normalized) {
+	objectID, err := primitive.ObjectIDFromHex(normalized)
+	if err != nil {
 		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
 	}
-	return normalized, nil
+	// 返回标准化的hex字符串，避免不同大小写/格式带来的查询歧义。
+	return objectID.Hex(), nil
 }
 
 // OutlineRepositoryMongo Outline Repository的MongoDB实现
