@@ -71,7 +71,10 @@ type EmailResult struct {
 	Error   error  // 错误信息
 }
 
-const smtpBodyPlaceholder = "Please view the full message in Qingyu application inbox."
+const (
+	smtpSubjectPlaceholder = "Qingyu Notification"
+	smtpBodyPlaceholder    = "Please view the full message in Qingyu application inbox."
+)
 
 // NewEmailService 创建邮件服务
 func NewEmailService(config *EmailConfig) EmailService {
@@ -178,13 +181,10 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 
 	headers := []string{
 		fmt.Sprintf("From: %s", formatAddress(s.config.FromName, fromAddress)),
-		fmt.Sprintf("To: %s", strings.Join(cleanTo, ", ")),
-		fmt.Sprintf("Subject: %s", req.Subject),
+		"To: undisclosed-recipients:;",
+		fmt.Sprintf("Subject: %s", smtpSubjectPlaceholder),
 		"MIME-Version: 1.0",
 		fmt.Sprintf("Content-Type: %s", contentType),
-	}
-	if len(cleanCc) > 0 {
-		headers = append(headers, fmt.Sprintf("Cc: %s", strings.Join(cleanCc, ", ")))
 	}
 
 	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + smtpBodyPlaceholder
