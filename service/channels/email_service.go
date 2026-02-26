@@ -104,6 +104,10 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 	if req.Body == "" {
 		return fmt.Errorf("邮件内容不能为空")
 	}
+	safeBody, err := sanitizeEmailBody(req.Body)
+	if err != nil {
+		return err
+	}
 
 	// 2. SMTP配置验证
 	if !s.config.EnableSMTP {
@@ -185,7 +189,7 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 		headers = append(headers, fmt.Sprintf("Cc: %s", strings.Join(cleanCc, ", ")))
 	}
 
-	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + req.Body
+	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + safeBody
 
 	// 6. 执行发送
 	addr := net.JoinHostPort(s.config.SMTPHost, strconv.Itoa(s.config.SMTPPort))
@@ -331,6 +335,16 @@ func normalizeSMTPAddress(value string) (string, error) {
 		return "", fmt.Errorf("invalid email address")
 	}
 	return strings.ToLower(parsed.Address), nil
+}
+
+func sanitizeEmailBody(body string) (string, error) {
+	// SMTP DATA 块不允许出现裸CR且需要阻断终止序列注入。
+	if strings.Contains(body, "\x00") {
+		return "", fmt.Errorf("邮件内容包含非法字符")
+	}
+	safeBody := strings.ReplaceAll(body, "\r\n.\r\n", "\r\n..\r\n")
+	safeBody = strings.ReplaceAll(safeBody, "\r", "")
+	return safeBody, nil
 }
 
 func sendSMTPMessage(addr string, auth smtp.Auth, from string, recipients []string, message []byte) error {

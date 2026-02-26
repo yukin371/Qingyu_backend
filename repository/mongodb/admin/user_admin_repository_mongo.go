@@ -25,6 +25,10 @@ type MongoUserAdminRepository struct {
 	db *mongo.Database
 }
 
+type userEmailFilter struct {
+	Email string `bson:"email"`
+}
+
 // NewMongoUserAdminRepository 创建用户管理仓储
 func NewMongoUserAdminRepository(db *mongo.Database) adminrepo.UserAdminRepository {
 	return &MongoUserAdminRepository{db: db}
@@ -107,7 +111,7 @@ func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string)
 	}
 
 	var user users.User
-	filter := bson.M{"email": canonicalEmail}
+	filter := userEmailFilter{Email: canonicalEmail}
 
 	err = r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
