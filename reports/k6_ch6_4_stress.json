@@ -1,0 +1,170 @@
+{
+    "metrics": {
+        "http_req_connecting": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 59.8384,
+            "avg": 0.010423717119448039,
+            "min": 0,
+            "med": 0
+        },
+        "http_reqs": {
+            "count": 44061,
+            "rate": 243.49319478630787
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_receiving": {
+            "avg": 1.8621518440344016,
+            "min": 0,
+            "med": 0.5264,
+            "p(90)": 4.5391,
+            "p(95)": 8.2483,
+            "max": 200.9731
+        },
+        "vus": {
+            "value": 100,
+            "min": 100,
+            "max": 100
+        },
+        "vus_max": {
+            "value": 100,
+            "min": 100,
+            "max": 100
+        },
+        "iteration_duration": {
+            "avg": 1229.8805763191936,
+            "min": 1014.2533,
+            "med": 1240.8184,
+            "p(90)": 1465.12594,
+            "p(95)": 1507.2400799999998,
+            "max": 1719.8588
+        },
+        "data_received": {
+            "rate": 3705560.602656295,
+            "count": 670534985
+        },
+        "group_duration": {
+            "med": 7.685700000000001,
+            "p(90)": 418.66448,
+            "p(95)": 462.7741999999999,
+            "max": 711.2279,
+            "avg": 114.26031248723356,
+            "min": 0
+        },
+        "data_sent": {
+            "count": 4141734,
+            "rate": 22888.36030991294
+        },
+        "iterations": {
+            "count": 14687,
+            "rate": 81.16439826210262
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 75.9583790222646,
+            "min": 1.6573,
+            "med": 10.5563,
+            "p(90)": 314.2501,
+            "p(95)": 370.2961,
+            "max": 606.4749
+        },
+        "checks": {
+            "passes": 44061,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_waiting": {
+            "p(90)": 310.7366,
+            "p(95)": 367.046,
+            "max": 606.4749,
+            "avg": 74.06882179478427,
+            "min": 1.0738,
+            "med": 8.9398
+        },
+        "http_req_duration": {
+            "p(95)": 370.2961,
+            "max": 606.4749,
+            "avg": 75.9583790222646,
+            "min": 1.6573,
+            "med": 10.5563,
+            "p(90)": 314.2501,
+            "thresholds": {
+                "p(95)<1200": false
+            }
+        },
+        "http_req_sending": {
+            "avg": 0.027405383445677577,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 26.8037
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 44061,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_req_blocked": {
+            "max": 59.8384,
+            "avg": 0.0167589637094029,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        }
+    },
+    "root_group": {
+        "groups": {
+            "public_endpoints": {
+                "name": "public_endpoints",
+                "path": "::public_endpoints",
+                "id": "7f2a7e521f2f02d1649ebb7a1e98b7e2",
+                "groups": {},
+                "checks": {
+                        "GET /health status is 200": {
+                            "fails": 0,
+                            "name": "GET /health status is 200",
+                            "path": "::public_endpoints::GET /health status is 200",
+                            "id": "ae6eed9b90fc1b4d84ec09a9e67ab5a9",
+                            "passes": 14687
+                        },
+                        "GET /bookstore/homepage status is 200": {
+                            "fails": 0,
+                            "name": "GET /bookstore/homepage status is 200",
+                            "path": "::public_endpoints::GET /bookstore/homepage status is 200",
+                            "id": "125d43228f15a6517ac86db799f76922",
+                            "passes": 14687
+                        },
+                        "GET /bookstore/books status is 200": {
+                            "passes": 14687,
+                            "fails": 0,
+                            "name": "GET /bookstore/books status is 200",
+                            "path": "::public_endpoints::GET /bookstore/books status is 200",
+                            "id": "36591bffd484f50885c7a9554433a955"
+                        }
+                    }
+            },
+            "auth_optional_endpoints": {
+                "id": "f4a1b6379366cbfcad23e9a962e67725",
+                "groups": {},
+                "checks": {},
+                "name": "auth_optional_endpoints",
+                "path": "::auth_optional_endpoints"
+            }
+        },
+        "checks": {},
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+}

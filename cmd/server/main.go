@@ -60,8 +60,12 @@ func main() {
 		configPath = os.Getenv("CONFIG_PATH")
 	}
 	if configPath == "" {
-		// 默认尝试 /app/config/config.yaml（Docker环境）
-		if _, err := os.Stat("/app/config/config.yaml"); err == nil {
+		// 默认尝试 /app/configs/config.yaml（Docker环境新路径）
+		if _, err := os.Stat("/app/configs/config.yaml"); err == nil {
+			configPath = "/app/configs/config.yaml"
+			log.Printf("[Main] Found Docker config at: %s", configPath)
+		} else if _, err := os.Stat("/app/config/config.yaml"); err == nil {
+			// 兼容旧路径
 			configPath = "/app/config/config.yaml"
 			log.Printf("[Main] Found Docker config at: %s", configPath)
 		} else {

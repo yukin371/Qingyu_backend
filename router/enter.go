@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	searchRouter "Qingyu_backend/api/v1/search"
@@ -37,6 +38,7 @@ import (
 	sharedStorage "Qingyu_backend/service/shared/storage"
 
 	versionAPI "Qingyu_backend/api/v1"
+	"Qingyu_backend/config"
 	financeApi "Qingyu_backend/api/v1/finance"
 	messagesApi "Qingyu_backend/api/v1/messages"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
@@ -563,7 +565,11 @@ func RegisterRoutes(r *gin.Engine) {
 	// 创建配置管理服务
 	configPath := os.Getenv("CONFIG_FILE")
 	if configPath == "" {
-		configPath = "./config/config.yaml"
+		if _, err := os.Stat("./configs/config.yaml"); err == nil {
+			configPath = "./configs/config.yaml"
+		} else {
+			configPath = "./config/config.yaml" // 兼容旧路径
+		}
 	}
 	configSvc := sharedService.NewConfigService(configPath)
 
@@ -833,30 +839,64 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 
 // initElasticsearch 初始化 Elasticsearch 客户端和引擎
 func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searchengine.Engine) {
+	cfg := config.GlobalConfig
+
 	// 从环境变量读取 ES 配置
 	esURL := os.Getenv("ELASTICSEARCH_URL")
+	if esURL == "" && cfg != nil && cfg.Elasticsearch != nil && cfg.Elasticsearch.URL != "" {
+		esURL = cfg.Elasticsearch.URL
+	}
 	if esURL == "" {
 		esURL = "http://localhost:9200" // 默认地址
 	}
 
-	esEnabled := os.Getenv("ELASTICSEARCH_ENABLED")
-	if esEnabled == "" || esEnabled == "false" {
+	esEnabledRaw := os.Getenv("ELASTICSEARCH_ENABLED")
+	esEnabled := false
+	switch strings.ToLower(esEnabledRaw) {
+	case "true", "1", "yes", "on":
+		esEnabled = true
+	case "false", "0", "no", "off":
+		esEnabled = false
+	default:
+		if cfg != nil && cfg.Elasticsearch != nil {
+			esEnabled = cfg.Elasticsearch.Enabled
+		}
+	}
+	if !esEnabled {
 		logger.Info("Elasticsearch 未启用")
 		return nil, nil
 	}
 
 	esIndexPrefix := os.Getenv("ELASTICSEARCH_INDEX_PREFIX")
+	if esIndexPrefix == "" && cfg != nil && cfg.Elasticsearch != nil && cfg.Elasticsearch.IndexPrefix != "" {
+		esIndexPrefix = cfg.Elasticsearch.IndexPrefix
+	}
 	if esIndexPrefix == "" {
 		esIndexPrefix = "qingyu" // 默认前缀
 	}
 
 	// 灰度配置
-	grayscaleEnabled := os.Getenv("ELASTICSEARCH_GRAYSCALE_ENABLED")
+	grayscaleEnabledRaw := os.Getenv("ELASTICSEARCH_GRAYSCALE_ENABLED")
+	grayscaleEnabled := false
+	switch strings.ToLower(grayscaleEnabledRaw) {
+	case "true", "1", "yes", "on":
+		grayscaleEnabled = true
+	case "false", "0", "no", "off":
+		grayscaleEnabled = false
+	default:
+		if cfg != nil && cfg.Elasticsearch != nil && cfg.Elasticsearch.GrayScale != nil {
+			grayscaleEnabled = cfg.Elasticsearch.GrayScale.Enabled
+		}
+	}
+
 	grayscalePercent := 0
-	if grayscaleEnabled == "true" {
+	if grayscaleEnabled {
 		percentStr := os.Getenv("ELASTICSEARCH_GRAYSCALE_PERCENT")
 		if percentStr != "" {
 			fmt.Sscanf(percentStr, "%d", &grayscalePercent)
+		}
+		if grayscalePercent == 0 && cfg != nil && cfg.Elasticsearch != nil && cfg.Elasticsearch.GrayScale != nil {
+			grayscalePercent = cfg.Elasticsearch.GrayScale.Percent
 		}
 		if grayscalePercent == 0 {
 			grayscalePercent = 10 // 默认 10%
@@ -897,7 +937,7 @@ func initElasticsearch(logger *zap.Logger) (*searchService.SearchConfig, searche
 			URL:         esURL,
 			IndexPrefix: esIndexPrefix,
 			GrayScale: searchService.GrayScaleConfig{
-				Enabled: grayscaleEnabled == "true",
+				Enabled: grayscaleEnabled,
 				Percent: grayscalePercent,
 			},
 		},

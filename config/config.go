@@ -21,12 +21,27 @@ type Config struct {
 	Log      *LogConfig                        `mapstructure:"log"`
 	JWT      *JWTConfig                        `mapstructure:"jwt"`
 	AI       *AIConfig                         `mapstructure:"ai"`
+	Elasticsearch *ElasticsearchConfig         `mapstructure:"elasticsearch"`
 	External *ExternalAPIConfig                `mapstructure:"external"`
 	AIQuota  *AIQuotaConfig                    `mapstructure:"ai_quota"`
 	Email    *EmailConfig                      `mapstructure:"email"`
 	Payment  *PaymentConfig                    `mapstructure:"payment"`
 	RateLimit *RateLimitConfig                 `mapstructure:"rate_limit"`
 	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
+}
+
+// ElasticsearchConfig Elasticsearch 配置
+type ElasticsearchConfig struct {
+	Enabled     bool                      `mapstructure:"enabled"`
+	URL         string                    `mapstructure:"url"`
+	IndexPrefix string                    `mapstructure:"index_prefix"`
+	GrayScale   *ElasticsearchGrayConfig  `mapstructure:"grayscale"`
+}
+
+// ElasticsearchGrayConfig Elasticsearch 灰度配置
+type ElasticsearchGrayConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+	Percent int  `mapstructure:"percent"`
 }
 
 // ServerConfig 服务器配置
@@ -265,7 +280,9 @@ func LoadConfig(configPath string) (*Config, error) {
 		// 优先尝试加载 config.test.yaml（测试配置优先）
 		testConfigPaths := []string{
 			configPath,
+			"./configs",
 			"./config",
+			"../../configs",
 			"../../config",
 			".",
 		}
@@ -285,10 +302,12 @@ func LoadConfig(configPath string) (*Config, error) {
 		if !testConfigFound {
 			v.SetConfigName("config")       // 配置文件名（不带扩展名）
 			v.SetConfigType("yaml")         // 配置文件类型
-			v.AddConfigPath(configPath)     // 配置文件路径
-			v.AddConfigPath("./config")     // config子目录
-			v.AddConfigPath("../../config") // 从cmd/server运行时
-			v.AddConfigPath(".")            // 当前目录
+			v.AddConfigPath(configPath)      // 配置文件路径
+			v.AddConfigPath("./configs")     // configs子目录（新）
+			v.AddConfigPath("./config")      // config子目录（兼容）
+			v.AddConfigPath("../../configs") // 从cmd/server运行时（新）
+			v.AddConfigPath("../../config")  // 从cmd/server运行时（兼容）
+			v.AddConfigPath(".")             // 当前目录
 			fmt.Println("[Config] Test config not found, using default config search")
 		}
 	}
@@ -423,6 +442,13 @@ func setDefaults() {
 	v.SetDefault("ai.ai_service.endpoint", "localhost:50052")
 	v.SetDefault("ai.ai_service.enable_fallback", false)
 	v.SetDefault("ai.ai_service.timeout", 30)
+
+	// Elasticsearch 默认配置
+	v.SetDefault("elasticsearch.enabled", false)
+	v.SetDefault("elasticsearch.url", "http://localhost:9200")
+	v.SetDefault("elasticsearch.index_prefix", "qingyu")
+	v.SetDefault("elasticsearch.grayscale.enabled", false)
+	v.SetDefault("elasticsearch.grayscale.percent", 10)
 
 	// 邮件默认配置
 	v.SetDefault("email.enabled", false)

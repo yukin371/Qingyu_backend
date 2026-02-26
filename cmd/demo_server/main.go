@@ -122,11 +122,18 @@ func loadDemoConfig() error {
 		configPath = "."
 	}
 
-	// 优先使用演示配置文件
-	demoConfigPath := filepath.Join(configPath, "config.demo.yaml")
-	if _, err := os.Stat(demoConfigPath); err == nil {
-		configPath = demoConfigPath
-		fmt.Printf("[演示模式] 使用演示配置: %s\n", configPath)
+	// 优先使用演示配置文件（新路径），兼容旧路径
+	demoConfigPathCandidates := []string{
+		filepath.Join(configPath, "configs", "config.demo.yaml"),
+		filepath.Join(configPath, "config", "config.demo.yaml"),
+		filepath.Join(configPath, "config.demo.yaml"),
+	}
+	for _, candidate := range demoConfigPathCandidates {
+		if _, err := os.Stat(candidate); err == nil {
+			configPath = candidate
+			fmt.Printf("[演示模式] 使用演示配置: %s\n", configPath)
+			break
+		}
 	}
 
 	// 加载配置
