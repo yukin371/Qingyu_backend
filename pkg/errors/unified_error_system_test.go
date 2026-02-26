@@ -328,11 +328,11 @@ func TestARCH005_ErrorRetryable(t *testing.T) {
 // 验证：ARCH-005要求 - 错误应该支持JSON序列化用于API响应
 func TestARCH005_ErrorJSONSerialization(t *testing.T) {
 	t.Run("UnifiedError应该可以序列化为JSON", func(t *testing.T) {
-		err := UserServiceFactory.AuthError("UNAUTHORIZED", "未授权").
+		appErr := UserServiceFactory.AuthError("UNAUTHORIZED", "未授权").
 			WithContext("user123", "req456", "trace789")
 
-		jsonData, err := err.ToJSON()
-		assert.NoError(t, err)
+		jsonData, jsonErr := appErr.ToJSON()
+		assert.NoError(t, jsonErr)
 		assert.NotEmpty(t, jsonData)
 
 		// 验证JSON包含关键字段

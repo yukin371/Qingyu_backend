@@ -13,6 +13,8 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
 	_ "Qingyu_backend/docs"
+	"Qingyu_backend/service"
+	serviceInterfaces "Qingyu_backend/service/interfaces/user"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -257,7 +259,7 @@ func ensureDemoData() {
 	defer cancel()
 
 	// 获取服务容器
-	container := getServiceContainer()
+	container := service.GetServiceContainer()
 	if container == nil {
 		fmt.Println("[演示模式] 服务容器未初始化，跳过数据检查")
 		return
@@ -271,9 +273,12 @@ func ensureDemoData() {
 	}
 
 	// 检查演示用户是否存在
-	users, err := userService.ListUsers(ctx, 1, 0)
-	if err == nil && len(users) > 0 {
-		fmt.Printf("[演示模式] 数据库已有 %d 个用户，跳过数据初始化\n", len(users))
+	listResp, err := userService.ListUsers(ctx, &serviceInterfaces.ListUsersRequest{
+		Page:     1,
+		PageSize: 10,
+	})
+	if err == nil && listResp != nil && len(listResp.Users) > 0 {
+		fmt.Printf("[演示模式] 数据库已有 %d 个用户，跳过数据初始化\n", len(listResp.Users))
 		return
 	}
 
@@ -282,13 +287,4 @@ func ensureDemoData() {
 	fmt.Println("  go run cmd/seeder/main.go")
 	fmt.Println()
 	fmt.Println("  或者手动创建演示账户后继续")
-}
-
-// getServiceContainer 获取服务容器
-func getServiceContainer() interface {
-	GetUserService() (interface{}, error)
-} {
-	// 返回nil，因为需要完整的服务容器实现
-	// 实际使用时会通过 service.GetServiceContainer() 获取
-	return nil
 }
