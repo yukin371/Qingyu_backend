@@ -1,10 +1,9 @@
 package reader
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
 	"Qingyu_backend/pkg/response"
@@ -51,19 +50,17 @@ func NewChapterAPI(chapterService interfaces.ReaderChapterService) *ChapterAPI {
 // @Router /reader/books/{bookId}/chapters/{chapterId} [get]
 
 func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	bookID, ok := shared.GetRequiredParam(c, "bookId", "书籍ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
 	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
@@ -102,20 +99,19 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/by-number/{chapterNum} [get]
 func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterNumStr := c.Param("chapterNum")
-
-	chapterNum, err := strconv.Atoi(chapterNumStr)
-	if err != nil || chapterNum <= 0 {
-		response.BadRequest(c,  "参数错误", "无效的章节号")
+	bookID, ok := shared.GetRequiredParam(c, "bookId", "书籍ID")
+	if !ok {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
+	chapterNum := shared.GetIntParam(c, "chapterNum", false, 0, 1, 0)
+	if chapterNum == 0 {
+		response.BadRequest(c, "参数错误", "无效的章节号")
+		return
 	}
+
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
 	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, bookID, chapterNum)
 	if err != nil {
@@ -149,19 +145,17 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/{chapterId}/next [get]
 func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	bookID, ok := shared.GetRequiredParam(c, "bookId", "书籍ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
 	nextChapter, err := api.chapterService.GetNextChapter(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
@@ -192,19 +186,17 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/{chapterId}/previous [get]
 func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	bookID, ok := shared.GetRequiredParam(c, "bookId", "书籍ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
 	prevChapter, err := api.chapterService.GetPreviousChapter(c.Request.Context(), userID, bookID, chapterID)
 	if err != nil {
@@ -235,30 +227,21 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters [get]
 func (api *ChapterAPI) GetChapterList(c *gin.Context) {
-	bookID := c.Param("bookId")
-
-	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+	bookID, ok := shared.GetRequiredParam(c, "bookId", "书籍ID")
+	if !ok {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "50"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 50
+	params := shared.GetPaginationParamsStandard(c)
+	// 覆盖size的默认值为50
+	if params.PageSize == 20 {
+		params.PageSize = 50
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	chapterList, err := api.chapterService.GetChapterList(c.Request.Context(), userID, bookID, page, size)
+	chapterList, err := api.chapterService.GetChapterList(c.Request.Context(), userID, bookID, params.Page, params.PageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -281,18 +264,13 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/chapters/{chapterId}/info [get]
 func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
-	chapterID := c.Param("chapterId")
-
-	if chapterID == "" {
-		response.BadRequest(c,  "参数错误", "章节ID不能为空")
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
 	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, chapterID)
 	if err != nil {

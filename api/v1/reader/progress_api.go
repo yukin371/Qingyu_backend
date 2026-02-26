@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
 )
@@ -52,13 +53,12 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	progress, err := api.readerService.GetReadingProgress(c.Request.Context(), userID.(string), bookID)
+	progress, err := api.readerService.GetReadingProgress(c.Request.Context(), userID, bookID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -78,19 +78,17 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 //	@Router		/api/v1/reader/progress [post]
 func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 	var req SaveProgressRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-			response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID.(string), req.BookID, req.ChapterID, req.Progress)
+	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID, req.BookID, req.ChapterID, req.Progress)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -108,19 +106,17 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/reading-time [put]
 func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 	var req UpdateReadingTimeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-			response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.readerService.UpdateReadingTime(c.Request.Context(), userID.(string), req.BookID, req.Duration)
+	err := api.readerService.UpdateReadingTime(c.Request.Context(), userID, req.BookID, req.Duration)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -138,15 +134,14 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/recent [get]
 func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 
-	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID.(string), limit)
+	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID, limit)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -165,16 +160,15 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/history [get]
 func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
-	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID.(string), page, size)
+	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID, page, size)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -197,9 +191,8 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/stats [get]
 func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -213,7 +206,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 		// 今天
 		start := time.Now().Truncate(hoursPerDay * time.Hour)
 		end := start.Add(hoursPerDay * time.Hour)
-		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
+		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID, start, end)
 	case "week":
 		// 本周
 		now := time.Now()
@@ -223,16 +216,16 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 		}
 		start := now.AddDate(0, 0, -(weekday - 1)).Truncate(hoursPerDay * time.Hour)
 		end := start.AddDate(0, 0, daysPerWeek)
-		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
+		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID, start, end)
 	case "month":
 		// 本月
 		now := time.Now()
 		start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 		end := start.AddDate(0, 1, 0)
-		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID.(string), start, end)
+		totalTime, err = api.readerService.GetReadingTimeByPeriod(c.Request.Context(), userID, start, end)
 	default:
 		// 总计
-		totalTime, err = api.readerService.GetTotalReadingTime(c.Request.Context(), userID.(string))
+		totalTime, err = api.readerService.GetTotalReadingTime(c.Request.Context(), userID)
 	}
 
 	if err != nil {
@@ -241,12 +234,12 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	}
 
 	// 获取未读完和已读完的书籍
-	unfinished, errUnfinished := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
+	unfinished, errUnfinished := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID)
 	if errUnfinished != nil {
 		unfinished = []*readerModels.ReadingProgress{} // 返回空列表而非失败
 	}
 
-	finished, errFinished := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	finished, errFinished := api.readerService.GetFinishedBooks(c.Request.Context(), userID)
 	if errFinished != nil {
 		finished = []*readerModels.ReadingProgress{} // 返回空列表而非失败
 	}
@@ -267,13 +260,12 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/unfinished [get]
 func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
+	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -290,13 +282,12 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 //	@Router		/api/v1/reader/progress/finished [get]
 func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-			response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
