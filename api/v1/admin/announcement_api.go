@@ -3,7 +3,8 @@ package admin
 import (
 	"strconv"
 
-	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
+	messagingModel "Qingyu_backend/models/messaging"
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	messagingService "Qingyu_backend/service/messaging"
 
@@ -115,9 +116,8 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [get]
 func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
@@ -145,14 +145,14 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Router /api/v1/admin/announcements [post]
 func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 	var req messagingService.CreateAnnouncementRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 从上下文获取当前用户ID
-	if userID, exists := c.Get("user_id"); exists {
-		req.CreatedBy = userID.(string)
+	userID, ok := shared.GetUserID(c)
+	if ok {
+		req.CreatedBy = userID
 	}
 
 	announcement, err := api.announcementService.CreateAnnouncement(c.Request.Context(), &req)
@@ -180,15 +180,13 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [put]
 func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
 	var req messagingService.UpdateAnnouncementRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
@@ -215,9 +213,8 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [delete]
 func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
@@ -244,8 +241,7 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 // @Router /api/v1/admin/announcements/batch-status [put]
 func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
 	var req messagingService.BatchUpdateAnnouncementStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
@@ -277,8 +273,7 @@ type BatchDeleteRequest struct {
 // @Router /api/v1/admin/announcements/batch-delete [delete]
 func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 	var req BatchDeleteRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
