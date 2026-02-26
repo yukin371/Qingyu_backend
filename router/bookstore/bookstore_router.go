@@ -61,9 +61,8 @@ func InitBookstoreRouter(
 
 	// 初始化其他服务的API处理器
 	var bookDetailApiHandler *bookstoreApi.BookDetailAPI
-	if bookDetailService != nil {
-		// 传入BookstoreService以确保/books/:id/detail与/books/:id使用相同数据源
-		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookDetailService, bookstoreService)
+	if bookstoreService != nil {
+		bookDetailApiHandler = bookstoreApi.NewBookDetailAPI(bookstoreService)
 	}
 
 	// 初始化Rating API处理器
@@ -117,7 +116,6 @@ func InitBookstoreRouter(
 			// 书籍详情接口（当BookDetailAPI可用时）- 必须在 /books/:id 之前注册
 			if bookDetailApiHandler != nil {
 				public.GET("/books/:id/detail", bookDetailApiHandler.GetBookDetail)
-				public.GET("/books/:id/statistics", bookDetailApiHandler.GetBookStatistics)
 				// ✅ 浏览量记录API（公开接口，不需要认证）
 				public.POST("/books/:id/view", bookDetailApiHandler.IncrementViewCount)
 			}
