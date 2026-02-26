@@ -2,6 +2,8 @@ package bookstore
 
 import (
 	bookstore2 "Qingyu_backend/models/bookstore"
+	searchModels "Qingyu_backend/models/search"
+	"Qingyu_backend/models/shared/types"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -56,14 +59,20 @@ type BookstoreService interface {
 	// 元数据查询 - 用于筛选项
 	GetYears(ctx context.Context) ([]int, error)
 	GetTags(ctx context.Context, categoryID *string) ([]string, error)
+
+	// 搜索相关 - 集成SearchService
+	SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error)
+	SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error)
+	GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error)
 }
 
 // BookstoreServiceImpl 书城服务实现
 type BookstoreServiceImpl struct {
-	bookRepo     BookstoreRepo.BookRepository
-	categoryRepo BookstoreRepo.CategoryRepository
-	bannerRepo   BookstoreRepo.BannerRepository
-	rankingRepo  BookstoreRepo.RankingRepository
+	bookRepo      BookstoreRepo.BookRepository
+	categoryRepo  BookstoreRepo.CategoryRepository
+	bannerRepo    BookstoreRepo.BannerRepository
+	rankingRepo   BookstoreRepo.RankingRepository
+	searchService interface{} // SearchService接口（避免循环依赖）
 }
 
 // HomepageData 首页数据结构
@@ -89,6 +98,11 @@ func NewBookstoreService(
 		bannerRepo:   bannerRepo,
 		rankingRepo:  rankingRepo,
 	}
+}
+
+// SetSearchService 设置SearchService（避免循环依赖）
+func (s *BookstoreServiceImpl) SetSearchService(searchService interface{}) {
+	s.searchService = searchService
 }
 
 // GetAllBooks 获取所有书籍列表（分页）
@@ -804,4 +818,267 @@ func (s *BookstoreServiceImpl) GetTags(ctx context.Context, categoryID *string) 
 
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// ========== 搜索相关辅助方法 ==========
+
+// BuildSearchFilter 构建搜索过滤条件
+// 将前端参数转换为后端过滤条件
+func BuildSearchFilter(categoryID, author, status string, tags []string) map[string]interface{} {
+	filter := make(map[string]interface{})
+
+	if categoryID != "" {
+		filter["category_id"] = categoryID
+	}
+
+	if author != "" {
+		filter["author"] = author
+	}
+
+	if status != "" {
+		// 映射前端状态值到后端状态值
+		var backendStatus string
+		switch status {
+		case "serializing":
+			backendStatus = "ongoing"
+		case "completed", "paused":
+			backendStatus = status
+		default:
+			backendStatus = status
+		}
+		filter["status"] = backendStatus
+	}
+
+	if len(tags) > 0 {
+		filter["tags"] = tags
+	}
+
+	return filter
+}
+
+// BuildSearchSort 构建搜索排序条件
+func BuildSearchSort(sortBy, sortOrder string) []searchModels.SortField {
+	var ascending bool
+	if sortOrder == "asc" {
+		ascending = true
+	}
+
+	return []searchModels.SortField{
+		{
+			Field:     sortBy,
+			Ascending: ascending,
+		},
+	}
+}
+
+// DeduplicateAndLimitBooks 去重并限制数量
+func DeduplicateAndLimitBooks(books []*bookstore2.Book, excludeID string, limit int) []*bookstore2.Book {
+	seen := make(map[string]bool)
+	result := make([]*bookstore2.Book, 0, len(books))
+
+	for _, b := range books {
+		bookID := b.ID.Hex()
+		// 排除指定ID和已添加的书籍
+		if bookID != excludeID && !seen[bookID] {
+			result = append(result, b)
+			seen[bookID] = true
+		}
+		if len(result) >= limit {
+			break
+		}
+	}
+	return result
+}
+
+// ConvertSearchResponseToBooks 将搜索响应转换为 Book 切片
+func ConvertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2.Book {
+	books := make([]*bookstore2.Book, 0, len(items))
+
+	for _, item := range items {
+		book := &bookstore2.Book{}
+
+		// 从 Data 中提取字段
+		if id, ok := item.Data["id"].(string); ok {
+			if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+				book.ID = objectID
+			}
+		}
+		if title, ok := item.Data["title"].(string); ok {
+			book.Title = title
+		}
+		if author, ok := item.Data["author"].(string); ok {
+			book.Author = author
+		}
+		if intro, ok := item.Data["introduction"].(string); ok {
+			book.Introduction = intro
+		}
+		if coverURL, ok := item.Data["cover_url"].(string); ok {
+			book.Cover = coverURL
+		}
+		if viewCount, ok := item.Data["view_count"].(int64); ok {
+			book.ViewCount = viewCount
+		}
+		if rating, ok := item.Data["rating"].(float64); ok {
+			book.Rating = types.Rating(rating)
+		}
+		if wordCount, ok := item.Data["word_count"].(int64); ok {
+			book.WordCount = wordCount
+		}
+		if status, ok := item.Data["status"].(string); ok {
+			book.Status = bookstore2.BookStatus(status)
+		}
+
+		books = append(books, book)
+	}
+
+	return books
+}
+
+// SearchSimilarBooks 搜索相似书籍
+// 这是一个辅助方法，被GetSimilarBooks调用
+// 参数：
+//   - book: 原书籍
+//   - limit: 返回数量限制
+//   - useCategory: 是否使用分类过滤
+//   - useTags: 是否使用标签过滤
+func SearchSimilarBooks(
+	ctx context.Context,
+	book *bookstore2.Book,
+	limit int,
+	useCategory bool,
+	useTags bool,
+	bookRepo BookstoreRepo.BookRepository,
+) []*bookstore2.Book {
+
+	filter := &bookstore2.BookFilter{
+		Limit:     limit + 1, // 多查一条用于排除当前书籍
+		Offset:    0,
+		SortBy:    "view_count",
+		SortOrder: "desc",
+	}
+
+	// 注意：Book 模型使用 CategoryIDs 数组而非单个 CategoryID
+	// 如果书籍有分类ID，使用第一个分类ID进行查询
+	if useCategory && len(book.CategoryIDs) > 0 {
+		firstCategoryID := book.CategoryIDs[0].Hex()
+		filter.CategoryID = &firstCategoryID
+	}
+
+	if useTags && len(book.Tags) > 0 {
+		filter.Tags = book.Tags
+	}
+
+	books, err := bookRepo.SearchWithFilter(ctx, filter)
+	if err != nil {
+		return []*bookstore2.Book{}
+	}
+
+	return books
+}
+
+// ========== SearchService集成方法 ==========
+
+// SearchByTitle 按标题搜索书籍
+// 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
+func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error) {
+	// 优先使用新路径 (SearchService - Milvus向量搜索)
+	// TODO: 实现SearchService集成
+	_ = s.searchService // 暂时避免未使用警告
+
+	// Fallback 到旧路径 (MongoDB查询)
+	filter := &bookstore2.BookFilter{
+		Keyword:   &title,
+		SortBy:    "view_count",
+		SortOrder: "desc",
+		Limit:     size,
+		Offset:    (page - 1) * size,
+	}
+
+	books, total, err := s.SearchBooksWithFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search books by title: %w", err)
+	}
+
+	// 确保返回空数组而不是nil
+	if books == nil {
+		books = make([]*bookstore2.Book, 0)
+	}
+
+	return books, total, nil
+}
+
+// SearchByAuthor 按作者搜索书籍
+// 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
+func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error) {
+	// 优先使用新路径 (SearchService - Milvus向量搜索)
+	// TODO: 实现SearchService集成
+	_ = s.searchService // 暂时避免未使用警告
+
+	// Fallback 到旧路径 (MongoDB查询)
+	filter := &bookstore2.BookFilter{
+		Author:    &author,
+		SortBy:    "view_count",
+		SortOrder: "desc",
+		Limit:     size,
+		Offset:    (page - 1) * size,
+	}
+
+	books, total, err := s.SearchBooksWithFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search books by author: %w", err)
+	}
+
+	// 确保返回空数组而不是nil
+	if books == nil {
+		books = make([]*bookstore2.Book, 0)
+	}
+
+	return books, total, nil
+}
+
+// GetSimilarBooks 获取相似书籍推荐
+// 基于书籍分类、标签等推荐相似书籍，有四层降级策略
+func (s *BookstoreServiceImpl) GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error) {
+	// 获取原书籍信息
+	book, err := s.GetBookByID(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book: %w", err)
+	}
+
+	var result []*bookstore2.Book
+
+	// v1.2实现：四层降级策略
+	// 策略1: 同分类 + 标签
+	result = SearchSimilarBooks(ctx, book, limit, true, true, s.bookRepo)
+
+	// 策略2: 如果结果不足，尝试同分类
+	if len(result) < limit {
+		additional := SearchSimilarBooks(ctx, book, limit-len(result), true, false, s.bookRepo)
+		result = append(result, additional...)
+	}
+
+	// 策略3: 如果还不足，尝试标签匹配
+	if len(result) < limit {
+		additional := SearchSimilarBooks(ctx, book, limit-len(result), false, true, s.bookRepo)
+		result = append(result, additional...)
+	}
+
+	// 策略4: 兜底 - 返回热门书籍（禁止返回空列表）
+	if len(result) == 0 {
+		popularBooks, _, err := s.GetHotBooks(ctx, 1, limit)
+		if err == nil && len(popularBooks) > 0 {
+			result = popularBooks
+		} else {
+			// 如果连热门书籍都获取失败，尝试推荐书籍
+			recommendedBooks, _, err := s.GetRecommendedBooks(ctx, 1, limit)
+			if err == nil && len(recommendedBooks) > 0 {
+				result = recommendedBooks
+			}
+		}
+	}
+
+	// 去重并限制数量
+	uniqueResult := DeduplicateAndLimitBooks(result, bookID, limit)
+
+	return uniqueResult, nil
 }

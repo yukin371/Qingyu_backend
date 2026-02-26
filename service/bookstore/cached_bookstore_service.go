@@ -385,3 +385,20 @@ func (c *CachedBookstoreService) UpdateRankings(ctx context.Context, rankingType
 func (c *CachedBookstoreService) GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
 	return c.service.GetBooksByAuthorID(ctx, authorID, page, pageSize)
 }
+
+// ========== 新增方法 ==========
+
+// SearchByTitle 按标题搜索书籍（直接委托，不使用缓存）
+func (c *CachedBookstoreService) SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error) {
+	return c.service.SearchByTitle(ctx, title, page, size)
+}
+
+// SearchByAuthor 按作者搜索书籍（直接委托，不使用缓存）
+func (c *CachedBookstoreService) SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error) {
+	return c.service.SearchByAuthor(ctx, author, page, size)
+}
+
+// GetSimilarBooks 获取相似书籍推荐（直接委托，不使用缓存）
+func (c *CachedBookstoreService) GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error) {
+	return c.service.GetSimilarBooks(ctx, bookID, limit)
+}
