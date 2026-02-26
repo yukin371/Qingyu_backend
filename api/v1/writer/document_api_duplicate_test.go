@@ -40,15 +40,15 @@ func TestDocumentApi_DuplicateDocument_MissingUserID(t *testing.T) {
 	assert.Equal(t, float64(1002), response["code"]) // 1002 = Unauthorized
 }
 
-// TestDocumentApi_DuplicateDocument_InvalidJSON 测试无效的JSON请求（有userId）
+// TestDocumentApi_DuplicateDocument_InvalidJSON 测试无效的JSON请求（有user_id）
 func TestDocumentApi_DuplicateDocument_InvalidJSON(t *testing.T) {
 	// Given
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	// 添加middleware来设置userId
+	// 添加middleware来设置user_id
 	r.Use(func(c *gin.Context) {
-		c.Set("userId", primitive.NewObjectID().Hex())
+		c.Set("user_id", primitive.NewObjectID().Hex())
 		c.Next()
 	})
 
@@ -74,9 +74,9 @@ func TestDocumentApi_DuplicateDocument_ServiceNotInitialized(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	// 添加middleware来设置userId
+	// 添加middleware来设置user_id
 	r.Use(func(c *gin.Context) {
-		c.Set("userId", primitive.NewObjectID().Hex())
+		c.Set("user_id", primitive.NewObjectID().Hex())
 		c.Next()
 	})
 
@@ -116,9 +116,9 @@ func TestDocumentApi_DuplicateDocument_ValidRequestStructure(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	// 添加middleware来设置userId
+	// 添加middleware来设置user_id
 	r.Use(func(c *gin.Context) {
-		c.Set("userId", primitive.NewObjectID().Hex())
+		c.Set("user_id", primitive.NewObjectID().Hex())
 		c.Next()
 	})
 
