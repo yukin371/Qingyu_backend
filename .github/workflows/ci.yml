@@ -51,7 +51,13 @@ jobs:
             exit 0
           fi
 
-          unformatted_files=$(echo "$changed_go_files" | xargs gofmt -s -l)
+          existing_go_files=$(echo "$changed_go_files" | while read -r f; do [ -n "$f" ] && [ -f "$f" ] && echo "$f"; done)
+          if [ -z "$existing_go_files" ]; then
+            echo "No existing changed Go files to format-check."
+            exit 0
+          fi
+
+          unformatted_files=$(echo "$existing_go_files" | xargs gofmt -s -l)
           if [ -n "$unformatted_files" ]; then
             echo "The following changed files are not formatted:"
             echo "$unformatted_files"
