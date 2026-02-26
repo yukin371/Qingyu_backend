@@ -1,7 +1,6 @@
 package ai
 
 import (
-	"context"
 	"fmt"
 
 	aiService "Qingyu_backend/service/ai"
