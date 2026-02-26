@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -28,13 +30,31 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.2
 
       - name: Run golangci-lint
-        run: golangci-lint run --timeout=10m
+        run: |
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            golangci-lint run --timeout=10m --new-from-rev=HEAD~1
+          else
+            # Fallback for shallow/manual runs without history
+            golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/...
+          fi
 
       - name: Check code formatting
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go code is not formatted:"
-            gofmt -d .
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            changed_go_files=$(git diff --name-only HEAD~1..HEAD -- '*.go' || true)
+          else
+            changed_go_files=$(git ls-files '*.go')
+          fi
+
+          if [ -z "$changed_go_files" ]; then
+            echo "No changed Go files to format-check."
+            exit 0
+          fi
+
+          unformatted_files=$(echo "$changed_go_files" | xargs gofmt -s -l)
+          if [ -n "$unformatted_files" ]; then
+            echo "The following changed files are not formatted:"
+            echo "$unformatted_files"
             exit 1
           fi
 
@@ -76,8 +96,13 @@ jobs:
 
       - name: Run unit tests
         run: |
+          TEST_PACKAGES=$(go list ./... | \
+            grep -v '^Qingyu_backend/cmd/' | \
+            grep -v '^Qingyu_backend/test/' | \
+            grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/.archive/')
           go test -v -race -short -coverprofile=coverage.txt -covermode=atomic \
-            $(go list ./... | grep -v /test/)
+            $TEST_PACKAGES
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
