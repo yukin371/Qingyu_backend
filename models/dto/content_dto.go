@@ -681,3 +681,216 @@ type DocumentTreeResponse struct {
 	ProjectID string              `json:"projectId"`
 	Documents []*DocumentTreeNode `json:"documents"`
 }
+
+// ============================================================================
+// 章节内容 DTO
+// ============================================================================
+
+// ChapterResponse 章节内容响应
+type ChapterResponse struct {
+	ChapterID   string `json:"chapterId"`
+	BookID      string `json:"bookId"`
+	ChapterNum  int    `json:"chapterNum"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	WordCount   int    `json:"wordCount"`
+	IsVIP       bool   `json:"isVip"`
+	PublishedAt int64  `json:"publishedAt"`
+}
+
+// ChapterInfo 章节信息（不含内容）
+type ChapterInfo struct {
+	ChapterID   string `json:"chapterId"`
+	BookID      string `json:"bookId"`
+	ChapterNum  int    `json:"chapterNum"`
+	Title       string `json:"title"`
+	WordCount   int    `json:"wordCount"`
+	IsVIP       bool   `json:"isVip"`
+	PublishedAt int64  `json:"publishedAt"`
+}
+
+// ChapterListResponse 章节列表响应
+type ChapterListResponse struct {
+	Chapters []*ChapterInfo `json:"chapters"`
+	Total    int64          `json:"total"`
+	Page     int            `json:"page"`
+	PageSize int            `json:"pageSize"`
+}
+
+// ChapterPublishStatus 章节发布状态
+type ChapterPublishStatus struct {
+	ChapterID     string    `json:"chapterId"`
+	IsPublished   bool      `json:"isPublished"`
+	ChapterNumber int       `json:"chapterNumber"`
+	PublishTime   *time.Time `json:"publishTime,omitempty"`
+	UpdateTime    time.Time `json:"updateTime"`
+}
+
+// UpdateChapterPublishStatusRequest 更新章节发布状态请求
+type UpdateChapterPublishStatusRequest struct {
+	IsPublished     bool       `json:"isPublished"`
+	IsFree          bool       `json:"isFree"`
+	ChapterNumber   *int       `json:"chapterNumber,omitempty" validate:"omitempty,min=1"`
+	PublishTime     *time.Time `json:"publishTime,omitempty"`
+	UnpublishReason string     `json:"unpublishReason,omitempty" validate:"max=500"`
+}
+
+// ============================================================================
+// 阅读进度 DTO
+// ============================================================================
+
+// ReadingProgressResponse 阅读进度响应
+type ReadingProgressResponse struct {
+	UserID      string  `json:"userId"`
+	BookID      string  `json:"bookId"`
+	ChapterID   string  `json:"chapterId"`
+	Progress    float64 `json:"progress"`
+	ReadingTime int64   `json:"readingTime"`
+	UpdateTime  int64   `json:"updateTime"`
+	BookTitle   string  `json:"bookTitle"`
+	ChapterNum  int     `json:"chapterNum"`
+}
+
+// SaveProgressRequest 保存进度请求
+type SaveProgressRequest struct {
+	UserID    string  `json:"userId" validate:"required"`
+	BookID    string  `json:"bookId" validate:"required"`
+	ChapterID string  `json:"chapterId" validate:"required"`
+	Progress  float64 `json:"progress" validate:"min=0,max=1"`
+}
+
+// RecentBooksResponse 最近阅读响应
+type RecentBooksResponse struct {
+	Books []*BookProgressInfo `json:"books"`
+	Total int                 `json:"total"`
+}
+
+// BookProgressInfo 书籍进度信息
+type BookProgressInfo struct {
+	BookID       string  `json:"bookId"`
+	BookTitle    string  `json:"bookTitle"`
+	CoverURL     string  `json:"coverUrl"`
+	Progress     float64 `json:"progress"`
+	ChapterNum   int     `json:"chapterNum"`
+	ReadingTime  int64   `json:"readingTime"`
+	LastReadTime int64   `json:"lastReadTime"`
+	Status       string  `json:"status"`
+}
+
+// ReadingStatsResponse 阅读统计响应
+type ReadingStatsResponse struct {
+	TotalBooks       int   `json:"totalBooks"`
+	FinishedBooks    int   `json:"finishedBooks"`
+	UnfinishedBooks  int   `json:"unfinishedBooks"`
+	TotalReadingTime int64 `json:"totalReadingTime"` // 秒
+	TotalWords       int64 `json:"totalWords"`
+	ReadingDays      int   `json:"readingDays"`
+	MaxStreak        int   `json:"maxStreak"`
+}
+
+// ReadingHistoryResponse 阅读历史响应
+type ReadingHistoryResponse struct {
+	Progresses  []*ReadingProgressResponse `json:"progresses"`
+	Total       int64                      `json:"total"`
+	Page        int                        `json:"page"`
+	PageSize    int                        `json:"pageSize"`
+	TotalPages  int                        `json:"totalPages"`
+}
+
+// ReadingTrendsResponse 阅读趋势响应
+type ReadingTrendsResponse struct {
+	Period string           `json:"period"` // daily, weekly, monthly
+	Trends []*TrendDataPoint `json:"trends"`
+}
+
+// TrendDataPoint 趋势数据点
+type TrendDataPoint struct {
+	Date       string `json:"date"`
+	ReadingTime int64  `json:"readingTime"` // 秒
+	WordsRead  int64  `json:"wordsRead"`
+	BooksRead  int    `json:"booksRead"`
+}
+
+// ReadingStreakResponse 连续阅读天数响应
+type ReadingStreakResponse struct {
+	CurrentStreak int `json:"currentStreak"`
+	MaxStreak     int `json:"maxStreak"`
+	LastReadDate  int64 `json:"lastReadDate"`
+}
+
+// ProgressSyncData 进度同步数据
+type ProgressSyncData struct {
+	Progresses   []*ReadingProgressResponse `json:"progresses"`
+	SyncTime     int64                      `json:"syncTime"`
+	HasMore      bool                       `json:"hasMore"`
+}
+
+// ============================================================================
+// 项目管理补充 DTO
+// ============================================================================
+
+// ProjectResponse 项目响应
+type ProjectResponse struct {
+	ProjectID   string              `json:"projectId"`
+	Title       string              `json:"title"`
+	Summary     string              `json:"summary"`
+	CoverURL    string              `json:"coverUrl"`
+	Category    string              `json:"category"`
+	Tags        []string            `json:"tags"`
+	Status      string              `json:"status"`
+	Statistics  *ProjectStatistics  `json:"statistics"`
+	CreatedBy   string              `json:"createdBy"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	UpdatedAt   time.Time           `json:"updatedAt"`
+}
+
+// ProjectStatistics 项目统计
+type ProjectStatistics struct {
+	TotalWords     int64 `json:"totalWords"`
+	TotalChapters  int   `json:"totalChapters"`
+	TotalChars     int   `json:"totalChars"`
+	TotalScenes    int   `json:"totalScenes"`
+	TotalNotes     int   `json:"totalNotes"`
+	TotalRoles     int   `json:"totalRoles"`
+	TotalLocations int   `json:"totalLocations"`
+	LastUpdateTime int64 `json:"lastUpdateTime"`
+}
+
+// DuplicateProjectRequest 复制项目请求
+type DuplicateProjectRequest struct {
+	NewTitle    string `json:"newTitle" validate:"required,min=1,max=100"`
+	CopyContent bool   `json:"copyContent"`
+	CopyAssets  bool   `json:"copyAssets"`
+}
+
+// CollaboratorInfo 协作者信息
+type CollaboratorInfo struct {
+	UserID    string    `json:"userId"`
+	UserName  string    `json:"userName"`
+	AvatarURL string    `json:"avatarUrl"`
+	Role      string    `json:"role"`
+	JoinedAt  time.Time `json:"joinedAt"`
+}
+
+// DocumentResponse 文档响应
+type DocumentResponse struct {
+	DocumentID    string    `json:"documentId"`
+	ProjectID     string    `json:"projectId"`
+	ParentID      string    `json:"parentId,omitempty"`
+	Title         string    `json:"title"`
+	Type          string    `json:"type"`
+	Level         int       `json:"level"`
+	Order         int       `json:"order"`
+	Status        string    `json:"status"`
+	CharacterIDs  []string  `json:"characterIds,omitempty"`
+	LocationIDs   []string  `json:"locationIds,omitempty"`
+	TimelineIDs   []string  `json:"timelineIds,omitempty"`
+	Tags          []string  `json:"tags,omitempty"`
+	Notes         string    `json:"notes,omitempty"`
+	CreatedBy     string    `json:"createdBy"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	WordCount     int       `json:"wordCount"`
+	Version       int       `json:"version"`
+}
+
