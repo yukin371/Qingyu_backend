@@ -4,6 +4,7 @@ import (
 	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/mail"
 	"net/smtp"
@@ -375,7 +376,7 @@ func sendSMTPMessage(addr string, auth smtp.Auth, from string, recipients []stri
 	if err != nil {
 		return err
 	}
-	if _, err := writer.Write(message); err != nil {
+	if _, err := io.Copy(writer, strings.NewReader(string(message))); err != nil {
 		_ = writer.Close()
 		return err
 	}
