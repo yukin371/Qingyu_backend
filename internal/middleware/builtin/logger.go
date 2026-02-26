@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"Qingyu_backend/internal/middleware/core"
@@ -70,6 +72,28 @@ type LoggerConfig struct {
 	// EnableColors 是否在控制台输出中使用颜色
 	// 默认: true
 	EnableColors bool `yaml:"enable_colors"`
+
+	// BodyAllowPaths 允许记录请求体的路径列表
+	// 如果为空，则所有路径都允许（当EnableRequestBody为true时）
+	// 如果不为空，只有匹配的路径才会记录请求体
+	// 默认: 空（所有路径都允许）
+	BodyAllowPaths []string `yaml:"body_allow_paths"`
+
+	// MaxBodySize 请求体最大记录大小（字节）
+	// 超过此大小的请求体会被截断
+	// 默认: 2048
+	MaxBodySize int `yaml:"max_body_size"`
+
+	// RedactKeys 需要脱敏的JSON键名列表
+	// 这些键对应的值在日志中会被替换为 ***
+	// 默认: ["authorization", "password", "token", "cookie"]
+	RedactKeys []string `yaml:"redact_keys"`
+
+	// Mode 日志模式
+	// normal: 正常模式
+	// strict: 严格模式（检查日志策略违规）
+	// 默认: normal
+	Mode string `yaml:"mode"`
 }
 
 // DefaultLoggerConfig 返回默认日志配置
@@ -84,6 +108,10 @@ func DefaultLoggerConfig() *LoggerConfig {
 		EnableResponseBody:   false,
 		SlowRequestThreshold: 3000,
 		EnableColors:         true,
+		BodyAllowPaths:       []string{},
+		MaxBodySize:          2048,
+		RedactKeys:           []string{"authorization", "password", "token", "cookie"},
+		Mode:                 "normal",
 	}
 }
 
@@ -130,6 +158,8 @@ func (m *LoggerMiddleware) Handler() gin.HandlerFunc {
 		var requestBody string
 		if m.config.EnableRequestBody && !m.config.SkipLogBody {
 			requestBody = m.getRequestBody(c)
+			// 脱敏敏感信息
+			requestBody = redactJSONKeys(requestBody, m.config.RedactKeys)
 		}
 
 		// 使用response writer包装器记录响应体
@@ -180,13 +210,22 @@ func (m *LoggerMiddleware) getRequestBody(c *gin.Context) string {
 		return ""
 	}
 
+	// 检查路径是否允许记录请求体
+	if !isPathAllowed(c.Request.URL.Path, m.config.BodyAllowPaths) {
+		return ""
+	}
+
 	contentType := c.Request.Header.Get("Content-Type")
 	if contentType != "application/json" && contentType != "application/x-www-form-urlencoded" {
 		return ""
 	}
 
 	// 读取请求体
-	bodyBytes, err := io.ReadAll(c.Request.Body)
+	maxSize := int64(m.config.MaxBodySize)
+	if maxSize <= 0 {
+		maxSize = 2048
+	}
+	bodyBytes, err := io.ReadAll(io.LimitReader(c.Request.Body, maxSize))
 	if err != nil {
 		return fmt.Sprintf("(读取失败: %v)", err)
 	}
@@ -194,13 +233,7 @@ func (m *LoggerMiddleware) getRequestBody(c *gin.Context) string {
 	// 恢复请求体供后续中间件使用
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	// 限制长度
-	bodyStr := string(bodyBytes)
-	if len(bodyStr) > 1000 {
-		bodyStr = bodyStr[:1000] + "... (truncated)"
-	}
-
-	return bodyStr
+	return string(bodyBytes)
 }
 
 // logRequest 记录请求日志
@@ -347,6 +380,36 @@ func (m *LoggerMiddleware) LoadConfig(config map[string]interface{}) error {
 		m.config.EnableColors = enableColors
 	}
 
+	// 加载BodyAllowPaths
+	if bodyAllowPaths, ok := config["body_allow_paths"].([]interface{}); ok {
+		m.config.BodyAllowPaths = make([]string, len(bodyAllowPaths))
+		for i, v := range bodyAllowPaths {
+			if str, ok := v.(string); ok {
+				m.config.BodyAllowPaths[i] = str
+			}
+		}
+	}
+
+	// 加载MaxBodySize
+	if maxBodySize, ok := config["max_body_size"].(int); ok {
+		m.config.MaxBodySize = maxBodySize
+	}
+
+	// 加载RedactKeys
+	if redactKeys, ok := config["redact_keys"].([]interface{}); ok {
+		m.config.RedactKeys = make([]string, len(redactKeys))
+		for i, v := range redactKeys {
+			if str, ok := v.(string); ok {
+				m.config.RedactKeys[i] = str
+			}
+		}
+	}
+
+	// 加载Mode
+	if mode, ok := config["mode"].(string); ok {
+		m.config.Mode = mode
+	}
+
 	return nil
 }
 
@@ -403,6 +466,50 @@ func (w *responseWriter) Write(data []byte) (int, error) {
 func (w *responseWriter) WriteString(s string) (int, error) {
 	w.body.WriteString(s)
 	return w.ResponseWriter.WriteString(s)
+}
+
+// isPathAllowed 检查路径是否允许记录请求体
+func isPathAllowed(path string, allowList []string) bool {
+	if len(allowList) == 0 {
+		return true
+	}
+	for _, allow := range allowList {
+		if strings.HasPrefix(path, allow) {
+			return true
+		}
+	}
+	return false
+}
+
+// redactJSONKeys 脱敏JSON中的敏感键值
+func redactJSONKeys(input string, keys []string) string {
+	if input == "" || len(keys) == 0 {
+		return input
+	}
+	redacted := input
+	for _, key := range keys {
+		if key == "" {
+			continue
+		}
+		re := regexp.MustCompile(`(?i)("` + regexp.QuoteMeta(key) + `"\\s*:\\s*")([^"]*)(")`)
+		redacted = re.ReplaceAllString(redacted, `${1}***${3}`)
+	}
+	return redacted
+}
+
+// validateAccessLogFields 验证访问日志字段（严格模式）
+func validateAccessLogFields(requestID, method, path string) []string {
+	var violations []string
+	if requestID == "" {
+		violations = append(violations, "request_id_missing")
+	}
+	if method == "" {
+		violations = append(violations, "method_missing")
+	}
+	if path == "" {
+		violations = append(violations, "path_missing")
+	}
+	return violations
 }
 
 // 确保LoggerMiddleware实现了ConfigurableMiddleware接口

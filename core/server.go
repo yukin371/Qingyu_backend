@@ -5,9 +5,10 @@ import (
 
 	"Qingyu_backend/api/v1/system"
 	"Qingyu_backend/config"
+	"Qingyu_backend/internal/middleware/builtin"
+	"Qingyu_backend/internal/middleware/ratelimit"
 	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/pkg/metrics"
-	pkgmiddleware "Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/router"
 
 	"github.com/gin-gonic/gin"
@@ -61,62 +62,69 @@ func InitServer() (*gin.Engine, error) {
 	r := gin.New()
 
 	// 2. 应用P0中间件（顺序很重要）
+	// 使用新架构的中间件 internal/middleware
+
 	// RequestIDMiddleware - 请求ID（最优先，为整个请求生成唯一ID）
-	r.Use(pkgmiddleware.RequestIDMiddleware())
+	r.Use(builtin.NewRequestIDMiddleware().Handler())
 
 	// RecoveryMiddleware - 异常恢复（捕获panic）
-	r.Use(pkgmiddleware.RecoveryMiddleware())
+	recoveryMW := builtin.NewRecoveryMiddleware(logger.Get().Logger)
+	r.Use(recoveryMW.Handler())
 
 	// LoggerMiddleware - 结构化日志记录
-	accessCfg := pkgmiddleware.DefaultAccessLogConfig()
-	accessCfg.Mode = logCfg.Mode
-	accessCfg.RedactKeys = logCfg.RedactKeys
+	// 使用 builtin 版本，支持敏感信息脱敏、严格模式等功能
+	loggerMW := builtin.NewLoggerMiddleware(logger.Get().Logger)
 	if logCfg.Request != nil {
-		accessCfg.SkipPaths = logCfg.Request.SkipPaths
-		accessCfg.BodyAllowPaths = logCfg.Request.BodyAllowPaths
-		accessCfg.EnableBody = logCfg.Request.EnableBody || logCfg.Mode == "strict"
-		accessCfg.MaxBodySize = logCfg.Request.MaxBodySize
+		loggerConfig := map[string]interface{}{
+			"skip_paths":         logCfg.Request.SkipPaths,
+			"body_allow_paths":   logCfg.Request.BodyAllowPaths,
+			"enable_request_body": logCfg.Request.EnableBody || logCfg.Mode == "strict",
+			"max_body_size":      logCfg.Request.MaxBodySize,
+			"redact_keys":        logCfg.RedactKeys,
+			"mode":               logCfg.Mode,
+		}
+		if err := loggerMW.LoadConfig(loggerConfig); err != nil {
+			logger.Warn("Failed to load logger config", zap.Error(err))
+		}
 	}
-	r.Use(pkgmiddleware.LoggerMiddleware(accessCfg))
+	r.Use(loggerMW.Handler())
 
 	// PrometheusMiddleware - 监控指标收集
 	r.Use(metrics.Middleware())
 
+	// ErrorHandler - 统一错误处理
+	errorHandlerMW := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandlerMW.Handler())
+
+	// CORSMiddleware - 跨域处理
+	corsMW := builtin.NewCORSMiddleware()
+	r.Use(corsMW.Handler())
+
 	// RateLimitMiddleware - API限流（支持配置化启用/禁用）
 	if config.GlobalConfig.RateLimit != nil && config.GlobalConfig.RateLimit.Enabled {
-		// Create a wrapper that checks skip paths
-		skipPaths := config.GlobalConfig.RateLimit.SkipPaths
-		rateLimitConfig := &pkgmiddleware.RateLimiterConfig{
-			Rate:    config.GlobalConfig.RateLimit.RequestsPerSec,
-			Burst:   config.GlobalConfig.RateLimit.Burst,
-			KeyFunc: pkgmiddleware.DefaultKeyFunc,
+		// 使用新架构的限流中间件
+		rateLimitConfig := &ratelimit.RateLimitConfig{
+			Strategy:     "token_bucket", // 使用令牌桶策略
+			Enabled:      true,
+			Rate:         int(config.GlobalConfig.RateLimit.RequestsPerSec),
+			Burst:        config.GlobalConfig.RateLimit.Burst,
+			SkipPaths:    config.GlobalConfig.RateLimit.SkipPaths,
 		}
 
-		// Wrap the middleware to handle skip paths
-		r.Use(func(c *gin.Context) {
-			path := c.Request.URL.Path
-			for _, skipPath := range skipPaths {
-				if path == skipPath {
-					c.Next()
-					return
-				}
-			}
-			pkgmiddleware.RateLimitMiddleware(rateLimitConfig)(c)
-		})
-
-		logger.Info("Rate limit middleware enabled",
-			zap.Float64("rate", rateLimitConfig.Rate),
-			zap.Int("burst", rateLimitConfig.Burst),
-			zap.Strings("skip_paths", skipPaths))
+		// 创建限流中间件
+		rateLimitMW, err := ratelimit.NewRateLimitMiddleware(rateLimitConfig, logger.Get().Logger)
+		if err != nil {
+			logger.Warn("Failed to create rate limit middleware", zap.Error(err))
+		} else {
+			r.Use(rateLimitMW.Handler())
+			logger.Info("Rate limit middleware enabled",
+				zap.Int("rate", rateLimitConfig.Rate),
+				zap.Int("burst", rateLimitConfig.Burst),
+				zap.Strings("skip_paths", rateLimitConfig.SkipPaths))
+		}
 	} else {
 		logger.Info("Rate limit middleware disabled")
 	}
-
-	// ErrorHandler - 统一错误处理（最后执行，处理所有错误）
-	r.Use(pkgmiddleware.ErrorHandler())
-
-	// CORSMiddleware - 跨域处理
-	r.Use(pkgmiddleware.CORSMiddleware())
 
 	// 自定义JSON渲染 - 设置不转义HTML字符（包括中文）
 	// 注意：我们通过在API层使用response.JSON()函数来实现
