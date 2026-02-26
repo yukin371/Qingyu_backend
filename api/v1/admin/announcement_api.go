@@ -145,13 +145,14 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Router /api/v1/admin/announcements [post]
 func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 	var req messagingService.CreateAnnouncementRequest
-	if !shared.BindAndValidate(c, &req) {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	// 从上下文获取当前用户ID
-	userID, ok := shared.GetUserID(c)
-	if ok {
+	// 从上下文获取当前用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
+	if userID != "" {
 		req.CreatedBy = userID
 	}
 
@@ -186,7 +187,8 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 	}
 
 	var req messagingService.UpdateAnnouncementRequest
-	if !shared.BindAndValidate(c, &req) {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -241,7 +243,8 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 // @Router /api/v1/admin/announcements/batch-status [put]
 func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
 	var req messagingService.BatchUpdateAnnouncementStatusRequest
-	if !shared.BindAndValidate(c, &req) {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -273,7 +276,8 @@ type BatchDeleteRequest struct {
 // @Router /api/v1/admin/announcements/batch-delete [delete]
 func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 	var req BatchDeleteRequest
-	if !shared.BindAndValidate(c, &req) {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
