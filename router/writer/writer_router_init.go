@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/pkg/lock"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
@@ -188,7 +189,7 @@ func (m *MockPublishService) PublishDocument(ctx context.Context, documentID, pr
 		BookstoreName: "Mock Bookstore",
 		Status:        interfaces.PublicationStatusPublished,
 		PublishTime:   &now,
-		Metadata: interfaces.PublicationMetadata{
+		Metadata: dto.PublicationMetadata{
 			ChapterTitle:  chapterTitle,
 			ChapterNumber: req.ChapterNumber,
 			IsFree:        req.IsFree,
