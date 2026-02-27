@@ -95,7 +95,10 @@ jobs:
 
       - name: Run unit tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
         run: |
@@ -190,6 +193,9 @@ jobs:
       - name: Run integration tests
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
         run: |
@@ -260,6 +266,9 @@ jobs:
       - name: Run application in background
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
         run: |
           ./server &
@@ -268,6 +277,9 @@ jobs:
       - name: Run API tests
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
         run: |
           go test -v -race -count=1 \
@@ -298,6 +310,15 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -314,8 +335,11 @@ jobs:
 
       - name: Run E2E Layer 1 - Basic Flows
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -325,8 +349,11 @@ jobs:
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -336,8 +363,11 @@ jobs:
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -426,7 +456,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: always() && hashFiles('trivy-results.sarif') != ''
+        if: always() && github.event_name == 'push' && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: 'trivy-results.sarif'
 
