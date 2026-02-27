@@ -31,20 +31,20 @@ type GrayScaleDecision interface {
 
 // GrayScaleMetrics 灰度指标
 type GrayScaleMetrics struct {
-	ESCount        int64         // ES 使用次数
-	MongoDBCount   int64         // MongoDB 使用次数
-	ESAvgTook      time.Duration // ES 平均耗时
-	MongoDBAvgTook time.Duration // MongoDB 平均耗时
-	ESTotalTook    time.Duration // ES 总耗时
+	ESCount          int64         // ES 使用次数
+	MongoDBCount     int64         // MongoDB 使用次数
+	ESAvgTook        time.Duration // ES 平均耗时
+	MongoDBAvgTook   time.Duration // MongoDB 平均耗时
+	ESTotalTook      time.Duration // ES 总耗时
 	MongoDBTotalTook time.Duration // MongoDB 总耗时
 }
 
 // grayscaleMetrics 灰度指标收集器
 type grayscaleMetrics struct {
-	mu           sync.RWMutex
-	esCount      int64
-	mongoCount   int64
-	esTotalTook  time.Duration
+	mu             sync.RWMutex
+	esCount        int64
+	mongoCount     int64
+	esTotalTook    time.Duration
 	mongoTotalTook time.Duration
 }
 
@@ -67,16 +67,24 @@ func NewGrayScaleDecision(config *GrayScaleConfig, logger *zap.Logger) GrayScale
 
 // ShouldUseES 判断是否应该使用 ES
 func (g *grayscaleDecision) ShouldUseES(ctx context.Context, searchType string, userID string) bool {
+	g.mu.RLock()
+	config := g.config
+	var enabled bool
+	var percent int
+	if config != nil {
+		enabled = config.Enabled
+		percent = config.Percent
+	}
+	g.mu.RUnlock()
+
 	// 如果灰度未启用，使用 MongoDB
-	if g.config == nil || !g.config.Enabled {
+	if config == nil || !enabled {
 		g.logger.Debug("灰度未启用，使用 MongoDB",
 			zap.String("user_id", userID),
 			zap.String("search_type", searchType),
 		)
 		return false
 	}
-
-	percent := g.config.Percent
 
 	// 边界检查
 	if percent <= 0 {
@@ -148,11 +156,11 @@ func (g *grayscaleDecision) GetMetrics() GrayScaleMetrics {
 	}
 
 	return GrayScaleMetrics{
-		ESCount:         g.metrics.esCount,
-		MongoDBCount:    g.metrics.mongoCount,
-		ESAvgTook:       esAvgTook,
-		MongoDBAvgTook:  mongoAvgTook,
-		ESTotalTook:     g.metrics.esTotalTook,
+		ESCount:          g.metrics.esCount,
+		MongoDBCount:     g.metrics.mongoCount,
+		ESAvgTook:        esAvgTook,
+		MongoDBAvgTook:   mongoAvgTook,
+		ESTotalTook:      g.metrics.esTotalTook,
 		MongoDBTotalTook: g.metrics.mongoTotalTook,
 	}
 }
@@ -196,8 +204,14 @@ func (g *grayscaleDecision) UpdateConfig(enabled bool, percent int) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	oldEnabled := g.config.Enabled
-	oldPercent := g.config.Percent
+	oldEnabled := false
+	oldPercent := 0
+	if g.config != nil {
+		oldEnabled = g.config.Enabled
+		oldPercent = g.config.Percent
+	} else {
+		g.config = &GrayScaleConfig{}
+	}
 
 	g.config.Enabled = enabled
 	g.config.Percent = percent

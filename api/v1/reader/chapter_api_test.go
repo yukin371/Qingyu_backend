@@ -75,7 +75,7 @@ func setupChapterTestRouter(chapterService interfaces.ReaderChapterService, user
 
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})

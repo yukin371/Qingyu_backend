@@ -504,6 +504,18 @@ func redactJSONKeys(input string, keys []string) string {
 	return redacted
 }
 
+// sanitizeLogValue 标准化日志字段，防止换行注入破坏日志结构
+func sanitizeLogValue(value string) string {
+	if value == "" {
+		return value
+	}
+
+	sanitized := strings.ReplaceAll(value, "\r", "\\r")
+	sanitized = strings.ReplaceAll(sanitized, "\n", "\\n")
+	sanitized = strings.ReplaceAll(sanitized, "\x00", "")
+	return sanitized
+}
+
 // validateAccessLogFields 验证访问日志字段（严格模式）
 func validateAccessLogFields(requestID, method, path string) []string {
 	var violations []string
