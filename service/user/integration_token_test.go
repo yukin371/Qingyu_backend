@@ -268,14 +268,14 @@ func TestUserService_TokenExpiration_Integration(t *testing.T) {
 	exp, ok := (*claims)["exp"].(float64)
 	require.True(t, ok, "Token应该包含exp字段")
 
-	// 验证过期时间大约是24小时后
-	expectedExp := env.TestConfig.JWTExpiration
-	actualExp := int64(exp)
-	expectedExpTime := time.Now().Add(expectedExp)
-	timeDiff := actualExp - (expectedExpTime.Unix() - int64(expectedExp.Seconds()))
-
-	// 允许1分钟的误差
-	assert.True(t, timeDiff < 60 && timeDiff > -60, "Token过期时间应该接近配置的时间")
+	// 验证过期时间接近当前时间 + 配置有效期（允许1分钟误差）
+	expTime := time.Unix(int64(exp), 0)
+	expectedExpTime := time.Now().Add(env.TestConfig.JWTExpiration)
+	timeDiff := expTime.Sub(expectedExpTime)
+	if timeDiff < 0 {
+		timeDiff = -timeDiff
+	}
+	assert.True(t, timeDiff < time.Minute, "Token过期时间应该接近配置的时间")
 }
 
 // TestUserService_RefreshToken Token刷新测试
