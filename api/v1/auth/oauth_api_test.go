@@ -16,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 
 	authModel "Qingyu_backend/models/auth"
+	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/service/auth"
 )
 
@@ -78,6 +79,10 @@ func setupOAuthTestRouter(oauthService *MockOAuthService, authService *MockAuthS
 
 	logger := zap.NewNop()
 
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
+	r.Use(errorHandler.Handler())
+
 	api := NewOAuthAPI(oauthService, authService, logger)
 
 	v1 := r.Group("/api/v1/shared/oauth")
@@ -99,13 +104,16 @@ func setupOAuthTestRouterWithAuth(oauthService *MockOAuthService, authService *M
 
 	logger := zap.NewNop()
 
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
+
 	// 模拟认证中间件
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
 			c.Set("user_id", userID)
 		}
 		c.Next()
-	})
+	}, errorHandler.Handler())
 
 	api := NewOAuthAPI(oauthService, authService, logger)
 

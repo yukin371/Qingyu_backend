@@ -159,7 +159,7 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 
 	accounts, err := api.oauthService.GetLinkedAccounts(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
