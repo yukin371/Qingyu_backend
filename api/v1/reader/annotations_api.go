@@ -51,7 +51,7 @@ func (api *AnnotationsAPI) getUserID(c *gin.Context) (string, bool) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误"))
+		c.Error(errors.New("用户ID类型错误"))
 		return "", false
 	}
 
@@ -91,7 +91,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误"))
+		c.Error(errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -111,7 +111,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 
 	err := api.readerService.CreateAnnotation(c.Request.Context(), annotation)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 
 	err := api.readerService.UpdateAnnotation(c.Request.Context(), annotationID, updates)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -167,7 +167,7 @@ func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 
 	err := api.readerService.DeleteAnnotation(c.Request.Context(), annotationID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -200,7 +200,7 @@ func (api *AnnotationsAPI) GetAnnotationsByChapter(c *gin.Context) {
 
 	annotations, err := api.readerService.GetAnnotationsByChapter(c.Request.Context(), userIDStr, bookID, chapterID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -227,7 +227,7 @@ func (api *AnnotationsAPI) GetAnnotationsByBook(c *gin.Context) {
 
 	annotations, err := api.readerService.GetAnnotationsByBook(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -254,7 +254,7 @@ func (api *AnnotationsAPI) GetNotes(c *gin.Context) {
 
 	notes, err := api.readerService.GetNotes(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -281,7 +281,7 @@ func (api *AnnotationsAPI) SearchNotes(c *gin.Context) {
 
 	notes, err := api.readerService.SearchNotes(c.Request.Context(), userIDStr, keyword)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -308,7 +308,7 @@ func (api *AnnotationsAPI) GetBookmarks(c *gin.Context) {
 
 	bookmarks, err := api.readerService.GetBookmarks(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -335,7 +335,7 @@ func (api *AnnotationsAPI) GetLatestBookmark(c *gin.Context) {
 
 	bookmark, err := api.readerService.GetLatestBookmark(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -362,7 +362,7 @@ func (api *AnnotationsAPI) GetHighlights(c *gin.Context) {
 
 	highlights, err := api.readerService.GetHighlights(c.Request.Context(), userIDStr, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -386,7 +386,7 @@ func (api *AnnotationsAPI) GetRecentAnnotations(c *gin.Context) {
 
 	annotations, err := api.readerService.GetRecentAnnotations(c.Request.Context(), userIDStr, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -414,7 +414,7 @@ func (api *AnnotationsAPI) GetPublicAnnotations(c *gin.Context) {
 
 	annotations, err := api.readerService.GetPublicAnnotations(c.Request.Context(), bookID, chapterID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
