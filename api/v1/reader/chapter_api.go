@@ -5,6 +5,8 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
+	readerservice "Qingyu_backend/service/reader"
+	"Qingyu_backend/pkg/response"
 )
 
 // ChapterAPI 阅读器章节API
@@ -57,10 +59,24 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	// 获取用户ID（可选）
 	userID := shared.GetUserIDOptional(c)
 
-	// 调用Service层（错误交给中间件处理）
+	// 调用Service层
 	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, params.BookID, params.ChapterID)
+
+	// 简化的错误处理（保留关键错误类型检查）
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
+	if err == readerservice.ErrChapterNotPublished {
+		response.Forbidden(c, "章节未发布")
+		return
+	}
+	if err == readerservice.ErrAccessDenied {
+		response.Forbidden(c, "无权访问")
+		return
+	}
 	if err != nil {
-		c.Error(err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -92,10 +108,20 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 	// 获取用户ID（可选）
 	userID := shared.GetUserIDOptional(c)
 
-	// 调用Service层（错误交给中间件处理）
+	// 调用Service层
 	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, params.BookID, params.ChapterNum)
+
+	// 简化的错误处理
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
+	if err == readerservice.ErrAccessDenied {
+		response.Forbidden(c, "无权访问")
+		return
+	}
 	if err != nil {
-		c.Error(err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -239,10 +265,16 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 	// 获取用户ID（可选）
 	userID := shared.GetUserIDOptional(c)
 
-	// 调用Service层（错误交给中间件处理）
+	// 调用Service层
 	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, params.ChapterID)
+
+	// 简化的错误处理
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
 	if err != nil {
-		c.Error(err)
+		response.InternalError(c, err)
 		return
 	}
 
