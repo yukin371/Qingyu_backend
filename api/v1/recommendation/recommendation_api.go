@@ -47,7 +47,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取推荐
 	recommendations, err := api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	// 获取相似物品
 	similarItems, err := api.recoService.GetSimilarItems(c.Request.Context(), itemID, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 记录行为
 	err := api.recoService.RecordUserBehavior(c.Request.Context(), behaviorReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 	// 获取热门推荐
 	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), itemType, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -253,7 +253,7 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	// TODO: 后续可以基于category参数实现真正的分类推荐
 	recommendations, err := api.recoService.GetHotItems(c.Request.Context(), "book", limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

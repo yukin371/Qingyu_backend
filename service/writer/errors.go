@@ -194,6 +194,14 @@ func (e *WriterError) IsRetryable() bool {
 	return false
 }
 
+// ErrorMessage 实现MessageProvider接口，返回用户友好的错误消息
+func (e *WriterError) ErrorMessage() string {
+	if e.Message != "" {
+		return e.Message
+	}
+	return e.Code.String()
+}
+
 // NewWriterError 创建新的 Writer 错误
 func NewWriterError(code ErrorCode, message string) *WriterError {
 	return &WriterError{

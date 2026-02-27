@@ -50,7 +50,7 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 
 	result, err := api.chapterService.GetChapter(c.Request.Context(), bookID, chapterID)
 	if err != nil {
-		shared.InternalError(c, "获取章节失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *ChapterAPI) ListChapters(c *gin.Context) {
 
 	result, err := api.chapterService.ListChapters(c.Request.Context(), bookID)
 	if err != nil {
-		shared.InternalError(c, "获取章节列表失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 
 	result, err := api.chapterService.GetNextChapter(c.Request.Context(), bookID, chapterID)
 	if err != nil {
-		shared.InternalError(c, "获取下一章失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 
 	result, err := api.chapterService.GetPreviousChapter(c.Request.Context(), bookID, chapterID)
 	if err != nil {
-		shared.InternalError(c, "获取上一章失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -187,7 +187,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 
 	result, err := api.chapterService.GetChapterByNumber(c.Request.Context(), bookID, chapterNum)
 	if err != nil {
-		shared.InternalError(c, "获取章节失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -217,7 +217,7 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 
 	result, err := api.chapterService.GetChapterInfo(c.Request.Context(), chapterID)
 	if err != nil {
-		shared.InternalError(c, "获取章节信息失败", err)
+		c.Error(err)
 		return
 	}
 

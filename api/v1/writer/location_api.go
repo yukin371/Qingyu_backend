@@ -42,7 +42,7 @@ func (api *LocationApi) CreateLocation(c *gin.Context) {
 
 	location, err := api.locationService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *LocationApi) ListLocations(c *gin.Context) {
 
 	locations, err := api.locationService.List(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -95,7 +95,7 @@ func (api *LocationApi) GetLocationTree(c *gin.Context) {
 
 	tree, err := api.locationService.GetLocationTree(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 
 	location, err := api.locationService.Update(c.Request.Context(), locationID, projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (api *LocationApi) DeleteLocation(c *gin.Context) {
 
 	err := api.locationService.Delete(c.Request.Context(), locationID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 
 	relation, err := api.locationService.CreateRelation(c.Request.Context(), projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (api *LocationApi) ListLocationRelations(c *gin.Context) {
 
 	relations, err := api.locationService.ListRelations(c.Request.Context(), projectID, locIDPtr)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -204,7 +204,7 @@ func (api *LocationApi) DeleteLocationRelation(c *gin.Context) {
 
 	err := api.locationService.DeleteRelation(c.Request.Context(), relationID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

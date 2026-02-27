@@ -40,7 +40,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 
 	quota, err := api.quotaService.GetQuotaInfo(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 
 	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 
 	stats, err := api.quotaService.GetQuotaStatistics(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 
 	transactions, err := api.quotaService.GetTransactionHistory(c.Request.Context(), userID.(string), limit, offset)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -166,7 +166,7 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 	// 调用充值服务
 	err := api.quotaService.RechargeQuota(c.Request.Context(), userID.(string), req.Amount, req.Reason, userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

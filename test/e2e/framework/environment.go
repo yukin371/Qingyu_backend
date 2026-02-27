@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -16,6 +16,8 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
+	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 	"Qingyu_backend/test/testutil"
 )
 
@@ -42,6 +44,12 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, func()) {
 	// 2. 初始化服务（会自动创建 ServiceContainer）
 	err = core.InitServices()
 	require.NoError(t, err, "初始化服务失败")
+
+	// 兼容仍依赖 global.DB 的 E2E fixtures/helpers
+	if sc := service.GetServiceContainer(); sc != nil {
+		global.DB = sc.GetMongoDB()
+		global.MongoClient = sc.GetMongoClient()
+	}
 
 	// 3. 初始化服务器
 	gin.SetMode(gin.TestMode)
@@ -165,6 +173,17 @@ func (env *TestEnvironment) ParseJSONResponse(w *httptest.ResponseRecorder) map[
 	return response
 }
 
+// HasRoute 检查路由是否已注册（按 method + 路由模板路径匹配）
+func (env *TestEnvironment) HasRoute(method, routePath string) bool {
+	routes := env.Router.Routes()
+	for _, r := range routes {
+		if r.Method == method && r.Path == routePath {
+			return true
+		}
+	}
+	return false
+}
+
 // LogSuccess 记录成功日志
 func (env *TestEnvironment) LogSuccess(format string, args ...interface{}) {
 	env.T.Logf("✓ "+format, args...)
@@ -184,4 +203,3 @@ func (env *TestEnvironment) LogError(format string, args ...interface{}) {
 func (env *TestEnvironment) ConsistencyValidator() *ConsistencyValidatorWrapper {
 	return &ConsistencyValidatorWrapper{env: env}
 }
-

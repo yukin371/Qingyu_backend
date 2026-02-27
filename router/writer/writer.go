@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/service/interfaces"
+	readingStatsService "Qingyu_backend/service/reader/stats"
 	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/service/writer/document"
@@ -25,6 +26,7 @@ func InitWriterRouter(
 	lockService lock.DocumentLockService,
 	commentService writerservice.CommentService,
 	templateService *document.TemplateService,
+	statsService *readingStatsService.ReadingStatsService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -89,6 +91,11 @@ func InitWriterRouter(
 		// 模板路由
 		if templateApi != nil {
 			InitTemplateRouter(writerGroup, templateApi)
+		}
+
+		// 统计路由
+		if statsService != nil {
+			InitStatsRouter(writerGroup, statsService)
 		}
 	}
 }

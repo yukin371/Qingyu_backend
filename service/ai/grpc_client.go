@@ -136,37 +136,3 @@ func (c *GRPCClient) Close() error {
 	}
 	return nil
 }
-
-// isRetryableError 判断错误是否可重试
-func isRetryableError(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	st, ok := status.FromError(err)
-	if !ok {
-		return false
-	}
-
-	// 可重试的错误码
-	switch st.Code() {
-	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted, codes.Aborted:
-		return true
-	default:
-		return false
-	}
-}
-
-// convertInterfaceMapToStringMap 转换 map[string]interface{} 到 map[string]string
-func convertInterfaceMapToStringMap(m map[string]interface{}) map[string]string {
-	if m == nil {
-		return nil
-	}
-
-	result := make(map[string]string)
-	for k, v := range m {
-		result[k] = fmt.Sprintf("%v", v)
-	}
-
-	return result
-}

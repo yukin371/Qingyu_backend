@@ -196,7 +196,8 @@ func (p *PublishExportImpl) convertPublicationRecord(record *serviceInterfaces.P
 		UpdatedAt:     record.UpdatedAt,
 	}
 	if record.PublishTime != nil {
-		r.PublishTime = record.PublishTime
+		t := *record.PublishTime
+		r.PublishTime = &t
 	}
 	return r
 }
@@ -213,7 +214,8 @@ func (p *PublishExportImpl) convertPublicationStatus(status *serviceInterfaces.P
 		PublishedChapters: status.PublishedChapters,
 	}
 	if status.PublishedAt != nil {
-		s.PublishedAt = status.PublishedAt
+		t := *status.PublishedAt
+		s.PublishedAt = &t
 	}
 	return s
 }

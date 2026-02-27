@@ -106,7 +106,7 @@ func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		response.InternalError(c, nil)
+		c.Error(nil)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		response.InternalError(c, nil)
+		c.Error(nil)
 		return
 	}
 
@@ -218,7 +218,7 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 		apiLogger.WithModule("search").Error("灰度配置更新失败",
 			zap.Error(err),
 		)
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -288,7 +288,7 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		response.InternalError(c, nil)
+		c.Error(nil)
 		return
 	}
 
@@ -364,7 +364,7 @@ func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
 	grayscaleDecision := api.searchService.GetGrayscaleDecision()
 	if grayscaleDecision == nil {
 		apiLogger.WithModule("search").Warn("灰度决策器未初始化")
-		response.InternalError(c, nil)
+		c.Error(nil)
 		return
 	}
 

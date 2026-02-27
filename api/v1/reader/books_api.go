@@ -54,7 +54,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取阅读历史（作为书架）
 	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID.(string), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -92,7 +92,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	// 通过保存初始进度来"添加到书架"
 	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID.(string), bookID, "", 0)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -123,7 +123,7 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 调用Service删除阅读进度
 	err := api.readerService.DeleteReadingProgress(c.Request.Context(), userID.(string), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -155,7 +155,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 
 	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -251,7 +251,7 @@ func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	// 调用服务层更新状态
 	err := api.readerService.UpdateBookStatus(c.Request.Context(), userID.(string), bookID, req.Status)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -300,7 +300,7 @@ func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 调用服务层批量更新状态
 	err := api.readerService.BatchUpdateBookStatus(c.Request.Context(), userID.(string), req.BookIDs, req.Status)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

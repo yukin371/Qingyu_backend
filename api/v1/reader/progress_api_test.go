@@ -261,6 +261,17 @@ func setupProgressTestRouter(readerService interfaces.ReaderService, userID stri
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误
+		if len(c.Errors) > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": c.Errors.String(),
+			})
+		}
+	})
+
 	// 添加middleware来设置userId
 	r.Use(func(c *gin.Context) {
 		if userID != "" {

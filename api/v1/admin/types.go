@@ -115,3 +115,28 @@ type BanUserRequest struct {
 	DurationUnit string     `json:"durationUnit" binding:"required,oneof=hours days weeks months"`
 	BanUntil     *time.Time `json:"banUntil,omitempty"`
 }
+
+// ===========================
+// 批量操作相关DTO
+// ===========================
+
+// BatchRoleOperationRequest 批量角色操作请求
+type BatchRoleOperationRequest struct {
+	UserIDs []string `json:"userIds" binding:"required,min=1"`
+	Role    string   `json:"role" binding:"required,oneof=reader author admin"`
+}
+
+// BatchOperationResult 批量操作结果
+type BatchOperationResult struct {
+	Total   int      `json:"total"`
+	Success int      `json:"success"`
+	Failed  int      `json:"failed"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+// BatchReviewAuditRequest 批量审核请求
+type BatchReviewAuditRequest struct {
+	AuditIDs   []string `json:"auditIds" binding:"required,min=1"`
+	Action     string   `json:"action" binding:"required,oneof=approve reject"`
+	ReviewNote string   `json:"reviewNote"`
+}

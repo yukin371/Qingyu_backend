@@ -11,7 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
 
+	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/service/auth"
 )
 
@@ -152,6 +154,11 @@ func setupAuthTestRouter(authService *MockAuthService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	logger := zap.NewNop()
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
+	r.Use(errorHandler.Handler())
+
 	api := NewAuthAPI(authService)
 
 	v1 := r.Group("/api/v1/shared/auth")
@@ -172,13 +179,17 @@ func setupAuthTestRouterWithAuth(authService *MockAuthService, userID string) *g
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	logger := zap.NewNop()
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
+
 	// 模拟认证中间件
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
 			c.Set("user_id", userID)
 		}
 		c.Next()
-	})
+	}, errorHandler.Handler())
 
 	api := NewAuthAPI(authService)
 

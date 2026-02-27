@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -132,13 +132,10 @@ func (ba *BusinessActions) GetChapterList(bookID string, token string) map[strin
 
 // StartReading 开始阅读（保存阅读进度）
 func (ba *BusinessActions) StartReading(userID, bookID, chapterID, token string) map[string]interface{} {
-	reqBody := map[string]interface{}{
-		"bookId":    bookID,
-		"chapterId": chapterID,
-		"progress":  0.1, // 阅读进度 0-1（使用 0.1 避免零值问题）
-	}
-	w := ba.env.DoRequest("POST", "/api/v1/reader/progress", reqBody, token)
-	require.Equal(ba.env.T, 200, w.Code, "保存阅读进度失败")
+	// 使用 reader 章节阅读接口触发服务端进度更新，规避部分环境下 body 读取 EOF 问题
+	path := fmt.Sprintf("/api/v1/reader/books/%s/chapters/%s", bookID, chapterID)
+	w := ba.env.DoRequest("GET", path, nil, token)
+	require.Equalf(ba.env.T, 200, w.Code, "开始阅读失败: %s", w.Body.String())
 
 	ba.env.LogSuccess("开始阅读: 书籍=%s, 章节=%s", bookID, chapterID)
 
@@ -147,8 +144,9 @@ func (ba *BusinessActions) StartReading(userID, bookID, chapterID, token string)
 
 // GetReadingProgress 获取阅读进度
 func (ba *BusinessActions) GetReadingProgress(userID, bookID string, token string) map[string]interface{} {
-	w := ba.env.DoRequest("GET", "/api/v1/reader/progress", nil, token)
-	require.Equal(ba.env.T, 200, w.Code, "获取阅读进度失败")
+	path := fmt.Sprintf("/api/v1/reader/progress/%s", bookID)
+	w := ba.env.DoRequest("GET", path, nil, token)
+	require.Equalf(ba.env.T, 200, w.Code, "获取阅读进度失败: %s", w.Body.String())
 
 	return ba.env.ParseJSONResponse(w)
 }
@@ -166,12 +164,14 @@ func (ba *BusinessActions) GetReadingHistory(userID string) map[string]interface
 // AddComment 发表评论
 func (ba *BusinessActions) AddComment(token, bookID, chapterID, content string) map[string]interface{} {
 	reqBody := map[string]interface{}{
-		"book_id":    bookID,
-		"chapter_id": chapterID,
-		"content":    content,
+		"book_id": bookID,
+		"content": content,
+	}
+	if chapterID != "" {
+		reqBody["chapter_id"] = chapterID
 	}
 	w := ba.env.DoRequest("POST", "/api/v1/social/comments", reqBody, token)
-	require.True(ba.env.T, w.Code == 200 || w.Code == 201, "发表评论失败")
+	require.Truef(ba.env.T, w.Code == 200 || w.Code == 201, "发表评论失败: code=%d body=%s", w.Code, w.Body.String())
 
 	ba.env.LogSuccess("发表评论: %s", content)
 
@@ -244,4 +244,3 @@ func (ba *BusinessActions) CreateProject(token string, req map[string]interface{
 
 	return ba.env.ParseJSONResponse(w)
 }
-

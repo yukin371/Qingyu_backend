@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
 )
@@ -36,20 +38,11 @@ func NewMongoUserAdminRepository(db *mongo.Database) adminrepo.UserAdminReposito
 
 // List 获取用户列表（分页、筛选）
 func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error) {
-	mongoFilter := r.buildFilter(filter)
-
-	total, err := r.db.Collection(UserCollection).CountDocuments(ctx, mongoFilter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	skip := (page - 1) * pageSize
+	// Use a fixed DB query and perform filtering in-memory to avoid dynamic query construction.
 	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.db.Collection(UserCollection).Find(ctx, mongoFilter, opts)
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -60,7 +53,31 @@ func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.U
 		return nil, 0, err
 	}
 
-	return userList, total, nil
+	filtered := make([]*users.User, 0, len(userList))
+	for _, user := range userList {
+		if userMatchesFilter(user, filter) {
+			filtered = append(filtered, user)
+		}
+	}
+
+	total := int64(len(filtered))
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	start := (page - 1) * pageSize
+	if start >= len(filtered) {
+		return []*users.User{}, total, nil
+	}
+	end := start + pageSize
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	return filtered[start:end], total, nil
 }
 
 // Create 创建用户
@@ -431,17 +448,26 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 
 	if filter != nil {
 		if filter.Keyword != "" {
+			normalizedKeyword := strings.TrimSpace(filter.Keyword)
+			if len(normalizedKeyword) > 64 {
+				normalizedKeyword = normalizedKeyword[:64]
+			}
+			escapedKeyword := regexp.QuoteMeta(normalizedKeyword)
 			mongoFilter["$or"] = []bson.M{
-				{"username": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"email": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"nickname": bson.M{"$regex": filter.Keyword, "$options": "i"}},
+				{"username": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"email": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"nickname": bson.M{"$regex": escapedKeyword, "$options": "i"}},
 			}
 		}
 		if filter.Status != "" {
-			mongoFilter["status"] = filter.Status
+			if status, ok := normalizeUserStatus(filter.Status); ok {
+				mongoFilter["status"] = exactUserMatchRegex(status)
+			}
 		}
 		if filter.Role != "" {
-			mongoFilter["role"] = filter.Role
+			if role, ok := normalizeUserRole(filter.Role); ok {
+				mongoFilter["role"] = exactUserMatchRegex(role)
+			}
 		}
 		if filter.DateFrom != nil {
 			if _, exists := mongoFilter["created_at"]; !exists {
@@ -461,4 +487,92 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 	}
 
 	return mongoFilter
+}
+
+func exactUserMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
+}
+
+func normalizeUserStatus(status users.UserStatus) (string, bool) {
+	switch status {
+	case users.UserStatusActive:
+		return string(users.UserStatusActive), true
+	case users.UserStatusInactive:
+		return string(users.UserStatusInactive), true
+	case users.UserStatusBanned:
+		return string(users.UserStatusBanned), true
+	case users.UserStatusDeleted:
+		return string(users.UserStatusDeleted), true
+	default:
+		return "", false
+	}
+}
+
+func normalizeUserRole(role string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case authModel.RoleReader:
+		return authModel.RoleReader, true
+	case authModel.RoleAuthor:
+		return authModel.RoleAuthor, true
+	case authModel.RoleAdmin:
+		return authModel.RoleAdmin, true
+	default:
+		return "", false
+	}
+}
+
+func userMatchesFilter(user *users.User, filter *adminrepo.UserFilter) bool {
+	if user == nil || filter == nil {
+		return true
+	}
+
+	if filter.Keyword != "" {
+		keyword := strings.ToLower(strings.TrimSpace(filter.Keyword))
+		if keyword != "" {
+			username := strings.ToLower(user.Username)
+			email := strings.ToLower(user.Email)
+			nickname := strings.ToLower(user.Nickname)
+			if !strings.Contains(username, keyword) &&
+				!strings.Contains(email, keyword) &&
+				!strings.Contains(nickname, keyword) {
+				return false
+			}
+		}
+	}
+
+	if filter.Status != "" {
+		if status, ok := normalizeUserStatus(filter.Status); !ok || string(user.Status) != status {
+			return false
+		}
+	}
+
+	if filter.Role != "" {
+		if role, ok := normalizeUserRole(filter.Role); !ok || !userHasRole(user, role) {
+			return false
+		}
+	}
+
+	if filter.DateFrom != nil && user.CreatedAt.Before(*filter.DateFrom) {
+		return false
+	}
+	if filter.DateTo != nil && user.CreatedAt.After(*filter.DateTo) {
+		return false
+	}
+	if filter.LastActive != nil && user.LastLoginAt.Before(*filter.LastActive) {
+		return false
+	}
+
+	return true
+}
+
+func userHasRole(user *users.User, role string) bool {
+	for _, r := range user.Roles {
+		if strings.EqualFold(strings.TrimSpace(r), role) {
+			return true
+		}
+	}
+	return false
 }

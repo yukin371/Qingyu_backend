@@ -103,7 +103,7 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -337,7 +337,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	// 获取评论及其所有回复（树状结构）
 	thread, err := api.commentService.GetCommentThread(c.Request.Context(), commentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -363,7 +363,7 @@ func (api *CommentAPI) GetTopComments(c *gin.Context) {
 	// 获取热门评论（按点赞数、回复数等排序）
 	topComments, err := api.commentService.GetTopComments(c.Request.Context(), bookID, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -393,7 +393,7 @@ func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 	// 获取评论的直接回复（分页）
 	replies, total, err := api.commentService.GetCommentReplies(c.Request.Context(), commentID, pagination.Page, pagination.PageSize)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

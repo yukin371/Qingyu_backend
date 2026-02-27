@@ -57,7 +57,7 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 	// 调用Service层获取待审核列表
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 	// 调用Service层
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -235,9 +235,58 @@ func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 	// 调用AuditService获取审核统计
 	stats, err := api.auditService.GetAuditStatistics(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	response.Success(c, stats)
+}
+
+// BatchReviewAudit 批量审核（管理员）
+//
+//	@Summary		批量审核
+//	@Description	管理员批量审核多个审核记录
+//	@Tags			管理员-审核管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		BatchReviewAuditRequest	true	"批量审核请求"
+//	@Success		200		{object}	shared.APIResponse
+//	@Failure		400		{object}	shared.ErrorResponse
+//	@Failure		401		{object}	shared.ErrorResponse
+//	@Failure		403		{object}	shared.ErrorResponse
+//	@Failure		500		{object}	shared.ErrorResponse
+//	@Router			/api/v1/admin/audit/batch-review [post]
+func (api *AuditAdminAPI) BatchReviewAudit(c *gin.Context) {
+	var req BatchReviewAuditRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	// 从context获取管理员ID
+	reviewerID, exists := c.Get("user_id")
+	if !exists {
+		response.Unauthorized(c, "未授权")
+		return
+	}
+
+	result := BatchOperationResult{
+		Total:  len(req.AuditIDs),
+		Errors: []string{},
+	}
+
+	// 判断审核动作
+	approved := req.Action == "approve"
+
+	for _, auditID := range req.AuditIDs {
+		if err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote); err != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, auditID+": "+err.Error())
+		} else {
+			result.Success++
+		}
+	}
+
+	response.Success(c, result)
 }

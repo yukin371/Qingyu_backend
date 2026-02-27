@@ -1,7 +1,9 @@
 package shared
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -123,7 +125,7 @@ func GetPaginationParamsSmall(c *gin.Context) PaginationParams {
 
 // ============ 数字参数辅助函数 ============
 
-//GetIntParam 获取整数参数（路径或查询），支持默认值和范围验证
+// GetIntParam 获取整数参数（路径或查询），支持默认值和范围验证
 // key: 参数名
 // isQuery: true表示查询参数，false表示路径参数
 // defaultValue: 默认值
@@ -159,17 +161,50 @@ func GetIntParam(c *gin.Context, key string, isQuery bool, defaultValue, min, ma
 
 // BindAndValidate 绑定并验证JSON请求体
 // 返回: (ok) - false表示已发送错误响应
+// 注意：ShouldBindJSON会自动验证结构体的binding标签
 func BindAndValidate(c *gin.Context, req interface{}) bool {
-	if !BindJSON(c, req) {
+	// 读取原始请求体用于错误响应
+	bodyBytes, _ := c.GetRawData()
+
+	// 重新设置请求体供后续使用
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// 绑定并验证（ShouldBindJSON会自动验证binding标签）
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return false
 	}
-	return ValidateRequest(c, req)
+	return true
 }
 
 // BindJSON 仅绑定JSON请求体（不验证）
 // 返回: (ok) - false表示已发送错误响应
 func BindJSON(c *gin.Context, req interface{}) bool {
 	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	return true
+}
+
+// BindParams 绑定URI路径参数和Query查询参数（自动验证）
+// 使用结构体标签进行参数绑定和验证
+// 返回: (ok) - false表示已发送错误响应
+//
+// 使用示例：
+//	var params struct {
+//	    BookID string `uri:"bookId" binding:"required"`
+//	    Page   int    `form:"page" binding:"min=1"`
+//	}
+//	if !BindParams(c, &params) { return }
+func BindParams(c *gin.Context, req interface{}) bool {
+	// 先绑定URI参数
+	if err := c.ShouldBindUri(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	// 再绑定Query参数
+	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return false
 	}

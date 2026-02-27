@@ -74,15 +74,7 @@ func InitServer() (*gin.Engine, error) {
 	// LoggerMiddleware - 结构化日志记录
 	// 使用 builtin 版本，支持敏感信息脱敏、严格模式等功能
 	loggerMW := builtin.NewLoggerMiddleware(logger.Get().Logger)
-	if logCfg.Request != nil {
-		loggerConfig := map[string]interface{}{
-			"skip_paths":         logCfg.Request.SkipPaths,
-			"body_allow_paths":   logCfg.Request.BodyAllowPaths,
-			"enable_request_body": logCfg.Request.EnableBody || logCfg.Mode == "strict",
-			"max_body_size":      logCfg.Request.MaxBodySize,
-			"redact_keys":        logCfg.RedactKeys,
-			"mode":               logCfg.Mode,
-		}
+	if loggerConfig := buildLoggerMiddlewareConfig(logCfg); loggerConfig != nil {
 		if err := loggerMW.LoadConfig(loggerConfig); err != nil {
 			logger.Warn("Failed to load logger config", zap.Error(err))
 		}
@@ -103,13 +95,7 @@ func InitServer() (*gin.Engine, error) {
 	// RateLimitMiddleware - API限流（支持配置化启用/禁用）
 	if config.GlobalConfig.RateLimit != nil && config.GlobalConfig.RateLimit.Enabled {
 		// 使用新架构的限流中间件
-		rateLimitConfig := &ratelimit.RateLimitConfig{
-			Strategy:     "token_bucket", // 使用令牌桶策略
-			Enabled:      true,
-			Rate:         int(config.GlobalConfig.RateLimit.RequestsPerSec),
-			Burst:        config.GlobalConfig.RateLimit.Burst,
-			SkipPaths:    config.GlobalConfig.RateLimit.SkipPaths,
-		}
+		rateLimitConfig := buildRateLimitMiddlewareConfig(config.GlobalConfig.RateLimit)
 
 		// 创建限流中间件
 		rateLimitMW, err := ratelimit.NewRateLimitMiddleware(rateLimitConfig, logger.Get().Logger)
@@ -162,4 +148,55 @@ func RunServer(r *gin.Engine) error {
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	fmt.Printf("Server is running on port %s in %s mode\n", cfg.Port, cfg.Mode)
 	return r.Run(addr)
+}
+
+func buildLoggerMiddlewareConfig(logCfg *config.LogConfig) map[string]interface{} {
+	if logCfg == nil || logCfg.Request == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"skip_paths":          stringSliceToInterfaceSlice(logCfg.Request.SkipPaths),
+		"body_allow_paths":    stringSliceToInterfaceSlice(logCfg.Request.BodyAllowPaths),
+		"enable_request_body": logCfg.Request.EnableBody || logCfg.Mode == "strict",
+		"max_body_size":       logCfg.Request.MaxBodySize,
+		"redact_keys":         stringSliceToInterfaceSlice(logCfg.RedactKeys),
+		"mode":                logCfg.Mode,
+	}
+}
+
+func buildRateLimitMiddlewareConfig(cfg *config.RateLimitConfig) *ratelimit.RateLimitConfig {
+	if cfg == nil {
+		return nil
+	}
+
+	rate := int(cfg.RequestsPerSec)
+	if rate <= 0 {
+		rate = 1
+	}
+
+	burst := cfg.Burst
+	if burst < rate {
+		burst = rate
+	}
+
+	return &ratelimit.RateLimitConfig{
+		Enabled:         cfg.Enabled,
+		Strategy:        "token_bucket",
+		Rate:            rate,
+		Burst:           burst,
+		KeyFunc:         "ip",
+		SkipPaths:       cfg.SkipPaths,
+		Message:         "请求过于频繁，请稍后再试",
+		StatusCode:      429,
+		CleanupInterval: 300,
+	}
+}
+
+func stringSliceToInterfaceSlice(values []string) []interface{} {
+	out := make([]interface{}, 0, len(values))
+	for _, v := range values {
+		out = append(out, v)
+	}
+	return out
 }

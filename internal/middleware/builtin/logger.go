@@ -329,13 +329,8 @@ func (m *LoggerMiddleware) LoadConfig(config map[string]interface{}) error {
 	}
 
 	// 加载SkipPaths
-	if skipPaths, ok := config["skip_paths"].([]interface{}); ok {
-		m.config.SkipPaths = make([]string, len(skipPaths))
-		for i, v := range skipPaths {
-			if str, ok := v.(string); ok {
-				m.config.SkipPaths[i] = str
-			}
-		}
+	if skipPaths, ok := toStringSlice(config["skip_paths"]); ok {
+		m.config.SkipPaths = skipPaths
 	}
 
 	// 加载TimeFormat
@@ -381,13 +376,8 @@ func (m *LoggerMiddleware) LoadConfig(config map[string]interface{}) error {
 	}
 
 	// 加载BodyAllowPaths
-	if bodyAllowPaths, ok := config["body_allow_paths"].([]interface{}); ok {
-		m.config.BodyAllowPaths = make([]string, len(bodyAllowPaths))
-		for i, v := range bodyAllowPaths {
-			if str, ok := v.(string); ok {
-				m.config.BodyAllowPaths[i] = str
-			}
-		}
+	if bodyAllowPaths, ok := toStringSlice(config["body_allow_paths"]); ok {
+		m.config.BodyAllowPaths = bodyAllowPaths
 	}
 
 	// 加载MaxBodySize
@@ -396,13 +386,8 @@ func (m *LoggerMiddleware) LoadConfig(config map[string]interface{}) error {
 	}
 
 	// 加载RedactKeys
-	if redactKeys, ok := config["redact_keys"].([]interface{}); ok {
-		m.config.RedactKeys = make([]string, len(redactKeys))
-		for i, v := range redactKeys {
-			if str, ok := v.(string); ok {
-				m.config.RedactKeys[i] = str
-			}
-		}
+	if redactKeys, ok := toStringSlice(config["redact_keys"]); ok {
+		m.config.RedactKeys = redactKeys
 	}
 
 	// 加载Mode
@@ -522,6 +507,25 @@ func validateAccessLogFields(requestID, method, path string) []string {
 		violations = append(violations, "path_missing")
 	}
 	return violations
+}
+
+func toStringSlice(value interface{}) ([]string, bool) {
+	switch v := value.(type) {
+	case []string:
+		return v, true
+	case []interface{}:
+		result := make([]string, 0, len(v))
+		for _, item := range v {
+			str, ok := item.(string)
+			if !ok {
+				return nil, false
+			}
+			result = append(result, str)
+		}
+		return result, true
+	default:
+		return nil, false
+	}
 }
 
 // 确保LoggerMiddleware实现了ConfigurableMiddleware接口

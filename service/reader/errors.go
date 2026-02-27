@@ -132,6 +132,14 @@ func (e *ReaderError) IsRetryable() bool {
 	return false
 }
 
+// ErrorMessage 实现MessageProvider接口，返回用户友好的错误消息
+func (e *ReaderError) ErrorMessage() string {
+	if e.Message != "" {
+		return e.Message
+	}
+	return e.Code.String()
+}
+
 // NewReaderError 创建新的 Reader 错误
 func NewReaderError(code ErrorCode, message string) *ReaderError {
 	return &ReaderError{

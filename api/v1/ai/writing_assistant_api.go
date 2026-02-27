@@ -61,7 +61,7 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	// 调用服务
 	result, err := api.summarizeService.SummarizeContent(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	// 调用服务
 	result, err := api.summarizeService.SummarizeChapter(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	// 调用服务
 	result, err := api.proofreadService.ProofreadContent(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 	// 调用服务
 	result, err := api.proofreadService.GetProofreadSuggestion(c.Request.Context(), suggestionID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -209,7 +209,7 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 	// 调用服务
 	result, err := api.sensitiveWordsService.CheckSensitiveWords(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -244,7 +244,7 @@ func (api *WritingAssistantApi) GetSensitiveWordsDetail(c *gin.Context) {
 	// 调用服务
 	result, err := api.sensitiveWordsService.GetSensitiveWordsDetail(c.Request.Context(), checkID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

@@ -43,7 +43,7 @@ func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
 	// 2. 获取有效公告
 	announcements, err := api.announcementService.GetEffectiveAnnouncements(c.Request.Context(), targetRole, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 	// 2. 增加查看次数
 	err := api.announcementService.IncrementViewCount(c.Request.Context(), id)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (api *AnnouncementPublicAPI) GetAnnouncementByID(c *gin.Context) {
 	// 2. 获取公告详情
 	announcement, err := api.announcementService.GetAnnouncementByID(c.Request.Context(), id)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

@@ -68,7 +68,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	// 调用服务
 	result, err := api.aiService.ContinueWriting(c.Request.Context(), serviceReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -238,7 +238,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 	// 调用服务
 	result, err := api.aiService.OptimizeText(c.Request.Context(), serviceReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

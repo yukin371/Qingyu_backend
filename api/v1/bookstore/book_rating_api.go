@@ -96,7 +96,8 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 
 	ratings, total, err := api.BookRatingService.GetRatingsByBookID(c.Request.Context(), bookID, page, limit)
 	if err != nil {
-		response.InternalError(c, errors.New("获取评分列表失败"))
+		err = errors.New("获取评分列表失败")
+		c.Error(err)
 		return
 	}
 
@@ -141,7 +142,8 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 
 	ratings, total, err := api.BookRatingService.GetRatingsByUserID(c.Request.Context(), userID, page, limit)
 	if err != nil {
-		response.InternalError(c, errors.New("获取评分列表失败"))
+		err = errors.New("获取评分列表失败")
+		c.Error(err)
 		return
 	}
 
@@ -174,7 +176,8 @@ func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 
 	avgRating, err := api.BookRatingService.GetAverageRating(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, errors.New("获取平均评分失败"))
+		err = errors.New("获取平均评分失败")
+		c.Error(err)
 		return
 	}
 
@@ -207,7 +210,8 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 
 	distribution, err := api.BookRatingService.GetRatingDistribution(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, errors.New("获取评分分布失败"))
+		err = errors.New("获取评分分布失败")
+		c.Error(err)
 		return
 	}
 
@@ -233,7 +237,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	}
 
 	if err := api.BookRatingService.CreateRating(c.Request.Context(), &rating); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -275,7 +279,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	rating.ID = id
 	err = api.BookRatingService.UpdateRating(c.Request.Context(), &rating)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -309,7 +313,7 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 
 	err = api.BookRatingService.DeleteRating(c.Request.Context(), id)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -352,19 +356,21 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 		// 尝试从string转换
 		userIDStr, ok := userID.(string)
 		if !ok {
-			response.InternalError(c, errors.New("用户ID格式错误"))
+			err = errors.New("用户ID格式错误")
+			c.Error(err)
 			return
 		}
 		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
 		if err != nil {
-			response.InternalError(c, errors.New("用户ID格式错误"))
+			err = errors.New("用户ID格式错误")
+			c.Error(err)
 			return
 		}
 	}
 
 	err = api.BookRatingService.LikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -407,19 +413,21 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 		// 尝试从string转换
 		userIDStr, ok := userID.(string)
 		if !ok {
-			response.InternalError(c, errors.New("用户ID格式错误"))
+			err = errors.New("用户ID格式错误")
+			c.Error(err)
 			return
 		}
 		userObjID, err = primitive.ObjectIDFromHex(userIDStr)
 		if err != nil {
-			response.InternalError(c, errors.New("用户ID格式错误"))
+			err = errors.New("用户ID格式错误")
+			c.Error(err)
 			return
 		}
 	}
 
 	err = api.BookRatingService.UnlikeRating(c.Request.Context(), id, userObjID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

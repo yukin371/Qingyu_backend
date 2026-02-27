@@ -147,30 +147,30 @@ func TestToBookModel(t *testing.T) {
 	lastUpdateAt := now.Add(-1 * time.Hour)
 
 	bookDTO := &dto.BookDTO{
-		ID:            bookID.Hex(),
-		CreatedAt:     now.Format(time.RFC3339),
-		UpdatedAt:     now.Format(time.RFC3339),
-		Title:         "测试书籍",
-		Author:        "测试作者",
-		AuthorID:      authorID.Hex(),
-		Introduction:  "这是一本测试书籍的简介",
-		Cover:         "https://example.com/cover.jpg",
-		CategoryIDs:   []string{categoryID1.Hex(), categoryID2.Hex()},
-		Categories:    []string{"玄幻", "修仙"},
-		Tags:          []string{"热血", "爽文"},
-		Status:        "ongoing",
-		Rating:        4.5,
-		RatingCount:   1000,
-		ViewCount:     50000,
-		WordCount:     1000000,
-		ChapterCount:  500,
-		Price:         "¥99.00",
-		IsFree:        false,
+		ID:           bookID.Hex(),
+		CreatedAt:    now.Format(time.RFC3339),
+		UpdatedAt:    now.Format(time.RFC3339),
+		Title:        "测试书籍",
+		Author:       "测试作者",
+		AuthorID:     authorID.Hex(), // AuthorID 现在是 string 类型
+		Introduction: "这是一本测试书籍的简介",
+		Cover:        "https://example.com/cover.jpg",
+		CategoryIDs:  []string{categoryID1.Hex(), categoryID2.Hex()},
+		Categories:   []string{"玄幻", "修仙"},
+		Tags:         []string{"热血", "爽文"},
+		Status:       "ongoing",
+		Rating:       4.5,
+		RatingCount:  1000,
+		ViewCount:    50000,
+		WordCount:    1000000,
+		ChapterCount: 500,
+		Price:        "¥99.00",
+		IsFree:       false,
 		IsRecommended: true,
-		IsFeatured:    false,
-		IsHot:         true,
-		PublishedAt:   publishedAt.Format(time.RFC3339),
-		LastUpdateAt:  lastUpdateAt.Format(time.RFC3339),
+		IsFeatured:   false,
+		IsHot:        true,
+		PublishedAt:  publishedAt.Format(time.RFC3339),
+		LastUpdateAt: lastUpdateAt.Format(time.RFC3339),
 	}
 
 	// 执行转换
@@ -186,7 +186,7 @@ func TestToBookModel(t *testing.T) {
 	// 验证基本信息
 	assert.Equal(t, "测试书籍", bookModel.Title)
 	assert.Equal(t, "测试作者", bookModel.Author)
-	assert.Equal(t, authorID.Hex(), bookModel.AuthorID)
+	assert.Equal(t, authorID.Hex(), bookModel.AuthorID) // AuthorID 现在是 string 类型
 	assert.Equal(t, "这是一本测试书籍的简介", bookModel.Introduction)
 	assert.Equal(t, "https://example.com/cover.jpg", bookModel.Cover)
 

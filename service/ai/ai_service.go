@@ -24,6 +24,7 @@ type AIServiceConfig struct {
 	MaxRetries     int           // 最大重试次数
 	RetryDelay     time.Duration // 重试延迟
 	EnableFallback bool          // 启用降级
+	EnableMonitor  bool          // 启用监控与追踪
 }
 
 // AIService AI服务（简化版，使用gRPC）

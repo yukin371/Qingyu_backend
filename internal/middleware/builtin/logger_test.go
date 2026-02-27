@@ -230,13 +230,13 @@ func TestLoggerMiddleware_LoadConfig(t *testing.T) {
 
 	// 测试加载配置
 	config := map[string]interface{}{
-		"skip_paths":               []interface{}{"/health", "/metrics"},
-		"skip_log_body":            true,
-		"enable_request_id":        false,
-		"enable_request_body":      false,
-		"enable_response_body":     true,
-		"slow_request_threshold":   5000,
-		"enable_colors":            false,
+		"skip_paths":             []interface{}{"/health", "/metrics"},
+		"skip_log_body":          true,
+		"enable_request_id":      false,
+		"enable_request_body":    false,
+		"enable_response_body":   true,
+		"slow_request_threshold": 5000,
+		"enable_colors":          false,
 	}
 
 	err := middleware.LoadConfig(config)
@@ -250,6 +250,23 @@ func TestLoggerMiddleware_LoadConfig(t *testing.T) {
 	assert.True(t, middleware.config.EnableResponseBody)
 	assert.Equal(t, 5000, middleware.config.SlowRequestThreshold)
 	assert.False(t, middleware.config.EnableColors)
+}
+
+func TestLoggerMiddleware_LoadConfigWithStringSlice(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+	middleware := NewLoggerMiddleware(logger)
+
+	config := map[string]interface{}{
+		"skip_paths":       []string{"/health", "/metrics"},
+		"body_allow_paths": []string{"/api/v1"},
+		"redact_keys":      []string{"authorization", "password"},
+	}
+
+	err := middleware.LoadConfig(config)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"/health", "/metrics"}, middleware.config.SkipPaths)
+	assert.Equal(t, []string{"/api/v1"}, middleware.config.BodyAllowPaths)
+	assert.Equal(t, []string{"authorization", "password"}, middleware.config.RedactKeys)
 }
 
 // TestLoggerMiddleware_ValidateConfig 测试配置验证

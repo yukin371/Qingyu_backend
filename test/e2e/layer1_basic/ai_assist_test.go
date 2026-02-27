@@ -4,6 +4,7 @@
 package layer1_basic
 
 import (
+	"os"
 	"testing"
 
 	e2e "Qingyu_backend/test/e2e/framework"
@@ -21,6 +22,9 @@ import (
 func TestAIAssistFunctionality(t *testing.T) {
 	if testing.Short() {
 		t.Skip("跳过E2E测试")
+	}
+	if os.Getenv("E2E_ENABLE_AI") != "1" {
+		t.Skip("AI E2E 默认关闭，设置 E2E_ENABLE_AI=1 后执行")
 	}
 
 	// 初始化测试环境

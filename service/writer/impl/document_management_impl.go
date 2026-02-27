@@ -322,12 +322,12 @@ func (d *DocumentManagementImpl) GetVersionHistory(ctx context.Context, document
 	versions := make([]*serviceWriter.VersionInfo, 0, len(versionResp.Versions))
 	for _, v := range versionResp.Versions {
 		versions = append(versions, &serviceWriter.VersionInfo{
-			VersionID: v.VersionID,
-			Version:   v.Version,
-			Message:   v.Message,
-			CreatedAt: v.CreatedAt,
-			CreatedBy: v.CreatedBy,
-			WordCount: v.WordCount,
+			VersionID:  v.VersionID,
+			Version:    v.Version,
+			Message:    v.Message,
+			CreatedAt:  v.CreatedAt,
+			CreatedBy:  v.CreatedBy,
+			WordCount:  v.WordCount,
 		})
 	}
 	return &serviceWriter.VersionHistoryResponse{
