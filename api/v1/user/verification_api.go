@@ -56,7 +56,7 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	// 发送验证码
 	err = api.verificationService.SendEmailCode(c.Request.Context(), req.Email, "verify_email")
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 	// 模拟实现：发送手机验证码
 	err := api.verificationService.SendPhoneCode(c.Request.Context(), req.Phone, "verify_phone")
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	// ✅ 添加：标记验证码为已使用（防止重复使用）
 	err = api.verificationService.MarkCodeAsUsed(c.Request.Context(), req.Email)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -132,7 +132,7 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	userID := c.GetString("userID")
 	err = api.verificationService.SetEmailVerified(c.Request.Context(), userID, req.Email)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 	// 解绑邮箱
 	err = api.userService.UnbindEmail(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -251,7 +251,7 @@ func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 		if serviceInterfaces.IsNotFoundError(err) {
 			response.NotFound(c, "设备不存在")
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
