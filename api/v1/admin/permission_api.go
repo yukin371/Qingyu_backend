@@ -39,7 +39,7 @@ func NewPermissionAPI(permissionService sharedService.PermissionService) *Permis
 func (api *PermissionAPI) GetAllPermissions(c *gin.Context) {
 	permissions, err := api.permissionService.GetAllPermissions(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -95,7 +95,7 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 	}
 
 	if err := api.permissionService.CreatePermission(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 
 	req.Code = code
 	if err := api.permissionService.UpdatePermission(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 	}
 
 	if err := api.permissionService.DeletePermission(c.Request.Context(), code); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 func (api *PermissionAPI) GetAllRoles(c *gin.Context) {
 	roles, err := api.permissionService.GetAllRoles(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -236,7 +236,7 @@ func (api *PermissionAPI) CreateRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.CreateRole(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -271,7 +271,7 @@ func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 
 	req.ID = roleID
 	if err := api.permissionService.UpdateRole(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -298,7 +298,7 @@ func (api *PermissionAPI) DeleteRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.DeleteRole(c.Request.Context(), roleID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -328,7 +328,7 @@ func (api *PermissionAPI) AssignPermissionToRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.AssignPermissionToRole(c.Request.Context(), roleID, permissionCode); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -358,7 +358,7 @@ func (api *PermissionAPI) RemovePermissionFromRole(c *gin.Context) {
 	}
 
 	if err := api.permissionService.RemovePermissionFromRole(c.Request.Context(), roleID, permissionCode); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -386,7 +386,7 @@ func (api *PermissionAPI) GetRolePermissions(c *gin.Context) {
 
 	permissions, err := api.permissionService.GetRolePermissions(c.Request.Context(), roleID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -415,7 +415,7 @@ func (api *PermissionAPI) GetUserRoles(c *gin.Context) {
 
 	roles, err := api.permissionService.GetUserRoles(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -448,7 +448,7 @@ func (api *PermissionAPI) AssignRoleToUser(c *gin.Context) {
 	}
 
 	if err := api.permissionService.AssignRoleToUser(c.Request.Context(), userID, req.Role); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -477,7 +477,7 @@ func (api *PermissionAPI) RemoveRoleFromUser(c *gin.Context) {
 	}
 
 	if err := api.permissionService.RemoveRoleFromUser(c.Request.Context(), userID, role); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -504,7 +504,7 @@ func (api *PermissionAPI) GetUserPermissions(c *gin.Context) {
 
 	permissions, err := api.permissionService.GetUserPermissions(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
