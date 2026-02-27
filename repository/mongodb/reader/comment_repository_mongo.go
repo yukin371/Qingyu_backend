@@ -219,8 +219,13 @@ func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID
 
 // GetRepliesByCommentID 获取评论的回复列表
 func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*social.Comment, error) {
+	parentID, err := parseCommentObjectID(commentID)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := bson.M{
-		"parent_id": commentID,
+		"parent_id": parentID.Hex(),
 		"state":     social.CommentStateNormal,
 	}
 
