@@ -8,8 +8,6 @@ on:
 
 env:
   GO_VERSION: '1.24'
-  MONGODB_TEST_USER: admin
-  MONGODB_TEST_PASS: ci_test_pass
 
 jobs:
   # 代码检查和格式化
@@ -94,12 +92,12 @@ jobs:
       mongodb:
         image: mongo:7.0
         env:
-          MONGO_INITDB_ROOT_USERNAME: ${{ env.MONGODB_TEST_USER }}
-          MONGO_INITDB_ROOT_PASSWORD: ${{ env.MONGODB_TEST_PASS }}
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: ci_test_pass
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh 'mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017' --eval 'db.stats().ok'"
+          --health-cmd "mongosh 'mongodb://admin:ci_test_pass@localhost:27017' --eval 'db.stats().ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
@@ -126,9 +124,9 @@ jobs:
 
       - name: Run unit tests
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
         run: |
@@ -213,9 +211,9 @@ jobs:
 
       - name: Run integration tests
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
@@ -305,9 +303,9 @@ jobs:
 
       - name: Start application
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
@@ -319,9 +317,9 @@ jobs:
 
       - name: Run API tests
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
@@ -396,9 +394,9 @@ jobs:
 
       - name: Run E2E Layer 1 - Basic Flows
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
@@ -410,9 +408,9 @@ jobs:
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
@@ -424,9 +422,9 @@ jobs:
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
-          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:ci_test_pass@localhost:27017/qingyu?authSource=admin
           QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
