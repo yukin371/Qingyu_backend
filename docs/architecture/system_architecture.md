@@ -24,12 +24,12 @@ API层负责处理HTTP请求和响应，按业务领域划分为以下模块：
 
 | 模块 | 职责 | 主要文件 |
 |------|------|----------|
-| `admin` | 后台管理功能 | admin_api.go, dashboard_api.go |
+| `admin` | 后台管理功能 | admin_api.go, dashboard_api.go, analytics_api.go, audit_api.go, permission_template_api.go, content_export_api.go |
 | `ai` | AI服务集成 | ai_api.go, chat_api.go |
 | `bookstore` | 书店/小说管理 | bookstore_api.go, book_detail_api.go |
 | `reader` | 读者功能 | reading_history_api.go, bookshelf_api.go |
 | `social` | 社交功能 | comment_api.go, like_api.go, follow_api.go |
-| `writer` | 作者功能 | editor_api.go, publish_api.go, statistics_api.go |
+| `writer` | 作者功能 | editor_api.go, publish_api.go, statistics_api.go, export_api.go, audit_api.go |
 | `notification` | 通知系统 | notification_api.go |
 | `finance` | 财务功能 | finance_api.go |
 | `compliance` | 合规审核 | compliance_api.go |
@@ -47,6 +47,9 @@ Service层实现业务逻辑，包含以下核心组件：
 | `social/` | 社交业务服务 |
 | `writer/` | 作者业务服务 |
 | `ai/` | AI服务集成 |
+| `admin/` | 管理员业务服务（统计分析、审计日志、导出服务、权限模板） |
+| `audit/` | 审核业务服务 |
+| `auth/` | 认证授权服务（权限模板服务） |
 | `shared/` | 共享服务（auth, cache, messaging等） |
 
 ### 2.3 Repository层 (`repository/`)
@@ -73,11 +76,16 @@ repository/
 
 ```
 models/
+├── admin/           # 管理相关模型
+│   └── export_history.go    # 导出历史记录
+├── auth/            # 认证授权相关模型
+│   └── permission_template.go  # 权限模板
+├── audit/           # 审核相关模型
+│   └── audit_record.go        # 审核记录
 ├── bookstore/       # 书店相关模型
 ├── reader/          # 读者相关模型
 ├── social/          # 社交相关模型
 ├── writer/          # 作者相关模型
-├── admin/           # 管理相关模型
 └── shared/          # 共享模型
 ```
 
@@ -101,6 +109,14 @@ graph TB
         Compliance[Compliance<br/>合规]
     end
 
+    subgraph "管理服务层"
+        Admin[Admin<br/>管理后台]
+        Analytics[Analytics<br/>统计分析]
+        AuditLog[AuditLog<br/>审计日志]
+        Export[Export<br/>数据导出]
+        Permission[Permission<br/>权限管理]
+    end
+
     subgraph "基础设施层"
         Auth[Auth<br/>认证]
         Cache[Cache<br/>缓存]
@@ -113,6 +129,14 @@ graph TB
     AI --> Events
     Writer --> AI
     Notification --> Events
+    Admin --> Analytics
+    Admin --> AuditLog
+    Admin --> Export
+    Admin --> Permission
+    Analytics --> Cache
+    AuditLog --> Events
+    Export --> Cache
+    Permission --> Auth
 ```
 
 ### 3.2 模块职责说明
@@ -127,6 +151,10 @@ graph TB
 | **Notification** | 消息通知 | Events |
 | **Finance** | 财务结算、收益管理 | Writer |
 | **Compliance** | 内容审核 | Writer, Bookstore |
+| **Analytics** | 统计分析、数据报表 | Cache |
+| **AuditLog** | 审计日志、操作追踪 | Events |
+| **Export** | 数据导出、批量导出 | Cache |
+| **Permission** | 权限模板、动态权限 | Auth |
 
 ## 4. 系统架构图
 
@@ -139,10 +167,10 @@ graph TB
 
     subgraph "API Layer - api/v1/"
         Router[Gin Router]
-        AdminAPI[Admin APIs]
+        AdminAPI[Admin APIs<br/>analytics,audit,export<br/>permission_template]
         BookstoreAPI[Bookstore APIs]
         ReaderAPI[Reader APIs]
-        WriterAPI[Writer APIs]
+        WriterAPI[Writer APIs<br/>export,audit]
         SocialAPI[Social APIs]
         AIAPI[AI APIs]
     end
@@ -162,6 +190,8 @@ graph TB
         SocialSvc[Social Service]
         AISvc[AI Service]
         EventSvc[Event Bus]
+        AdminSvc[Admin Service<br/>analytics,audit_log<br/>export]
+        AuthSvc[Auth Service<br/>permission_template]
     end
 
     subgraph "Repository Layer - repository/"
@@ -169,6 +199,8 @@ graph TB
         ReaderRepo[Reader Repository]
         WriterRepo[Writer Repository]
         SocialRepo[Social Repository]
+        AdminRepo[Admin Repository<br/>export_history]
+        AuthRepo[Auth Repository<br/>permission_template]
     end
 
     subgraph "Model Layer - models/"
@@ -176,6 +208,9 @@ graph TB
         ReaderModels[Reader Models]
         WriterModels[Writer Models]
         SocialModels[Social Models]
+        AdminModels[Admin Models<br/>export_history]
+        AuthModels[Auth Models<br/>permission_template]
+        AuditModels[Audit Models<br/>audit_record]
     end
 
     subgraph "Data & External Services"
@@ -213,21 +248,29 @@ graph TB
     Container --> SocialSvc
     Container --> AISvc
     Container --> EventSvc
+    Container --> AdminSvc
+    Container --> AuthSvc
 
     BookstoreSvc --> BookstoreRepo
     ReaderSvc --> ReaderRepo
     WriterSvc --> WriterRepo
     SocialSvc --> SocialRepo
+    AdminSvc --> AdminRepo
+    AuthSvc --> AuthRepo
 
     BookstoreRepo --> BookstoreModels
     ReaderRepo --> ReaderModels
     WriterRepo --> WriterModels
     SocialRepo --> SocialModels
+    AdminRepo --> AdminModels
+    AuthRepo --> AuthModels
 
     BookstoreRepo --> MongoDB
     ReaderRepo --> MongoDB
     WriterRepo --> MongoDB
     SocialRepo --> MongoDB
+    AdminRepo --> MongoDB
+    AuthRepo --> MongoDB
 
     Container --> Redis
     AISvc --> AIService
@@ -236,7 +279,7 @@ graph TB
 
     EventSvc -.-> ReaderSvc
     EventSvc -.-> WriterSvc
-    EventSvc -.-> NotificationSvc
+    EventSvc -.-> AdminSvc
 ```
 
 ## 5. 关键设计决策
