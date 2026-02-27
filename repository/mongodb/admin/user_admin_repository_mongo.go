@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
+	"regexp"
 	"strings"
 	"time"
 
@@ -431,17 +432,18 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 
 	if filter != nil {
 		if filter.Keyword != "" {
+			escapedKeyword := regexp.QuoteMeta(filter.Keyword)
 			mongoFilter["$or"] = []bson.M{
-				{"username": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"email": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"nickname": bson.M{"$regex": filter.Keyword, "$options": "i"}},
+				{"username": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"email": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"nickname": bson.M{"$regex": escapedKeyword, "$options": "i"}},
 			}
 		}
 		if filter.Status != "" {
-			mongoFilter["status"] = filter.Status
+			mongoFilter["status"] = exactUserMatchRegex(string(filter.Status))
 		}
 		if filter.Role != "" {
-			mongoFilter["role"] = filter.Role
+			mongoFilter["role"] = exactUserMatchRegex(filter.Role)
 		}
 		if filter.DateFrom != nil {
 			if _, exists := mongoFilter["created_at"]; !exists {
@@ -461,4 +463,11 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 	}
 
 	return mongoFilter
+}
+
+func exactUserMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
 }

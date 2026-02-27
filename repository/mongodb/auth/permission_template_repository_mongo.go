@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -109,7 +110,7 @@ func (r *PermissionTemplateRepositoryMongo) GetTemplateByID(ctx context.Context,
 
 // GetTemplateByCode 根据代码获取模板
 func (r *PermissionTemplateRepositoryMongo) GetTemplateByCode(ctx context.Context, code string) (*authModel.PermissionTemplate, error) {
-	filter := bson.M{"code": code}
+	filter := bson.M{"code": exactTemplateMatchRegex(code)}
 	return r.findOneByFilter(ctx, filter)
 }
 
@@ -132,7 +133,7 @@ func (r *PermissionTemplateRepositoryMongo) UpdateTemplate(ctx context.Context, 
 	// 执行更新
 	objectID, err := primitive.ObjectIDFromHex(templateID)
 	if err != nil {
-		filter := bson.M{"_id": templateID}
+		filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
 		_, err = r.getCollection().UpdateOne(ctx, filter, bson.M{"$set": updates})
 	} else {
 		filter := bson.M{"_id": objectID}
@@ -167,7 +168,7 @@ func (r *PermissionTemplateRepositoryMongo) DeleteTemplate(ctx context.Context, 
 	objectID, err := primitive.ObjectIDFromHex(templateID)
 	var result *mongo.DeleteResult
 	if err != nil {
-		filter := bson.M{"_id": templateID}
+		filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
 		result, err = r.getCollection().DeleteOne(ctx, filter)
 	} else {
 		filter := bson.M{"_id": objectID}
@@ -243,7 +244,7 @@ func (r *PermissionTemplateRepositoryMongo) ListTemplatesByCategory(ctx context.
 	}
 
 	// 从数据库获取
-	filter := bson.M{"category": category}
+	filter := bson.M{"category": exactTemplateMatchRegex(category)}
 	opts := options.Find().SetSort(bson.M{"created_at": -1})
 
 	cursor, err := r.getCollection().Find(ctx, filter, opts)
@@ -284,7 +285,7 @@ func (r *PermissionTemplateRepositoryMongo) ApplyTemplateToRole(ctx context.Cont
 	objectID, err := primitive.ObjectIDFromHex(roleID)
 	var filter primitive.M
 	if err != nil {
-		filter = bson.M{"_id": roleID}
+		filter = bson.M{"_id": exactTemplateMatchRegex(roleID)}
 	} else {
 		filter = bson.M{"_id": objectID}
 	}
@@ -448,6 +449,7 @@ func (r *PermissionTemplateRepositoryMongo) Health(ctx context.Context) error {
 
 // findOneByFilter 根据条件查询单个模板
 func (r *PermissionTemplateRepositoryMongo) findOneByFilter(ctx context.Context, filter bson.M) (*authModel.PermissionTemplate, error) {
+	filter = sanitizeTemplateFilter(filter)
 	var template authModel.PermissionTemplate
 	err := r.getCollection().FindOne(ctx, filter).Decode(&template)
 	if err != nil {
@@ -489,4 +491,24 @@ func (r *PermissionTemplateRepositoryMongo) clearTemplateListCache(ctx context.C
 		_ = r.redis.Del(ctx, "permission_templates:category:"+authModel.CategoryAdmin)
 		_ = r.redis.Del(ctx, "permission_templates:category:"+authModel.CategoryCustom)
 	}
+}
+
+func exactTemplateMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
+}
+
+func sanitizeTemplateFilter(filter bson.M) bson.M {
+	safe := bson.M{}
+	for key, value := range filter {
+		switch v := value.(type) {
+		case string:
+			safe[key] = exactTemplateMatchRegex(v)
+		default:
+			safe[key] = value
+		}
+	}
+	return safe
 }
