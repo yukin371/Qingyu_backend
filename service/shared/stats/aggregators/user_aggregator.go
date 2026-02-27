@@ -19,9 +19,7 @@ func NewUserAggregator() *UserAggregator {
 
 // AggregateUserStats 聚合平台用户统计（骨架实现）
 func (a *UserAggregator) AggregateUserStats(ctx context.Context, filter *stats.StatsFilter) (*stats.PlatformUserStats, error) {
-	if filter == nil {
-		filter = &stats.StatsFilter{}
-	}
+	_ = filter
 	_ = ctx
 
 	return &stats.PlatformUserStats{
