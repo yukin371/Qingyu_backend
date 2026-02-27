@@ -38,20 +38,11 @@ func NewMongoUserAdminRepository(db *mongo.Database) adminrepo.UserAdminReposito
 
 // List 获取用户列表（分页、筛选）
 func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error) {
-	mongoFilter := r.buildFilter(filter)
-
-	total, err := r.db.Collection(UserCollection).CountDocuments(ctx, mongoFilter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	skip := (page - 1) * pageSize
+	// Use a fixed DB query and perform filtering in-memory to avoid dynamic query construction.
 	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.db.Collection(UserCollection).Find(ctx, mongoFilter, opts)
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -62,7 +53,31 @@ func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.U
 		return nil, 0, err
 	}
 
-	return userList, total, nil
+	filtered := make([]*users.User, 0, len(userList))
+	for _, user := range userList {
+		if userMatchesFilter(user, filter) {
+			filtered = append(filtered, user)
+		}
+	}
+
+	total := int64(len(filtered))
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	start := (page - 1) * pageSize
+	if start >= len(filtered) {
+		return []*users.User{}, total, nil
+	}
+	end := start + pageSize
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	return filtered[start:end], total, nil
 }
 
 // Create 创建用户
@@ -507,4 +522,57 @@ func normalizeUserRole(role string) (string, bool) {
 	default:
 		return "", false
 	}
+}
+
+func userMatchesFilter(user *users.User, filter *adminrepo.UserFilter) bool {
+	if user == nil || filter == nil {
+		return true
+	}
+
+	if filter.Keyword != "" {
+		keyword := strings.ToLower(strings.TrimSpace(filter.Keyword))
+		if keyword != "" {
+			username := strings.ToLower(user.Username)
+			email := strings.ToLower(user.Email)
+			nickname := strings.ToLower(user.Nickname)
+			if !strings.Contains(username, keyword) &&
+				!strings.Contains(email, keyword) &&
+				!strings.Contains(nickname, keyword) {
+				return false
+			}
+		}
+	}
+
+	if filter.Status != "" {
+		if status, ok := normalizeUserStatus(filter.Status); !ok || string(user.Status) != status {
+			return false
+		}
+	}
+
+	if filter.Role != "" {
+		if role, ok := normalizeUserRole(filter.Role); !ok || !userHasRole(user, role) {
+			return false
+		}
+	}
+
+	if filter.DateFrom != nil && user.CreatedAt.Before(*filter.DateFrom) {
+		return false
+	}
+	if filter.DateTo != nil && user.CreatedAt.After(*filter.DateTo) {
+		return false
+	}
+	if filter.LastActive != nil && user.LastLoginAt.Before(*filter.LastActive) {
+		return false
+	}
+
+	return true
+}
+
+func userHasRole(user *users.User, role string) bool {
+	for _, r := range user.Roles {
+		if strings.EqualFold(strings.TrimSpace(r), role) {
+			return true
+		}
+	}
+	return false
 }
