@@ -12,6 +12,7 @@ func InitWriterRoutes(
 	characterService interfaces.CharacterService,
 	locationService interfaces.LocationService,
 	timelineService interfaces.TimelineService,
+	outlineService interfaces.OutlineService,
 ) {
 	// 角色管理路由
 	if characterService != nil {
@@ -26,5 +27,10 @@ func InitWriterRoutes(
 	// 时间线管理路由
 	if timelineService != nil {
 		InitTimelineRoutes(router, timelineService)
+	}
+
+	// 大纲管理路由
+	if outlineService != nil {
+		InitOutlineRoutes(router, outlineService)
 	}
 }

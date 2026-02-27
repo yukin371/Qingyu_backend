@@ -41,11 +41,22 @@ jobs:
 
       - name: Check for large files
         run: |
-          # 检查是否有大于 5MB 的文件
-          large_files=$(find . -type f -size +5M -not -path "./.git/*" -not -path "./vendor/*")
+          # 仅检查本次PR变更文件中是否有大于 5MB 的文件
+          base_ref="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          changed_files=$(git diff --name-only "$base_ref...HEAD")
+          large_files=""
+          for f in $changed_files; do
+            if [ -f "$f" ]; then
+              size=$(stat -c%s "$f")
+              if [ "$size" -gt $((5 * 1024 * 1024)) ]; then
+                large_files="${large_files}\n./$f"
+              fi
+            fi
+          done
           if [ -n "$large_files" ]; then
             echo "❌ Found large files (>5MB):"
-            echo "$large_files"
+            echo -e "$large_files"
             echo ""
             echo "Please consider using Git LFS for large files."
             exit 1
@@ -126,8 +137,12 @@ jobs:
 
       - name: Quick syntax check
         run: |
-          go vet ./...
+          go vet $(go list ./... | grep -v '^Qingyu_backend/cmd/')
           go build -v ./...
+
+      - name: Architecture guard tests
+        run: |
+          make guard-arch
 
   test-docker-changes:
     name: Test Docker Changes

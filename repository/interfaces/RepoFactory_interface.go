@@ -38,6 +38,12 @@ type RepositoryFactory interface {
 	CreateDocumentRepository() writer.DocumentRepository
 	CreateDocumentContentRepository() writer.DocumentContentRepository
 	CreateTemplateRepository() writer.TemplateRepository
+	// 设定百科相关Repository
+	CreateCharacterRepository() writer.CharacterRepository
+	CreateLocationRepository() writer.LocationRepository
+	CreateTimelineRepository() writer.TimelineRepository
+	CreateTimelineEventRepository() writer.TimelineEventRepository
+	CreateOutlineRepository() writer.OutlineRepository
 
 	// 阅读相关Repository
 	CreateReadingSettingsRepository() ReadingInterfaces.ReadingSettingsRepository

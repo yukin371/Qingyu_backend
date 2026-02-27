@@ -89,7 +89,7 @@ func TestCachedBookRepository_GetByID_CacheMiss(t *testing.T) {
 		Title:  "Test Book",
 		Author: "Test Author",
 	}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	cached := WrapBookRepositoryWithCache(base, redisClient)
@@ -109,7 +109,7 @@ func TestCachedBookRepository_GetByID_CacheHit(t *testing.T) {
 		Title:  "Test Book",
 		Author: "Test Author",
 	}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	cached := WrapBookRepositoryWithCache(base, redisClient)
@@ -146,13 +146,13 @@ func TestCachedBookRepository_Update(t *testing.T) {
 		Title:  "Test Book",
 		Author: "Test Author",
 	}
-	base.Create(context.Background(), book)
+	_ = base.Create(context.Background(), book)
 
 	redisClient := setupTestRedis(t)
 	cached := WrapBookRepositoryWithCache(base, redisClient)
 
 	// 填充缓存
-	cached.GetByID(context.Background(), book.ID.Hex())
+	_, _ = cached.GetByID(context.Background(), book.ID.Hex())
 	time.Sleep(100 * time.Millisecond)
 
 	// 更新数据（应该删除缓存）

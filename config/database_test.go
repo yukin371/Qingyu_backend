@@ -236,26 +236,26 @@ func TestMongoDBProfilingEnvOverrides(t *testing.T) {
 	defer func() {
 		// 恢复原始值
 		if originalLevel != "" {
-			os.Setenv("MONGODB_PROFILING_LEVEL", originalLevel)
+			_ = os.Setenv("MONGODB_PROFILING_LEVEL", originalLevel)
 		} else {
-			os.Unsetenv("MONGODB_PROFILING_LEVEL")
+			_ = os.Unsetenv("MONGODB_PROFILING_LEVEL")
 		}
 		if originalSlowMS != "" {
-			os.Setenv("MONGODB_SLOW_MS", originalSlowMS)
+			_ = os.Setenv("MONGODB_SLOW_MS", originalSlowMS)
 		} else {
-			os.Unsetenv("MONGODB_SLOW_MS")
+			_ = os.Unsetenv("MONGODB_SLOW_MS")
 		}
 		if originalSizeMB != "" {
-			os.Setenv("MONGODB_PROFILER_SIZE_MB", originalSizeMB)
+			_ = os.Setenv("MONGODB_PROFILER_SIZE_MB", originalSizeMB)
 		} else {
-			os.Unsetenv("MONGODB_PROFILER_SIZE_MB")
+			_ = os.Unsetenv("MONGODB_PROFILER_SIZE_MB")
 		}
 	}()
 
 	// 设置测试环境变量
-	os.Setenv("MONGODB_PROFILING_LEVEL", "2")
-	os.Setenv("MONGODB_SLOW_MS", "200")
-	os.Setenv("MONGODB_PROFILER_SIZE_MB", "200")
+	_ = os.Setenv("MONGODB_PROFILING_LEVEL", "2")
+	_ = os.Setenv("MONGODB_SLOW_MS", "200")
+	_ = os.Setenv("MONGODB_PROFILER_SIZE_MB", "200")
 
 	// 加载配置
 	config, err := LoadDatabaseConfig("")

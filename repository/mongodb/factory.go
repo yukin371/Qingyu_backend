@@ -170,6 +170,11 @@ func (f *MongoRepositoryFactory) CreateTemplateRepository() writerRepo.TemplateR
 	return mongoWriter.NewMongoTemplateRepository(f.database)
 }
 
+// CreateOutlineRepository 创建大纲Repository
+func (f *MongoRepositoryFactory) CreateOutlineRepository() writerRepo.OutlineRepository {
+	return mongoWriter.NewOutlineRepository(f.database)
+}
+
 // ========== Reading Module Repositories ==========
 
 // CreateReadingSettingsRepository 创建阅读设置Repository

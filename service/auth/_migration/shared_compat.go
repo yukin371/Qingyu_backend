@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 // Package auth 提供认证服务
 package auth
 
@@ -27,26 +30,26 @@ type PasswordValidator = PasswordValidatorImpl
 
 // 导出请求和响应类型
 type (
-	RegisterRequest    = RegisterRequest
-	RegisterResponse   = RegisterResponse
-	LoginRequest       = LoginRequest
-	LoginResponse      = LoginResponse
-	OAuthLoginRequest  = OAuthLoginRequest
-	TokenClaims        = TokenClaims
-	UserInfo           = UserInfo
-	Session            = Session
-	Role               = Role
-	Permission         = Permission
-	CreateRoleRequest  = CreateRoleRequest
-	UpdateRoleRequest  = UpdateRoleRequest
+	RegisterRequest   = RegisterRequest
+	RegisterResponse  = RegisterResponse
+	LoginRequest      = LoginRequest
+	LoginResponse     = LoginResponse
+	OAuthLoginRequest = OAuthLoginRequest
+	TokenClaims       = TokenClaims
+	UserInfo          = UserInfo
+	Session           = Session
+	Role              = Role
+	Permission        = Permission
+	CreateRoleRequest = CreateRoleRequest
+	UpdateRoleRequest = UpdateRoleRequest
 )
 
 // 导出配置类型
 type (
-	JWTConfig       = JWTConfig
-	OAuthConfig     = OAuthConfig
-	SessionConfig   = SessionConfig
-	PasswordRules   = PasswordRules
+	JWTConfig     = JWTConfig
+	OAuthConfig   = OAuthConfig
+	SessionConfig = SessionConfig
+	PasswordRules = PasswordRules
 )
 
 // 导出函数
@@ -62,10 +65,10 @@ var (
 
 // 导出常量
 const (
-	DefaultTokenDuration     = DefaultTokenDuration
-	DefaultRefreshDuration   = DefaultRefreshDuration
-	MaxPasswordLength        = MaxPasswordLength
-	MinPasswordLength        = MinPasswordLength
+	DefaultTokenDuration   = DefaultTokenDuration
+	DefaultRefreshDuration = DefaultRefreshDuration
+	MaxPasswordLength      = MaxPasswordLength
+	MinPasswordLength      = MinPasswordLength
 )
 
 // 导出OAuth提供商

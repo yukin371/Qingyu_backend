@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	globalLogger *Logger
-	once         sync.Once
-	strictStats  StrictStats
+	globalLogger   *Logger
+	globalLoggerMu sync.RWMutex
+	once           sync.Once
+	strictStats    StrictStats
 )
 
 // 自定义时间编码器 - 简洁的 HH:MM:SS 格式
@@ -82,7 +83,9 @@ func Init(config *Config) error {
 			initErr = err
 			return
 		}
+		globalLoggerMu.Lock()
 		globalLogger = logger
+		globalLoggerMu.Unlock()
 	})
 	return initErr
 }
@@ -154,8 +157,8 @@ func NewLogger(config *Config) (*Logger, error) {
 		consoleEncoderConfig := zapcore.EncoderConfig{
 			TimeKey:        "T",
 			LevelKey:       "L",
-			NameKey:        "",     // 隐藏logger名称
-			CallerKey:      "",     // 隐藏caller信息（更简洁）
+			NameKey:        "", // 隐藏logger名称
+			CallerKey:      "", // 隐藏caller信息（更简洁）
 			FunctionKey:    zapcore.OmitKey,
 			MessageKey:     "M",
 			StacktraceKey:  "S",
@@ -265,9 +268,31 @@ func strictHook(entry zapcore.Entry) error {
 
 // Get 获取全局日志记录器
 func Get() *Logger {
-	if globalLogger == nil {
-		// 使用默认配置初始化
-		_ = Init(DefaultConfig())
+	globalLoggerMu.RLock()
+	logger := globalLogger
+	globalLoggerMu.RUnlock()
+	if logger != nil {
+		return logger
+	}
+
+	globalLoggerMu.Lock()
+	defer globalLoggerMu.Unlock()
+
+	if globalLogger != nil {
+		return globalLogger
+	}
+
+	// 使用默认配置初始化（一次性初始化可能因历史失败状态而不生效）
+	if created, err := NewLogger(DefaultConfig()); err == nil {
+		globalLogger = created
+		return globalLogger
+	}
+
+	// 最后兜底：确保调用方不会因nil logger发生panic
+	nop := zap.NewNop()
+	globalLogger = &Logger{
+		Logger: nop,
+		sugar:  nop.Sugar(),
 	}
 	return globalLogger
 }

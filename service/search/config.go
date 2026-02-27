@@ -31,7 +31,7 @@ type SearchConfig struct {
 
 // SearchIndicesConfig 索引配置（从 search_indices.yaml 加载）
 type SearchIndicesConfig struct {
-	Indices map[string]IndexConfig `yaml:"indices"`
+	Indices  map[string]IndexConfig `yaml:"indices"`
 	Settings SettingsConfig         `yaml:"settings"`
 }
 
@@ -61,24 +61,41 @@ type AnalyzerConfig struct {
 
 // LoadSearchIndicesConfig 加载索引配置文件
 func LoadSearchIndicesConfig(configPath string) (*SearchIndicesConfig, error) {
-	// 支持环境变量覆盖配置路径
-	if configPath == "" {
-		configPath = os.Getenv("SEARCH_INDICES_CONFIG")
-		if configPath == "" {
-			configPath = "config/search_indices.yaml"
+	var candidates []string
+	if configPath != "" {
+		candidates = []string{configPath}
+	} else if envPath := os.Getenv("SEARCH_INDICES_CONFIG"); envPath != "" {
+		candidates = []string{envPath}
+	} else {
+		candidates = []string{
+			"configs/search_indices.yaml",
+			"config/search_indices.yaml", // 兼容旧路径
 		}
 	}
 
-	// 读取配置文件
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read search indices config file: %w", err)
+	var (
+		data    []byte
+		err     error
+		usedCfg string
+	)
+	for _, candidate := range candidates {
+		data, err = os.ReadFile(candidate)
+		if err == nil {
+			usedCfg = candidate
+			break
+		}
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to read search indices config file %s: %w", candidate, err)
+		}
+	}
+	if usedCfg == "" {
+		return nil, fmt.Errorf("failed to read search indices config file, tried: %v", candidates)
 	}
 
 	// 解析 YAML
 	var config SearchIndicesConfig
 	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse search indices config: %w", err)
+		return nil, fmt.Errorf("failed to parse search indices config (%s): %w", usedCfg, err)
 	}
 
 	// 验证配置

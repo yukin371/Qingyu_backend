@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/bookstore"
-	"Qingyu_backend/repository/mongodb"
+	"Qingyu_backend/repository/mongodb/bookstore"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -142,10 +142,9 @@ func BenchmarkStreamSearch_WithCursor(b *testing.B) {
 // BenchmarkCursorEncoding 基准测试：游标编码性能
 func BenchmarkCursorEncoding(b *testing.B) {
 	cursorMgr := mongodb.NewCursorManager()
-	book := &bookstore.Book{
-		ID:        primitive.NewObjectID(),
-		CreatedAt: time.Now(),
-	}
+	book := &bookstore.Book{}
+	book.ID = primitive.NewObjectID()
+	book.CreatedAt = time.Now()
 
 	b.ResetTimer()
 

@@ -6,7 +6,6 @@ package api
 import (
 	readerModel "Qingyu_backend/models/reader"
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -19,14 +18,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerAPI "Qingyu_backend/api/v1/reader"
-	"Qingyu_backend/service/reader"
-	"Qingyu_backend/test/testutil"
 )
 
 // TestReaderAPIIntegration 阅读器API集成测试
 type TestReaderAPIIntegration struct {
-	readerService *reading.ReaderService
-	chapterAPI    *readerAPI.ChaptersAPI
+	readerService interface{}
+	chapterAPI    *readerAPI.ChapterAPI
 	settingAPI    *readerAPI.SettingAPI
 	router        *gin.Engine
 	testUserID    string
@@ -37,11 +34,6 @@ type TestReaderAPIIntegration struct {
 // setupReaderAPITest 设置阅读器API测试环境
 func setupReaderAPITest(t *testing.T) *TestReaderAPIIntegration {
 	gin.SetMode(gin.TestMode)
-
-	// 使用测试工具创建数据库连接
-	ctx := context.Background()
-	cleanup := testutil.SetupTestDB(t, ctx)
-	t.Cleanup(cleanup)
 
 	// TODO: 创建 Repository 的 Mock 或测试实例
 	// 目前使用nil，需要补充完整的Repository Mock
@@ -204,16 +196,16 @@ func TestSaveReadingSettings_Success(t *testing.T) {
 
 	// 准备请求数据
 	settings := readerModel.ReadingSettings{
-		UserID:          suite.testUserID,
-		FontSize:        16,
-		FontFamily:      "宋体",
-		LineHeight:      1.5,
-		BackgroundColor: "#FFFFFF",
-		TextColor:       "#000000",
-		PageMode:        "scroll",
-		AutoSave:        true,
-		ShowProgress:    true,
-		UpdatedAt:       time.Now(),
+		UserID:      suite.testUserID,
+		FontSize:    16,
+		FontFamily:  "宋体",
+		LineHeight:  1.5,
+		Theme:       "light",
+		Background:  "#FFFFFF",
+		PageMode:    1,
+		AutoScroll:  false,
+		ScrollSpeed: 1,
+		UpdatedAt:   time.Now(),
 	}
 
 	body, _ := json.Marshal(settings)

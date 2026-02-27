@@ -89,8 +89,40 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		templateSvc = documentService.NewTemplateService(templateRepo, logger)
 	}
 
-	// 调用InitWriterRouter初始化所有写作路由
+	// 创建CharacterService（角色服务）
+	characterRepo := repositoryFactory.CreateCharacterRepository()
+	var characterSvc interfaces.CharacterService
+	if characterRepo != nil {
+		characterSvc = writerservice.NewCharacterService(characterRepo, eventBus)
+	}
+
+	// 创建LocationService（地点服务）
+	locationRepo := repositoryFactory.CreateLocationRepository()
+	var locationSvc interfaces.LocationService
+	if locationRepo != nil {
+		locationSvc = writerservice.NewLocationService(locationRepo, eventBus)
+	}
+
+	// 创建TimelineService（时间线服务）
+	timelineRepo := repositoryFactory.CreateTimelineRepository()
+	timelineEventRepo := repositoryFactory.CreateTimelineEventRepository()
+	var timelineSvc interfaces.TimelineService
+	if timelineRepo != nil && timelineEventRepo != nil {
+		timelineSvc = writerservice.NewTimelineService(timelineRepo, timelineEventRepo, eventBus)
+	}
+
+	// 创建OutlineService（大纲服务）
+	outlineRepo := repositoryFactory.CreateOutlineRepository()
+	var outlineSvc interfaces.OutlineService
+	if outlineRepo != nil {
+		outlineSvc = writerservice.NewOutlineService(outlineRepo, eventBus)
+	}
+
+	// 调用InitWriterRouter初始化文档编辑相关路由
 	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc)
+
+	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
+	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)
 }
 
 // MockPublishService 用于E2E测试的Mock发布服务

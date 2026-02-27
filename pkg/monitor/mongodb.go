@@ -28,13 +28,13 @@ func (m *MongoDB) OrphanedRecords(ctx context.Context, collection, foreignKey, t
 
 	pipeline := mongo.Pipeline{
 		bson.D{{Key: "$lookup", Value: bson.D{
-			{"from", targetCollection},
-			{"localField", foreignKey},
-			{"foreignField", "_id"},
-			{"as", "ref"},
+			{Key: "from", Value: targetCollection},
+			{Key: "localField", Value: foreignKey},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "ref"},
 		}}},
 		bson.D{{Key: "$match", Value: bson.D{
-			{"ref", bson.D{{"$size", 0}}},
+			{Key: "ref", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
 		bson.D{{Key: "$count", Value: "total"}},
 	}
@@ -88,28 +88,28 @@ func (m *MongoDB) checkBooksStatistics(ctx context.Context, countField string) (
 
 	// 使用聚合管道比较count字段与实际数量
 	lookupStage := bson.D{{Key: "$lookup", Value: bson.D{
-		{"from", targetCollection},
-		{"let", bson.D{{"bookId", "$_id"}}},
-		{"pipeline", bson.A{
+		{Key: "from", Value: targetCollection},
+		{Key: "let", Value: bson.D{{Key: "bookId", Value: "$_id"}}},
+		{Key: "pipeline", Value: bson.A{
 			bson.D{{Key: "$match", Value: bson.D{
-				{"$expr", bson.D{{"$eq", bson.A{"$$bookId", "$target_id"}}}},
+				{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{"$$bookId", "$target_id"}}}},
 			}}},
 		}},
-		{"as", "refs"},
+		{Key: "as", Value: "refs"},
 	}}}
 
 	projectStage := bson.D{{Key: "$project", Value: bson.D{
-		{"_id", 1},
-		{"stored_count", bson.D{{"$ifNull", bson.A{fmt.Sprintf("$%s", countField), 0}}}},
-		{"actual_count", bson.D{{"$size", "$refs"}}},
-		{"diff", bson.D{{"$subtract", bson.A{
-			bson.D{{"$ifNull", bson.A{fmt.Sprintf("$%s", countField), 0}}},
-			bson.D{{"$size", "$refs"}},
+		{Key: "_id", Value: 1},
+		{Key: "stored_count", Value: bson.D{{Key: "$ifNull", Value: bson.A{fmt.Sprintf("$%s", countField), 0}}}},
+		{Key: "actual_count", Value: bson.D{{Key: "$size", Value: "$refs"}}},
+		{Key: "diff", Value: bson.D{{Key: "$subtract", Value: bson.A{
+			bson.D{{Key: "$ifNull", Value: bson.A{fmt.Sprintf("$%s", countField), 0}}},
+			bson.D{{Key: "$size", Value: "$refs"}},
 		}}}},
 	}}}
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
-		{"diff", bson.D{{"$ne", 0}}},
+		{Key: "diff", Value: bson.D{{Key: "$ne", Value: 0}}},
 	}}}
 
 	countStage := bson.D{{Key: "$count", Value: "total"}}
@@ -144,28 +144,28 @@ func (m *MongoDB) checkUsersStatistics(ctx context.Context, countField string) (
 
 	// 使用聚合管道比较followers_count与实际的followers数量
 	lookupStage := bson.D{{Key: "$lookup", Value: bson.D{
-		{"from", "user_relations"},
-		{"let", bson.D{{"userId", "$_id"}}},
-		{"pipeline", bson.A{
+		{Key: "from", Value: "user_relations"},
+		{Key: "let", Value: bson.D{{Key: "userId", Value: "$_id"}}},
+		{Key: "pipeline", Value: bson.A{
 			bson.D{{Key: "$match", Value: bson.D{
-				{"$expr", bson.D{{"$eq", bson.A{"$$userId", "$followed_id"}}}},
+				{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{"$$userId", "$followed_id"}}}},
 			}}},
 		}},
-		{"as", "followers"},
+		{Key: "as", Value: "followers"},
 	}}}
 
 	projectStage := bson.D{{Key: "$project", Value: bson.D{
-		{"_id", 1},
-		{"stored_count", bson.D{{"$ifNull", bson.A{"$followers_count", 0}}}},
-		{"actual_count", bson.D{{"$size", "$followers"}}},
-		{"diff", bson.D{{"$subtract", bson.A{
-			bson.D{{"$ifNull", bson.A{"$followers_count", 0}}},
-			bson.D{{"$size", "$followers"}},
+		{Key: "_id", Value: 1},
+		{Key: "stored_count", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$followers_count", 0}}}},
+		{Key: "actual_count", Value: bson.D{{Key: "$size", Value: "$followers"}}},
+		{Key: "diff", Value: bson.D{{Key: "$subtract", Value: bson.A{
+			bson.D{{Key: "$ifNull", Value: bson.A{"$followers_count", 0}}},
+			bson.D{{Key: "$size", Value: "$followers"}},
 		}}}},
 	}}}
 
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
-		{"diff", bson.D{{"$ne", 0}}},
+		{Key: "diff", Value: bson.D{{Key: "$ne", Value: 0}}},
 	}}}
 
 	countStage := bson.D{{Key: "$count", Value: "total"}}

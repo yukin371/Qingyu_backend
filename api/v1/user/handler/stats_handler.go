@@ -14,11 +14,11 @@ import (
 
 // StatsHandler 用户统计处理器
 type StatsHandler struct {
-	statsService stats.PlatformStatsService
+	statsService stats.StatsPort
 }
 
 // NewStatsHandler 创建统计处理器
-func NewStatsHandler(statsService stats.PlatformStatsService) *StatsHandler {
+func NewStatsHandler(statsService stats.StatsPort) *StatsHandler {
 	return &StatsHandler{
 		statsService: statsService,
 	}

@@ -3,12 +3,14 @@ package ai
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/models/ai"
 	"Qingyu_backend/pkg/cache"
+	"Qingyu_backend/pkg/quota"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
 	"Qingyu_backend/service/base"
 
@@ -88,6 +90,25 @@ func (s *QuotaService) InitializeUserQuota(ctx context.Context, userID, userRole
 	}
 
 	return s.quotaRepo.CreateQuota(ctx, quota)
+}
+
+// Check 检查配额是否可用（实现 quota.Checker 接口）
+func (s *QuotaService) Check(ctx context.Context, userID string, amount int) error {
+	err := s.CheckQuota(ctx, userID, amount)
+	if err == nil {
+		return nil
+	}
+	// 统一对外错误域，避免中间件与业务层错误类型耦合。
+	switch {
+	case errors.Is(err, ai.ErrQuotaExhausted):
+		return quota.ErrQuotaExhausted
+	case errors.Is(err, ai.ErrQuotaSuspended):
+		return quota.ErrQuotaSuspended
+	case errors.Is(err, ai.ErrInsufficientQuota):
+		return quota.ErrInsufficientQuota
+	default:
+		return err
+	}
 }
 
 // CheckQuota 检查配额是否可用

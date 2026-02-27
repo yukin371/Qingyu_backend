@@ -23,6 +23,15 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 	}
 }
 
+// getContextWithUserID 从gin.Context获取userID并添加到context.Context
+func getContextWithUserID(c *gin.Context) context.Context {
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+	return ctx
+}
+
 // CreateDocument 创建文档
 // @Summary 创建文档
 // @Description 在项目中创建新文档
@@ -94,7 +103,9 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 func (api *DocumentApi) GetDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	doc, err := api.documentService.GetDocument(c.Request.Context(), documentID)
+	ctx := getContextWithUserID(c)
+
+	doc, err := api.documentService.GetDocument(ctx, documentID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -115,7 +126,9 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	resp, err := api.documentService.GetDocumentTree(c.Request.Context(), projectID)
+	ctx := getContextWithUserID(c)
+
+	resp, err := api.documentService.GetDocumentTree(ctx, projectID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -143,7 +156,9 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 		return
 	}
 
-	if err := api.documentService.UpdateDocument(c.Request.Context(), documentID, &req); err != nil {
+	ctx := getContextWithUserID(c)
+
+	if err := api.documentService.UpdateDocument(ctx, documentID, &req); err != nil {
 		response.InternalError(c, err)
 		return
 	}
@@ -163,7 +178,9 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	if err := api.documentService.DeleteDocument(c.Request.Context(), documentID); err != nil {
+	ctx := getContextWithUserID(c)
+
+	if err := api.documentService.DeleteDocument(ctx, documentID); err != nil {
 		response.InternalError(c, err)
 		return
 	}
@@ -194,7 +211,9 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 		PageSize:  pageSize,
 	}
 
-	resp, err := api.documentService.ListDocuments(c.Request.Context(), req)
+	ctx := getContextWithUserID(c)
+
+	resp, err := api.documentService.ListDocuments(ctx, req)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -224,7 +243,9 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 
 	req.DocumentID = documentID
 
-	if err := api.documentService.MoveDocument(c.Request.Context(), &req); err != nil {
+	ctx := getContextWithUserID(c)
+
+	if err := api.documentService.MoveDocument(ctx, &req); err != nil {
 		response.InternalError(c, err)
 		return
 	}
@@ -253,7 +274,9 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 
 	req.ProjectID = projectID
 
-	if err := api.documentService.ReorderDocuments(c.Request.Context(), &req); err != nil {
+	ctx := getContextWithUserID(c)
+
+	if err := api.documentService.ReorderDocuments(ctx, &req); err != nil {
 		response.InternalError(c, err)
 		return
 	}

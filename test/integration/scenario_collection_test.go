@@ -1,8 +1,10 @@
 package integration
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,8 +18,31 @@ func TestCollectionScenario(t *testing.T) {
 	// 创建TestHelper
 	helper := NewTestHelper(t, router)
 
-	// 使用测试用户登录
-	token := helper.LoginTestUser()
+	// 使用动态测试用户登录，避免依赖固定种子账号
+	username := fmt.Sprintf("it_collection_%d", time.Now().UnixNano())
+	password := "Test@123456"
+	registerData := map[string]interface{}{
+		"username": username,
+		"email":    fmt.Sprintf("%s@test.com", username),
+		"password": password,
+	}
+	registerResp := helper.DoRequest("POST", RegisterPath, registerData, "")
+	if registerResp.Code != 200 && registerResp.Code != 201 {
+		t.Fatalf("创建测试用户失败，状态码: %d, 响应: %s", registerResp.Code, registerResp.Body.String())
+	}
+
+	loginResp := helper.DoRequest("POST", LoginPath, map[string]interface{}{
+		"username": username,
+		"password": password,
+	}, "")
+	if loginResp.Code != 200 {
+		t.Fatalf("测试用户登录失败，状态码: %d, 响应: %s", loginResp.Code, loginResp.Body.String())
+	}
+
+	var loginBody map[string]interface{}
+	_ = json.Unmarshal(loginResp.Body.Bytes(), &loginBody)
+	data, _ := loginBody["data"].(map[string]interface{})
+	token, _ := data["token"].(string)
 	if token == "" {
 		t.Fatal("登录失败，无法继续测试")
 	}
@@ -42,7 +67,7 @@ func TestCollectionScenario(t *testing.T) {
 		w := helper.DoAuthRequest("POST", ReaderCollectionsPath, reqBody, token)
 		response := helper.AssertSuccess(w, 201, "添加收藏失败")
 
-		assert.Equal(t, float64(201), response["code"])
+		assert.EqualValues(t, 0, response["code"])
 		assert.NotNil(t, response["data"])
 
 		helper.LogSuccess("添加收藏成功")
@@ -92,7 +117,7 @@ func TestCollectionScenario(t *testing.T) {
 		w := helper.DoAuthRequest("POST", ReaderCollectionsPath+"/folders", reqBody, token)
 		response := helper.AssertSuccess(w, 201, "创建收藏夹失败")
 
-		assert.Equal(t, float64(201), response["code"])
+		assert.EqualValues(t, 0, response["code"])
 		assert.NotNil(t, response["data"])
 
 		helper.LogSuccess("创建收藏夹成功")
@@ -114,7 +139,7 @@ func TestCollectionScenario(t *testing.T) {
 		w := helper.DoRequest("GET", ReaderCollectionsPath+"/public?page=1&size=10", nil, "")
 		response := helper.AssertSuccess(w, 200, "获取公开收藏列表失败")
 
-		assert.Equal(t, float64(200), response["code"])
+		assert.EqualValues(t, 0, response["code"])
 
 		helper.LogSuccess("获取公开收藏列表成功")
 	})

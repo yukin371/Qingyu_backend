@@ -42,8 +42,10 @@ func (m *ViperConfigManager) LoadFromFile(configPath string) error {
 		if configPath != "" {
 			m.viper.AddConfigPath(configPath)
 		}
-		m.viper.AddConfigPath("./config")     // 从项目根目录
-		m.viper.AddConfigPath("../../config") // 从cmd/server/运行
+		m.viper.AddConfigPath("./configs")     // 从项目根目录（新）
+		m.viper.AddConfigPath("./config")      // 从项目根目录（兼容）
+		m.viper.AddConfigPath("../../configs") // 从cmd/server/运行（新）
+		m.viper.AddConfigPath("../../config")  // 从cmd/server/运行（兼容）
 		m.viper.AddConfigPath(".")
 	}
 

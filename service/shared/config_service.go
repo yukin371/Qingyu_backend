@@ -23,7 +23,19 @@ type ConfigService struct {
 // NewConfigService 创建配置管理服务
 func NewConfigService(configPath string) *ConfigService {
 	if configPath == "" {
-		configPath = "./config/config.yaml"
+		candidates := []string{
+			"./configs/config.yaml",
+			"./config/config.yaml", // 兼容旧路径
+		}
+		for _, candidate := range candidates {
+			if _, err := os.Stat(candidate); err == nil {
+				configPath = candidate
+				break
+			}
+		}
+		if configPath == "" {
+			configPath = "./configs/config.yaml"
+		}
 	}
 
 	return &ConfigService{

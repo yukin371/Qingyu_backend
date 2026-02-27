@@ -12,16 +12,28 @@ import (
 
 // StorageAPI 文件存储API处理器
 type StorageAPI struct {
-	storageService   *storage.StorageServiceImpl
-	multipartService *storage.MultipartUploadService
-	imageProcessor   *storage.ImageProcessor
+	storageService   storage.StorageService
+	multipartService storage.MultipartUploadManager
+	imageProcessor   storage.ImageProcessorService
+}
+
+type initiateMultipartUploadPayload struct {
+	FileName  string            `json:"file_name" binding:"required"`
+	FileSize  int64             `json:"file_size" binding:"required"`
+	FileType  string            `json:"file_type"`
+	MimeType  string            `json:"mime_type"`
+	ChunkSize int64             `json:"chunk_size,omitempty"`
+	MD5Hash   string            `json:"md5_hash,omitempty"`
+	Category  string            `json:"category"`
+	IsPublic  bool              `json:"is_public"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 // NewStorageAPI 创建存储API实例
 func NewStorageAPI(
-	storageService *storage.StorageServiceImpl,
-	multipartService *storage.MultipartUploadService,
-	imageProcessor *storage.ImageProcessor,
+	storageService storage.StorageService,
+	multipartService storage.MultipartUploadManager,
+	imageProcessor storage.ImageProcessorService,
 ) *StorageAPI {
 	return &StorageAPI{
 		storageService:   storageService,
@@ -323,15 +335,27 @@ func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 	}
 
 	// 2. 绑定请求参数
-	var req storage.InitiateMultipartUploadRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var payload initiateMultipartUploadPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		ValidationError(c, err)
 		return
 	}
-	req.UploadedBy = userID.(string)
+
+	req := &storage.InitiateMultipartUploadRequest{
+		FileName:   payload.FileName,
+		FileSize:   payload.FileSize,
+		FileType:   payload.FileType,
+		MimeType:   payload.MimeType,
+		ChunkSize:  payload.ChunkSize,
+		MD5Hash:    payload.MD5Hash,
+		UploadedBy: userID.(string),
+		Category:   payload.Category,
+		IsPublic:   payload.IsPublic,
+		Metadata:   payload.Metadata,
+	}
 
 	// 3. 初始化分片上传
-	resp, err := api.multipartService.InitiateMultipartUpload(c.Request.Context(), &req)
+	resp, err := api.multipartService.InitiateMultipartUpload(c.Request.Context(), req)
 	if err != nil {
 		InternalError(c, "初始化失败", err)
 		return
@@ -358,6 +382,10 @@ func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 func (api *StorageAPI) UploadChunk(c *gin.Context) {
 	// 1. 获取参数
 	uploadID := c.PostForm("upload_id")
+	if uploadID == "" {
+		BadRequest(c, "参数错误", "上传ID不能为空")
+		return
+	}
 	chunkIndexStr := c.PostForm("chunk_index")
 	chunkIndex, err := strconv.Atoi(chunkIndexStr)
 	if err != nil {

@@ -67,6 +67,10 @@ func TestMain(m *testing.M) {
 
 // setupTestEnv 创建测试环境
 func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperationService, writerInterfaces.BatchOperationRepository, writerInterfaces.DocumentRepository, primitive.ObjectID) {
+	if global.DB == nil {
+		t.Skip("global.DB 不可用，跳过依赖直连 MongoDB 的批量操作集成测试")
+	}
+
 	ctx := context.Background()
 
 	// 创建测试项目ID
@@ -85,6 +89,10 @@ func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperatio
 
 // cleanupTestData 清理测试数据
 func cleanupTestData(t *testing.T, projectID primitive.ObjectID, batchOpID primitive.ObjectID) {
+	if global.DB == nil {
+		return
+	}
+
 	ctx := context.Background()
 	global.DB.Collection("batch_operations").DeleteMany(ctx, bson.M{"project_id": projectID})
 	global.DB.Collection("novel_files").DeleteMany(ctx, bson.M{"project_id": projectID})

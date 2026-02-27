@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -185,7 +185,7 @@ func (f *Fixtures) CreateBook(authorID string, opts ...BookOption) *bookstore.Bo
 
 	book := &bookstore.Book{
 		Title:        "e2e_test_book_" + bookID.Hex()[:8],
-		AuthorID:     authorObjID,
+		AuthorID:     authorObjID.Hex(),
 		Introduction: "E2E测试书籍",
 		Categories:   []string{"小说"},
 		Price:        0,
@@ -373,4 +373,3 @@ func (f *Fixtures) CreateAuthorUser(opts ...UserOption) *users.User {
 
 	return user
 }
-

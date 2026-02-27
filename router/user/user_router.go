@@ -5,28 +5,30 @@ import (
 
 	managementApi "Qingyu_backend/api/v1/user"
 	"Qingyu_backend/api/v1/user/handler"
-	repoInterfaces "Qingyu_backend/repository/interfaces/user"
-	userService "Qingyu_backend/service/user"
-	userConstants "Qingyu_backend/service/user"
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/internal/middleware/ratelimit"
+	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"Qingyu_backend/service/shared/stats"
+	sharedStorage "Qingyu_backend/service/shared/storage"
+	userService "Qingyu_backend/service/user"
 )
+
+// BookstoreService 用户公开作品查询端口（复用 handler 端口定义）
+type BookstoreService = handler.BookstoreService
 
 // RegisterUserRoutes 注册用户路由
 func RegisterUserRoutes(
 	r *gin.RouterGroup,
 	userSvc userServiceInterface.UserService,
-	userRepo interface{},
-	bookstoreService interface{},
-	statsService stats.PlatformStatsService,
+	userRepo repoInterfaces.UserRepository,
+	bookstoreService BookstoreService,
+	storageService sharedStorage.StorageService,
+	statsService stats.StatsPort,
 ) {
 	// 创建验证服务
-	// 注意：这里使用类型断言来获取UserRepository接口
-	// TODO: 未来应该直接传入具体的Repository接口类型，而不是使用interface{}
 	verificationService := userService.NewVerificationService(
-		userRepo.(repoInterfaces.UserRepository),
+		userRepo,
 		nil, // authRepo
 		nil, // emailService (暂时为nil，使用模拟发送)
 	)
@@ -34,17 +36,17 @@ func RegisterUserRoutes(
 	// 创建密码服务
 	passwordService := userService.NewPasswordService(
 		verificationService,
-		userRepo.(repoInterfaces.UserRepository),
+		userRepo,
 	)
 
 	// 创建处理器
 	handlers := &Handlers{
-		AuthHandler:           handler.NewAuthHandler(userSvc),
-		ProfileHandler:        handler.NewProfileHandler(userSvc),
-		PublicUserHandler:     handler.NewPublicUserHandler(userSvc),
-		SecurityHandler:       managementApi.NewSecurityAPI(userSvc),
-		VerificationAPI:       managementApi.NewVerificationAPI(verificationService, userSvc),
-		PasswordAPI:           managementApi.NewPasswordAPI(passwordService),
+		AuthHandler:       handler.NewAuthHandler(userSvc),
+		ProfileHandler:    handler.NewProfileHandler(userSvc),
+		PublicUserHandler: handler.NewPublicUserHandler(userSvc),
+		SecurityHandler:   managementApi.NewSecurityAPI(userSvc),
+		VerificationAPI:   managementApi.NewVerificationAPI(verificationService, userSvc),
+		PasswordAPI:       managementApi.NewPasswordAPI(passwordService),
 	}
 
 	if statsService != nil {
@@ -55,9 +57,9 @@ func RegisterUserRoutes(
 	if bookstoreService != nil {
 		handlers.PublicUserHandler.SetBookstoreService(bookstoreService)
 	}
-	// 设置存储服务（需要从外部注入）
-	// TODO: 将storageService作为参数传入RegisterUserRoutes
-	// handlers.ProfileHandler.SetStorageService(storageService)
+	if storageService != nil {
+		handlers.ProfileHandler.SetStorageService(storageService)
+	}
 
 	// ========================================
 	// 公开路由（不需要认证）
@@ -79,9 +81,9 @@ func RegisterUserRoutes(
 
 		// 验证和密码相关（新API） - 公开访问
 		// 应用频率限制：每分钟最多3次请求
-		verifyEmailRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
-		verifyPhoneRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
-		passwordResetRateLimit := ratelimit.RateLimitMiddlewareSimple(userConstants.VerificationRateLimitCount, userConstants.VerificationRateLimitWindow)
+		verifyEmailRateLimit := ratelimit.RateLimitMiddlewareSimple(userService.VerificationRateLimitCount, userService.VerificationRateLimitWindow)
+		verifyPhoneRateLimit := ratelimit.RateLimitMiddlewareSimple(userService.VerificationRateLimitCount, userService.VerificationRateLimitWindow)
+		passwordResetRateLimit := ratelimit.RateLimitMiddlewareSimple(userService.VerificationRateLimitCount, userService.VerificationRateLimitWindow)
 
 		r.POST("/users/verify/email/send", verifyEmailRateLimit, handlers.VerificationAPI.SendEmailVerifyCode)
 		r.POST("/users/verify/phone/send", verifyPhoneRateLimit, handlers.VerificationAPI.SendPhoneVerifyCode)

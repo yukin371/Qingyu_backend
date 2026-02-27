@@ -26,11 +26,11 @@ var _ BaseService = (*MockReaderSyncPort)(nil)
 // MockReadingProgressPort Mock 实现用于编译时检查
 type MockReadingProgressPort struct{}
 
-func (m *MockReadingProgressPort) Initialize(ctx context.Context) error                                                   { return nil }
-func (m *MockReadingProgressPort) Health(ctx context.Context) error                                                        { return nil }
-func (m *MockReadingProgressPort) Close(ctx context.Context) error                                                          { return nil }
-func (m *MockReadingProgressPort) GetServiceName() string                                                                   { return "MockReadingProgressPort" }
-func (m *MockReadingProgressPort) GetVersion() string                                                                       { return "1.0.0" }
+func (m *MockReadingProgressPort) Initialize(ctx context.Context) error { return nil }
+func (m *MockReadingProgressPort) Health(ctx context.Context) error     { return nil }
+func (m *MockReadingProgressPort) Close(ctx context.Context) error      { return nil }
+func (m *MockReadingProgressPort) GetServiceName() string               { return "MockReadingProgressPort" }
+func (m *MockReadingProgressPort) GetVersion() string                   { return "1.0.0" }
 func (m *MockReadingProgressPort) GetReadingProgress(ctx context.Context, userID, bookID string) (*readerModel.ReadingProgress, error) {
 	return nil, nil
 }
@@ -46,7 +46,9 @@ func (m *MockReadingProgressPort) GetRecentReading(ctx context.Context, userID s
 func (m *MockReadingProgressPort) GetReadingHistory(ctx context.Context, req *GetReadingHistoryRequest) (*GetReadingHistoryResponse, error) {
 	return nil, nil
 }
-func (m *MockReadingProgressPort) GetTotalReadingTime(ctx context.Context, userID string) (int64, error) { return 0, nil }
+func (m *MockReadingProgressPort) GetTotalReadingTime(ctx context.Context, userID string) (int64, error) {
+	return 0, nil
+}
 func (m *MockReadingProgressPort) GetReadingTimeByPeriod(ctx context.Context, req *GetReadingTimeByPeriodRequest) (int64, error) {
 	return 0, nil
 }
@@ -56,8 +58,12 @@ func (m *MockReadingProgressPort) GetUnfinishedBooks(ctx context.Context, userID
 func (m *MockReadingProgressPort) GetFinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error) {
 	return nil, nil
 }
-func (m *MockReadingProgressPort) DeleteReadingProgress(ctx context.Context, userID, bookID string) error { return nil }
-func (m *MockReadingProgressPort) UpdateBookStatus(ctx context.Context, req *UpdateBookStatusRequest) error { return nil }
+func (m *MockReadingProgressPort) DeleteReadingProgress(ctx context.Context, userID, bookID string) error {
+	return nil
+}
+func (m *MockReadingProgressPort) UpdateBookStatus(ctx context.Context, req *UpdateBookStatusRequest) error {
+	return nil
+}
 func (m *MockReadingProgressPort) BatchUpdateBookStatus(ctx context.Context, req *BatchUpdateBookStatusRequest) error {
 	return nil
 }
@@ -66,8 +72,8 @@ func (m *MockReadingProgressPort) BatchUpdateBookStatus(ctx context.Context, req
 type MockAnnotationPort struct{}
 
 func (m *MockAnnotationPort) Initialize(ctx context.Context) error { return nil }
-func (m *MockAnnotationPort) Health(ctx context.Context) error      { return nil }
-func (m *MockAnnotationPort) Close(ctx context.Context) error       { return nil }
+func (m *MockAnnotationPort) Health(ctx context.Context) error     { return nil }
+func (m *MockAnnotationPort) Close(ctx context.Context) error      { return nil }
 func (m *MockAnnotationPort) GetServiceName() string               { return "MockAnnotationPort" }
 func (m *MockAnnotationPort) GetVersion() string                   { return "1.0.0" }
 func (m *MockAnnotationPort) CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error {
@@ -76,7 +82,9 @@ func (m *MockAnnotationPort) CreateAnnotation(ctx context.Context, annotation *r
 func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error { return nil }
+func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error {
+	return nil
+}
 func (m *MockAnnotationPort) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error) {
 	return nil, nil
 }
@@ -110,16 +118,18 @@ func (m *MockAnnotationPort) GetAnnotationStats(ctx context.Context, userID, boo
 func (m *MockAnnotationPort) BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error { return nil }
+func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+	return nil
+}
 
 // MockChapterContentPort Mock 实现用于编译时检查
 type MockChapterContentPort struct{}
 
 func (m *MockChapterContentPort) Initialize(ctx context.Context) error { return nil }
-func (m *MockChapterContentPort) Health(ctx context.Context) error    { return nil }
-func (m *MockChapterContentPort) Close(ctx context.Context) error     { return nil }
-func (m *MockChapterContentPort) GetServiceName() string             { return "MockChapterContentPort" }
-func (m *MockChapterContentPort) GetVersion() string                 { return "1.0.0" }
+func (m *MockChapterContentPort) Health(ctx context.Context) error     { return nil }
+func (m *MockChapterContentPort) Close(ctx context.Context) error      { return nil }
+func (m *MockChapterContentPort) GetServiceName() string               { return "MockChapterContentPort" }
+func (m *MockChapterContentPort) GetVersion() string                   { return "1.0.0" }
 func (m *MockChapterContentPort) GetChapterContent(ctx context.Context, userID, chapterID string) (string, error) {
 	return "", nil
 }
@@ -152,8 +162,8 @@ func (m *MockChapterContentPort) GetChapterInfo(ctx context.Context, userID, cha
 type MockReaderSettingsPort struct{}
 
 func (m *MockReaderSettingsPort) Initialize(ctx context.Context) error { return nil }
-func (m *MockReaderSettingsPort) Health(ctx context.Context) error      { return nil }
-func (m *MockReaderSettingsPort) Close(ctx context.Context) error       { return nil }
+func (m *MockReaderSettingsPort) Health(ctx context.Context) error     { return nil }
+func (m *MockReaderSettingsPort) Close(ctx context.Context) error      { return nil }
 func (m *MockReaderSettingsPort) GetServiceName() string               { return "MockReaderSettingsPort" }
 func (m *MockReaderSettingsPort) GetVersion() string                   { return "1.0.0" }
 func (m *MockReaderSettingsPort) GetReadingSettings(ctx context.Context, userID string) (*readerModel.ReadingSettings, error) {
@@ -170,8 +180,8 @@ func (m *MockReaderSettingsPort) UpdateReadingSettings(ctx context.Context, user
 type MockReaderSyncPort struct{}
 
 func (m *MockReaderSyncPort) Initialize(ctx context.Context) error { return nil }
-func (m *MockReaderSyncPort) Health(ctx context.Context) error      { return nil }
-func (m *MockReaderSyncPort) Close(ctx context.Context) error       { return nil }
+func (m *MockReaderSyncPort) Health(ctx context.Context) error     { return nil }
+func (m *MockReaderSyncPort) Close(ctx context.Context) error      { return nil }
 func (m *MockReaderSyncPort) GetServiceName() string               { return "MockReaderSyncPort" }
 func (m *MockReaderSyncPort) GetVersion() string                   { return "1.0.0" }
 func (m *MockReaderSyncPort) SyncAnnotations(ctx context.Context, req *SyncAnnotationsRequest) (*SyncAnnotationsResponse, error) {
@@ -189,95 +199,95 @@ func TestPortInterfacesMethodSignatures(t *testing.T) {
 		// 测试所有方法都能正常调用
 		ctx := context.Background()
 
-		port.Initialize(ctx)
-		port.Health(ctx)
-		port.Close(ctx)
+		_ = port.Initialize(ctx)
+		_ = port.Health(ctx)
+		_ = port.Close(ctx)
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
-		port.GetReadingProgress(ctx, "user1", "book1")
-		port.SaveReadingProgress(ctx, &SaveReadingProgressRequest{})
-		port.UpdateReadingTime(ctx, &UpdateReadingTimeRequest{})
-		port.GetRecentReading(ctx, "user1", 10)
-		port.GetReadingHistory(ctx, &GetReadingHistoryRequest{})
-		port.GetTotalReadingTime(ctx, "user1")
-		port.GetReadingTimeByPeriod(ctx, &GetReadingTimeByPeriodRequest{})
-		port.GetUnfinishedBooks(ctx, "user1")
-		port.GetFinishedBooks(ctx, "user1")
-		port.DeleteReadingProgress(ctx, "user1", "book1")
-		port.UpdateBookStatus(ctx, &UpdateBookStatusRequest{})
-		port.BatchUpdateBookStatus(ctx, &BatchUpdateBookStatusRequest{})
+		_, _ = port.GetReadingProgress(ctx, "user1", "book1")
+		_ = port.SaveReadingProgress(ctx, &SaveReadingProgressRequest{})
+		_ = port.UpdateReadingTime(ctx, &UpdateReadingTimeRequest{})
+		_, _ = port.GetRecentReading(ctx, "user1", 10)
+		_, _ = port.GetReadingHistory(ctx, &GetReadingHistoryRequest{})
+		_, _ = port.GetTotalReadingTime(ctx, "user1")
+		_, _ = port.GetReadingTimeByPeriod(ctx, &GetReadingTimeByPeriodRequest{})
+		_, _ = port.GetUnfinishedBooks(ctx, "user1")
+		_, _ = port.GetFinishedBooks(ctx, "user1")
+		_ = port.DeleteReadingProgress(ctx, "user1", "book1")
+		_ = port.UpdateBookStatus(ctx, &UpdateBookStatusRequest{})
+		_ = port.BatchUpdateBookStatus(ctx, &BatchUpdateBookStatusRequest{})
 	})
 
 	t.Run("AnnotationPort has 16 methods", func(t *testing.T) {
 		var port AnnotationPort = &MockAnnotationPort{}
 		ctx := context.Background()
 
-		port.Initialize(ctx)
-		port.Health(ctx)
-		port.Close(ctx)
+		_ = port.Initialize(ctx)
+		_ = port.Health(ctx)
+		_ = port.Close(ctx)
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
-		port.CreateAnnotation(ctx, &readerModel.Annotation{})
-		port.UpdateAnnotation(ctx, "id1", map[string]interface{}{})
-		port.DeleteAnnotation(ctx, "id1")
-		port.GetAnnotationsByChapter(ctx, "user1", "book1", "chapter1")
-		port.GetAnnotationsByBook(ctx, "user1", "book1")
-		port.GetNotes(ctx, "user1", "book1")
-		port.SearchNotes(ctx, "user1", "keyword")
-		port.GetBookmarks(ctx, "user1", "book1")
-		port.GetLatestBookmark(ctx, "user1", "book1")
-		port.GetHighlights(ctx, "user1", "book1")
-		port.GetRecentAnnotations(ctx, "user1", 10)
-		port.GetPublicAnnotations(ctx, "book1", "chapter1")
-		port.GetAnnotationStats(ctx, "user1", "book1")
-		port.BatchCreateAnnotations(ctx, []*readerModel.Annotation{})
-		port.BatchDeleteAnnotations(ctx, []string{})
+		_ = port.CreateAnnotation(ctx, &readerModel.Annotation{})
+		_ = port.UpdateAnnotation(ctx, "id1", map[string]interface{}{})
+		_ = port.DeleteAnnotation(ctx, "id1")
+		_, _ = port.GetAnnotationsByChapter(ctx, "user1", "book1", "chapter1")
+		_, _ = port.GetAnnotationsByBook(ctx, "user1", "book1")
+		_, _ = port.GetNotes(ctx, "user1", "book1")
+		_, _ = port.SearchNotes(ctx, "user1", "keyword")
+		_, _ = port.GetBookmarks(ctx, "user1", "book1")
+		_, _ = port.GetLatestBookmark(ctx, "user1", "book1")
+		_, _ = port.GetHighlights(ctx, "user1", "book1")
+		_, _ = port.GetRecentAnnotations(ctx, "user1", 10)
+		_, _ = port.GetPublicAnnotations(ctx, "book1", "chapter1")
+		_, _ = port.GetAnnotationStats(ctx, "user1", "book1")
+		_ = port.BatchCreateAnnotations(ctx, []*readerModel.Annotation{})
+		_ = port.BatchDeleteAnnotations(ctx, []string{})
 	})
 
 	t.Run("ChapterContentPort has 12 methods", func(t *testing.T) {
 		var port ChapterContentPort = &MockChapterContentPort{}
 		ctx := context.Background()
 
-		port.Initialize(ctx)
-		port.Health(ctx)
-		port.Close(ctx)
+		_ = port.Initialize(ctx)
+		_ = port.Health(ctx)
+		_ = port.Close(ctx)
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
-		port.GetChapterContent(ctx, "user1", "chapter1")
-		port.GetChapterByID(ctx, "chapter1")
-		port.GetBookChapters(ctx, "book1", 1, 10)
-		port.GetChapterContentWithProgress(ctx, &GetChapterContentRequest{})
-		port.GetChapterByNumber(ctx, "user1", "book1", 1)
-		port.GetNextChapter(ctx, "user1", "book1", "chapter1")
-		port.GetPreviousChapter(ctx, "user1", "book1", "chapter1")
-		port.GetChapterList(ctx, "user1", "book1", 1, 10)
-		port.GetChapterInfo(ctx, "user1", "chapter1")
+		_, _ = port.GetChapterContent(ctx, "user1", "chapter1")
+		_, _ = port.GetChapterByID(ctx, "chapter1")
+		_, _, _ = port.GetBookChapters(ctx, "book1", 1, 10)
+		_, _ = port.GetChapterContentWithProgress(ctx, &GetChapterContentRequest{})
+		_, _ = port.GetChapterByNumber(ctx, "user1", "book1", 1)
+		_, _ = port.GetNextChapter(ctx, "user1", "book1", "chapter1")
+		_, _ = port.GetPreviousChapter(ctx, "user1", "book1", "chapter1")
+		_, _ = port.GetChapterList(ctx, "user1", "book1", 1, 10)
+		_, _ = port.GetChapterInfo(ctx, "user1", "chapter1")
 	})
 
 	t.Run("ReaderSettingsPort has 6 methods", func(t *testing.T) {
 		var port ReaderSettingsPort = &MockReaderSettingsPort{}
 		ctx := context.Background()
 
-		port.Initialize(ctx)
-		port.Health(ctx)
-		port.Close(ctx)
+		_ = port.Initialize(ctx)
+		_ = port.Health(ctx)
+		_ = port.Close(ctx)
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
-		port.GetReadingSettings(ctx, "user1")
-		port.SaveReadingSettings(ctx, &readerModel.ReadingSettings{})
-		port.UpdateReadingSettings(ctx, "user1", map[string]interface{}{})
+		_, _ = port.GetReadingSettings(ctx, "user1")
+		_ = port.SaveReadingSettings(ctx, &readerModel.ReadingSettings{})
+		_ = port.UpdateReadingSettings(ctx, "user1", map[string]interface{}{})
 	})
 
 	t.Run("ReaderSyncPort has 6 methods", func(t *testing.T) {
 		var port ReaderSyncPort = &MockReaderSyncPort{}
 		ctx := context.Background()
 
-		port.Initialize(ctx)
-		port.Health(ctx)
-		port.Close(ctx)
+		_ = port.Initialize(ctx)
+		_ = port.Health(ctx)
+		_ = port.Close(ctx)
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
-		port.SyncAnnotations(ctx, &SyncAnnotationsRequest{})
+		_, _ = port.SyncAnnotations(ctx, &SyncAnnotationsRequest{})
 	})
 }
 

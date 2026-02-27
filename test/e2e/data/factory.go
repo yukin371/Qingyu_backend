@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package data
@@ -85,12 +85,12 @@ func (f *TestDataFactory) CreateUser(ctx context.Context, opts UserOptions) *use
 	}
 
 	user := &users.User{
-		Username:  username,
-		Email:     email,
-		Password:  string(hashedPassword),
-		VIPLevel:  opts.VIPLevel,
-		Status:    users.UserStatusActive,
-		Roles:     roles,
+		Username: username,
+		Email:    email,
+		Password: string(hashedPassword),
+		VIPLevel: opts.VIPLevel,
+		Status:   users.UserStatusActive,
+		Roles:    roles,
 	}
 	user.ID = userID
 	user.CreatedAt = time.Now()
@@ -152,7 +152,7 @@ func (f *TestDataFactory) CreateBook(ctx context.Context, opts BookOptions) *boo
 
 	book := &bookstore.Book{
 		Title:        title,
-		AuthorID:     authorObjID,
+		AuthorID:     authorObjID.Hex(),
 		Introduction: "E2E测试书籍 - 用于验证系统功能",
 		Categories:   categories,
 		Price:        opts.Price,
@@ -290,4 +290,3 @@ func (f *TestDataFactory) Cleanup(prefix string) {
 		}
 	}
 }
-

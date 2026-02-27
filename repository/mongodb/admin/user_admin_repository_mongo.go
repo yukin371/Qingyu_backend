@@ -2,6 +2,9 @@ package admin
 
 import (
 	"context"
+	"fmt"
+	"net/mail"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +23,10 @@ const (
 
 type MongoUserAdminRepository struct {
 	db *mongo.Database
+}
+
+type userEmailFilter struct {
+	Email string `bson:"email"`
 }
 
 // NewMongoUserAdminRepository 创建用户管理仓储
@@ -56,6 +63,34 @@ func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.U
 	return userList, total, nil
 }
 
+// Create 创建用户
+func (r *MongoUserAdminRepository) Create(ctx context.Context, user *users.User) error {
+	user.ID = primitive.NewObjectID()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+
+	_, err := r.db.Collection(UserCollection).InsertOne(ctx, user)
+	return err
+}
+
+// BatchCreate 批量创建用户
+func (r *MongoUserAdminRepository) BatchCreate(ctx context.Context, usersList []*users.User) error {
+	if len(usersList) == 0 {
+		return nil
+	}
+
+	documents := make([]interface{}, len(usersList))
+	for i, user := range usersList {
+		user.ID = primitive.NewObjectID()
+		user.CreatedAt = time.Now()
+		user.UpdatedAt = time.Now()
+		documents[i] = user
+	}
+
+	_, err := r.db.Collection(UserCollection).InsertMany(ctx, documents)
+	return err
+}
+
 // GetByID 根据ID获取用户
 func (r *MongoUserAdminRepository) GetByID(ctx context.Context, userID primitive.ObjectID) (*users.User, error) {
 	var user users.User
@@ -70,14 +105,31 @@ func (r *MongoUserAdminRepository) GetByID(ctx context.Context, userID primitive
 
 // GetByEmail 根据邮箱获取用户
 func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string) (*users.User, error) {
-	var user users.User
-	filter := bson.M{"email": email}
+	canonicalEmail, err := normalizeEmail(email)
+	if err != nil {
+		return nil, err
+	}
 
-	err := r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
+	var user users.User
+	filter := userEmailFilter{Email: canonicalEmail}
+
+	err = r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func normalizeEmail(email string) (string, error) {
+	trimmed := strings.TrimSpace(email)
+	parsed, err := mail.ParseAddress(trimmed)
+	if err != nil || parsed == nil {
+		return "", fmt.Errorf("invalid email format")
+	}
+	if parsed.Address != trimmed {
+		return "", fmt.Errorf("invalid email format")
+	}
+	return strings.ToLower(parsed.Address), nil
 }
 
 // Update 更新用户信息

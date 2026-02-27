@@ -18,7 +18,7 @@ import (
 var (
 	// 全局标志
 	esURL      = flag.String("es-url", "http://localhost:9200", "Elasticsearch URL")
-	configPath = flag.String("config", "config/search_indices.yaml", "Config file path")
+	configPath = flag.String("config", "configs/search_indices.yaml", "Config file path")
 	verbose    = flag.Bool("verbose", false, "Verbose output")
 )
 
@@ -31,7 +31,6 @@ type elasticLogger struct {
 func (l *elasticLogger) Printf(format string, v ...interface{}) {
 	l.Info(fmt.Sprintf(format, v...))
 }
-
 
 func main() {
 	flag.Parse()

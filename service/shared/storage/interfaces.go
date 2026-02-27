@@ -31,6 +31,20 @@ type StorageService interface {
 	Health(ctx context.Context) error
 }
 
+// MultipartUploadManager 分片上传服务接口（对外暴露）
+type MultipartUploadManager interface {
+	InitiateMultipartUpload(ctx context.Context, req *InitiateMultipartUploadRequest) (*InitiateMultipartUploadResponse, error)
+	UploadChunk(ctx context.Context, req *UploadChunkRequest) error
+	CompleteMultipartUpload(ctx context.Context, req *CompleteMultipartUploadRequest) (*FileInfo, error)
+	AbortMultipartUpload(ctx context.Context, uploadID string) error
+	GetUploadProgress(ctx context.Context, uploadID string) (float64, error)
+}
+
+// ImageProcessorService 图片处理服务接口（对外暴露）
+type ImageProcessorService interface {
+	GenerateThumbnail(ctx context.Context, sourcePath string, width, height int, keepAspect bool) (string, error)
+}
+
 // ============ 请求结构 ============
 
 // UploadRequest 上传请求

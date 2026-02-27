@@ -17,10 +17,28 @@ const (
 	testTimeout    = 120 * time.Second
 )
 
+func requireAIService(t *testing.T) *ai.Phase3Client {
+	t.Helper()
+
+	client, err := ai.NewPhase3Client(grpcServerAddr)
+	if err != nil {
+		t.Skipf("AI gRPC服务不可用，跳过测试: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if _, err := client.HealthCheck(ctx); err != nil {
+		client.Close()
+		t.Skipf("AI gRPC健康检查失败，跳过测试: %v", err)
+	}
+
+	return client
+}
+
 // TestGRPCConnection 测试gRPC连接
 func TestGRPCConnection(t *testing.T) {
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -38,8 +56,7 @@ func TestGRPCConnection(t *testing.T) {
 
 // TestGenerateOutline 测试大纲生成
 func TestGenerateOutline(t *testing.T) {
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -83,8 +100,7 @@ func TestGenerateOutline(t *testing.T) {
 
 // TestGenerateCharacters 测试角色生成
 func TestGenerateCharacters(t *testing.T) {
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -137,8 +153,7 @@ func TestGenerateCharacters(t *testing.T) {
 
 // TestGeneratePlot 测试情节生成
 func TestGeneratePlot(t *testing.T) {
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -205,8 +220,7 @@ func TestCompleteWorkflow(t *testing.T) {
 		t.Skip("跳过长时间测试")
 	}
 
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
@@ -272,8 +286,7 @@ func TestConcurrentRequests(t *testing.T) {
 		t.Skip("跳过并发测试")
 	}
 
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	fmt.Printf("\n🔀 测试并发请求\n")
@@ -320,8 +333,7 @@ func TestConcurrentRequests(t *testing.T) {
 
 // TestErrorHandling 测试错误处理
 func TestErrorHandling(t *testing.T) {
-	client, err := ai.NewPhase3Client(grpcServerAddr)
-	require.NoError(t, err, "创建gRPC客户端失败")
+	client := requireAIService(t)
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -330,7 +342,7 @@ func TestErrorHandling(t *testing.T) {
 	fmt.Printf("\n⚠️  测试错误处理\n")
 
 	// 测试空任务
-	_, err = client.GenerateOutline(ctx, "", "test_user", "test_project", nil)
+	_, err := client.GenerateOutline(ctx, "", "test_user", "test_project", nil)
 	assert.Error(t, err, "空任务应该返回错误")
 	fmt.Printf("   [1/2] ✓ 空任务错误处理正常\n")
 

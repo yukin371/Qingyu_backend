@@ -86,10 +86,10 @@ func setupPublishTestRouter(publishService interfaces.PublishService, userID str
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	// 添加middleware来设置userId（用于需要认证的端点）
+	// 添加middleware来设置user_id（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})

@@ -10,6 +10,7 @@ import (
 // InitExportRoutes 初始化导出路由
 func InitExportRoutes(router *gin.RouterGroup, exportService interfaces.ExportService) {
 	api := writer.NewExportApi(exportService)
+	importExportApi := writer.NewImportExportApi(exportService)
 
 	// 文档导出路由
 	documentGroup := router.Group("/documents/:id")
@@ -22,6 +23,13 @@ func InitExportRoutes(router *gin.RouterGroup, exportService interfaces.ExportSe
 	{
 		projectGroup.POST("/export", api.ExportProject)
 		projectGroup.GET("/exports", api.ListExportTasks)
+	}
+
+	// 项目导入导出路由（直接下载/上传ZIP）
+	projectsGroup := router.Group("/projects")
+	{
+		projectsGroup.GET("/:id/export", importExportApi.ExportProject)    // 导出项目为ZIP（直接下载）
+		projectsGroup.POST("/import", importExportApi.ImportProject)       // 导入项目（上传ZIP）
 	}
 
 	// 导出任务管理路由

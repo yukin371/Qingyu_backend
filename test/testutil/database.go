@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -45,16 +46,9 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		}
 	} else {
 		// 如果没有环境变量，尝试从配置文件加载（本地开发）
-		cfg, err = config.LoadConfig("config/config.yaml")
+		cfg, err = loadLocalConfigWithFallback()
 		if err != nil {
-			// 如果失败，尝试使用相对路径
-			cfg, err = config.LoadConfig("../../config/config.yaml")
-			if err != nil {
-				cfg, err = config.LoadConfig("../../../config/config.yaml")
-				if err != nil {
-					t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 config/config.yaml 存在)", err)
-				}
-			}
+			t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 configs/config.yaml 存在)", err)
 		}
 	}
 
@@ -163,15 +157,9 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		}
 	} else {
 		// 如果没有环境变量，尝试从配置文件加载（本地开发）
-		cfg, err = config.LoadConfig("config/config.yaml")
+		cfg, err = loadLocalConfigWithFallback()
 		if err != nil {
-			cfg, err = config.LoadConfig("../../config/config.yaml")
-			if err != nil {
-				cfg, err = config.LoadConfig("../../../config/config.yaml")
-				if err != nil {
-					t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 config/config.yaml 存在)", err)
-				}
-			}
+			t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 configs/config.yaml 存在)", err)
 		}
 	}
 
@@ -231,4 +219,24 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 	}
 
 	return c, cleanup
+}
+
+func loadLocalConfigWithFallback() (*config.Config, error) {
+	candidates := []string{
+		"configs/config.yaml",
+		"config/config.yaml", // 兼容旧路径
+		"../../configs/config.yaml",
+		"../../config/config.yaml", // 兼容旧路径
+		"../../../configs/config.yaml",
+		"../../../config/config.yaml", // 兼容旧路径
+	}
+
+	for _, candidate := range candidates {
+		cfg, err := config.LoadConfig(candidate)
+		if err == nil {
+			return cfg, nil
+		}
+	}
+
+	return nil, fmt.Errorf("未找到可用配置文件，已尝试路径: %v", candidates)
 }

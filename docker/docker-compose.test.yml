@@ -44,10 +44,19 @@ services:
 
   # gRPC AI服务（测试专用）
   grpc-ai-service:
-    build:
-      context: ../python_ai_service
-      dockerfile: docker/Dockerfile.grpc
+    image: python:3.11-slim
     container_name: qingyu-grpc-ai-test
+    command: >
+      python -u -c "import socket;
+      s=socket.socket();
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1);
+      s.bind(('0.0.0.0', 50051));
+      s.listen(16);
+      print('grpc-ai mock listening on 50051', flush=True);
+      import time;
+      while True:
+        c,_=s.accept();
+        c.close()"
     ports:
       - "50051:50051"
     networks:
