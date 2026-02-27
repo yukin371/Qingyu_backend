@@ -97,9 +97,10 @@ type ServiceContainer struct {
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
-	quotaService *aiService.QuotaService
-	chatService  *aiService.ChatService
-	phase3Client *aiService.Phase3Client
+	quotaService   *aiService.QuotaService
+	chatService    *aiService.ChatService
+	phase3Client   *aiService.Phase3Client
+	unifiedClient  *aiService.UnifiedClient
 
 	// Shared services
 	authService           auth.AuthService
@@ -319,6 +320,14 @@ func (c *ServiceContainer) GetPhase3Client() (*aiService.Phase3Client, error) {
 		return nil, fmt.Errorf("Phase3Client未初始化")
 	}
 	return c.phase3Client, nil
+}
+
+// GetUnifiedClient 获取统一AI服务gRPC客户端
+func (c *ServiceContainer) GetUnifiedClient() (*aiService.UnifiedClient, error) {
+	if c.unifiedClient == nil {
+		return nil, fmt.Errorf("UnifiedClient未初始化")
+	}
+	return c.unifiedClient, nil
 }
 
 // ============ 共享服务获取方法 ============
@@ -818,6 +827,19 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 	} else {
 		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
+	}
+
+	// ============ 5.2 初始化统一 gRPC 客户端 ============
+	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
+		unifiedClient, err := aiService.NewUnifiedClientWithAddress(aiCfg.AIService.Endpoint)
+		if err != nil {
+			fmt.Printf("警告: UnifiedClient初始化失败: %v\n", err)
+		} else {
+			c.unifiedClient = unifiedClient
+			fmt.Printf("  ✓ UnifiedClient初始化完成 (endpoint: %s)\n", aiCfg.AIService.Endpoint)
+		}
+	} else {
+		fmt.Println("警告: AI服务配置为空，跳过UnifiedClient初始化")
 	}
 
 	// ============ 5. 共享服务初始化 ============

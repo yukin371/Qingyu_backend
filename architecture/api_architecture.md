@@ -16,6 +16,7 @@
 - [模块依赖关系图](#模块依赖关系图)
 - [数据流图](#数据流图)
 - [通信模块架构](#通信模块架构)
+- [AI模块架构](#ai模块架构)
 
 ---
 
@@ -920,6 +921,285 @@ graph TB
 
 ---
 
+## AI模块架构
+
+### AI服务整体架构
+
+```mermaid
+graph TB
+    subgraph "API层"
+        AIAPI[ai/ API Handler]
+    end
+
+    subgraph "AI服务层 (service/ai)"
+        AIService[AIService]
+        UnifiedClient[UnifiedClient<br/>统一gRPC客户端]
+        QuotaService[QuotaService<br/>配额服务]
+    end
+
+    subgraph "监控与追踪"
+        GRPCMetrics[GRPCMetrics<br/>调用统计]
+        Tracer[Tracer<br/>请求追踪]
+    end
+
+    subgraph "AI服务 (Python)"
+        AIgRPC[AIService gRPC Server]
+        AgentExec[Agent Executor]
+        Workflow[Creative Workflow]
+    end
+
+    subgraph "外部AI服务"
+        OpenAI[OpenAI]
+        Claude[Claude]
+        Gemini[Gemini]
+        Qwen[Qwen]
+    end
+
+    subgraph "数据存储"
+        MongoQuota[(MongoDB<br/>配额数据)]
+        RedisCache[(Redis<br/>配额缓存)]
+    end
+
+    AIAPI --> AIService
+    AIService --> UnifiedClient
+    AIService --> QuotaService
+
+    UnifiedClient --> AIgRPC
+    AIgRPC --> AgentExec
+    AIgRPC --> Workflow
+
+    AgentExec --> OpenAI
+    AgentExec --> Claude
+    AgentExec --> Gemini
+    AgentExec --> Qwen
+
+    UnifiedClient -.监控.-> GRPCMetrics
+    UnifiedClient -.追踪.-> Tracer
+    UnifiedClient -.配额.-> QuotaService
+
+    QuotaService --> MongoQuota
+    QuotaService --> RedisCache
+
+    classDef api fill:#e8f5e9
+    classDef service fill:#fff9c4
+    classDef monitor fill:#e1f5fe
+    classDef ai fill:#f3e5f5
+    classDef external fill:#fce4ec
+    classDef storage fill:#efebe9
+
+    class AIAPI api
+    class AIService,UnifiedClient,QuotaService service
+    class GRPCMetrics,Tracer monitor
+    class AIgRPC,AgentExec,Workflow ai
+    class OpenAI,Claude,Gemini,Qwen external
+    class MongoQuota,RedisCache storage
+```
+
+### gRPC调用流程
+
+```mermaid
+sequenceDiagram
+    participant API as API Handler
+    participant Service as AI Service
+    participant Client as UnifiedClient
+    participant Metrics as GRPCMetrics
+    participant Tracer as Tracer
+    participant AI as AI Service (Python)
+    participant Quota as QuotaService
+
+    API->>Service: 调用AI方法
+    Service->>Client: ExecuteAgent/GenerateOutline...
+    Client->>Tracer: startTrace()
+    Client->>AI: gRPC请求
+
+    Note over AI: 处理请求
+
+    AI-->>Client: gRPC响应
+
+    alt 成功
+        Client->>Metrics: recordCall(success)
+        Client->>Metrics: recordLatency()
+        Client->>Tracer: endTrace(success)
+        Client->>Quota: consumeQuota() [异步]
+        Note over Quota: 不影响主流程
+        Client-->>Service: 返回结果
+    else 失败
+        Client->>Metrics: recordCall(failed)
+        Client->>Tracer: endTrace(failed)
+        Client-->>Service: 返回错误
+    end
+
+    Service-->>API: 返回响应
+```
+
+### 监控架构
+
+```mermaid
+graph TB
+    subgraph "监控数据收集"
+        UnifiedClient[UnifiedClient]
+    end
+
+    subgraph "GRPCMetrics (调用统计)"
+        Calls[ServiceStats<br/>调用统计]
+        Performance[PerformanceStats<br/>性能统计]
+        QuotaMetrics[QuotaMetrics<br/>配额统计]
+    end
+
+    subgraph "监控指标"
+        TotalCalls[总调用数]
+        SuccessRate[成功率]
+        Latency[延迟统计]
+        P95P99[P95/P99延迟]
+        Timeouts[超时次数]
+        Retries[重试次数]
+        QuotaConsumed[配额消耗]
+        QuotaShortage[配额不足]
+    end
+
+    subgraph "报告输出"
+        ConsoleReport[控制台报告]
+        MetricsAPI[监控API]
+        AlertSystem[告警系统]
+    end
+
+    UnifiedClient --> Calls
+    UnifiedClient --> Performance
+    UnifiedClient --> QuotaMetrics
+
+    Calls --> TotalCalls
+    Calls --> SuccessRate
+
+    Performance --> Latency
+    Performance --> P95P99
+    Performance --> Timeouts
+    Performance --> Retries
+
+    QuotaMetrics --> QuotaConsumed
+    QuotaMetrics --> QuotaShortage
+
+    TotalCalls --> ConsoleReport
+    SuccessRate --> MetricsAPI
+    Latency --> MetricsAPI
+    QuotaShortage --> AlertSystem
+
+    classDef client fill:#e8f5e9
+    classDef metrics fill:#fff9c4
+    classDef indicators fill:#e1f5fe
+    classDef output fill:#f3e5f5
+
+    class UnifiedClient client
+    class Calls,Performance,QuotaMetrics metrics
+    class TotalCalls,SuccessRate,Latency,P95P99,Timeouts,Retries,QuotaConsumed,QuotaShortage indicators
+    class ConsoleReport,MetricsAPI,AlertSystem output
+```
+
+### 配额管理流程
+
+```mermaid
+graph TB
+    Start[AI请求开始] --> CheckQuota{检查配额}
+
+    CheckQuota -->|充足| CallAI[调用AI服务]
+    CheckQuota -->|不足| ReturnError[返回配额不足错误]
+
+    CallAI --> AIResponse{AI响应}
+    AIResponse -->|成功| GetTokens[获取使用tokens]
+    AIResponse -->|失败| HandleError[处理错误]
+
+    GetTokens --> ConsumeQuota[异步扣除配额]
+    ConsumeQuota --> UpdateDB[更新数据库]
+    UpdateDB --> InvalidateCache[清除缓存]
+    InvalidateCache --> CheckWarning{检查预警阈值}
+
+    CheckWarning -->|低于20%| PublishWarning[发布预警]
+    CheckWarning -->|低于10%| PublishCritical[发布严重预警]
+    CheckWarning -->|正常| Finish[完成]
+    CheckWarning -->|发布失败| LogError[记录日志]
+
+    PublishWarning --> Finish
+    PublishCritical --> Finish
+    LogError --> Finish
+
+    HandleError --> RestoreQuota{需要恢复配额?}
+    RestoreQuota -->|是| Restore[恢复配额]
+    RestoreQuota -->|否| Finish
+    Restore --> Finish
+
+    ReturnError --> End[结束]
+    Finish --> End
+
+    classDef success fill:#c8e6c9
+    classDef error fill:#ffcdd2
+    classDef warning fill:#fff9c4
+    classDef process fill:#e1f5fe
+
+    class CallAI,GetTokens,ConsumeQuota,UpdateDB,InvalidateCache,Restore success
+    class ReturnError,HandleError,LogError error
+    class CheckWarning,PublishWarning,PublishCritical,RestoreQuota warning
+    class CheckQuota,AIResponse,Finish,Start,End process
+```
+
+### AI服务列表
+
+| 服务名 | 端点 | 方法 | 描述 | 超时 |
+|--------|------|------|------|------|
+| **ExecuteAgent** | `/grpc.AIService/ExecuteAgent` | POST | 执行AI Agent工作流 | 30s |
+| **GenerateOutline** | `/grpc.AIService/GenerateOutline` | POST | 生成故事大纲 | 30s |
+| **GenerateCharacters** | `/grpc.AIService/GenerateCharacters` | POST | 生成角色设定 | 30s |
+| **GeneratePlot** | `/grpc.AIService/GeneratePlot` | POST | 生成情节设定 | 30s |
+| **ExecuteCreativeWorkflow** | `/grpc.AIService/ExecuteCreativeWorkflow` | POST | 执行完整创作工作流 | 120s |
+| **HealthCheck** | `/grpc.AIService/HealthCheck` | POST | 健康检查 | 5s |
+
+### AI模块文件组织
+
+```
+service/ai/
+├── unified_client.go          # 统一gRPC客户端
+├── grpc_client.go             # 基础gRPC客户端
+├── phase3_client.go           # Phase3客户端（创作相关）
+├── grpc_metrics.go            # 监控指标
+├── grpc_tracing.go            # 请求追踪
+├── grpc_errors.go             # 错误处理
+├── quota_service.go           # 配额服务
+├── ai_service.go              # AI服务配置
+├── text_service.go            # 文本服务
+├── image_service.go           # 图片服务
+├── proofread_service.go       # 校对服务
+├── summarize_service.go       # 摘要服务
+├── sensitive_words_service.go # 敏感词服务
+├── context_service.go         # 上下文服务
+├── chat_service.go            # 聊天服务
+├── chat_repository.go         # 聊天仓储
+├── chat_repository_memory.go  # 内存聊天仓储
+├── adapter/                   # AI适配器
+│   ├── adapter_interface.go   # 适配器接口
+│   ├── manager.go             # 适配器管理器
+│   ├── openai.go              # OpenAI适配器
+│   ├── claude.go              # Claude适配器
+│   ├── gemini.go              # Gemini适配器
+│   ├── qwen.go                # Qwen适配器
+│   ├── glm.go                 # GLM适配器
+│   ├── wenxin.go              # 文心适配器
+│   ├── deepseek_adapter.go    # DeepSeek适配器
+│   └── retry.go               # 重试逻辑
+├── dto/                       # 数据传输对象
+│   ├── chat_dto.go            # 聊天DTO
+│   └── writing_assistant_dto.go # 写作助手DTO
+├── mocks/                     # Mock对象
+│   └── ai_adapter_mock.go     # AI适配器Mock
+├── ai_service_test.go         # 服务测试
+└── grpc_monitor_test.go       # 监控测试
+```
+
+### 相关文档
+
+- [gRPC对接文档](../docs/architecture/ai_grpc_integration.md)
+- [配额管理指南](../docs/guides/quota_management.md)
+- [AI服务配置](../docs/configuration/ai_service_config.md)
+
+---
+
 ## 文档说明
 
 ### 图例说明
@@ -945,6 +1225,7 @@ graph TB
 |------|------|----------|
 | 2026-02-26 | v1.0 | 初始版本，创建所有架构图 |
 | 2026-02-27 | v1.1 | 添加通信模块架构详细说明 |
+| 2026-02-27 | v1.2 | 添加AI模块架构、gRPC调用流程、监控架构、配额流程 |
 
 ---
 
