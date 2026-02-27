@@ -176,6 +176,30 @@ func BindJSON(c *gin.Context, req interface{}) bool {
 	return true
 }
 
+// BindParams 绑定URI路径参数和Query查询参数（自动验证）
+// 使用结构体标签进行参数绑定和验证
+// 返回: (ok) - false表示已发送错误响应
+//
+// 使用示例：
+//	var params struct {
+//	    BookID string `uri:"bookId" binding:"required"`
+//	    Page   int    `form:"page" binding:"min=1"`
+//	}
+//	if !BindParams(c, &params) { return }
+func BindParams(c *gin.Context, req interface{}) bool {
+	// 先绑定URI参数
+	if err := c.ShouldBindUri(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	// 再绑定Query参数
+	if err := c.ShouldBindQuery(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	return true
+}
+
 // ============ 分页响应辅助函数 ============
 
 // RespondWithPaginated 响应分页数据
