@@ -51,7 +51,7 @@ func (api *DocumentAPI) CreateDocument(c *gin.Context) {
 
 	result, err := api.documentService.CreateDocument(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "创建文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (api *DocumentAPI) GetDocument(c *gin.Context) {
 
 	result, err := api.documentService.GetDocument(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "获取文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (api *DocumentAPI) UpdateDocument(c *gin.Context) {
 
 	result, err := api.documentService.UpdateDocument(c.Request.Context(), id, &req)
 	if err != nil {
-		shared.InternalError(c, "更新文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -145,7 +145,7 @@ func (api *DocumentAPI) DeleteDocument(c *gin.Context) {
 
 	err := api.documentService.DeleteDocument(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "删除文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -192,7 +192,7 @@ func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 
 	result, err := api.documentService.ListDocuments(c.Request.Context(), req)
 	if err != nil {
-		shared.InternalError(c, "获取文档列表失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -228,7 +228,7 @@ func (api *DocumentAPI) DuplicateDocument(c *gin.Context) {
 
 	result, err := api.documentService.DuplicateDocument(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "复制文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (api *DocumentAPI) MoveDocument(c *gin.Context) {
 
 	err := api.documentService.MoveDocument(c.Request.Context(), req.DocumentID, req.NewParentID, req.Order)
 	if err != nil {
-		shared.InternalError(c, "移动文档失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -294,7 +294,7 @@ func (api *DocumentAPI) GetDocumentTree(c *gin.Context) {
 
 	result, err := api.documentService.GetDocumentTree(c.Request.Context(), projectID)
 	if err != nil {
-		shared.InternalError(c, "获取文档树失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -323,7 +323,7 @@ func (api *DocumentAPI) GetDocumentContent(c *gin.Context) {
 
 	result, err := api.documentService.GetDocumentContent(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "获取文档内容失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -361,7 +361,7 @@ func (api *DocumentAPI) UpdateDocumentContent(c *gin.Context) {
 
 	err := api.documentService.UpdateDocumentContent(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "更新文档内容失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -389,7 +389,7 @@ func (api *DocumentAPI) AutoSaveDocument(c *gin.Context) {
 
 	result, err := api.documentService.AutoSaveDocument(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "自动保存失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -429,7 +429,7 @@ func (api *DocumentAPI) GetVersionHistory(c *gin.Context) {
 
 	result, err := api.documentService.GetVersionHistory(c.Request.Context(), id, page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取版本历史失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -465,7 +465,7 @@ func (api *DocumentAPI) RestoreVersion(c *gin.Context) {
 
 	err := api.documentService.RestoreVersion(c.Request.Context(), id, versionID)
 	if err != nil {
-		shared.InternalError(c, "恢复版本失败", err)
+		c.Error(err)
 		return
 	}
 
