@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,12 +16,22 @@ import (
 	"Qingyu_backend/repository/mongodb/base"
 )
 
-func validateMongoQueryValue(field, value string) error {
-	if strings.TrimSpace(value) == "" {
-		return fmt.Errorf("%s不能为空", field)
+var safeCollectionTagPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,32}$`)
+
+func normalizeObjectIDHex(field, value string) (string, error) {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		return "", fmt.Errorf("%s格式非法", field)
 	}
-	if strings.Contains(value, "$") || strings.ContainsRune(value, '\x00') {
-		return fmt.Errorf("%s包含非法字符", field)
+	return objectID.Hex(), nil
+}
+
+func validateCollectionTag(value string) error {
+	if strings.TrimSpace(value) == "" {
+		return fmt.Errorf("标签不能为空")
+	}
+	if !safeCollectionTagPattern.MatchString(value) {
+		return fmt.Errorf("标签格式非法")
 	}
 	return nil
 }
@@ -169,17 +180,19 @@ func (r *MongoCollectionRepository) GetByUserAndBook(ctx context.Context, userID
 	if userID == "" || bookID == "" {
 		return nil, fmt.Errorf("用户ID和书籍ID不能为空")
 	}
-	if err := validateMongoQueryValue("user_id", userID); err != nil {
+	userIDHex, err := normalizeObjectIDHex("user_id", userID)
+	if err != nil {
 		return nil, err
 	}
-	if err := validateMongoQueryValue("book_id", bookID); err != nil {
+	bookIDHex, err := normalizeObjectIDHex("book_id", bookID)
+	if err != nil {
 		return nil, err
 	}
 
 	var collection social.Collection
-	err := r.GetCollection().FindOne(ctx, bson.D{
-		{Key: "user_id", Value: userID},
-		{Key: "book_id", Value: bookID},
+	err = r.GetCollection().FindOne(ctx, bson.D{
+		{Key: "user_id", Value: userIDHex},
+		{Key: "book_id", Value: bookIDHex},
 	}).Decode(&collection)
 
 	if err != nil {
@@ -197,11 +210,19 @@ func (r *MongoCollectionRepository) GetCollectionsByUser(ctx context.Context, us
 	if userID == "" {
 		return nil, 0, fmt.Errorf("用户ID不能为空")
 	}
+	userIDHex, err := normalizeObjectIDHex("user_id", userID)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	// 构建过滤条件
-	filter := bson.M{"user_id": userID}
+	filter := bson.M{"user_id": userIDHex}
 	if folderID != "" {
-		filter["folder_id"] = folderID
+		folderIDHex, normalizeErr := normalizeObjectIDHex("folder_id", folderID)
+		if normalizeErr != nil {
+			return nil, 0, normalizeErr
+		}
+		filter["folder_id"] = folderIDHex
 	}
 
 	// 计算总数
@@ -238,45 +259,53 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 	if userID == "" || tag == "" {
 		return nil, 0, fmt.Errorf("用户ID和标签不能为空")
 	}
-	if err := validateMongoQueryValue("user_id", userID); err != nil {
-		return nil, 0, err
-	}
-	if err := validateMongoQueryValue("tag", tag); err != nil {
-		return nil, 0, err
-	}
-
-	filter := bson.D{
-		{Key: "user_id", Value: userID},
-		{Key: "tags", Value: tag}, // MongoDB会自动匹配数组中的元素
-	}
-
-	// 计算总数
-	total, err := r.GetCollection().CountDocuments(ctx, filter)
+	userIDHex, err := normalizeObjectIDHex("user_id", userID)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count collections by tag: %w", err)
+		return nil, 0, err
+	}
+	if err := validateCollectionTag(tag); err != nil {
+		return nil, 0, err
 	}
 
-	// 计算跳过数
-	skip := int64((page - 1) * size)
-
-	// 查询
+	// 为避免将用户输入直接拼到查询条件中，先按用户拉取，再在内存中过滤标签。
+	userFilter := bson.D{
+		{Key: "user_id", Value: userIDHex},
+	}
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
-		SetSkip(skip).
-		SetLimit(int64(size))
+		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, userFilter, opts)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find collections by tag: %w", err)
+		return nil, 0, fmt.Errorf("failed to find collections by user: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var collections []*social.Collection
-	if err := cursor.All(ctx, &collections); err != nil {
+	var allCollections []*social.Collection
+	if err := cursor.All(ctx, &allCollections); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode collections: %w", err)
 	}
 
-	return collections, total, nil
+	filtered := make([]*social.Collection, 0, len(allCollections))
+	for _, collection := range allCollections {
+		for _, existingTag := range collection.Tags {
+			if existingTag == tag {
+				filtered = append(filtered, collection)
+				break
+			}
+		}
+	}
+
+	total := int64(len(filtered))
+	start := (page - 1) * size
+	if start < 0 || start >= len(filtered) {
+		return []*social.Collection{}, total, nil
+	}
+	end := start + size
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	return filtered[start:end], total, nil
 }
 
 // Update 更新收藏
