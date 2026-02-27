@@ -599,6 +599,10 @@ func (api *UserAdminAPI) BatchCreateUsers(c *gin.Context) {
 			response.BadRequest(c, "无效的角色", err.Error())
 			return
 		}
+		if err == adminservice.ErrInvalidBatchCount {
+			response.BadRequest(c, "无效的批量创建数量", err.Error())
+			return
+		}
 		response.InternalError(c, err)
 		return
 	}

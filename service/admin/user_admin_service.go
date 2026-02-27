@@ -23,7 +23,12 @@ var (
 	ErrCannotModifySuperAdmin = fmt.Errorf("cannot modify super admin")
 	// ErrInvalidRole 无效的角色
 	ErrInvalidRole = fmt.Errorf("invalid role")
+	// ErrInvalidBatchCount 无效的批量创建数量
+	ErrInvalidBatchCount = fmt.Errorf("invalid batch user count")
 )
+
+// MaxBatchCreateUsersCount 批量创建用户的最大数量
+const MaxBatchCreateUsersCount = 1000
 
 // UserAdminService 用户管理服务接口
 type UserAdminService interface {
@@ -434,6 +439,11 @@ func (s *UserAdminServiceImpl) BatchCreateUsers(ctx context.Context, req *BatchC
 	// 验证角色
 	if !isValidRole(req.Role) {
 		return nil, ErrInvalidRole
+	// 校验批量创建数量，防止过大的内存分配
+	if req.Count <= 0 || req.Count > MaxBatchCreateUsersCount {
+		return nil, ErrInvalidBatchCount
+	}
+
 	}
 
 	// 设置默认值
