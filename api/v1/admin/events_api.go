@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -91,8 +90,7 @@ func (api *EventsAdminAPI) ReplayEvents(c *gin.Context) {
 	// 使用nil handler，因为我们只是统计事件，不需要实际处理
 	result, err := api.eventBus.Replay(c.Request.Context(), nil, filter)
 	if err != nil {
-		log.Printf("[EventsAdminAPI] Replay failed: %v", err)
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

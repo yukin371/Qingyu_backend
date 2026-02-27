@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"Qingyu_backend/internal/middleware/builtin"
+	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/service/base"
 	"Qingyu_backend/service/events"
 )
@@ -55,6 +57,10 @@ func (m *MockPersistedEventBus) Replay(ctx context.Context, handler base.EventHa
 func setupEventsAdminTestRouter(eventBus *MockPersistedEventBus) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandler.Handler())
 
 	api := NewEventsAdminAPI(eventBus)
 
