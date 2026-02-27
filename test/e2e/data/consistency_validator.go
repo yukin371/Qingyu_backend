@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package data
@@ -195,7 +195,19 @@ func (v *ConsistencyValidator) AssertNoConsistencyIssues(t *testing.T, issues []
 // getUser 获取用户
 func (v *ConsistencyValidator) getUser(ctx context.Context, userID string) map[string]interface{} {
 	var user map[string]interface{}
-	err := global.DB.Collection("users").FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+
+	// 兼容用户ID在不同集合中可能的存储类型（ObjectID 或 string）。
+	filter := bson.M{"_id": userID}
+	if objID, err := primitive.ObjectIDFromHex(userID); err == nil {
+		filter = bson.M{
+			"$or": []bson.M{
+				{"_id": objID},
+				{"_id": userID},
+			},
+		}
+	}
+
+	err := global.DB.Collection("users").FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil
 	}
@@ -465,4 +477,3 @@ func (v *ConsistencyValidator) validatePurchases(ctx context.Context, userID str
 		}
 	}
 }
-

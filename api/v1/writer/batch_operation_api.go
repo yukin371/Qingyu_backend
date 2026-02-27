@@ -26,22 +26,22 @@ func NewBatchOperationAPI(batchOpSvc document.BatchOperationService) *BatchOpera
 
 // SubmitBatchOperationRequest 提交批量操作请求
 type SubmitBatchOperationRequest struct {
-	ProjectID          string                 `json:"projectId" binding:"required"`
+	ProjectID          string                    `json:"projectId" binding:"required"`
 	Type               writer.BatchOperationType `json:"type" binding:"required"`
-	TargetIDs          []string               `json:"targetIds" binding:"required,min=1"`
-	Atomic             bool                   `json:"atomic"`
-	Payload            map[string]interface{} `json:"payload"`
-	ConflictPolicy     writer.ConflictPolicy  `json:"conflictPolicy"`
-	ExpectedVersions   map[string]int         `json:"expectedVersions"`
-	ClientRequestID    string                 `json:"clientRequestId"`
-	IncludeDescendants bool                   `json:"includeDescendants"`
+	TargetIDs          []string                  `json:"targetIds" binding:"required,min=1"`
+	Atomic             bool                      `json:"atomic"`
+	Payload            map[string]interface{}    `json:"payload"`
+	ConflictPolicy     writer.ConflictPolicy     `json:"conflictPolicy"`
+	ExpectedVersions   map[string]int            `json:"expectedVersions"`
+	ClientRequestID    string                    `json:"clientRequestId"`
+	IncludeDescendants bool                      `json:"includeDescendants"`
 }
 
 // SubmitBatchOperationResponse 提交批量操作响应
 type SubmitBatchOperationResponse struct {
-	BatchID          string                    `json:"batchId"`
+	BatchID          string                      `json:"batchId"`
 	Status           writer.BatchOperationStatus `json:"status"`
-	PreflightSummary *writer.PreflightSummary  `json:"preflightSummary"`
+	PreflightSummary *writer.PreflightSummary    `json:"preflightSummary"`
 }
 
 // SubmitBatchOperation 提交批量操作
@@ -61,7 +61,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权")
 		return
@@ -143,7 +143,7 @@ func (api *BatchOperationAPI) CancelBatchOperation(c *gin.Context) {
 		return
 	}
 
-	_, exists := c.Get("userID")
+	_, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权")
 		return
@@ -175,7 +175,7 @@ func (api *BatchOperationAPI) UndoBatchOperation(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未授权")
 		return

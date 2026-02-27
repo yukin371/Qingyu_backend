@@ -7,19 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/models/bookstore"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
-	adminRepo "Qingyu_backend/repository/interfaces/admin"
-	adminService "Qingyu_backend/service/admin"
 	"Qingyu_backend/pkg/response"
+	adminRepo "Qingyu_backend/repository/interfaces/admin"
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	adminService "Qingyu_backend/service/admin"
 )
 
 // ContentExportAPI 内容导出API处理器
 type ContentExportAPI struct {
-	bookRepo         bookstoreRepo.BookRepository
-	chapterRepo      bookstoreRepo.ChapterRepository
+	bookRepo          bookstoreRepo.BookRepository
+	chapterRepo       bookstoreRepo.ChapterRepository
 	exportHistoryRepo adminRepo.ExportHistoryRepository
-	exportService    adminService.ExportService
+	exportService     adminService.ExportService
 }
 
 // NewContentExportAPI 创建内容导出API实例
@@ -29,10 +29,10 @@ func NewContentExportAPI(
 	exportHistoryRepo adminRepo.ExportHistoryRepository,
 ) *ContentExportAPI {
 	return &ContentExportAPI{
-		bookRepo:         bookRepo,
-		chapterRepo:      chapterRepo,
+		bookRepo:          bookRepo,
+		chapterRepo:       chapterRepo,
 		exportHistoryRepo: exportHistoryRepo,
-		exportService:    adminService.NewExportService(),
+		exportService:     adminService.NewExportService(),
 	}
 }
 
@@ -44,7 +44,7 @@ func NewContentExportAPI(
 //	@Description	管理员导出书籍数据，支持CSV和Excel格式
 //	@Tags			Admin-Content
 //	@Accept			json
-//	@Produce		csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+//	@Produce		json
 //	@Param			format		query		string	false	"导出格式"	Enums(csv,excel)
 //	@Param			status		query		string	false	"状态筛选"
 //	@Param			author		query		string	false	"作者筛选"
@@ -143,7 +143,7 @@ func (api *ContentExportAPI) ExportBooks(c *gin.Context) {
 //	@Description	管理员导出章节数据，支持CSV和Excel格式
 //	@Tags			Admin-Content
 //	@Accept			json
-//	@Produce		csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+//	@Produce		json
 //	@Param			format		query		string	false	"导出格式"	Enums(csv,excel)
 //	@Param			book_id		query		string	false	"书籍ID"
 //	@Param			start_date	query		string	false	"开始日期"	format(date)
@@ -228,7 +228,7 @@ func (api *ContentExportAPI) ExportChapters(c *gin.Context) {
 //	@Description	获取书籍导出的字段模板
 //	@Tags			Admin-Content
 //	@Accept			json
-//	@Produce		csv
+//	@Produce		json
 //	@Success		200	{file}		file
 //	@Router			/api/v1/admin/content/books/export/template [get]
 func (api *ContentExportAPI) GetBookExportTemplate(c *gin.Context) {
@@ -262,7 +262,7 @@ func (api *ContentExportAPI) GetBookExportTemplate(c *gin.Context) {
 //	@Description	获取章节导出的字段模板
 //	@Tags			Admin-Content
 //	@Accept			json
-//	@Produce		csv
+//	@Produce		json
 //	@Success		200	{file}		file
 //	@Router			/api/v1/admin/content/chapters/export/template [get]
 func (api *ContentExportAPI) GetChapterExportTemplate(c *gin.Context) {

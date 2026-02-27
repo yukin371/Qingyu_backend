@@ -32,7 +32,7 @@ func NewAnalyticsAPI(analyticsService adminService.AnalyticsService) *AnalyticsA
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param interval query string true "间隔 (daily/weekly/monthly)" Enums(daily, weekly, monthly)
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/user-growth [get]
 func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -108,7 +108,7 @@ func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 // @Produce json
 // @Param start_date query string false "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string false "结束日期 (YYYY-MM-DD)"
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/content-statistics [get]
 func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -172,7 +172,7 @@ func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param interval query string true "间隔 (daily/weekly/monthly)" Enums(daily, weekly, monthly)
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/revenue-report [get]
 func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -249,7 +249,7 @@ func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param type query string true "类型 (dau/wau/mau)" Enums(dau, wau, mau)
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/active-users [get]
 func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -331,7 +331,7 @@ func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/system-overview [get]
 func (api *AnalyticsAPI) GetSystemOverview(c *gin.Context) {
 	// 调用服务
@@ -454,7 +454,7 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/dashboard [get]
 func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 	// 并行获取各种统计数据
@@ -524,7 +524,7 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param query body CustomAnalyticsQuery true "自定义查询条件"
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/custom [post]
 func (api *AnalyticsAPI) GetCustomAnalyticsQuery(c *gin.Context) {
 	var req CustomAnalyticsQuery
@@ -570,7 +570,7 @@ type CustomAnalyticsQuery struct {
 // @Param period2_start query string true "第二期开始日期 (YYYY-MM-DD)"
 // @Param period2_end query string true "第二期结束日期 (YYYY-MM-DD)"
 // @Param metrics query string true "对比指标，逗号分隔 (users,revenue,etc)"
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/compare [get]
 func (api *AnalyticsAPI) CompareAnalyticsPeriods(c *gin.Context) {
 	period1StartStr := c.Query("period1_start")
@@ -655,7 +655,7 @@ func (api *AnalyticsAPI) CompareAnalyticsPeriods(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/realtime [get]
 func (api *AnalyticsAPI) GetRealTimeStats(c *gin.Context) {
 	// TODO: 实现实时统计逻辑
@@ -682,7 +682,7 @@ func (api *AnalyticsAPI) GetRealTimeStats(c *gin.Context) {
 // @Produce json
 // @Param type query string true "预测类型 (users/revenue/content)" Enums(users, revenue, content)
 // @Param days query int false "预测天数" default(30)
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/analytics/predict [get]
 func (api *AnalyticsAPI) GetAnalyticsPredictions(c *gin.Context) {
 	predictType := c.Query("type")
