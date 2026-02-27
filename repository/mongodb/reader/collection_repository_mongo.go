@@ -3,6 +3,7 @@ package reader
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +13,16 @@ import (
 
 	"Qingyu_backend/models/reader"
 )
+
+func validateMongoQueryValue(field, value string) error {
+	if strings.TrimSpace(value) == "" {
+		return fmt.Errorf("%s不能为空", field)
+	}
+	if strings.Contains(value, "$") || strings.ContainsRune(value, '\x00') {
+		return fmt.Errorf("%s包含非法字符", field)
+	}
+	return nil
+}
 
 // MongoCollectionRepository MongoDB收藏仓储实现
 type MongoCollectionRepository struct {
@@ -158,11 +169,17 @@ func (r *MongoCollectionRepository) GetByUserAndBook(ctx context.Context, userID
 	if userID == "" || bookID == "" {
 		return nil, fmt.Errorf("用户ID和书籍ID不能为空")
 	}
+	if err := validateMongoQueryValue("user_id", userID); err != nil {
+		return nil, err
+	}
+	if err := validateMongoQueryValue("book_id", bookID); err != nil {
+		return nil, err
+	}
 
 	var collection reader.Collection
-	err := r.collectionColl.FindOne(ctx, bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+	err := r.collectionColl.FindOne(ctx, bson.D{
+		{Key: "user_id", Value: userID},
+		{Key: "book_id", Value: bookID},
 	}).Decode(&collection)
 
 	if err != nil {
@@ -221,10 +238,16 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 	if userID == "" || tag == "" {
 		return nil, 0, fmt.Errorf("用户ID和标签不能为空")
 	}
+	if err := validateMongoQueryValue("user_id", userID); err != nil {
+		return nil, 0, err
+	}
+	if err := validateMongoQueryValue("tag", tag); err != nil {
+		return nil, 0, err
+	}
 
-	filter := bson.M{
-		"user_id": userID,
-		"tags":    tag, // MongoDB会自动匹配数组中的元素
+	filter := bson.D{
+		{Key: "user_id", Value: userID},
+		{Key: "tags", Value: tag}, // MongoDB会自动匹配数组中的元素
 	}
 
 	// 计算总数
