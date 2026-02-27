@@ -15,6 +15,7 @@
 - [重构前后对比图](#重构前后对比图)
 - [模块依赖关系图](#模块依赖关系图)
 - [数据流图](#数据流图)
+- [通信模块架构](#通信模块架构)
 
 ---
 
@@ -709,6 +710,216 @@ graph TB
 
 ---
 
+## 通信模块架构
+
+通信模块负责系统内所有信息传递功能，由三个独立但互补的通信系统组成。
+
+### 三个通信系统的独立性
+
+```mermaid
+graph TB
+    subgraph "Announcements（公告）"
+        A1[方向: Platform → Users]
+        A2[可见性: 公开]
+        A3[模式: 一对多]
+        A4[存储: 集中式]
+        A5[推送: 被动获取]
+    end
+
+    subgraph "Notifications（通知）"
+        N1[方向: System → User]
+        N2[可见性: 私有]
+        N3[模式: 事件驱动]
+        N4[存储: 按用户]
+        N5[推送: 主动推送]
+    end
+
+    subgraph "Messages（消息）"
+        M1[方向: User ↔ User]
+        M2[可见性: 私有]
+        M3[模式: 点对点]
+        M4[存储: 按会话]
+        M5[推送: 实时推送]
+    end
+
+    A1 --> A2 --> A3 --> A4 --> A5
+    N1 --> N2 --> N3 --> N4 --> N5
+    M1 --> M2 --> M3 --> M4 --> M5
+
+    classDef announcements fill:#e1f5fe
+    classDef notifications fill:#f3e5f5
+    classDef messages fill:#fff9c4
+
+    class A1,A2,A3,A4,A5 announcements
+    class N1,N2,N3,N4,N5 notifications
+    class M1,M2,M3,M4,M5 messages
+```
+
+### 通信模块对比
+
+| 特性 | Announcements | Notifications | Messages |
+|------|--------------|---------------|----------|
+| **方向** | Platform → Users | System → User | User ↔ User |
+| **触发者** | 管理员 | 系统事件 | 用户 |
+| **接收者** | 所有用户/特定角色 | 单个用户 | 参与会话的用户 |
+| **可见性** | 公开 | 私有 | 私有 |
+| **模式** | 一对多 | 一对一 | 点对点 |
+| **存储** | Announcement集合 | 按UserID分片 | 按ConversationID组织 |
+| **推送方式** | 被动获取 + WebSocket广播 | WebSocket/邮件/短信 | WebSocket实时推送 |
+| **过期策略** | 按有效期 | 按ReadAt | 永久保存 |
+| **API路径** | `/api/v1/announcements` | `/api/v1/notifications` | `/api/v1/social/messages` |
+| **认证要求** | 公开API无需认证 | 需要JWT认证 | 需要JWT认证 |
+
+### 通信模块数据流
+
+```mermaid
+sequenceDiagram
+    participant Admin as 管理员
+    participant System as 系统事件
+    participant User as 用户
+    participant AnnAPI as Announcements API
+    participant NotifAPI as Notifications API
+    participant MsgAPI as Messages API
+    participant DB as 数据库
+    participant WS as WebSocket Hub
+
+    Note over AnnAPI,WS: 公告流程
+    Admin->>AnnAPI: 创建公告
+    AnnAPI->>DB: 保存公告
+    User->>AnnAPI: 获取有效公告
+    AnnAPI->>DB: 查询公告
+    DB-->>AnnAPI: 返回公告
+    AnnAPI-->>User: 返回公告列表
+    AnnAPI->>WS: 广播新公告
+
+    Note over AnnAPI,WS: 通知流程
+    System->>NotifAPI: 触发事件
+    NotifAPI->>DB: 创建通知
+    NotifAPI->>WS: 推送通知
+    WS-->>User: 实时推送
+    NotifAPI->>NotifAPI: 发送邮件/短信
+
+    Note over AnnAPI,WS: 消息流程
+    User->>MsgAPI: 发送消息
+    MsgAPI->>DB: 保存消息
+    MsgAPI->>WS: 实时推送
+    WS-->>User: 推送给接收者
+    User->>MsgAPI: 标记已读
+    MsgAPI->>DB: 更新已读状态
+```
+
+### 通信模块路由组织
+
+```
+api/v1/
+├── announcements/              # 公开API
+│   ├── GET    /effective      # 获取有效公告
+│   ├── GET    /:id            # 获取公告详情
+│   └── POST   /:id/view       # 增加查看次数
+│
+├── notifications/              # 需要认证
+│   ├── GET    /               # 获取通知列表
+│   ├── GET    /:id            # 获取通知详情
+│   ├── POST   /:id/read       # 标记已读
+│   ├── POST   /batch-read     # 批量标记已读
+│   ├── POST   /read-all       # 标记全部已读
+│   ├── DELETE /:id            # 删除通知
+│   ├── POST   /batch-delete   # 批量删除
+│   ├── DELETE /delete-all     # 删除全部
+│   ├── POST   /clear-read     # 清除已读
+│   ├── GET    /unread-count   # 未读数量
+│   ├── GET    /stats          # 通知统计
+│   ├── GET    /preferences    # 偏好设置
+│   ├── PUT    /preferences    # 更新偏好
+│   ├── POST   /:id/resend     # 重新发送
+│   └── GET    /ws-endpoint    # WebSocket端点
+│
+├── social/                     # 需要认证
+│   └── messages/
+│       ├── GET    /conversations              # 获取会话列表
+│       ├── POST   /conversations              # 创建会话
+│       ├── GET    /conversations/:id/messages # 获取消息
+│       ├── POST   /conversations/:id/messages # 发送消息
+│       └── POST   /conversations/:id/read     # 标记已读
+│
+└── admin/                      # 管理员API
+    └── announcements/
+        ├── GET    /                           # 获取公告列表
+        ├── POST   /                           # 创建公告
+        ├── PUT    /:id                        # 更新公告
+        ├── DELETE /:id                        # 删除公告
+        ├── POST   /batch/status               # 批量更新状态
+        └── DELETE /batch                      # 批量删除
+```
+
+### WebSocket实时推送
+
+```mermaid
+graph TB
+    subgraph "WebSocket Hubs"
+        NotifWS[NotificationWSHub<br/>通知推送]
+        MsgWS[MessagingWSHub<br/>消息推送]
+    end
+
+    subgraph "客户端连接"
+        Client1[Web客户端]
+        Client2[移动端]
+        Client3[其他端]
+    end
+
+    subgraph "消息来源"
+        Event1[系统事件]
+        Event2[用户消息]
+        Event3[新公告]
+    end
+
+    Event1 --> NotifWS
+    Event2 --> MsgWS
+    Event3 --> NotifWS
+
+    NotifWS --> Client1
+    NotifWS --> Client2
+    NotifWS --> Client3
+
+    MsgWS --> Client1
+    MsgWS --> Client2
+    MsgWS --> Client3
+
+    classDef hub fill:#e1f5fe
+    classDef client fill:#c8e6c9
+    classDef event fill:#fff9c4
+
+    class NotifWS,MsgWS hub
+    class Client1,Client2,Client3 client
+    class Event1,Event2,Event3 event
+```
+
+### 废弃模块记录
+
+在Phase 3重构中，以下模块已被废弃：
+
+| 文件 | 废弃原因 | 替代方案 |
+|------|----------|----------|
+| `api/v1/shared/notification_api.go` | 功能被完全覆盖 | `api/v1/notifications/notification_api.go` |
+| `api/v1/messages/message_api.go` | 旧版消息API | `api/v1/social/message_api.go` (MessageAPIV2) |
+
+### 重构改进统计
+
+- **删除废弃代码**: 272行
+- **减少重复代码**: ~50行
+- **统一响应格式**: 所有通信模块使用`pkg/response`包
+- **统一参数验证**: 应用`shared.GetRequiredParam`、`shared.GetIntParam`等辅助函数
+- **测试覆盖**: 178个测试全部通过
+
+### 相关文档
+
+- [Announcements API](../api/v1/announcements/README.md)
+- [Notifications API](../api/v1/notifications/README.md)
+- [Social API](../api/v1/social/README.md)
+- [Phase 3 完成报告](../docs/plans/phase3_completion_report.md)
+
+---
+
 ## 文档说明
 
 ### 图例说明
@@ -733,8 +944,9 @@ graph TB
 | 日期 | 版本 | 变更内容 |
 |------|------|----------|
 | 2026-02-26 | v1.0 | 初始版本，创建所有架构图 |
+| 2026-02-27 | v1.1 | 添加通信模块架构详细说明 |
 
 ---
 
 **维护者**: Backend Architecture Team
-**最后更新**: 2026-02-26
+**最后更新**: 2026-02-27

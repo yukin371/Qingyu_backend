@@ -1,10 +1,9 @@
 package announcements
 
 import (
-	"strconv"
-
+	messagingModel "Qingyu_backend/models/messaging"
 	"Qingyu_backend/api/v1/shared"
-	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
+	"Qingyu_backend/pkg/response"
 	messagingService "Qingyu_backend/service/messaging"
 
 	"github.com/gin-gonic/gin"
@@ -33,31 +32,23 @@ func NewAnnouncementPublicAPI(announcementService messagingService.AnnouncementS
 //	@Produce		json
 //	@Param			targetRole	query		string	false	"目标角色(all/reader/writer/admin)"	default(all)
 //	@Param			limit			query		int		false	"限制数量"	default(10)
-//	@Success		200				{object}	shared.APIResponse
-//	@Failure		500				{object}	shared.ErrorResponse
+//	@Success		200				{object}	response.APIResponse
+//	@Failure		500				{object}	response.ErrorResponse
 //	@Router			/api/v1/announcements/effective [get]
 func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
 	// 1. 获取参数
 	targetRole := c.DefaultQuery("targetRole", "all")
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	limit := shared.GetIntParam(c, "limit", true, 10, 1, 50)
 
-	// 2. 限制最大数量
-	if limit > 50 {
-		limit = 50
-	}
-	if limit <= 0 {
-		limit = 10
-	}
-
-	// 3. 获取有效公告
+	// 2. 获取有效公告
 	announcements, err := api.announcementService.GetEffectiveAnnouncements(c.Request.Context(), targetRole, limit)
 	if err != nil {
-		shared.Error(c, 500, "获取公告失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
-	// 4. 返回结果
-	shared.Success(c, 200, "获取成功", announcements)
+	// 3. 返回结果
+	response.Success(c, announcements)
 }
 
 // IncrementViewCount 增加公告查看次数
@@ -74,21 +65,20 @@ func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
 //	@Router			/api/v1/announcements/{id}/view [post]
 func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 	// 1. 获取公告ID
-	id := c.Param("id")
-	if id == "" {
-		shared.BadRequest(c, "参数错误", "公告ID不能为空")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
 	// 2. 增加查看次数
 	err := api.announcementService.IncrementViewCount(c.Request.Context(), id)
 	if err != nil {
-		shared.Error(c, 500, "操作失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
 	// 3. 返回成功
-	shared.Success(c, 200, "操作成功", nil)
+	response.Success(c, nil)
 }
 
 // GetAnnouncementByID 获取公告详情
@@ -106,31 +96,25 @@ func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 //	@Router			/api/v1/announcements/{id} [get]
 func (api *AnnouncementPublicAPI) GetAnnouncementByID(c *gin.Context) {
 	// 1. 获取公告ID
-	id := c.Param("id")
-	if id == "" {
-		shared.BadRequest(c, "参数错误", "公告ID不能为空")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
 	// 2. 获取公告详情
 	announcement, err := api.announcementService.GetAnnouncementByID(c.Request.Context(), id)
 	if err != nil {
-		// 检查是否为404错误
-		if len(err.Error()) > 0 && (err.Error()[0:4] == "not_" || err.Error()[0:4] == "NOT_") {
-			shared.NotFound(c, "公告不存在")
-			return
-		}
-		shared.Error(c, 500, "获取公告失败", err.Error())
+		response.InternalError(c, err)
 		return
 	}
 
 	if announcement == nil {
-		shared.NotFound(c, "公告不存在")
+		response.NotFound(c, "公告不存在")
 		return
 	}
 
 	// 3. 返回结果
-	shared.Success(c, 200, "获取成功", announcement)
+	response.Success(c, announcement)
 }
 
 var _ = messagingModel.Announcement{}

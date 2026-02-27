@@ -3,6 +3,7 @@ package reader
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"Qingyu_backend/models/reader"
@@ -120,7 +121,7 @@ func (s *CollectionService) AddToCollection(ctx context.Context, userID, bookID,
 	// 更新收藏夹计数
 	if folderID != "" {
 		if err := s.collectionRepo.IncrementFolderBookCount(ctx, folderID); err != nil {
-			fmt.Printf("Warning: Failed to increment folder book count: %v\n", err)
+			log.Printf("Warning: failed to increment folder book count")
 		}
 	}
 
@@ -158,7 +159,7 @@ func (s *CollectionService) RemoveFromCollection(ctx context.Context, userID, co
 	// 更新收藏夹计数
 	if collection.FolderID != "" {
 		if err := s.collectionRepo.DecrementFolderBookCount(ctx, collection.FolderID); err != nil {
-			fmt.Printf("Warning: Failed to decrement folder book count: %v\n", err)
+			log.Printf("Warning: failed to decrement folder book count")
 		}
 	}
 
@@ -212,13 +213,13 @@ func (s *CollectionService) UpdateCollection(ctx context.Context, userID, collec
 			// 旧收藏夹计数-1
 			if oldFolderID != "" {
 				if err := s.collectionRepo.DecrementFolderBookCount(ctx, oldFolderID); err != nil {
-					fmt.Printf("Warning: Failed to decrement old folder count: %v\n", err)
+					log.Printf("Warning: failed to decrement old folder count")
 				}
 			}
 			// 新收藏夹计数+1
 			if newFolderID != "" {
 				if err := s.collectionRepo.IncrementFolderBookCount(ctx, newFolderID); err != nil {
-					fmt.Printf("Warning: Failed to increment new folder count: %v\n", err)
+					log.Printf("Warning: failed to increment new folder count")
 				}
 			}
 		}

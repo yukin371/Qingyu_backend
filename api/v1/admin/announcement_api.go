@@ -3,7 +3,8 @@ package admin
 import (
 	"strconv"
 
-	messagingModel "Qingyu_backend/models/messaging" // Imported for Swagger annotations
+	messagingModel "Qingyu_backend/models/messaging"
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	messagingService "Qingyu_backend/service/messaging"
 
@@ -115,9 +116,8 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [get]
 func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
@@ -150,9 +150,10 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 		return
 	}
 
-	// 从上下文获取当前用户ID
-	if userID, exists := c.Get("user_id"); exists {
-		req.CreatedBy = userID.(string)
+	// 从上下文获取当前用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
+	if userID != "" {
+		req.CreatedBy = userID
 	}
 
 	announcement, err := api.announcementService.CreateAnnouncement(c.Request.Context(), &req)
@@ -180,9 +181,8 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [put]
 func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 
@@ -215,9 +215,8 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 // @Failure 500 {object} shared.ErrorResponse
 // @Router /api/v1/admin/announcements/{id} [delete]
 func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.BadRequest(c, "公告ID不能为空", "")
+	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
+	if !ok {
 		return
 	}
 

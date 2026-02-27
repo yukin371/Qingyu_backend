@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"context"
 )
@@ -24,41 +25,19 @@ type CharacterService interface {
 }
 
 // CreateCharacterRequest 创建角色请求
-type CreateCharacterRequest struct {
-	Name              string   `json:"name" validate:"required"`
-	Alias             []string `json:"alias"`
-	Summary           string   `json:"summary"`
-	Traits            []string `json:"traits"`
-	Background        string   `json:"background"`
-	AvatarURL         string   `json:"avatarUrl"`
-	PersonalityPrompt string   `json:"personalityPrompt"`
-	SpeechPattern     string   `json:"speechPattern"`
-	CurrentState      string   `json:"currentState"`
-}
+// Deprecated: 使用 dto.CreateCharacterRequest 替代
+type CreateCharacterRequest = dto.CreateCharacterRequest
 
 // UpdateCharacterRequest 更新角色请求
-type UpdateCharacterRequest struct {
-	Name              *string   `json:"name"`
-	Alias             *[]string `json:"alias"`
-	Summary           *string   `json:"summary"`
-	Traits            *[]string `json:"traits"`
-	Background        *string   `json:"background"`
-	AvatarURL         *string   `json:"avatarUrl"`
-	PersonalityPrompt *string   `json:"personalityPrompt"`
-	SpeechPattern     *string   `json:"speechPattern"`
-	CurrentState      *string   `json:"currentState"`
-}
+// Deprecated: 使用 dto.UpdateCharacterRequest 替代
+type UpdateCharacterRequest = dto.UpdateCharacterRequest
 
 // CreateRelationRequest 创建关系请求
-type CreateRelationRequest struct {
-	FromID   string `json:"fromId" validate:"required"`
-	ToID     string `json:"toId" validate:"required"`
-	Type     string `json:"type" validate:"required"`
-	Strength int    `json:"strength"`
-	Notes    string `json:"notes"`
-}
+// Deprecated: 使用 dto.CreateRelationRequest 替代
+type CreateRelationRequest = dto.CreateRelationRequest
 
 // CharacterGraph 角色关系图
+// Deprecated: 保留角色模块特定类型
 type CharacterGraph struct {
 	Nodes []*writer.Character         `json:"nodes"`
 	Edges []*writer.CharacterRelation `json:"edges"`

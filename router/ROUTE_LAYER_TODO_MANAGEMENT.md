@@ -208,7 +208,8 @@ func InitBookstoreRouter(
 **优先级**: 🟢 低
 
 #### 9.2 推送通知API (Phase3)
-**位置**: `api/v1/shared/notification_api.go:241, 247`
+**位置**: 已废弃并迁移
+**说明**: `api/v1/shared/notification_api.go` 已删除，功能已迁移到 `api/v1/notifications/` 和 `router/notifications/`
 **优先级**: 🟢 低
 
 #### 9.3 搜索历史和热门搜索API (Phase3)

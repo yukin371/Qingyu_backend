@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -190,7 +191,7 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	if comment.State == social.CommentStateNormal {
 		if err := s.commentRepo.IncrementReplyCount(ctx, parentCommentID); err != nil {
 			// 非致命错误，只记录日志
-			fmt.Printf("Warning: Failed to increment reply count: %v\n", err)
+			log.Printf("Warning: failed to increment reply count")
 		}
 	}
 

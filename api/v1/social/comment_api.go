@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -48,22 +49,20 @@ type UpdateCommentRequest struct {
 //	@Router		/api/v1/reader/comments [post]
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	var req CreateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 发表评论
 	comment, err := api.commentService.PublishComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		req.BookID,
 		req.ChapterID,
 		req.Content,
@@ -128,9 +127,8 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [get]
 func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
@@ -152,29 +150,26 @@ func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [put]
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
 	var req UpdateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 更新评论
 	err := api.commentService.UpdateComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		commentID,
 		req.Content,
 	)
@@ -195,23 +190,21 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [delete]
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 删除评论
 	err := api.commentService.DeleteComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		commentID,
 	)
 
@@ -232,29 +225,26 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/reply [post]
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
-	parentCommentID := c.Param("id")
-	if parentCommentID == "" {
-		response.BadRequest(c, "参数错误", "父评论ID不能为空")
+	parentCommentID, ok := shared.GetRequiredParam(c, "id", "父评论ID")
+	if !ok {
 		return
 	}
 
 	var req ReplyCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 回复评论
 	comment, err := api.commentService.ReplyComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		parentCommentID,
 		req.Content,
 	)
@@ -275,23 +265,21 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/like [post]
 func (api *CommentAPI) LikeComment(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 点赞评论（实际实现将在LikeService中）
 	err := api.commentService.LikeComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		commentID,
 	)
 
@@ -311,23 +299,21 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/like [delete]
 func (api *CommentAPI) UnlikeComment(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 取消点赞评论（实际实现将在LikeService中）
 	err := api.commentService.UnlikeComment(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		commentID,
 	)
 
@@ -347,9 +333,8 @@ func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 //	@Success	200	{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/thread [get]
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 
@@ -406,9 +391,8 @@ func (api *CommentAPI) GetTopComments(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id}/replies [get]
 func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
-	commentID := c.Param("id")
-	if commentID == "" {
-		response.BadRequest(c, "参数错误", "评论ID不能为空")
+	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
+	if !ok {
 		return
 	}
 

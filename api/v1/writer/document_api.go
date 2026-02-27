@@ -2,6 +2,7 @@ package writer
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -202,8 +203,17 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 func (api *DocumentApi) ListDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	page, _ := c.GetQuery("page")
-	pageSize, _ := c.GetQuery("pageSize")
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("pageSize", "20")
+
+	page := 1
+	pageSize := 20
+	if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+		page = p
+	}
+	if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
+		pageSize = ps
+	}
 
 	req := &document.ListDocumentsRequest{
 		ProjectID: projectID,
