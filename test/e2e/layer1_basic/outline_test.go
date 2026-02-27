@@ -187,7 +187,7 @@ func TestOutlineManagement(t *testing.T) {
 			},
 		}
 
-		path := fmt.Sprintf("/api/v1/writer/projects/%s/documents/reorder", projectId)
+		path := fmt.Sprintf("/api/v1/writer/project/%s/documents/reorder", projectId)
 		w := env.DoRequest("PUT", path, reorderReq, token)
 
 		if w.Code == 200 {
@@ -210,13 +210,13 @@ func TestOutlineManagement(t *testing.T) {
 		}
 
 		updateReq := map[string]interface{}{
-			"title":     "第一卷：起源（修订版）",
-			"summary":   "这是故事的开端，英雄的旅程从这里开始",
-			"tension":   4,
+			"title":      "第一卷：起源（修订版）",
+			"summary":    "这是故事的开端，英雄的旅程从这里开始",
+			"tension":    4,
 			"characters": []string{"character_1", "character_2"},
 		}
 
-		path := fmt.Sprintf("/api/v1/documents/%s", outlineId.(string))
+		path := fmt.Sprintf("/api/v1/writer/documents/%s", outlineId.(string))
 		w := env.DoRequest("PUT", path, updateReq, token)
 
 		if w.Code == 200 {
@@ -272,7 +272,7 @@ func TestOutlineManagement(t *testing.T) {
 				"chapter_id": chapterId,
 			}
 
-			path := fmt.Sprintf("/api/v1/documents/%s", outlineChapterId.(string))
+			path := fmt.Sprintf("/api/v1/writer/documents/%s", outlineChapterId.(string))
 			w = env.DoRequest("PUT", path, updateReq, token)
 
 			if w.Code == 200 {
@@ -290,7 +290,7 @@ func TestOutlineManagement(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 		projectId := env.GetTestData("project_id").(string)
 
-		path := fmt.Sprintf("/api/v1/projects/%s/documents/tree", projectId)
+		path := fmt.Sprintf("/api/v1/writer/project/%s/documents/tree", projectId)
 		w := env.DoRequest("GET", path, nil, token)
 
 		if w.Code == 200 {
@@ -319,14 +319,14 @@ func TestOutlineManagement(t *testing.T) {
 
 		// 测试设置大纲特有属性
 		updateReq := map[string]interface{}{
-			"summary":   "修订后的摘要：英雄之旅的起点",
-			"tension":   7, // 提高紧张度
-			"type":      "英雄之旅-召唤", // 结构类型
+			"summary":    "修订后的摘要：英雄之旅的起点",
+			"tension":    7,         // 提高紧张度
+			"type":       "英雄之旅-召唤", // 结构类型
 			"characters": []string{"主角", "导师"},
 			"items":      []string{"神秘物品"},
 		}
 
-		path := fmt.Sprintf("/api/v1/documents/%s", outlineId.(string))
+		path := fmt.Sprintf("/api/v1/writer/documents/%s", outlineId.(string))
 		w := env.DoRequest("PUT", path, updateReq, token)
 
 		if w.Code == 200 {

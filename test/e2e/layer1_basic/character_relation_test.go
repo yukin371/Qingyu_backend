@@ -77,7 +77,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 			"background":  "出生在一个普通家庭，立志改变世界。",
 		}
 
-		w := env.DoRequest("POST", "/api/v1/writer/characters", character1Req, token)
+		w := env.DoRequest("POST", "/api/v1/writer/projects/"+projectId+"/characters", character1Req, token)
 
 		if w.Code == 200 || w.Code == 201 {
 			t.Log("✓ 角色1创建成功")
@@ -102,15 +102,15 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		// 创建第二个角色
 		character2Req := map[string]interface{}{
-			"projectId":  projectId,
-			"name":       "小红",
-			"type":       "supporting", // 配角
+			"projectId":   projectId,
+			"name":        "小红",
+			"type":        "supporting", // 配角
 			"personality": []string{"温柔", "坚强"},
-			"appearance": "一个美丽善良的女孩。",
-			"background": "小明的青梅竹马。",
+			"appearance":  "一个美丽善良的女孩。",
+			"background":  "小明的青梅竹马。",
 		}
 
-		w2 := env.DoRequest("POST", "/api/v1/writer/characters", character2Req, token)
+		w2 := env.DoRequest("POST", "/api/v1/writer/projects/"+projectId+"/characters", character2Req, token)
 
 		if w2.Code == 200 || w2.Code == 201 {
 			t.Log("✓ 角色2创建成功")
@@ -129,15 +129,15 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		// 创建第三个角色
 		character3Req := map[string]interface{}{
-			"projectId":  projectId,
-			"name":       "大魔王",
-			"type":       "antagonist", // 反派
+			"projectId":   projectId,
+			"name":        "大魔王",
+			"type":        "antagonist", // 反派
 			"personality": []string{"邪恶", "强大"},
-			"appearance": "一个神秘的黑暗人物。",
-			"background": "企图征服世界的邪恶势力领袖。",
+			"appearance":  "一个神秘的黑暗人物。",
+			"background":  "企图征服世界的邪恶势力领袖。",
 		}
 
-		w3 := env.DoRequest("POST", "/api/v1/writer/characters", character3Req, token)
+		w3 := env.DoRequest("POST", "/api/v1/writer/projects/"+projectId+"/characters", character3Req, token)
 
 		if w3.Code == 200 || w3.Code == 201 {
 			t.Log("✓ 角色3创建成功")
@@ -169,8 +169,8 @@ func TestCharacterRelationGraph(t *testing.T) {
 		relationReq := map[string]interface{}{
 			"sourceId":      char1Id,
 			"targetId":      char2Id,
-			"relationType":  "friend",     // 朋友
-			"relationLevel": 5,            // 关系强度 1-10
+			"relationType":  "friend", // 朋友
+			"relationLevel": 5,        // 关系强度 1-10
 			"description":   "青梅竹马的好朋友",
 		}
 
@@ -200,7 +200,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 		projectId := env.GetTestData("project_id").(string)
 
-		w := env.DoRequest("GET", "/api/v1/writer/characters?projectId="+projectId, nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/projects/"+projectId+"/characters", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 角色列表查询成功")
@@ -238,7 +238,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 			return
 		}
 
-		w := env.DoRequest("GET", "/api/v1/writer/characters/"+char1Id.(string), nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/characters/"+char1Id.(string)+"?projectId="+env.GetTestData("project_id").(string), nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 角色详情获取成功")
@@ -277,7 +277,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 		projectId := env.GetTestData("project_id").(string)
 
-		w := env.DoRequest("GET", "/api/v1/writer/characters/graph?projectId="+projectId, nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/projects/"+projectId+"/characters/graph", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 关系图生成成功")
@@ -328,7 +328,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 			"background":  fmt.Sprintf("更新后的背景_%s", t.Name()),
 		}
 
-		w := env.DoRequest("PUT", "/api/v1/writer/characters/"+char1Id.(string), updateReq, token)
+		w := env.DoRequest("PUT", "/api/v1/writer/characters/"+char1Id.(string)+"?projectId="+env.GetTestData("project_id").(string), updateReq, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 角色信息更新成功")
@@ -358,7 +358,7 @@ func TestCharacterRelationGraph(t *testing.T) {
 			return
 		}
 
-		w := env.DoRequest("DELETE", "/api/v1/writer/characters/"+char3Id.(string), nil, token)
+		w := env.DoRequest("DELETE", "/api/v1/writer/characters/"+char3Id.(string)+"?projectId="+env.GetTestData("project_id").(string), nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 角色删除成功")

@@ -35,6 +35,12 @@ func TestAdvancedAnalytics(t *testing.T) {
 
 		env.SetTestData("author_user", author)
 		env.SetTestData("auth_token", token)
+		// 创建书城书籍与章节，确保统计接口有目标资源
+		book := fixtures.CreateBook(author.ID.Hex())
+		for i := 0; i < 3; i++ {
+			fixtures.CreateChapter(book.ID.Hex())
+		}
+		env.SetTestData("book_id", book.ID.Hex())
 		t.Logf("✓ 作者准备完成")
 	})
 
@@ -97,10 +103,10 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试阅读热力图...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		bookID := env.GetTestData("book_id").(string)
 
 		// 获取热力图数据
-		w := env.DoRequest("GET", "/api/v1/writer/stats/heatmap?projectId="+projectId, nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/heatmap", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 热力图数据获取成功")
@@ -142,10 +148,10 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试章节留存率分析...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		bookID := env.GetTestData("book_id").(string)
 
 		// 获取留存率数据
-		w := env.DoRequest("GET", "/api/v1/writer/stats/retention?projectId="+projectId, nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/retention?days=7", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 留存率数据获取成功")
@@ -202,10 +208,10 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试跳出点分析...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		bookID := env.GetTestData("book_id").(string)
 
 		// 获取跳出点数据
-		w := env.DoRequest("GET", "/api/v1/writer/stats/bounce-points?projectId="+projectId, nil, token)
+		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/drop-off-points", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 跳出点数据获取成功")
@@ -259,15 +265,15 @@ func TestAdvancedAnalytics(t *testing.T) {
 		}
 	})
 
-	// 测试场景4: 阅读时长分布
+	// 测试场景4: 每日统计分布
 	t.Run("场景4_阅读时长分布", func(t *testing.T) {
-		t.Log("测试阅读时长分布...")
+		t.Log("测试每日统计分布...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		bookID := env.GetTestData("book_id").(string)
 
-		// 获取阅读时长分布
-		w := env.DoRequest("GET", "/api/v1/writer/stats/reading-duration?projectId="+projectId, nil, token)
+		// 获取每日统计
+		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/daily-stats?days=7", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 阅读时长分布获取成功")
@@ -298,21 +304,21 @@ func TestAdvancedAnalytics(t *testing.T) {
 				}
 			}
 		} else if w.Code == 404 {
-			t.Log("⚠ 阅读时长API未实现（404）")
+			t.Log("⚠ 每日统计API未实现（404）")
 		} else {
-			t.Logf("ℹ 阅读时长分布获取尝试，状态码: %d", w.Code)
+			t.Logf("ℹ 每日统计获取尝试，状态码: %d", w.Code)
 		}
 	})
 
-	// 测试场景5: 用户行为路径分析
+	// 测试场景5: 热门章节分析
 	t.Run("场景5_用户行为路径分析", func(t *testing.T) {
-		t.Log("测试用户行为路径分析...")
+		t.Log("测试热门章节分析...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		bookID := env.GetTestData("book_id").(string)
 
-		// 获取用户行为路径
-		w := env.DoRequest("GET", "/api/v1/writer/stats/user-paths?projectId="+projectId, nil, token)
+		// 获取热门章节
+		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/top-chapters", nil, token)
 
 		if w.Code == 200 {
 			t.Log("✓ 用户行为路径获取成功")
@@ -353,9 +359,9 @@ func TestAdvancedAnalytics(t *testing.T) {
 				}
 			}
 		} else if w.Code == 404 {
-			t.Log("⚠ 用户行为路径API未实现（404）")
+			t.Log("⚠ 热门章节API未实现（404）")
 		} else {
-			t.Logf("ℹ 用户行为路径获取尝试，状态码: %d", w.Code)
+			t.Logf("ℹ 热门章节获取尝试，状态码: %d", w.Code)
 		}
 	})
 

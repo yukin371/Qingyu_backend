@@ -76,8 +76,7 @@ func testPermissionModelIntegrity(t *testing.T) {
 		if err == nil {
 			// 验证必需字段
 			assert.NotEmpty(t, permission.ID, "权限ID不应为空")
-			assert.NotEmpty(t, permission.Resource, "资源不应为空")
-			assert.NotEmpty(t, permission.Action, "操作不应为空")
+			assert.NotEmpty(t, permission.Code, "权限代码不应为空")
 			t.Logf("✓ 权限模型结构正确: %+v", permission)
 		} else {
 			t.Log("○ 权限集合为空或查询失败")
@@ -205,9 +204,9 @@ func testPermissionInheritance(t *testing.T) {
 
 		// 查询admin角色的权限
 		var adminPermissions []auth.Permission
-		cursor, err := mongoDB.Collection("role_permissions").Find(
+		cursor, err := mongoDB.Collection("permissions").Find(
 			context.Background(),
-			bson.M{"role": "admin"},
+			bson.M{},
 		)
 
 		if err == nil {
@@ -218,15 +217,15 @@ func testPermissionInheritance(t *testing.T) {
 
 			// 验证admin角色应该有的权限
 			expectedPermissions := []string{
-				"user:read",
-				"user:write",
-				"user:delete",
+				"user.read",
+				"user.write",
+				"user.delete",
 			}
 
 			for _, expected := range expectedPermissions {
 				found := false
 				for _, perm := range adminPermissions {
-					if perm.Resource+":"+perm.Action == expected {
+					if perm.Code == expected {
 						found = true
 						break
 					}
