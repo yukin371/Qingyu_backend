@@ -61,7 +61,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 			response.Conflict(c, "版本冲突", "文档已被其他用户修改，请刷新后重试")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 
 	status, err := api.documentService.GetSaveStatus(ctx, documentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -115,7 +115,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 
 	content, err := api.documentService.GetDocumentContent(ctx, documentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	}
 
 	if err := api.documentService.UpdateDocumentContent(ctx, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -201,7 +201,7 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 
 	config, err := api.shortcutService.GetUserShortcuts(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -231,7 +231,7 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 	}
 
 	if err := api.shortcutService.UpdateUserShortcuts(c.Request.Context(), userID.(string), req.Shortcuts); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -254,7 +254,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 	}
 
 	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID.(string)); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -278,7 +278,7 @@ func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
 
 	help, err := api.shortcutService.GetShortcutHelp(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

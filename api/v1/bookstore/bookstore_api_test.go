@@ -13,6 +13,7 @@ import (
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/shared"
+	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -256,6 +257,10 @@ func (m *MockBookstoreService) GetSimilarBooks(ctx context.Context, bookID strin
 func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandler.Handler())
 
 	logger := logger.Get()
 	api := NewBookstoreAPI(service, nil, logger)

@@ -94,6 +94,20 @@ func setupPublishTestRouter(publishService interfaces.PublishService, userID str
 		c.Next()
 	})
 
+	// 添加错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误写入
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			c.JSON(500, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+
 	publishAPI := writer.NewPublishApi(publishService)
 	r.POST("/api/v1/writer/projects/:id/publish", publishAPI.PublishProject)
 

@@ -49,7 +49,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 
 	resp, err := api.projectService.CreateProject(ctx, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 
 	project, err := api.projectService.GetProject(ctx, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 
 	resp, err := api.projectService.ListMyProjects(ctx, req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	}
 
 	if err := api.projectService.UpdateProject(ctx, projectID, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	}
 
 	if err := api.projectService.DeleteProject(ctx, projectID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 
 	// 调用Service计算并更新统计信息
 	if err := api.projectService.RecalculateProjectStatistics(ctx, projectID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

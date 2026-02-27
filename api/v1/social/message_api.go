@@ -77,7 +77,7 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 		if err == modelsMessaging.ErrConversationNotFound {
 			response.NotFound(c, "会话不存在")
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -106,7 +106,7 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 		after,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -177,7 +177,7 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 		if err == modelsMessaging.ErrConversationNotFound {
 			response.NotFound(c, "会话不存在")
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -218,7 +218,7 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 	// 保存消息
 	savedMessage, err := api.messageService.Create(c.Request.Context(), message)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -291,7 +291,7 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 		userID,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -342,7 +342,7 @@ func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {
 		readAt,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

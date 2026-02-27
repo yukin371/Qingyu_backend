@@ -54,7 +54,7 @@ func (api *FollowAPI) FollowUser(c *gin.Context) {
 		} else if errMsg == "已经关注过该用户" {
 			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -90,7 +90,7 @@ func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 		if errMsg == "未关注该用户" {
 			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -136,7 +136,7 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -186,7 +186,7 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -227,7 +227,7 @@ func (api *FollowAPI) CheckFollowStatus(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -290,7 +290,7 @@ func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 		if errMsg == "已经关注过该作者" {
 			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -331,7 +331,7 @@ func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 		if errMsg == "未关注该作者" {
 			response.BadRequest(c, "操作失败", errMsg)
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -376,7 +376,7 @@ func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

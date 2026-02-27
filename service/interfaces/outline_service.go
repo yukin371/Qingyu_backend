@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"context"
 )
@@ -20,32 +21,15 @@ type OutlineService interface {
 }
 
 // CreateOutlineRequest 创建大纲请求
-type CreateOutlineRequest struct {
-	Title      string   `json:"title" validate:"required"`
-	ParentID   string   `json:"parentId"`
-	Summary    string   `json:"summary"`
-	Type       string   `json:"type"`
-	Tension    int      `json:"tension"`
-	ChapterID  string   `json:"chapterId"`
-	Characters []string `json:"characters"`
-	Items      []string `json:"items"`
-	Order      int      `json:"order"`
-}
+// Deprecated: 使用 dto.CreateOutlineRequest 替代
+type CreateOutlineRequest = dto.CreateOutlineRequest
 
 // UpdateOutlineRequest 更新大纲请求
-type UpdateOutlineRequest struct {
-	Title      *string   `json:"title"`
-	ParentID   *string   `json:"parentId"`
-	Summary    *string   `json:"summary"`
-	Type       *string   `json:"type"`
-	Tension    *int      `json:"tension"`
-	ChapterID  *string   `json:"chapterId"`
-	Characters *[]string `json:"characters"`
-	Items      *[]string `json:"items"`
-	Order      *int      `json:"order"`
-}
+// Deprecated: 使用 dto.UpdateOutlineRequest 替代
+type UpdateOutlineRequest = dto.UpdateOutlineRequest
 
 // OutlineTreeNode 大纲树节点
+// Deprecated: 保留大纲模块特定类型
 type OutlineTreeNode struct {
 	*writer.OutlineNode
 	Children []*OutlineTreeNode `json:"children,omitempty"`

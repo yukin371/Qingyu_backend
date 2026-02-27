@@ -46,9 +46,14 @@ func ErrorMiddleware(service string) gin.HandlerFunc {
 		// 检查是否有错误写入
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": "内部服务器错误",
+
+			// 使用MapToHTTPStatus映射错误到正确的HTTP状态码
+			statusCode := MapToHTTPStatus(err.Err)
+			errorMessage := GetErrorMessage(err.Err)
+
+			c.JSON(statusCode, gin.H{
+				"code":    statusCode,
+				"message": errorMessage,
 				"details": err.Error(),
 			})
 		}

@@ -2,7 +2,6 @@ package bookstore
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -52,11 +51,7 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 
 	chapter, err := api.service.GetChapterByID(c.Request.Context(), id.Hex())
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -102,7 +97,7 @@ func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 
 	chapters, total, err := api.service.GetChaptersByBookID(c.Request.Context(), bookID.Hex(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -145,11 +140,7 @@ func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
 
 	chapter, err := api.service.GetChapterByBookIDAndNum(c.Request.Context(), bookID.Hex(), chapterNum)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -195,7 +186,7 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 
 	chapters, total, err := api.service.GetFreeChaptersByBookID(c.Request.Context(), bookID.Hex(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -241,7 +232,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 
 	chapters, total, err := api.service.GetPaidChaptersByBookID(c.Request.Context(), bookID.Hex(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -287,7 +278,7 @@ func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
 
 	chapters, total, err := api.service.GetPublishedChaptersByBookID(c.Request.Context(), bookID.Hex(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -323,17 +314,13 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	// 先获取当前章节信息
 	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id.Hex())
 	if err != nil {
-		response.NotFound(c, "当前章节不存在")
+		c.Error(err)
 		return
 	}
 
 	chapter, err := api.service.GetPreviousChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "上一章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -369,17 +356,13 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	// 先获取当前章节信息
 	currentChapter, err := api.service.GetChapterByID(c.Request.Context(), id.Hex())
 	if err != nil {
-		response.NotFound(c, "当前章节不存在")
+		c.Error(err)
 		return
 	}
 
 	chapter, err := api.service.GetNextChapter(c.Request.Context(), currentChapter.BookID, currentChapter.ChapterNum)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "下一章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -414,11 +397,7 @@ func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
 
 	chapter, err := api.service.GetFirstChapter(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "第一章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -453,11 +432,7 @@ func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
 
 	chapter, err := api.service.GetLastChapter(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "最后章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -500,11 +475,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 
 	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID.Hex())
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "章节内容不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -548,7 +519,7 @@ func (api *ChapterAPI) SearchChapters(c *gin.Context) {
 
 	chapters, total, err := api.service.SearchChapters(c.Request.Context(), keyword, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -583,25 +554,25 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 	// 获取统计信息
 	totalCount, err := api.service.GetChapterCountByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	freeCount, err := api.service.GetFreeChapterCountByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	paidCount, err := api.service.GetPaidChapterCountByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	totalWordCount, err := api.service.GetTotalWordCountByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -636,7 +607,7 @@ func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 	}
 
 	if err := api.service.CreateChapter(c.Request.Context(), &chapter); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -679,11 +650,7 @@ func (api *ChapterAPI) UpdateChapter(c *gin.Context) {
 	chapter.ID = id.Hex()
 
 	if err := api.service.UpdateChapter(c.Request.Context(), &chapter); err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -717,11 +684,7 @@ func (api *ChapterAPI) DeleteChapter(c *gin.Context) {
 	}
 
 	if err := api.service.DeleteChapter(c.Request.Context(), id.Hex()); err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

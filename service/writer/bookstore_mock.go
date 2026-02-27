@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	serviceInterfaces "Qingyu_backend/service/interfaces"
+	"Qingyu_backend/models/dto"
 )
 
 // MockBookstoreClient Mock书城客户端
@@ -44,10 +44,10 @@ func (m *MockBookstoreClient) UpdateChapter(ctx context.Context, req *BookstoreU
 	return args.Error(0)
 }
 
-func (m *MockBookstoreClient) GetStatistics(ctx context.Context, projectID, bookstoreID string) (*serviceInterfaces.PublicationStatistics, error) {
+func (m *MockBookstoreClient) GetStatistics(ctx context.Context, projectID, bookstoreID string) (*dto.PublicationStatistics, error) {
 	args := m.Called(ctx, projectID, bookstoreID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*serviceInterfaces.PublicationStatistics), args.Error(1)
+	return args.Get(0).(*dto.PublicationStatistics), args.Error(1)
 }

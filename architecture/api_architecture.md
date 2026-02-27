@@ -15,6 +15,8 @@
 - [重构前后对比图](#重构前后对比图)
 - [模块依赖关系图](#模块依赖关系图)
 - [数据流图](#数据流图)
+- [通信模块架构](#通信模块架构)
+- [AI模块架构](#ai模块架构)
 
 ---
 
@@ -709,6 +711,495 @@ graph TB
 
 ---
 
+## 通信模块架构
+
+通信模块负责系统内所有信息传递功能，由三个独立但互补的通信系统组成。
+
+### 三个通信系统的独立性
+
+```mermaid
+graph TB
+    subgraph "Announcements（公告）"
+        A1[方向: Platform → Users]
+        A2[可见性: 公开]
+        A3[模式: 一对多]
+        A4[存储: 集中式]
+        A5[推送: 被动获取]
+    end
+
+    subgraph "Notifications（通知）"
+        N1[方向: System → User]
+        N2[可见性: 私有]
+        N3[模式: 事件驱动]
+        N4[存储: 按用户]
+        N5[推送: 主动推送]
+    end
+
+    subgraph "Messages（消息）"
+        M1[方向: User ↔ User]
+        M2[可见性: 私有]
+        M3[模式: 点对点]
+        M4[存储: 按会话]
+        M5[推送: 实时推送]
+    end
+
+    A1 --> A2 --> A3 --> A4 --> A5
+    N1 --> N2 --> N3 --> N4 --> N5
+    M1 --> M2 --> M3 --> M4 --> M5
+
+    classDef announcements fill:#e1f5fe
+    classDef notifications fill:#f3e5f5
+    classDef messages fill:#fff9c4
+
+    class A1,A2,A3,A4,A5 announcements
+    class N1,N2,N3,N4,N5 notifications
+    class M1,M2,M3,M4,M5 messages
+```
+
+### 通信模块对比
+
+| 特性 | Announcements | Notifications | Messages |
+|------|--------------|---------------|----------|
+| **方向** | Platform → Users | System → User | User ↔ User |
+| **触发者** | 管理员 | 系统事件 | 用户 |
+| **接收者** | 所有用户/特定角色 | 单个用户 | 参与会话的用户 |
+| **可见性** | 公开 | 私有 | 私有 |
+| **模式** | 一对多 | 一对一 | 点对点 |
+| **存储** | Announcement集合 | 按UserID分片 | 按ConversationID组织 |
+| **推送方式** | 被动获取 + WebSocket广播 | WebSocket/邮件/短信 | WebSocket实时推送 |
+| **过期策略** | 按有效期 | 按ReadAt | 永久保存 |
+| **API路径** | `/api/v1/announcements` | `/api/v1/notifications` | `/api/v1/social/messages` |
+| **认证要求** | 公开API无需认证 | 需要JWT认证 | 需要JWT认证 |
+
+### 通信模块数据流
+
+```mermaid
+sequenceDiagram
+    participant Admin as 管理员
+    participant System as 系统事件
+    participant User as 用户
+    participant AnnAPI as Announcements API
+    participant NotifAPI as Notifications API
+    participant MsgAPI as Messages API
+    participant DB as 数据库
+    participant WS as WebSocket Hub
+
+    Note over AnnAPI,WS: 公告流程
+    Admin->>AnnAPI: 创建公告
+    AnnAPI->>DB: 保存公告
+    User->>AnnAPI: 获取有效公告
+    AnnAPI->>DB: 查询公告
+    DB-->>AnnAPI: 返回公告
+    AnnAPI-->>User: 返回公告列表
+    AnnAPI->>WS: 广播新公告
+
+    Note over AnnAPI,WS: 通知流程
+    System->>NotifAPI: 触发事件
+    NotifAPI->>DB: 创建通知
+    NotifAPI->>WS: 推送通知
+    WS-->>User: 实时推送
+    NotifAPI->>NotifAPI: 发送邮件/短信
+
+    Note over AnnAPI,WS: 消息流程
+    User->>MsgAPI: 发送消息
+    MsgAPI->>DB: 保存消息
+    MsgAPI->>WS: 实时推送
+    WS-->>User: 推送给接收者
+    User->>MsgAPI: 标记已读
+    MsgAPI->>DB: 更新已读状态
+```
+
+### 通信模块路由组织
+
+```
+api/v1/
+├── announcements/              # 公开API
+│   ├── GET    /effective      # 获取有效公告
+│   ├── GET    /:id            # 获取公告详情
+│   └── POST   /:id/view       # 增加查看次数
+│
+├── notifications/              # 需要认证
+│   ├── GET    /               # 获取通知列表
+│   ├── GET    /:id            # 获取通知详情
+│   ├── POST   /:id/read       # 标记已读
+│   ├── POST   /batch-read     # 批量标记已读
+│   ├── POST   /read-all       # 标记全部已读
+│   ├── DELETE /:id            # 删除通知
+│   ├── POST   /batch-delete   # 批量删除
+│   ├── DELETE /delete-all     # 删除全部
+│   ├── POST   /clear-read     # 清除已读
+│   ├── GET    /unread-count   # 未读数量
+│   ├── GET    /stats          # 通知统计
+│   ├── GET    /preferences    # 偏好设置
+│   ├── PUT    /preferences    # 更新偏好
+│   ├── POST   /:id/resend     # 重新发送
+│   └── GET    /ws-endpoint    # WebSocket端点
+│
+├── social/                     # 需要认证
+│   └── messages/
+│       ├── GET    /conversations              # 获取会话列表
+│       ├── POST   /conversations              # 创建会话
+│       ├── GET    /conversations/:id/messages # 获取消息
+│       ├── POST   /conversations/:id/messages # 发送消息
+│       └── POST   /conversations/:id/read     # 标记已读
+│
+└── admin/                      # 管理员API
+    └── announcements/
+        ├── GET    /                           # 获取公告列表
+        ├── POST   /                           # 创建公告
+        ├── PUT    /:id                        # 更新公告
+        ├── DELETE /:id                        # 删除公告
+        ├── POST   /batch/status               # 批量更新状态
+        └── DELETE /batch                      # 批量删除
+```
+
+### WebSocket实时推送
+
+```mermaid
+graph TB
+    subgraph "WebSocket Hubs"
+        NotifWS[NotificationWSHub<br/>通知推送]
+        MsgWS[MessagingWSHub<br/>消息推送]
+    end
+
+    subgraph "客户端连接"
+        Client1[Web客户端]
+        Client2[移动端]
+        Client3[其他端]
+    end
+
+    subgraph "消息来源"
+        Event1[系统事件]
+        Event2[用户消息]
+        Event3[新公告]
+    end
+
+    Event1 --> NotifWS
+    Event2 --> MsgWS
+    Event3 --> NotifWS
+
+    NotifWS --> Client1
+    NotifWS --> Client2
+    NotifWS --> Client3
+
+    MsgWS --> Client1
+    MsgWS --> Client2
+    MsgWS --> Client3
+
+    classDef hub fill:#e1f5fe
+    classDef client fill:#c8e6c9
+    classDef event fill:#fff9c4
+
+    class NotifWS,MsgWS hub
+    class Client1,Client2,Client3 client
+    class Event1,Event2,Event3 event
+```
+
+### 废弃模块记录
+
+在Phase 3重构中，以下模块已被废弃：
+
+| 文件 | 废弃原因 | 替代方案 |
+|------|----------|----------|
+| `api/v1/shared/notification_api.go` | 功能被完全覆盖 | `api/v1/notifications/notification_api.go` |
+| `api/v1/messages/message_api.go` | 旧版消息API | `api/v1/social/message_api.go` (MessageAPIV2) |
+
+### 重构改进统计
+
+- **删除废弃代码**: 272行
+- **减少重复代码**: ~50行
+- **统一响应格式**: 所有通信模块使用`pkg/response`包
+- **统一参数验证**: 应用`shared.GetRequiredParam`、`shared.GetIntParam`等辅助函数
+- **测试覆盖**: 178个测试全部通过
+
+### 相关文档
+
+- [Announcements API](../api/v1/announcements/README.md)
+- [Notifications API](../api/v1/notifications/README.md)
+- [Social API](../api/v1/social/README.md)
+- [Phase 3 完成报告](../docs/plans/phase3_completion_report.md)
+
+---
+
+## AI模块架构
+
+### AI服务整体架构
+
+```mermaid
+graph TB
+    subgraph "API层"
+        AIAPI[ai/ API Handler]
+    end
+
+    subgraph "AI服务层 (service/ai)"
+        AIService[AIService]
+        UnifiedClient[UnifiedClient<br/>统一gRPC客户端]
+        QuotaService[QuotaService<br/>配额服务]
+    end
+
+    subgraph "监控与追踪"
+        GRPCMetrics[GRPCMetrics<br/>调用统计]
+        Tracer[Tracer<br/>请求追踪]
+    end
+
+    subgraph "AI服务 (Python)"
+        AIgRPC[AIService gRPC Server]
+        AgentExec[Agent Executor]
+        Workflow[Creative Workflow]
+    end
+
+    subgraph "外部AI服务"
+        OpenAI[OpenAI]
+        Claude[Claude]
+        Gemini[Gemini]
+        Qwen[Qwen]
+    end
+
+    subgraph "数据存储"
+        MongoQuota[(MongoDB<br/>配额数据)]
+        RedisCache[(Redis<br/>配额缓存)]
+    end
+
+    AIAPI --> AIService
+    AIService --> UnifiedClient
+    AIService --> QuotaService
+
+    UnifiedClient --> AIgRPC
+    AIgRPC --> AgentExec
+    AIgRPC --> Workflow
+
+    AgentExec --> OpenAI
+    AgentExec --> Claude
+    AgentExec --> Gemini
+    AgentExec --> Qwen
+
+    UnifiedClient -.监控.-> GRPCMetrics
+    UnifiedClient -.追踪.-> Tracer
+    UnifiedClient -.配额.-> QuotaService
+
+    QuotaService --> MongoQuota
+    QuotaService --> RedisCache
+
+    classDef api fill:#e8f5e9
+    classDef service fill:#fff9c4
+    classDef monitor fill:#e1f5fe
+    classDef ai fill:#f3e5f5
+    classDef external fill:#fce4ec
+    classDef storage fill:#efebe9
+
+    class AIAPI api
+    class AIService,UnifiedClient,QuotaService service
+    class GRPCMetrics,Tracer monitor
+    class AIgRPC,AgentExec,Workflow ai
+    class OpenAI,Claude,Gemini,Qwen external
+    class MongoQuota,RedisCache storage
+```
+
+### gRPC调用流程
+
+```mermaid
+sequenceDiagram
+    participant API as API Handler
+    participant Service as AI Service
+    participant Client as UnifiedClient
+    participant Metrics as GRPCMetrics
+    participant Tracer as Tracer
+    participant AI as AI Service (Python)
+    participant Quota as QuotaService
+
+    API->>Service: 调用AI方法
+    Service->>Client: ExecuteAgent/GenerateOutline...
+    Client->>Tracer: startTrace()
+    Client->>AI: gRPC请求
+
+    Note over AI: 处理请求
+
+    AI-->>Client: gRPC响应
+
+    alt 成功
+        Client->>Metrics: recordCall(success)
+        Client->>Metrics: recordLatency()
+        Client->>Tracer: endTrace(success)
+        Client->>Quota: consumeQuota() [异步]
+        Note over Quota: 不影响主流程
+        Client-->>Service: 返回结果
+    else 失败
+        Client->>Metrics: recordCall(failed)
+        Client->>Tracer: endTrace(failed)
+        Client-->>Service: 返回错误
+    end
+
+    Service-->>API: 返回响应
+```
+
+### 监控架构
+
+```mermaid
+graph TB
+    subgraph "监控数据收集"
+        UnifiedClient[UnifiedClient]
+    end
+
+    subgraph "GRPCMetrics (调用统计)"
+        Calls[ServiceStats<br/>调用统计]
+        Performance[PerformanceStats<br/>性能统计]
+        QuotaMetrics[QuotaMetrics<br/>配额统计]
+    end
+
+    subgraph "监控指标"
+        TotalCalls[总调用数]
+        SuccessRate[成功率]
+        Latency[延迟统计]
+        P95P99[P95/P99延迟]
+        Timeouts[超时次数]
+        Retries[重试次数]
+        QuotaConsumed[配额消耗]
+        QuotaShortage[配额不足]
+    end
+
+    subgraph "报告输出"
+        ConsoleReport[控制台报告]
+        MetricsAPI[监控API]
+        AlertSystem[告警系统]
+    end
+
+    UnifiedClient --> Calls
+    UnifiedClient --> Performance
+    UnifiedClient --> QuotaMetrics
+
+    Calls --> TotalCalls
+    Calls --> SuccessRate
+
+    Performance --> Latency
+    Performance --> P95P99
+    Performance --> Timeouts
+    Performance --> Retries
+
+    QuotaMetrics --> QuotaConsumed
+    QuotaMetrics --> QuotaShortage
+
+    TotalCalls --> ConsoleReport
+    SuccessRate --> MetricsAPI
+    Latency --> MetricsAPI
+    QuotaShortage --> AlertSystem
+
+    classDef client fill:#e8f5e9
+    classDef metrics fill:#fff9c4
+    classDef indicators fill:#e1f5fe
+    classDef output fill:#f3e5f5
+
+    class UnifiedClient client
+    class Calls,Performance,QuotaMetrics metrics
+    class TotalCalls,SuccessRate,Latency,P95P99,Timeouts,Retries,QuotaConsumed,QuotaShortage indicators
+    class ConsoleReport,MetricsAPI,AlertSystem output
+```
+
+### 配额管理流程
+
+```mermaid
+graph TB
+    Start[AI请求开始] --> CheckQuota{检查配额}
+
+    CheckQuota -->|充足| CallAI[调用AI服务]
+    CheckQuota -->|不足| ReturnError[返回配额不足错误]
+
+    CallAI --> AIResponse{AI响应}
+    AIResponse -->|成功| GetTokens[获取使用tokens]
+    AIResponse -->|失败| HandleError[处理错误]
+
+    GetTokens --> ConsumeQuota[异步扣除配额]
+    ConsumeQuota --> UpdateDB[更新数据库]
+    UpdateDB --> InvalidateCache[清除缓存]
+    InvalidateCache --> CheckWarning{检查预警阈值}
+
+    CheckWarning -->|低于20%| PublishWarning[发布预警]
+    CheckWarning -->|低于10%| PublishCritical[发布严重预警]
+    CheckWarning -->|正常| Finish[完成]
+    CheckWarning -->|发布失败| LogError[记录日志]
+
+    PublishWarning --> Finish
+    PublishCritical --> Finish
+    LogError --> Finish
+
+    HandleError --> RestoreQuota{需要恢复配额?}
+    RestoreQuota -->|是| Restore[恢复配额]
+    RestoreQuota -->|否| Finish
+    Restore --> Finish
+
+    ReturnError --> End[结束]
+    Finish --> End
+
+    classDef success fill:#c8e6c9
+    classDef error fill:#ffcdd2
+    classDef warning fill:#fff9c4
+    classDef process fill:#e1f5fe
+
+    class CallAI,GetTokens,ConsumeQuota,UpdateDB,InvalidateCache,Restore success
+    class ReturnError,HandleError,LogError error
+    class CheckWarning,PublishWarning,PublishCritical,RestoreQuota warning
+    class CheckQuota,AIResponse,Finish,Start,End process
+```
+
+### AI服务列表
+
+| 服务名 | 端点 | 方法 | 描述 | 超时 |
+|--------|------|------|------|------|
+| **ExecuteAgent** | `/grpc.AIService/ExecuteAgent` | POST | 执行AI Agent工作流 | 30s |
+| **GenerateOutline** | `/grpc.AIService/GenerateOutline` | POST | 生成故事大纲 | 30s |
+| **GenerateCharacters** | `/grpc.AIService/GenerateCharacters` | POST | 生成角色设定 | 30s |
+| **GeneratePlot** | `/grpc.AIService/GeneratePlot` | POST | 生成情节设定 | 30s |
+| **ExecuteCreativeWorkflow** | `/grpc.AIService/ExecuteCreativeWorkflow` | POST | 执行完整创作工作流 | 120s |
+| **HealthCheck** | `/grpc.AIService/HealthCheck` | POST | 健康检查 | 5s |
+
+### AI模块文件组织
+
+```
+service/ai/
+├── unified_client.go          # 统一gRPC客户端
+├── grpc_client.go             # 基础gRPC客户端
+├── phase3_client.go           # Phase3客户端（创作相关）
+├── grpc_metrics.go            # 监控指标
+├── grpc_tracing.go            # 请求追踪
+├── grpc_errors.go             # 错误处理
+├── quota_service.go           # 配额服务
+├── ai_service.go              # AI服务配置
+├── text_service.go            # 文本服务
+├── image_service.go           # 图片服务
+├── proofread_service.go       # 校对服务
+├── summarize_service.go       # 摘要服务
+├── sensitive_words_service.go # 敏感词服务
+├── context_service.go         # 上下文服务
+├── chat_service.go            # 聊天服务
+├── chat_repository.go         # 聊天仓储
+├── chat_repository_memory.go  # 内存聊天仓储
+├── adapter/                   # AI适配器
+│   ├── adapter_interface.go   # 适配器接口
+│   ├── manager.go             # 适配器管理器
+│   ├── openai.go              # OpenAI适配器
+│   ├── claude.go              # Claude适配器
+│   ├── gemini.go              # Gemini适配器
+│   ├── qwen.go                # Qwen适配器
+│   ├── glm.go                 # GLM适配器
+│   ├── wenxin.go              # 文心适配器
+│   ├── deepseek_adapter.go    # DeepSeek适配器
+│   └── retry.go               # 重试逻辑
+├── dto/                       # 数据传输对象
+│   ├── chat_dto.go            # 聊天DTO
+│   └── writing_assistant_dto.go # 写作助手DTO
+├── mocks/                     # Mock对象
+│   └── ai_adapter_mock.go     # AI适配器Mock
+├── ai_service_test.go         # 服务测试
+└── grpc_monitor_test.go       # 监控测试
+```
+
+### 相关文档
+
+- [gRPC对接文档](../docs/architecture/ai_grpc_integration.md)
+- [配额管理指南](../docs/guides/quota_management.md)
+- [AI服务配置](../docs/configuration/ai_service_config.md)
+
+---
+
 ## 文档说明
 
 ### 图例说明
@@ -733,8 +1224,10 @@ graph TB
 | 日期 | 版本 | 变更内容 |
 |------|------|----------|
 | 2026-02-26 | v1.0 | 初始版本，创建所有架构图 |
+| 2026-02-27 | v1.1 | 添加通信模块架构详细说明 |
+| 2026-02-27 | v1.2 | 添加AI模块架构、gRPC调用流程、监控架构、配额流程 |
 
 ---
 
 **维护者**: Backend Architecture Team
-**最后更新**: 2026-02-26
+**最后更新**: 2026-02-27

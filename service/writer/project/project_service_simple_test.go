@@ -359,9 +359,11 @@ func TestProjectService_UpdateProject_Success(t *testing.T) {
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
 
 	// Act
+	newTitle := "新标题"
+	newSummary := "新简介"
 	req := &UpdateProjectRequest{
-		Title:   "新标题",
-		Summary: "新简介",
+		Title:   &newTitle,
+		Summary: &newSummary,
 	}
 	err := projectService.UpdateProject(ctx, projectID, req)
 

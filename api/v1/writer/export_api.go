@@ -59,7 +59,7 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 
 	task, err := api.exportService.ExportDocument(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 
 	task, err := api.exportService.ExportProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 
 	file, err := api.exportService.DownloadExportFile(c.Request.Context(), taskID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -188,7 +188,7 @@ func (api *ExportApi) ListExportTasks(c *gin.Context) {
 
 	tasks, total, err := api.exportService.ListExportTasks(c.Request.Context(), projectID, page, pageSize)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -223,7 +223,7 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 
 	err := api.exportService.DeleteExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (api *ExportApi) CancelExportTask(c *gin.Context) {
 
 	err := api.exportService.CancelExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

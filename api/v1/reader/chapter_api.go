@@ -1,10 +1,9 @@
 package reader
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
 	"Qingyu_backend/pkg/response"
@@ -51,40 +50,38 @@ func NewChapterAPI(chapterService interfaces.ReaderChapterService) *ChapterAPI {
 // @Router /reader/books/{bookId}/chapters/{chapterId} [get]
 
 func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetChapterContentParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, bookID, chapterID)
+	// 调用Service层
+	content, err := api.chapterService.GetChapterContent(c.Request.Context(), userID, params.BookID, params.ChapterID)
+
+	// 简化的错误处理（保留关键错误类型检查）
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
+	if err == readerservice.ErrChapterNotPublished {
+		response.Forbidden(c, "章节未发布")
+		return
+	}
+	if err == readerservice.ErrAccessDenied {
+		response.Forbidden(c, "无权访问")
+		return
+	}
 	if err != nil {
-		if err == readerservice.ErrChapterNotFound {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		if err == readerservice.ErrChapterNotPublished {
-			response.Forbidden(c, "章节未发布")
-			return
-		}
-		if err == readerservice.ErrAccessDenied && content != nil {
-			// 返回访问拒绝响应
-			response.Forbidden(c, "无权访问")
-			return
-		}
 		response.InternalError(c, err)
 		return
 	}
 
-	response.Success(c, content)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", content)
 }
 
 // GetChapterByNumber 根据章节号获取内容
@@ -102,36 +99,34 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/by-number/{chapterNum} [get]
 func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterNumStr := c.Param("chapterNum")
-
-	chapterNum, err := strconv.Atoi(chapterNumStr)
-	if err != nil || chapterNum <= 0 {
-		response.BadRequest(c,  "参数错误", "无效的章节号")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetChapterByNumberParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, bookID, chapterNum)
+	// 调用Service层
+	content, err := api.chapterService.GetChapterByNumber(c.Request.Context(), userID, params.BookID, params.ChapterNum)
+
+	// 简化的错误处理
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
+	if err == readerservice.ErrAccessDenied {
+		response.Forbidden(c, "无权访问")
+		return
+	}
 	if err != nil {
-		if err == readerservice.ErrChapterNotFound {
-			response.NotFound(c, "章节不存在")
-			return
-		}
-		if err == readerservice.ErrAccessDenied && content != nil {
-			response.Forbidden(c, "无权访问")
-			return
-		}
 		response.InternalError(c, err)
 		return
 	}
 
-	response.Success(c, content)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", content)
 }
 
 // GetNextChapter 获取下一章
@@ -149,32 +144,24 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/{chapterId}/next [get]
 func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetNextChapterParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	nextChapter, err := api.chapterService.GetNextChapter(c.Request.Context(), userID, bookID, chapterID)
+	// 调用Service层（错误交给中间件处理）
+	nextChapter, err := api.chapterService.GetNextChapter(c.Request.Context(), userID, params.BookID, params.ChapterID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	if nextChapter == nil {
-		response.Success(c, nil)
-		return
-	}
-
-	response.Success(c, nextChapter)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", nextChapter)
 }
 
 // GetPreviousChapter 获取上一章
@@ -192,32 +179,24 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters/{chapterId}/previous [get]
 func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
-	bookID := c.Param("bookId")
-	chapterID := c.Param("chapterId")
-
-	if bookID == "" || chapterID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID和章节ID不能为空")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetPreviousChapterParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	prevChapter, err := api.chapterService.GetPreviousChapter(c.Request.Context(), userID, bookID, chapterID)
+	// 调用Service层（错误交给中间件处理）
+	prevChapter, err := api.chapterService.GetPreviousChapter(c.Request.Context(), userID, params.BookID, params.ChapterID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	if prevChapter == nil {
-		response.Success(c, nil)
-		return
-	}
-
-	response.Success(c, prevChapter)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", prevChapter)
 }
 
 // GetChapterList 获取章节目录
@@ -235,36 +214,32 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/reader/books/{bookId}/chapters [get]
 func (api *ChapterAPI) GetChapterList(c *gin.Context) {
-	bookID := c.Param("bookId")
-
-	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetChapterListParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "50"))
-
-	if page < 1 {
-		page = 1
+	// 设置默认分页参数
+	if params.Page == 0 {
+		params.Page = 1
 	}
-	if size < 1 || size > 100 {
-		size = 50
+	if params.Size == 0 {
+		params.Size = 50
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	chapterList, err := api.chapterService.GetChapterList(c.Request.Context(), userID, bookID, page, size)
+	// 调用Service层（错误交给中间件处理）
+	chapterList, err := api.chapterService.GetChapterList(c.Request.Context(), userID, params.BookID, params.Page, params.Size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	response.Success(c, chapterList)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", chapterList)
 }
 
 // GetChapterInfo 获取章节信息
@@ -281,28 +256,28 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/reader/chapters/{chapterId}/info [get]
 func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
-	chapterID := c.Param("chapterId")
-
-	if chapterID == "" {
-		response.BadRequest(c,  "参数错误", "章节ID不能为空")
+	// 参数绑定（使用结构体+自动验证）
+	var params GetChapterInfoParams
+	if !shared.BindParams(c, &params) {
 		return
 	}
 
-	// 获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户ID（可选）
+	userID := shared.GetUserIDOptional(c)
 
-	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, chapterID)
+	// 调用Service层
+	chapterInfo, err := api.chapterService.GetChapterInfo(c.Request.Context(), userID, params.ChapterID)
+
+	// 简化的错误处理
+	if err == readerservice.ErrChapterNotFound {
+		response.NotFound(c, "章节不存在")
+		return
+	}
 	if err != nil {
-		if err == readerservice.ErrChapterNotFound {
-			response.NotFound(c, "章节不存在")
-			return
-		}
 		response.InternalError(c, err)
 		return
 	}
 
-	response.Success(c, chapterInfo)
+	// 响应封装
+	shared.Success(c, 200, "获取成功", chapterInfo)
 }

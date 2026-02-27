@@ -39,7 +39,7 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 
 	versions, err := api.versionService.GetVersionHistory(c.Request.Context(), documentID, page, pageSize)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 
 	version, err := api.versionService.GetVersion(c.Request.Context(), documentID, versionID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -92,7 +92,7 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 
 	diff, err := api.versionService.CompareVersions(c.Request.Context(), documentID, fromVersion, toVersion)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (api *VersionApi) RestoreVersion(c *gin.Context) {
 	versionID := c.Param("versionId")
 
 	if err := api.versionService.RestoreVersion(c.Request.Context(), documentID, versionID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

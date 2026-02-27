@@ -1,515 +1,266 @@
 package writer
 
 // ============================================================================
-// Writer 模块 DTO 类型定义
+// Writer 模块 DTO 类型定义（已废弃）
 // ============================================================================
 
+// 本文件中的DTO定义已迁移至 models/dto/content_dto.go
+// 为了保持向后兼容，这里重新导出新定义
+//
+// 迁移指南：
+// - 将 import "Qingyu_backend/service/interfaces/writer" 改为 "Qingyu_backend/models/dto"
+// - 或者直接使用 writer.CreateProjectRequest（它会自动指向 dto.CreateProjectRequest）
+//
+// 废弃时间：2026-02-26
+// 计划移除时间：2026-06-01
+
+import "Qingyu_backend/models/dto"
+
 // ============================================================================
-// 项目管理 DTO
+// 项目管理 DTO（重新导出）
 // ============================================================================
 
 // CreateProjectRequest 创建项目请求
-type CreateProjectRequest struct {
-	Title     string   `json:"title"`
-	Summary   string   `json:"summary"`
-	CoverURL  string   `json:"cover_url"`
-	Category  string   `json:"category"`
-	Tags      []string `json:"tags"`
-	ProjectID string   `json:"project_id"` // 用于模板创建
-}
+// Deprecated: 使用 dto.CreateProjectRequest 替代
+type CreateProjectRequest = dto.CreateProjectRequest
 
 // CreateProjectResponse 创建项目响应
-type CreateProjectResponse struct {
-	ProjectID string `json:"project_id"`
-	Title     string `json:"title"`
-	Status    string `json:"status"`
-	CreatedAt string `json:"created_at"`
-}
+// Deprecated: 使用 dto.CreateProjectResponse 替代
+type CreateProjectResponse = dto.CreateProjectResponse
 
 // ListProjectsRequest 列出项目请求
-type ListProjectsRequest struct {
-	Page     int    `json:"page"`
-	PageSize int    `json:"page_size"`
-	Status   string `json:"status"`
-}
+// Deprecated: 使用 dto.ListProjectsRequest 替代
+type ListProjectsRequest = dto.ListProjectsRequest
 
 // ListProjectsResponse 列出项目响应
-type ListProjectsResponse struct {
-	Projects interface{} `json:"projects"`
-	Total    int64       `json:"total"`
-	Page     int         `json:"page"`
-	PageSize int         `json:"page_size"`
-}
+// Deprecated: 使用 dto.ListProjectsResponse 替代
+type ListProjectsResponse = dto.ListProjectsResponse
 
 // UpdateProjectRequest 更新项目请求
-type UpdateProjectRequest struct {
-	Title    string   `json:"title"`
-	Summary  string   `json:"summary"`
-	CoverURL string   `json:"cover_url"`
-	Category string   `json:"category"`
-	Tags     []string `json:"tags"`
-	Status   string   `json:"status"`
-}
+// Deprecated: 使用 dto.UpdateProjectRequest 替代
+type UpdateProjectRequest = dto.UpdateProjectRequest
+
+// GetProjectResponse 获取项目详情响应
+// Deprecated: 使用 dto.GetProjectResponse 替代
+type GetProjectResponse = dto.GetProjectResponse
+
+// UpdateStatisticsRequest 更新统计请求
+// Deprecated: 使用 dto.UpdateStatisticsRequest 替代
+type UpdateStatisticsRequest = dto.UpdateStatisticsRequest
+
+// AddCollaboratorRequest 添加协作者请求
+// Deprecated: 使用 dto.AddCollaboratorRequest 替代
+type AddCollaboratorRequest = dto.AddCollaboratorRequest
+
+// RemoveCollaboratorRequest 移除协作者请求
+// Deprecated: 使用 dto.RemoveCollaboratorRequest 替代
+type RemoveCollaboratorRequest = dto.RemoveCollaboratorRequest
 
 // ============================================================================
-// 文档管理 DTO
+// 文档管理 DTO（重新导出）
 // ============================================================================
 
 // CreateDocumentRequest 创建文档请求
-type CreateDocumentRequest struct {
-	ProjectID    string   `json:"project_id"`
-	ParentID     string   `json:"parent_id"`
-	Title        string   `json:"title"`
-	Type         string   `json:"type"`
-	Level        int      `json:"level"`
-	Order        int      `json:"order"`
-	CharacterIDs []string `json:"character_ids"`
-	LocationIDs  []string `json:"location_ids"`
-	TimelineIDs  []string `json:"timeline_ids"`
-	Tags         []string `json:"tags"`
-	Notes        string   `json:"notes"`
-}
+// Deprecated: 使用 dto.CreateDocumentRequest 替代
+type CreateDocumentRequest = dto.CreateDocumentRequest
 
 // CreateDocumentResponse 创建文档响应
-type CreateDocumentResponse struct {
-	DocumentID string `json:"document_id"`
-	Title      string `json:"title"`
-	Type       string `json:"type"`
-	CreatedAt  string `json:"created_at"`
-}
+// Deprecated: 使用 dto.CreateDocumentResponse 替代
+type CreateDocumentResponse = dto.CreateDocumentResponse
 
 // DocumentTreeResponse 文档树响应
-type DocumentTreeResponse struct {
-	ProjectID string       `json:"project_id"`
-	Documents []*TreeNode `json:"documents"`
-}
+// Deprecated: 使用 dto.DocumentTreeResponse 替代
+type DocumentTreeResponse = dto.DocumentTreeResponse
 
-// TreeNode 树节点
+// TreeNode 树节点（保留旧定义以兼容）
+// Deprecated: 直接使用 models 中的类型
 type TreeNode struct {
 	Document interface{}   `json:"document"`
 	Children []*TreeNode   `json:"children"`
 }
 
 // ListDocumentsRequest 列出文档请求
-type ListDocumentsRequest struct {
-	ProjectID string `json:"project_id"`
-	ParentID  string `json:"parent_id"`
-	Page      string `json:"page"`
-	PageSize  string `json:"page_size"`
-	Status    string `json:"status"`
-}
+// Deprecated: 使用 dto.ListDocumentsRequest 替代
+type ListDocumentsRequest = dto.ListDocumentsRequest
 
 // ListDocumentsResponse 列出文档响应
-type ListDocumentsResponse struct {
-	Documents interface{} `json:"documents"`
-	Total     int         `json:"total"`
-	Page      int         `json:"page"`
-	PageSize  int         `json:"page_size"`
-}
+// Deprecated: 使用 dto.ListDocumentsResponse 替代
+type ListDocumentsResponse = dto.ListDocumentsResponse
 
 // UpdateDocumentRequest 更新文档请求
-type UpdateDocumentRequest struct {
-	Title         string   `json:"title"`
-	Notes         string   `json:"notes"`
-	Status        string   `json:"status"`
-	CharacterIDs  []string `json:"character_ids"`
-	LocationIDs   []string `json:"location_ids"`
-	TimelineIDs   []string `json:"timeline_ids"`
-	Tags          []string `json:"tags"`
-}
+// Deprecated: 使用 dto.UpdateDocumentRequest 替代
+type UpdateDocumentRequest = dto.UpdateDocumentRequest
 
 // MoveDocumentRequest 移动文档请求
-type MoveDocumentRequest struct {
-	DocumentID string `json:"document_id"`
-	NewParentID string `json:"new_parent_id"`
-	Order      int    `json:"order"`
-}
+// Deprecated: 使用 dto.MoveDocumentRequest 替代
+type MoveDocumentRequest = dto.MoveDocumentRequest
 
 // ReorderDocumentsRequest 重新排序文档请求
-type ReorderDocumentsRequest struct {
-	ProjectID string         `json:"project_id"`
-	ParentID  string         `json:"parent_id"`
-	Orders    map[string]int `json:"orders"`
-}
+// Deprecated: 使用 dto.ReorderDocumentsRequest 替代
+type ReorderDocumentsRequest = dto.ReorderDocumentsRequest
 
 // AutoSaveRequest 自动保存请求
-type AutoSaveRequest struct {
-	DocumentID     string `json:"document_id"`
-	Content        string `json:"content"`
-	CurrentVersion int    `json:"current_version"`
-	SaveType       string `json:"save_type"`
-}
+// Deprecated: 使用 dto.AutoSaveRequest 替代
+type AutoSaveRequest = dto.AutoSaveRequest
 
 // AutoSaveResponse 自动保存响应
-type AutoSaveResponse struct {
-	Saved       bool   `json:"saved"`
-	NewVersion  int    `json:"new_version"`
-	WordCount   int    `json:"word_count"`
-	SavedAt     string `json:"saved_at"`
-	HasConflict bool   `json:"has_conflict"`
-}
+// Deprecated: 使用 dto.AutoSaveResponse 替代
+type AutoSaveResponse = dto.AutoSaveResponse
 
 // SaveStatusResponse 保存状态响应
-type SaveStatusResponse struct {
-	DocumentID     string `json:"document_id"`
-	LastSavedAt    string `json:"last_saved_at"`
-	CurrentVersion int    `json:"current_version"`
-	IsSaving       bool   `json:"is_saving"`
-	WordCount      int    `json:"word_count"`
-}
+// Deprecated: 使用 dto.SaveStatusResponse 替代
+type SaveStatusResponse = dto.SaveStatusResponse
 
 // DocumentContentResponse 文档内容响应
-type DocumentContentResponse struct {
-	DocumentID string `json:"document_id"`
-	Content    string `json:"content"`
-	Version    int    `json:"version"`
-	WordCount  int    `json:"word_count"`
-	UpdatedAt  string `json:"updated_at"`
-}
+// Deprecated: 使用 dto.DocumentContentResponse 替代
+type DocumentContentResponse = dto.DocumentContentResponse
 
 // UpdateContentRequest 更新内容请求
-type UpdateContentRequest struct {
-	DocumentID string `json:"document_id"`
-	Content    string `json:"content"`
-	Version    int    `json:"version"`
-}
+// Deprecated: 使用 dto.UpdateContentRequest 替代
+type UpdateContentRequest = dto.UpdateContentRequest
 
 // DuplicateRequest 复制请求
-type DuplicateRequest struct {
-	NewTitle      string   `json:"new_title"`
-	TargetProject string   `json:"target_project"`
-	CopyContent   bool     `json:"copy_content"`
-}
+// Deprecated: 使用 dto.DuplicateRequest 替代
+type DuplicateRequest = dto.DuplicateRequest
 
 // DuplicateResponse 复制响应
-type DuplicateResponse struct {
-	NewDocumentID string `json:"new_document_id"`
-	Title         string `json:"title"`
-}
+// Deprecated: 使用 dto.DuplicateResponse 替代
+type DuplicateResponse = dto.DuplicateResponse
 
 // 版本控制 DTO
 
 // VersionHistoryResponse 版本历史响应
-type VersionHistoryResponse struct {
-	Versions []*VersionInfo `json:"versions"`
-	Total    int            `json:"total"`
-	Page     int            `json:"page"`
-	PageSize int            `json:"page_size"`
-}
+// Deprecated: 使用 dto.VersionHistoryResponse 替代
+type VersionHistoryResponse = dto.VersionHistoryResponse
 
 // VersionInfo 版本信息
-type VersionInfo struct {
-	VersionID  string `json:"version_id"`
-	Version    int    `json:"version"`
-	Message    string `json:"message"`
-	CreatedAt  string `json:"created_at"`
-	CreatedBy  string `json:"created_by"`
-	WordCount  int    `json:"word_count"`
-}
+// Deprecated: 使用 dto.VersionInfo 替代
+type VersionInfo = dto.VersionInfo
 
 // VersionDetail 版本详情
-type VersionDetail struct {
-	VersionID  string `json:"version_id"`
-	DocumentID string `json:"document_id"`
-	Version    int    `json:"version"`
-	Content    string `json:"content"`
-	Message    string `json:"message"`
-	CreatedAt  string `json:"created_at"`
-	CreatedBy  string `json:"created_by"`
-	WordCount  int    `json:"word_count"`
-}
+// Deprecated: 使用 dto.VersionDetail 替代
+type VersionDetail = dto.VersionDetail
 
 // VersionDiff 版本差异
-type VersionDiff struct {
-	FromVersion   string      `json:"from_version"`
-	ToVersion     string      `json:"to_version"`
-	Changes       []ChangeItem `json:"changes"`
-	AddedLines    int         `json:"added_lines"`
-	DeletedLines  int         `json:"deleted_lines"`
-}
+// Deprecated: 使用 dto.VersionDiff 替代
+type VersionDiff = dto.VersionDiff
 
 // ChangeItem 变更项
-type ChangeItem struct {
-	Type    string `json:"type"`    // added, deleted, modified
-	Line    int    `json:"line"`
-	Content string `json:"content"`
-}
+// Deprecated: 使用 dto.ChangeItem 替代
+type ChangeItem = dto.ChangeItem
 
 // ============================================================================
-// 内容管理 DTO
+// 内容管理 DTO（重新导出）
 // ============================================================================
 
 // CreateCharacterRequest 创建角色请求
-type CreateCharacterRequest struct {
-	Name             string   `json:"name"`
-	Alias            string   `json:"alias"`
-	Summary          string   `json:"summary"`
-	Traits           []string `json:"traits"`
-	Background       string   `json:"background"`
-	AvatarURL        string   `json:"avatar_url"`
-	PersonalityPrompt string  `json:"personality_prompt"`
-	SpeechPattern    string   `json:"speech_pattern"`
-	CurrentState     string   `json:"current_state"`
-}
+// Deprecated: 使用 dto.CreateCharacterRequest 替代
+type CreateCharacterRequest = dto.CreateCharacterRequest
 
 // UpdateCharacterRequest 更新角色请求
-type UpdateCharacterRequest struct {
-	Name             *string  `json:"name"`
-	Alias            *string  `json:"alias"`
-	Summary          *string  `json:"summary"`
-	Traits           []string `json:"traits"`
-	Background       *string  `json:"background"`
-	AvatarURL        *string  `json:"avatar_url"`
-	PersonalityPrompt *string  `json:"personality_prompt"`
-	SpeechPattern    *string  `json:"speech_pattern"`
-	CurrentState     *string  `json:"current_state"`
-}
+// Deprecated: 使用 dto.UpdateCharacterRequest 替代
+type UpdateCharacterRequest = dto.UpdateCharacterRequest
 
 // CreateRelationRequest 创建关系请求
-type CreateRelationRequest struct {
-	FromID   string  `json:"from_id"`
-	ToID     string  `json:"to_id"`
-	Type     string  `json:"type"`
-	Strength int    `json:"strength"`
-	Notes    string  `json:"notes"`
-}
+// Deprecated: 使用 dto.CreateRelationRequest 替代
+type CreateRelationRequest = dto.CreateRelationRequest
 
 // CharacterGraph 角色关系图
-type CharacterGraph struct {
-	Nodes interface{} `json:"nodes"`
-	Edges interface{} `json:"edges"`
-}
+// Deprecated: 使用 dto.CharacterGraph 替代
+type CharacterGraph = dto.CharacterGraph
 
 // CreateLocationRequest 创建地点请求
-type CreateLocationRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Climate     string `json:"climate"`
-	Culture     string `json:"culture"`
-	Geography   string `json:"geography"`
-	Atmosphere  string `json:"atmosphere"`
-	ParentID    string `json:"parent_id"`
-	ImageURL    string `json:"image_url"`
-}
+// Deprecated: 使用 dto.CreateLocationRequest 替代
+type CreateLocationRequest = dto.CreateLocationRequest
 
 // UpdateLocationRequest 更新地点请求
-type UpdateLocationRequest struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Climate     *string `json:"climate"`
-	Culture     *string `json:"culture"`
-	Geography   *string `json:"geography"`
-	Atmosphere  *string `json:"atmosphere"`
-	ParentID    *string `json:"parent_id"`
-	ImageURL    *string `json:"image_url"`
-}
+// Deprecated: 使用 dto.UpdateLocationRequest 替代
+type UpdateLocationRequest = dto.UpdateLocationRequest
 
 // LocationNode 地点节点
-type LocationNode struct {
-	Location interface{}     `json:"location"`
-	Children []*LocationNode `json:"children"`
-}
+// Deprecated: 使用 dto.LocationNode 替代
+type LocationNode = dto.LocationNode
 
 // CreateLocationRelationRequest 创建地点关系请求
-type CreateLocationRelationRequest struct {
-	FromID   string  `json:"from_id"`
-	ToID     string  `json:"to_id"`
-	Type     string  `json:"type"`
-	Distance *int    `json:"distance"`
-	Notes    string  `json:"notes"`
-}
+// Deprecated: 使用 dto.CreateLocationRelationRequest 替代
+type CreateLocationRelationRequest = dto.CreateLocationRelationRequest
 
 // CreateTimelineRequest 创建时间线请求
-type CreateTimelineRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	StartTime   string `json:"start_time"`
-	EndTime     string `json:"end_time"`
-}
+// Deprecated: 使用 dto.CreateTimelineRequest 替代
+type CreateTimelineRequest = dto.CreateTimelineRequest
 
 // CreateTimelineEventRequest 创建时间线事件请求
-type CreateTimelineEventRequest struct {
-	TimelineID   string   `json:"timeline_id"`
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	EventType    string   `json:"event_type"`
-	Importance   int      `json:"importance"`
-	Participants []string `json:"participants"`
-	LocationIDs  []string `json:"location_ids"`
-	ChapterIDs   []string `json:"chapter_ids"`
-	StoryTime    string   `json:"story_time"`
-	Duration     *int     `json:"duration"`
-	Impact       string   `json:"impact"`
-}
+// Deprecated: 使用 dto.CreateTimelineEventRequest 替代
+type CreateTimelineEventRequest = dto.CreateTimelineEventRequest
 
 // UpdateTimelineEventRequest 更新时间线事件请求
-type UpdateTimelineEventRequest struct {
-	Title        *string   `json:"title"`
-	Description  *string   `json:"description"`
-	EventType    *string   `json:"event_type"`
-	Importance   *int      `json:"importance"`
-	Participants []string  `json:"participants"`
-	LocationIDs  []string  `json:"location_ids"`
-	ChapterIDs   []string  `json:"chapter_ids"`
-	StoryTime    *string   `json:"story_time"`
-	Duration     *int      `json:"duration"`
-	Impact       *string   `json:"impact"`
-}
+// Deprecated: 使用 dto.UpdateTimelineEventRequest 替代
+type UpdateTimelineEventRequest = dto.UpdateTimelineEventRequest
 
 // TimelineVisualization 时间线可视化
-type TimelineVisualization struct {
-	Events      []*TimelineEventNode  `json:"events"`
-	Connections []*EventConnection    `json:"connections"`
-}
+// Deprecated: 使用 dto.TimelineVisualization 替代
+type TimelineVisualization = dto.TimelineVisualization
 
 // TimelineEventNode 时间线事件节点
-type TimelineEventNode struct {
-	ID         string   `json:"id"`
-	Title      string   `json:"title"`
-	StoryTime  string   `json:"story_time"`
-	EventType  string   `json:"event_type"`
-	Importance int      `json:"importance"`
-	Characters []string `json:"characters"`
-}
+// Deprecated: 使用 dto.TimelineEventNode 替代
+type TimelineEventNode = dto.TimelineEventNode
 
 // EventConnection 事件连接
-type EventConnection struct {
-	FromEventID string `json:"from_event_id"`
-	ToEventID   string `json:"to_event_id"`
-	Type        string `json:"type"`
-}
+// Deprecated: 使用 dto.EventConnection 替代
+type EventConnection = dto.EventConnection
 
 // ============================================================================
-// 发布导出 DTO
+// 发布导出 DTO（重新导出）
 // ============================================================================
 
 // PublishProjectRequest 发布项目请求
-type PublishProjectRequest struct {
-	BookstoreID    string   `json:"bookstore_id"`
-	CategoryID     string   `json:"category_id"`
-	Tags           []string `json:"tags"`
-	Description    string   `json:"description"`
-	CoverImage     string   `json:"cover_image"`
-	PublishType    string   `json:"publish_type"`
-	Price          *float64 `json:"price"`
-	FreeChapters   int      `json:"free_chapters"`
-	AuthorNote     string   `json:"author_note"`
-	EnableComment  bool     `json:"enable_comment"`
-	EnableShare    bool     `json:"enable_share"`
-	PublishTime    *string  `json:"publish_time"`
-}
+// Deprecated: 使用 dto.PublishProjectRequest 替代
+type PublishProjectRequest = dto.PublishProjectRequest
 
 // PublishDocumentRequest 发布文档请求
-type PublishDocumentRequest struct {
-	ChapterTitle  string  `json:"chapter_title"`
-	ChapterNumber int     `json:"chapter_number"`
-	IsFree        bool    `json:"is_free"`
-	AuthorNote    string  `json:"author_note"`
-	PublishTime   *string `json:"publish_time"`
-}
+// Deprecated: 使用 dto.PublishDocumentRequest 替代
+type PublishDocumentRequest = dto.PublishDocumentRequest
 
 // UpdateDocumentPublishStatusRequest 更新文档发布状态请求
-type UpdateDocumentPublishStatusRequest struct {
-	IsPublished     bool    `json:"is_published"`
-	IsFree          bool    `json:"is_free"`
-	ChapterNumber   *int    `json:"chapter_number"`
-	UnpublishReason string  `json:"unpublish_reason"`
-}
+// Deprecated: 使用 dto.UpdateDocumentPublishStatusRequest 替代
+type UpdateDocumentPublishStatusRequest = dto.UpdateDocumentPublishStatusRequest
 
 // BatchPublishDocumentsRequest 批量发布文档请求
-type BatchPublishDocumentsRequest struct {
-	DocumentIDs    []string `json:"document_ids"`
-	IsFree         bool     `json:"is_free"`
-	AutoNumbering  bool     `json:"auto_numbering"`
-	StartNumber    int      `json:"start_number"`
-	PublishTime    *string  `json:"publish_time"`
-}
+// Deprecated: 使用 dto.BatchPublishDocumentsRequest 替代
+type BatchPublishDocumentsRequest = dto.BatchPublishDocumentsRequest
 
 // BatchPublishResult 批量发布结果
-type BatchPublishResult struct {
-	SuccessCount int                  `json:"success_count"`
-	FailCount    int                  `json:"fail_count"`
-	Results      []BatchPublishItem   `json:"results"`
-}
+// Deprecated: 使用 dto.BatchPublishResult 替代
+type BatchPublishResult = dto.BatchPublishResult
 
 // BatchPublishItem 批量发布项
-type BatchPublishItem struct {
-	DocumentID string `json:"document_id"`
-	Success    bool   `json:"success"`
-	RecordID   string `json:"record_id"`
-	Error      string `json:"error"`
-}
+// Deprecated: 使用 dto.BatchPublishItem 替代
+type BatchPublishItem = dto.BatchPublishItem
 
 // PublicationRecord 发布记录
-type PublicationRecord struct {
-	ID            string                `json:"id"`
-	Type          string                `json:"type"`
-	ResourceID    string                `json:"resource_id"`
-	ResourceTitle string                `json:"resource_title"`
-	BookstoreID   string                `json:"bookstore_id"`
-	BookstoreName string                `json:"bookstore_name"`
-	Status        string                `json:"status"`
-	PublishTime   *string               `json:"publish_time"`
-	CreatedBy     string                `json:"created_by"`
-	CreatedAt     string                `json:"created_at"`
-	UpdatedAt     string                `json:"updated_at"`
-}
+// Deprecated: 使用 dto.PublicationRecord 替代
+type PublicationRecord = dto.PublicationRecord
 
 // PublicationStatus 发布状态
-type PublicationStatus struct {
-	ProjectID         string                `json:"project_id"`
-	ProjectTitle      string                `json:"project_title"`
-	IsPublished       bool                  `json:"is_published"`
-	BookstoreID       string                `json:"bookstore_id"`
-	BookstoreName     string                `json:"bookstore_name"`
-	PublishedAt       *string               `json:"published_at"`
-	Statistics        interface{}           `json:"statistics"`
-	TotalChapters     int                   `json:"total_chapters"`
-	PublishedChapters int                   `json:"published_chapters"`
-}
+// Deprecated: 使用 dto.PublicationStatus 替代
+type PublicationStatus = dto.PublicationStatus
 
 // ExportDocumentRequest 导出文档请求
-type ExportDocumentRequest struct {
-	Format  string            `json:"format"`
-	Options *ExportOptions     `json:"options"`
-}
+// Deprecated: 使用 dto.ExportDocumentRequest 替代
+type ExportDocumentRequest = dto.ExportDocumentRequest
 
 // ExportOptions 导出选项
-type ExportOptions struct {
-	TOC        bool `json:"toc"`        // 目录
-	IncludeMeta bool `json:"include_meta"` // 包含元数据
-}
+// Deprecated: 使用 dto.ExportOptions 替代
+type ExportOptions = dto.ExportOptions
 
 // ExportProjectRequest 导出项目请求
-type ExportProjectRequest struct {
-	Format          string  `json:"format"`
-	IncludeDocuments bool    `json:"include_documents"`
-	IncludeMeta     bool    `json:"include_meta"`
-}
+// Deprecated: 使用 dto.ExportProjectRequest 替代
+type ExportProjectRequest = dto.ExportProjectRequest
 
 // ExportTask 导出任务
-type ExportTask struct {
-	ID            string    `json:"id"`
-	Type          string    `json:"type"`
-	ResourceID    string    `json:"resource_id"`
-	ResourceTitle string    `json:"resource_title"`
-	Format        string    `json:"format"`
-	Status        string    `json:"status"`
-	Progress      int       `json:"progress"`
-	FileURL       string    `json:"file_url"`
-	FileSize      int64     `json:"file_size"`
-	ErrorMsg      string    `json:"error_msg"`
-	CreatedBy     string    `json:"created_by"`
-	CreatedAt     string    `json:"created_at"`
-	UpdatedAt     string    `json:"updated_at"`
-	CompletedAt   *string  `json:"completed_at"`
-	ExpiresAt     string    `json:"expires_at"`
-}
+// Deprecated: 使用 dto.ExportTask 替代
+type ExportTask = dto.ExportTask
 
 // ExportFile 导出文件
-type ExportFile struct {
-	Filename string `json:"filename"`
-	URL      string `json:"url"`
-	MimeType string `json:"mime_type"`
-	FileSize int64  `json:"file_size"`
-}
+// Deprecated: 使用 dto.ExportFile 替代
+type ExportFile = dto.ExportFile

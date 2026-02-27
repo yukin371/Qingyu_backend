@@ -55,7 +55,7 @@ func (api *OutlineApi) CreateOutline(c *gin.Context) {
 
 	outline, err := api.outlineService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (api *OutlineApi) ListOutlines(c *gin.Context) {
 
 	outlines, err := api.outlineService.List(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 
 	tree, err := api.outlineService.GetTree(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -171,7 +171,7 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 
 	outline, err := api.outlineService.Update(c.Request.Context(), outlineID, projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -200,7 +200,7 @@ func (api *OutlineApi) DeleteOutline(c *gin.Context) {
 
 	err := api.outlineService.Delete(c.Request.Context(), outlineID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -228,7 +228,7 @@ func (api *OutlineApi) GetOutlineChildren(c *gin.Context) {
 
 	children, err := api.outlineService.GetChildren(c.Request.Context(), projectID, parentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

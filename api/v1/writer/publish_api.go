@@ -57,7 +57,7 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 
 	record, err := api.publishService.PublishProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 
 	err := api.publishService.UnpublishProject(c.Request.Context(), projectID, userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 
 	status, err := api.publishService.GetProjectPublicationStatus(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -171,7 +171,7 @@ func (api *PublishApi) PublishDocument(c *gin.Context) {
 
 	record, err := api.publishService.PublishDocument(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 
 	err := api.publishService.UpdateDocumentPublishStatus(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 
 	result, err := api.publishService.BatchPublishDocuments(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -291,7 +291,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 
 	records, total, err := api.publishService.GetPublicationRecords(c.Request.Context(), projectID, page, pageSize)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

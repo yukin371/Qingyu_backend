@@ -333,7 +333,11 @@ func TestAnnouncementAPI_CreateAnnouncement_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, reqHTTP)
 
-	// Then
+	// Then - Debug output
+	if w.Code != http.StatusCreated {
+		t.Logf("Response Body: %s", w.Body.String())
+		t.Logf("Response Code: %d", w.Code)
+	}
 	assert.Equal(t, http.StatusCreated, w.Code)
 
 	mockService.AssertExpectations(t)

@@ -69,7 +69,7 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 			shared.NotFound(c, "书籍不存在")
 			return
 		}
-		shared.InternalError(c, "获取章节目录失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 			shared.NotFound(c, "章节不存在")
 			return
 		}
-		shared.InternalError(c, "获取章节信息失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 
 	chapters, err := api.purchaseService.GetTrialChapters(c.Request.Context(), bookID.Hex(), trialCount)
 	if err != nil {
-		shared.InternalError(c, "获取试读章节失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -187,7 +187,7 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 
 	chapters, err := api.purchaseService.GetVIPChapters(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		shared.InternalError(c, "获取VIP章节失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -230,7 +230,7 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 			shared.NotFound(c, "章节不存在")
 			return
 		}
-		shared.InternalError(c, "获取章节价格失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -299,7 +299,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 			shared.BadRequest(c, "参数错误", "免费章节无需购买")
 			return
 		}
-		shared.InternalError(c, "购买章节失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -361,7 +361,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 			shared.Forbidden(c, "余额不足")
 			return
 		}
-		shared.InternalError(c, "购买全书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -413,7 +413,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 
 	purchases, total, err := api.purchaseService.GetChapterPurchases(c.Request.Context(), userID.Hex(), page, size)
 	if err != nil {
-		shared.InternalError(c, "获取购买记录失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -478,7 +478,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 
 	purchases, total, err := api.purchaseService.GetBookPurchases(c.Request.Context(), userID.Hex(), bookID.Hex(), page, size)
 	if err != nil {
-		shared.InternalError(c, "获取购买记录失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -525,7 +525,7 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 			shared.NotFound(c, "章节不存在")
 			return
 		}
-		shared.InternalError(c, "检查访问权限失败", err)
+		c.Error(err)
 		return
 	}
 

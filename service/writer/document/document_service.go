@@ -215,14 +215,14 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 	// 2. 构建更新数据
 	updates := make(map[string]interface{})
 
-	if req.Title != "" {
-		updates["title"] = req.Title
+	if req.Title != nil {
+		updates["title"] = *req.Title
 	}
-	if req.Notes != "" {
-		updates["notes"] = req.Notes
+	if req.Notes != nil {
+		updates["notes"] = *req.Notes
 	}
-	if req.Status != "" {
-		updates["status"] = req.Status
+	if req.Status != nil {
+		updates["status"] = *req.Status
 	}
 	if req.CharacterIDs != nil {
 		updates["character_ids"] = req.CharacterIDs
@@ -405,15 +405,11 @@ func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsR
 	// 2. 解析分页参数
 	page := 1
 	pageSize := 20
-	if req.Page != "" {
-		if p, err := time.Parse("", req.Page); err == nil {
-			page = int(p.Unix())
-		}
+	if req.Page > 0 {
+		page = req.Page
 	}
-	if req.PageSize != "" {
-		if ps, err := time.Parse("", req.PageSize); err == nil {
-			pageSize = int(ps.Unix())
-		}
+	if req.PageSize > 0 {
+		pageSize = req.PageSize
 	}
 
 	// 3. 查询文档列表

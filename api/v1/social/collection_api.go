@@ -1,10 +1,9 @@
 package social
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -45,20 +44,18 @@ type AddCollectionRequest struct {
 // @Security Bearer
 func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	var req AddCollectionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	collection, err := api.collectionService.AddToCollection(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		req.BookID,
 		req.FolderID,
 		req.Note,
@@ -67,15 +64,7 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		errMsg := err.Error()
-		// 根据错误类型返回具体的错误信息
-		if strings.Contains(errMsg, "已经收藏") || strings.Contains(errMsg, "already") {
-			response.BadRequest(c, "该书籍已经收藏", errMsg)
-		} else if strings.Contains(errMsg, "不存在") || strings.Contains(errMsg, "not found") {
-			response.NotFound(c, "书籍不存在")
-		} else {
-			response.BadRequest(c, "添加收藏失败", errMsg)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -94,45 +83,29 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 // @Router /api/v1/reader/collections [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollections(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	folderID := c.Query("folder_id")
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	collections, total, err := api.collectionService.GetUserCollections(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		folderID,
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	response.Success(c, gin.H{
-		"list":  collections,
-		"total": total,
-		"page":  params.Page,
-		"size":  params.Size,
-	})
+	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
 }
 
 // UpdateCollectionRequest 更新收藏请求
@@ -154,21 +127,18 @@ type UpdateCollectionRequest struct {
 // @Router /api/v1/reader/collections/{id} [put]
 // @Security Bearer
 func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
-	collectionID := c.Param("id")
-	if collectionID == "" {
-		response.BadRequest(c, "参数错误", "收藏ID不能为空")
+	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	var req UpdateCollectionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
@@ -194,7 +164,7 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 
 	err := api.collectionService.UpdateCollection(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		collectionID,
 		updates,
 	)
@@ -217,21 +187,19 @@ func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 // @Router /api/v1/reader/collections/{id} [delete]
 // @Security Bearer
 func (api *CollectionAPI) DeleteCollection(c *gin.Context) {
-	collectionID := c.Param("id")
-	if collectionID == "" {
-		response.BadRequest(c, "参数错误", "收藏ID不能为空")
+	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.collectionService.RemoveFromCollection(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		collectionID,
 	)
 
@@ -263,20 +231,19 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	isCollected, err := api.collectionService.IsCollected(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		bookID,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -297,49 +264,32 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 // @Router /api/v1/reader/collections/tags/{tag} [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
-	tag := c.Param("tag")
-	if tag == "" {
-		response.BadRequest(c, "参数错误", "标签不能为空")
+	tag, ok := shared.GetRequiredParam(c, "tag", "标签")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	collections, total, err := api.collectionService.GetCollectionsByTag(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		tag,
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	response.Success(c, gin.H{
-		"list":  collections,
-		"total": total,
-		"page":  params.Page,
-		"size":  params.Size,
-	})
+	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
 }
 
 // =========================
@@ -364,20 +314,18 @@ type CreateFolderRequest struct {
 // @Security Bearer
 func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 	var req CreateFolderRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	folder, err := api.collectionService.CreateFolder(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		req.Name,
 		req.Description,
 		req.IsPublic,
@@ -400,19 +348,18 @@ func (api *CollectionAPI) CreateFolder(c *gin.Context) {
 // @Router /api/v1/reader/collections/folders [get]
 // @Security Bearer
 func (api *CollectionAPI) GetFolders(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	folders, err := api.collectionService.GetUserFolders(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -439,21 +386,18 @@ type UpdateFolderRequest struct {
 // @Router /api/v1/reader/collections/folders/{id} [put]
 // @Security Bearer
 func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
-	folderID := c.Param("id")
-	if folderID == "" {
-		response.BadRequest(c, "参数错误", "收藏夹ID不能为空")
+	folderID, ok := shared.GetRequiredParam(c, "id", "收藏夹ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	var req UpdateFolderRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindAndValidate(c, &req) {
 		return
 	}
 
@@ -476,7 +420,7 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 
 	err := api.collectionService.UpdateFolder(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		folderID,
 		updates,
 	)
@@ -499,21 +443,19 @@ func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 // @Router /api/v1/reader/collections/folders/{id} [delete]
 // @Security Bearer
 func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
-	folderID := c.Param("id")
-	if folderID == "" {
-		response.BadRequest(c, "参数错误", "收藏夹ID不能为空")
+	folderID, ok := shared.GetRequiredParam(c, "id", "收藏夹ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.collectionService.DeleteFolder(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		folderID,
 	)
 
@@ -539,21 +481,19 @@ func (api *CollectionAPI) DeleteFolder(c *gin.Context) {
 // @Router /api/v1/reader/collections/{id}/share [post]
 // @Security Bearer
 func (api *CollectionAPI) ShareCollection(c *gin.Context) {
-	collectionID := c.Param("id")
-	if collectionID == "" {
-		response.BadRequest(c, "参数错误", "收藏ID不能为空")
+	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.collectionService.ShareCollection(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		collectionID,
 	)
 
@@ -575,21 +515,19 @@ func (api *CollectionAPI) ShareCollection(c *gin.Context) {
 // @Router /api/v1/reader/collections/{id}/share [delete]
 // @Security Bearer
 func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
-	collectionID := c.Param("id")
-	if collectionID == "" {
-		response.BadRequest(c, "参数错误", "收藏ID不能为空")
+	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.collectionService.UnshareCollection(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		collectionID,
 	)
 
@@ -611,35 +549,20 @@ func (api *CollectionAPI) UnshareCollection(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/public [get]
 func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	collections, total, err := api.collectionService.GetPublicCollections(
 		c.Request.Context(),
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
-	response.Success(c, gin.H{
-		"list":  collections,
-		"total": total,
-		"page":  params.Page,
-		"size":  params.Size,
-	})
+	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
 }
 
 // =========================
@@ -655,19 +578,18 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 // @Router /api/v1/reader/collections/stats [get]
 // @Security Bearer
 func (api *CollectionAPI) GetCollectionStats(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	stats, err := api.collectionService.GetUserCollectionStats(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

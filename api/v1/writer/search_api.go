@@ -79,7 +79,7 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 4. 执行搜索
 	resp, err := api.searchService.Search(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
