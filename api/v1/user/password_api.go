@@ -43,7 +43,7 @@ func (api *PasswordAPI) SendPasswordResetCode(c *gin.Context) {
 	// 发送重置验证码
 	err := api.passwordService.SendResetCode(c.Request.Context(), req.Email)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 		if err == userService.ErrInvalidCode {
 			response.BadRequest(c, "验证码无效或已过期", err.Error())
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
@@ -125,7 +125,7 @@ func (api *PasswordAPI) UpdatePassword(c *gin.Context) {
 		if err == userService.ErrOldPasswordMismatch {
 			response.Unauthorized(c, "旧密码错误")
 		} else {
-			response.InternalError(c, err)
+			c.Error(err)
 		}
 		return
 	}
