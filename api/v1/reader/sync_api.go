@@ -117,7 +117,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 
 	// 同步进度
 	if err := api.syncService.SyncProgress(c.Request.Context(), userIDStr, req.BookID, req.ChapterID, req.DeviceID, req.Progress); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -174,7 +174,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 
 	// 合并进度
 	if err := api.syncService.MergeOfflineProgresses(c.Request.Context(), userIDStr, progresses); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
