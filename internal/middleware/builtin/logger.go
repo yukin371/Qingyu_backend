@@ -26,10 +26,10 @@ const (
 // 优先级: 7（监控层，在基础设施之后、业务层之前）
 // 用途: 记录请求和响应日志，包括请求方法、路径、状态码、耗时等信息
 type LoggerMiddleware struct {
-	config      *LoggerConfig
-	logger      *zap.Logger
-	timeFormat  string
-	utc         bool
+	config     *LoggerConfig
+	logger     *zap.Logger
+	timeFormat string
+	utc        bool
 }
 
 // LoggerConfig 日志配置
@@ -168,7 +168,7 @@ func (m *LoggerMiddleware) Handler() gin.HandlerFunc {
 		if m.config.EnableResponseBody && !m.config.SkipLogBody {
 			writer = &responseWriter{
 				ResponseWriter: c.Writer,
-				body:          bytes.NewBufferString(""),
+				body:           bytes.NewBufferString(""),
 			}
 			c.Writer = writer
 		}
@@ -178,7 +178,7 @@ func (m *LoggerMiddleware) Handler() gin.HandlerFunc {
 
 		// 计算耗时
 		latency := time.Since(start)
-	 latencyMs := latency.Milliseconds()
+		latencyMs := latency.Milliseconds()
 
 		// 记录响应体
 		if writer != nil {
@@ -274,12 +274,12 @@ func (m *LoggerMiddleware) logRequest(c *gin.Context, requestBody, responseBody 
 
 	// 添加查询参数
 	if c.Request.URL.RawQuery != "" {
-		fields = append(fields, zap.String("query", c.Request.URL.RawQuery))
+		fields = append(fields, zap.String("query", sanitizeLogValue(c.Request.URL.RawQuery)))
 	}
 
 	// 添加请求体（如果启用且有内容）
 	if m.config.EnableRequestBody && !m.config.SkipLogBody && requestBody != "" {
-		fields = append(fields, zap.String("request_body", requestBody))
+		fields = append(fields, zap.String("request_body", sanitizeLogValue(requestBody)))
 	}
 
 	// 添加响应体（如果启用且有内容）
@@ -288,12 +288,12 @@ func (m *LoggerMiddleware) logRequest(c *gin.Context, requestBody, responseBody 
 		if len(responseBodyStr) > 1000 {
 			responseBodyStr = responseBodyStr[:1000] + "... (truncated)"
 		}
-		fields = append(fields, zap.String("response_body", responseBodyStr))
+		fields = append(fields, zap.String("response_body", sanitizeLogValue(responseBodyStr)))
 	}
 
 	// 添加User-Agent
 	if userAgent := c.Request.UserAgent(); userAgent != "" {
-		fields = append(fields, zap.String("user_agent", userAgent))
+		fields = append(fields, zap.String("user_agent", sanitizeLogValue(userAgent)))
 	}
 
 	// 添加错误信息（如果有）
@@ -495,6 +495,18 @@ func redactJSONKeys(input string, keys []string) string {
 		redacted = re.ReplaceAllString(redacted, `${1}***${3}`)
 	}
 	return redacted
+}
+
+// sanitizeLogValue 标准化日志字段，防止换行注入破坏日志结构
+func sanitizeLogValue(value string) string {
+	if value == "" {
+		return value
+	}
+
+	sanitized := strings.ReplaceAll(value, "\r", "\\r")
+	sanitized = strings.ReplaceAll(sanitized, "\n", "\\n")
+	sanitized = strings.ReplaceAll(sanitized, "\x00", "")
+	return sanitized
 }
 
 // validateAccessLogFields 验证访问日志字段（严格模式）

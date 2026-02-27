@@ -1,11 +1,12 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultRateLimitConfig(t *testing.T) {
@@ -19,15 +20,21 @@ func TestDefaultRateLimitConfig(t *testing.T) {
 }
 
 func TestRateLimitConfig_LoadedFromTestYaml(t *testing.T) {
-	// Get the directory of this test file
-	_, testFile, _, _ := runtime.Caller(0)
-	testDir := filepath.Dir(testFile)
-	configPath := filepath.Join(testDir, "..", "config")
+	tmpDir := t.TempDir()
+	configFile := filepath.Join(tmpDir, "config.test.yaml")
+	yamlContent := `
+rate_limit:
+  enabled: false
+  requests_per_sec: 10000
+  burst: 20000
+  skip_paths:
+    - /api/v1/reader
+`
+	err := os.WriteFile(configFile, []byte(yamlContent), 0644)
+	require.NoError(t, err)
 
-	// Test loading from actual test config file
-	cfg, err := LoadConfig(configPath)
-
-	assert.NoError(t, err)
+	cfg, err := LoadConfig(configFile)
+	require.NoError(t, err)
 	assert.NotNil(t, cfg.RateLimit)
 	assert.False(t, cfg.RateLimit.Enabled, "Test environment should have rate limit disabled")
 	assert.Equal(t, 10000.0, cfg.RateLimit.RequestsPerSec, "Test environment should have higher rate limit")

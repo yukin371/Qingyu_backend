@@ -257,7 +257,7 @@ func setupAnnotationsTestRouter(readerService interfaces.ReaderService, userID s
 
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})

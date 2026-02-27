@@ -215,8 +215,13 @@ func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID
 
 // GetRepliesByCommentID 获取评论的回复列表
 func (r *MongoCommentRepository) GetRepliesByCommentID(ctx context.Context, commentID string) ([]*social.Comment, error) {
+	parentID, err := r.ParseID(commentID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid comment id: %w", err)
+	}
+
 	filter := bson.M{
-		"parent_id": commentID,
+		"parent_id": parentID.Hex(),
 		"state":     social.CommentStateNormal,
 	}
 
@@ -355,9 +360,14 @@ func (r *MongoCommentRepository) DecrementLikeCount(ctx context.Context, id stri
 
 // IncrementReplyCount 增加回复数
 func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id string) error {
-	_, err := r.GetCollection().UpdateOne(
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$inc": bson.M{"thread_size": 1},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -373,9 +383,14 @@ func (r *MongoCommentRepository) IncrementReplyCount(ctx context.Context, id str
 
 // DecrementReplyCount 减少回复数
 func (r *MongoCommentRepository) DecrementReplyCount(ctx context.Context, id string) error {
-	_, err := r.GetCollection().UpdateOne(
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
+	_, err = r.GetCollection().UpdateOne(
 		ctx,
-		bson.M{"_id": id},
+		bson.M{"_id": objectID},
 		bson.M{
 			"$inc": bson.M{"thread_size": -1},
 			"$set": bson.M{"updated_at": time.Now()},

@@ -296,7 +296,12 @@ func (s *StorageServiceImpl) ListFiles(ctx context.Context, req *ListFilesReques
 		pageSize = maxListPageSize
 	}
 
-	return s.fileRepo.List(ctx, req.UserID, normalizeStorageCategory(req.Category), page, pageSize)
+	category := strings.TrimSpace(req.Category)
+	if category != "" {
+		category = normalizeStorageCategory(category)
+	}
+
+	return s.fileRepo.List(ctx, req.UserID, category, page, pageSize)
 }
 
 // GetDownloadURL 生成下载链接

@@ -1,21 +1,36 @@
 package ai
 
 import (
+	"context"
 	"fmt"
 
-	aiService "Qingyu_backend/service/ai"
-
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/pkg/response"
+	"github.com/gin-gonic/gin"
 )
+
+// RAGService 定义 RAG API 依赖的最小服务契约。
+// 具体实现由上层注入，避免 API 层依赖已移除的具体实现类型。
+type RAGService interface {
+	RetrieveAndGenerate(ctx context.Context, query, userID, projectID string, topK int, includeOutline bool) (*RAGResult, error)
+	SearchSimilar(ctx context.Context, query, userID string, topK int) ([]string, error)
+}
+
+// RAGResult 表示检索增强生成结果。
+type RAGResult struct {
+	Answer        string
+	Sources       []string
+	References    []string
+	TokensUsed    int
+	ExecutionTime int64
+}
 
 // RAGApi RAG检索增强API
 type RAGApi struct {
-	ragService *aiService.RAGService
+	ragService RAGService
 }
 
 // NewRAGApi 创建RAG API实例
-func NewRAGApi(ragService *aiService.RAGService) *RAGApi {
+func NewRAGApi(ragService RAGService) *RAGApi {
 	return &RAGApi{
 		ragService: ragService,
 	}
@@ -23,19 +38,19 @@ func NewRAGApi(ragService *aiService.RAGService) *RAGApi {
 
 // RetrieveAndGenerateRequest 检索增强生成请求
 type RetrieveAndGenerateRequest struct {
-	Query           string `json:"query" binding:"required"`
-	TopK            int    `json:"topK"`
-	ProjectID       string `json:"projectId"`
-	IncludeOutline  bool   `json:"includeOutline"`
+	Query          string `json:"query" binding:"required"`
+	TopK           int    `json:"topK"`
+	ProjectID      string `json:"projectId"`
+	IncludeOutline bool   `json:"includeOutline"`
 }
 
 // RetrieveAndGenerateResponse 检索增强生成响应
 type RetrieveAndGenerateResponse struct {
-	Answer       string   `json:"answer"`
-	Sources      []string `json:"sources"`
-	References   []string `json:"references"`
-	TokensUsed   int      `json:"tokensUsed"`
-	ExecutionTime int64   `json:"executionTime"`
+	Answer        string   `json:"answer"`
+	Sources       []string `json:"sources"`
+	References    []string `json:"references"`
+	TokensUsed    int      `json:"tokensUsed"`
+	ExecutionTime int64    `json:"executionTime"`
 }
 
 // RetrieveAndGenerate RAG检索增强生成
@@ -79,10 +94,10 @@ func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 
 	// 构造响应
 	resp := &RetrieveAndGenerateResponse{
-		Answer:       result.Answer,
-		Sources:      result.Sources,
-		References:   result.References,
-		TokensUsed:   result.TokensUsed,
+		Answer:        result.Answer,
+		Sources:       result.Sources,
+		References:    result.References,
+		TokensUsed:    result.TokensUsed,
 		ExecutionTime: result.ExecutionTime,
 	}
 

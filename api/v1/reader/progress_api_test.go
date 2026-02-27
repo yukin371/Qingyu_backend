@@ -264,7 +264,7 @@ func setupProgressTestRouter(readerService interfaces.ReaderService, userID stri
 	// 添加middleware来设置userId
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})
