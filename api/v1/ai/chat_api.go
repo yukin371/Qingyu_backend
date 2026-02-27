@@ -64,7 +64,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 	// 调用聊天服务
 	result, err := api.chatService.StartChat(c.Request.Context(), serviceReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 
 	sessions, err := api.chatService.ListChatSessions(c.Request.Context(), projectID, limit, offset)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -244,7 +244,7 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 
 	session, err := api.chatService.GetChatHistory(c.Request.Context(), sessionID, limit, offset)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -269,7 +269,7 @@ func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 
 	err := api.chatService.DeleteChatSession(c.Request.Context(), sessionID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
