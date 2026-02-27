@@ -4,6 +4,7 @@ import (
 	adminInterface "Qingyu_backend/repository/interfaces/admin"
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	adminModel "Qingyu_backend/models/users"
@@ -61,18 +62,18 @@ func (r *AdminLogRepositoryImpl) ListAdminLogs(ctx context.Context, filter *admi
 	bsonFilter := bson.M{}
 
 	if filter.AdminID != "" {
-		bsonFilter["admin_id"] = filter.AdminID
+		bsonFilter["admin_id"] = exactMatchRegex(filter.AdminID)
 	}
 	if filter.Operation != "" {
-		bsonFilter["operation"] = filter.Operation
+		bsonFilter["operation"] = exactMatchRegex(filter.Operation)
 	}
 	// 新增：支持资源类型过滤
 	if filter.ResourceType != "" {
-		bsonFilter["resource_type"] = filter.ResourceType
+		bsonFilter["resource_type"] = exactMatchRegex(filter.ResourceType)
 	}
 	// 新增：支持资源ID过滤
 	if filter.ResourceID != "" {
-		bsonFilter["resource_id"] = filter.ResourceID
+		bsonFilter["resource_id"] = exactMatchRegex(filter.ResourceID)
 	}
 	if !filter.StartDate.IsZero() || !filter.EndDate.IsZero() {
 		createdAtFilter := bson.M{}
@@ -112,18 +113,18 @@ func (r *AdminLogRepositoryImpl) CountAdminLogs(ctx context.Context, filter *adm
 	bsonFilter := bson.M{}
 
 	if filter.AdminID != "" {
-		bsonFilter["admin_id"] = filter.AdminID
+		bsonFilter["admin_id"] = exactMatchRegex(filter.AdminID)
 	}
 	if filter.Operation != "" {
-		bsonFilter["operation"] = filter.Operation
+		bsonFilter["operation"] = exactMatchRegex(filter.Operation)
 	}
 	// 新增：支持资源类型过滤
 	if filter.ResourceType != "" {
-		bsonFilter["resource_type"] = filter.ResourceType
+		bsonFilter["resource_type"] = exactMatchRegex(filter.ResourceType)
 	}
 	// 新增：支持资源ID过滤
 	if filter.ResourceID != "" {
-		bsonFilter["resource_id"] = filter.ResourceID
+		bsonFilter["resource_id"] = exactMatchRegex(filter.ResourceID)
 	}
 	if !filter.StartDate.IsZero() || !filter.EndDate.IsZero() {
 		createdAtFilter := bson.M{}
@@ -154,8 +155,8 @@ func (r *AdminLogRepositoryImpl) Health(ctx context.Context) error {
 // GetByResource 根据资源获取日志
 func (r *AdminLogRepositoryImpl) GetByResource(ctx context.Context, resourceType, resourceID string) ([]*adminModel.AdminLog, error) {
 	bsonFilter := bson.M{
-		"resource_type": resourceType,
-		"resource_id":   resourceID,
+		"resource_type": exactMatchRegex(resourceType),
+		"resource_id":   exactMatchRegex(resourceID),
 	}
 
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
@@ -217,4 +218,11 @@ func (r *AdminLogRepositoryImpl) CleanOldLogs(ctx context.Context, beforeDate ti
 	}
 
 	return nil
+}
+
+func exactMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
 }

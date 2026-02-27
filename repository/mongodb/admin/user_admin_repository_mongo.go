@@ -2,6 +2,10 @@ package admin
 
 import (
 	"context"
+	"fmt"
+	"net/mail"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +24,10 @@ const (
 
 type MongoUserAdminRepository struct {
 	db *mongo.Database
+}
+
+type userEmailFilter struct {
+	Email string `bson:"email"`
 }
 
 // NewMongoUserAdminRepository 创建用户管理仓储
@@ -98,14 +106,31 @@ func (r *MongoUserAdminRepository) GetByID(ctx context.Context, userID primitive
 
 // GetByEmail 根据邮箱获取用户
 func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string) (*users.User, error) {
-	var user users.User
-	filter := bson.M{"email": email}
+	canonicalEmail, err := normalizeEmail(email)
+	if err != nil {
+		return nil, err
+	}
 
-	err := r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
+	var user users.User
+	filter := userEmailFilter{Email: canonicalEmail}
+
+	err = r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func normalizeEmail(email string) (string, error) {
+	trimmed := strings.TrimSpace(email)
+	parsed, err := mail.ParseAddress(trimmed)
+	if err != nil || parsed == nil {
+		return "", fmt.Errorf("invalid email format")
+	}
+	if parsed.Address != trimmed {
+		return "", fmt.Errorf("invalid email format")
+	}
+	return strings.ToLower(parsed.Address), nil
 }
 
 // Update 更新用户信息
@@ -407,17 +432,18 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 
 	if filter != nil {
 		if filter.Keyword != "" {
+			escapedKeyword := regexp.QuoteMeta(filter.Keyword)
 			mongoFilter["$or"] = []bson.M{
-				{"username": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"email": bson.M{"$regex": filter.Keyword, "$options": "i"}},
-				{"nickname": bson.M{"$regex": filter.Keyword, "$options": "i"}},
+				{"username": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"email": bson.M{"$regex": escapedKeyword, "$options": "i"}},
+				{"nickname": bson.M{"$regex": escapedKeyword, "$options": "i"}},
 			}
 		}
 		if filter.Status != "" {
-			mongoFilter["status"] = filter.Status
+			mongoFilter["status"] = exactUserMatchRegex(string(filter.Status))
 		}
 		if filter.Role != "" {
-			mongoFilter["role"] = filter.Role
+			mongoFilter["role"] = exactUserMatchRegex(filter.Role)
 		}
 		if filter.DateFrom != nil {
 			if _, exists := mongoFilter["created_at"]; !exists {
@@ -437,4 +463,11 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 	}
 
 	return mongoFilter
+}
+
+func exactUserMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
 }
