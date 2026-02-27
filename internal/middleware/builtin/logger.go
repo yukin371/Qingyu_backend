@@ -413,13 +413,6 @@ func (m *LoggerMiddleware) LoadConfig(config map[string]interface{}) error {
 	return nil
 }
 
-func sanitizeLogValue(value string) string {
-	// 移除换行和回车，避免日志注入。
-	value = strings.ReplaceAll(value, "\r", "")
-	value = strings.ReplaceAll(value, "\n", "")
-	return value
-}
-
 // ValidateConfig 验证配置有效性
 //
 // 实现ConfigurableMiddleware接口
