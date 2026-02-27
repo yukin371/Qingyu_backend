@@ -4,7 +4,6 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,13 +19,12 @@ type MongoCommentRepository struct {
 	*base.BaseMongoRepository
 }
 
-var socialCommentSafeQueryTokenPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
-
 func sanitizeSocialCommentQueryToken(field, value string) (string, error) {
-	if !socialCommentSafeQueryTokenPattern.MatchString(value) {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
 		return "", fmt.Errorf("%s格式不合法", field)
 	}
-	return value, nil
+	return objectID.Hex(), nil
 }
 
 func sanitizeSocialCommentFilter(filter bson.M) (bson.M, error) {

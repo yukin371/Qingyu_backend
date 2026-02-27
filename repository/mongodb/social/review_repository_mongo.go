@@ -3,7 +3,6 @@ package social
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,13 +19,12 @@ type MongoReviewRepository struct {
 	likeCollection   *mongo.Collection
 }
 
-var reviewSafeQueryTokenPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
-
 func sanitizeReviewQueryToken(field, value string) (string, error) {
-	if !reviewSafeQueryTokenPattern.MatchString(value) {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
 		return "", fmt.Errorf("%s格式不合法", field)
 	}
-	return value, nil
+	return objectID.Hex(), nil
 }
 
 func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
