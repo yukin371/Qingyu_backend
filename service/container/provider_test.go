@@ -48,7 +48,7 @@ func TestProviderDependencyDeclaration(t *testing.T) {
 	t.Run("Provider应该能够声明显式依赖", func(t *testing.T) {
 		databaseProvider := Provider{
 			Name:         "database",
-			Factory:      nil, // 简化测试
+			Factory:      nil,        // 简化测试
 			Dependencies: []string{}, // 数据库没有依赖
 		}
 
@@ -145,26 +145,29 @@ func TestLazyProvider(t *testing.T) {
 func TestSingletonProvider(t *testing.T) {
 	t.Run("Singleton Provider应该只创建一次实例", func(t *testing.T) {
 		callCount := 0
-		var lastInstance interface{}
 
 		provider := Provider{
 			Name:      "singleton-service",
 			Singleton: true,
 			Factory: func(c *ServiceContainer) (interface{}, error) {
 				callCount++
-				lastInstance = "instance-" + string(rune(callCount))
-			return lastInstance, nil
+				return "instance-" + string(rune(callCount)), nil
 			},
 		}
 
 		container := NewServiceContainer()
+		registry := NewProviderRegistry()
+		err := registry.Register(provider)
+		require.NoError(t, err)
 
 		// 第一次调用
-		instance1, _ := provider.Factory(container)
+		instance1, err := registry.GetOrCreate("singleton-service", container)
+		require.NoError(t, err)
 		assert.Equal(t, 1, callCount)
 
 		// 第二次调用（单例应该返回相同实例）
-		instance2, _ := provider.Factory(container)
+		instance2, err := registry.GetOrCreate("singleton-service", container)
+		require.NoError(t, err)
 		assert.Equal(t, 1, callCount, "单例不应该重复创建")
 		assert.Equal(t, instance1, instance2)
 	})

@@ -8,6 +8,8 @@ on:
 
 env:
   GO_VERSION: '1.24'
+  MONGODB_TEST_USER: admin
+  MONGODB_TEST_PASS: ci_test_pass
 
 jobs:
   # 代码检查和格式化
@@ -88,6 +90,28 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ env.MONGODB_TEST_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ env.MONGODB_TEST_PASS }}
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh 'mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017' --eval 'db.stats().ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,6 +125,12 @@ jobs:
         run: go mod download
 
       - name: Run unit tests
+        env:
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
         run: |
           TEST_PACKAGES=$(go list ./... | \
             grep -v '^Qingyu_backend/cmd/' | \
@@ -183,8 +213,10 @@ jobs:
 
       - name: Run integration tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
@@ -273,7 +305,10 @@ jobs:
 
       - name: Start application
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
@@ -284,8 +319,10 @@ jobs:
 
       - name: Run API tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
@@ -324,8 +361,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Start MongoDB
-        run: docker compose -f docker/docker-compose.test.yml up -d mongodb-test
+      - name: Start test infrastructure
+        run: docker compose -f docker/docker-compose.test.yml up -d mongodb-test redis-test
 
       - name: Wait for MongoDB
         run: |
@@ -344,10 +381,26 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Wait for Redis
+        run: |
+          for i in {1..15}; do
+            if docker exec qingyu-redis-test redis-cli ping > /dev/null 2>&1; then
+              echo "Redis is ready!"
+              exit 0
+            fi
+            echo "Waiting for Redis... ($i/15)"
+            sleep 1
+          done
+          echo "Redis failed to start"
+          exit 1
+
       - name: Run E2E Layer 1 - Basic Flows
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -357,8 +410,11 @@ jobs:
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -368,8 +424,11 @@ jobs:
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://${{ env.MONGODB_TEST_USER }}:${{ env.MONGODB_TEST_PASS }}@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
