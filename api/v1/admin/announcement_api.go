@@ -95,7 +95,7 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 	// 调用Service层
 	resp, err := api.announcementService.GetAnnouncements(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -123,7 +123,7 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 
 	announcement, err := api.announcementService.GetAnnouncementByID(c.Request.Context(), id)
 	if err != nil {
-		response.HandleServiceError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 
 	announcement, err := api.announcementService.CreateAnnouncement(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 	}
 
 	if err := api.announcementService.UpdateAnnouncement(c.Request.Context(), id, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -221,7 +221,7 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 	}
 
 	if err := api.announcementService.DeleteAnnouncement(c.Request.Context(), id); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -249,7 +249,7 @@ func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
 	}
 
 	if err := api.announcementService.BatchUpdateStatus(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -288,7 +288,7 @@ func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 	}
 
 	if err := api.announcementService.BatchDelete(c.Request.Context(), req.IDs); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

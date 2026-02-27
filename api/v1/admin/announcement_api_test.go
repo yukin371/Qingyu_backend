@@ -18,6 +18,8 @@ import (
 	messagingModel "Qingyu_backend/models/messaging"
 	messagingBase "Qingyu_backend/models/messaging/base"
 	apperrors "Qingyu_backend/pkg/errors"
+	"Qingyu_backend/internal/middleware/builtin"
+	"Qingyu_backend/pkg/logger"
 	messagingService "Qingyu_backend/service/messaging"
 )
 
@@ -88,6 +90,10 @@ func setupAnnouncementAPITestRouter(service *MockAnnouncementService) *gin.Engin
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandler.Handler())
+
 	api := NewAnnouncementAPI(service)
 
 	v1 := r.Group("/api/v1/admin")
@@ -157,13 +163,8 @@ func TestAnnouncementAPI_GetAnnouncementByID_InvalidID(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err)
-	assert.Equal(t, float64(5000), response["code"])
+	// Then - 中间件会自动映射ValidationError为400状态码
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -184,13 +185,8 @@ func TestAnnouncementAPI_GetAnnouncementByID_NotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err)
-	assert.Equal(t, float64(5000), response["code"])
+	// Then - 中间件会自动映射NotFoundError为404状态码
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -211,13 +207,8 @@ func TestAnnouncementAPI_GetAnnouncementByID_InternalError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err)
-	assert.Equal(t, float64(5000), response["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -385,8 +376,8 @@ func TestAnnouncementAPI_CreateAnnouncement_ServiceError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, reqHTTP)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	// Then - 中间件会自动映射ValidationError为400状态码
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -445,8 +436,8 @@ func TestAnnouncementAPI_UpdateAnnouncement_NotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, reqHTTP)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	// Then - 中间件会自动映射NotFoundError为404状态码
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -487,8 +478,8 @@ func TestAnnouncementAPI_DeleteAnnouncement_NotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	// Then - 中间件会自动映射NotFoundError为404状态码
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	mockService.AssertExpectations(t)
 }
@@ -543,8 +534,8 @@ func TestAnnouncementAPI_BatchUpdateStatus_ValidationError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, reqHTTP)
 
-	// Then
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	// Then - 中间件会自动映射ValidationError为400状态码
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	mockService.AssertExpectations(t)
 }
