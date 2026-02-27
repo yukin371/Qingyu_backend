@@ -11,6 +11,13 @@ import (
 
 // TestDatabaseConfig_LoadOldFormatYAML 测试从YAML加载旧格式配置
 func TestDatabaseConfig_LoadOldFormatYAML(t *testing.T) {
+	t.Setenv("MONGODB_URI", "")
+	t.Setenv("MONGODB_DATABASE", "")
+	t.Setenv("MONGODB_MAX_POOL_SIZE", "")
+	t.Setenv("MONGODB_PROFILING_LEVEL", "")
+	t.Setenv("MONGODB_SLOW_MS", "")
+	t.Setenv("MONGODB_PROFILER_SIZE_MB", "")
+
 	yamlContent := `
 uri: "mongodb://localhost:27017"
 name: "qingyu"
@@ -42,6 +49,13 @@ primary:
 
 // TestDatabaseConfig_LoadNewFormatYAML 测试从YAML加载新格式配置
 func TestDatabaseConfig_LoadNewFormatYAML(t *testing.T) {
+	t.Setenv("MONGODB_URI", "")
+	t.Setenv("MONGODB_DATABASE", "")
+	t.Setenv("MONGODB_MAX_POOL_SIZE", "")
+	t.Setenv("MONGODB_PROFILING_LEVEL", "")
+	t.Setenv("MONGODB_SLOW_MS", "")
+	t.Setenv("MONGODB_PROFILER_SIZE_MB", "")
+
 	yamlContent := `
 type: mongodb
 primary:

@@ -497,13 +497,16 @@ func redactJSONKeys(input string, keys []string) string {
 	return redacted
 }
 
-// sanitizeLogValue strips characters that can break log structure or hide payload boundaries.
-func sanitizeLogValue(v string) string {
-	clean := strings.ReplaceAll(v, "\n", "\\n")
-	clean = strings.ReplaceAll(clean, "\r", "\\r")
-	clean = strings.ReplaceAll(clean, "\t", "\\t")
-	clean = strings.ReplaceAll(clean, "\x00", "")
-	return clean
+// sanitizeLogValue 标准化日志字段，防止换行注入破坏日志结构
+func sanitizeLogValue(value string) string {
+	if value == "" {
+		return value
+	}
+
+	sanitized := strings.ReplaceAll(value, "\r", "\\r")
+	sanitized = strings.ReplaceAll(sanitized, "\n", "\\n")
+	sanitized = strings.ReplaceAll(sanitized, "\x00", "")
+	return sanitized
 }
 
 // validateAccessLogFields 验证访问日志字段（严格模式）

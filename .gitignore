@@ -107,6 +107,7 @@ scripts/*.log
 scripts/*.tmp
 scripts/temp/
 scripts/logs/
+scripts/check-dependencies/check-deps
 
 # Serena配置
 .serena/
