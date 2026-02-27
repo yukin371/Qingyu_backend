@@ -17,6 +17,7 @@ import (
 )
 
 var safeCollectionTagPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,32}$`)
+var safeCollectionShareIDPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
 
 func normalizeObjectIDHex(field, value string) (string, error) {
 	objectID, err := primitive.ObjectIDFromHex(value)
@@ -36,10 +37,17 @@ func validateCollectionTag(value string) error {
 	return nil
 }
 
+func normalizeCollectionShareID(value string) (string, error) {
+	if !safeCollectionShareIDPattern.MatchString(value) {
+		return "", fmt.Errorf("share_id格式非法")
+	}
+	return value, nil
+}
+
 // MongoCollectionRepository MongoDB收藏仓储实现
 type MongoCollectionRepository struct {
-	*base.BaseMongoRepository // 嵌入基类，管理主collection (collections)
-	folderColl *mongo.Collection // 独立管理folder collection
+	*base.BaseMongoRepository                   // 嵌入基类，管理主collection (collections)
+	folderColl                *mongo.Collection // 独立管理folder collection
 }
 
 // NewMongoCollectionRepository 创建MongoDB收藏仓储实例
@@ -86,6 +94,13 @@ func NewMongoCollectionRepository(db *mongo.Database) *MongoCollectionRepository
 				{Key: "user_id", Value: 1},
 				{Key: "tags", Value: 1},
 			},
+		},
+		{
+			// 分享ID查询（唯一索引）
+			Keys: bson.D{
+				{Key: "share_id", Value: 1},
+			},
+			Options: options.Index().SetUnique(true).SetSparse(true),
 		},
 	}
 
@@ -200,6 +215,35 @@ func (r *MongoCollectionRepository) GetByUserAndBook(ctx context.Context, userID
 			return nil, nil // 未收藏不报错，返回nil
 		}
 		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+
+	return &collection, nil
+}
+
+// GetByShareID 根据分享ID获取收藏
+func (r *MongoCollectionRepository) GetByShareID(ctx context.Context, shareID string) (*social.Collection, error) {
+	if shareID == "" {
+		return nil, fmt.Errorf("分享ID不能为空")
+	}
+	shareIDValue, err := normalizeCollectionShareID(shareID)
+	if err != nil {
+		return nil, err
+	}
+	shareIDPattern := primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(shareIDValue) + "$",
+		Options: "",
+	}
+
+	var collection social.Collection
+	err = r.GetCollection().FindOne(ctx, bson.D{
+		{Key: "share_id", Value: shareIDPattern},
+	}).Decode(&collection)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // 未找到不报错，返回nil
+		}
+		return nil, fmt.Errorf("failed to get collection by share_id: %w", err)
 	}
 
 	return &collection, nil

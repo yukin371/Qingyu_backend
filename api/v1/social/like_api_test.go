@@ -1,6 +1,7 @@
 package social_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -103,6 +104,15 @@ func (m *MockLikeService) GetUserLikeStats(ctx context.Context, userID string) (
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
+// BatchLikeBooks 模拟批量点赞书籍
+func (m *MockLikeService) BatchLikeBooks(ctx context.Context, userID string, bookIDs []string) (map[string]interface{}, error) {
+	args := m.Called(ctx, userID, bookIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
 // setupLikeTestRouter 设置测试路由
 func setupLikeTestRouter(likeService interfaces.LikeService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -123,6 +133,7 @@ func setupLikeTestRouter(likeService interfaces.LikeService, userID string) *gin
 		v1.POST("/books/:bookId/like", api.LikeBook)
 		v1.DELETE("/books/:bookId/like", api.UnlikeBook)
 		v1.GET("/books/:bookId/like/info", api.GetBookLikeInfo)
+		v1.POST("/books/batch-like", api.BatchLikeBooks)
 		v1.GET("/likes/books", api.GetUserLikedBooks)
 		v1.GET("/likes/stats", api.GetUserLikeStats)
 		v1.POST("/comments/:id/like", api.LikeComment)
@@ -155,7 +166,7 @@ func TestLikeAPI_LikeBook_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -217,7 +228,7 @@ func TestLikeAPI_UnlikeBook_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -306,7 +317,7 @@ func TestLikeAPI_LikeComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -334,7 +345,194 @@ func TestLikeAPI_UnlikeComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
+}
+
+// ========================= 批量点赞测试 =========================
+
+// BatchLikeBookResult 批量点赞书籍结果
+type BatchLikeBookResult struct {
+	BookID   string `json:"book_id"`
+	Success  bool   `json:"success"`
+	ErrorMsg string `json:"error_msg,omitempty"`
+}
+
+// TestLikeAPI_BatchLikeBooks_Success 测试成功批量点赞书籍
+func TestLikeAPI_BatchLikeBooks_Success(t *testing.T) {
+	// Given
+	mockService := new(MockLikeService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupLikeTestRouter(mockService, userID)
+
+	// 准备测试数据
+	bookID1 := primitive.NewObjectID().Hex()
+	bookID2 := primitive.NewObjectID().Hex()
+	bookID3 := primitive.NewObjectID().Hex()
+
+	// Mock服务层调用
+	mockService.On("BatchLikeBooks", mock.Anything, userID, []string{bookID1, bookID2, bookID3}).Return(map[string]interface{}{
+		"success_count": 3,
+		"failed_count":  0,
+		"results": []BatchLikeBookResult{
+			{BookID: bookID1, Success: true},
+			{BookID: bookID2, Success: true},
+			{BookID: bookID3, Success: true},
+		},
+	}, nil)
+
+	// 准备请求体
+	requestBody := map[string][]string{
+		"book_ids": {bookID1, bookID2, bookID3},
+	}
+	bodyBytes, _ := json.Marshal(requestBody)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/books/batch-like", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(3), data["success_count"])
+	assert.Equal(t, float64(0), data["failed_count"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestLikeAPI_BatchLikeBooks_EmptyBookIDs 测试空书籍ID列表
+func TestLikeAPI_BatchLikeBooks_EmptyBookIDs(t *testing.T) {
+	// Given
+	mockService := new(MockLikeService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupLikeTestRouter(mockService, userID)
+
+	// 准备空的请求体
+	requestBody := map[string][]string{
+		"book_ids": {},
+	}
+	bodyBytes, _ := json.Marshal(requestBody)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/books/batch-like", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestLikeAPI_BatchLikeBooks_ExceedLimit 测试超过数量限制
+func TestLikeAPI_BatchLikeBooks_ExceedLimit(t *testing.T) {
+	// Given
+	mockService := new(MockLikeService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupLikeTestRouter(mockService, userID)
+
+	// 准备超过50个书籍ID的请求体
+	bookIDs := make([]string, 51)
+	for i := 0; i < 51; i++ {
+		bookIDs[i] = primitive.NewObjectID().Hex()
+	}
+
+	requestBody := map[string][]string{
+		"book_ids": bookIDs,
+	}
+	bodyBytes, _ := json.Marshal(requestBody)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/books/batch-like", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestLikeAPI_BatchLikeBooks_PartialSuccess 测试部分成功
+func TestLikeAPI_BatchLikeBooks_PartialSuccess(t *testing.T) {
+	// Given
+	mockService := new(MockLikeService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupLikeTestRouter(mockService, userID)
+
+	// 准备测试数据
+	bookID1 := primitive.NewObjectID().Hex()
+	bookID2 := primitive.NewObjectID().Hex()
+	bookID3 := primitive.NewObjectID().Hex()
+
+	// Mock服务层调用 - 部分成功
+	mockService.On("BatchLikeBooks", mock.Anything, userID, []string{bookID1, bookID2, bookID3}).Return(map[string]interface{}{
+		"success_count": 2,
+		"failed_count":  1,
+		"results": []BatchLikeBookResult{
+			{BookID: bookID1, Success: true},
+			{BookID: bookID2, Success: false, ErrorMsg: "书籍不存在"},
+			{BookID: bookID3, Success: true},
+		},
+	}, nil)
+
+	requestBody := map[string][]string{
+		"book_ids": {bookID1, bookID2, bookID3},
+	}
+	bodyBytes, _ := json.Marshal(requestBody)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/books/batch-like", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["success_count"])
+	assert.Equal(t, float64(1), data["failed_count"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestLikeAPI_BatchLikeBooks_Unauthorized 测试未授权访问
+func TestLikeAPI_BatchLikeBooks_Unauthorized(t *testing.T) {
+	// Given
+	mockService := new(MockLikeService)
+	router := setupLikeTestRouter(mockService, "") // 不设置userID
+
+	bookID := primitive.NewObjectID().Hex()
+	requestBody := map[string][]string{
+		"book_ids": {bookID},
+	}
+	bodyBytes, _ := json.Marshal(requestBody)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/books/batch-like", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }

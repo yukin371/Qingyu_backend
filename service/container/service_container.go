@@ -51,6 +51,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
 	"Qingyu_backend/repository/mongodb"
+	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -743,7 +744,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.services["LikeService"] = c.likeService
 
 	// ============ 4.6 创建收藏服务 ============
-	collectionRepo := c.repositoryFactory.CreateCollectionRepository()
+	collectionRepo := mongoSocialRepo.NewMongoCollectionRepository(c.mongoDB)
 
 	c.collectionService = socialService.NewCollectionService(
 		collectionRepo,

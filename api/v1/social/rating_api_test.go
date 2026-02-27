@@ -73,7 +73,7 @@ func setupRatingTestRouter(ratingService *MockRatingService, userID string) *gin
 	// 添加middleware来设置userId（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})
@@ -351,7 +351,7 @@ func TestGetUserRating_Unauthorized(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["message"], "未授权")
+	assert.Contains(t, response["message"], "登录")
 }
 
 // TestGetUserRating_InvalidTargetType 测试无效的目标类型

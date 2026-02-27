@@ -7,18 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/api/v1/social/dto"
 	modelsMessaging "Qingyu_backend/models/messaging"
-	serviceMessaging "Qingyu_backend/service/messaging"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/realtime/websocket"
+	serviceMessaging "Qingyu_backend/service/messaging"
 )
 
 // MessageAPIV2 消息API处理器（新版本，基于会话）
 type MessageAPIV2 struct {
-	messageService       *serviceMessaging.MessageService
-	conversationService  *serviceMessaging.ConversationService
-	wsHub                *websocket.MessagingWSHub
+	messageService      *serviceMessaging.MessageService
+	conversationService *serviceMessaging.ConversationService
+	wsHub               *websocket.MessagingWSHub
 }
 
 // NewMessageAPIV2 创建消息API实例
@@ -60,13 +60,13 @@ func (api *MessageAPIV2) GetMessages(c *gin.Context) {
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.GetMessagesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 	req = *req.GetDefaults() // 应用默认值
@@ -161,13 +161,13 @@ func (api *MessageAPIV2) SendMessage(c *gin.Context) {
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.SendMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -274,13 +274,13 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 
 	var req dto.CreateConversationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 验证参与者
 	if !contains(req.ParticipantIDs, userID) {
-		response.BadRequest(c,  "参数错误", "必须包含当前用户")
+		response.BadRequest(c, "参数错误", "必须包含当前用户")
 		return
 	}
 
@@ -323,13 +323,13 @@ func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {
 
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 
 	var req dto.MarkConversationReadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

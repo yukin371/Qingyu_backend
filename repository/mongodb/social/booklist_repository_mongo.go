@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,8 +18,17 @@ import (
 
 // MongoBookListRepository MongoDB书单仓储实现
 type MongoBookListRepository struct {
-	*base.BaseMongoRepository // 嵌入基类，管理主collection (book_lists)
-	db *mongo.Database         // 保留db字段用于访问其他collection (如book_list_likes)
+	*base.BaseMongoRepository                 // 嵌入基类，管理主collection (book_lists)
+	db                        *mongo.Database // 保留db字段用于访问其他collection (如book_list_likes)
+}
+
+var bookListSafeQueryTokenPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
+
+func sanitizeBookListQueryToken(field, value string) (string, error) {
+	if !bookListSafeQueryTokenPattern.MatchString(value) {
+		return "", fmt.Errorf("%s格式不合法", field)
+	}
+	return value, nil
 }
 
 // NewMongoBookListRepository 创建MongoDB书单仓储
@@ -434,7 +444,7 @@ func (r *MongoBookListRepository) DeleteBookListLike(ctx context.Context, bookLi
 
 	filter := bson.M{
 		"booklist_id": bookListID,
-		"user_id":      userID,
+		"user_id":     userID,
 	}
 
 	result, err := likesCollection.DeleteOne(ctx, filter)
@@ -453,14 +463,22 @@ func (r *MongoBookListRepository) DeleteBookListLike(ctx context.Context, bookLi
 // GetBookListLike 获取书单点赞记录
 func (r *MongoBookListRepository) GetBookListLike(ctx context.Context, bookListID, userID string) (*social.BookListLike, error) {
 	likesCollection := r.db.Collection("book_list_likes")
+	safeBookListID, err := sanitizeBookListQueryToken("booklist_id", bookListID)
+	if err != nil {
+		return nil, err
+	}
+	safeUserID, err := sanitizeBookListQueryToken("user_id", userID)
+	if err != nil {
+		return nil, err
+	}
 
 	filter := bson.M{
-		"booklist_id": bookListID,
-		"user_id":      userID,
+		"booklist_id": safeBookListID,
+		"user_id":     safeUserID,
 	}
 
 	var bookListLike social.BookListLike
-	err := likesCollection.FindOne(ctx, filter).Decode(&bookListLike)
+	err = likesCollection.FindOne(ctx, filter).Decode(&bookListLike)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -474,10 +492,18 @@ func (r *MongoBookListRepository) GetBookListLike(ctx context.Context, bookListI
 // IsBookListLiked 检查是否已点赞
 func (r *MongoBookListRepository) IsBookListLiked(ctx context.Context, bookListID, userID string) (bool, error) {
 	likesCollection := r.db.Collection("book_list_likes")
+	safeBookListID, err := sanitizeBookListQueryToken("booklist_id", bookListID)
+	if err != nil {
+		return false, err
+	}
+	safeUserID, err := sanitizeBookListQueryToken("user_id", userID)
+	if err != nil {
+		return false, err
+	}
 
 	filter := bson.M{
-		"booklist_id": bookListID,
-		"user_id":      userID,
+		"booklist_id": safeBookListID,
+		"user_id":     safeUserID,
 	}
 
 	count, err := likesCollection.CountDocuments(ctx, filter)

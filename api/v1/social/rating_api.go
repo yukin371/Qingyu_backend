@@ -3,6 +3,7 @@ package social
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/social"
 )
@@ -19,6 +20,16 @@ func NewRatingAPI(ratingService social.RatingService) *RatingAPI {
 	}
 }
 
+// isValidTargetType 验证目标类型是否有效
+func (api *RatingAPI) isValidTargetType(targetType string, validTypes []string) bool {
+	for _, t := range validTypes {
+		if t == targetType {
+			return true
+		}
+	}
+	return false
+}
+
 // GetRatingStats 获取评分统计
 //
 //	@Summary		获取评分统计
@@ -33,22 +44,17 @@ func NewRatingAPI(ratingService social.RatingService) *RatingAPI {
 //	@Failure		500			{object}	response.APIResponse	"服务器内部错误"
 //	@Router			/api/v1/ratings/{targetType}/{targetId}/stats [get]
 func (api *RatingAPI) GetRatingStats(c *gin.Context) {
-	targetType := c.Param("targetType")
-	targetID := c.Param("targetId")
-
-	// 参数验证
-	if targetType == "" || targetID == "" {
-		response.BadRequest(c, "参数错误", "targetType和targetId不能为空")
+	targetType, ok := shared.GetRequiredParam(c, "targetType", "目标类型")
+	if !ok {
+		return
+	}
+	targetID, ok := shared.GetRequiredParam(c, "targetId", "目标ID")
+	if !ok {
 		return
 	}
 
 	// 验证目标类型
-	validTypes := map[string]bool{
-		"comment": true,
-		"review":  true,
-		"book":    true,
-	}
-	if !validTypes[targetType] {
+	if !api.isValidTargetType(targetType, []string{"comment", "review", "book"}) {
 		response.BadRequest(c, "参数错误", "targetType必须是comment、review或book")
 		return
 	}
@@ -78,28 +84,22 @@ func (api *RatingAPI) GetRatingStats(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse	"服务器内部错误"
 //	@Router			/api/v1/ratings/{targetType}/{targetId}/user-rating [get]
 func (api *RatingAPI) GetUserRating(c *gin.Context) {
-	// 验证用户身份
-	userID := c.GetString("userId")
-	if userID == "" {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	targetType := c.Param("targetType")
-	targetID := c.Param("targetId")
-
-	// 参数验证
-	if targetType == "" || targetID == "" {
-		response.BadRequest(c, "参数错误", "targetType和targetId不能为空")
+	targetType, ok := shared.GetRequiredParam(c, "targetType", "目标类型")
+	if !ok {
+		return
+	}
+	targetID, ok := shared.GetRequiredParam(c, "targetId", "目标ID")
+	if !ok {
 		return
 	}
 
 	// 验证目标类型
-	validTypes := map[string]bool{
-		"book":   true,
-		"review": true,
-	}
-	if !validTypes[targetType] {
+	if !api.isValidTargetType(targetType, []string{"book", "review"}) {
 		response.BadRequest(c, "参数错误", "targetType必须是book或review")
 		return
 	}

@@ -25,6 +25,9 @@ type LikeService interface {
 	GetBooksLikeCount(ctx context.Context, bookIDs []string) (map[string]int64, error)
 	GetUserLikeStatus(ctx context.Context, userID string, bookIDs []string) (map[string]bool, error)
 
+	// 批量操作
+	BatchLikeBooks(ctx context.Context, userID string, bookIDs []string) (map[string]interface{}, error)
+
 	// 统计
 	GetUserLikeStats(ctx context.Context, userID string) (map[string]interface{}, error)
 }

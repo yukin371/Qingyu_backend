@@ -2,8 +2,10 @@ package social
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"log"
+	"math/big"
 	"time"
 
 	"Qingyu_backend/models/reader"
@@ -585,4 +587,94 @@ func (s *CollectionService) publishFolderEvent(ctx context.Context, eventType st
 	}
 
 	s.eventBus.PublishAsync(ctx, event)
+}
+
+// =========================
+// 分享链接生成（新增）
+// =========================
+
+// generateShareID 生成唯一的分享ID
+func (s *CollectionService) generateShareID() (string, error) {
+	// 生成9位随机字符串（小写字母+数字）
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, 9)
+	for i := range result {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", fmt.Errorf("生成随机数失败: %w", err)
+		}
+		result[i] = chars[num.Int64()]
+	}
+	return string(result), nil
+}
+
+// ShareCollectionWithURL 分享收藏并返回分享链接
+func (s *CollectionService) ShareCollectionWithURL(ctx context.Context, userID, collectionID string) (map[string]interface{}, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("用户ID不能为空")
+	}
+	if collectionID == "" {
+		return nil, fmt.Errorf("收藏ID不能为空")
+	}
+
+	// 获取收藏
+	collection, err := s.collectionRepo.GetByID(ctx, collectionID)
+	if err != nil {
+		return nil, fmt.Errorf("获取收藏失败: %w", err)
+	}
+
+	// 权限检查
+	if collection.UserID != userID {
+		return nil, fmt.Errorf("无权分享该收藏")
+	}
+
+	// 如果已有分享ID，直接返回
+	if collection.ShareID != "" {
+		return map[string]interface{}{
+			"share_id":   collection.ShareID,
+			"share_url":  "/api/v1/reader/collections/shared/" + collection.ShareID,
+			"expires_at": nil,
+		}, nil
+	}
+
+	// 生成新的分享ID
+	shareID, err := s.generateShareID()
+	if err != nil {
+		return nil, fmt.Errorf("生成分享ID失败: %w", err)
+	}
+
+	// 更新收藏
+	updates := map[string]interface{}{
+		"is_public": true,
+		"share_id":  shareID,
+	}
+
+	if err := s.collectionRepo.Update(ctx, collectionID, updates); err != nil {
+		return nil, fmt.Errorf("分享收藏失败: %w", err)
+	}
+
+	return map[string]interface{}{
+		"share_id":   shareID,
+		"share_url":  "/api/v1/reader/collections/shared/" + shareID,
+		"expires_at": nil,
+	}, nil
+}
+
+// GetSharedCollection 根据分享ID获取收藏详情
+func (s *CollectionService) GetSharedCollection(ctx context.Context, shareID string) (*reader.Collection, error) {
+	if shareID == "" {
+		return nil, fmt.Errorf("分享ID不能为空")
+	}
+
+	collection, err := s.collectionRepo.GetByShareID(ctx, shareID)
+	if err != nil {
+		return nil, fmt.Errorf("获取分享收藏失败: %w", err)
+	}
+
+	// 检查是否为公开收藏
+	if !collection.IsPublic {
+		return nil, fmt.Errorf("该收藏未公开")
+	}
+
+	return collection, nil
 }

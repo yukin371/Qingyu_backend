@@ -32,31 +32,31 @@ type GetMessagesResponse struct {
 
 // MessageItem 消息项
 type MessageItem struct {
-	ID             string                `json:"id"`
-	ConversationID string                `json:"conversation_id"`
-	SenderID       string                `json:"sender_id"`
-	ReceiverID     string                `json:"receiver_id"`
-	Content        string                `json:"content"`
-	Type           string                `json:"type"`
+	ID             string                 `json:"id"`
+	ConversationID string                 `json:"conversation_id"`
+	SenderID       string                 `json:"sender_id"`
+	ReceiverID     string                 `json:"receiver_id"`
+	Content        string                 `json:"content"`
+	Type           string                 `json:"type"`
 	Attachments    []MessageAttachmentDTO `json:"attachments,omitempty"`
-	ReplyTo        *string               `json:"reply_to,omitempty"`
-	Read           bool                  `json:"read"`
-	SentAt         time.Time             `json:"sent_at"`
+	ReplyTo        *string                `json:"reply_to,omitempty"`
+	Read           bool                   `json:"read"`
+	SentAt         time.Time              `json:"sent_at"`
 }
 
 // SendMessageRequest 发送消息请求
 type SendMessageRequest struct {
-	Content     string                `json:"content" binding:"required,min=1,max=5000"`
-	Type        string                `json:"type" binding:"required,oneof=text image file"`
+	Content     string                 `json:"content" binding:"required,min=1,max=5000"`
+	Type        string                 `json:"type" binding:"required,oneof=text image file"`
 	Attachments []MessageAttachmentDTO `json:"attachments,omitempty"`
-	ReplyTo     *string               `json:"reply_to,omitempty"`
+	ReplyTo     *string                `json:"reply_to,omitempty"`
 }
 
 // SendMessageResponse 发送消息响应
 type SendMessageResponse struct {
-	MessageID    string    `json:"message_id"`
-	SentAt       time.Time `json:"sent_at"`
-	UnreadCount  int       `json:"unread_count"`
+	MessageID   string    `json:"message_id"`
+	SentAt      time.Time `json:"sent_at"`
+	UnreadCount int       `json:"unread_count"`
 }
 
 // CreateConversationRequest 创建会话请求
@@ -84,9 +84,9 @@ type MarkAsReadResponse struct {
 
 // MessageAttachmentDTO 消息附件DTO（用于API层，区别于models层）
 type MessageAttachmentDTO struct {
-	Type      string `json:"type" binding:"required,oneof=image file"`
-	URL       string `json:"url" binding:"required"`
-	Name      string `json:"name"`
-	Size      int64  `json:"size"`
-	MimeType  string `json:"mime_type"`
+	Type     string `json:"type" binding:"required,oneof=image file"`
+	URL      string `json:"url" binding:"required"`
+	Name     string `json:"name"`
+	Size     int64  `json:"size"`
+	MimeType string `json:"mime_type"`
 }

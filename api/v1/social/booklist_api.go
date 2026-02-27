@@ -1,9 +1,9 @@
 package social
 
 import (
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -46,22 +46,21 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 获取用户信息
 	userName := ""
 	userAvatar := ""
-	if name, ok := c.Get("username"); ok {
+	if name, exists := c.Get("username"); exists {
 		userName = name.(string)
 	}
 
 	bookList, err := api.bookListService.CreateBookList(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		userName,
 		userAvatar,
 		req.Title,
@@ -90,22 +89,12 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists [get]
 func (api *BookListAPI) GetBookLists(c *gin.Context) {
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	bookLists, total, err := api.bookListService.GetBookLists(
 		c.Request.Context(),
-		params.Page,
-		params.Size,
+		pagination.Page,
+		pagination.PageSize,
 	)
 
 	if err != nil {
@@ -113,12 +102,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"list":  bookLists,
-		"total": total,
-		"page":  params.Page,
-		"size":  params.Size,
-	})
+	shared.RespondWithPaginated(c, bookLists, int(total), pagination.Page, pagination.PageSize, "")
 }
 
 // GetBookListDetail 获取书单详情
@@ -130,9 +114,8 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [get]
 func (api *BookListAPI) GetBookListDetail(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 
@@ -166,15 +149,13 @@ type UpdateBookListRequest struct {
 // @Router /api/v1/social/booklists/{id} [put]
 // @Security Bearer
 func (api *BookListAPI) UpdateBookList(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -209,7 +190,7 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 		return
 	}
 
-	err := api.bookListService.UpdateBookList(c.Request.Context(), userID.(string), bookListID, updates)
+	err := api.bookListService.UpdateBookList(c.Request.Context(), userID, bookListID, updates)
 	if err != nil {
 		c.Error(err)
 		return
@@ -228,19 +209,17 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 // @Router /api/v1/social/booklists/{id} [delete]
 // @Security Bearer
 func (api *BookListAPI) DeleteBookList(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.bookListService.DeleteBookList(c.Request.Context(), userID.(string), bookListID)
+	err := api.bookListService.DeleteBookList(c.Request.Context(), userID, bookListID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -259,19 +238,17 @@ func (api *BookListAPI) DeleteBookList(c *gin.Context) {
 // @Router /api/v1/social/booklists/{id}/like [post]
 // @Security Bearer
 func (api *BookListAPI) LikeBookList(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.bookListService.LikeBookList(c.Request.Context(), userID.(string), bookListID)
+	err := api.bookListService.LikeBookList(c.Request.Context(), userID, bookListID)
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经点赞过该书单" {
@@ -295,19 +272,17 @@ func (api *BookListAPI) LikeBookList(c *gin.Context) {
 // @Router /api/v1/social/booklists/{id}/fork [post]
 // @Security Bearer
 func (api *BookListAPI) ForkBookList(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	bookList, err := api.bookListService.ForkBookList(c.Request.Context(), userID.(string), bookListID)
+	bookList, err := api.bookListService.ForkBookList(c.Request.Context(), userID, bookListID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -325,9 +300,8 @@ func (api *BookListAPI) ForkBookList(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id}/books [get]
 func (api *BookListAPI) GetBooksInList(c *gin.Context) {
-	bookListID := c.Param("id")
-	if bookListID == "" {
-		response.BadRequest(c, "参数错误", "书单ID不能为空")
+	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
+	if !ok {
 		return
 	}
 

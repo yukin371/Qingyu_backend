@@ -17,8 +17,25 @@ import (
 
 // MongoFollowRepository MongoDB关注仓储实现
 type MongoFollowRepository struct {
-	*base.BaseMongoRepository  // 嵌入基类，管理主collection (follows)
-	authorFollowsCollection *mongo.Collection  // 作者关注collection独立管理
+	*base.BaseMongoRepository                   // 嵌入基类，管理主collection (follows)
+	authorFollowsCollection   *mongo.Collection // 作者关注collection独立管理
+}
+
+func sanitizeFollowQueryToken(field, value string) (string, error) {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		return "", fmt.Errorf("%s格式不合法", field)
+	}
+	return objectID.Hex(), nil
+}
+
+func sanitizeFollowType(followType string) (string, error) {
+	switch followType {
+	case "user", "author":
+		return followType, nil
+	default:
+		return "", fmt.Errorf("不支持的关注类型")
+	}
 }
 
 // NewMongoFollowRepository 创建MongoDB关注仓储实例
@@ -76,7 +93,7 @@ func NewMongoFollowRepository(db *mongo.Database) socialRepo.FollowRepository {
 	}
 
 	return &MongoFollowRepository{
-		BaseMongoRepository:       base.NewBaseMongoRepository(db, "follows"),
+		BaseMongoRepository:     base.NewBaseMongoRepository(db, "follows"),
 		authorFollowsCollection: authorFollowsCollection,
 	}
 }
@@ -101,13 +118,23 @@ func (r *MongoFollowRepository) CreateFollow(ctx context.Context, follow *social
 
 // DeleteFollow 删除关注关系
 func (r *MongoFollowRepository) DeleteFollow(ctx context.Context, followerID, followingID, followType string) error {
-	filter := bson.M{
-		"follower_id": followerID,
-		"following_id": followingID,
-		"follow_type": followType,
+	safeFollowerID, err := sanitizeFollowQueryToken("follower_id", followerID)
+	if err != nil {
+		return err
 	}
-
-	_, err := r.GetCollection().DeleteOne(ctx, filter)
+	safeFollowingID, err := sanitizeFollowQueryToken("following_id", followingID)
+	if err != nil {
+		return err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return err
+	}
+	_, err = r.GetCollection().DeleteOne(ctx, bson.D{
+		{Key: "follower_id", Value: safeFollowerID},
+		{Key: "following_id", Value: safeFollowingID},
+		{Key: "follow_type", Value: safeFollowType},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete follow: %w", err)
 	}
@@ -116,14 +143,26 @@ func (r *MongoFollowRepository) DeleteFollow(ctx context.Context, followerID, fo
 
 // GetFollow 获取关注关系
 func (r *MongoFollowRepository) GetFollow(ctx context.Context, followerID, followingID, followType string) (*social.Follow, error) {
+	safeFollowerID, err := sanitizeFollowQueryToken("follower_id", followerID)
+	if err != nil {
+		return nil, err
+	}
+	safeFollowingID, err := sanitizeFollowQueryToken("following_id", followingID)
+	if err != nil {
+		return nil, err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"follower_id": followerID,
-		"following_id": followingID,
-		"follow_type": followType,
+		"follower_id":  safeFollowerID,
+		"following_id": safeFollowingID,
+		"follow_type":  safeFollowType,
 	}
 
 	var follow social.Follow
-	err := r.GetCollection().FindOne(ctx, filter).Decode(&follow)
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&follow)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -135,10 +174,22 @@ func (r *MongoFollowRepository) GetFollow(ctx context.Context, followerID, follo
 
 // IsFollowing 检查是否已关注
 func (r *MongoFollowRepository) IsFollowing(ctx context.Context, followerID, followingID, followType string) (bool, error) {
+	safeFollowerID, err := sanitizeFollowQueryToken("follower_id", followerID)
+	if err != nil {
+		return false, err
+	}
+	safeFollowingID, err := sanitizeFollowQueryToken("following_id", followingID)
+	if err != nil {
+		return false, err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return false, err
+	}
 	filter := bson.M{
-		"follower_id": followerID,
-		"following_id": followingID,
-		"follow_type": followType,
+		"follower_id":  safeFollowerID,
+		"following_id": safeFollowingID,
+		"follow_type":  safeFollowType,
 	}
 
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
@@ -150,9 +201,17 @@ func (r *MongoFollowRepository) IsFollowing(ctx context.Context, followerID, fol
 
 // GetFollowers 获取粉丝列表
 func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string, followType string, page, size int) ([]*social.FollowInfo, int64, error) {
+	safeUserID, err := sanitizeFollowQueryToken("following_id", userID)
+	if err != nil {
+		return nil, 0, err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return nil, 0, err
+	}
 	filter := bson.M{
-		"following_id": userID,
-		"follow_type": followType,
+		"following_id": safeUserID,
+		"follow_type":  safeFollowType,
 	}
 
 	// 统计总数
@@ -189,9 +248,17 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 
 // GetFollowing 获取关注列表
 func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string, followType string, page, size int) ([]*social.FollowingInfo, int64, error) {
+	safeUserID, err := sanitizeFollowQueryToken("follower_id", userID)
+	if err != nil {
+		return nil, 0, err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return nil, 0, err
+	}
 	filter := bson.M{
-		"follower_id": userID,
-		"follow_type": followType,
+		"follower_id": safeUserID,
+		"follow_type": safeFollowType,
 	}
 
 	// 统计总数
@@ -228,20 +295,30 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 
 // UpdateMutualStatus 更新互相关注状态
 func (r *MongoFollowRepository) UpdateMutualStatus(ctx context.Context, followerID, followingID, followType string, isMutual bool) error {
-	filter := bson.M{
-		"follower_id": followerID,
-		"following_id": followingID,
-		"follow_type": followType,
+	safeFollowerID, err := sanitizeFollowQueryToken("follower_id", followerID)
+	if err != nil {
+		return err
 	}
-
+	safeFollowingID, err := sanitizeFollowQueryToken("following_id", followingID)
+	if err != nil {
+		return err
+	}
+	safeFollowType, err := sanitizeFollowType(followType)
+	if err != nil {
+		return err
+	}
 	update := bson.M{
 		"$set": bson.M{
-			"is_mutual": isMutual,
+			"is_mutual":  isMutual,
 			"updated_at": time.Now(),
 		},
 	}
 
-	_, err := r.GetCollection().UpdateOne(ctx, filter, update)
+	_, err = r.GetCollection().UpdateOne(ctx, bson.D{
+		{Key: "follower_id", Value: safeFollowerID},
+		{Key: "following_id", Value: safeFollowingID},
+		{Key: "follow_type", Value: safeFollowType},
+	}, update)
 	if err != nil {
 		return fmt.Errorf("failed to update mutual status: %w", err)
 	}
@@ -268,12 +345,18 @@ func (r *MongoFollowRepository) CreateAuthorFollow(ctx context.Context, authorFo
 
 // DeleteAuthorFollow 删除作者关注
 func (r *MongoFollowRepository) DeleteAuthorFollow(ctx context.Context, userID, authorID string) error {
-	filter := bson.M{
-		"user_id": userID,
-		"author_id": authorID,
+	safeUserID, err := sanitizeFollowQueryToken("user_id", userID)
+	if err != nil {
+		return err
 	}
-
-	_, err := r.authorFollowsCollection.DeleteOne(ctx, filter)
+	safeAuthorID, err := sanitizeFollowQueryToken("author_id", authorID)
+	if err != nil {
+		return err
+	}
+	_, err = r.authorFollowsCollection.DeleteOne(ctx, bson.D{
+		{Key: "user_id", Value: safeUserID},
+		{Key: "author_id", Value: safeAuthorID},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete author follow: %w", err)
 	}
@@ -282,13 +365,19 @@ func (r *MongoFollowRepository) DeleteAuthorFollow(ctx context.Context, userID, 
 
 // GetAuthorFollow 获取作者关注
 func (r *MongoFollowRepository) GetAuthorFollow(ctx context.Context, userID, authorID string) (*social.AuthorFollow, error) {
-	filter := bson.M{
-		"user_id": userID,
-		"author_id": authorID,
+	safeUserID, err := sanitizeFollowQueryToken("user_id", userID)
+	if err != nil {
+		return nil, err
 	}
-
+	safeAuthorID, err := sanitizeFollowQueryToken("author_id", authorID)
+	if err != nil {
+		return nil, err
+	}
 	var authorFollow social.AuthorFollow
-	err := r.authorFollowsCollection.FindOne(ctx, filter).Decode(&authorFollow)
+	err = r.authorFollowsCollection.FindOne(ctx, bson.D{
+		{Key: "user_id", Value: safeUserID},
+		{Key: "author_id", Value: safeAuthorID},
+	}).Decode(&authorFollow)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -300,8 +389,12 @@ func (r *MongoFollowRepository) GetAuthorFollow(ctx context.Context, userID, aut
 
 // GetAuthorFollowers 获取作者的粉丝列表
 func (r *MongoFollowRepository) GetAuthorFollowers(ctx context.Context, authorID string, page, size int) ([]*social.FollowInfo, int64, error) {
+	safeAuthorID, err := sanitizeFollowQueryToken("author_id", authorID)
+	if err != nil {
+		return nil, 0, err
+	}
 	filter := bson.M{
-		"author_id": authorID,
+		"author_id": safeAuthorID,
 	}
 
 	// 统计总数
@@ -338,8 +431,12 @@ func (r *MongoFollowRepository) GetAuthorFollowers(ctx context.Context, authorID
 
 // GetUserFollowingAuthors 获取用户关注的作者列表
 func (r *MongoFollowRepository) GetUserFollowingAuthors(ctx context.Context, userID string, page, size int) ([]*social.AuthorFollow, int64, error) {
+	safeUserID, err := sanitizeFollowQueryToken("user_id", userID)
+	if err != nil {
+		return nil, 0, err
+	}
 	filter := bson.M{
-		"user_id": userID,
+		"user_id": safeUserID,
 	}
 
 	// 统计总数
@@ -381,7 +478,7 @@ func (r *MongoFollowRepository) GetFollowStats(ctx context.Context, userID strin
 	// 统计粉丝数
 	followerCount, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"following_id": userID,
-		"follow_type": "user",
+		"follow_type":  "user",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to count followers: %w", err)
@@ -415,7 +512,7 @@ func (r *MongoFollowRepository) UpdateFollowStats(ctx context.Context, userID st
 func (r *MongoFollowRepository) CountFollowers(ctx context.Context, userID, followType string) (int64, error) {
 	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
 		"following_id": userID,
-		"follow_type": followType,
+		"follow_type":  followType,
 	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count followers: %w", err)

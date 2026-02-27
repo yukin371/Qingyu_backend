@@ -129,6 +129,24 @@ func (m *MockCollectionService) GetUserCollectionStats(ctx context.Context, user
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
+// ShareCollectionWithURL 分享收藏并返回分享信息（新增）
+func (m *MockCollectionService) ShareCollectionWithURL(ctx context.Context, userID, collectionID string) (map[string]interface{}, error) {
+	args := m.Called(ctx, userID, collectionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
+// GetSharedCollection 获取分享的收藏详情（新增）
+func (m *MockCollectionService) GetSharedCollection(ctx context.Context, shareID string) (*socialModels.Collection, error) {
+	args := m.Called(ctx, shareID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*socialModels.Collection), args.Error(1)
+}
+
 // setupCollectionTestRouter 设置测试路由
 func setupCollectionTestRouter(collectionService interfaces.CollectionService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -156,6 +174,9 @@ func setupCollectionTestRouter(collectionService interfaces.CollectionService, u
 		v1.DELETE("/collections/:id", api.DeleteCollection)
 		v1.POST("/collections/:id/share", api.ShareCollection)
 		v1.DELETE("/collections/:id/share", api.UnshareCollection)
+		v1.POST("/collections/:id/share/url", api.ShareCollectionWithURL)
+		v1.GET("/collections/shared/:share_id", api.GetSharedCollection)
+		v1.POST("/collections/batch", api.BatchAddCollections)
 
 		v1.POST("/folders", api.CreateFolder)
 		v1.GET("/folders", api.GetFolders)
@@ -723,4 +744,331 @@ func TestCollectionAPI_GetCollectionsByTag_Success(t *testing.T) {
 	assert.NotNil(t, data["list"])
 
 	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_BatchAddCollections_Success 测试批量添加收藏成功
+func TestCollectionAPI_BatchAddCollections_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	bookID1 := primitive.NewObjectID().Hex()
+	bookID2 := primitive.NewObjectID().Hex()
+	bookID3 := primitive.NewObjectID().Hex()
+
+	expectedCollection1 := &socialModels.Collection{UserID: userID, BookID: bookID1, Note: "收藏1"}
+	expectedCollection1.ID = primitive.NewObjectID()
+
+	expectedCollection2 := &socialModels.Collection{UserID: userID, BookID: bookID2, Note: "收藏2"}
+	expectedCollection2.ID = primitive.NewObjectID()
+
+	expectedCollection3 := &socialModels.Collection{UserID: userID, BookID: bookID3, Note: "收藏3"}
+	expectedCollection3.ID = primitive.NewObjectID()
+
+	// Mock多次调用AddToCollection
+	mockService.On("AddToCollection", mock.Anything, userID, bookID1, "", "收藏1", []string{"推荐"}, false).
+		Return(expectedCollection1, nil).Once()
+	mockService.On("AddToCollection", mock.Anything, userID, bookID2, "", "收藏2", []string{"推荐"}, false).
+		Return(expectedCollection2, nil).Once()
+	mockService.On("AddToCollection", mock.Anything, userID, bookID3, "", "收藏3", []string{"推荐"}, false).
+		Return(expectedCollection3, nil).Once()
+
+	reqBody := map[string]interface{}{
+		"items": []map[string]interface{}{
+			{"book_id": bookID1, "note": "收藏1", "tags": []string{"推荐"}, "is_public": false},
+			{"book_id": bookID2, "note": "收藏2", "tags": []string{"推荐"}, "is_public": false},
+			{"book_id": bookID3, "note": "收藏3", "tags": []string{"推荐"}, "is_public": false},
+		},
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(3), data["success_count"])
+	assert.Equal(t, float64(0), data["failed_count"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_BatchAddCollections_EmptyItems 测试批量添加收藏-空列表
+func TestCollectionAPI_BatchAddCollections_EmptyItems(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"items": []map[string]interface{}{},
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
+}
+
+// TestCollectionAPI_BatchAddCollections_ExceedLimit 测试批量添加收藏-超过限制
+func TestCollectionAPI_BatchAddCollections_ExceedLimit(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	// 创建51个项目（超过限制）
+	items := make([]map[string]interface{}, 51)
+	for i := 0; i < 51; i++ {
+		items[i] = map[string]interface{}{
+			"book_id": primitive.NewObjectID().Hex(),
+			"note":    "收藏",
+		}
+	}
+
+	reqBody := map[string]interface{}{
+		"items": items,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
+}
+
+// TestCollectionAPI_BatchAddCollections_PartialSuccess 测试批量添加收藏-部分成功
+func TestCollectionAPI_BatchAddCollections_PartialSuccess(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	bookID1 := primitive.NewObjectID().Hex()
+	bookID2 := primitive.NewObjectID().Hex()
+	bookID3 := primitive.NewObjectID().Hex()
+
+	expectedCollection1 := &socialModels.Collection{UserID: userID, BookID: bookID1, Note: "收藏1"}
+	expectedCollection1.ID = primitive.NewObjectID()
+
+	expectedCollection3 := &socialModels.Collection{UserID: userID, BookID: bookID3, Note: "收藏3"}
+	expectedCollection3.ID = primitive.NewObjectID()
+
+	// 第一个和第三个成功，第二个失败
+	// 注意：JSON中不提供tags字段时，Go会解析为nil而非空切片
+	mockService.On("AddToCollection", mock.Anything, userID, bookID1, "", "收藏1", mock.AnythingOfType("[]string"), false).
+		Return(expectedCollection1, nil).Once()
+	mockService.On("AddToCollection", mock.Anything, userID, bookID2, "", "收藏2", mock.AnythingOfType("[]string"), false).
+		Return(nil, assert.AnError).Once()
+	mockService.On("AddToCollection", mock.Anything, userID, bookID3, "", "收藏3", mock.AnythingOfType("[]string"), false).
+		Return(expectedCollection3, nil).Once()
+
+	reqBody := map[string]interface{}{
+		"items": []map[string]interface{}{
+			{"book_id": bookID1, "note": "收藏1"},
+			{"book_id": bookID2, "note": "收藏2"},
+			{"book_id": bookID3, "note": "收藏3"},
+		},
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["success_count"])
+	assert.Equal(t, float64(1), data["failed_count"])
+
+	mockService.AssertExpectations(t)
+}
+
+// =========================
+// 分享链接相关测试（新增）
+// =========================
+
+// TestCollectionAPI_ShareCollectionWithURL_Success 测试分享收藏并返回分享链接成功
+func TestCollectionAPI_ShareCollectionWithURL_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	collectionID := primitive.NewObjectID().Hex()
+	shareID := "abc123xyz"
+	router := setupCollectionTestRouter(mockService, userID)
+
+	expectedShareInfo := map[string]interface{}{
+		"share_id":   shareID,
+		"share_url":  "/api/v1/reader/collections/shared/" + shareID,
+		"expires_at": nil,
+	}
+
+	mockService.On("ShareCollectionWithURL", mock.Anything, userID, collectionID).
+		Return(expectedShareInfo, nil)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/"+collectionID+"/share/url", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, shareID, data["share_id"])
+	assert.Equal(t, "/api/v1/reader/collections/shared/"+shareID, data["share_url"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_ShareCollectionWithURL_Unauthorized 测试分享收藏-无权限
+func TestCollectionAPI_ShareCollectionWithURL_Unauthorized(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	collectionID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	mockService.On("ShareCollectionWithURL", mock.Anything, userID, collectionID).
+		Return(nil, assert.AnError)
+
+	req, _ := http.NewRequest("POST", "/api/v1/reader/collections/"+collectionID+"/share/url", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_GetSharedCollection_Success 测试获取分享的收藏详情成功
+func TestCollectionAPI_GetSharedCollection_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	shareID := "abc123xyz"
+	router := setupCollectionTestRouter(mockService, "") // 不需要登录
+
+	expectedCollection := &socialModels.Collection{
+		BookID:   primitive.NewObjectID().Hex(),
+		Note:     "公开收藏的书籍",
+		IsPublic: true,
+	}
+	expectedCollection.ID = primitive.NewObjectID()
+
+	mockService.On("GetSharedCollection", mock.Anything, shareID).
+		Return(expectedCollection, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/collections/shared/"+shareID, nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.NotNil(t, data["id"])
+	assert.Equal(t, "公开收藏的书籍", data["note"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_GetSharedCollection_NotFound 测试获取分享的收藏-不存在
+func TestCollectionAPI_GetSharedCollection_NotFound(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	shareID := "nonexistent"
+	router := setupCollectionTestRouter(mockService, "")
+
+	mockService.On("GetSharedCollection", mock.Anything, shareID).
+		Return(nil, assert.AnError)
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/collections/shared/"+shareID, nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusNotFound, w.Code) // API实现返回404
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCollectionAPI_GetSharedCollection_InvalidShareID 测试获取分享的收藏-无效的share_id
+func TestCollectionAPI_GetSharedCollection_InvalidShareID(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	router := setupCollectionTestRouter(mockService, "")
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/collections/shared/", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }

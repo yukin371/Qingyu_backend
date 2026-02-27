@@ -36,6 +36,14 @@ func (m *MockCollectionRepository) GetByUserAndBook(ctx context.Context, userID,
 	return args.Get(0).(*social.Collection), args.Error(1)
 }
 
+func (m *MockCollectionRepository) GetByShareID(ctx context.Context, shareID string) (*social.Collection, error) {
+	args := m.Called(ctx, shareID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*social.Collection), args.Error(1)
+}
+
 func (m *MockCollectionRepository) GetCollectionsByUser(ctx context.Context, userID string, folderID string, page, size int) ([]*social.Collection, int64, error) {
 	args := m.Called(ctx, userID, folderID, page, size)
 	if args.Get(0) == nil {

@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"bytes"
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,22 +15,8 @@ func GetValidator() *validator.Validate {
 }
 
 // ValidateRequest 验证请求并返回友好错误
+// 注意：此函数不会绑定请求体，假设已经通过BindJSON等函数完成绑定
 func ValidateRequest(c *gin.Context, req interface{}) bool {
-	// 读取原始请求体用于调试
-	bodyBytes, _ := c.GetRawData()
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	// 绑定请求
-	if err := c.ShouldBindJSON(req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    400,
-			Message: "请求参数格式错误",
-			Error:   err.Error(),
-			Debug:   string(bodyBytes), // 添加调试信息
-		})
-		return false
-	}
-
 	// 验证请求
 	validationErrors := appValidator.ValidateStructWithErrors(req)
 	if len(validationErrors) > 0 {

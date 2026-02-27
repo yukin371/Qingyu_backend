@@ -1,9 +1,9 @@
 package social
 
 import (
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -34,19 +34,17 @@ func NewFollowAPI(followService interfaces.FollowService) *FollowAPI {
 // @Router /api/v1/social/users/{userId}/follow [post]
 // @Security Bearer
 func (api *FollowAPI) FollowUser(c *gin.Context) {
-	userID := c.Param("userId")
-	if userID == "" {
-		response.BadRequest(c, "参数错误", "用户ID不能为空")
+	userID, ok := shared.GetRequiredParam(c, "userId", "用户ID")
+	if !ok {
 		return
 	}
 
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.followService.FollowUser(c.Request.Context(), currentUserID.(string), userID)
+	err := api.followService.FollowUser(c.Request.Context(), currentUserID, userID)
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "不能关注自己" {
@@ -72,19 +70,17 @@ func (api *FollowAPI) FollowUser(c *gin.Context) {
 // @Router /api/v1/social/users/{userId}/unfollow [delete]
 // @Security Bearer
 func (api *FollowAPI) UnfollowUser(c *gin.Context) {
-	userID := c.Param("userId")
-	if userID == "" {
-		response.BadRequest(c, "参数错误", "用户ID不能为空")
+	userID, ok := shared.GetRequiredParam(c, "userId", "用户ID")
+	if !ok {
 		return
 	}
 
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.followService.UnfollowUser(c.Request.Context(), currentUserID.(string), userID)
+	err := api.followService.UnfollowUser(c.Request.Context(), currentUserID, userID)
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "未关注该用户" {
@@ -110,29 +106,18 @@ func (api *FollowAPI) UnfollowUser(c *gin.Context) {
 // @Router /api/v1/social/users/{userId}/followers [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowers(c *gin.Context) {
-	userID := c.Param("userId")
-	if userID == "" {
-		response.BadRequest(c, "参数错误", "用户ID不能为空")
+	userID, ok := shared.GetRequiredParam(c, "userId", "用户ID")
+	if !ok {
 		return
 	}
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	followers, total, err := api.followService.GetFollowers(
 		c.Request.Context(),
 		userID,
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
@@ -144,7 +129,7 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 		"list":  followers,
 		"total": total,
 		"page":  params.Page,
-		"size":  params.Size,
+		"size":  params.PageSize,
 	})
 }
 
@@ -160,29 +145,18 @@ func (api *FollowAPI) GetFollowers(c *gin.Context) {
 // @Router /api/v1/social/users/{userId}/following [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowing(c *gin.Context) {
-	userID := c.Param("userId")
-	if userID == "" {
-		response.BadRequest(c, "参数错误", "用户ID不能为空")
+	userID, ok := shared.GetRequiredParam(c, "userId", "用户ID")
+	if !ok {
 		return
 	}
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	following, total, err := api.followService.GetFollowing(
 		c.Request.Context(),
 		userID,
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
@@ -194,7 +168,7 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 		"list":  following,
 		"total": total,
 		"page":  params.Page,
-		"size":  params.Size,
+		"size":  params.PageSize,
 	})
 }
 
@@ -208,21 +182,19 @@ func (api *FollowAPI) GetFollowing(c *gin.Context) {
 // @Router /api/v1/social/users/{userId}/follow-status [get]
 // @Security Bearer
 func (api *FollowAPI) CheckFollowStatus(c *gin.Context) {
-	userID := c.Param("userId")
-	if userID == "" {
-		response.BadRequest(c, "参数错误", "用户ID不能为空")
+	userID, ok := shared.GetRequiredParam(c, "userId", "用户ID")
+	if !ok {
 		return
 	}
 
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	isFollowing, err := api.followService.CheckFollowStatus(
 		c.Request.Context(),
-		currentUserID.(string),
+		currentUserID,
 		userID,
 	)
 
@@ -258,27 +230,24 @@ type FollowAuthorRequest struct {
 // @Router /api/v1/social/authors/{authorId}/follow [post]
 // @Security Bearer
 func (api *FollowAPI) FollowAuthor(c *gin.Context) {
-	authorID := c.Param("authorId")
-	if authorID == "" {
-		response.BadRequest(c, "参数错误", "作者ID不能为空")
+	authorID, ok := shared.GetRequiredParam(c, "authorId", "作者ID")
+	if !ok {
 		return
 	}
 
 	var req FollowAuthorRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.followService.FollowAuthor(
 		c.Request.Context(),
-		currentUserID.(string),
+		currentUserID,
 		authorID,
 		req.AuthorName,
 		req.AuthorAvatar,
@@ -308,21 +277,19 @@ func (api *FollowAPI) FollowAuthor(c *gin.Context) {
 // @Router /api/v1/social/authors/{authorId}/unfollow [delete]
 // @Security Bearer
 func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
-	authorID := c.Param("authorId")
-	if authorID == "" {
-		response.BadRequest(c, "参数错误", "作者ID不能为空")
+	authorID, ok := shared.GetRequiredParam(c, "authorId", "作者ID")
+	if !ok {
 		return
 	}
 
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	err := api.followService.UnfollowAuthor(
 		c.Request.Context(),
-		currentUserID.(string),
+		currentUserID,
 		authorID,
 	)
 
@@ -350,29 +317,18 @@ func (api *FollowAPI) UnfollowAuthor(c *gin.Context) {
 // @Router /api/v1/social/following/authors [get]
 // @Security Bearer
 func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
-	currentUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
-	}
+	params := shared.GetPaginationParamsStandard(c)
 
 	authors, total, err := api.followService.GetFollowingAuthors(
 		c.Request.Context(),
-		currentUserID.(string),
+		currentUserID,
 		params.Page,
-		params.Size,
+		params.PageSize,
 	)
 
 	if err != nil {
@@ -384,6 +340,6 @@ func (api *FollowAPI) GetFollowingAuthors(c *gin.Context) {
 		"list":  authors,
 		"total": total,
 		"page":  params.Page,
-		"size":  params.Size,
+		"size":  params.PageSize,
 	})
 }

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"Qingyu_backend/models/social"
-	socialRepo "Qingyu_backend/repository/interfaces/social"
 	"Qingyu_backend/pkg/cache"
+	socialRepo "Qingyu_backend/repository/interfaces/social"
 	"go.uber.org/zap"
 )
 
@@ -60,22 +60,16 @@ func (s *RatingServiceImplementation) GetRatingStats(ctx context.Context, target
 	if err == nil && cached != "" {
 		// 检查是否为空值缓存标记
 		if cached == EmptyCacheValue {
-			s.logger.Debug("命中空值缓存",
-				zap.String("targetType", targetType),
-				zap.String("targetID", targetID))
+			s.logger.Debug("命中空值缓存")
 			return nil, fmt.Errorf("评分数据不存在")
 		}
 
 		stats, err := s.deserializeStats(cached)
 		if err == nil {
-			s.logger.Debug("缓存命中",
-				zap.String("targetType", targetType),
-				zap.String("targetID", targetID))
+			s.logger.Debug("缓存命中")
 			return stats, nil
 		}
 		s.logger.Warn("缓存反序列化失败，将重新计算",
-			zap.String("targetType", targetType),
-			zap.String("targetID", targetID),
 			zap.Error(err))
 	}
 
@@ -85,15 +79,9 @@ func (s *RatingServiceImplementation) GetRatingStats(ctx context.Context, target
 		// 3. 缓存空值（防止缓存穿透）
 		if s.redisClient != nil {
 			if setErr := s.redisClient.Set(ctx, cacheKey, EmptyCacheValue, EmptyCacheTTL); setErr != nil {
-				s.logger.Warn("写入空值缓存失败",
-					zap.String("targetType", targetType),
-					zap.String("targetID", targetID),
-					zap.Error(setErr))
+				s.logger.Warn("写入空值缓存失败", zap.Error(setErr))
 			} else {
-				s.logger.Debug("已缓存空值",
-					zap.String("targetType", targetType),
-					zap.String("targetID", targetID),
-					zap.Duration("ttl", EmptyCacheTTL))
+				s.logger.Debug("已缓存空值", zap.Duration("ttl", EmptyCacheTTL))
 			}
 		}
 		return nil, fmt.Errorf("聚合评分失败: %w", err)
@@ -104,15 +92,9 @@ func (s *RatingServiceImplementation) GetRatingStats(ctx context.Context, target
 	if s.redisClient != nil {
 		ttl := s.calculateTTLWithJitter(BaseCacheTTL)
 		if err := s.redisClient.Set(ctx, cacheKey, serialized, ttl); err != nil {
-			s.logger.Warn("写入缓存失败",
-				zap.String("targetType", targetType),
-				zap.String("targetID", targetID),
-				zap.Error(err))
+			s.logger.Warn("写入缓存失败", zap.Error(err))
 		} else {
-			s.logger.Debug("已写入缓存",
-				zap.String("targetType", targetType),
-				zap.String("targetID", targetID),
-				zap.Duration("ttl", ttl))
+			s.logger.Debug("已写入缓存", zap.Duration("ttl", ttl))
 		}
 	}
 

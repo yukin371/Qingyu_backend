@@ -1,11 +1,11 @@
 package social
 
 import (
-
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/interfaces"
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // ReviewAPI 书评API处理器
@@ -41,14 +41,13 @@ type CreateReviewRequest struct {
 // @Security Bearer
 func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	var req CreateReviewRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	// 获取用户ID
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -62,7 +61,7 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	review, err := api.reviewService.CreateReview(
 		c.Request.Context(),
 		req.BookID,
-		userID.(string),
+		userID,
 		userName,
 		userAvatar,
 		req.Title,
@@ -91,29 +90,18 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews [get]
 func (api *ReviewAPI) GetReviews(c *gin.Context) {
-	bookID := c.Query("book_id")
-	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+	bookID, ok := shared.GetRequiredQuery(c, "book_id", "书籍ID")
+	if !ok {
 		return
 	}
 
-	var params struct {
-		Page int `form:"page" binding:"min=1"`
-		Size int `form:"size" binding:"min=1,max=100"`
-	}
-	params.Page = 1
-	params.Size = 20
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
-		return
-	}
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	reviews, total, err := api.reviewService.GetReviews(
 		c.Request.Context(),
 		bookID,
-		params.Page,
-		params.Size,
+		pagination.Page,
+		pagination.PageSize,
 	)
 
 	if err != nil {
@@ -124,8 +112,8 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	response.Success(c, gin.H{
 		"list":  reviews,
 		"total": total,
-		"page":  params.Page,
-		"size":  params.Size,
+		"page":  pagination.Page,
+		"size":  pagination.PageSize,
 	})
 }
 
@@ -138,9 +126,8 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews/{id} [get]
 func (api *ReviewAPI) GetReviewDetail(c *gin.Context) {
-	reviewID := c.Param("id")
-	if reviewID == "" {
-		response.BadRequest(c,  "参数错误", "书评ID不能为空")
+	reviewID, ok := shared.GetRequiredParam(c, "id", "书评ID")
+	if !ok {
 		return
 	}
 
@@ -173,21 +160,19 @@ type UpdateReviewRequest struct {
 // @Router /api/v1/social/reviews/{id} [put]
 // @Security Bearer
 func (api *ReviewAPI) UpdateReview(c *gin.Context) {
-	reviewID := c.Param("id")
-	if reviewID == "" {
-		response.BadRequest(c,  "参数错误", "书评ID不能为空")
+	reviewID, ok := shared.GetRequiredParam(c, "id", "书评ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	// 获取用户ID
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	var req UpdateReviewRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -209,11 +194,11 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		response.BadRequest(c,  "参数错误", "没有要更新的字段")
+		response.BadRequest(c, "参数错误", "没有要更新的字段")
 		return
 	}
 
-	err := api.reviewService.UpdateReview(c.Request.Context(), userID.(string), reviewID, updates)
+	err := api.reviewService.UpdateReview(c.Request.Context(), userID, reviewID, updates)
 	if err != nil {
 		c.Error(err)
 		return
@@ -232,19 +217,18 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 // @Router /api/v1/social/reviews/{id} [delete]
 // @Security Bearer
 func (api *ReviewAPI) DeleteReview(c *gin.Context) {
-	reviewID := c.Param("id")
-	if reviewID == "" {
-		response.BadRequest(c,  "参数错误", "书评ID不能为空")
+	reviewID, ok := shared.GetRequiredParam(c, "id", "书评ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	// 获取用户ID
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.reviewService.DeleteReview(c.Request.Context(), userID.(string), reviewID)
+	err := api.reviewService.DeleteReview(c.Request.Context(), userID, reviewID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -263,23 +247,22 @@ func (api *ReviewAPI) DeleteReview(c *gin.Context) {
 // @Router /api/v1/social/reviews/{id}/like [post]
 // @Security Bearer
 func (api *ReviewAPI) LikeReview(c *gin.Context) {
-	reviewID := c.Param("id")
-	if reviewID == "" {
-		response.BadRequest(c,  "参数错误", "书评ID不能为空")
+	reviewID, ok := shared.GetRequiredParam(c, "id", "书评ID")
+	if !ok {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	// 获取用户ID
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.reviewService.LikeReview(c.Request.Context(), userID.(string), reviewID)
+	err := api.reviewService.LikeReview(c.Request.Context(), userID, reviewID)
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经点赞过该书评" {
-			response.BadRequest(c,  "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
 			response.InternalError(c, err)
 		}

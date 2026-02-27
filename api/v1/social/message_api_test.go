@@ -539,17 +539,6 @@ func TestMessageAPI_SendMessage_Success(t *testing.T) {
 	mockConvRepo.On("FindByID", mock.Anything, conversationID).
 		Return(conv, nil)
 
-	msgID := primitive.NewObjectID()
-	message := &modelsMessaging.DirectMessage{}
-	message.ID = msgID
-	message.ConversationID = conversationID
-	message.SenderID = userID
-	message.ReceiverID = otherUserID
-	message.Content = "Hello"
-	message.Type = modelsMessaging.MessageTypeText
-	message.Status = modelsMessaging.MessageStatusNormal
-	message.CreatedAt = time.Now()
-
 	// Create方法在repository中只返回error，但service.Create会返回message
 	// 所以我们需要mock repository.Create返回nil（成功），然后service会返回传入的message
 	mockMessageRepo.On("Create", mock.Anything, mock.Anything).
@@ -691,9 +680,7 @@ func TestMessageAPI_CreateConversation_Success(t *testing.T) {
 
 	conv := &modelsMessaging.Conversation{}
 	conv.ID = primitive.NewObjectID()
-	conv.ParticipantIDs = []string{userID, otherUserID}
 	conv.CreatedAt = time.Now()
-	conv.CreatedBy = userID
 
 	// FindByParticipants会先检查是否已存在会话
 	mockConvRepo.On("FindByParticipants", mock.Anything, []string{userID, otherUserID}).

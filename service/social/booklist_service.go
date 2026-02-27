@@ -118,7 +118,7 @@ func (s *BookListService) GetBookListByID(ctx context.Context, bookListID string
 
 	// 增加浏览次数
 	if err := s.bookListRepo.IncrementViewCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment view count: %v\n", err)
+		fmt.Printf("Warning: Failed to increment view count\n")
 	}
 
 	return bookList, nil
@@ -203,7 +203,7 @@ func (s *BookListService) LikeBookList(ctx context.Context, userID, bookListID s
 
 	// 增加点赞数
 	if err := s.bookListRepo.IncrementBookListLikeCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment like count: %v\n", err)
+		fmt.Printf("Warning: Failed to increment like count\n")
 	}
 
 	return nil
@@ -229,7 +229,7 @@ func (s *BookListService) ForkBookList(ctx context.Context, userID, bookListID s
 
 	// 增加被复制次数
 	if err := s.bookListRepo.IncrementForkCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment fork count: %v\n", err)
+		fmt.Printf("Warning: Failed to increment fork count\n")
 	}
 
 	s.publishBookListEvent(ctx, "booklist.forked", userID, forkedList.ID.Hex())
