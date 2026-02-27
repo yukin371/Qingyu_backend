@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"time"
 
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 	serviceWriter "Qingyu_backend/service/interfaces/writer"
@@ -68,18 +67,12 @@ func (p *PublishExportImpl) PublishProject(ctx context.Context, projectID, userI
 		Description:   req.Description,
 		CoverImage:    req.CoverImage,
 		PublishType:   req.PublishType,
-		PublishTime:   nil, // Port DTO 使用 *string，Service DTO 使用 *time.Time
+		PublishTime:   req.PublishTime,
 		Price:         req.Price,
 		FreeChapters:  req.FreeChapters,
 		AuthorNote:    req.AuthorNote,
 		EnableComment: req.EnableComment,
 		EnableShare:   req.EnableShare,
-	}
-	if req.PublishTime != nil {
-		t, err := time.Parse(time.RFC3339, *req.PublishTime)
-		if err == nil {
-			publishReq.PublishTime = &t
-		}
 	}
 	record, err := p.publishService.PublishProject(ctx, projectID, userID, publishReq)
 	if err != nil {
@@ -108,17 +101,11 @@ func (p *PublishExportImpl) GetProjectPublicationStatus(ctx context.Context, pro
 func (p *PublishExportImpl) PublishDocument(ctx context.Context, documentID, projectID, userID string, req *serviceWriter.PublishDocumentRequest) (*serviceWriter.PublicationRecord, error) {
 	// 转换请求类型
 	publishReq := &serviceInterfaces.PublishDocumentRequest{
-		ChapterTitle: req.ChapterTitle,
+		ChapterTitle:  req.ChapterTitle,
 		ChapterNumber: req.ChapterNumber,
-		IsFree:       req.IsFree,
-		PublishTime:  nil, // Port DTO 使用 *string，Service DTO 使用 *time.Time
-		AuthorNote:   req.AuthorNote,
-	}
-	if req.PublishTime != nil {
-		t, err := time.Parse(time.RFC3339, *req.PublishTime)
-		if err == nil {
-			publishReq.PublishTime = &t
-		}
+		IsFree:        req.IsFree,
+		PublishTime:   req.PublishTime,
+		AuthorNote:    req.AuthorNote,
 	}
 	record, err := p.publishService.PublishDocument(ctx, documentID, projectID, userID, publishReq)
 	if err != nil {
@@ -205,12 +192,11 @@ func (p *PublishExportImpl) convertPublicationRecord(record *serviceInterfaces.P
 		BookstoreName: record.BookstoreName,
 		Status:        record.Status,
 		CreatedBy:     record.CreatedBy,
-		CreatedAt:     record.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:     record.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		CreatedAt:     record.CreatedAt,
+		UpdatedAt:     record.UpdatedAt,
 	}
 	if record.PublishTime != nil {
-		formatted := record.PublishTime.Format("2006-01-02T15:04:05Z07:00")
-		r.PublishTime = &formatted
+		r.PublishTime = record.PublishTime
 	}
 	return r
 }
@@ -227,8 +213,7 @@ func (p *PublishExportImpl) convertPublicationStatus(status *serviceInterfaces.P
 		PublishedChapters: status.PublishedChapters,
 	}
 	if status.PublishedAt != nil {
-		formatted := status.PublishedAt.Format("2006-01-02T15:04:05Z07:00")
-		s.PublishedAt = &formatted
+		s.PublishedAt = status.PublishedAt
 	}
 	return s
 }

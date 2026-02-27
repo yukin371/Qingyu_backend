@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	serviceWriter "Qingyu_backend/service/interfaces/writer"
 	writerdocument "Qingyu_backend/service/writer/document"
@@ -11,14 +12,14 @@ import (
 
 // DocumentManagementImpl 文档管理端口实现
 type DocumentManagementImpl struct {
-	documentService *writerdocument.DocumentService
-	projectService  *writerproject.ProjectService
-	nodeService     *writerproject.NodeService
-	versionService  *writerproject.VersionService
-	autosaveService *writerproject.AutoSaveService
+	documentService  *writerdocument.DocumentService
+	projectService   *writerproject.ProjectService
+	nodeService      *writerproject.NodeService
+	versionService   *writerproject.VersionService
+	autosaveService  *writerproject.AutoSaveService
 	duplicateService *writerdocument.DuplicateService
-	serviceName     string
-	version         string
+	serviceName      string
+	version          string
 }
 
 // NewDocumentManagementImpl 创建文档管理端口实现
@@ -94,7 +95,7 @@ func (d *DocumentManagementImpl) CreateDocument(ctx context.Context, req *servic
 		DocumentID: documentResp.DocumentID,
 		Title:      documentResp.Title,
 		Type:       documentResp.Type,
-		CreatedAt:  documentResp.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		CreatedAt:  documentResp.CreatedAt,
 	}, nil
 }
 
@@ -117,13 +118,13 @@ func (d *DocumentManagementImpl) GetDocumentTree(ctx context.Context, projectID 
 }
 
 // convertDocumentTreeNodes 递归转换文档树节点
-func (d *DocumentManagementImpl) convertDocumentTreeNodes(nodes []*writerdocument.DocumentTreeNode) []*serviceWriter.TreeNode {
+func (d *DocumentManagementImpl) convertDocumentTreeNodes(nodes []*writerdocument.DocumentTreeNode) []*dto.DocumentTreeNode {
 	if nodes == nil {
 		return nil
 	}
-	result := make([]*serviceWriter.TreeNode, 0, len(nodes))
+	result := make([]*dto.DocumentTreeNode, 0, len(nodes))
 	for _, node := range nodes {
-		result = append(result, &serviceWriter.TreeNode{
+		result = append(result, &dto.DocumentTreeNode{
 			Document: node.Document,
 			Children: d.convertDocumentTreeNodes(node.Children),
 		})
@@ -212,7 +213,7 @@ func (d *DocumentManagementImpl) AutoSaveDocument(ctx context.Context, req *serv
 		Saved:       documentResp.Saved,
 		NewVersion:  documentResp.NewVersion,
 		WordCount:   documentResp.WordCount,
-		SavedAt:     documentResp.SavedAt.Format("2006-01-02T15:04:05Z07:00"),
+		SavedAt:     documentResp.SavedAt,
 		HasConflict: documentResp.HasConflict,
 	}, nil
 }
@@ -226,7 +227,7 @@ func (d *DocumentManagementImpl) GetSaveStatus(ctx context.Context, documentID s
 	// 转换响应类型
 	return &serviceWriter.SaveStatusResponse{
 		DocumentID:     documentResp.DocumentID,
-		LastSavedAt:    documentResp.LastSavedAt.Format("2006-01-02T15:04:05Z07:00"),
+		LastSavedAt:    documentResp.LastSavedAt,
 		CurrentVersion: documentResp.CurrentVersion,
 		IsSaving:       documentResp.IsSaving,
 		WordCount:      documentResp.WordCount,
@@ -245,7 +246,7 @@ func (d *DocumentManagementImpl) GetDocumentContent(ctx context.Context, documen
 		Content:    documentResp.Content,
 		Version:    documentResp.Version,
 		WordCount:  documentResp.WordCount,
-		UpdatedAt:  documentResp.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:  documentResp.UpdatedAt,
 	}, nil
 }
 
@@ -321,12 +322,12 @@ func (d *DocumentManagementImpl) GetVersionHistory(ctx context.Context, document
 	versions := make([]*serviceWriter.VersionInfo, 0, len(versionResp.Versions))
 	for _, v := range versionResp.Versions {
 		versions = append(versions, &serviceWriter.VersionInfo{
-			VersionID:  v.VersionID,
-			Version:    v.Version,
-			Message:    v.Message,
-			CreatedAt:  v.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-			CreatedBy:  v.CreatedBy,
-			WordCount:  v.WordCount,
+			VersionID: v.VersionID,
+			Version:   v.Version,
+			Message:   v.Message,
+			CreatedAt: v.CreatedAt,
+			CreatedBy: v.CreatedBy,
+			WordCount: v.WordCount,
 		})
 	}
 	return &serviceWriter.VersionHistoryResponse{
@@ -350,7 +351,7 @@ func (d *DocumentManagementImpl) GetVersionDetail(ctx context.Context, documentI
 		Version:    versionResp.Version,
 		Content:    versionResp.Content,
 		Message:    versionResp.Message,
-		CreatedAt:  versionResp.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		CreatedAt:  versionResp.CreatedAt,
 		CreatedBy:  versionResp.CreatedBy,
 		WordCount:  versionResp.WordCount,
 	}, nil
