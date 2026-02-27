@@ -2,7 +2,7 @@ name: Architecture CI
 
 on:
   push:
-    branches: [ main, dev, architecture-refactor ]
+    branches: [ main, architecture-refactor ]
   workflow_dispatch:
 
 jobs:
@@ -40,6 +40,7 @@ jobs:
   unit-tests:
     name: 单元测试
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout代码
@@ -87,7 +88,7 @@ jobs:
 
       - name: 安装golangci-lint
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.2
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
 
       - name: 运行golangci-lint（增量）
         run: |
@@ -136,6 +137,7 @@ jobs:
         if: always()
         with:
           sarif_file: gosec-results.sarif
+        continue-on-error: true
 
   architecture-validation:
     name: 架构验证

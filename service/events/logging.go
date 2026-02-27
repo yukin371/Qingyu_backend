@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -375,5 +376,18 @@ func (l *EventLogger) Flush() {
 
 // Sync 同步日志
 func (l *EventLogger) Sync() error {
-	return l.logger.Sync()
+	err := l.logger.Sync()
+	if err == nil {
+		return nil
+	}
+
+	// stdout/stderr 在部分环境不支持 sync；这类错误可安全忽略。
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "invalid argument") ||
+		strings.Contains(msg, "inappropriate ioctl for device") ||
+		strings.Contains(msg, "bad file descriptor") {
+		return nil
+	}
+
+	return err
 }

@@ -12,14 +12,14 @@ import (
 
 // DocumentManagementImpl 文档管理端口实现
 type DocumentManagementImpl struct {
-	documentService *writerdocument.DocumentService
-	projectService  *writerproject.ProjectService
-	nodeService     *writerproject.NodeService
-	versionService  *writerproject.VersionService
-	autosaveService *writerproject.AutoSaveService
+	documentService  *writerdocument.DocumentService
+	projectService   *writerproject.ProjectService
+	nodeService      *writerproject.NodeService
+	versionService   *writerproject.VersionService
+	autosaveService  *writerproject.AutoSaveService
 	duplicateService *writerdocument.DuplicateService
-	serviceName     string
-	version         string
+	serviceName      string
+	version          string
 }
 
 // NewDocumentManagementImpl 创建文档管理端口实现
