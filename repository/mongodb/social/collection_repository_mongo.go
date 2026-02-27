@@ -17,6 +17,7 @@ import (
 )
 
 var safeCollectionTagPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,32}$`)
+var safeCollectionShareIDPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
 
 func normalizeObjectIDHex(field, value string) (string, error) {
 	objectID, err := primitive.ObjectIDFromHex(value)
@@ -36,10 +37,17 @@ func validateCollectionTag(value string) error {
 	return nil
 }
 
+func normalizeCollectionShareID(value string) (string, error) {
+	if !safeCollectionShareIDPattern.MatchString(value) {
+		return "", fmt.Errorf("share_id格式非法")
+	}
+	return value, nil
+}
+
 // MongoCollectionRepository MongoDB收藏仓储实现
 type MongoCollectionRepository struct {
-	*base.BaseMongoRepository // 嵌入基类，管理主collection (collections)
-	folderColl *mongo.Collection // 独立管理folder collection
+	*base.BaseMongoRepository                   // 嵌入基类，管理主collection (collections)
+	folderColl                *mongo.Collection // 独立管理folder collection
 }
 
 // NewMongoCollectionRepository 创建MongoDB收藏仓储实例
@@ -217,10 +225,14 @@ func (r *MongoCollectionRepository) GetByShareID(ctx context.Context, shareID st
 	if shareID == "" {
 		return nil, fmt.Errorf("分享ID不能为空")
 	}
+	shareIDValue, err := normalizeCollectionShareID(shareID)
+	if err != nil {
+		return nil, err
+	}
 
 	var collection social.Collection
-	err := r.GetCollection().FindOne(ctx, bson.M{
-		"share_id": shareID,
+	err = r.GetCollection().FindOne(ctx, bson.M{
+		"share_id": shareIDValue,
 	}).Decode(&collection)
 
 	if err != nil {

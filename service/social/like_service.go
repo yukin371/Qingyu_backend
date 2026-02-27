@@ -186,7 +186,7 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 	// 更新评论点赞数
 	if s.commentRepo != nil {
 		if err := s.commentRepo.IncrementLikeCount(ctx, commentID); err != nil {
-			fmt.Printf("Warning: Failed to increment comment like count: %v\n", err)
+			fmt.Printf("Warning: Failed to increment comment like count\n")
 		}
 	}
 
@@ -216,7 +216,7 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 	// 更新评论点赞数
 	if s.commentRepo != nil {
 		if err := s.commentRepo.DecrementLikeCount(ctx, commentID); err != nil {
-			fmt.Printf("Warning: Failed to decrement comment like count: %v\n", err)
+			fmt.Printf("Warning: Failed to decrement comment like count\n")
 		}
 	}
 

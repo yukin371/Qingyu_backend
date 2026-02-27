@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,6 +19,24 @@ import (
 type MongoLikeRepository struct {
 	*base.BaseMongoRepository
 	// redisClient cache.RedisClient // TODO: 添加Redis支持
+}
+
+var likeSafeQueryTokenPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
+
+func sanitizeLikeQueryToken(field, value string) (string, error) {
+	if !likeSafeQueryTokenPattern.MatchString(value) {
+		return "", fmt.Errorf("%s格式不合法", field)
+	}
+	return value, nil
+}
+
+func sanitizeLikeTargetType(targetType string) (string, error) {
+	switch targetType {
+	case social.LikeTargetTypeBook, social.LikeTargetTypeComment, social.LikeTargetTypeChapter:
+		return targetType, nil
+	default:
+		return "", fmt.Errorf("不支持的点赞目标类型")
+	}
 }
 
 // NewMongoLikeRepository 创建MongoDB点赞仓储实例
@@ -98,11 +117,23 @@ func (r *MongoLikeRepository) RemoveLike(ctx context.Context, userID, targetType
 	if userID == "" || targetType == "" || targetID == "" {
 		return fmt.Errorf("取消点赞参数不完整")
 	}
+	safeUserID, err := sanitizeLikeQueryToken("user_id", userID)
+	if err != nil {
+		return err
+	}
+	safeTargetType, err := sanitizeLikeTargetType(targetType)
+	if err != nil {
+		return err
+	}
+	safeTargetID, err := sanitizeLikeQueryToken("target_id", targetID)
+	if err != nil {
+		return err
+	}
 
 	result, err := r.GetCollection().DeleteOne(ctx, bson.M{
-		"user_id":     userID,
-		"target_type": targetType,
-		"target_id":   targetID,
+		"user_id":     safeUserID,
+		"target_type": safeTargetType,
+		"target_id":   safeTargetID,
 	})
 
 	if err != nil {
@@ -123,13 +154,25 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 	if userID == "" || targetType == "" || targetID == "" {
 		return false, fmt.Errorf("查询参数不完整")
 	}
+	safeUserID, err := sanitizeLikeQueryToken("user_id", userID)
+	if err != nil {
+		return false, err
+	}
+	safeTargetType, err := sanitizeLikeTargetType(targetType)
+	if err != nil {
+		return false, err
+	}
+	safeTargetID, err := sanitizeLikeQueryToken("target_id", targetID)
+	if err != nil {
+		return false, err
+	}
 
 	// TODO: 优先从Redis缓存查询
 
 	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
-		"user_id":     userID,
-		"target_type": targetType,
-		"target_id":   targetID,
+		"user_id":     safeUserID,
+		"target_type": safeTargetType,
+		"target_id":   safeTargetID,
 	})
 
 	if err != nil {
@@ -203,12 +246,20 @@ func (r *MongoLikeRepository) GetLikeCount(ctx context.Context, targetType, targ
 	if targetType == "" || targetID == "" {
 		return 0, fmt.Errorf("目标参数不完整")
 	}
+	safeTargetType, err := sanitizeLikeTargetType(targetType)
+	if err != nil {
+		return 0, err
+	}
+	safeTargetID, err := sanitizeLikeQueryToken("target_id", targetID)
+	if err != nil {
+		return 0, err
+	}
 
 	// TODO: 优先从Redis缓存查询
 
 	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
-		"target_type": targetType,
-		"target_id":   targetID,
+		"target_type": safeTargetType,
+		"target_id":   safeTargetID,
 	})
 
 	if err != nil {

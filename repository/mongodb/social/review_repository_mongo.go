@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +18,58 @@ import (
 type MongoReviewRepository struct {
 	reviewCollection *mongo.Collection
 	likeCollection   *mongo.Collection
+}
+
+var reviewSafeQueryTokenPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
+
+func sanitizeReviewQueryToken(field, value string) (string, error) {
+	if !reviewSafeQueryTokenPattern.MatchString(value) {
+		return "", fmt.Errorf("%s格式不合法", field)
+	}
+	return value, nil
+}
+
+func sanitizeReviewFilterValue(value interface{}) (interface{}, error) {
+	switch v := value.(type) {
+	case string:
+		return sanitizeReviewQueryToken("filter_value", v)
+	case []string:
+		result := make([]string, 0, len(v))
+		for _, item := range v {
+			safeItem, err := sanitizeReviewQueryToken("filter_value", item)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, safeItem)
+		}
+		return result, nil
+	case []interface{}:
+		result := make([]interface{}, 0, len(v))
+		for _, item := range v {
+			safeItem, err := sanitizeReviewFilterValue(item)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, safeItem)
+		}
+		return result, nil
+	case bson.M:
+		return sanitizeReviewFilter(v)
+	default:
+		return value, nil
+	}
+}
+
+func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
+	safeFilter := make(bson.M, len(filter))
+	for key, value := range filter {
+		safeValue, err := sanitizeReviewFilterValue(value)
+		if err != nil {
+			return nil, err
+		}
+		safeFilter[key] = safeValue
+	}
+	return safeFilter, nil
 }
 
 // NewMongoReviewRepository 创建MongoDB书评仓储实例
@@ -145,7 +198,11 @@ func (r *MongoReviewRepository) GetReviewByID(ctx context.Context, reviewID stri
 
 // GetReviewsByBook 获取书籍的书评列表
 func (r *MongoReviewRepository) GetReviewsByBook(ctx context.Context, bookID string, page, size int) ([]*social.Review, int64, error) {
-	filter := bson.M{"book_id": bookID}
+	safeBookID, err := sanitizeReviewQueryToken("book_id", bookID)
+	if err != nil {
+		return nil, 0, err
+	}
+	filter := bson.M{"book_id": safeBookID}
 	sort := bson.D{{Key: "created_at", Value: -1}}
 
 	return r.findReviews(ctx, filter, page, size, sort)
@@ -153,7 +210,11 @@ func (r *MongoReviewRepository) GetReviewsByBook(ctx context.Context, bookID str
 
 // GetReviewsByUser 获取用户的书评列表
 func (r *MongoReviewRepository) GetReviewsByUser(ctx context.Context, userID string, page, size int) ([]*social.Review, int64, error) {
-	filter := bson.M{"user_id": userID}
+	safeUserID, err := sanitizeReviewQueryToken("user_id", userID)
+	if err != nil {
+		return nil, 0, err
+	}
+	filter := bson.M{"user_id": safeUserID}
 	sort := bson.D{{Key: "created_at", Value: -1}}
 
 	return r.findReviews(ctx, filter, page, size, sort)
@@ -169,8 +230,12 @@ func (r *MongoReviewRepository) GetPublicReviews(ctx context.Context, page, size
 
 // GetReviewsByRating 根据评分获取书评
 func (r *MongoReviewRepository) GetReviewsByRating(ctx context.Context, bookID string, rating int, page, size int) ([]*social.Review, int64, error) {
+	safeBookID, err := sanitizeReviewQueryToken("book_id", bookID)
+	if err != nil {
+		return nil, 0, err
+	}
 	filter := bson.M{
-		"book_id": bookID,
+		"book_id": safeBookID,
 		"rating":  rating,
 	}
 	sort := bson.D{{Key: "created_at", Value: -1}}
@@ -245,9 +310,17 @@ func (r *MongoReviewRepository) CreateReviewLike(ctx context.Context, reviewLike
 
 // DeleteReviewLike 删除书评点赞
 func (r *MongoReviewRepository) DeleteReviewLike(ctx context.Context, reviewID, userID string) error {
-	_, err := r.likeCollection.DeleteOne(ctx, bson.M{
-		"review_id": reviewID,
-		"user_id":   userID,
+	safeReviewID, err := sanitizeReviewQueryToken("review_id", reviewID)
+	if err != nil {
+		return err
+	}
+	safeUserID, err := sanitizeReviewQueryToken("user_id", userID)
+	if err != nil {
+		return err
+	}
+	_, err = r.likeCollection.DeleteOne(ctx, bson.M{
+		"review_id": safeReviewID,
+		"user_id":   safeUserID,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to delete review like: %w", err)
@@ -258,10 +331,18 @@ func (r *MongoReviewRepository) DeleteReviewLike(ctx context.Context, reviewID, 
 
 // GetReviewLike 获取书评点赞记录
 func (r *MongoReviewRepository) GetReviewLike(ctx context.Context, reviewID, userID string) (*social.ReviewLike, error) {
+	safeReviewID, err := sanitizeReviewQueryToken("review_id", reviewID)
+	if err != nil {
+		return nil, err
+	}
+	safeUserID, err := sanitizeReviewQueryToken("user_id", userID)
+	if err != nil {
+		return nil, err
+	}
 	var reviewLike social.ReviewLike
-	err := r.likeCollection.FindOne(ctx, bson.M{
-		"review_id": reviewID,
-		"user_id":   userID,
+	err = r.likeCollection.FindOne(ctx, bson.M{
+		"review_id": safeReviewID,
+		"user_id":   safeUserID,
 	}).Decode(&reviewLike)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -275,9 +356,17 @@ func (r *MongoReviewRepository) GetReviewLike(ctx context.Context, reviewID, use
 
 // IsReviewLiked 检查是否已点赞
 func (r *MongoReviewRepository) IsReviewLiked(ctx context.Context, reviewID, userID string) (bool, error) {
+	safeReviewID, err := sanitizeReviewQueryToken("review_id", reviewID)
+	if err != nil {
+		return false, err
+	}
+	safeUserID, err := sanitizeReviewQueryToken("user_id", userID)
+	if err != nil {
+		return false, err
+	}
 	count, err := r.likeCollection.CountDocuments(ctx, bson.M{
-		"review_id": reviewID,
-		"user_id":   userID,
+		"review_id": safeReviewID,
+		"user_id":   safeUserID,
 	})
 	if err != nil {
 		return false, fmt.Errorf("failed to check review like: %w", err)
@@ -288,7 +377,11 @@ func (r *MongoReviewRepository) IsReviewLiked(ctx context.Context, reviewID, use
 
 // GetReviewLikes 获取书评点赞列表
 func (r *MongoReviewRepository) GetReviewLikes(ctx context.Context, reviewID string, page, size int) ([]*social.ReviewLike, int64, error) {
-	filter := bson.M{"review_id": reviewID}
+	safeReviewID, err := sanitizeReviewQueryToken("review_id", reviewID)
+	if err != nil {
+		return nil, 0, err
+	}
+	filter := bson.M{"review_id": safeReviewID}
 
 	// 计算总数
 	total, err := r.likeCollection.CountDocuments(ctx, filter)
@@ -369,9 +462,13 @@ func (r *MongoReviewRepository) DecrementReviewLikeCount(ctx context.Context, re
 
 // GetAverageRating 获取书籍平均评分
 func (r *MongoReviewRepository) GetAverageRating(ctx context.Context, bookID string) (float64, error) {
+	safeBookID, err := sanitizeReviewQueryToken("book_id", bookID)
+	if err != nil {
+		return 0, err
+	}
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"book_id": bookID,
+			"book_id": safeBookID,
 		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   nil,
@@ -405,9 +502,13 @@ func (r *MongoReviewRepository) GetAverageRating(ctx context.Context, bookID str
 
 // GetRatingDistribution 获取评分分布
 func (r *MongoReviewRepository) GetRatingDistribution(ctx context.Context, bookID string) (map[int]int64, error) {
+	safeBookID, err := sanitizeReviewQueryToken("book_id", bookID)
+	if err != nil {
+		return nil, err
+	}
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"book_id": bookID,
+			"book_id": safeBookID,
 		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$rating",
@@ -451,7 +552,11 @@ func (r *MongoReviewRepository) GetRatingDistribution(ctx context.Context, bookI
 
 // CountReviews 统计书评数
 func (r *MongoReviewRepository) CountReviews(ctx context.Context, bookID string) (int64, error) {
-	count, err := r.reviewCollection.CountDocuments(ctx, bson.M{"book_id": bookID})
+	safeBookID, err := sanitizeReviewQueryToken("book_id", bookID)
+	if err != nil {
+		return 0, err
+	}
+	count, err := r.reviewCollection.CountDocuments(ctx, bson.M{"book_id": safeBookID})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count reviews: %w", err)
 	}
@@ -461,7 +566,11 @@ func (r *MongoReviewRepository) CountReviews(ctx context.Context, bookID string)
 
 // CountUserReviews 统计用户书评数
 func (r *MongoReviewRepository) CountUserReviews(ctx context.Context, userID string) (int64, error) {
-	count, err := r.reviewCollection.CountDocuments(ctx, bson.M{"user_id": userID})
+	safeUserID, err := sanitizeReviewQueryToken("user_id", userID)
+	if err != nil {
+		return 0, err
+	}
+	count, err := r.reviewCollection.CountDocuments(ctx, bson.M{"user_id": safeUserID})
 	if err != nil {
 		return 0, fmt.Errorf("failed to count user reviews: %w", err)
 	}
@@ -476,8 +585,13 @@ func (r *MongoReviewRepository) Health(ctx context.Context) error {
 
 // findReviews 通用的查询书评方法
 func (r *MongoReviewRepository) findReviews(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*social.Review, int64, error) {
+	safeFilter, err := sanitizeReviewFilter(filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	// 计算总数
-	total, err := r.reviewCollection.CountDocuments(ctx, filter)
+	total, err := r.reviewCollection.CountDocuments(ctx, safeFilter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
 	}
@@ -491,7 +605,7 @@ func (r *MongoReviewRepository) findReviews(ctx context.Context, filter bson.M, 
 		SetSkip(skip).
 		SetLimit(int64(size))
 
-	cursor, err := r.reviewCollection.Find(ctx, filter, opts)
+	cursor, err := r.reviewCollection.Find(ctx, safeFilter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
 	}
