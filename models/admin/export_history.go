@@ -38,3 +38,62 @@ const (
 	ExportFormatCSV   = "csv"   // CSV格式
 	ExportFormatExcel = "excel" // Excel格式
 )
+
+// IsPending 检查是否为待处理状态
+func (e *ExportHistory) IsPending() bool {
+	return e.Status == ExportStatusPending
+}
+
+// IsCompleted 检查是否为已完成状态
+func (e *ExportHistory) IsCompleted() bool {
+	return e.Status == ExportStatusCompleted
+}
+
+// IsFailed 检查是否为失败状态
+func (e *ExportHistory) IsFailed() bool {
+	return e.Status == ExportStatusFailed
+}
+
+// MarkCompleted 标记为已完成
+func (e *ExportHistory) MarkCompleted() {
+	e.Status = ExportStatusCompleted
+	now := time.Now()
+	e.CompletedAt = &now
+}
+
+// MarkFailed 标记为失败
+func (e *ExportHistory) MarkFailed() {
+	e.Status = ExportStatusFailed
+}
+
+// Validate 验证导出历史记录
+func (e *ExportHistory) Validate() error {
+	if e.AdminID == "" {
+		return ErrExportAdminIDRequired
+	}
+	if e.ExportType == "" {
+		return ErrExportTypeRequired
+	}
+	if e.Format == "" {
+		return ErrExportFormatRequired
+	}
+	return nil
+}
+
+// 导出历史错误
+var (
+	ErrExportAdminIDRequired = NewExportError("admin ID is required")
+	ErrExportTypeRequired    = NewExportError("export type is required")
+	ErrExportFormatRequired  = NewExportError("export format is required")
+)
+
+// ExportError 导出错误类型
+type ExportError string
+
+func NewExportError(msg string) ExportError {
+	return ExportError(msg)
+}
+
+func (e ExportError) Error() string {
+	return string(e)
+}
