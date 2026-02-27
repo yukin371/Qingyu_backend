@@ -71,7 +71,7 @@ func (p *ProjectManagementImpl) CreateProject(ctx context.Context, req *serviceW
 		ProjectID: projectResp.ProjectID,
 		Title:     projectResp.Title,
 		Status:    projectResp.Status,
-		CreatedAt: projectResp.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		CreatedAt: projectResp.CreatedAt,
 	}, nil
 }
 
