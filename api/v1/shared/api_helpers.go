@@ -1,7 +1,9 @@
 package shared
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -159,11 +161,20 @@ func GetIntParam(c *gin.Context, key string, isQuery bool, defaultValue, min, ma
 
 // BindAndValidate 绑定并验证JSON请求体
 // 返回: (ok) - false表示已发送错误响应
+// 注意：ShouldBindJSON会自动验证结构体的binding标签
 func BindAndValidate(c *gin.Context, req interface{}) bool {
-	if !BindJSON(c, req) {
+	// 读取原始请求体用于错误响应
+	bodyBytes, _ := c.GetRawData()
+
+	// 重新设置请求体供后续使用
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// 绑定并验证（ShouldBindJSON会自动验证binding标签）
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
 		return false
 	}
-	return ValidateRequest(c, req)
+	return true
 }
 
 // BindJSON 仅绑定JSON请求体（不验证）
