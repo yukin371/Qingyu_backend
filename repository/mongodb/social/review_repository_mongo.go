@@ -190,8 +190,25 @@ func (r *MongoReviewRepository) GetReviewsByBook(ctx context.Context, bookID str
 	}
 	filter := bson.M{"book_id": safeBookID}
 	sort := bson.D{{Key: "created_at", Value: -1}}
-
-	return r.findReviews(ctx, filter, page, size, sort)
+	total, err := r.reviewCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(sort).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.reviewCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var reviews []*social.Review
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode reviews: %w", err)
+	}
+	return reviews, total, nil
 }
 
 // GetReviewsByUser 获取用户的书评列表
@@ -202,16 +219,50 @@ func (r *MongoReviewRepository) GetReviewsByUser(ctx context.Context, userID str
 	}
 	filter := bson.M{"user_id": safeUserID}
 	sort := bson.D{{Key: "created_at", Value: -1}}
-
-	return r.findReviews(ctx, filter, page, size, sort)
+	total, err := r.reviewCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(sort).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.reviewCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var reviews []*social.Review
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode reviews: %w", err)
+	}
+	return reviews, total, nil
 }
 
 // GetPublicReviews 获取公开书评列表
 func (r *MongoReviewRepository) GetPublicReviews(ctx context.Context, page, size int) ([]*social.Review, int64, error) {
 	filter := bson.M{"is_public": true}
 	sort := bson.D{{Key: "created_at", Value: -1}}
-
-	return r.findReviews(ctx, filter, page, size, sort)
+	total, err := r.reviewCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(sort).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.reviewCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var reviews []*social.Review
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode reviews: %w", err)
+	}
+	return reviews, total, nil
 }
 
 // GetReviewsByRating 根据评分获取书评
@@ -225,8 +276,25 @@ func (r *MongoReviewRepository) GetReviewsByRating(ctx context.Context, bookID s
 		"rating":  rating,
 	}
 	sort := bson.D{{Key: "created_at", Value: -1}}
-
-	return r.findReviews(ctx, filter, page, size, sort)
+	total, err := r.reviewCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(sort).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.reviewCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var reviews []*social.Review
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode reviews: %w", err)
+	}
+	return reviews, total, nil
 }
 
 // UpdateReview 更新书评
@@ -567,40 +635,4 @@ func (r *MongoReviewRepository) CountUserReviews(ctx context.Context, userID str
 // Health 健康检查
 func (r *MongoReviewRepository) Health(ctx context.Context) error {
 	return r.reviewCollection.Database().Client().Ping(ctx, nil)
-}
-
-// findReviews 通用的查询书评方法
-func (r *MongoReviewRepository) findReviews(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*social.Review, int64, error) {
-	safeFilter, err := sanitizeReviewFilter(filter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 计算总数
-	total, err := r.reviewCollection.CountDocuments(ctx, safeFilter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count reviews: %w", err)
-	}
-
-	// 计算跳过数
-	skip := int64((page - 1) * size)
-
-	// 查询
-	opts := options.Find().
-		SetSort(sort).
-		SetSkip(skip).
-		SetLimit(int64(size))
-
-	cursor, err := r.reviewCollection.Find(ctx, safeFilter, opts)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find reviews: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var reviews []*social.Review
-	if err := cursor.All(ctx, &reviews); err != nil {
-		return nil, 0, fmt.Errorf("failed to decode reviews: %w", err)
-	}
-
-	return reviews, total, nil
 }

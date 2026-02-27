@@ -314,8 +314,25 @@ func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID
 		"state":       social.CommentStateNormal,
 		"parent_id":   nil, // 只获取顶级评论
 	}
-
-	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+	return comments, total, nil
 }
 
 // GetCommentsByUserID 获取用户的评论列表
@@ -325,7 +342,25 @@ func (r *MongoCommentRepository) GetCommentsByUserID(ctx context.Context, userID
 		return nil, 0, err
 	}
 	filter := bson.M{"author_id": safeUserID}
-	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+	return comments, total, nil
 }
 
 // GetRepliesByCommentID 获取评论的回复列表
@@ -366,8 +401,25 @@ func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, cha
 		"state":       social.CommentStateNormal,
 		"parent_id":   nil,
 	}
-
-	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: -1}})
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+	return comments, total, nil
 }
 
 // GetCommentsByBookIDSorted 获取书籍的排序评论列表
@@ -392,8 +444,25 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 	default:
 		sort = bson.D{{Key: "created_at", Value: -1}}
 	}
-
-	return r.findComments(ctx, filter, page, size, sort)
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(sort).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+	return comments, total, nil
 }
 
 // UpdateCommentStatus 更新评论审核状态
@@ -432,7 +501,25 @@ func (r *MongoCommentRepository) UpdateCommentStatus(ctx context.Context, id, st
 // GetPendingComments 获取待审核评论列表
 func (r *MongoCommentRepository) GetPendingComments(ctx context.Context, page, size int) ([]*social.Comment, int64, error) {
 	filter := bson.M{"state": social.CommentStateNormal} // 或根据业务需求使用pending状态
-	return r.findComments(ctx, filter, page, size, bson.D{{Key: "created_at", Value: 1}})
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+	skip := int64((page - 1) * size)
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: 1}}).
+		SetSkip(skip).
+		SetLimit(int64(size))
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+	return comments, total, nil
 }
 
 // IncrementLikeCount 增加点赞数
@@ -652,40 +739,4 @@ func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, boo
 // Health 健康检查
 func (r *MongoCommentRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
-}
-
-// findComments 通用的查询评论方法
-func (r *MongoCommentRepository) findComments(ctx context.Context, filter bson.M, page, size int, sort bson.D) ([]*social.Comment, int64, error) {
-	safeFilter, err := sanitizeCommentFilter(filter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, safeFilter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
-	}
-
-	// 计算跳过数
-	skip := int64((page - 1) * size)
-
-	// 查询
-	opts := options.Find().
-		SetSort(sort).
-		SetSkip(skip).
-		SetLimit(int64(size))
-
-	cursor, err := r.collection.Find(ctx, safeFilter, opts)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var comments []*social.Comment
-	if err := cursor.All(ctx, &comments); err != nil {
-		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
-	}
-
-	return comments, total, nil
 }

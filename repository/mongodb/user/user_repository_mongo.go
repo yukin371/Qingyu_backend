@@ -10,24 +10,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"Qingyu_backend/repository/mongodb/base"
 	usersModel "Qingyu_backend/models/users"
-	infrastructure "Qingyu_backend/repository/interfaces/infrastructure"
+	"Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 // MongoUserRepository MongoDB用户仓储实现
 // 基于新的架构设计，实现BaseRepository和UserRepository接口
 type MongoUserRepository struct {
-	*base.BaseMongoRepository  // 嵌入基类，继承ID转换和通用CRUD方法喵~
-	db *mongo.Database
+	*base.BaseMongoRepository // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	db                        *mongo.Database
 }
 
 // NewMongoUserRepository 创建新的MongoDB用户仓储实例
 func NewMongoUserRepository(db *mongo.Database) UserInterface.UserRepository {
 	return &MongoUserRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "users"),
-		db:                 db,
+		db:                  db,
 	}
 }
 
@@ -797,7 +797,7 @@ func (r *MongoUserRepository) Transaction(ctx context.Context,
 		// 创建事务内的Repository实例
 		txRepo := &MongoUserRepository{
 			BaseMongoRepository: r.BaseMongoRepository,
-			db:                 r.db,
+			db:                  r.db,
 		}
 
 		return nil, fn(sessCtx, txRepo)
