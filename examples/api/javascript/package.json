@@ -1,0 +1,21 @@
+{
+  "name": "qingyu-api-examples",
+  "version": "1.0.0",
+  "description": "青羽写作平台 API JavaScript示例",
+  "main": "auth_example.js",
+  "scripts": {
+    "auth": "node auth_example.js",
+    "bookstore": "node bookstore_example.js",
+    "admin": "node admin_example.js"
+  },
+  "keywords": ["api", "qingyu", "javascript"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
