@@ -2,7 +2,7 @@ name: Architecture CI
 
 on:
   push:
-    branches: [ main, dev, architecture-refactor ]
+    branches: [ main, architecture-refactor ]
   workflow_dispatch:
 
 jobs:
@@ -40,6 +40,7 @@ jobs:
   unit-tests:
     name: 单元测试
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout代码

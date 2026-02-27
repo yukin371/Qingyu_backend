@@ -66,7 +66,7 @@ func (c *ContentManagementImpl) CreateCharacter(ctx context.Context, projectID, 
 	// 转换请求类型
 	convertReq := &serviceInterfaces.CreateCharacterRequest{
 		Name:              req.Name,
-		Alias:             []string{req.Alias}, // Port DTO 使用 string，Service DTO 使用 []string
+		Alias:             req.Alias,
 		Summary:           req.Summary,
 		Traits:            req.Traits,
 		Background:        req.Background,
@@ -302,7 +302,7 @@ func (c *ContentManagementImpl) CreateTimelineEvent(ctx context.Context, project
 		LocationIDs:  req.LocationIDs,
 		ChapterIDs:   req.ChapterIDs,
 		StoryTime:    nil, // Port DTO 使用 string，Service DTO 使用 *writer.StoryTime
-		Duration:     "", // Port DTO 使用 *int，Service DTO 使用 string
+		Duration:     "",  // Port DTO 使用 *int，Service DTO 使用 string
 		Impact:       req.Impact,
 	}
 	return c.timelineService.CreateEvent(ctx, projectID, convertReq)
