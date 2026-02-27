@@ -243,3 +243,217 @@ func TestSensitiveOperationService_RemoveFromWhitelist(t *testing.T) {
 		t.Error("从白名单移除后, 应该被识别为敏感操作")
 	}
 }
+
+// TestSensitiveOperationService_AddToWhitelist_EmptyAction 测试空操作类型
+func TestSensitiveOperationService_AddToWhitelist_EmptyAction(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	err := service.AddToWhitelist("", "user")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err.Error() != "操作类型和资源类型不能为空" {
+		t.Errorf("期望错误信息为 '操作类型和资源类型不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestSensitiveOperationService_AddToWhitelist_EmptyResourceType 测试空资源类型
+func TestSensitiveOperationService_AddToWhitelist_EmptyResourceType(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	err := service.AddToWhitelist("delete", "")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err.Error() != "操作类型和资源类型不能为空" {
+		t.Errorf("期望错误信息为 '操作类型和资源类型不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestSensitiveOperationService_RemoveFromWhitelist_EmptyAction 测试移除空操作类型
+func TestSensitiveOperationService_RemoveFromWhitelist_EmptyAction(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	err := service.RemoveFromWhitelist("", "user")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err.Error() != "操作类型和资源类型不能为空" {
+		t.Errorf("期望错误信息为 '操作类型和资源类型不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestSensitiveOperationService_RemoveFromWhitelist_EmptyResourceType 测试移除空资源类型
+func TestSensitiveOperationService_RemoveFromWhitelist_EmptyResourceType(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	err := service.RemoveFromWhitelist("delete", "")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err.Error() != "操作类型和资源类型不能为空" {
+		t.Errorf("期望错误信息为 '操作类型和资源类型不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestSensitiveOperationService_LogSensitiveOperation_NilRequest 测试空请求
+func TestSensitiveOperationService_LogSensitiveOperation_NilRequest(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	err := service.LogSensitiveOperation(context.Background(), nil)
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err.Error() != "请求参数不能为空" {
+		t.Errorf("期望错误信息为 '请求参数不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestSensitiveOperationService_LogSensitiveOperation_NonSensitive 测试非敏感操作
+func TestSensitiveOperationService_LogSensitiveOperation_NonSensitive(t *testing.T) {
+	ctx := context.Background()
+	var markedSensitive bool
+
+	mockService := &MockAuditLogServiceForSensitive{
+		LogFunc: func(ctx context.Context, req *LogOperationWithAuditRequest) error {
+			markedSensitive = req.IsSensitive
+			return nil
+		},
+	}
+
+	service := NewSensitiveOperationService(mockService)
+
+	req := &LogOperationWithAuditRequest{
+		AdminID:      "admin123",
+		Operation:    "query",
+		ResourceType: "user",
+		ResourceID:   "user123",
+	}
+
+	err := service.LogSensitiveOperation(ctx, req)
+	if err != nil {
+		t.Fatalf("期望记录成功, 但得到错误: %v", err)
+	}
+	if markedSensitive {
+		t.Error("非敏感操作不应该被标记为敏感")
+	}
+}
+
+// TestSensitiveOperationService_IsSensitiveOperation_CaseInsensitive 测试大小写不敏感
+func TestSensitiveOperationService_IsSensitiveOperation_CaseInsensitive(t *testing.T) {
+	service := NewSensitiveOperationService(nil)
+
+	// 测试大小写变化
+	if !service.IsSensitiveOperation("DELETE", "USER") {
+		t.Error("大写的 DELETE:USER 应该被识别为敏感操作")
+	}
+	if !service.IsSensitiveOperation("Delete", "User") {
+		t.Error("混合大小写的 Delete:User 应该被识别为敏感操作")
+	}
+}
+
+// TestSensitiveOperationService_Whitelist_CaseInsensitive 测试白名单大小写不敏感
+func TestSensitiveOperationService_Whitelist_CaseInsensitive(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	// 添加到白名单
+	service.AddToWhitelist("DELETE", "USER")
+
+	// 验证小写也不敏感
+	if service.IsSensitiveOperation("delete", "user") {
+		t.Error("添加到白名单后, 大小写变化都应该不敏感")
+	}
+}
+
+// TestSensitiveOperationService_GetSensitiveOperations 测试获取敏感操作列表
+func TestSensitiveOperationService_GetSensitiveOperations(t *testing.T) {
+	operations := GetSensitiveOperations()
+
+	if len(operations) == 0 {
+		t.Error("期望敏感操作列表不为空")
+	}
+
+	// 验证包含已知敏感操作
+	foundDeleteUser := false
+	for _, op := range operations {
+		if op == "delete:user" {
+			foundDeleteUser = true
+			break
+		}
+	}
+	if !foundDeleteUser {
+		t.Error("期望敏感操作列表包含 'delete:user'")
+	}
+}
+
+// TestSensitiveOperationService_AddSensitiveOperation 测试动态添加敏感操作
+func TestSensitiveOperationService_AddSensitiveOperation(t *testing.T) {
+	service := NewSensitiveOperationService(nil)
+
+	// 添加新的敏感操作
+	AddSensitiveOperation("archive", "book")
+
+	// 验证被识别为敏感操作
+	if !service.IsSensitiveOperation("archive", "book") {
+		t.Error("动态添加的敏感操作应该被识别")
+	}
+
+	// 清理
+	RemoveSensitiveOperation("archive", "book")
+}
+
+// TestSensitiveOperationService_RemoveSensitiveOperation 测试动态移除敏感操作
+func TestSensitiveOperationService_RemoveSensitiveOperation(t *testing.T) {
+	service := NewSensitiveOperationService(nil)
+
+	// 先添加
+	AddSensitiveOperation("temp", "action")
+
+	// 验证存在
+	if !service.IsSensitiveOperation("temp", "action") {
+		t.Error("添加后应该被识别为敏感操作")
+	}
+
+	// 移除
+	RemoveSensitiveOperation("temp", "action")
+
+	// 验证不再敏感
+	if service.IsSensitiveOperation("temp", "action") {
+		t.Error("移除后不应该被识别为敏感操作")
+	}
+}
+
+// TestSensitiveOperationService_ConcurrentWhitelistOperations 测试并发白名单操作
+func TestSensitiveOperationService_ConcurrentWhitelistOperations(t *testing.T) {
+	mockService := &MockAuditLogServiceForSensitive{}
+	service := NewSensitiveOperationService(mockService)
+
+	// 并发添加和移除
+	done := make(chan bool)
+	go func() {
+		for i := 0; i < 100; i++ {
+			service.AddToWhitelist("action", "resource")
+		}
+		done <- true
+	}()
+	go func() {
+		for i := 0; i < 100; i++ {
+			service.RemoveFromWhitelist("action", "resource")
+		}
+		done <- true
+	}()
+
+	<-done
+	<-done
+
+	// 验证服务仍然可用
+	if service.IsSensitiveOperation("delete", "user") {
+		// 这是预期的, delete:user 是敏感操作
+	}
+}

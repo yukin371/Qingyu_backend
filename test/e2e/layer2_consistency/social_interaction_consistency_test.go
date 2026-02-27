@@ -54,14 +54,14 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		user1 := env.GetTestData("user1").(*users.User)
 		user2 := env.GetTestData("user2").(*users.User)
 		book := env.GetTestData("test_book").(*bookstore.Book)
-		chapter := env.GetTestData("test_chapter").(*bookstore.Chapter)
+		_ = env.GetTestData("test_chapter").(*bookstore.Chapter)
 
 		// User1 登录并执行互动
 		token1 := actions.Login(user1.Username, "Test1234")
 
 		// User1 发表评论
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论1：这本书很有趣！")
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论2：期待后续章节。")
+		actions.AddComment(token1, book.ID.Hex(), "", "这本书非常精彩，情节推进自然，角色塑造也很立体。")
+		actions.AddComment(token1, book.ID.Hex(), "", "故事节奏很好，叙事清晰，期待后续章节继续展开。")
 
 		// User1 收藏书籍
 		actions.CollectBook(token1, book.ID.Hex())
@@ -75,7 +75,7 @@ func TestSocialInteractionConsistency(t *testing.T) {
 		token2 := actions.Login(user2.Username, "Test1234")
 
 		// User2 发表评论
-		actions.AddComment(token2, book.ID.Hex(), chapter.ID, "E2E测试评论3：我也很喜欢这本书。")
+		actions.AddComment(token2, book.ID.Hex(), "", "整体阅读体验很好，文笔流畅，人物关系也很有张力。")
 
 		// User2 收藏书籍
 		actions.CollectBook(token2, book.ID.Hex())

@@ -39,7 +39,7 @@ func NewAuditAPI(auditLogService adminService.AuditLogService, exportService adm
 // @Param end_date query string false "结束日期 (YYYY-MM-DD)"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/audit/trail [get]
 func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 	// 解析查询参数
@@ -109,7 +109,7 @@ func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 // @Produce json
 // @Param type path string true "资源类型"
 // @Param id path string true "资源ID"
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/audit/trail/resource/{type}/{id} [get]
 func (api *AuditAPI) GetResourceAuditTrail(c *gin.Context) {
 	resourceType := c.Param("type")
@@ -229,7 +229,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 // @Tags Admin-Audit
 // @Accept json
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} map[string]interface{} "code,message,data"
 // @Router /api/v1/admin/audit/statistics [get]
 func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	// 获取总日志数

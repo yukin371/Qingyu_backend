@@ -37,6 +37,11 @@ type UpdateTemplateRequest struct {
 	Category    string   `json:"category"`
 }
 
+// ApplyTemplateRequest 应用模板请求
+type ApplyTemplateRequest struct {
+	RoleID string `json:"roleId" binding:"required"`
+}
+
 // CreateTemplate 创建权限模板
 // @Summary 创建权限模板
 // @Description 创建新的权限模板

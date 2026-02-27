@@ -123,7 +123,7 @@ func GetPaginationParamsSmall(c *gin.Context) PaginationParams {
 
 // ============ 数字参数辅助函数 ============
 
-//GetIntParam 获取整数参数（路径或查询），支持默认值和范围验证
+// GetIntParam 获取整数参数（路径或查询），支持默认值和范围验证
 // key: 参数名
 // isQuery: true表示查询参数，false表示路径参数
 // defaultValue: 默认值
@@ -160,9 +160,7 @@ func GetIntParam(c *gin.Context, key string, isQuery bool, defaultValue, min, ma
 // BindAndValidate 绑定并验证JSON请求体
 // 返回: (ok) - false表示已发送错误响应
 func BindAndValidate(c *gin.Context, req interface{}) bool {
-	if !BindJSON(c, req) {
-		return false
-	}
+	// ValidateRequest 内部已包含 JSON 绑定 + 结构校验，避免重复读取 body 导致 EOF。
 	return ValidateRequest(c, req)
 }
 

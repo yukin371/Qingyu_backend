@@ -7,6 +7,8 @@ import (
 
 	adminModel "Qingyu_backend/models/users"
 	adminRepo "Qingyu_backend/repository/interfaces/admin"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // MockAuditLogRepository Mock审计日志仓储
@@ -335,5 +337,318 @@ func TestAuditLogService_CleanOldLogs_Success(t *testing.T) {
 	err := service.CleanOldLogs(ctx, cleanDate)
 	if err != nil {
 		t.Fatalf("期望清理成功, 但得到错误: %v", err)
+	}
+}
+
+// TestAuditLogService_LogOperationWithAudit_NilRequest 测试空请求
+func TestAuditLogService_LogOperationWithAudit_NilRequest(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	err := service.LogOperationWithAudit(ctx, nil)
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err != nil && err.Error() != "请求参数不能为空" {
+		t.Errorf("期望错误信息为 '请求参数不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_LogOperationWithAudit_WithChanges 测试带变更记录的日志
+func TestAuditLogService_LogOperationWithAudit_WithChanges(t *testing.T) {
+	ctx := context.Background()
+	receivedChanges := false
+
+	mockRepo := &MockAuditLogRepository{
+		CreateFunc: func(ctx context.Context, log *adminModel.AdminLog) error {
+			if log.Changes == nil {
+				t.Error("期望 Changes 不为空")
+			} else {
+				receivedChanges = true
+			}
+			return nil
+		},
+	}
+
+	service := NewAuditLogService(mockRepo)
+
+	req := &LogOperationWithAuditRequest{
+		AdminID:      "admin123",
+		Operation:    "update",
+		ResourceType: "user",
+		ResourceID:   "user123",
+		Changes: map[string]adminModel.ChangeRecord{
+			"status": {
+				Field:    "status",
+				OldValue: "active",
+				NewValue: "banned",
+			},
+		},
+	}
+
+	err := service.LogOperationWithAudit(ctx, req)
+	if err != nil {
+		t.Fatalf("期望记录成功, 但得到错误: %v", err)
+	}
+	if !receivedChanges {
+		t.Error("期望 Changes 被正确传递")
+	}
+}
+
+// TestAuditLogService_QueryAuditLogs_NilRequest 测试空查询请求
+func TestAuditLogService_QueryAuditLogs_NilRequest(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, total, err := service.QueryAuditLogs(ctx, nil)
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if total != 0 {
+		t.Errorf("期望 total 为 0, 实际为 %d", total)
+	}
+}
+
+// TestAuditLogService_QueryAuditLogs_DefaultPagination 测试默认分页参数
+func TestAuditLogService_QueryAuditLogs_DefaultPagination(t *testing.T) {
+	ctx := context.Background()
+	var receivedFilter *adminRepo.AdminLogFilter
+
+	mockRepo := &MockAuditLogRepository{
+		ListFunc: func(ctx context.Context, filter *adminRepo.AdminLogFilter) ([]*adminModel.AdminLog, error) {
+			receivedFilter = filter
+			return []*adminModel.AdminLog{}, nil
+		},
+		CountFunc: func(ctx context.Context, filter *adminRepo.AdminLogFilter) (int64, error) {
+			return 0, nil
+		},
+	}
+
+	service := NewAuditLogService(mockRepo)
+
+	req := &QueryAuditLogsRequest{
+		Page:     0,
+		PageSize: 0,
+	}
+
+	_, _, err := service.QueryAuditLogs(ctx, req)
+	if err != nil {
+		t.Fatalf("期望查询成功, 但得到错误: %v", err)
+	}
+
+	if receivedFilter.Limit != 20 {
+		t.Errorf("期望默认 Limit 为 20, 实际为 %d", receivedFilter.Limit)
+	}
+	if receivedFilter.Offset != 0 {
+		t.Errorf("期望默认 Offset 为 0, 实际为 %d", receivedFilter.Offset)
+	}
+}
+
+// TestAuditLogService_QueryAuditLogs_MaxPageSize 测试最大分页大小限制
+func TestAuditLogService_QueryAuditLogs_MaxPageSize(t *testing.T) {
+	ctx := context.Background()
+	var receivedFilter *adminRepo.AdminLogFilter
+
+	mockRepo := &MockAuditLogRepository{
+		ListFunc: func(ctx context.Context, filter *adminRepo.AdminLogFilter) ([]*adminModel.AdminLog, error) {
+			receivedFilter = filter
+			return []*adminModel.AdminLog{}, nil
+		},
+		CountFunc: func(ctx context.Context, filter *adminRepo.AdminLogFilter) (int64, error) {
+			return 0, nil
+		},
+	}
+
+	service := NewAuditLogService(mockRepo)
+
+	req := &QueryAuditLogsRequest{
+		Page:     1,
+		PageSize: 200, // 超过最大限制
+	}
+
+	_, _, err := service.QueryAuditLogs(ctx, req)
+	if err != nil {
+		t.Fatalf("期望查询成功, 但得到错误: %v", err)
+	}
+
+	if receivedFilter.Limit != 100 {
+		t.Errorf("期望 Limit 被限制为 100, 实际为 %d", receivedFilter.Limit)
+	}
+}
+
+// TestAuditLogService_GetLogsByResource_EmptyResourceType 测试空资源类型
+func TestAuditLogService_GetLogsByResource_EmptyResourceType(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByResource(ctx, "", "resource123")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if err != nil && err.Error() != "资源类型不能为空" {
+		t.Errorf("期望错误信息为 '资源类型不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_GetLogsByResource_EmptyResourceID 测试空资源ID
+func TestAuditLogService_GetLogsByResource_EmptyResourceID(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByResource(ctx, "user", "")
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if err != nil && err.Error() != "资源ID不能为空" {
+		t.Errorf("期望错误信息为 '资源ID不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_GetLogsByDateRange_Success 测试按日期范围查询成功
+func TestAuditLogService_GetLogsByDateRange_Success(t *testing.T) {
+	ctx := context.Background()
+	startDate := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
+
+	expectedLogs := []*adminModel.AdminLog{
+		{
+			ID:        "log1",
+			AdminID:   "admin123",
+			Operation: "update_user",
+			CreatedAt: time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),
+		},
+	}
+
+	mockRepo := &MockAuditLogRepository{
+		GetByDateRangeFunc: func(ctx context.Context, start, end time.Time) ([]*adminModel.AdminLog, error) {
+			if !start.Equal(startDate) {
+				t.Errorf("期望开始日期为 %v, 实际为 %v", startDate, start)
+			}
+			if !end.Equal(endDate) {
+				t.Errorf("期望结束日期为 %v, 实际为 %v", endDate, end)
+			}
+			return expectedLogs, nil
+		},
+	}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByDateRange(ctx, startDate, endDate)
+	if err != nil {
+		t.Fatalf("期望查询成功, 但得到错误: %v", err)
+	}
+	if len(logs) != 1 {
+		t.Errorf("期望返回 1 条日志, 实际为 %d", len(logs))
+	}
+}
+
+// TestAuditLogService_GetLogsByDateRange_EmptyStartDate 测试空开始日期
+func TestAuditLogService_GetLogsByDateRange_EmptyStartDate(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByDateRange(ctx, time.Time{}, time.Now())
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if err != nil && err.Error() != "日期范围不能为空" {
+		t.Errorf("期望错误信息为 '日期范围不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_GetLogsByDateRange_EmptyEndDate 测试空结束日期
+func TestAuditLogService_GetLogsByDateRange_EmptyEndDate(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByDateRange(ctx, time.Now(), time.Time{})
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if err != nil && err.Error() != "日期范围不能为空" {
+		t.Errorf("期望错误信息为 '日期范围不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_GetLogsByDateRange_InvalidRange 测试无效日期范围
+func TestAuditLogService_GetLogsByDateRange_InvalidRange(t *testing.T) {
+	ctx := context.Background()
+	startDate := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	logs, err := service.GetLogsByDateRange(ctx, startDate, endDate)
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if logs != nil {
+		t.Error("期望 logs 为 nil")
+	}
+	if err != nil && err.Error() != "开始日期不能晚于结束日期" {
+		t.Errorf("期望错误信息为 '开始日期不能晚于结束日期', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_CleanOldLogs_EmptyDate 测试空清理日期
+func TestAuditLogService_CleanOldLogs_EmptyDate(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := &MockAuditLogRepository{}
+
+	service := NewAuditLogService(mockRepo)
+
+	err := service.CleanOldLogs(ctx, time.Time{})
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
+	}
+	if err != nil && err.Error() != "清理日期不能为空" {
+		t.Errorf("期望错误信息为 '清理日期不能为空', 实际为 '%v'", err)
+	}
+}
+
+// TestAuditLogService_CleanOldLogs_RepositoryError 测试仓储错误
+func TestAuditLogService_CleanOldLogs_RepositoryError(t *testing.T) {
+	ctx := context.Background()
+	cleanDate := time.Now().AddDate(-1, 0, 0)
+
+	mockRepo := &MockAuditLogRepository{
+		CleanOldLogsFunc: func(ctx context.Context, beforeDate time.Time) error {
+			return assert.AnError
+		},
+	}
+
+	service := NewAuditLogService(mockRepo)
+
+	err := service.CleanOldLogs(ctx, cleanDate)
+	if err == nil {
+		t.Error("期望返回错误, 但得到 nil")
 	}
 }

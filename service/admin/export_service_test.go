@@ -385,3 +385,216 @@ func TestExportService_ExportDataWithInconsistentColumns_Success(t *testing.T) {
 	assert.Equal(t, 3, len(records)) // Header + 2 rows
 	assert.Equal(t, 2, len(records[0])) // Only 2 columns
 }
+
+// ==================== TestExportService_NewExportDataAdapter ====================
+
+func TestExportService_NewExportDataAdapter(t *testing.T) {
+	data := []map[string]string{
+		{"ID": "1", "Name": "Alice"},
+		{"ID": "2", "Name": "Bob"},
+	}
+
+	adapter := NewExportDataAdapter(data)
+
+	assert.NotNil(t, adapter)
+	assert.NotNil(t, adapter.data)
+	assert.Equal(t, 2, len(adapter.data))
+}
+
+func TestExportService_ExportDataAdapter_ToExportRow(t *testing.T) {
+	data := []map[string]string{
+		{"ID": "1", "Name": "Alice", "Email": "alice@example.com"},
+		{"ID": "2", "Name": "Bob", "Email": "bob@example.com"},
+	}
+
+	adapter := NewExportDataAdapter(data)
+
+	// 测试有效索引
+	row := adapter.ToExportRow(0)
+	assert.NotNil(t, row)
+	assert.Equal(t, 3, len(row))
+
+	// 测试索引越界
+	row = adapter.ToExportRow(10)
+	assert.NotNil(t, row)
+	assert.Equal(t, 0, len(row))
+
+	// 测试空数据
+	emptyAdapter := NewExportDataAdapter([]map[string]string{})
+	row = emptyAdapter.ToExportRow(0)
+	assert.NotNil(t, row)
+	assert.Equal(t, 0, len(row))
+}
+
+// ==================== TestExportService_DefaultExportConfig ====================
+
+func TestExportService_DefaultExportConfig(t *testing.T) {
+	config := DefaultExportConfig()
+
+	assert.NotNil(t, config)
+	assert.Equal(t, ExportFormatCSV, config.Format)
+	assert.True(t, config.IncludeHeader)
+	assert.Equal(t, "export", config.FileName)
+	assert.Equal(t, "Sheet1", config.SheetName)
+	assert.Equal(t, 100000, config.MaxRows)
+}
+
+// ==================== TestExportService_ExportConfig_Fields ====================
+
+func TestExportService_ExportConfig_Fields(t *testing.T) {
+	config := &ExportConfig{
+		Format:         ExportFormatExcel,
+		IncludeHeader:  false,
+		FileName:       "test_export",
+		SheetName:      "TestData",
+		MaxRows:        50000,
+	}
+
+	assert.Equal(t, ExportFormatExcel, config.Format)
+	assert.False(t, config.IncludeHeader)
+	assert.Equal(t, "test_export", config.FileName)
+	assert.Equal(t, "TestData", config.SheetName)
+	assert.Equal(t, 50000, config.MaxRows)
+}
+
+// ==================== TestExportService_ExportToCSV_EmptyColumns ====================
+
+func TestExportService_ExportToCSV_EmptyColumns(t *testing.T) {
+	ctx := context.Background()
+	service := NewExportService()
+
+	data := []Exportable{
+		&MockExportable{ID: "1", Name: "Alice"},
+	}
+
+	columns := []ExportColumn{}
+
+	_, err := service.ExportToCSV(ctx, data, columns)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "列定义")
+}
+
+// ==================== TestExportService_ExportToExcel_EmptyColumns ====================
+
+func TestExportService_ExportToExcel_EmptyColumns(t *testing.T) {
+	ctx := context.Background()
+	service := NewExportService()
+
+	data := []Exportable{
+		&MockExportable{ID: "1", Name: "Alice"},
+	}
+
+	columns := []ExportColumn{}
+
+	_, err := service.ExportToExcel(ctx, data, columns)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "列定义")
+}
+
+// ==================== TestExportService_GetExportTemplate_EmptyColumns ====================
+
+func TestExportService_GetExportTemplate_EmptyColumns(t *testing.T) {
+	service := NewExportService()
+
+	columns := []ExportColumn{}
+
+	_, err := service.GetExportTemplate(columns)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "列定义")
+}
+
+// ==================== TestExportService_ExportToCSV_ColumnToLetter ====================
+
+func TestExportService_ColumnToLetter(t *testing.T) {
+	service := NewExportService().(*exportServiceImpl)
+
+	testCases := []struct {
+		index    int
+		expected string
+	}{
+		{0, "A"},
+		{1, "B"},
+		{2, "C"},
+		{25, "Z"},
+		{26, "AA"},
+		{27, "AB"},
+		{51, "AZ"},
+		{52, "BA"},
+		{701, "ZZ"},
+		{702, "AAA"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(strconv.Itoa(tc.index), func(t *testing.T) {
+			result := service.columnToLetter(tc.index)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+// ==================== TestExportService_ExportDataWithMoreColumns ====================
+
+func TestExportService_ExportDataWithMoreColumns(t *testing.T) {
+	ctx := context.Background()
+	service := NewExportService()
+
+	// 数据只有2列，但要求导出4列
+	data := []Exportable{
+		&MockExportable{ID: "1", Name: "Alice", Email: "alice@example.com", Age: 25},
+	}
+
+	columns := []ExportColumn{
+		{Key: "ID", Title: "ID"},
+		{Key: "Name", Title: "姓名"},
+		{Key: "Email", Title: "邮箱"},
+		{Key: "Age", Title: "年龄"},
+	}
+
+	// When
+	result, err := service.ExportToCSV(ctx, data, columns)
+
+	// Then
+	assert.NoError(t, err)
+
+	reader := csv.NewReader(bytes.NewReader(result))
+	records, err := reader.ReadAll()
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(records)) // Header + 1 row
+	assert.Equal(t, 4, len(records[0])) // 4 columns
+
+	// 验证最后一列为空（因为数据只有4列，刚好匹配）
+	assert.Equal(t, "25", records[1][3])
+}
+
+// ==================== TestExportService_ExportDataWithLessColumns ====================
+
+func TestExportService_ExportDataWithLessColumns(t *testing.T) {
+	ctx := context.Background()
+	service := NewExportService()
+
+	// 数据有4列，但只要求导出2列
+	data := []Exportable{
+		&MockExportable{ID: "1", Name: "Alice", Email: "alice@example.com", Age: 25},
+	}
+
+	columns := []ExportColumn{
+		{Key: "ID", Title: "ID"},
+		{Key: "Name", Title: "姓名"},
+	}
+
+	// When
+	result, err := service.ExportToCSV(ctx, data, columns)
+
+	// Then
+	assert.NoError(t, err)
+
+	reader := csv.NewReader(bytes.NewReader(result))
+	records, err := reader.ReadAll()
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(records)) // Header + 1 row
+	assert.Equal(t, 2, len(records[0])) // 2 columns
+	assert.Equal(t, "Alice", records[1][1])
+}

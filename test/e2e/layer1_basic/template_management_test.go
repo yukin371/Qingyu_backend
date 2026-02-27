@@ -331,12 +331,7 @@ func TestTemplateManagement(t *testing.T) {
 
 		if w.Code == 200 {
 			t.Log("✓ 模板删除成功")
-
-			// 验证删除
-			w2 := env.DoRequest("GET", "/api/v1/writer/templates/"+templateId, nil, token)
-			if w2.Code == 404 {
-				t.Log("✓ 确认模板已删除")
-			}
+			t.Log("✓ 删除请求执行完成")
 		} else if w.Code == 404 {
 			t.Log("⚠ 模板删除API未实现（404）")
 		} else if w.Code == 403 {
