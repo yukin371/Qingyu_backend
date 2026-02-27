@@ -51,7 +51,7 @@ func (api *ProgressAPI) GetProgress(c *gin.Context) {
 
 	result, err := api.progressService.GetProgress(c.Request.Context(), userID.(string), bookID)
 	if err != nil {
-		shared.InternalError(c, "获取进度失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (api *ProgressAPI) SaveProgress(c *gin.Context) {
 
 	err := api.progressService.SaveProgress(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "保存进度失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 
 	err := api.progressService.UpdateReadingTime(c.Request.Context(), userID.(string), req.BookID, req.Duration)
 	if err != nil {
-		shared.InternalError(c, "更新阅读时长失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (api *ProgressAPI) GetRecentBooks(c *gin.Context) {
 
 	result, err := api.progressService.GetRecentBooks(c.Request.Context(), userID.(string), limit)
 	if err != nil {
-		shared.InternalError(c, "获取最近阅读失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 
 	result, err := api.progressService.GetReadingStats(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取阅读统计失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -231,7 +231,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 
 	result, err := api.progressService.GetReadingHistory(c.Request.Context(), userID.(string), page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取阅读历史失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	result, err := api.progressService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取未读完书籍失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -287,7 +287,7 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 
 	result, err := api.progressService.GetFinishedBooks(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取已读完书籍失败", err)
+		c.Error(err)
 		return
 	}
 
