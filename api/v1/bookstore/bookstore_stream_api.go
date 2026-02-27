@@ -89,7 +89,7 @@ func (api *BookstoreAPI) StreamSearchBooks(c *gin.Context) {
 	// 创建流式写入器
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
-		response.InternalError(c, nil)
+		c.Error(http.ErrNotSupported)
 		return
 	}
 
@@ -244,7 +244,7 @@ func (api *BookstoreAPI) StreamSearchBooksBatch(c *gin.Context) {
 			zap.Error(err),
 			zap.String("keyword", keyword),
 			zap.String("cursor", cursor))
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

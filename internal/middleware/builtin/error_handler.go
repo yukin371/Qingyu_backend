@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"Qingyu_backend/internal/middleware/core"
+	"Qingyu_backend/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -88,20 +89,26 @@ func (m *ErrorHandlerMiddleware) handleMiddlewareError(c *gin.Context, err inter
 // handleGinErrors 处理Gin错误
 func (m *ErrorHandlerMiddleware) handleGinErrors(c *gin.Context) {
 	// 获取第一个错误
-	err := c.Errors[0]
+	ginErr := c.Errors[0]
+	err := ginErr.Err
+
+	// 使用错误映射器获取HTTP状态码和错误消息
+	statusCode := errors.MapToHTTPStatus(err)
+	errorMessage := errors.GetErrorMessage(err)
 
 	// 记录错误日志
 	m.logger.Error("Gin error",
 		zap.String("path", c.Request.URL.Path),
 		zap.String("method", c.Request.Method),
-		zap.Error(err.Err),
+		zap.Int("status", statusCode),
+		zap.Error(err),
 	)
 
 	// 如果还没有响应，发送统一错误格式
 	if !c.Writer.Written() {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": "Internal Server Error",
+		c.JSON(statusCode, gin.H{
+			"code":    statusCode,
+			"message": errorMessage,
 			"error":   err.Error(),
 		})
 	}

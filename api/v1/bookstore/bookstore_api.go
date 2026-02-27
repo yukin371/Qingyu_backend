@@ -64,7 +64,7 @@ type PaginatedResponse struct {
 func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 	data, err := api.service.GetHomepageData(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 	}
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 			return
 		}
 
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -214,7 +214,7 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 
 	books, total, err := api.service.GetBooksByCategory(c.Request.Context(), categoryID, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 
 	books, total, err := api.service.GetRecommendedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -282,7 +282,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 
 	books, total, err := api.service.GetFeaturedBooks(c.Request.Context(), page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -514,7 +514,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("duration", duration),
 		)
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -588,7 +588,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 	// 调用Service层
 	books, total, err := api.service.SearchByTitle(c.Request.Context(), title, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -652,7 +652,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 	// 调用Service层
 	books, total, err := api.service.SearchByAuthor(c.Request.Context(), author, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -679,7 +679,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 	tree, err := api.service.GetCategoryTree(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -718,7 +718,7 @@ func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 			return
 		}
 
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -744,7 +744,7 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 
 	banners, err := api.service.GetActiveBanners(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -779,7 +779,7 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 
 	err = api.service.IncrementBookView(c.Request.Context(), id.Hex())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -813,7 +813,7 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 			return
 		}
 
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -839,7 +839,7 @@ func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetRealtimeRanking(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -867,7 +867,7 @@ func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetWeeklyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -895,7 +895,7 @@ func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetMonthlyRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -923,7 +923,7 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 
 	rankings, err := api.service.GetNewbieRanking(c.Request.Context(), period, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -959,7 +959,7 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 
 	rankings, err := api.service.GetRankingByType(c.Request.Context(), bookstore2.RankingType(rankingType), period, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -988,7 +988,7 @@ func (api *BookstoreAPI) buildSearchSort(sortBy, sortOrder string) []searchModel
 func (api *BookstoreAPI) GetYears(c *gin.Context) {
 	years, err := api.service.GetYears(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -1007,7 +1007,7 @@ func (api *BookstoreAPI) GetTags(c *gin.Context) {
 
 	tags, err := api.service.GetTags(c.Request.Context(), categoryIDPtr)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -1082,7 +1082,7 @@ func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
 
 	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -1142,7 +1142,7 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 
 	books, total, err := api.service.SearchBooksWithFilter(c.Request.Context(), filter)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -1199,7 +1199,7 @@ func (api *BookstoreAPI) GetSimilarBooks(c *gin.Context) {
 			response.NotFound(c, "书籍不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

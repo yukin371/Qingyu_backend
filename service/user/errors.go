@@ -113,6 +113,14 @@ func (e *UserError) IsRetryable() bool {
 	return false
 }
 
+// ErrorMessage 实现MessageProvider接口，返回用户友好的错误消息
+func (e *UserError) ErrorMessage() string {
+	if e.Message != "" {
+		return e.Message
+	}
+	return e.Code.String()
+}
+
 // NewUserError 创建新的用户错误
 func NewUserError(code ErrorCode, message string) *UserError {
 	return &UserError{

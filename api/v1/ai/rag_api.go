@@ -88,7 +88,7 @@ func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 		req.IncludeOutline,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -144,7 +144,7 @@ func (api *RAGApi) SearchSimilar(c *gin.Context) {
 		topK,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

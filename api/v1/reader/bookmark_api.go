@@ -66,7 +66,7 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 			response.Conflict(c, "书签已存在", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	}
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -159,7 +159,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 			response.NotFound(c, "书签不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -202,7 +202,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 			response.NotFound(c, "书签不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 			response.NotFound(c, "书签不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -258,7 +258,7 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	format := c.DefaultQuery("format", "json")
 	data, contentType, err := api.bookmarkService.ExportBookmarks(c.Request.Context(), userID.(string), format)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -288,7 +288,7 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 
 	stats, err := api.bookmarkService.GetBookmarkStats(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -327,7 +327,7 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 
 	result, err := api.bookmarkService.SearchBookmarks(c.Request.Context(), userID.(string), keyword, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

@@ -58,7 +58,7 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 		req.DeviceID,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	}
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 		userID.(string),
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -159,7 +159,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 		days,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -199,7 +199,7 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 		historyID,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -228,7 +228,7 @@ func (api *ReadingHistoryAPI) ClearHistories(c *gin.Context) {
 		userID.(string),
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

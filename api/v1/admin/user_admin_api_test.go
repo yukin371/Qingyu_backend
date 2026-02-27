@@ -146,6 +146,19 @@ func setupUserAdminTestRouter(userAdminService *MockUserAdminService) *gin.Engin
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误
+		if len(c.Errors) > 0 {
+			// 返回500错误
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": c.Errors.String(),
+			})
+		}
+	})
+
 	api := NewUserAdminAPI(userAdminService)
 
 	v1 := r.Group("/api/v1/admin/users")

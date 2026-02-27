@@ -73,7 +73,7 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -138,7 +138,7 @@ func (api *BookListAPI) GetBookListDetail(c *gin.Context) {
 
 	bookList, err := api.bookListService.GetBookListByID(c.Request.Context(), bookListID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 
 	err := api.bookListService.UpdateBookList(c.Request.Context(), userID.(string), bookListID, updates)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -242,7 +242,7 @@ func (api *BookListAPI) DeleteBookList(c *gin.Context) {
 
 	err := api.bookListService.DeleteBookList(c.Request.Context(), userID.(string), bookListID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -309,7 +309,7 @@ func (api *BookListAPI) ForkBookList(c *gin.Context) {
 
 	bookList, err := api.bookListService.ForkBookList(c.Request.Context(), userID.(string), bookListID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -333,7 +333,7 @@ func (api *BookListAPI) GetBooksInList(c *gin.Context) {
 
 	books, err := api.bookListService.GetBooksInList(c.Request.Context(), bookListID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

@@ -74,6 +74,19 @@ func setupRelationTestRouter(relationService socialAPI.UserRelationServiceInterf
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误写入
+		if len(c.Errors) > 0 {
+			c.JSON(500, gin.H{
+				"code":    500,
+				"message": "内部服务器错误",
+				"details": c.Errors.Last().Error(),
+			})
+		}
+	})
+
 	// 添加middleware来设置 user_id（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {

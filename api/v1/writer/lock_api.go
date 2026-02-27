@@ -79,7 +79,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 			response.Conflict(c, "文档已被锁定", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 			response.Forbidden(c, "无权操作")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 	ttl := 30 * time.Minute
 
 	if err := api.lockService.RefreshLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -189,7 +189,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 
 	status, err := api.lockService.GetLockStatus(c.Request.Context(), documentID, userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 
 	// 强制解锁
 	if err := api.lockService.ForceUnlock(c.Request.Context(), documentID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -276,7 +276,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 	}
 
 	if err := api.lockService.ExtendLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

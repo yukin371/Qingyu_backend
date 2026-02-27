@@ -57,7 +57,7 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 	// 调用Service层获取待审核列表
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	// 调用Service层
 	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 	// 调用Service层
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -235,7 +235,7 @@ func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 	// 调用AuditService获取审核统计
 	stats, err := api.auditService.GetAuditStatistics(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

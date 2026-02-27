@@ -85,7 +85,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	// 创建批注
 	created, err := api.commentService.CreateComment(c.Request.Context(), comment)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 
 	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -224,7 +224,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -297,7 +297,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 			response.BadRequest(c,  "批注已解决", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -329,7 +329,7 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 			response.NotFound(c, "批注不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -376,7 +376,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 
 	reply, err := api.commentService.ReplyComment(c.Request.Context(), parentID, req.Content, userID.(string), userName)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -405,7 +405,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 
 	thread, err := api.commentService.GetCommentThread(c.Request.Context(), threadID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -433,7 +433,7 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 
 	stats, err := api.commentService.GetCommentStats(c.Request.Context(), documentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -473,7 +473,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 
 	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -513,7 +513,7 @@ func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	}
 
 	if err := api.commentService.BatchDeleteComments(c.Request.Context(), req.CommentIDs); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

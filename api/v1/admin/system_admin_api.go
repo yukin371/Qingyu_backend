@@ -53,7 +53,7 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	// 调用Service层
 	err := api.admin.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID.(string), req.Approved, req.Reason)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 	// 调用Service层
 	stats, err := api.admin.GetUserStatistics(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 	// 调用Service层
 	logs, err := api.admin.GetOperationLogs(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 	// 调用AdminService获取系统统计
 	stats, err := api.admin.GetSystemStats(ctx)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 	// 调用AdminService获取系统配置
 	configs, err := api.admin.GetSystemConfig(ctx)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	// 调用AdminService更新系统配置
 	err := api.admin.UpdateSystemConfig(ctx, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -260,7 +260,7 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	// 调用AdminService创建公告
 	announcement, err := api.admin.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -291,7 +291,7 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	// 调用AdminService获取公告列表
 	announcements, total, err := api.admin.GetAnnouncements(ctx, page, pageSize)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

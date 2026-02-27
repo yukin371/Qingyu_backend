@@ -57,6 +57,19 @@ func setupRatingTestRouter(ratingService *MockRatingService, userID string) *gin
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误写入
+		if len(c.Errors) > 0 {
+			c.JSON(500, gin.H{
+				"code":    500,
+				"message": "内部服务器错误",
+				"details": c.Errors.Last().Error(),
+			})
+		}
+	})
+
 	// 添加middleware来设置userId（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
@@ -191,7 +204,7 @@ func TestGetRatingStats_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["message"], "服务器内部错误")
+	assert.Contains(t, response["message"], "内部服务器错误")
 
 	mockService.AssertExpectations(t)
 }
@@ -390,7 +403,7 @@ func TestGetUserRating_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["message"], "服务器内部错误")
+	assert.Contains(t, response["message"], "内部服务器错误")
 
 	mockService.AssertExpectations(t)
 }

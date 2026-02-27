@@ -45,7 +45,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 	// 获取时间范围统计
 	stats, err := api.statsService.GetTimeRangeStats(c.Request.Context(), "", startDate, endDate)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 	// 获取每日统计
 	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), "", days)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

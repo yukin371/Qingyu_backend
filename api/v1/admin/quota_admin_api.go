@@ -65,7 +65,7 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 
 	err := api.quotaService.UpdateUserQuota(c.Request.Context(), targetUserID, quotaType, req.TotalQuota)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 
 	err := api.quotaService.SuspendUserQuota(c.Request.Context(), targetUserID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 
 	err := api.quotaService.ActivateUserQuota(c.Request.Context(), targetUserID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -159,7 +159,7 @@ func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 	// 获取所有类型的配额
 	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), targetUserID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

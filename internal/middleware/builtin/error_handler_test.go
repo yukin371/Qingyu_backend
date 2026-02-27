@@ -58,7 +58,7 @@ func TestErrorHandlerMiddleware_HandleGinErrors(t *testing.T) {
 	var response map[string]interface{}
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 	assert.Equal(t, float64(http.StatusInternalServerError), response["code"])
-	assert.Equal(t, "Internal Server Error", response["message"])
+	assert.Equal(t, "test error", response["message"])
 
 	// 验证错误日志被记录
 	assert.Equal(t, 1, logs.FilterField(zap.String("path", "/error")).Len())

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,6 +14,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	apperrors "Qingyu_backend/pkg/errors"
+	"Qingyu_backend/internal/middleware/builtin"
+	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/models/audit"
 	auditInterface "Qingyu_backend/service/interfaces/audit"
 )
@@ -114,6 +118,10 @@ func setupAuditAdminTestRouter(auditService *MockContentAuditService) *gin.Engin
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandler.Handler())
+
 	api := NewAuditAdminAPI(auditService)
 
 	v1 := r.Group("/api/v1/admin/audit")
@@ -132,6 +140,10 @@ func setupAuditAdminTestRouter(auditService *MockContentAuditService) *gin.Engin
 func setupAuditAdminTestRouterWithAuth(auditService *MockContentAuditService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+
+	// 添加错误处理中间件
+	errorHandler := builtin.NewErrorHandlerMiddleware(logger.Get().Logger)
+	r.Use(errorHandler.Handler())
 
 	// 模拟认证中间件
 	r.Use(func(c *gin.Context) {
@@ -223,14 +235,17 @@ func TestAuditAdminAPI_GetPendingAudits_ServiceError(t *testing.T) {
 	mockService := new(MockContentAuditService)
 	router := setupAuditAdminTestRouter(mockService)
 
-	mockService.On("GetPendingReviews", mock.Anything, 50).Return(nil, assert.AnError)
+	mockService.On("GetPendingReviews", mock.Anything, 50).Return(
+		nil,
+		apperrors.BookstoreServiceFactory.InternalError("GET_PENDING_AUDITS_FAILED", "获取待审核列表失败", errors.New("database error")),
+	)
 
 	// When
 	req, _ := http.NewRequest("GET", "/api/v1/admin/audit/pending", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)
@@ -388,7 +403,9 @@ func TestAuditAdminAPI_ReviewAudit_ServiceError(t *testing.T) {
 		ReviewNote: "内容符合规范",
 	}
 
-	mockService.On("ReviewAudit", mock.Anything, auditID, userID, true, "内容符合规范").Return(assert.AnError)
+	mockService.On("ReviewAudit", mock.Anything, auditID, userID, true, "内容符合规范").Return(
+		apperrors.BookstoreServiceFactory.InternalError("REVIEW_AUDIT_FAILED", "审核失败", errors.New("service error")),
+	)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -397,7 +414,7 @@ func TestAuditAdminAPI_ReviewAudit_ServiceError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)
@@ -555,7 +572,9 @@ func TestAuditAdminAPI_ReviewAppeal_ServiceError(t *testing.T) {
 		ReviewNote: "申诉理由充分",
 	}
 
-	mockService.On("ReviewAppeal", mock.Anything, auditID, userID, true, "申诉理由充分").Return(assert.AnError)
+	mockService.On("ReviewAppeal", mock.Anything, auditID, userID, true, "申诉理由充分").Return(
+		apperrors.BookstoreServiceFactory.InternalError("REVIEW_APPEAL_FAILED", "审核申诉失败", errors.New("service error")),
+	)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -564,7 +583,7 @@ func TestAuditAdminAPI_ReviewAppeal_ServiceError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)
@@ -640,14 +659,17 @@ func TestAuditAdminAPI_GetHighRiskAudits_ServiceError(t *testing.T) {
 	mockService := new(MockContentAuditService)
 	router := setupAuditAdminTestRouter(mockService)
 
-	mockService.On("GetHighRiskAudits", mock.Anything, 3, 50).Return(nil, assert.AnError)
+	mockService.On("GetHighRiskAudits", mock.Anything, 3, 50).Return(
+		nil,
+		apperrors.BookstoreServiceFactory.InternalError("GET_HIGH_RISK_AUDITS_FAILED", "获取高风险审核记录失败", errors.New("database error")),
+	)
 
 	// When
 	req, _ := http.NewRequest("GET", "/api/v1/admin/audit/high-risk", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)
@@ -693,14 +715,17 @@ func TestAuditAdminAPI_GetAuditStatistics_ServiceError(t *testing.T) {
 	mockService := new(MockContentAuditService)
 	router := setupAuditAdminTestRouter(mockService)
 
-	mockService.On("GetAuditStatistics", mock.Anything).Return(nil, assert.AnError)
+	mockService.On("GetAuditStatistics", mock.Anything).Return(
+		nil,
+		apperrors.BookstoreServiceFactory.InternalError("GET_AUDIT_STATISTICS_FAILED", "获取审核统计失败", errors.New("database error")),
+	)
 
 	// When
 	req, _ := http.NewRequest("GET", "/api/v1/admin/audit/statistics", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
+	// Then - 中间件会自动映射InternalError为500状态码
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)

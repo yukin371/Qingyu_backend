@@ -85,7 +85,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	resp, err := api.documentService.CreateDocument(ctx, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 
 	doc, err := api.documentService.GetDocument(ctx, documentID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 
 	resp, err := api.documentService.GetDocumentTree(ctx, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -160,7 +160,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	ctx := getContextWithUserID(c)
 
 	if err := api.documentService.UpdateDocument(ctx, documentID, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -182,7 +182,7 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	ctx := getContextWithUserID(c)
 
 	if err := api.documentService.DeleteDocument(ctx, documentID); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 
 	resp, err := api.documentService.ListDocuments(ctx, req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 	ctx := getContextWithUserID(c)
 
 	if err := api.documentService.MoveDocument(ctx, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -287,7 +287,7 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	ctx := getContextWithUserID(c)
 
 	if err := api.documentService.ReorderDocuments(ctx, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -335,7 +335,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	resp, err := api.documentService.DuplicateDocument(ctx, documentID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -417,7 +417,7 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 
 	resp, err := api.documentService.CreateDocument(ctx, createReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

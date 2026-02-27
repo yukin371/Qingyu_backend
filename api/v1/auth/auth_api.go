@@ -54,7 +54,7 @@ func (api *AuthAPI) Register(c *gin.Context) {
 
 	resp, err := api.authService.Register(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 
 	err := api.authService.Logout(c.Request.Context(), token)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -178,7 +178,7 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 
 	permissions, err := api.authService.GetUserPermissions(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -207,7 +207,7 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 
 	roles, err := api.authService.GetUserRoles(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

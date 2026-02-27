@@ -43,7 +43,7 @@ type UpdateSettingsRequest struct {
 func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
+		c.Error(errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -63,7 +63,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 
 	settings, err := api.readerService.GetReadingSettings(c.Request.Context(), userIDStr)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
+		c.Error(errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -108,7 +108,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 
 	err := api.readerService.SaveReadingSettings(c.Request.Context(), &settings)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {
-		response.InternalError(c, errors.New("服务未初始化: 阅读器服务未正确初始化"))
+		c.Error(errors.New("服务未初始化: 阅读器服务未正确初始化"))
 		return
 	}
 
@@ -177,7 +177,7 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 
 	err := api.readerService.UpdateReadingSettings(c.Request.Context(), userIDStr, updates)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

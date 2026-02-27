@@ -1,8 +1,6 @@
 package social
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -66,15 +64,7 @@ func (api *CollectionAPI) AddCollection(c *gin.Context) {
 	)
 
 	if err != nil {
-		errMsg := err.Error()
-		// 根据错误类型返回具体的错误信息
-		if strings.Contains(errMsg, "已经收藏") || strings.Contains(errMsg, "already") {
-			response.BadRequest(c, "该书籍已经收藏", errMsg)
-		} else if strings.Contains(errMsg, "不存在") || strings.Contains(errMsg, "not found") {
-			response.NotFound(c, "书籍不存在")
-		} else {
-			response.BadRequest(c, "添加收藏失败", errMsg)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -111,7 +101,7 @@ func (api *CollectionAPI) GetCollections(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -253,7 +243,7 @@ func (api *CollectionAPI) CheckCollected(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -295,7 +285,7 @@ func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -369,7 +359,7 @@ func (api *CollectionAPI) GetFolders(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -568,7 +558,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -599,7 +589,7 @@ func (api *CollectionAPI) GetCollectionStats(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

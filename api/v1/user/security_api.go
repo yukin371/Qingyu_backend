@@ -43,7 +43,7 @@ func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 
 	resp, err := api.userService.SendEmailVerification(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -100,7 +100,7 @@ func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 
 	resp, err := api.userService.RequestPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

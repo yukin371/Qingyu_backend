@@ -54,7 +54,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -214,7 +214,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		req.WorkspaceContext,
 	)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (a *CreativeAPI) HealthCheck(c *gin.Context) {
 
 	resp, err := a.phase3Client.HealthCheck(ctx)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

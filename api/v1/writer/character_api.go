@@ -55,7 +55,7 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 
 	character, err := api.characterService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 
 	characters, err := api.characterService.List(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 
 	character, err := api.characterService.Update(c.Request.Context(), characterID, projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -175,7 +175,7 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 
 	err := api.characterService.Delete(c.Request.Context(), characterID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -208,7 +208,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 
 	relation, err := api.characterService.CreateRelation(c.Request.Context(), projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -240,7 +240,7 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 
 	relations, err := api.characterService.ListRelations(c.Request.Context(), projectID, charIDPtr)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -269,7 +269,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 
 	err := api.characterService.DeleteRelation(c.Request.Context(), relationID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -294,7 +294,7 @@ func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 
 	graph, err := api.characterService.GetCharacterGraph(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

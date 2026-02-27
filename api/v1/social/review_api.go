@@ -73,7 +73,7 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (api *ReviewAPI) GetReviews(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (api *ReviewAPI) GetReviewDetail(c *gin.Context) {
 
 	review, err := api.reviewService.GetReviewByID(c.Request.Context(), reviewID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -215,7 +215,7 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 
 	err := api.reviewService.UpdateReview(c.Request.Context(), userID.(string), reviewID, updates)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -246,7 +246,7 @@ func (api *ReviewAPI) DeleteReview(c *gin.Context) {
 
 	err := api.reviewService.DeleteReview(c.Request.Context(), userID.(string), reviewID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

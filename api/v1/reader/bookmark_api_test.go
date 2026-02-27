@@ -91,6 +91,17 @@ func setupBookmarkTestRouter(bookmarkService interfaces.BookmarkService, userID 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	// 错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误
+		if len(c.Errors) > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": c.Errors.String(),
+			})
+		}
+	})
+
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
 			c.Set("user_id", userID)

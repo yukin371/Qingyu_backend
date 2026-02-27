@@ -56,7 +56,7 @@ func (api *RatingAPI) GetRatingStats(c *gin.Context) {
 	// 获取评分统计
 	stats, err := api.ratingService.GetRatingStats(c.Request.Context(), targetType, targetID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (api *RatingAPI) GetUserRating(c *gin.Context) {
 	// 获取用户评分
 	rating, err := api.ratingService.GetUserRating(c.Request.Context(), userID, targetType, targetID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

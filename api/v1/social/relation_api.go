@@ -68,7 +68,7 @@ func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 			response.Conflict(c, "关注失败", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -113,7 +113,7 @@ func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 			response.Conflict(c, "取消关注失败", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 	// 检查关注状态
 	isFollowing, err := api.relationService.IsFollowing(c.Request.Context(), followerID, followeeID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -192,7 +192,7 @@ func (api *UserRelationAPI) GetFollowers(c *gin.Context) {
 	// 获取粉丝列表
 	relations, total, err := api.relationService.GetFollowers(c.Request.Context(), userID, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -233,7 +233,7 @@ func (api *UserRelationAPI) GetFollowing(c *gin.Context) {
 	// 获取关注列表
 	relations, total, err := api.relationService.GetFollowing(c.Request.Context(), userID, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -268,13 +268,13 @@ func (api *UserRelationAPI) GetFollowStats(c *gin.Context) {
 	// 获取统计信息
 	followerCount, err := api.relationService.GetFollowerCount(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	followingCount, err := api.relationService.GetFollowingCount(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

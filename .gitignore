@@ -107,6 +107,7 @@ scripts/*.log
 scripts/*.tmp
 scripts/temp/
 scripts/logs/
+# 本地环境可能误触发的依赖检查二进制产物
 scripts/check-dependencies/check-deps
 
 # Serena配置

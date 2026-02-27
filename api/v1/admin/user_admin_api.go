@@ -55,7 +55,7 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 
 	usersList, total, err := api.userAdminService.GetUserList(c.Request.Context(), filter, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 			response.NotFound(c, "用户不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 			response.Forbidden(c, "权限不足")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -189,7 +189,7 @@ func (api *UserAdminAPI) UpdateUserRole(c *gin.Context) {
 			response.BadRequest(c, "无效的角色", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -226,7 +226,7 @@ func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 			response.Forbidden(c, "权限不足")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -264,7 +264,7 @@ func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 			response.BadRequest(c, "无效的用户ID", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -304,7 +304,7 @@ func (api *UserAdminAPI) GetUserStatistics(c *gin.Context) {
 			response.BadRequest(c, "无效的用户ID", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -338,7 +338,7 @@ func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 			response.NotFound(c, "用户不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -377,7 +377,7 @@ func (api *UserAdminAPI) BatchUpdateStatus(c *gin.Context) {
 
 	status := users.UserStatus(req.Status)
 	if err := api.userAdminService.BatchUpdateStatus(c.Request.Context(), req.UserIds, status); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -410,7 +410,7 @@ func (api *UserAdminAPI) BatchDeleteUsers(c *gin.Context) {
 	}
 
 	if err := api.userAdminService.BatchDeleteUsers(c.Request.Context(), req.UserIds); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -443,7 +443,7 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 
 	usersList, total, err := api.userAdminService.SearchUsers(c.Request.Context(), keyword, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -470,7 +470,7 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 func (api *UserAdminAPI) CountByStatus(c *gin.Context) {
 	counts, err := api.userAdminService.CountByStatus(c.Request.Context())
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -559,7 +559,7 @@ func (api *UserAdminAPI) CreateUser(c *gin.Context) {
 			response.BadRequest(c, "无效的角色", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -599,7 +599,7 @@ func (api *UserAdminAPI) BatchCreateUsers(c *gin.Context) {
 			response.BadRequest(c, "无效的角色", err.Error())
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
