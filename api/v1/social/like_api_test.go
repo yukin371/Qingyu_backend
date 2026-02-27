@@ -166,7 +166,7 @@ func TestLikeAPI_LikeBook_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -228,7 +228,7 @@ func TestLikeAPI_UnlikeBook_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -317,7 +317,7 @@ func TestLikeAPI_LikeComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -345,7 +345,7 @@ func TestLikeAPI_UnlikeComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -354,9 +354,9 @@ func TestLikeAPI_UnlikeComment_Success(t *testing.T) {
 
 // BatchLikeBookResult 批量点赞书籍结果
 type BatchLikeBookResult struct {
-	BookID    string `json:"book_id"`
-	Success   bool   `json:"success"`
-	ErrorMsg  string `json:"error_msg,omitempty"`
+	BookID   string `json:"book_id"`
+	Success  bool   `json:"success"`
+	ErrorMsg string `json:"error_msg,omitempty"`
 }
 
 // TestLikeAPI_BatchLikeBooks_Success 测试成功批量点赞书籍

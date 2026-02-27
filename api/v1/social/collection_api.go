@@ -98,18 +98,18 @@ type BatchCollectionItem struct {
 
 // BatchAddCollectionsResult 批量添加收藏结果
 type BatchAddCollectionsResult struct {
-	SuccessCount int                       `json:"success_count"`
-	FailedCount  int                       `json:"failed_count"`
+	SuccessCount int                         `json:"success_count"`
+	FailedCount  int                         `json:"failed_count"`
 	Results      []BatchCollectionItemResult `json:"results"`
 }
 
 // BatchCollectionItemResult 单个收藏项结果
 type BatchCollectionItemResult struct {
-	Index    int         `json:"index"`
-	BookID   string      `json:"book_id"`
-	Success  bool        `json:"success"`
-	Data     interface{} `json:"data,omitempty"`
-	Error    string      `json:"error,omitempty"`
+	Index   int         `json:"index"`
+	BookID  string      `json:"book_id"`
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
 }
 
 // BatchAddCollections 批量添加收藏

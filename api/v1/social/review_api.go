@@ -1,12 +1,11 @@
 package social
 
 import (
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // ReviewAPI 书评API处理器
@@ -195,7 +194,7 @@ func (api *ReviewAPI) UpdateReview(c *gin.Context) {
 	}
 
 	if len(updates) == 0 {
-		response.BadRequest(c,  "参数错误", "没有要更新的字段")
+		response.BadRequest(c, "参数错误", "没有要更新的字段")
 		return
 	}
 
@@ -263,7 +262,7 @@ func (api *ReviewAPI) LikeReview(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "已经点赞过该书评" {
-			response.BadRequest(c,  "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
 			response.InternalError(c, err)
 		}

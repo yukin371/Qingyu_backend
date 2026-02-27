@@ -74,11 +74,10 @@ func setupRelationTestRouter(relationService socialAPI.UserRelationServiceInterf
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	// 添加middleware来设置userId（用于需要认证的端点）
-	// 注意：relation_api使用"userId"而不是"user_id"
+	// 添加middleware来设置user_id（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})
