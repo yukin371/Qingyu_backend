@@ -43,10 +43,14 @@ type UpdateAnnotationRequest struct {
 
 // getUserID 从gin.Context中获取并验证用户ID
 func (api *AnnotationsAPI) getUserID(c *gin.Context) (string, bool) {
+	// 兼容两种 key 格式: "user_id" 和 "userId"
 	userID, exists := c.Get("user_id")
 	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return "", false
+		userID, exists = c.Get("userId")
+		if !exists {
+			response.Unauthorized(c, "请先登录")
+			return "", false
+		}
 	}
 
 	userIDStr, ok := userID.(string)
@@ -82,16 +86,9 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	// 获取用户ID - getUserID 已经返回 string 类型
+	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误"))
 		return
 	}
 

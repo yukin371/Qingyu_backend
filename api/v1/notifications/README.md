@@ -302,6 +302,7 @@ ws://host/ws/notifications
 
 ---
 
-**版本**: v1.0
+**版本**: v1.1
 **更新日期**: 2026-02-27
 **维护者**: Backend Communication Team
+**测试覆盖率**: 26.1%（需补充测试）
