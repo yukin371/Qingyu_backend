@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -87,13 +88,11 @@ func (r *PermissionTemplateRepositoryMongo) GetTemplateByID(ctx context.Context,
 	// 从数据库获取
 	objectID, err := primitive.ObjectIDFromHex(templateID)
 	if err != nil {
-		// 如果不是有效的ObjectID，尝试按ID字符串查询
-		filter := bson.M{"_id": templateID}
-		return r.findOneByFilter(ctx, filter)
+		// 如果不是有效的ObjectID，尝试按ID字符串查询（严格格式校验）
+		return r.findOneByStringID(ctx, templateID)
 	}
 
-	filter := bson.M{"_id": objectID}
-	template, err := r.findOneByFilter(ctx, filter)
+	template, err := r.findOneByObjectID(ctx, objectID)
 	if err != nil {
 		return nil, authModel.ErrTemplateNotFound
 	}
@@ -110,8 +109,7 @@ func (r *PermissionTemplateRepositoryMongo) GetTemplateByID(ctx context.Context,
 
 // GetTemplateByCode 根据代码获取模板
 func (r *PermissionTemplateRepositoryMongo) GetTemplateByCode(ctx context.Context, code string) (*authModel.PermissionTemplate, error) {
-	filter := bson.M{"code": exactTemplateMatchRegex(code)}
-	return r.findOneByFilter(ctx, filter)
+	return r.findOneByCode(ctx, code)
 }
 
 // UpdateTemplate 更新模板
@@ -447,11 +445,47 @@ func (r *PermissionTemplateRepositoryMongo) Health(ctx context.Context) error {
 
 // ============ 辅助函数 ============
 
-// findOneByFilter 根据条件查询单个模板
-func (r *PermissionTemplateRepositoryMongo) findOneByFilter(ctx context.Context, filter bson.M) (*authModel.PermissionTemplate, error) {
-	filter = sanitizeTemplateFilter(filter)
+// findOneByObjectID 根据 ObjectID 查询单个模板
+func (r *PermissionTemplateRepositoryMongo) findOneByObjectID(ctx context.Context, objectID primitive.ObjectID) (*authModel.PermissionTemplate, error) {
+	filter := struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}{
+		ID: objectID,
+	}
+	return r.findTemplateByQuery(ctx, filter)
+}
+
+// findOneByStringID 根据字符串ID查询单个模板（仅允许安全字符）
+func (r *PermissionTemplateRepositoryMongo) findOneByStringID(ctx context.Context, id string) (*authModel.PermissionTemplate, error) {
+	safeID, err := normalizeTemplateIdentifier(id)
+	if err != nil {
+		return nil, authModel.ErrTemplateNotFound
+	}
+	filter := struct {
+		ID primitive.Regex `bson:"_id"`
+	}{
+		ID: exactTemplateMatchRegex(safeID),
+	}
+	return r.findTemplateByQuery(ctx, filter)
+}
+
+// findOneByCode 根据模板代码查询单个模板（仅允许安全字符）
+func (r *PermissionTemplateRepositoryMongo) findOneByCode(ctx context.Context, code string) (*authModel.PermissionTemplate, error) {
+	safeCode, err := normalizeTemplateIdentifier(code)
+	if err != nil {
+		return nil, authModel.ErrTemplateNotFound
+	}
+	filter := struct {
+		Code primitive.Regex `bson:"code"`
+	}{
+		Code: exactTemplateMatchRegex(safeCode),
+	}
+	return r.findTemplateByQuery(ctx, filter)
+}
+
+func (r *PermissionTemplateRepositoryMongo) findTemplateByQuery(ctx context.Context, query interface{}) (*authModel.PermissionTemplate, error) {
 	var template authModel.PermissionTemplate
-	err := r.getCollection().FindOne(ctx, filter).Decode(&template)
+	err := r.getCollection().FindOne(ctx, query).Decode(&template)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, authModel.ErrTemplateNotFound
@@ -500,15 +534,16 @@ func exactTemplateMatchRegex(value string) primitive.Regex {
 	}
 }
 
-func sanitizeTemplateFilter(filter bson.M) bson.M {
-	safe := bson.M{}
-	for key, value := range filter {
-		switch v := value.(type) {
-		case string:
-			safe[key] = exactTemplateMatchRegex(v)
-		default:
-			safe[key] = value
-		}
+func normalizeTemplateIdentifier(value string) (string, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "", errors.New("empty template identifier")
 	}
-	return safe
+	if len(trimmed) > 64 {
+		return "", errors.New("template identifier too long")
+	}
+	if !regexp.MustCompile(`^[A-Za-z0-9_-]+$`).MatchString(trimmed) {
+		return "", errors.New("template identifier contains unsafe characters")
+	}
+	return trimmed, nil
 }
