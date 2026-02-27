@@ -191,6 +191,10 @@ func setupPermissionAPITestRouter(permissionService *MockPermissionService) *gin
 		v1.POST("/users/:userId/roles", api.AssignRoleToUser)
 		v1.DELETE("/users/:userId/roles", api.RemoveRoleFromUser)
 		v1.GET("/users/:userId/permissions", api.GetUserPermissions)
+
+		// Batch operations
+		v1.POST("/users/batch-assign-role", api.BatchAssignRoleToUsers)
+		v1.POST("/users/batch-revoke-role", api.BatchRevokeRoleFromUsers)
 	}
 
 	return r
@@ -880,4 +884,140 @@ func TestPermissionAPI_GetUserPermissions_EmptyUserID(t *testing.T) {
 	// Then
 	// Empty path param returns 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// ==================== Batch Assign Role To Users Tests ====================
+
+func TestPermissionAPI_BatchAssignRoleToUsers_Success(t *testing.T) {
+	// Given
+	mockService := new(MockPermissionService)
+	router := setupPermissionAPITestRouter(mockService)
+
+	reqBody := BatchRoleOperationRequest{
+		UserIDs: []string{"user1", "user2", "user3"},
+		Role:    "author",
+	}
+	// Mock service calls for each user
+	mockService.On("AssignRoleToUser", mock.Anything, "user1", "author").Return(nil)
+	mockService.On("AssignRoleToUser", mock.Anything, "user2", "author").Return(nil)
+	mockService.On("AssignRoleToUser", mock.Anything, "user3", "author").Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/users/batch-assign-role", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(3), data["total"])
+	assert.Equal(t, float64(3), data["success"])
+	assert.Equal(t, float64(0), data["failed"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestPermissionAPI_BatchRevokeRoleFromUsers_Success(t *testing.T) {
+	// Given
+	mockService := new(MockPermissionService)
+	router := setupPermissionAPITestRouter(mockService)
+
+	reqBody := BatchRoleOperationRequest{
+		UserIDs: []string{"user1", "user2"},
+		Role:    "admin",
+	}
+	// Mock service calls for each user
+	mockService.On("RemoveRoleFromUser", mock.Anything, "user1", "admin").Return(nil)
+	mockService.On("RemoveRoleFromUser", mock.Anything, "user2", "admin").Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/users/batch-revoke-role", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["total"])
+	assert.Equal(t, float64(2), data["success"])
+	assert.Equal(t, float64(0), data["failed"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestPermissionAPI_BatchOperationEmptyList_Error(t *testing.T) {
+	// Given
+	mockService := new(MockPermissionService)
+	router := setupPermissionAPITestRouter(mockService)
+
+	reqBody := BatchRoleOperationRequest{
+		UserIDs: []string{},
+		Role:    "author",
+	}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/users/batch-assign-role", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestPermissionAPI_BatchOperationPartialSuccess_Result(t *testing.T) {
+	// Given
+	mockService := new(MockPermissionService)
+	router := setupPermissionAPITestRouter(mockService)
+
+	reqBody := BatchRoleOperationRequest{
+		UserIDs: []string{"user1", "user2", "user3"},
+		Role:    "author",
+	}
+	// Mock: user1 succeeds, user2 fails, user3 succeeds
+	mockService.On("AssignRoleToUser", mock.Anything, "user1", "author").Return(nil)
+	mockService.On("AssignRoleToUser", mock.Anything, "user2", "author").Return(assert.AnError)
+	mockService.On("AssignRoleToUser", mock.Anything, "user3", "author").Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/users/batch-assign-role", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(3), data["total"])
+	assert.Equal(t, float64(2), data["success"])
+	assert.Equal(t, float64(1), data["failed"])
+
+	errors := data["errors"].([]interface{})
+	assert.Equal(t, 1, len(errors))
+
+	mockService.AssertExpectations(t)
 }
