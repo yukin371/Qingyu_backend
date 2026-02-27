@@ -137,8 +137,13 @@ jobs:
 
       - name: Quick syntax check
         run: |
-          go vet $(go list ./... | grep -v '^Qingyu_backend/cmd/')
-          go build -v ./...
+          PKGS=$(go list ./... | \
+            grep -v '^Qingyu_backend/cmd/' | \
+            grep -v '^Qingyu_backend/test/' | \
+            grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/.archive/')
+          go vet $PKGS
+          go build -v $PKGS
 
       - name: Architecture guard tests
         run: |

@@ -13,7 +13,7 @@ import (
 
 	"Qingyu_backend/api/v1"
 	"Qingyu_backend/internal/middleware"
-	pkgmiddleware "Qingyu_backend/pkg/middleware"
+	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -45,7 +45,7 @@ func (h *TestHelper) setupTestRouter() *gin.Engine {
 	r.Use(middleware.VersionRoutingMiddleware())
 
 	// 添加错误处理
-	r.Use(pkgmiddleware.ErrorHandler())
+	r.Use(builtin.NewErrorHandlerMiddleware(h.logger).Handler())
 
 	// 创建版本API
 	versionAPI := v1.NewVersionAPI()

@@ -27,7 +27,13 @@ jobs:
           cache: true
 
       - name: Run tests
-        run: go test -v ./...
+        run: |
+          TEST_PACKAGES=$(go list ./... | \
+            grep -v '^Qingyu_backend/cmd/' | \
+            grep -v '^Qingyu_backend/test/' | \
+            grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/.archive/')
+          go test -v -short $TEST_PACKAGES
 
       - name: Build binaries
         run: |

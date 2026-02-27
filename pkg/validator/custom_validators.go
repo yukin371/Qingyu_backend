@@ -9,7 +9,8 @@ import (
 )
 
 // RegisterCustomValidators 注册所有自定义验证器
-func RegisterCustomValidators(v *validator.Validate) {
+// 返回注册状态信息
+func RegisterCustomValidators(v *validator.Validate) RegistrationStatus {
 	// 定义所有验证器注册项
 	validations := []struct {
 		tag string
@@ -35,12 +36,38 @@ func RegisterCustomValidators(v *validator.Validate) {
 		{"content_type", validateContentType},
 	}
 
-	// 注册所有验证器，检查错误
+	// 初始化注册状态
+	status := RegistrationStatus{
+		Total:      len(validations),
+		Success:    0,
+		Failed:     0,
+		FailedTags: []string{},
+		Errors:     make(map[string]error),
+	}
+
+	// 注册所有验证器，收集错误
 	for _, validation := range validations {
 		if err := v.RegisterValidation(validation.tag, validation.fn); err != nil {
-			log.Printf("Warning: failed to register validation '%s': %v", validation.tag, err)
+			status.Failed++
+			status.FailedTags = append(status.FailedTags, validation.tag)
+			status.Errors[validation.tag] = err
+			log.Printf("[WARNING] Failed to register validation '%s': %v", validation.tag, err)
+		} else {
+			status.Success++
+			log.Printf("[INFO] Successfully registered validation '%s'", validation.tag)
 		}
 	}
+
+	// 如果有注册失败，记录警告
+	if status.Failed > 0 {
+		log.Printf("[WARNING] Validator registration completed with %d failures out of %d total validators",
+			status.Failed, status.Total)
+		log.Printf("[WARNING] Failed validator tags: %v", status.FailedTags)
+	} else {
+		log.Printf("[INFO] All %d validators registered successfully", status.Total)
+	}
+
+	return status
 }
 
 // validateAmount 验证金额格式（最多2位小数）

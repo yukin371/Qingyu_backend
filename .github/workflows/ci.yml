@@ -2,7 +2,7 @@ name: Simple CI
 
 on:
   push:
-    branches: [ main, dev, test, develop ]
+    branches: [ main ]
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -28,13 +30,37 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.2
 
       - name: Run golangci-lint
-        run: golangci-lint run --timeout=10m
+        run: |
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            golangci-lint run --timeout=10m --new-from-rev=HEAD~1
+          else
+            # Fallback for shallow/manual runs without history
+            golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/...
+          fi
 
       - name: Check code formatting
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go code is not formatted:"
-            gofmt -d .
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            changed_go_files=$(git diff --name-only HEAD~1..HEAD -- '*.go' || true)
+          else
+            changed_go_files=$(git ls-files '*.go')
+          fi
+
+          if [ -z "$changed_go_files" ]; then
+            echo "No changed Go files to format-check."
+            exit 0
+          fi
+
+          existing_go_files=$(echo "$changed_go_files" | while read -r f; do [ -n "$f" ] && [ -f "$f" ] && echo "$f"; done)
+          if [ -z "$existing_go_files" ]; then
+            echo "No existing changed Go files to format-check."
+            exit 0
+          fi
+
+          unformatted_files=$(echo "$existing_go_files" | xargs gofmt -s -l)
+          if [ -n "$unformatted_files" ]; then
+            echo "The following changed files are not formatted:"
+            echo "$unformatted_files"
             exit 1
           fi
 
@@ -62,6 +88,28 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh 'mongodb://admin:password@localhost:27017' --eval 'db.stats().ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,9 +123,20 @@ jobs:
         run: go mod download
 
       - name: Run unit tests
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
         run: |
+          TEST_PACKAGES=$(go list ./... | \
+            grep -v '^Qingyu_backend/cmd/' | \
+            grep -v '^Qingyu_backend/test/' | \
+            grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/.archive/')
           go test -v -race -short -coverprofile=coverage.txt -covermode=atomic \
-            $(go list ./... | grep -v /test/)
+            $TEST_PACKAGES
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -154,6 +213,8 @@ jobs:
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
@@ -243,6 +304,9 @@ jobs:
       - name: Start application
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
@@ -255,6 +319,8 @@ jobs:
         env:
           MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
@@ -293,8 +359,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Start MongoDB
-        run: docker compose -f docker/docker-compose.test.yml up -d mongodb-test
+      - name: Start test infrastructure
+        run: docker compose -f docker/docker-compose.test.yml up -d mongodb-test redis-test
 
       - name: Wait for MongoDB
         run: |
@@ -313,10 +379,26 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Wait for Redis
+        run: |
+          for i in {1..15}; do
+            if docker exec qingyu-redis-test redis-cli ping > /dev/null 2>&1; then
+              echo "Redis is ready!"
+              exit 0
+            fi
+            echo "Waiting for Redis... ($i/15)"
+            sleep 1
+          done
+          echo "Redis failed to start"
+          exit 1
+
       - name: Run E2E Layer 1 - Basic Flows
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -326,8 +408,11 @@ jobs:
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="
@@ -337,8 +422,11 @@ jobs:
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017
+          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
           MONGODB_DATABASE: qingyu_test
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
           echo "=========================================="

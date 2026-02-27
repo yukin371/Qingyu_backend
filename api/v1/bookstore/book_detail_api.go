@@ -1,30 +1,23 @@
 package bookstore
 
 import (
-	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/models/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
 // BookDetailAPI 书籍详情API处理器
 type BookDetailAPI struct {
 	bookstoreService bookstoreService.BookstoreService
-	bookDetailService bookstoreService.BookDetailService
 }
 
 // NewBookDetailAPI 创建书籍详情API实例
-// 优先使用BookstoreService以确保与/books/:id接口数据一致
-func NewBookDetailAPI(bookDetailService bookstoreService.BookDetailService, bookstoreService bookstoreService.BookstoreService) *BookDetailAPI {
+func NewBookDetailAPI(bookstoreService bookstoreService.BookstoreService) *BookDetailAPI {
 	return &BookDetailAPI{
 		bookstoreService: bookstoreService,
-		bookDetailService: bookDetailService,
 	}
 }
 
@@ -37,9 +30,9 @@ func NewBookDetailAPI(bookDetailService bookstoreService.BookDetailService, book
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
 //	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		404	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/detail [get]
 func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 	idStr := c.Param("id")
@@ -48,530 +41,9 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 		return
 	}
 
-	// 优先使用BookstoreService，确保与/books/:id接口数据一致
-	// BookDetailRepository使用"books" collection但用BookDetail模型decode导致数据解析失败
-	if api.bookstoreService != nil {
-		book, err := api.bookstoreService.GetBookByID(c.Request.Context(), idStr)
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
-				response.NotFound(c, "书籍不存在")
-				return
-			}
-			response.InternalError(c, err)
-			return
-		}
-		response.Success(c, book)
-		return
-	}
-
-	// 降级方案：如果没有提供BookstoreService，使用BookDetailService
-	// 这需要数据库中有BookDetail格式的数据
-	if api.bookDetailService != nil {
-		_, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
-			response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-			return
-		}
-
-		book, err := api.bookDetailService.GetBookDetailByID(c.Request.Context(), idStr)
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				response.NotFound(c, "书籍不存在")
-				return
-			}
-			response.InternalError(c, err)
-			return
-		}
-		response.Success(c, book)
-		return
-	}
-
-	response.InternalError(c, errors.New("服务未初始化"))
-}
-
-// GetBooksByTitle 根据标题搜索书籍
-//
-//	@Summary		根据标题搜索书籍
-//	@Description	根据书籍标题进行模糊搜索
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			title	query		string	true	"书籍标题"
-//	@Param			page	query		int		false	"页码"	default(1)
-//	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400		{object}	response.APIResponse
-//	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/search/title [get]
-func (api *BookDetailAPI) GetBooksByTitle(c *gin.Context) {
-	title := c.Query("title")
-	if title == "" {
-		response.BadRequest(c, "参数错误", "书籍标题不能为空")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.GetBooksByTitle(c.Request.Context(), title, page, size)
+	book, err := api.bookstoreService.GetBookByID(c.Request.Context(), idStr)
 	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "搜索成功")
-}
-
-// GetBooksByAuthor 根据作者搜索书籍
-//
-//	@Summary		根据作者搜索书籍
-//	@Description	根据作者名称搜索书籍
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			author	query		string	true	"作者名称"
-//	@Param			page	query		int		false	"页码"	default(1)
-//	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/search/author [get]
-func (api *BookDetailAPI) GetBooksByAuthor(c *gin.Context) {
-	author := c.Query("author")
-	if author == "" {
-		response.BadRequest(c, "参数错误", "作者名称不能为空")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.GetBooksByAuthor(c.Request.Context(), author, page, size)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "搜索成功")
-}
-
-// GetBooksByCategory 根据分类获取书籍
-//
-//	@Summary		根据分类获取书籍
-//	@Description	根据分类获取书籍列表
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			category	query		string	true	"分类名称"
-//	@Param			page		query		int		false	"页码"	default(1)
-//	@Param			size		query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400			{object}	response.APIResponse
-//	@Failure		500			{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/category [get]
-func (api *BookDetailAPI) GetBooksByCategory(c *gin.Context) {
-	category := c.Query("category")
-	if category == "" {
-		response.BadRequest(c, "参数错误", "分类名称不能为空")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.GetBooksByCategory(c.Request.Context(), category, page, size)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "获取成功")
-}
-
-// GetBooksByStatus 根据状态获取书籍
-//
-//	@Summary		根据状态获取书籍
-//	@Description	根据书籍状态获取书籍列表
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			status	query		string	true	"书籍状态(serializing/completed/paused)"
-//	@Param			page	query		int		false	"页码"	default(1)
-//	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/status [get]
-func (api *BookDetailAPI) GetBooksByStatus(c *gin.Context) {
-	status := c.Query("status")
-	if status == "" {
-		response.BadRequest(c, "参数错误", "书籍状态不能为空")
-		return
-	}
-
-	// 验证状态值
-	validStatuses := []string{"serializing", "completed", "paused"}
-	isValid := false
-	for _, validStatus := range validStatuses {
-		if status == validStatus {
-			isValid = true
-			break
-		}
-	}
-	if !isValid {
-		response.BadRequest(c, "参数错误", "无效的书籍状态")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.GetBooksByStatus(c.Request.Context(), status, page, size)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "获取成功")
-}
-
-// GetBooksByTags 根据标签获取书籍
-//
-//	@Summary		根据标签获取书籍
-//	@Description	根据标签获取书籍列表
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			tags	query		string	true	"标签列表(逗号分隔)"
-//	@Param			page	query		int		false	"页码"	default(1)
-//	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400		{object}	response.APIResponse
-//	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/tags [get]
-func (api *BookDetailAPI) GetBooksByTags(c *gin.Context) {
-	tagsStr := c.Query("tags")
-	if tagsStr == "" {
-		response.BadRequest(c, "参数错误", "标签不能为空")
-		return
-	}
-
-	tags := strings.Split(tagsStr, ",")
-	for i, tag := range tags {
-		tags[i] = strings.TrimSpace(tag)
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.GetBooksByTags(c.Request.Context(), tags, page, size)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "获取成功")
-}
-
-// SearchBooks 搜索书籍
-//
-//	@Summary		搜索书籍
-//	@Description	根据关键词搜索书籍
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			keyword	query		string	true	"搜索关键词"
-//	@Param			page	query		int		false	"页码"	default(1)
-//	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/search [get]
-func (api *BookDetailAPI) SearchBooks(c *gin.Context) {
-	keyword := c.Query("keyword")
-	if keyword == "" {
-		response.BadRequest(c, "参数错误", "搜索关键词不能为空")
-		return
-	}
-
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 || size > 100 {
-		size = 20
-	}
-
-	books, total, err := api.bookDetailService.SearchBooks(c.Request.Context(), keyword, page, size)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Paginated(c, books, total, page, size, "搜索成功")
-}
-
-// GetRecommendedBooks 获取推荐书籍
-//
-//	@Summary		获取推荐书籍
-//	@Description	获取推荐书籍列表
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/recommended [get]
-func (api *BookDetailAPI) GetRecommendedBooks(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit < 1 || limit > 50 {
-		limit = 10
-	}
-
-	books, err := api.bookDetailService.GetRecommendedBooks(c.Request.Context(), limit)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "获取成功", books)
-}
-
-// GetSimilarBooks 获取相似书籍
-//
-//	@Summary		获取相似书籍
-//	@Description	根据书籍ID获取相似书籍
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string	true	"书籍ID"
-//	@Param			limit	query		int		false	"数量限制"	default(10)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/similar [get]
-func (api *BookDetailAPI) GetSimilarBooks(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit < 1 || limit > 50 {
-		limit = 10
-	}
-
-	books, err := api.bookDetailService.GetSimilarBooks(c.Request.Context(), id.Hex(), limit)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "获取成功", books)
-}
-
-// GetPopularBooks 获取热门书籍
-//
-//	@Summary		获取热门书籍
-//	@Description	获取热门书籍列表
-//	@Tags			书籍推荐
-//	@Accept			json
-//	@Produce		json
-//	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/popular [get]
-func (api *BookDetailAPI) GetPopularBooks(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit < 1 || limit > 50 {
-		limit = 10
-	}
-
-	books, err := api.bookDetailService.GetPopularBooks(c.Request.Context(), limit)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "获取成功", books)
-}
-
-// GetLatestBooks 获取最新书籍
-//
-//	@Summary		获取最新书籍
-//	@Description	获取最新发布的书籍列表
-//	@Tags			书籍推荐
-//	@Accept			json
-//	@Produce		json
-//	@Param			limit	query		int	false	"数量限制"	default(10)
-//	@Success 200 {object} response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/latest [get]
-func (api *BookDetailAPI) GetLatestBooks(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit < 1 || limit > 50 {
-		limit = 10
-	}
-
-	books, err := api.bookDetailService.GetLatestBooks(c.Request.Context(), limit)
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "获取成功", books)
-}
-
-// GetBookStatistics 获取书籍统计信息
-//
-//	@Summary		获取书籍统计信息
-//	@Description	获取书籍的浏览量、收藏量等统计信息
-//	@Tags			书籍交互
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/statistics [get]
-func (api *BookDetailAPI) GetBookStatistics(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	// 获取统计信息
-	totalCount, err := api.bookDetailService.CountBooksByCategory(c.Request.Context(), "")
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	// 这里可以扩展更多统计信息
-	statistics := map[string]interface{}{
-		"total_books": totalCount,
-		"book_id":     id.Hex(),
-	}
-
-	response.SuccessWithMessage(c, "获取成功", statistics)
-}
-
-// CreateBookDetail 创建书籍详情
-//
-//	@Summary		创建书籍详情
-//	@Description	创建新的书籍详情信息
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
-//	@Success 201 {object} response.APIResponse
-//	@Failure		400		{object}	response.APIResponse
-//	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books [post]
-func (api *BookDetailAPI) CreateBookDetail(c *gin.Context) {
-	var book bookstore.BookDetail
-	if err := c.ShouldBindJSON(&book); err != nil {
-		response.BadRequest(c, "参数错误", "请求参数格式错误")
-		return
-	}
-
-	if err := api.bookDetailService.CreateBookDetail(c.Request.Context(), &book); err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.Created(c, book)
-}
-
-// UpdateBookDetail 更新书籍详情
-//
-//	@Summary		更新书籍详情
-//	@Description	更新书籍详情信息
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string					true	"书籍ID"
-//	@Param			book	body		bookstore.BookDetail	true	"书籍详情信息"
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		404	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id} [put]
-func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	_, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	var book bookstore.BookDetail
-	if err := c.ShouldBindJSON(&book); err != nil {
-		response.BadRequest(c, "参数错误", "请求参数格式错误")
-		return
-	}
-
-	// ID 已在 DTO 中处理，无需再赋值
-
-	if err := api.bookDetailService.UpdateBookDetail(c.Request.Context(), &book); err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
 			response.NotFound(c, "书籍不存在")
 			return
 		}
@@ -579,45 +51,7 @@ func (api *BookDetailAPI) UpdateBookDetail(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "更新成功", book)
-}
-
-// DeleteBookDetail 删除书籍详情
-//
-//	@Summary		删除书籍详情
-//	@Description	删除书籍详情信息
-//	@Tags			书籍详情
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		404	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id} [delete]
-func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	if err := api.bookDetailService.DeleteBookDetail(c.Request.Context(), id.Hex()); err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "书籍不存在")
-			return
-		}
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "书籍详情删除成功", nil)
+	response.Success(c, book)
 }
 
 // IncrementViewCount 增加书籍浏览量
@@ -629,10 +63,10 @@ func (api *BookDetailAPI) DeleteBookDetail(c *gin.Context) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		404	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/view [post]
 func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 	idStr := c.Param("id")
@@ -641,107 +75,15 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	// 优先使用BookstoreService，确保数据一致性
-	if api.bookstoreService != nil {
-		err := api.bookstoreService.IncrementBookView(c.Request.Context(), idStr)
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
-				response.NotFound(c, "书籍不存在")
-				return
-			}
-			response.InternalError(c, err)
-			return
-		}
-		response.SuccessWithMessage(c, "浏览量增加成功", nil)
-		return
-	}
-
-	// 降级方案：使用BookDetailService
-	if api.bookDetailService != nil {
-		_, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
-			response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-			return
-		}
-
-		err = api.bookDetailService.IncrementViewCount(c.Request.Context(), idStr)
-		if err != nil {
-			response.InternalError(c, err)
-			return
-		}
-		response.SuccessWithMessage(c, "浏览量增加成功", nil)
-		return
-	}
-
-	response.InternalError(c, errors.New("服务未初始化"))
-}
-
-// IncrementLikeCount 增加书籍点赞数
-//
-//	@Summary		增加书籍点赞数
-//	@Description	用户点赞书籍，增加点赞数统计
-//	@Tags			书籍交互
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			id	path		string	true	"书籍ID"
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/like [post]
-func (api *BookDetailAPI) IncrementLikeCount(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(idStr)
+	err := api.bookstoreService.IncrementBookView(c.Request.Context(), idStr)
 	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	err = api.bookDetailService.IncrementLikeCount(c.Request.Context(), id.Hex())
-	if err != nil {
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not available") {
+			response.NotFound(c, "书籍不存在")
+			return
+		}
 		response.InternalError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, "点赞成功", nil)
-}
-
-// DecrementLikeCount 减少书籍点赞数
-//
-//	@Summary		减少书籍点赞数
-//	@Description	用户取消点赞书籍，减少点赞数统计
-//	@Tags			书籍交互
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			id	path		string	true	"书籍ID"
-//	@Success 200 {object} response.APIResponse
-//	@Failure		400	{object}	response.APIResponse
-//	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/unlike [post]
-func (api *BookDetailAPI) DecrementLikeCount(c *gin.Context) {
-	idStr := c.Param("id")
-	if idStr == "" {
-		response.BadRequest(c, "参数错误", "书籍ID不能为空")
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的书籍ID格式")
-		return
-	}
-
-	err = api.bookDetailService.DecrementLikeCount(c.Request.Context(), id.Hex())
-	if err != nil {
-		response.InternalError(c, err)
-		return
-	}
-
-	response.SuccessWithMessage(c, "取消点赞成功", nil)
+	response.SuccessWithMessage(c, "浏览量增加成功", nil)
 }

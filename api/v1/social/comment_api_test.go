@@ -142,7 +142,7 @@ func setupCommentTestRouter(commentService interfaces.CommentService, userID str
 	// 添加middleware来设置userId（用于需要认证的端点）
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
-			c.Set("userId", userID)
+			c.Set("user_id", userID)
 		}
 		c.Next()
 	})
@@ -393,7 +393,7 @@ func TestCommentAPI_DeleteComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -421,7 +421,7 @@ func TestCommentAPI_LikeComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }
@@ -455,7 +455,7 @@ func TestCommentAPI_UpdateComment_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
-	assert.Equal(t, "操作成功", response["message"]) // 成功响应message为"操作成功"
+	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
 
 	mockService.AssertExpectations(t)
 }

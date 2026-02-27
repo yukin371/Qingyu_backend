@@ -5,7 +5,7 @@ import (
 
 	statsAPI "Qingyu_backend/api/v1/stats"
 	"Qingyu_backend/internal/middleware/auth"
-	middleware "Qingyu_backend/pkg/middleware"
+	"Qingyu_backend/internal/middleware/builtin"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 )
 
@@ -23,10 +23,9 @@ func RegisterReadingStatsRoutes(
 
 	// 应用中间件
 	statsGroup := r.Group("/stats")
-	statsGroup.Use(middleware.ResponseFormatterMiddleware())
-	statsGroup.Use(middleware.ResponseTimingMiddleware())
-	statsGroup.Use(middleware.CORSMiddleware())
-	statsGroup.Use(middleware.Recovery())
+	statsGroup.Use(builtin.NewRequestIDMiddleware().Handler())
+	statsGroup.Use(builtin.NewRecoveryMiddleware(nil).Handler())
+	statsGroup.Use(builtin.NewCORSMiddleware().Handler())
 
 	// ============ 我的统计路由（需要认证） ============
 	myStats := statsGroup.Group("/my")

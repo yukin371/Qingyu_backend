@@ -24,6 +24,8 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	t.Setenv("MONGODB_DATABASE", "qingyu_test_batch_"+primitive.NewObjectID().Hex())
+
 	ctx := context.Background()
 	db, cleanup := testutil.SetupTestDB(t)
 	defer cleanup()
@@ -75,9 +77,9 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	req := &document.SubmitBatchOperationRequest{
 		ProjectID: project.ID.Hex(),
 		Type:      writerModel.BatchOpTypeDelete,
-		TargetIDs:  []string{docs[0].ID.Hex(), docs[1].ID.Hex()},
-		Atomic:     true,
-		UserID:     userID.Hex(),
+		TargetIDs: []string{docs[0].ID.Hex(), docs[1].ID.Hex()},
+		Atomic:    true,
+		UserID:    userID.Hex(),
 	}
 
 	batchOp, err := batchOpSvc.Submit(ctx, req)
@@ -147,6 +149,8 @@ func TestBatchOperation_Undo(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	t.Setenv("MONGODB_DATABASE", "qingyu_test_batch_"+primitive.NewObjectID().Hex())
+
 	ctx := context.Background()
 	db, cleanup := testutil.SetupTestDB(t)
 	defer cleanup()
@@ -199,9 +203,9 @@ func TestBatchOperation_Undo(t *testing.T) {
 	req := &document.SubmitBatchOperationRequest{
 		ProjectID: project.ID.Hex(),
 		Type:      writerModel.BatchOpTypeDelete,
-		TargetIDs:  []string{docs[0].ID.Hex(), docs[1].ID.Hex()},
-		Atomic:     true,
-		UserID:     userID.Hex(),
+		TargetIDs: []string{docs[0].ID.Hex(), docs[1].ID.Hex()},
+		Atomic:    true,
+		UserID:    userID.Hex(),
 	}
 
 	batchOp, err := batchOpSvc.Submit(ctx, req)

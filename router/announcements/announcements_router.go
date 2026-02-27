@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	announcementsAPI "Qingyu_backend/api/v1/announcements"
+	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/internal/middleware/ratelimit"
-	"Qingyu_backend/pkg/middleware"
 	messagingService "Qingyu_backend/service/messaging"
 )
 
@@ -15,10 +15,10 @@ func RegisterAnnouncementRoutes(
 	announcementService messagingService.AnnouncementService,
 ) {
 	// 应用中间件
-	r.Use(middleware.ResponseFormatterMiddleware())
-	r.Use(middleware.ResponseTimingMiddleware())
-	r.Use(middleware.CORSMiddleware())
-	r.Use(middleware.Recovery())
+	// 使用新架构的中间件
+	r.Use(builtin.NewRequestIDMiddleware().Handler())
+	r.Use(builtin.NewRecoveryMiddleware(nil).Handler())
+	r.Use(builtin.NewCORSMiddleware().Handler())
 
 	// 创建API处理器
 	announcementPublicAPI := announcementsAPI.NewAnnouncementPublicAPI(announcementService)

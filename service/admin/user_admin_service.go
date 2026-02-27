@@ -31,6 +31,9 @@ const (
 	maxBatchCreateUsers = 100
 )
 
+// MaxBatchCreateUsersCount 批量创建用户的最大数量
+const MaxBatchCreateUsersCount = 1000
+
 // UserAdminService 用户管理服务接口
 type UserAdminService interface {
 	// GetUserList 获取用户列表
@@ -447,6 +450,11 @@ func (s *UserAdminServiceImpl) BatchCreateUsers(ctx context.Context, req *BatchC
 	// 验证角色
 	if !isValidRole(req.Role) {
 		return nil, ErrInvalidRole
+	}
+
+	// 校验批量创建数量，防止过大的内存分配
+	if req.Count <= 0 || req.Count > MaxBatchCreateUsersCount {
+		return nil, ErrInvalidBatchCount
 	}
 
 	// 设置默认值

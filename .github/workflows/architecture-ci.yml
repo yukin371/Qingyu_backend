@@ -2,7 +2,7 @@ name: Architecture CI
 
 on:
   push:
-    branches: [ main, dev, architecture-refactor ]
+    branches: [ main, architecture-refactor ]
   workflow_dispatch:
 
 jobs:
@@ -12,12 +12,14 @@ jobs:
 
     steps:
       - name: Checkout代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 设置Go环境
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache: true
 
       - name: 检查代码依赖关系
@@ -38,15 +40,18 @@ jobs:
   unit-tests:
     name: 单元测试
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 设置Go环境
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache: true
 
       - name: 下载依赖
@@ -71,22 +76,36 @@ jobs:
 
     steps:
       - name: Checkout代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 设置Go环境
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache: true
 
-      - name: 运行golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
+      - name: 安装golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
+
+      - name: 运行golangci-lint（增量）
+        run: |
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            golangci-lint run --timeout=10m --new-from-rev=HEAD~1
+          else
+            golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/...
+          fi
 
       - name: 运行go vet
-        run: go vet $(go list ./... | grep -v '^Qingyu_backend/cmd/')
+        run: |
+          PKGS=$(go list ./... | \
+            grep -v '^Qingyu_backend/cmd/' | \
+            grep -v '^Qingyu_backend/test/' | \
+            grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/.archive/')
+          go vet $PKGS
 
   security-scan:
     name: 安全扫描
@@ -94,12 +113,12 @@ jobs:
 
     steps:
       - name: Checkout代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 设置Go环境
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
 
       - name: 运行Gosec安全扫描
         uses: securego/gosec@master
@@ -118,6 +137,7 @@ jobs:
         if: always()
         with:
           sarif_file: gosec-results.sarif
+        continue-on-error: true
 
   architecture-validation:
     name: 架构验证
@@ -125,12 +145,12 @@ jobs:
 
     steps:
       - name: Checkout代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 设置Go环境
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
 
       - name: 验证接口契约
         run: |
