@@ -40,7 +40,7 @@ func (api *AuditApi) CheckContent(c *gin.Context) {
 
 	result, err := api.auditService.CheckContent(c.Request.Context(), req.Content)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 
 	record, err := api.auditService.AuditDocument(c.Request.Context(), req.DocumentID, req.Content, userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -209,7 +209,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 
 	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), req.Approved, req.Note)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -244,7 +244,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 
 	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), req.Approved, req.Note)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -281,7 +281,7 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 
 	violations, err := api.auditService.GetUserViolations(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -323,7 +323,7 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 
 	summary, err := api.auditService.GetUserViolationSummary(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -360,7 +360,7 @@ func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

@@ -45,7 +45,7 @@ func (api *StatsApi) GetBookStats(c *gin.Context) {
 	// 获取作品统计
 	bookStats, err := api.statsService.CalculateBookStats(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *StatsApi) GetChapterStats(c *gin.Context) {
 	// 获取章节统计
 	chapterStats, err := api.statsService.CalculateChapterStats(c.Request.Context(), chapterID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 	// 生成热力图
 	heatmap, err := api.statsService.GenerateHeatmap(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	// 获取收入细分
 	revenueBreakdown, err := api.statsService.GetRevenueBreakdown(c.Request.Context(), bookID, startDate, endDate)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 	// 获取热门章节
 	topChapters, err := api.statsService.GetTopChapters(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	// 获取每日统计
 	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), bookID, days)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -262,7 +262,7 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 	// 获取跳出点
 	dropOffPoints, err := api.statsService.CalculateDropOffPoints(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -296,7 +296,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	// 记录行为
 	err := api.statsService.RecordReaderBehavior(c.Request.Context(), &behavior)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -333,7 +333,7 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	// 计算留存率
 	retentionRate, err := api.statsService.CalculateRetention(c.Request.Context(), bookID, days)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

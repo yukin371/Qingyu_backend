@@ -60,7 +60,7 @@ func (api *ImportExportApi) ExportProject(c *gin.Context) {
 	// 调用服务导出项目为ZIP
 	zipData, err := api.exportService.ExportProjectAsZip(c.Request.Context(), projectID, userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -128,14 +128,14 @@ func (api *ImportExportApi) ImportProject(c *gin.Context) {
 	zipData := make([]byte, fileSize)
 	_, err = file.Read(zipData)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
 	// 调用服务导入项目
 	result, err := api.exportService.ImportProject(c.Request.Context(), userID, zipData)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

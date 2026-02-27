@@ -93,7 +93,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	// 调用service创建模板
 	template, err := api.service.CreateTemplate(ctx, serviceReq)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -173,7 +173,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	// 调用service查询
 	templates, total, err := api.service.ListTemplates(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -203,7 +203,7 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 
 	template, err := api.service.GetTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -267,7 +267,7 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 			response.Forbidden(c, "禁止操作")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -322,7 +322,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 			response.Forbidden(c, "权限不足")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -370,7 +370,7 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	// 渲染模板
 	renderedContent, err := renderer.Render(template.Content, req.Variables)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

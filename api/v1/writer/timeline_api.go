@@ -35,7 +35,7 @@ func (api *TimelineApi) CreateTimeline(c *gin.Context) {
 
 	timeline, err := api.timelineService.CreateTimeline(c.Request.Context(), projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (api *TimelineApi) ListTimelines(c *gin.Context) {
 
 	timelines, err := api.timelineService.ListTimelines(c.Request.Context(), projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (api *TimelineApi) DeleteTimeline(c *gin.Context) {
 
 	err := api.timelineService.DeleteTimeline(c.Request.Context(), timelineID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
 
 	event, err := api.timelineService.CreateEvent(c.Request.Context(), projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (api *TimelineApi) ListTimelineEvents(c *gin.Context) {
 
 	events, err := api.timelineService.ListEvents(c.Request.Context(), timelineID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
 
 	event, err := api.timelineService.UpdateEvent(c.Request.Context(), eventID, projectID, &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -198,7 +198,7 @@ func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
 
 	err := api.timelineService.DeleteEvent(c.Request.Context(), eventID, projectID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -215,7 +215,7 @@ func (api *TimelineApi) GetTimelineVisualization(c *gin.Context) {
 
 	visualization, err := api.timelineService.GetTimelineVisualization(c.Request.Context(), timelineID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

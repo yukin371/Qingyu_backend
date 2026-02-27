@@ -112,6 +112,20 @@ func setupImportExportTestRouter(service *MockImportExportService, userID string
 		c.Next()
 	})
 
+	// 添加错误处理中间件
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		// 检查是否有错误写入
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			c.JSON(500, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+
 	importExportAPI := writer.NewImportExportApi(service)
 	r.GET("/api/v1/writer/projects/:id/export", importExportAPI.ExportProject)
 	r.POST("/api/v1/writer/projects/import", importExportAPI.ImportProject)
