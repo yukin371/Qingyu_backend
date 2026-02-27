@@ -4,6 +4,7 @@ import (
 	adminInterface "Qingyu_backend/repository/interfaces/admin"
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	adminModel "Qingyu_backend/models/users"
@@ -61,10 +62,18 @@ func (r *AdminLogRepositoryImpl) ListAdminLogs(ctx context.Context, filter *admi
 	bsonFilter := bson.M{}
 
 	if filter.AdminID != "" {
-		bsonFilter["admin_id"] = filter.AdminID
+		bsonFilter["admin_id"] = exactMatchRegex(filter.AdminID)
 	}
 	if filter.Operation != "" {
-		bsonFilter["operation"] = filter.Operation
+		bsonFilter["operation"] = exactMatchRegex(filter.Operation)
+	}
+	// 新增：支持资源类型过滤
+	if filter.ResourceType != "" {
+		bsonFilter["resource_type"] = exactMatchRegex(filter.ResourceType)
+	}
+	// 新增：支持资源ID过滤
+	if filter.ResourceID != "" {
+		bsonFilter["resource_id"] = exactMatchRegex(filter.ResourceID)
 	}
 	if !filter.StartDate.IsZero() || !filter.EndDate.IsZero() {
 		createdAtFilter := bson.M{}
@@ -104,10 +113,18 @@ func (r *AdminLogRepositoryImpl) CountAdminLogs(ctx context.Context, filter *adm
 	bsonFilter := bson.M{}
 
 	if filter.AdminID != "" {
-		bsonFilter["admin_id"] = filter.AdminID
+		bsonFilter["admin_id"] = exactMatchRegex(filter.AdminID)
 	}
 	if filter.Operation != "" {
-		bsonFilter["operation"] = filter.Operation
+		bsonFilter["operation"] = exactMatchRegex(filter.Operation)
+	}
+	// 新增：支持资源类型过滤
+	if filter.ResourceType != "" {
+		bsonFilter["resource_type"] = exactMatchRegex(filter.ResourceType)
+	}
+	// 新增：支持资源ID过滤
+	if filter.ResourceID != "" {
+		bsonFilter["resource_id"] = exactMatchRegex(filter.ResourceID)
 	}
 	if !filter.StartDate.IsZero() || !filter.EndDate.IsZero() {
 		createdAtFilter := bson.M{}
@@ -131,4 +148,81 @@ func (r *AdminLogRepositoryImpl) CountAdminLogs(ctx context.Context, filter *adm
 // Health 健康检查
 func (r *AdminLogRepositoryImpl) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
+}
+
+// ============ 审计追踪新增方法 ============
+
+// GetByResource 根据资源获取日志
+func (r *AdminLogRepositoryImpl) GetByResource(ctx context.Context, resourceType, resourceID string) ([]*adminModel.AdminLog, error) {
+	bsonFilter := bson.M{
+		"resource_type": exactMatchRegex(resourceType),
+		"resource_id":   exactMatchRegex(resourceID),
+	}
+
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bsonFilter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询资源日志失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var logs []*adminModel.AdminLog
+	if err := cursor.All(ctx, &logs); err != nil {
+		return nil, fmt.Errorf("解析资源日志失败: %w", err)
+	}
+
+	return logs, nil
+}
+
+// GetByDateRange 根据日期范围获取日志
+func (r *AdminLogRepositoryImpl) GetByDateRange(ctx context.Context, startDate, endDate time.Time) ([]*adminModel.AdminLog, error) {
+	bsonFilter := bson.M{
+		"created_at": bson.M{
+			"$gte": startDate,
+			"$lte": endDate,
+		},
+	}
+
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, bsonFilter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询日期范围日志失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var logs []*adminModel.AdminLog
+	if err := cursor.All(ctx, &logs); err != nil {
+		return nil, fmt.Errorf("解析日期范围日志失败: %w", err)
+	}
+
+	return logs, nil
+}
+
+// CleanOldLogs 清理旧日志
+func (r *AdminLogRepositoryImpl) CleanOldLogs(ctx context.Context, beforeDate time.Time) error {
+	filter := bson.M{
+		"created_at": bson.M{
+			"$lt": beforeDate,
+		},
+	}
+
+	result, err := r.collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("清理旧日志失败: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("没有需要清理的旧日志")
+	}
+
+	return nil
+}
+
+func exactMatchRegex(value string) primitive.Regex {
+	return primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(value) + "$",
+		Options: "",
+	}
 }

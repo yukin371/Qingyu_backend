@@ -16,17 +16,24 @@ type AuditRecord struct {
 	UpdatedAt   time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
-// AdminLog 管理员操作日志
+// AdminLog 管理员操作日志（扩展版-审计追踪）
 type AdminLog struct {
-	ID         string                 `json:"id" bson:"_id,omitempty"`
-	AdminID    string                 `json:"admin_id" bson:"admin_id"`
-	Operation  string                 `json:"operation" bson:"operation"`                         // review_content, ban_user, approve_withdraw
-	Target     string                 `json:"target,omitempty" bson:"target,omitempty"`           // 操作对象ID
-	TargetType string                 `json:"target_type,omitempty" bson:"target_type,omitempty"` // user, content, withdraw
-	Details    map[string]interface{} `json:"details,omitempty" bson:"details,omitempty"`
-	IP         string                 `json:"ip" bson:"ip"`
-	UserAgent  string                 `json:"user_agent,omitempty" bson:"user_agent,omitempty"`
-	CreatedAt  time.Time              `json:"created_at" bson:"created_at"`
+	ID           string                 `json:"id" bson:"_id,omitempty"`
+	AdminID      string                 `json:"admin_id" bson:"admin_id"`
+	AdminName    string                 `json:"admin_name,omitempty" bson:"admin_name,omitempty"` // 新增：管理员名称
+	Operation    string                 `json:"operation" bson:"operation"`                         // review_content, ban_user, approve_withdraw
+	Target       string                 `json:"target,omitempty" bson:"target,omitempty"`           // 操作对象ID（保留兼容）
+	TargetType   string                 `json:"target_type,omitempty" bson:"target_type,omitempty"` // user, content, withdraw（保留兼容）
+	ResourceType string                 `json:"resource_type,omitempty" bson:"resource_type,omitempty"` // 新增：资源类型
+	ResourceID   string                 `json:"resource_id,omitempty" bson:"resource_id,omitempty"`     // 新增：资源ID
+	Details      map[string]interface{} `json:"details,omitempty" bson:"details,omitempty"`
+	// 新增：变更追踪字段
+	Changes   map[string]ChangeRecord `json:"changes,omitempty" bson:"changes,omitempty"`
+	OldValues map[string]interface{} `json:"old_values,omitempty" bson:"old_values,omitempty"`
+	NewValues map[string]interface{} `json:"new_values,omitempty" bson:"new_values,omitempty"`
+	IP        string                 `json:"ip" bson:"ip"`
+	UserAgent string                 `json:"user_agent,omitempty" bson:"user_agent,omitempty"`
+	CreatedAt time.Time              `json:"created_at" bson:"created_at"`
 }
 
 // 审核状态
@@ -55,3 +62,10 @@ const (
 	OperationUpdateRole      = "update_role"      // 更新角色
 	OperationModifyContent   = "modify_content"   // 修改内容
 )
+
+// ChangeRecord 变更记录（新增-审计追踪）
+type ChangeRecord struct {
+	Field    string      `json:"field" bson:"field"`
+	OldValue interface{} `json:"old_value,omitempty" bson:"old_value,omitempty"`
+	NewValue interface{} `json:"new_value,omitempty" bson:"new_value,omitempty"`
+}

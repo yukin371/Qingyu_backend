@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -521,4 +522,70 @@ type AssignRoleRequest struct {
 // UpdateRolePermissionsRequest 更新角色权限请求
 type UpdateRolePermissionsRequest struct {
 	Permissions []string `json:"permissions" binding:"required"`
+}
+
+// ==================== 批量角色操作 ====================
+
+// batchOperationFunc 批量操作函数类型
+type batchOperationFunc func(ctx context.Context, userID, role string) error
+
+// executeBatchRoleOperation 执行批量角色操作的通用方法
+func (api *PermissionAPI) executeBatchRoleOperation(c *gin.Context, req BatchRoleOperationRequest, operation batchOperationFunc) {
+	result := BatchOperationResult{
+		Total:  len(req.UserIDs),
+		Errors: []string{},
+	}
+
+	for _, userID := range req.UserIDs {
+		if err := operation(c.Request.Context(), userID, req.Role); err != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, userID+": "+err.Error())
+		} else {
+			result.Success++
+		}
+	}
+
+	response.Success(c, result)
+}
+
+// BatchAssignRoleToUsers 批量分配角色
+//
+//	@Summary		批量分配角色
+//	@Description	管理员批量为用户分配角色
+//	@Tags			Admin-Role
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		BatchRoleOperationRequest	true	"批量角色操作请求"
+//	@Success		200		{object}	shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Router			/api/v1/admin/users/batch-assign-role [post]
+func (api *PermissionAPI) BatchAssignRoleToUsers(c *gin.Context) {
+	var req BatchRoleOperationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	api.executeBatchRoleOperation(c, req, api.permissionService.AssignRoleToUser)
+}
+
+// BatchRevokeRoleFromUsers 批量撤销角色
+//
+//	@Summary		批量撤销角色
+//	@Description	管理员批量撤销用户角色
+//	@Tags			Admin-Role
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		BatchRoleOperationRequest	true	"批量角色操作请求"
+//	@Success		200		{object}	shared.APIResponse
+//	@Failure		400		{object}	shared.APIResponse
+//	@Router			/api/v1/admin/users/batch-revoke-role [post]
+func (api *PermissionAPI) BatchRevokeRoleFromUsers(c *gin.Context) {
+	var req BatchRoleOperationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	api.executeBatchRoleOperation(c, req, api.permissionService.RemoveRoleFromUser)
 }

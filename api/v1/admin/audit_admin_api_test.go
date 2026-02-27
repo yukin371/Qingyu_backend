@@ -147,6 +147,7 @@ func setupAuditAdminTestRouterWithAuth(auditService *MockContentAuditService, us
 	{
 		v1.POST("/:id/review", api.ReviewAudit)
 		v1.POST("/:id/appeal/review", api.ReviewAppeal)
+		v1.POST("/batch-review", api.BatchReviewAudit)
 	}
 
 	return r
@@ -703,4 +704,173 @@ func TestAuditAdminAPI_GetAuditStatistics_ServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	mockService.AssertExpectations(t)
+}
+
+// ==================== Batch Review Audit Tests ====================
+
+func TestAuditAdminAPI_BatchReviewAudit_Success(t *testing.T) {
+	// Given
+	mockService := new(MockContentAuditService)
+	router := setupAuditAdminTestRouterWithAuth(mockService, "admin123")
+
+	auditID1 := primitive.NewObjectID().Hex()
+	auditID2 := primitive.NewObjectID().Hex()
+
+	reqBody := BatchReviewAuditRequest{
+		AuditIDs:   []string{auditID1, auditID2},
+		Action:     "approve",
+		ReviewNote: "批量审核通过",
+	}
+
+	mockService.On("ReviewAudit", mock.Anything, auditID1, "admin123", true, "批量审核通过").Return(nil)
+	mockService.On("ReviewAudit", mock.Anything, auditID2, "admin123", true, "批量审核通过").Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/audit/batch-review", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["total"])
+	assert.Equal(t, float64(2), data["success"])
+	assert.Equal(t, float64(0), data["failed"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestAuditAdminAPI_BatchReviewAudit_ApproveAll(t *testing.T) {
+	// Given
+	mockService := new(MockContentAuditService)
+	router := setupAuditAdminTestRouterWithAuth(mockService, "admin123")
+
+	auditIDs := []string{
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+	}
+
+	reqBody := BatchReviewAuditRequest{
+		AuditIDs:   auditIDs,
+		Action:     "approve",
+		ReviewNote: "全部通过",
+	}
+
+	for _, id := range auditIDs {
+		mockService.On("ReviewAudit", mock.Anything, id, "admin123", true, "全部通过").Return(nil)
+	}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/audit/batch-review", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(3), data["total"])
+	assert.Equal(t, float64(3), data["success"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestAuditAdminAPI_BatchReviewAudit_RejectAll(t *testing.T) {
+	// Given
+	mockService := new(MockContentAuditService)
+	router := setupAuditAdminTestRouterWithAuth(mockService, "admin123")
+
+	auditIDs := []string{
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+	}
+
+	reqBody := BatchReviewAuditRequest{
+		AuditIDs:   auditIDs,
+		Action:     "reject",
+		ReviewNote: "全部拒绝",
+	}
+
+	for _, id := range auditIDs {
+		mockService.On("ReviewAudit", mock.Anything, id, "admin123", false, "全部拒绝").Return(nil)
+	}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/audit/batch-review", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["total"])
+	assert.Equal(t, float64(2), data["success"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestAuditAdminAPI_BatchReviewAudit_EmptyList_Error(t *testing.T) {
+	// Given
+	mockService := new(MockContentAuditService)
+	router := setupAuditAdminTestRouterWithAuth(mockService, "admin123")
+
+	reqBody := BatchReviewAuditRequest{
+		AuditIDs:   []string{},
+		Action:     "approve",
+		ReviewNote: "测试",
+	}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/audit/batch-review", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestAuditAdminAPI_BatchReviewAudit_InvalidAction_Error(t *testing.T) {
+	// Given
+	mockService := new(MockContentAuditService)
+	router := setupAuditAdminTestRouterWithAuth(mockService, "admin123")
+
+	reqBody := BatchReviewAuditRequest{
+		AuditIDs:   []string{primitive.NewObjectID().Hex()},
+		Action:     "invalid_action",
+		ReviewNote: "测试",
+	}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	reqHTTP, _ := http.NewRequest("POST", "/api/v1/admin/audit/batch-review", bytes.NewBuffer(jsonBody))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, reqHTTP)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
