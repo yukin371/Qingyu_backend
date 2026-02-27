@@ -2,7 +2,7 @@ name: Simple CI
 
 on:
   push:
-    branches: [ main, dev, test, develop ]
+    branches: [ main ]
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
