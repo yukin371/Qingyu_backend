@@ -257,9 +257,9 @@ func (r *MongoLikeRepository) GetLikeCount(ctx context.Context, targetType, targ
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
-		"target_type": safeTargetType,
-		"target_id":   safeTargetID,
+	count, err := r.GetCollection().CountDocuments(ctx, bson.D{
+		{Key: "target_type", Value: safeTargetType},
+		{Key: "target_id", Value: safeTargetID},
 	})
 
 	if err != nil {

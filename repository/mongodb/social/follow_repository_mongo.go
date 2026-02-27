@@ -132,13 +132,11 @@ func (r *MongoFollowRepository) DeleteFollow(ctx context.Context, followerID, fo
 	if err != nil {
 		return err
 	}
-	filter := bson.M{
-		"follower_id":  safeFollowerID,
-		"following_id": safeFollowingID,
-		"follow_type":  safeFollowType,
-	}
-
-	_, err = r.GetCollection().DeleteOne(ctx, filter)
+	_, err = r.GetCollection().DeleteOne(ctx, bson.D{
+		{Key: "follower_id", Value: safeFollowerID},
+		{Key: "following_id", Value: safeFollowingID},
+		{Key: "follow_type", Value: safeFollowType},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete follow: %w", err)
 	}
@@ -311,12 +309,6 @@ func (r *MongoFollowRepository) UpdateMutualStatus(ctx context.Context, follower
 	if err != nil {
 		return err
 	}
-	filter := bson.M{
-		"follower_id":  safeFollowerID,
-		"following_id": safeFollowingID,
-		"follow_type":  safeFollowType,
-	}
-
 	update := bson.M{
 		"$set": bson.M{
 			"is_mutual":  isMutual,
@@ -324,7 +316,11 @@ func (r *MongoFollowRepository) UpdateMutualStatus(ctx context.Context, follower
 		},
 	}
 
-	_, err = r.GetCollection().UpdateOne(ctx, filter, update)
+	_, err = r.GetCollection().UpdateOne(ctx, bson.D{
+		{Key: "follower_id", Value: safeFollowerID},
+		{Key: "following_id", Value: safeFollowingID},
+		{Key: "follow_type", Value: safeFollowType},
+	}, update)
 	if err != nil {
 		return fmt.Errorf("failed to update mutual status: %w", err)
 	}
@@ -359,12 +355,10 @@ func (r *MongoFollowRepository) DeleteAuthorFollow(ctx context.Context, userID, 
 	if err != nil {
 		return err
 	}
-	filter := bson.M{
-		"user_id":   safeUserID,
-		"author_id": safeAuthorID,
-	}
-
-	_, err = r.authorFollowsCollection.DeleteOne(ctx, filter)
+	_, err = r.authorFollowsCollection.DeleteOne(ctx, bson.D{
+		{Key: "user_id", Value: safeUserID},
+		{Key: "author_id", Value: safeAuthorID},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete author follow: %w", err)
 	}
@@ -381,13 +375,11 @@ func (r *MongoFollowRepository) GetAuthorFollow(ctx context.Context, userID, aut
 	if err != nil {
 		return nil, err
 	}
-	filter := bson.M{
-		"user_id":   safeUserID,
-		"author_id": safeAuthorID,
-	}
-
 	var authorFollow social.AuthorFollow
-	err = r.authorFollowsCollection.FindOne(ctx, filter).Decode(&authorFollow)
+	err = r.authorFollowsCollection.FindOne(ctx, bson.D{
+		{Key: "user_id", Value: safeUserID},
+		{Key: "author_id", Value: safeAuthorID},
+	}).Decode(&authorFollow)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil

@@ -55,7 +55,20 @@ func sanitizeCommentFilterValue(value interface{}) (interface{}, error) {
 		}
 		return result, nil
 	case bson.M:
-		return sanitizeCommentFilter(v)
+		safeMap := make(bson.M, len(v))
+		for key, nestedValue := range v {
+			switch key {
+			case "$in", "$gt":
+			default:
+				return nil, fmt.Errorf("unsupported filter operator: %s", key)
+			}
+			safeNestedValue, err := sanitizeCommentFilterValue(nestedValue)
+			if err != nil {
+				return nil, err
+			}
+			safeMap[key] = safeNestedValue
+		}
+		return safeMap, nil
 	default:
 		return value, nil
 	}
@@ -64,6 +77,11 @@ func sanitizeCommentFilterValue(value interface{}) (interface{}, error) {
 func sanitizeCommentFilter(filter bson.M) (bson.M, error) {
 	safeFilter := make(bson.M, len(filter))
 	for key, value := range filter {
+		switch key {
+		case "_id", "target_id", "target_type", "state", "parent_id", "author_id", "rating":
+		default:
+			return nil, fmt.Errorf("unsupported filter key: %s", key)
+		}
 		safeValue, err := sanitizeCommentFilterValue(value)
 		if err != nil {
 			return nil, err

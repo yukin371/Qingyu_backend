@@ -229,10 +229,14 @@ func (r *MongoCollectionRepository) GetByShareID(ctx context.Context, shareID st
 	if err != nil {
 		return nil, err
 	}
+	shareIDPattern := primitive.Regex{
+		Pattern: "^" + regexp.QuoteMeta(shareIDValue) + "$",
+		Options: "",
+	}
 
 	var collection social.Collection
-	err = r.GetCollection().FindOne(ctx, bson.M{
-		"share_id": shareIDValue,
+	err = r.GetCollection().FindOne(ctx, bson.D{
+		{Key: "share_id", Value: shareIDPattern},
 	}).Decode(&collection)
 
 	if err != nil {
