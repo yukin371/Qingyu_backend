@@ -61,7 +61,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -176,7 +176,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 		if errMsg == "不能给自己发送消息" {
 			response.BadRequest(c,  "操作失败", errMsg)
 		} else {
-			response.InternalError(c, fmt.Errorf("发送消息失败: %s", errMsg))
+			c.Error(fmt.Errorf("发送消息失败: %s", errMsg))
 		}
 		return
 	}
@@ -213,7 +213,7 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -249,7 +249,7 @@ func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -300,7 +300,7 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -344,7 +344,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -385,7 +385,7 @@ func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 

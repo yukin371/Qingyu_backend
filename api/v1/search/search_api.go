@@ -154,7 +154,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("took", duration),
 		)
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -298,7 +298,7 @@ func (api *SearchAPI) SearchBatch(c *gin.Context) {
 			zap.Error(err),
 			zap.Duration("took", duration),
 		)
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
