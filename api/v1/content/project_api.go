@@ -52,7 +52,7 @@ func (api *ProjectAPI) CreateProject(c *gin.Context) {
 
 	result, err := api.projectService.CreateProject(c.Request.Context(), &req)
 	if err != nil {
-		shared.InternalError(c, "创建项目失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (api *ProjectAPI) GetProject(c *gin.Context) {
 
 	result, err := api.projectService.GetProject(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "获取项目失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 
 	result, err := api.projectService.UpdateProject(c.Request.Context(), id, &req)
 	if err != nil {
-		shared.InternalError(c, "更新项目失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 
 	err := api.projectService.DeleteProject(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "删除项目失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 
 	result, err := api.projectService.ListProjects(c.Request.Context(), req)
 	if err != nil {
-		shared.InternalError(c, "获取项目列表失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -219,7 +219,7 @@ func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 
 	result, err := api.projectService.GetProjectStatistics(c.Request.Context(), id)
 	if err != nil {
-		shared.InternalError(c, "获取项目统计失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (api *ProjectAPI) UpdateProjectStatistics(c *gin.Context) {
 
 	err := api.projectService.UpdateProjectStatistics(c.Request.Context(), id, &stats)
 	if err != nil {
-		shared.InternalError(c, "更新项目统计失败", err)
+		c.Error(err)
 		return
 	}
 
