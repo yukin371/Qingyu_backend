@@ -76,7 +76,7 @@ func (api *BookStatisticsAPI) GetTopViewedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopViewedBooks(c.Request.Context(), limit)
 	if err != nil {
-		shared.InternalError(c, "获取最多浏览图书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (api *BookStatisticsAPI) GetTopFavoritedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopFavoritedBooks(c.Request.Context(), limit)
 	if err != nil {
-		shared.InternalError(c, "获取最多收藏图书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (api *BookStatisticsAPI) GetTopRatedBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTopRatedBooks(c.Request.Context(), limit)
 	if err != nil {
-		shared.InternalError(c, "获取最高评分图书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (api *BookStatisticsAPI) GetHottestBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetHottestBooks(c.Request.Context(), limit)
 	if err != nil {
-		shared.InternalError(c, "获取最热门图书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetTrendingBooks(c.Request.Context(), 0, limit)
 	if err != nil {
-		shared.InternalError(c, "获取趋势图书失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 
 	err = api.BookStatisticsService.IncrementViewCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		shared.InternalError(c, "增加浏览量失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -246,7 +246,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 
 	err = api.BookStatisticsService.IncrementFavoriteCount(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		shared.InternalError(c, "增加收藏量失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -265,7 +265,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
 	statistics, err := api.BookStatisticsService.GetAggregatedStatistics(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取聚合统计信息失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -319,7 +319,7 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 
 	statistics, err := api.BookStatisticsService.GetStatisticsByTimeRange(c.Request.Context(), startTime, endTime)
 	if err != nil {
-		shared.InternalError(c, "获取时间范围统计信息失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -354,7 +354,7 @@ func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 
 	report, err := api.BookStatisticsService.GenerateDailyReport(c.Request.Context(), date)
 	if err != nil {
-		shared.InternalError(c, "获取日统计报告失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -405,7 +405,7 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 
 	report, err := api.BookStatisticsService.GenerateWeeklyReport(c.Request.Context(), startDate)
 	if err != nil {
-		shared.InternalError(c, "获取周统计报告失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -447,7 +447,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 
 	report, err := api.BookStatisticsService.GenerateMonthlyReport(c.Request.Context(), year, month)
 	if err != nil {
-		shared.InternalError(c, "获取月统计报告失败", err)
+		c.Error(err)
 		return
 	}
 
@@ -486,7 +486,7 @@ func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 
 	statistics, total, err := api.BookStatisticsService.SearchStatistics(c.Request.Context(), keyword, page, limit)
 	if err != nil {
-		shared.InternalError(c, "搜索统计信息失败", err)
+		c.Error(err)
 		return
 	}
 

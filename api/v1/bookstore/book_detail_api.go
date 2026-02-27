@@ -47,7 +47,7 @@ func (api *BookDetailAPI) GetBookDetail(c *gin.Context) {
 			response.NotFound(c, "书籍不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (api *BookDetailAPI) IncrementViewCount(c *gin.Context) {
 			response.NotFound(c, "书籍不存在")
 			return
 		}
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
