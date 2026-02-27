@@ -88,7 +88,7 @@ func (api *BannerAPI) GetBanners(c *gin.Context) {
 	// 调用Service层
 	resp, err := api.bannerService.GetBanners(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (api *BannerAPI) GetBannerByID(c *gin.Context) {
 
 	banner, err := api.bannerService.GetBannerByID(c.Request.Context(), id)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (api *BannerAPI) CreateBanner(c *gin.Context) {
 
 	banner, err := api.bannerService.CreateBanner(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -182,7 +182,7 @@ func (api *BannerAPI) UpdateBanner(c *gin.Context) {
 	}
 
 	if err := api.bannerService.UpdateBanner(c.Request.Context(), id, &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (api *BannerAPI) DeleteBanner(c *gin.Context) {
 	}
 
 	if err := api.bannerService.DeleteBanner(c.Request.Context(), id); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -239,7 +239,7 @@ func (api *BannerAPI) BatchUpdateStatus(c *gin.Context) {
 	}
 
 	if err := api.bannerService.BatchUpdateStatus(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -267,7 +267,7 @@ func (api *BannerAPI) BatchUpdateSort(c *gin.Context) {
 	}
 
 	if err := api.bannerService.BatchUpdateSort(c.Request.Context(), &req); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -293,7 +293,7 @@ func (api *BannerAPI) IncrementClickCount(c *gin.Context) {
 	}
 
 	if err := api.bannerService.IncrementClickCount(c.Request.Context(), id); err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
