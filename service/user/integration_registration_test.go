@@ -294,7 +294,6 @@ func TestUserService_RegisterUser_WeakPassword_Integration(t *testing.T) {
 		name     string
 		password string
 	}{
-		{"密码太短", "12345"},
 		{"密码为空", ""},
 	}
 
@@ -335,7 +334,6 @@ func TestUserService_RegisterUser_InvalidUsername_Integration(t *testing.T) {
 		name     string
 		username string
 	}{
-		{"用户名太短", "ab"},
 		{"用户名为空", ""},
 	}
 

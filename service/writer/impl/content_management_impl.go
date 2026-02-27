@@ -302,7 +302,7 @@ func (c *ContentManagementImpl) CreateTimelineEvent(ctx context.Context, project
 		LocationIDs:  req.LocationIDs,
 		ChapterIDs:   req.ChapterIDs,
 		StoryTime:    nil, // Port DTO 使用 string，Service DTO 使用 *writer.StoryTime
-		Duration:     "", // Port DTO 使用 *int，Service DTO 使用 string
+		Duration:     "",  // Port DTO 使用 *int，Service DTO 使用 string
 		Impact:       req.Impact,
 	}
 	return c.timelineService.CreateEvent(ctx, projectID, convertReq)
