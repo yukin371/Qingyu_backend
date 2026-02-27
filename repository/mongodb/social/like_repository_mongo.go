@@ -39,6 +39,14 @@ func sanitizeLikeTargetType(targetType string) (string, error) {
 	}
 }
 
+func sanitizeLikeObjectIDHex(field, value string) (string, error) {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		return "", fmt.Errorf("%s格式不合法", field)
+	}
+	return objectID.Hex(), nil
+}
+
 // NewMongoLikeRepository 创建MongoDB点赞仓储实例
 func NewMongoLikeRepository(db *mongo.Database) *MongoLikeRepository {
 	// 创建索引
@@ -250,7 +258,7 @@ func (r *MongoLikeRepository) GetLikeCount(ctx context.Context, targetType, targ
 	if err != nil {
 		return 0, err
 	}
-	safeTargetID, err := sanitizeLikeQueryToken("target_id", targetID)
+	safeTargetID, err := sanitizeLikeObjectIDHex("target_id", targetID)
 	if err != nil {
 		return 0, err
 	}

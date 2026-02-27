@@ -29,63 +29,31 @@ func sanitizeReviewQueryToken(field, value string) (string, error) {
 	return value, nil
 }
 
-func sanitizeReviewFilterValue(value interface{}) (interface{}, error) {
-	switch v := value.(type) {
-	case string:
-		return sanitizeReviewQueryToken("filter_value", v)
-	case []string:
-		result := make([]string, 0, len(v))
-		for _, item := range v {
-			safeItem, err := sanitizeReviewQueryToken("filter_value", item)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, safeItem)
-		}
-		return result, nil
-	case []interface{}:
-		result := make([]interface{}, 0, len(v))
-		for _, item := range v {
-			safeItem, err := sanitizeReviewFilterValue(item)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, safeItem)
-		}
-		return result, nil
-	case bson.M:
-		safeMap := make(bson.M, len(v))
-		for key, nestedValue := range v {
-			switch key {
-			case "$in", "$gt":
-			default:
-				return nil, fmt.Errorf("unsupported filter operator: %s", key)
-			}
-			safeNestedValue, err := sanitizeReviewFilterValue(nestedValue)
-			if err != nil {
-				return nil, err
-			}
-			safeMap[key] = safeNestedValue
-		}
-		return safeMap, nil
-	default:
-		return value, nil
-	}
-}
-
 func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
 	safeFilter := make(bson.M, len(filter))
 	for key, value := range filter {
 		switch key {
-		case "book_id", "user_id", "is_public", "rating":
+		case "book_id", "user_id":
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid %s filter type", key)
+			}
+			objectID, err := primitive.ObjectIDFromHex(valueStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid id: %w", err)
+			}
+			safeFilter[key] = objectID.Hex()
+		case "is_public":
+			boolValue, ok := value.(bool)
+			if !ok {
+				return nil, fmt.Errorf("invalid is_public filter type")
+			}
+			safeFilter[key] = boolValue
+		case "rating":
+			safeFilter[key] = value
 		default:
 			return nil, fmt.Errorf("unsupported filter key: %s", key)
 		}
-		safeValue, err := sanitizeReviewFilterValue(value)
-		if err != nil {
-			return nil, err
-		}
-		safeFilter[key] = safeValue
 	}
 	return safeFilter, nil
 }

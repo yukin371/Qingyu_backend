@@ -29,63 +29,95 @@ func sanitizeSocialCommentQueryToken(field, value string) (string, error) {
 	return value, nil
 }
 
-func sanitizeSocialCommentFilterValue(value interface{}) (interface{}, error) {
-	switch v := value.(type) {
-	case string:
-		return sanitizeSocialCommentQueryToken("filter_value", v)
-	case []string:
-		result := make([]string, 0, len(v))
-		for _, item := range v {
-			safeItem, err := sanitizeSocialCommentQueryToken("filter_value", item)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, safeItem)
-		}
-		return result, nil
-	case []interface{}:
-		result := make([]interface{}, 0, len(v))
-		for _, item := range v {
-			safeItem, err := sanitizeSocialCommentFilterValue(item)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, safeItem)
-		}
-		return result, nil
-	case bson.M:
-		safeMap := make(bson.M, len(v))
-		for key, nestedValue := range v {
-			switch key {
-			case "$in", "$gt":
-			default:
-				return nil, fmt.Errorf("unsupported filter operator: %s", key)
-			}
-			safeNestedValue, err := sanitizeSocialCommentFilterValue(nestedValue)
-			if err != nil {
-				return nil, err
-			}
-			safeMap[key] = safeNestedValue
-		}
-		return safeMap, nil
-	default:
-		return value, nil
-	}
-}
-
 func sanitizeSocialCommentFilter(filter bson.M) (bson.M, error) {
 	safeFilter := make(bson.M, len(filter))
 	for key, value := range filter {
 		switch key {
-		case "_id", "target_id", "target_type", "state", "parent_id", "author_id", "rating":
+		case "_id":
+			switch idValue := value.(type) {
+			case primitive.ObjectID:
+				safeFilter[key] = idValue
+			case string:
+				objectID, err := primitive.ObjectIDFromHex(idValue)
+				if err != nil {
+					return nil, fmt.Errorf("invalid id: %w", err)
+				}
+				safeFilter[key] = objectID
+			case bson.M:
+				inRaw, ok := idValue["$in"]
+				if !ok {
+					return nil, fmt.Errorf("unsupported _id operator")
+				}
+				switch inList := inRaw.(type) {
+				case []primitive.ObjectID:
+					safeFilter[key] = bson.M{"$in": inList}
+				case []string:
+					objectIDs := make([]primitive.ObjectID, 0, len(inList))
+					for _, id := range inList {
+						objectID, err := primitive.ObjectIDFromHex(id)
+						if err != nil {
+							return nil, fmt.Errorf("invalid id: %w", err)
+						}
+						objectIDs = append(objectIDs, objectID)
+					}
+					safeFilter[key] = bson.M{"$in": objectIDs}
+				default:
+					return nil, fmt.Errorf("unsupported _id $in value")
+				}
+			default:
+				return nil, fmt.Errorf("unsupported _id filter value")
+			}
+		case "target_id", "author_id":
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid %s filter type", key)
+			}
+			objectID, err := primitive.ObjectIDFromHex(valueStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid id: %w", err)
+			}
+			safeFilter[key] = objectID.Hex()
+		case "parent_id":
+			if value == nil {
+				safeFilter[key] = nil
+				continue
+			}
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid parent_id filter type")
+			}
+			objectID, err := primitive.ObjectIDFromHex(valueStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid id: %w", err)
+			}
+			safeFilter[key] = objectID.Hex()
+		case "target_type":
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid target_type filter type")
+			}
+			switch social.CommentTargetType(valueStr) {
+			case social.CommentTargetTypeBook, social.CommentTargetTypeChapter, social.CommentTargetTypeArticle, social.CommentTargetTypeAnnouncement, social.CommentTargetTypeProject:
+				safeFilter[key] = valueStr
+			default:
+				return nil, fmt.Errorf("invalid target_type")
+			}
+		case "state":
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid state filter type")
+			}
+			switch social.CommentState(valueStr) {
+			case social.CommentStateNormal, social.CommentStateHidden, social.CommentStateDeleted, social.CommentStateRejected:
+				safeFilter[key] = valueStr
+			default:
+				return nil, fmt.Errorf("invalid state")
+			}
+		case "rating":
+			safeFilter[key] = value
 		default:
 			return nil, fmt.Errorf("unsupported filter key: %s", key)
 		}
-		safeValue, err := sanitizeSocialCommentFilterValue(value)
-		if err != nil {
-			return nil, err
-		}
-		safeFilter[key] = safeValue
 	}
 	return safeFilter, nil
 }
