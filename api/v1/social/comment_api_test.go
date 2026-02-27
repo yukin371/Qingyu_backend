@@ -299,7 +299,7 @@ func TestCommentAPI_CreateComment_Unauthorized(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(1002), response["code"]) // 未授权错误code为1002
-	assert.Contains(t, response["message"], "未授权")
+	assert.Contains(t, response["message"], "请先登录")
 }
 
 // TestCommentAPI_GetCommentList_Success 测试成功获取评论列表

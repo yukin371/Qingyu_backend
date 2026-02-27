@@ -118,7 +118,7 @@ func (api *LikeAPI) GetBookLikeInfo(c *gin.Context) {
 	// 获取点赞数
 	likeCount, err := api.likeService.GetBookLikeCount(c.Request.Context(), bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -253,7 +253,7 @@ func (api *LikeAPI) GetUserLikedBooks(c *gin.Context) {
 	// 查询
 	likes, total, err := api.likeService.GetUserLikedBooks(c.Request.Context(), userID.(string), params.Page, params.Size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -284,7 +284,7 @@ func (api *LikeAPI) GetUserLikeStats(c *gin.Context) {
 
 	stats, err := api.likeService.GetUserLikeStats(c.Request.Context(), userID.(string))
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
