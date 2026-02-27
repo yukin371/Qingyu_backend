@@ -60,7 +60,7 @@ func (api *ProgressAPI) GetReadingProgress(c *gin.Context) {
 
 	progress, err := api.readerService.GetReadingProgress(c.Request.Context(), userID, bookID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 
 	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID, req.BookID, req.ChapterID, req.Progress)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 
 	err := api.readerService.UpdateReadingTime(c.Request.Context(), userID, req.BookID, req.Duration)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -143,7 +143,7 @@ func (api *ProgressAPI) GetRecentReading(c *gin.Context) {
 
 	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID, limit)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -170,7 +170,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 
 	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID, page, size)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	}
 
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -267,7 +267,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -289,7 +289,7 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 
 	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
