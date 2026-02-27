@@ -23,6 +23,12 @@ var (
 	ErrCannotModifySuperAdmin = fmt.Errorf("cannot modify super admin")
 	// ErrInvalidRole 无效的角色
 	ErrInvalidRole = fmt.Errorf("invalid role")
+	// ErrInvalidBatchCount 无效的批量创建数量
+	ErrInvalidBatchCount = fmt.Errorf("invalid batch count")
+)
+
+const (
+	maxBatchCreateUsers = 100
 )
 
 // UserAdminService 用户管理服务接口
@@ -358,21 +364,21 @@ func generateRandomPassword(length int) (string, error) {
 
 // CreateUserRequest 创建用户请求
 type CreateUserRequest struct {
-	Username string         `json:"username" binding:"required,min=3,max=50"`
-	Email    string         `json:"email" binding:"required,email"`
-	Password string         `json:"password" binding:"min=6,max=100"`
-	Nickname string         `json:"nickname"`
-	Role     string         `json:"role" binding:"required,oneof=reader author admin"`
+	Username string           `json:"username" binding:"required,min=3,max=50"`
+	Email    string           `json:"email" binding:"required,email"`
+	Password string           `json:"password" binding:"min=6,max=100"`
+	Nickname string           `json:"nickname"`
+	Role     string           `json:"role" binding:"required,oneof=reader author admin"`
 	Status   users.UserStatus `json:"status"`
-	Bio      string         `json:"bio"`
+	Bio      string           `json:"bio"`
 }
 
 // BatchCreateUserRequest 批量创建用户请求
 type BatchCreateUserRequest struct {
-	Count   int              `json:"count" binding:"required,min=1,max=100"`
-	Prefix  string           `json:"prefix"`
-	Role    string           `json:"role" binding:"required,oneof=reader author admin"`
-	Status  users.UserStatus `json:"status"`
+	Count  int              `json:"count" binding:"required,min=1,max=100"`
+	Prefix string           `json:"prefix"`
+	Role   string           `json:"role" binding:"required,oneof=reader author admin"`
+	Status users.UserStatus `json:"status"`
 }
 
 // CreateUser 创建用户
@@ -431,6 +437,13 @@ func (s *UserAdminServiceImpl) CreateUser(ctx context.Context, req *CreateUserRe
 
 // BatchCreateUsers 批量创建用户
 func (s *UserAdminServiceImpl) BatchCreateUsers(ctx context.Context, req *BatchCreateUserRequest) ([]*users.User, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+	if req.Count < 1 || req.Count > maxBatchCreateUsers {
+		return nil, ErrInvalidBatchCount
+	}
+
 	// 验证角色
 	if !isValidRole(req.Role) {
 		return nil, ErrInvalidRole
@@ -450,8 +463,9 @@ func (s *UserAdminServiceImpl) BatchCreateUsers(ctx context.Context, req *BatchC
 	// 这里简化处理，使用时间戳作为唯一标识
 	baseID := time.Now().Unix()
 
-	usersList := make([]*users.User, req.Count)
-	for i := 0; i < req.Count; i++ {
+	count := req.Count
+	usersList := make([]*users.User, count)
+	for i := 0; i < count; i++ {
 		userID := baseID + int64(i)
 
 		// 生成随机密码

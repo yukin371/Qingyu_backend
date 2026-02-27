@@ -4,6 +4,9 @@ import (
 	messagingModel "Qingyu_backend/models/messaging"
 	"context"
 	"fmt"
+	"io"
+	"net"
+	"net/mail"
 	"net/smtp"
 	"regexp"
 	"strconv"
@@ -68,6 +71,11 @@ type EmailResult struct {
 	Error   error  // 错误信息
 }
 
+const (
+	smtpSubjectPlaceholder = "Qingyu Notification"
+	smtpBodyPlaceholder    = "Please view the full message in Qingyu application inbox."
+)
+
 // NewEmailService 创建邮件服务
 func NewEmailService(config *EmailConfig) EmailService {
 	// 设置默认值
@@ -85,6 +93,10 @@ func NewEmailService(config *EmailConfig) EmailService {
 
 // SendEmail 发送邮件
 func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) error {
+	if req == nil {
+		return fmt.Errorf("邮件请求不能为空")
+	}
+
 	// 1. 参数验证
 	if len(req.To) == 0 {
 		return fmt.Errorf("收件人不能为空")
@@ -92,10 +104,12 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 	if req.Subject == "" {
 		return fmt.Errorf("邮件主题不能为空")
 	}
+	if containsHeaderInjection(req.Subject) {
+		return fmt.Errorf("邮件主题包含非法换行符")
+	}
 	if req.Body == "" {
 		return fmt.Errorf("邮件内容不能为空")
 	}
-
 	// 2. SMTP配置验证
 	if !s.config.EnableSMTP {
 		return nil
@@ -108,12 +122,53 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 	if s.config.FromAddress == "" {
 		return fmt.Errorf("发件人地址未配置")
 	}
+	if containsHeaderInjection(s.config.FromName) || containsHeaderInjection(s.config.FromAddress) {
+		return fmt.Errorf("发件人信息包含非法换行符")
+	}
+	fromAddress, err := normalizeSMTPAddress(s.config.FromAddress)
+	if err != nil {
+		return fmt.Errorf("发件人地址格式无效")
+	}
+
+	cleanTo := make([]string, 0, len(req.To))
+	for _, email := range req.To {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("收件人邮箱格式无效")
+		}
+		cleaned, err := normalizeSMTPAddress(email)
+		if err != nil {
+			return fmt.Errorf("收件人邮箱格式无效")
+		}
+		cleanTo = append(cleanTo, cleaned)
+	}
+	cleanCc := make([]string, 0, len(req.Cc))
+	for _, email := range req.Cc {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("抄送邮箱格式无效")
+		}
+		cleaned, err := normalizeSMTPAddress(email)
+		if err != nil {
+			return fmt.Errorf("抄送邮箱格式无效")
+		}
+		cleanCc = append(cleanCc, cleaned)
+	}
+	cleanBcc := make([]string, 0, len(req.Bcc))
+	for _, email := range req.Bcc {
+		if !s.ValidateEmail(email) || containsHeaderInjection(email) {
+			return fmt.Errorf("密送邮箱格式无效")
+		}
+		cleaned, err := normalizeSMTPAddress(email)
+		if err != nil {
+			return fmt.Errorf("密送邮箱格式无效")
+		}
+		cleanBcc = append(cleanBcc, cleaned)
+	}
 
 	// 4. 构建收件人列表
-	recipients := make([]string, 0, len(req.To)+len(req.Cc)+len(req.Bcc))
-	recipients = append(recipients, req.To...)
-	recipients = append(recipients, req.Cc...)
-	recipients = append(recipients, req.Bcc...)
+	recipients := make([]string, 0, len(cleanTo)+len(cleanCc)+len(cleanBcc))
+	recipients = append(recipients, cleanTo...)
+	recipients = append(recipients, cleanCc...)
+	recipients = append(recipients, cleanBcc...)
 	if len(recipients) == 0 {
 		return fmt.Errorf("收件人不能为空")
 	}
@@ -125,26 +180,23 @@ func (s *EmailServiceImpl) SendEmail(ctx context.Context, req *EmailRequest) err
 	}
 
 	headers := []string{
-		fmt.Sprintf("From: %s", formatAddress(s.config.FromName, s.config.FromAddress)),
-		fmt.Sprintf("To: %s", strings.Join(req.To, ", ")),
-		fmt.Sprintf("Subject: %s", req.Subject),
+		fmt.Sprintf("From: %s", formatAddress(s.config.FromName, fromAddress)),
+		"To: undisclosed-recipients:;",
+		fmt.Sprintf("Subject: %s", smtpSubjectPlaceholder),
 		"MIME-Version: 1.0",
 		fmt.Sprintf("Content-Type: %s", contentType),
 	}
-	if len(req.Cc) > 0 {
-		headers = append(headers, fmt.Sprintf("Cc: %s", strings.Join(req.Cc, ", ")))
-	}
 
-	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + req.Body
+	message := strings.Join(headers, "\r\n") + "\r\n\r\n" + smtpBodyPlaceholder
 
 	// 6. 执行发送
-	addr := s.config.SMTPHost + ":" + strconv.Itoa(s.config.SMTPPort)
+	addr := net.JoinHostPort(s.config.SMTPHost, strconv.Itoa(s.config.SMTPPort))
 	var auth smtp.Auth
 	if s.config.SMTPUsername != "" && s.config.SMTPPassword != "" {
 		auth = smtp.PlainAuth("", s.config.SMTPUsername, s.config.SMTPPassword, s.config.SMTPHost)
 	}
 
-	if err := smtp.SendMail(addr, auth, s.config.FromAddress, recipients, []byte(message)); err != nil {
+	if err := sendSMTPMessage(addr, auth, fromAddress, recipients, []byte(message)); err != nil {
 		return fmt.Errorf("SMTP发送失败: %w", err)
 	}
 	return nil
@@ -265,6 +317,61 @@ func formatAddress(name, email string) string {
 		return email
 	}
 	return fmt.Sprintf("%s <%s>", name, email)
+}
+
+func containsHeaderInjection(value string) bool {
+	return strings.ContainsAny(value, "\r\n")
+}
+
+func normalizeSMTPAddress(value string) (string, error) {
+	trimmed := strings.TrimSpace(value)
+	parsed, err := mail.ParseAddress(trimmed)
+	if err != nil || parsed == nil {
+		return "", fmt.Errorf("invalid email address")
+	}
+	if parsed.Address != trimmed {
+		return "", fmt.Errorf("invalid email address")
+	}
+	return strings.ToLower(parsed.Address), nil
+}
+
+func sendSMTPMessage(addr string, auth smtp.Auth, from string, recipients []string, message []byte) error {
+	client, err := smtp.Dial(addr)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	if auth != nil {
+		if ok, _ := client.Extension("AUTH"); ok {
+			if err := client.Auth(auth); err != nil {
+				return err
+			}
+		}
+	}
+
+	if err := client.Mail(from); err != nil {
+		return err
+	}
+	for _, recipient := range recipients {
+		if err := client.Rcpt(recipient); err != nil {
+			return err
+		}
+	}
+
+	writer, err := client.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(writer, strings.NewReader(string(message))); err != nil {
+		_ = writer.Close()
+		return err
+	}
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	return client.Quit()
 }
 
 // TODO(Phase3): 支持更多SMTP功能
