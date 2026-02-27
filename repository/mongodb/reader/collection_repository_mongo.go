@@ -267,38 +267,45 @@ func (r *MongoCollectionRepository) GetCollectionsByTag(ctx context.Context, use
 		return nil, 0, err
 	}
 
-	filter := bson.D{
+	// 为避免将用户输入直接拼到查询条件中，先按用户拉取，再在内存中过滤标签。
+	userFilter := bson.D{
 		{Key: "user_id", Value: userIDHex},
-		{Key: "tags", Value: tag}, // MongoDB会自动匹配数组中的元素
 	}
-
-	// 计算总数
-	total, err := r.collectionColl.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count collections by tag: %w", err)
-	}
-
-	// 计算跳过数
-	skip := int64((page - 1) * size)
-
-	// 查询
 	opts := options.Find().
-		SetSort(bson.D{{Key: "created_at", Value: -1}}).
-		SetSkip(skip).
-		SetLimit(int64(size))
+		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collectionColl.Find(ctx, filter, opts)
+	cursor, err := r.collectionColl.Find(ctx, userFilter, opts)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find collections by tag: %w", err)
+		return nil, 0, fmt.Errorf("failed to find collections by user: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var collections []*reader.Collection
-	if err := cursor.All(ctx, &collections); err != nil {
+	var allCollections []*reader.Collection
+	if err := cursor.All(ctx, &allCollections); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode collections: %w", err)
 	}
 
-	return collections, total, nil
+	filtered := make([]*reader.Collection, 0, len(allCollections))
+	for _, collection := range allCollections {
+		for _, existingTag := range collection.Tags {
+			if existingTag == tag {
+				filtered = append(filtered, collection)
+				break
+			}
+		}
+	}
+
+	total := int64(len(filtered))
+	start := (page - 1) * size
+	if start < 0 || start >= len(filtered) {
+		return []*reader.Collection{}, total, nil
+	}
+	end := start + size
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	return filtered[start:end], total, nil
 }
 
 // Update 更新收藏
