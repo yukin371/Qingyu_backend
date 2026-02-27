@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
 )
@@ -432,7 +433,11 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 
 	if filter != nil {
 		if filter.Keyword != "" {
-			escapedKeyword := regexp.QuoteMeta(filter.Keyword)
+			normalizedKeyword := strings.TrimSpace(filter.Keyword)
+			if len(normalizedKeyword) > 64 {
+				normalizedKeyword = normalizedKeyword[:64]
+			}
+			escapedKeyword := regexp.QuoteMeta(normalizedKeyword)
 			mongoFilter["$or"] = []bson.M{
 				{"username": bson.M{"$regex": escapedKeyword, "$options": "i"}},
 				{"email": bson.M{"$regex": escapedKeyword, "$options": "i"}},
@@ -440,10 +445,14 @@ func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bso
 			}
 		}
 		if filter.Status != "" {
-			mongoFilter["status"] = exactUserMatchRegex(string(filter.Status))
+			if status, ok := normalizeUserStatus(filter.Status); ok {
+				mongoFilter["status"] = exactUserMatchRegex(status)
+			}
 		}
 		if filter.Role != "" {
-			mongoFilter["role"] = exactUserMatchRegex(filter.Role)
+			if role, ok := normalizeUserRole(filter.Role); ok {
+				mongoFilter["role"] = exactUserMatchRegex(role)
+			}
 		}
 		if filter.DateFrom != nil {
 			if _, exists := mongoFilter["created_at"]; !exists {
@@ -469,5 +478,33 @@ func exactUserMatchRegex(value string) primitive.Regex {
 	return primitive.Regex{
 		Pattern: "^" + regexp.QuoteMeta(value) + "$",
 		Options: "",
+	}
+}
+
+func normalizeUserStatus(status users.UserStatus) (string, bool) {
+	switch status {
+	case users.UserStatusActive:
+		return string(users.UserStatusActive), true
+	case users.UserStatusInactive:
+		return string(users.UserStatusInactive), true
+	case users.UserStatusBanned:
+		return string(users.UserStatusBanned), true
+	case users.UserStatusDeleted:
+		return string(users.UserStatusDeleted), true
+	default:
+		return "", false
+	}
+}
+
+func normalizeUserRole(role string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case authModel.RoleReader:
+		return authModel.RoleReader, true
+	case authModel.RoleAuthor:
+		return authModel.RoleAuthor, true
+	case authModel.RoleAdmin:
+		return authModel.RoleAdmin, true
+	default:
+		return "", false
 	}
 }
