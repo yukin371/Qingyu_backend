@@ -9,7 +9,6 @@ import (
 
 	shared "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/shared/stats"
-	"Qingyu_backend/pkg/response"
 )
 
 // StatsHandler 用户统计处理器
@@ -47,7 +46,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 2. 获取统计数据
 	statsData, err := h.statsService.GetUserStats(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -78,7 +77,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 2. 获取内容统计
 	contentStats, err := h.statsService.GetContentStats(c.Request.Context(), userID)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -118,7 +117,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 3. 获取活跃度统计
 	activityStats, err := h.statsService.GetUserActivityStats(c.Request.Context(), userID, days)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
@@ -169,7 +168,7 @@ func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 3. 获取收益统计
 	revenueStats, err := h.statsService.GetRevenueStats(c.Request.Context(), userID, startDate, endDate)
 	if err != nil {
-		response.InternalError(c, err)
+		c.Error(err)
 		return
 	}
 
