@@ -142,6 +142,24 @@ func TestCheckConsistency_Inconsistent(t *testing.T) {
 	t.Skip("需要真实的 MongoDB 和 ES 连接或更复杂的 mock")
 }
 
+// TestCheckConsistency_NilMongoDB 测试 MongoDB 为空时返回错误而非 panic
+func TestCheckConsistency_NilMongoDB(t *testing.T) {
+	mockEngine := new(MockEngine)
+	logger := zaptest.NewLogger(t)
+	checker := NewConsistencyChecker(nil, nil, mockEngine, nil, logger, nil)
+
+	ctx := context.Background()
+	report, err := checker.CheckConsistency(ctx, "books")
+
+	require.Error(t, err)
+	require.NotNil(t, report)
+	assert.Equal(t, "error", report.Status)
+	assert.Contains(t, err.Error(), "mongo database is not initialized")
+	mongoErr, ok := report.Details["mongo_error"].(string)
+	require.True(t, ok)
+	assert.Contains(t, mongoErr, "mongo database is not initialized")
+}
+
 // TestRepairMissingDocuments 测试修复缺失文档
 func TestRepairMissingDocuments(t *testing.T) {
 	// 这个测试需要真实的数据库连接，暂时跳过

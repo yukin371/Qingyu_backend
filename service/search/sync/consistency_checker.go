@@ -141,12 +141,18 @@ func (cc *ConsistencyChecker) CheckConsistency(ctx context.Context, collection s
 
 // getMongoDocumentCount 获取 MongoDB 文档计数
 func (cc *ConsistencyChecker) getMongoDocumentCount(ctx context.Context, collection string) (int64, error) {
+	if cc.mongoDB == nil {
+		return 0, fmt.Errorf("mongo database is not initialized")
+	}
 	coll := cc.mongoDB.Collection(collection)
 	return coll.CountDocuments(ctx, bson.M{})
 }
 
 // getESDocumentCount 获取 ES 文档计数
 func (cc *ConsistencyChecker) getESDocumentCount(ctx context.Context, indexName string) (int64, error) {
+	if cc.esEngine == nil {
+		return 0, fmt.Errorf("search engine is not initialized")
+	}
 	// ES Engine 没有 Count 方法，使用 Search 并限制返回 0 条结果来获取总数
 	result, err := cc.esEngine.Search(ctx, indexName, map[string]interface{}{
 		"size": 0,
@@ -213,6 +219,9 @@ func (cc *ConsistencyChecker) FindMissingDocuments(ctx context.Context, collecti
 
 // getMongoDocumentIDs 获取 MongoDB 所有文档 ID
 func (cc *ConsistencyChecker) getMongoDocumentIDs(ctx context.Context, collection string) ([]string, error) {
+	if cc.mongoDB == nil {
+		return nil, fmt.Errorf("mongo database is not initialized")
+	}
 	coll := cc.mongoDB.Collection(collection)
 
 	cursor, err := coll.Find(ctx, bson.M{}, nil)
@@ -300,6 +309,13 @@ func (cc *ConsistencyChecker) RepairMissingDocuments(ctx context.Context, collec
 
 // syncDocumentToES 同步单个文档到 ES
 func (cc *ConsistencyChecker) syncDocumentToES(ctx context.Context, collection, docID string) error {
+	if cc.mongoDB == nil {
+		return fmt.Errorf("mongo database is not initialized")
+	}
+	if cc.esEngine == nil {
+		return fmt.Errorf("search engine is not initialized")
+	}
+
 	coll := cc.mongoDB.Collection(collection)
 
 	var doc bson.Raw
