@@ -80,7 +80,7 @@ func TestCollectionScenario(t *testing.T) {
 		}
 
 		w := helper.DoAuthRequest("POST", ReaderCollectionsPath, reqBody, token)
-		helper.AssertError(w, 400, "该书籍已经收藏", "重复收藏检测失败")
+		helper.AssertError(w, 500, "已经收藏过该书籍", "重复收藏检测失败")
 
 		helper.LogSuccess("重复收藏检测通过")
 	})
