@@ -115,3 +115,4 @@ scripts/check-dependencies/check-deps
 __pycache__/
 *.pyc
 *.pyo
+.worktrees
