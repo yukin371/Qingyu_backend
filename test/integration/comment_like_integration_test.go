@@ -515,7 +515,7 @@ func TestIntegration_CommentListAndSorting(t *testing.T) {
 	eventBus := base.NewSimpleEventBus()
 	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
 
-	bookID := "book_list_test"
+	bookID := "507f1f77bcf86cd799439011"
 
 	// Step 1: 创建多条评论
 	t.Log("Step 1: 创建5条评论")

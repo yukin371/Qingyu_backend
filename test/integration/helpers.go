@@ -35,8 +35,8 @@ const (
 	RegisterPath = APIBasePath + "/register"
 
 	// 用户相关
-	UserProfilePath  = APIBasePath + "/users/profile"
-	UserPasswordPath = APIBasePath + "/users/password"
+	UserProfilePath  = APIBasePath + "/user/profile"
+	UserPasswordPath = APIBasePath + "/user/password"
 
 	// 阅读器相关
 	ReaderBooksPath          = APIBasePath + "/reader/books"
