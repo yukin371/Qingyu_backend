@@ -19,6 +19,7 @@ func TestMongoBookListQueryRepository_GetByID(t *testing.T) {
 	defer cleanup()
 
 	repo := mongodb.NewMongoBookListQueryRepository(db.Client(), db.Name())
+	mutationRepo := mongodb.NewMongoBookDataMutationRepository(db.Client(), db.Name())
 	ctx := context.Background()
 
 	// 创建测试书籍
@@ -28,7 +29,7 @@ func TestMongoBookListQueryRepository_GetByID(t *testing.T) {
 		Introduction: "测试简介",
 		Status:       bookstore.BookStatusOngoing,
 	}
-	err := repo.Create(ctx, book)
+	err := mutationRepo.Create(ctx, book)
 	require.NoError(t, err)
 
 	// Act

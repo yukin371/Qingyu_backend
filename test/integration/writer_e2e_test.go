@@ -5,6 +5,7 @@ package integration
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -398,9 +399,35 @@ func TestWriterE2E_ConcurrentOperations(t *testing.T) {
 // 辅助函数
 
 func setupTestDB(t *testing.T) (*mongodb.MongoRepositoryFactory, func()) {
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		candidates := []string{
+			"mongodb://admin:password@localhost:27017/?authSource=admin",
+			"mongodb://localhost:27017",
+		}
+		for _, uri := range candidates {
+			config := &mongodb.MongoConfig{
+				URI:      uri,
+				Database: "qingyu_integration_test",
+				Timeout:  5 * time.Second,
+			}
+			factory, err := mongodb.NewMongoRepositoryFactory(config)
+			if err == nil {
+				_ = factory.Close()
+				mongoURI = uri
+				break
+			}
+		}
+	}
+	require.NotEmpty(t, mongoURI, "应该能连接到MongoDB")
+	mongoDB := os.Getenv("MONGODB_DATABASE")
+	if mongoDB == "" {
+		mongoDB = "qingyu_integration_test"
+	}
+
 	config := &mongodb.MongoConfig{
-		URI:      "mongodb://localhost:27017",
-		Database: "qingyu_integration_test",
+		URI:      mongoURI,
+		Database: mongoDB,
 		Timeout:  30 * time.Second,
 	}
 

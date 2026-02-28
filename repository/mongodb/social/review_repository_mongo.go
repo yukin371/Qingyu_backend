@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,9 +21,13 @@ type MongoReviewRepository struct {
 }
 
 func sanitizeReviewQueryToken(field, value string) (string, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", fmt.Errorf("%s不能为空", field)
+	}
 	objectID, err := primitive.ObjectIDFromHex(value)
 	if err != nil {
-		return "", fmt.Errorf("%s格式不合法", field)
+		return value, nil
 	}
 	return objectID.Hex(), nil
 }
@@ -36,11 +41,11 @@ func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
 			if !ok {
 				return nil, fmt.Errorf("invalid %s filter type", key)
 			}
-			objectID, err := primitive.ObjectIDFromHex(valueStr)
+			normalized, err := sanitizeReviewQueryToken(key, valueStr)
 			if err != nil {
 				return nil, fmt.Errorf("invalid id: %w", err)
 			}
-			safeFilter[key] = objectID.Hex()
+			safeFilter[key] = normalized
 		case "is_public":
 			boolValue, ok := value.(bool)
 			if !ok {
