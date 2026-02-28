@@ -1,4 +1,4 @@
-﻿//go:build e2e
+//go:build e2e
 // +build e2e
 
 package data
@@ -39,4 +39,3 @@ func SetupTestEnvironment(t *testing.T) {
 		global.MongoClient = service.ServiceManager.GetMongoClient()
 	}
 }
-
