@@ -139,7 +139,7 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 
 	// 验证：封禁时必须提供原因
 	if status == users.UserStatusBanned && (req.BanReason == nil || *req.BanReason == "") {
-		response.BadRequest(c, "封禁用户时必须提供封禁原因")
+		response.BadRequest(c, "封禁用户时必须提供封禁原因", nil)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 			return
 		}
 		if err == adminservice.ErrBanReasonRequired {
-			response.BadRequest(c, "封禁用户时必须提供封禁原因")
+			response.BadRequest(c, "封禁用户时必须提供封禁原因", nil)
 			return
 		}
 		c.Error(err)

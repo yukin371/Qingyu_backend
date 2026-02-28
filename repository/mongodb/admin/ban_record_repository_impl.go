@@ -29,19 +29,20 @@ func NewBanRecordRepository(db *mongo.Database) adminrepo.BanRecordRepository {
 func (r *banRecordRepositoryImpl) Create(ctx context.Context, record *admin.BanRecord) error {
 	record.ID = primitive.NewObjectID()
 	record.TouchForCreate()
-	return r.Create(ctx, record)
+	return r.BaseMongoRepository.Create(ctx, record)
 }
 
 // GetByUserID 获取用户的封禁历史
 func (r *banRecordRepositoryImpl) GetByUserID(ctx context.Context, userID string, page, pageSize int) ([]*admin.BanRecord, int64, error) {
-	// 解析用户ID
-	userOID, err := r.ParseID(userID)
-	if err != nil {
-		return nil, 0, err
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
 	}
 
 	// 构造查询条件
-	filter := bson.M{"user_id": userOID}
+	filter := bson.M{"user_id": userID}
 
 	// 计算跳过数量
 	skip := int64((page - 1) * pageSize)
@@ -57,7 +58,7 @@ func (r *banRecordRepositoryImpl) GetByUserID(ctx context.Context, userID string
 	}
 
 	// 统计总数
-	total, err := r.Count(ctx, filter)
+	total, err := r.BaseMongoRepository.Count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -67,13 +68,8 @@ func (r *banRecordRepositoryImpl) GetByUserID(ctx context.Context, userID string
 
 // GetActiveBan 获取用户当前生效的封禁记录
 func (r *banRecordRepositoryImpl) GetActiveBan(ctx context.Context, userID string) (*admin.BanRecord, error) {
-	userOID, err := r.ParseID(userID)
-	if err != nil {
-		return nil, err
-	}
-
 	filter := bson.M{
-		"user_id": userOID,
+		"user_id": userID,
 		"action":  "ban",
 	}
 

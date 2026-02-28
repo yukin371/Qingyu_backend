@@ -38,12 +38,12 @@ import (
 	sharedStorage "Qingyu_backend/service/shared/storage"
 
 	versionAPI "Qingyu_backend/api/v1"
-	"Qingyu_backend/config"
 	financeApi "Qingyu_backend/api/v1/finance"
 	messagesApi "Qingyu_backend/api/v1/messages"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
+	"Qingyu_backend/config"
 	modelsMessaging "Qingyu_backend/models/messaging"
 	"Qingyu_backend/pkg/cache"
 	syncService "Qingyu_backend/pkg/sync"
@@ -600,9 +600,10 @@ func RegisterRoutes(r *gin.Engine) {
 	if mongoDB != nil {
 		// 创建用户管理仓储
 		userAdminRepo := adminrep.NewMongoUserAdminRepository(mongoDB)
+		banRecordRepo := adminrep.NewBanRecordRepository(mongoDB)
 
-		// 创建用户管理服务
-		userAdminSvc := adminservice.NewUserAdminService(userAdminRepo)
+		// 创建用户管理服务（带封禁记录）
+		userAdminSvc := adminservice.NewUserAdminServiceWithBanRepo(userAdminRepo, banRecordRepo)
 
 		// 创建权限管理仓储和服务
 		permissionRepo := authRep.NewMongoPermissionRepository(mongoDB)
