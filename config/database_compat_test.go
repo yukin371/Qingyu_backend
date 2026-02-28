@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -45,6 +46,28 @@ func TestDatabaseConfig_NewFormat(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "mongodb://localhost:27017", mongoConfig.URI)
 	assert.Equal(t, "qingyu", mongoConfig.Database)
+}
+
+// TestDatabaseConfig_NewFormatWithDefaults 测试新格式配置也会填充默认值
+func TestDatabaseConfig_NewFormatWithDefaults(t *testing.T) {
+	cfg := &DatabaseConfig{
+		Primary: DatabaseConnection{
+			Type: DatabaseTypeMongoDB,
+			MongoDB: &MongoDBConfig{
+				URI:      "mongodb://localhost:27017",
+				Database: "qingyu",
+			},
+		},
+	}
+
+	mongoConfig, err := cfg.GetMongoConfig()
+
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(100), mongoConfig.MaxPoolSize)
+	assert.Equal(t, uint64(5), mongoConfig.MinPoolSize)
+	assert.Equal(t, 10*time.Second, mongoConfig.ConnectTimeout)
+	assert.Equal(t, 30*time.Second, mongoConfig.ServerTimeout)
+	assert.Equal(t, int64(100), mongoConfig.ProfilerSizeMB)
 }
 
 // TestDatabaseConfig_Priority 测试新格式优先级高于旧格式

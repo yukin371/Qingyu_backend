@@ -23,9 +23,9 @@ func GetTestConfig() *TestConfig {
 		JWTSecret:           "test-secret-key-for-integration-testing-only-do-not-use-in-production",
 		JWTExpiration:       24 * time.Hour,
 		JWTRefreshDuration:  7 * 24 * time.Hour,
-		MongoURI:            "mongodb://localhost:27017",
-		DatabaseName:        "qingyu_test",
-		RedisAddr:           "localhost:6379",
+		MongoURI:            GetTestMongoDBURI(),
+		DatabaseName:        GetTestDatabaseName(),
+		RedisAddr:           GetEnvOrDefault("REDIS_ADDR", "localhost:6379"),
 		EmailServiceEnabled: false, // 测试中禁用真实邮件发送
 	}
 }

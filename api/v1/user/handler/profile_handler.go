@@ -100,6 +100,11 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	var req dto.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.BadRequest(c, "请求参数错误", err.Error())
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}
@@ -187,6 +192,11 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 	}
 
 	var req dto.UpdatePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		shared.BadRequest(c, "请求参数错误", err.Error())
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}

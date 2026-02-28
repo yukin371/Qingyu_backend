@@ -37,6 +37,11 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 //	@Router			/api/v1/shared/auth/register [post]
 func (api *AuthAPI) Register(c *gin.Context) {
 	var req auth.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}
@@ -221,6 +226,11 @@ type sendVerificationCodeRequest struct {
 // SendVerificationCode 发送注册邮箱验证码
 func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
 	var req sendVerificationCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}

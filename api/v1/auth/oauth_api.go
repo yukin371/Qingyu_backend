@@ -43,6 +43,11 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
 
 	var req OAuthAuthorizeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}
@@ -85,6 +90,11 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
 
 	var req OAuthCallbackRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
+		return
+	}
+
 	if !shared.ValidateRequest(c, &req) {
 		return
 	}
