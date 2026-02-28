@@ -5,6 +5,8 @@ import (
 	authInterface "Qingyu_backend/repository/interfaces/auth"
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var roleNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 // RoleRepositoryImpl 角色Repository实现
 type RoleRepositoryImpl struct {
@@ -69,16 +73,40 @@ func (r *RoleRepositoryImpl) GetRole(ctx context.Context, roleID string) (*authM
 
 // GetRoleByName 根据名称获取角色
 func (r *RoleRepositoryImpl) GetRoleByName(ctx context.Context, name string) (*authModel.Role, error) {
-	var role authModel.Role
-	err := r.roleCollection.FindOne(ctx, bson.M{"name": name}).Decode(&role)
+	safeName, err := sanitizeRoleName(name)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("角色不存在: %s", name)
-		}
-		return nil, fmt.Errorf("查询角色失败: %w", err)
+		return nil, err
 	}
 
-	return &role, nil
+	cursor, err := r.roleCollection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("查询角色失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var role authModel.Role
+		if decodeErr := cursor.Decode(&role); decodeErr != nil {
+			return nil, fmt.Errorf("解析角色失败: %w", decodeErr)
+		}
+		if role.Name == safeName {
+			return &role, nil
+		}
+	}
+
+	if err = cursor.Err(); err != nil {
+		return nil, fmt.Errorf("遍历角色失败: %w", err)
+	}
+
+	return nil, fmt.Errorf("角色不存在: %s", safeName)
+}
+
+func sanitizeRoleName(name string) (string, error) {
+	trimmed := strings.TrimSpace(name)
+	if !roleNamePattern.MatchString(trimmed) {
+		return "", fmt.Errorf("角色名称格式不合法")
+	}
+	return trimmed, nil
 }
 
 // UpdateRole 更新角色

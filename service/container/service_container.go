@@ -98,10 +98,10 @@ type ServiceContainer struct {
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
-	quotaService   *aiService.QuotaService
-	chatService    *aiService.ChatService
-	phase3Client   *aiService.Phase3Client
-	unifiedClient  *aiService.UnifiedClient
+	quotaService  *aiService.QuotaService
+	chatService   *aiService.ChatService
+	phase3Client  *aiService.Phase3Client
+	unifiedClient *aiService.UnifiedClient
 
 	// Shared services
 	authService           auth.AuthService
@@ -505,6 +505,10 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 
 // initMongoDB 初始化MongoDB客户端
 func (c *ServiceContainer) initMongoDB() error {
+	if config.GlobalConfig == nil {
+		return fmt.Errorf("全局配置未初始化")
+	}
+
 	cfg := config.GlobalConfig.Database
 	if cfg == nil {
 		return fmt.Errorf("数据库配置未找到")

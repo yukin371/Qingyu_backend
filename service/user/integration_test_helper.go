@@ -13,9 +13,9 @@ import (
 
 	"Qingyu_backend/config"
 	usersModel "Qingyu_backend/models/users"
-	repoUser "Qingyu_backend/repository/mongodb/user"
-	roleRepo "Qingyu_backend/repository/mongodb/auth"
 	authInterface "Qingyu_backend/repository/interfaces/auth"
+	roleRepo "Qingyu_backend/repository/mongodb/auth"
+	repoUser "Qingyu_backend/repository/mongodb/user"
 )
 
 // IntegrationTestEnvironment 集成测试环境
@@ -64,12 +64,41 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 				Mode: "test",
 			},
 		}
+	} else {
+		// 确保测试使用当前测试配置，避免受其他测试污染
+		if config.GlobalConfig.JWT == nil {
+			config.GlobalConfig.JWT = &config.JWTConfig{}
+		}
+		config.GlobalConfig.JWT.Secret = testCfg.JWTSecret
+		config.GlobalConfig.JWT.ExpirationHours = int(testCfg.JWTExpiration.Hours())
+
+		if config.GlobalConfig.Database == nil {
+			config.GlobalConfig.Database = &config.DatabaseConfig{}
+		}
+		config.GlobalConfig.Database.Type = "mongodb"
+		config.GlobalConfig.Database.Primary = config.DatabaseConnection{
+			Type: config.DatabaseTypeMongoDB,
+			MongoDB: &config.MongoDBConfig{
+				URI:      testCfg.MongoURI,
+				Database: testCfg.DatabaseName,
+			},
+		}
 	}
 
 	// 创建MongoDB客户端（不使用service container避免循环依赖）
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(testCfg.MongoURI))
-	require.NoError(t, err, "连接MongoDB失败")
+	connectCtx, connectCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer connectCancel()
+	client, err := mongo.Connect(connectCtx, options.Client().ApplyURI(testCfg.MongoURI))
+	if err != nil {
+		t.Skipf("MongoDB不可用，跳过集成测试: %v", err)
+	}
+
+	pingCtx, pingCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer pingCancel()
+	if err := client.Ping(pingCtx, nil); err != nil {
+		_ = client.Disconnect(context.Background())
+		t.Skipf("MongoDB不可用，跳过集成测试: %v", err)
+	}
 
 	db := client.Database(testCfg.DatabaseName)
 
@@ -85,6 +114,7 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 	require.True(t, ok, "UserService类型转换失败")
 
 	// 初始化UserService
+	ctx := context.Background()
 	err = userServiceImpl.Initialize(ctx)
 	require.NoError(t, err, "初始化UserService失败")
 
@@ -287,7 +317,7 @@ func GetEnvOrDefault(key, defaultValue string) string {
 // IsDockerEnvironment 检测是否在Docker环境中运行
 func IsDockerEnvironment() bool {
 	return GetEnvOrDefault("DOCKER_ENV", "false") == "true" ||
-		   os.Getenv("MONGODB_URI") != ""
+		os.Getenv("MONGODB_URI") != ""
 }
 
 // GetTestMongoDBURI 获取测试用MongoDB URI

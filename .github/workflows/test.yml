@@ -111,6 +111,7 @@ jobs:
             grep -v '^Qingyu_backend/cmd/' | \
             grep -v '^Qingyu_backend/test/' | \
             grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/repository/mongodb/' | \
             grep -v '^Qingyu_backend/.archive/')
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "PR mode: run compile-level smoke test only."

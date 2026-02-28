@@ -139,7 +139,7 @@ test-unit:
 	go test -v -race -count=1 \
 		-coverprofile=coverage.out \
 		-covermode=atomic \
-		./service/... ./api/... ./pkg/... ./middleware/...
+		./service/... ./api/... ./pkg/... ./pkg/middleware/...
 
 # 运行集成测试
 test-integration:

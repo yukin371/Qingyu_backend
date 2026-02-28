@@ -117,6 +117,29 @@ func (c *DatabaseConfig) normalizeConfig() error {
 
 	// 优先使用新格式（嵌套）
 	if c.Primary.Type == DatabaseTypeMongoDB && c.Primary.MongoDB != nil {
+		// 新格式也要补齐默认值，避免测试场景下超时为0导致立即失败
+		if c.Primary.MongoDB.MaxPoolSize == 0 {
+			c.Primary.MongoDB.MaxPoolSize = 100
+		}
+		if c.Primary.MongoDB.MinPoolSize == 0 {
+			c.Primary.MongoDB.MinPoolSize = 5
+		}
+		if c.Primary.MongoDB.ConnectTimeout == 0 {
+			c.Primary.MongoDB.ConnectTimeout = 10 * time.Second
+		}
+		if c.Primary.MongoDB.ServerTimeout == 0 {
+			c.Primary.MongoDB.ServerTimeout = 30 * time.Second
+		}
+		if c.Primary.MongoDB.SlowMS == 0 {
+			c.Primary.MongoDB.SlowMS = 100
+		}
+		if c.Primary.MongoDB.ProfilerSizeMB == 0 {
+			c.Primary.MongoDB.ProfilerSizeMB = 100
+		}
+
+		if err := c.Primary.MongoDB.Validate(); err != nil {
+			return fmt.Errorf("主数据库MongoDB配置无效: %w", err)
+		}
 		c.mongoConfig = c.Primary.MongoDB
 		c.resolved = true
 		return nil
