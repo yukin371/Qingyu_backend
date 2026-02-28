@@ -5,7 +5,6 @@ import (
 	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,13 +13,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var financeSafeUserIDPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
-
 func sanitizeFinanceUserID(userID string) (string, error) {
-	if !financeSafeUserIDPattern.MatchString(userID) {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
 		return "", fmt.Errorf("user_id格式不合法")
 	}
-	return userID, nil
+	return objectID.Hex(), nil
 }
 
 // WalletRepositoryImpl 钱包Repository实现
