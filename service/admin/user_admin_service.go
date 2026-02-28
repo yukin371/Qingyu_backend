@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/admin"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
@@ -125,17 +123,18 @@ func (s *UserAdminServiceImpl) GetUserList(ctx context.Context, filter *adminrep
 		pageSize = 20
 	}
 
-	return s.userRepo.List(ctx, filter, page, pageSize)
+	// 使用新接口 ListWithPagination
+	return s.userRepo.ListWithPagination(ctx, filter, page, pageSize)
 }
 
 // GetUserDetail 获取用户详情
 func (s *UserAdminServiceImpl) GetUserDetail(ctx context.Context, userID string) (*users.User, error) {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return nil, ErrInvalidUserID
 	}
 
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
@@ -145,13 +144,13 @@ func (s *UserAdminServiceImpl) GetUserDetail(ctx context.Context, userID string)
 
 // UpdateUserStatus 更新用户状态
 func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID string, status users.UserStatus) error {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return ErrInvalidUserID
 	}
 
 	// 检查用户是否存在
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
@@ -161,18 +160,18 @@ func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID stri
 		return ErrCannotModifySuperAdmin
 	}
 
-	return s.userRepo.UpdateStatus(ctx, id, status)
+	return s.userRepo.UpdateStatus(ctx, userID, status)
 }
 
 // UpdateUserStatusWithReason 更新用户状态（带封禁原因记录）
 func (s *UserAdminServiceImpl) UpdateUserStatusWithReason(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) error {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return ErrInvalidUserID
 	}
 
 	// 检查用户是否存在
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
@@ -188,26 +187,35 @@ func (s *UserAdminServiceImpl) UpdateUserStatusWithReason(ctx context.Context, u
 	}
 
 	oldStatus := user.Status
-	user.Status = status
 	now := time.Now()
 
-	// 封禁逻辑：设置封禁字段
+	// 准备更新字段
+	updates := make(map[string]interface{})
+
 	if status == users.UserStatusBanned {
-		user.BannedAt = &now
-		user.BannedBy = operatorID
+		// 封禁逻辑：设置封禁字段
+		updates["banned_at"] = &now
+		updates["banned_by"] = operatorID
 		if banReason != nil {
-			user.BanReason = *banReason
+			updates["ban_reason"] = *banReason
 		}
 	} else if oldStatus == users.UserStatusBanned {
 		// 解封：清除封禁字段
-		user.BannedAt = nil
-		user.BannedBy = ""
-		user.BanReason = ""
+		updates["banned_at"] = nil
+		updates["banned_by"] = ""
+		updates["ban_reason"] = ""
 	}
 
-	// 更新用户
-	if err := s.userRepo.Update(ctx, id, user); err != nil {
+	// 更新用户状态
+	if err := s.userRepo.UpdateStatus(ctx, userID, status); err != nil {
 		return err
+	}
+
+	// 更新其他字段（如果有）
+	if len(updates) > 0 {
+		if err := s.userRepo.Update(ctx, userID, updates); err != nil {
+			return err
+		}
 	}
 
 	// 记录封禁历史
@@ -242,8 +250,8 @@ func (s *UserAdminServiceImpl) recordBanHistory(ctx context.Context, userID stri
 
 // UpdateUserRole 更新用户角色
 func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role string) error {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return ErrInvalidUserID
 	}
 
@@ -253,7 +261,7 @@ func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role 
 	}
 
 	// 检查用户是否存在
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
@@ -263,18 +271,22 @@ func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role 
 		return ErrCannotModifySuperAdmin
 	}
 
-	return s.userRepo.UpdateRoles(ctx, id, role)
+	// 注意：UpdateRoles 仍使用 ObjectID，需要转换
+	// 这里是一个临时方案，实际上应该让 Repository 也接受 string ID
+	// 但为了保持 admin 特有方法的一致性，这里保留 ObjectID
+	// TODO: 将 UpdateRoles 也改为接受 string ID
+	return s.userRepo.UpdateRoles(ctx, user.ID, role)
 }
 
 // DeleteUser 删除用户
 func (s *UserAdminServiceImpl) DeleteUser(ctx context.Context, userID string) error {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return ErrInvalidUserID
 	}
 
 	// 检查用户是否存在
-	user, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
@@ -284,32 +296,33 @@ func (s *UserAdminServiceImpl) DeleteUser(ctx context.Context, userID string) er
 		return ErrCannotModifySuperAdmin
 	}
 
-	return s.userRepo.Delete(ctx, id)
+	return s.userRepo.Delete(ctx, userID)
 }
 
 // BatchUpdateStatus 批量更新用户状态
 func (s *UserAdminServiceImpl) BatchUpdateStatus(ctx context.Context, userIDs []string, status users.UserStatus) error {
-	ids := make([]primitive.ObjectID, 0, len(userIDs))
+	// 过滤有效的 ID
+	validIDs := make([]string, 0, len(userIDs))
 	for _, idStr := range userIDs {
-		id, err := primitive.ObjectIDFromHex(idStr)
-		if err != nil {
-			continue // 跳过无效ID
+		if idStr == "" {
+			continue // 跳过空ID
 		}
 
 		// 检查是否是管理员
-		user, err := s.userRepo.GetByID(ctx, id)
+		user, err := s.userRepo.GetByID(ctx, idStr)
 		if err == nil && user.HasRole("admin") {
 			continue // 跳过管理员
 		}
 
-		ids = append(ids, id)
+		validIDs = append(validIDs, idStr)
 	}
 
-	if len(ids) == 0 {
+	if len(validIDs) == 0 {
 		return fmt.Errorf("no valid user IDs")
 	}
 
-	return s.userRepo.BatchUpdateStatus(ctx, ids, status)
+	// 新接口直接接受 []string
+	return s.userRepo.BatchUpdateStatus(ctx, validIDs, status)
 }
 
 // BatchDeleteUsers 批量删除用户
@@ -319,8 +332,8 @@ func (s *UserAdminServiceImpl) BatchDeleteUsers(ctx context.Context, userIDs []s
 
 // GetUserActivities 获取用户活动记录
 func (s *UserAdminServiceImpl) GetUserActivities(ctx context.Context, userID string, page, pageSize int) ([]*users.UserActivity, int64, error) {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return nil, 0, ErrInvalidUserID
 	}
 
@@ -331,28 +344,42 @@ func (s *UserAdminServiceImpl) GetUserActivities(ctx context.Context, userID str
 		pageSize = 20
 	}
 
-	return s.userRepo.GetActivities(ctx, id, page, pageSize)
+	// GetActivities 仍使用 ObjectID，需要转换
+	// TODO: 将 GetActivities 也改为接受 string ID
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, 0, ErrUserNotFound
+	}
+
+	return s.userRepo.GetActivities(ctx, user.ID, page, pageSize)
 }
 
 // GetUserStatistics 获取用户统计信息
 func (s *UserAdminServiceImpl) GetUserStatistics(ctx context.Context, userID string) (*users.UserStatistics, error) {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return nil, ErrInvalidUserID
 	}
 
-	return s.userRepo.GetStatistics(ctx, id)
+	// GetStatistics 仍使用 ObjectID，需要转换
+	// TODO: 将 GetStatistics 也改为接受 string ID
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	return s.userRepo.GetStatistics(ctx, user.ID)
 }
 
 // ResetUserPassword 重置用户密码
 func (s *UserAdminServiceImpl) ResetUserPassword(ctx context.Context, userID string) (string, error) {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	// 验证 ID 格式
+	if userID == "" {
 		return "", ErrInvalidUserID
 	}
 
 	// 检查用户是否存在
-	_, err = s.userRepo.GetByID(ctx, id)
+	_, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return "", ErrUserNotFound
 	}
@@ -363,7 +390,14 @@ func (s *UserAdminServiceImpl) ResetUserPassword(ctx context.Context, userID str
 		return "", fmt.Errorf("failed to generate password: %w", err)
 	}
 
-	if err := s.userRepo.ResetPassword(ctx, id, newPassword); err != nil {
+	// ResetPassword 仍使用 ObjectID，需要转换
+	// TODO: 将 ResetPassword 也改为接受 string ID
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return "", ErrUserNotFound
+	}
+
+	if err := s.userRepo.ResetPassword(ctx, user.ID, newPassword); err != nil {
 		return "", err
 	}
 
@@ -400,7 +434,8 @@ func (s *UserAdminServiceImpl) GetUsersByRole(ctx context.Context, role string, 
 
 // CountByStatus 按状态统计用户数量
 func (s *UserAdminServiceImpl) CountByStatus(ctx context.Context) (map[string]int64, error) {
-	return s.userRepo.CountByStatus(ctx)
+	// 使用新接口 CountByStatusMap
+	return s.userRepo.CountByStatusMap(ctx)
 }
 
 // GetRecentUsers 获取最近注册的用户
