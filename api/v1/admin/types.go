@@ -29,6 +29,7 @@ type AdminUpdateUserRequest struct {
 	Phone         *string `json:"phone,omitempty" validate:"omitempty,e164"`
 	Role          *string `json:"role,omitempty" validate:"omitempty,oneof=reader author admin"`
 	Status        *string `json:"status,omitempty" validate:"omitempty"`
+	BanReason     *string `json:"banReason,omitempty" validate:"omitempty,max=500"`
 	EmailVerified *bool   `json:"email_verified,omitempty"`
 	PhoneVerified *bool   `json:"phone_verified,omitempty"`
 }

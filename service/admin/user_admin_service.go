@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/models/admin"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
 )
@@ -25,6 +26,8 @@ var (
 	ErrInvalidRole = fmt.Errorf("invalid role")
 	// ErrInvalidBatchCount 无效的批量创建数量
 	ErrInvalidBatchCount = fmt.Errorf("invalid batch count")
+	// ErrBanReasonRequired 封禁时必须提供原因
+	ErrBanReasonRequired = fmt.Errorf("ban reason is required when banning user")
 )
 
 const (
@@ -50,6 +53,9 @@ type UserAdminService interface {
 
 	// UpdateUserStatus 更新用户状态
 	UpdateUserStatus(ctx context.Context, userID string, status users.UserStatus) error
+
+	// UpdateUserStatusWithReason 更新用户状态（带封禁原因记录）
+	UpdateUserStatusWithReason(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) error
 
 	// UpdateUserRole 更新用户角色
 	UpdateUserRole(ctx context.Context, userID, role string) error
@@ -90,13 +96,23 @@ type UserAdminService interface {
 
 // UserAdminServiceImpl 用户管理服务实现
 type UserAdminServiceImpl struct {
-	userRepo adminrepo.UserAdminRepository
+	userRepo     adminrepo.UserAdminRepository
+	banRecordRepo adminrepo.BanRecordRepository
 }
 
 // NewUserAdminService 创建用户管理服务
 func NewUserAdminService(userRepo adminrepo.UserAdminRepository) UserAdminService {
 	return &UserAdminServiceImpl{
-		userRepo: userRepo,
+		userRepo:     userRepo,
+		banRecordRepo: nil, // 需要通过依赖注入设置
+	}
+}
+
+// NewUserAdminServiceWithBanRepo 创建带封禁记录仓储的用户管理服务
+func NewUserAdminServiceWithBanRepo(userRepo adminrepo.UserAdminRepository, banRecordRepo adminrepo.BanRecordRepository) UserAdminService {
+	return &UserAdminServiceImpl{
+		userRepo:     userRepo,
+		banRecordRepo: banRecordRepo,
 	}
 }
 
@@ -146,6 +162,82 @@ func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID stri
 	}
 
 	return s.userRepo.UpdateStatus(ctx, id, status)
+}
+
+// UpdateUserStatusWithReason 更新用户状态（带封禁原因记录）
+func (s *UserAdminServiceImpl) UpdateUserStatusWithReason(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return ErrInvalidUserID
+	}
+
+	// 检查用户是否存在
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// 不能修改管理员的状态
+	if user.HasRole("admin") {
+		return ErrCannotModifySuperAdmin
+	}
+
+	// 封禁时必须提供原因
+	if status == users.UserStatusBanned && (banReason == nil || *banReason == "") {
+		return ErrBanReasonRequired
+	}
+
+	oldStatus := user.Status
+	user.Status = status
+	now := time.Now()
+
+	// 封禁逻辑：设置封禁字段
+	if status == users.UserStatusBanned {
+		user.BannedAt = &now
+		user.BannedBy = operatorID
+		if banReason != nil {
+			user.BanReason = *banReason
+		}
+	} else if oldStatus == users.UserStatusBanned {
+		// 解封：清除封禁字段
+		user.BannedAt = nil
+		user.BannedBy = ""
+		user.BanReason = ""
+	}
+
+	// 更新用户
+	if err := s.userRepo.Update(ctx, id, user); err != nil {
+		return err
+	}
+
+	// 记录封禁历史
+	if s.banRecordRepo != nil {
+		s.recordBanHistory(ctx, userID, status, operatorID, banReason)
+	}
+
+	return nil
+}
+
+// recordBanHistory 记录封禁历史
+func (s *UserAdminServiceImpl) recordBanHistory(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) {
+	action := "unban"
+	reason := "解除封禁"
+	if status == users.UserStatusBanned {
+		action = "ban"
+		if banReason != nil {
+			reason = *banReason
+		}
+	}
+
+	record := &admin.BanRecord{
+		UserID:     userID,
+		Action:     action,
+		Reason:     reason,
+		OperatorID: operatorID,
+	}
+
+	// 忽略错误，记录失败不应影响主流程
+	_ = s.banRecordRepo.Create(ctx, record)
 }
 
 // UpdateUserRole 更新用户角色

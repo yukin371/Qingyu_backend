@@ -44,6 +44,11 @@ func (m *MockUserAdminService) UpdateUserStatus(ctx context.Context, userID stri
 	return args.Error(0)
 }
 
+func (m *MockUserAdminService) UpdateUserStatusWithReason(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) error {
+	args := m.Called(ctx, userID, status, operatorID, banReason)
+	return args.Error(0)
+}
+
 func (m *MockUserAdminService) UpdateUserRole(ctx context.Context, userID, role string) error {
 	args := m.Called(ctx, userID, role)
 	return args.Error(0)
@@ -335,7 +340,7 @@ func TestUserAdminAPI_UpdateUserStatus_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	reqBody := UpdateUserStatusRequest{Status: "active"}
 
-	mockService.On("UpdateUserStatus", mock.Anything, userID, users.UserStatus("active")).Return(nil)
+	mockService.On("UpdateUserStatusWithReason", mock.Anything, userID, users.UserStatus("active"), "", (*string)(nil)).Return(nil)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -390,6 +395,59 @@ func TestUserAdminAPI_UpdateUserStatus_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
+func TestUserAdminAPI_UpdateUserStatus_BanWithoutReason(t *testing.T) {
+	// Given
+	mockService := new(MockUserAdminService)
+	router := setupUserAdminTestRouter(mockService)
+
+	userID := primitive.NewObjectID().Hex()
+	reqBody := UpdateUserStatusRequest{Status: "banned"}
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PUT", "/api/v1/admin/users/"+userID+"/status", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockService.AssertNotCalled(t, "UpdateUserStatusWithReason", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestUserAdminAPI_UpdateUserStatus_BanWithReason(t *testing.T) {
+	// Given
+	mockService := new(MockUserAdminService)
+	router := setupUserAdminTestRouter(mockService)
+
+	userID := primitive.NewObjectID().Hex()
+	reason := "恶意刷接口"
+	reqBody := UpdateUserStatusRequest{
+		Status:    "banned",
+		BanReason: &reason,
+	}
+
+	mockService.On(
+		"UpdateUserStatusWithReason",
+		mock.Anything,
+		userID,
+		users.UserStatus("banned"),
+		"",
+		mock.MatchedBy(func(v *string) bool { return v != nil && *v == reason }),
+	).Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PUT", "/api/v1/admin/users/"+userID+"/status", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
 func TestUserAdminAPI_UpdateUserStatus_UserNotFound(t *testing.T) {
 	// Given
 	mockService := new(MockUserAdminService)
@@ -398,7 +456,7 @@ func TestUserAdminAPI_UpdateUserStatus_UserNotFound(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	reqBody := UpdateUserStatusRequest{Status: "active"}
 
-	mockService.On("UpdateUserStatus", mock.Anything, userID, users.UserStatus("active")).Return(adminservice.ErrUserNotFound)
+	mockService.On("UpdateUserStatusWithReason", mock.Anything, userID, users.UserStatus("active"), "", (*string)(nil)).Return(adminservice.ErrUserNotFound)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -421,7 +479,7 @@ func TestUserAdminAPI_UpdateUserStatus_CannotModifySuperAdmin(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	reqBody := UpdateUserStatusRequest{Status: "active"}
 
-	mockService.On("UpdateUserStatus", mock.Anything, userID, users.UserStatus("active")).Return(adminservice.ErrCannotModifySuperAdmin)
+	mockService.On("UpdateUserStatusWithReason", mock.Anything, userID, users.UserStatus("active"), "", (*string)(nil)).Return(adminservice.ErrCannotModifySuperAdmin)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
