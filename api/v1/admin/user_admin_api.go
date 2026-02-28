@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/pkg/response"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
@@ -131,14 +132,37 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 
+	// 获取当前操作者ID
+	operatorID := shared.GetUserIDOptional(c)
+
 	status := users.UserStatus(req.Status)
-	if err := api.userAdminService.UpdateUserStatus(c.Request.Context(), userID, status); err != nil {
+
+	// 验证：封禁时必须提供原因
+	if status == users.UserStatusBanned && (req.BanReason == nil || *req.BanReason == "") {
+		response.BadRequest(c, "封禁用户时必须提供封禁原因")
+		return
+	}
+
+	// 调用带原因的更新方法
+	err := api.userAdminService.UpdateUserStatusWithReason(
+		c.Request.Context(),
+		userID,
+		status,
+		operatorID,
+		req.BanReason,
+	)
+
+	if err != nil {
 		if err == adminservice.ErrUserNotFound {
 			response.NotFound(c, "用户不存在")
 			return
 		}
 		if err == adminservice.ErrCannotModifySuperAdmin {
 			response.Forbidden(c, "权限不足")
+			return
+		}
+		if err == adminservice.ErrBanReasonRequired {
+			response.BadRequest(c, "封禁用户时必须提供封禁原因")
 			return
 		}
 		c.Error(err)
@@ -481,7 +505,8 @@ func (api *UserAdminAPI) CountByStatus(c *gin.Context) {
 
 // UpdateUserStatusRequest 更新用户状态请求
 type UpdateUserStatusRequest struct {
-	Status string `json:"status" binding:"required"`
+	Status    string  `json:"status" binding:"required"`
+	BanReason *string `json:"banReason,omitempty"`
 }
 
 // UpdateUserRoleRequest 更新用户角色请求

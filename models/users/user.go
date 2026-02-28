@@ -38,6 +38,11 @@ type User struct {
 	Nickname string     `bson:"nickname,omitempty" json:"nickname,omitempty" validate:"max=50"`
 	Bio      string     `bson:"bio,omitempty" json:"bio,omitempty" validate:"max=500"`
 
+	// 封禁相关字段
+	BanReason  string     `bson:"ban_reason,omitempty" json:"banReason,omitempty"`        // 封禁原因
+	BannedAt   *time.Time `bson:"banned_at,omitempty" json:"bannedAt,omitempty"`           // 封禁时间
+	BannedBy   string     `bson:"banned_by,omitempty" json:"bannedBy,omitempty"`           // 封禁操作者ID
+
 	// 个人资料扩展字段
 	Gender   string     `bson:"gender,omitempty" json:"gender,omitempty" validate:"omitempty,oneof=male female other"` // 性别
 	Birthday *time.Time `bson:"birthday,omitempty" json:"birthday,omitempty"`                                         // 生日
