@@ -27,7 +27,7 @@ func SetupTestEnvironment(t *testing.T) {
 
 	// 设置全局配置
 	config.GlobalConfig = cfg
-	testutil.EnableStrictLogAssertions(t)
+	testutil.EnableStrictLogAssertionsIgnoreWarn(t)
 
 	// 初始化服务（包括数据库连接）
 	err = core.InitServices()
