@@ -56,10 +56,14 @@ func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstor
 	log.Printf("[DEBUG] GetByID(%s) database: %s, collection: %s\n",
 		id, r.GetDB().Name(), r.GetCollection().Name())
 
-	// 由于数据库中的 _id 字段是字符串类型，直接使用字符串查询
-	// 而不是转换为 ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Printf("[DEBUG] GetByID(%s) invalid object id: %v\n", id, err)
+		return nil, nil
+	}
+
 	var book bookstore.Book
-	err := r.GetCollection().FindOne(ctx, bson.M{"_id": id}).Decode(&book)
+	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&book)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			log.Printf("[DEBUG] GetByID(%s) no documents found for query: {_id: %s}\n", id, id)

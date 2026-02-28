@@ -1,7 +1,11 @@
 package shared
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -17,6 +21,36 @@ func GetValidator() *validator.Validate {
 // ValidateRequest 验证请求并返回友好错误
 // 注意：此函数不会绑定请求体，假设已经通过BindJSON等函数完成绑定
 func ValidateRequest(c *gin.Context, req interface{}) bool {
+	// 向后兼容：自动尝试绑定 JSON 请求体。
+	// 旧代码大量直接调用 ValidateRequest 而未显式绑定，导致字段始终为空。
+	method := c.Request.Method
+	contentType := strings.ToLower(c.GetHeader("Content-Type"))
+	shouldBindJSON := (method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch) &&
+		strings.Contains(contentType, "application/json")
+	if shouldBindJSON {
+		bodyBytes, err := c.GetRawData()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    400,
+				Message: "请求体读取失败",
+				Error:   err.Error(),
+			})
+			return false
+		}
+		if len(bodyBytes) > 0 {
+			if err := json.Unmarshal(bodyBytes, req); err != nil {
+				c.JSON(http.StatusBadRequest, ErrorResponse{
+					Code:    400,
+					Message: "请求体格式错误",
+					Error:   err.Error(),
+				})
+				return false
+			}
+			// 还原 Body，避免后续中间件/处理器读取为空。
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		}
+	}
+
 	// 验证请求
 	validationErrors := appValidator.ValidateStructWithErrors(req)
 	if len(validationErrors) > 0 {

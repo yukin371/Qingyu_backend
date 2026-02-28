@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,9 +23,13 @@ type MongoFollowRepository struct {
 }
 
 func sanitizeFollowQueryToken(field, value string) (string, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", fmt.Errorf("%s不能为空", field)
+	}
 	objectID, err := primitive.ObjectIDFromHex(value)
 	if err != nil {
-		return "", fmt.Errorf("%s格式不合法", field)
+		return value, nil
 	}
 	return objectID.Hex(), nil
 }

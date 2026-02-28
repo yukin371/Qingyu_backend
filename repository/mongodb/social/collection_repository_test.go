@@ -33,8 +33,8 @@ func TestCollectionRepository_Create(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:   "user_create_" + primitive.NewObjectID().Hex(),
-		BookID:   "book_create_" + primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
+		BookID:   primitive.NewObjectID().Hex(),
 		FolderID: "",
 		Tags:     []string{"玄幻", "推荐"},
 		Note:     "这是一本好书",
@@ -57,8 +57,8 @@ func TestCollectionRepository_Create_Duplicate(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_dup_" + primitive.NewObjectID().Hex()
-	bookID := "book_dup_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	collection := &social.Collection{
 		UserID:   userID,
 		BookID:   bookID,
@@ -125,8 +125,8 @@ func TestCollectionRepository_GetByID(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:   "user_getbyid_" + primitive.NewObjectID().Hex(),
-		BookID:   "book_getbyid_" + primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
+		BookID:   primitive.NewObjectID().Hex(),
 		IsPublic: false,
 	}
 	err := repo.Create(ctx, collection)
@@ -180,8 +180,8 @@ func TestCollectionRepository_GetByUserAndBook(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_getuserandbook_" + primitive.NewObjectID().Hex()
-	bookID := "book_getuserandbook_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 	collection := &social.Collection{
 		UserID:   userID,
 		BookID:   bookID,
@@ -205,9 +205,11 @@ func TestCollectionRepository_GetByUserAndBook_NotCollected(t *testing.T) {
 	// Arrange
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	// Act
-	found, err := repo.GetByUserAndBook(ctx, "user123", "book123")
+	found, err := repo.GetByUserAndBook(ctx, userID, bookID)
 
 	// Assert
 	require.NoError(t, err)
@@ -220,7 +222,7 @@ func TestCollectionRepository_GetCollectionsByUser(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_getcollections_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	for i := 0; i < 5; i++ {
 		collection := &social.Collection{
 			UserID:   userID,
@@ -247,7 +249,7 @@ func TestCollectionRepository_GetCollectionsByUser_WithFolder(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_withfolder_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	folder := &social.CollectionFolder{
 		UserID:      userID,
 		Name:        "测试收藏夹",
@@ -286,7 +288,7 @@ func TestCollectionRepository_GetCollectionsByTag(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_getbytag_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	tag := "玄幻"
 	for i := 0; i < 3; i++ {
 		collection := &social.Collection{
@@ -319,8 +321,8 @@ func TestCollectionRepository_Update(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:   "user_update_" + primitive.NewObjectID().Hex(),
-		BookID:   "book_update_" + primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
+		BookID:   primitive.NewObjectID().Hex(),
 		IsPublic: false,
 	}
 	err := repo.Create(ctx, collection)
@@ -371,8 +373,8 @@ func TestCollectionRepository_Delete(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:   "user_delete_" + primitive.NewObjectID().Hex(),
-		BookID:   "book_delete_" + primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
+		BookID:   primitive.NewObjectID().Hex(),
 		IsPublic: false,
 	}
 	err := repo.Create(ctx, collection)
@@ -417,7 +419,7 @@ func TestCollectionRepository_CreateFolder(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_createfolder_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "我的收藏夹",
 		Description: "收藏我喜欢的书籍",
 		IsPublic:    false,
@@ -480,7 +482,7 @@ func TestCollectionRepository_GetFolderByID(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_getfolderbyid_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "测试收藏夹",
 		Description: "测试用",
 		IsPublic:    false,
@@ -521,7 +523,7 @@ func TestCollectionRepository_GetFoldersByUser(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_getfolders_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	for i := 0; i < 3; i++ {
 		folder := &social.CollectionFolder{
 			UserID:      userID,
@@ -549,7 +551,7 @@ func TestCollectionRepository_UpdateFolder(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_updatefolder_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "原始名称",
 		Description: "原始描述",
 		IsPublic:    false,
@@ -602,7 +604,7 @@ func TestCollectionRepository_DeleteFolder(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_deletefolder_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "待删除收藏夹",
 		Description: "测试用",
 		IsPublic:    false,
@@ -645,7 +647,7 @@ func TestCollectionRepository_IncrementFolderBookCount(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_increment_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "测试收藏夹",
 		Description: "测试用",
 		IsPublic:    false,
@@ -672,7 +674,7 @@ func TestCollectionRepository_DecrementFolderBookCount(t *testing.T) {
 	defer cleanup()
 
 	folder := &social.CollectionFolder{
-		UserID:      "user_decrement_" + primitive.NewObjectID().Hex(),
+		UserID:      primitive.NewObjectID().Hex(),
 		Name:        "测试收藏夹",
 		Description: "测试用",
 		IsPublic:    false,
@@ -797,7 +799,7 @@ func TestCollectionRepository_CountUserCollections(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_count_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	for i := 0; i < 5; i++ {
 		collection := &social.Collection{
 			UserID:   userID,
@@ -857,7 +859,7 @@ func TestCollectionRepository_CompleteWorkflow(t *testing.T) {
 	repo, ctx, cleanup := setupCollectionRepo(t)
 	defer cleanup()
 
-	userID := "user_workflow_" + primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 
 	// 1. 创建收藏夹
 	folder := &social.CollectionFolder{
@@ -927,8 +929,8 @@ func TestCollectionRepository_AutoSetTimestamp(t *testing.T) {
 	defer cleanup()
 
 	collection := &social.Collection{
-		UserID:   "user_timestamp_" + primitive.NewObjectID().Hex(),
-		BookID:   "book_timestamp_" + primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
+		BookID:   primitive.NewObjectID().Hex(),
 		IsPublic: false,
 	}
 	beforeCreate := time.Now()
