@@ -5,6 +5,7 @@ import (
 	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +13,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var financeSafeUserIDPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]{1,128}$`)
+
+func sanitizeFinanceUserID(userID string) (string, error) {
+	if !financeSafeUserIDPattern.MatchString(userID) {
+		return "", fmt.Errorf("user_id格式不合法")
+	}
+	return userID, nil
+}
 
 // WalletRepositoryImpl 钱包Repository实现
 type WalletRepositoryImpl struct {
@@ -54,11 +64,16 @@ func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *finance
 // GetWallet 获取钱包（根据用户ID）
 // 注意：这是接口定义的方法，使用userID作为参数
 func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error) {
+	safeUserID, err := sanitizeFinanceUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
 	var wallet financeModel.Wallet
-	err := r.walletCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&wallet)
+	err = r.walletCollection.FindOne(ctx, bson.M{"user_id": safeUserID}).Decode(&wallet)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("钱包不存在: user %s", userID)
+			return nil, fmt.Errorf("钱包不存在")
 		}
 		return nil, fmt.Errorf("查询钱包失败: %w", err)
 	}
@@ -113,10 +128,15 @@ func (r *WalletRepositoryImpl) UpdateWallet(ctx context.Context, walletID string
 
 // UpdateBalance 更新余额（原子操作）
 func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string, amount int64) error {
+	safeUserID, err := sanitizeFinanceUserID(userID)
+	if err != nil {
+		return err
+	}
+
 	// 使用user_id查询钱包
 	result, err := r.walletCollection.UpdateOne(
 		ctx,
-		bson.M{"user_id": userID},
+		bson.M{"user_id": safeUserID},
 		bson.M{
 			"$inc": bson.M{"balance": amount},
 			"$set": bson.M{"updated_at": time.Now()},
@@ -127,7 +147,7 @@ func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string,
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("钱包不存在: user %s", userID)
+		return fmt.Errorf("钱包不存在")
 	}
 
 	return nil

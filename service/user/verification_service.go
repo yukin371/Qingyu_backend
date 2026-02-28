@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	"Qingyu_backend/config"
 	usersModel "Qingyu_backend/models/users"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/channels"
-	"Qingyu_backend/config"
 	"go.uber.org/zap"
 )
 
 // VerificationService 验证服务
 type VerificationService struct {
-	emailService         channels.EmailService // 邮件服务（可选，用于发送验证邮件）
-	userRepo             repoInterfaces.UserRepository
-	authRepo             sharedRepo.AuthRepository
-	tokenManager         *EmailVerificationTokenManager
+	emailService channels.EmailService // 邮件服务（可选，用于发送验证邮件）
+	userRepo     repoInterfaces.UserRepository
+	authRepo     sharedRepo.AuthRepository
+	tokenManager *EmailVerificationTokenManager
 }
 
 // NewVerificationService 创建验证服务
@@ -74,9 +74,9 @@ func (s *VerificationService) SendEmailCode(ctx context.Context, email, purpose 
 	// 临时方案：仅在开发环境打印到控制台
 	if config.GetEnvBool("APP_DEBUG", false) {
 		zap.L().Debug("[VerificationService] 发送邮箱验证码",
-			zap.String("email", email),
-			zap.String("code", code),
-			zap.String("purpose", purpose),
+			zap.Bool("has_email", email != ""),
+			zap.Bool("has_code", code != ""),
+			zap.Bool("has_purpose", purpose != ""),
 		)
 	}
 
@@ -95,9 +95,9 @@ func (s *VerificationService) SendPhoneCode(ctx context.Context, phone, purpose 
 	// 模拟实现：仅在开发环境打印到控制台
 	if config.GetEnvBool("APP_DEBUG", false) {
 		zap.L().Debug("[VerificationService] 发送手机验证码（模拟）",
-			zap.String("phone", phone),
-			zap.String("code", code),
-			zap.String("purpose", purpose),
+			zap.Bool("has_phone", phone != ""),
+			zap.Bool("has_code", code != ""),
+			zap.Bool("has_purpose", purpose != ""),
 		)
 	}
 
