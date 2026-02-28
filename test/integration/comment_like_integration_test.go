@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -108,8 +109,38 @@ func setupIntegrationTest(t *testing.T) (*mongo.Database, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	require.NoError(t, err)
+	candidates := make([]string, 0, 2)
+	if mongoURI := os.Getenv("MONGODB_URI"); mongoURI != "" {
+		candidates = append(candidates, mongoURI)
+	} else {
+		candidates = append(candidates,
+			"mongodb://admin:password@localhost:27017/?authSource=admin",
+			"mongodb://localhost:27017",
+		)
+	}
+
+	var (
+		client  *mongo.Client
+		err     error
+		lastErr error
+	)
+	for _, uri := range candidates {
+		client, err = mongo.Connect(ctx, options.Client().ApplyURI(uri))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		pingCtx, pingCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		pingErr := client.Ping(pingCtx, nil)
+		pingCancel()
+		if pingErr == nil {
+			break
+		}
+		lastErr = pingErr
+		_ = client.Disconnect(context.Background())
+		client = nil
+	}
+	require.NotNil(t, client, "应该能连接到MongoDB: %v", lastErr)
 
 	// 创建独立的测试数据库
 	dbName := fmt.Sprintf("qingyu_integration_test_%d", time.Now().Unix())

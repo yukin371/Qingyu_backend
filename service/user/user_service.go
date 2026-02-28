@@ -24,13 +24,12 @@ func isDuplicateKeyError(err error) bool {
 	errStr := err.Error()
 	// MongoDB Duplicate Key错误通常包含"11000"或"duplicate key"
 	return contains(errStr, "11000") || contains(errStr, "duplicate key") ||
-	       contains(errStr, "E11000")
+		contains(errStr, "E11000")
 }
 
 // contains 检查字符串是否包含子串（忽略大小写）
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (
-		s[:len(substr)] == substr ||
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr ||
 		s[len(s)-len(substr):] == substr ||
 		indexOf(s, substr) >= 0))
 }
@@ -118,7 +117,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *user2.CreateUserR
 		Email:    req.Email,
 		Password: req.Password,
 		Status:   usersModel.UserStatusActive, // 默认设置为活跃状态
-		Roles:    []string{"reader"}, // 默认角色为reader
+		Roles:    []string{"reader"},          // 默认角色为reader
 	}
 
 	// 4. 设置密码
@@ -329,7 +328,7 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterU
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
-		Roles:    []string{"reader"},         // 默认角色
+		Roles:    []string{"reader"},          // 默认角色
 		Status:   usersModel.UserStatusActive, // 默认状态
 	}
 
@@ -397,8 +396,8 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户名和密码不能为空", nil)
 	}
 
-	// DEBUG: 记录登录尝试
-	zap.L().Debug("登录尝试", zap.String("username", req.Username))
+	// DEBUG: 记录登录尝试（不记录原始用户输入）
+	zap.L().Debug("登录尝试")
 
 	// 2. 获取用户
 	user, err := s.userRepo.GetByUsername(ctx, req.Username)
@@ -422,7 +421,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 		hashPrefix = user.Password
 	}
 	zap.L().Debug("密码哈希", zap.String("hash_prefix", hashPrefix))
-	zap.L().Debug("输入密码", zap.String("password", req.Password))
+	zap.L().Debug("输入密码", zap.Int("password_length", len(req.Password)))
 
 	// 3. 验证密码
 	if !user.ValidatePassword(req.Password) {
@@ -628,6 +627,7 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 		<p>如果您没有请求重置密码，请忽略此邮件。</p>
 		<p>青羽写作团队</p>
 	`, user.Username, resetLink)
+	_ = emailBody
 
 	// 5. 发送重置邮件（当前为模拟发送）
 	// 注意：EmailService 需要在 ServiceContainer 中注入
@@ -871,6 +871,7 @@ func (s *UserServiceImpl) SendEmailVerification(ctx context.Context, req *user2.
 		<p>如果您没有注册青羽写作平台，请忽略此邮件。</p>
 		<p>青羽写作团队</p>
 	`, user.Username, code)
+	_ = emailBody
 
 	// 7. 发送验证邮件（当前为模拟发送）
 	// TODO(Production): 集成真实的邮件发送服务
@@ -886,9 +887,9 @@ func (s *UserServiceImpl) SendEmailVerification(ctx context.Context, req *user2.
 	// 	}
 	// }
 
-	// 模拟：打印日志代替发送邮件
-	fmt.Printf("[Email Verification] Code generated for %s (UserID: %s): %s\n", req.Email, req.UserID, code)
-	fmt.Printf("[Email Verification] Email content:\n%s\n", emailBody)
+	// 模拟：打印日志代替发送邮件（避免输出用户输入和敏感数据）
+	fmt.Printf("[Email Verification] Code generated successfully\n")
+	fmt.Printf("[Email Verification] Email template generated\n")
 
 	return &user2.SendEmailVerificationResponse{
 		Success:   true,
@@ -982,6 +983,7 @@ func (s *UserServiceImpl) RequestPasswordReset(ctx context.Context, req *user2.R
 		<p>如果您没有请求重置密码，请忽略此邮件，您的密码不会被更改。</p>
 		<p>青羽写作团队</p>
 	`, user.Username, resetLink, resetLink)
+	_ = emailBody
 
 	// 5. 发送重置邮件（当前为模拟发送）
 	// TODO(Production): 集成真实的邮件发送服务
@@ -997,10 +999,9 @@ func (s *UserServiceImpl) RequestPasswordReset(ctx context.Context, req *user2.R
 	// 	}
 	// }
 
-	// 模拟：打印日志代替发送邮件
-	fmt.Printf("[Password Reset] Token generated for %s: %s\n", req.Email, resetToken)
-	fmt.Printf("[Password Reset] Reset link: %s\n", resetLink)
-	fmt.Printf("[Password Reset] Email content:\n%s\n", emailBody)
+	// 模拟：打印日志代替发送邮件（避免输出用户输入和敏感数据）
+	fmt.Printf("[Password Reset] Token generated successfully\n")
+	fmt.Printf("[Password Reset] Reset email template generated\n")
 
 	return &user2.RequestPasswordResetResponse{
 		Success:   true,
@@ -1046,7 +1047,6 @@ func (s *UserServiceImpl) ConfirmPasswordReset(ctx context.Context, req *user2.C
 	if err := tokenManager.MarkTokenAsUsed(ctx, req.Email); err != nil {
 		// 记录警告但不影响流程
 		zap.L().Warn("标记重置Token为已使用失败",
-			zap.String("email", req.Email),
 			zap.Error(err),
 		)
 	}
@@ -1112,9 +1112,9 @@ func (s *UserServiceImpl) UnbindPhone(ctx context.Context, userID string) error 
 
 	// 3. 清除手机号
 	updates := map[string]interface{}{
-		"phone":         "",
+		"phone":          "",
 		"phone_verified": false,
-		"updated_at":    time.Now(),
+		"updated_at":     time.Now(),
 	}
 
 	if err := s.userRepo.Update(ctx, userID, updates); err != nil {
