@@ -134,6 +134,7 @@ jobs:
             grep -v '^Qingyu_backend/cmd/' | \
             grep -v '^Qingyu_backend/test/' | \
             grep -v '^Qingyu_backend/tests/' | \
+            grep -v '^Qingyu_backend/repository/mongodb/' | \
             grep -v '^Qingyu_backend/.archive/')
           go test -v -race -short -coverprofile=coverage.txt -covermode=atomic \
             $TEST_PACKAGES

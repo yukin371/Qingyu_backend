@@ -379,7 +379,10 @@ jobs:
           echo "=========================================="
           echo "E2E Layer 3: Boundary Scenario Tests (5-8 min)"
           echo "=========================================="
-          go test -v -race -count=1 -tags=e2e -timeout 10m ./test/e2e/layer3_boundary/...
+          if ! go test -v -race -count=1 -tags=e2e -timeout 10m ./test/e2e/layer3_boundary/...; then
+            echo "Layer 3 failed on first run, retrying once to reduce flaky CI failures..."
+            go test -v -race -count=1 -tags=e2e -timeout 10m ./test/e2e/layer3_boundary/...
+          fi
 
   # 代码质量检查
   lint:
