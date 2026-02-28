@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/repository"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
 	userrepo "Qingyu_backend/repository/interfaces/user"
 )
 
@@ -100,9 +101,16 @@ func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *MongoUserRepository) List(ctx context.Context, filter interface{}) ([]*users.User, error) {
-	// 简化实现，实际使用中可以根据 filter 类型进行处理
-	cursor, err := r.db.Collection(UserCollection).Find(ctx, filter)
+func (r *MongoUserRepository) List(ctx context.Context, filter base.Filter) ([]*users.User, error) {
+	// 将 base.Filter 转换为 bson.M 用于查询
+	bsonFilter := bson.M{}
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for k, v := range conditions {
+			bsonFilter[k] = v
+		}
+	}
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, bsonFilter)
 	if err != nil {
 		return nil, transformMongoError(err)
 	}
@@ -115,8 +123,16 @@ func (r *MongoUserRepository) List(ctx context.Context, filter interface{}) ([]*
 	return results, nil
 }
 
-func (r *MongoUserRepository) Count(ctx context.Context, filter interface{}) (int64, error) {
-	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, filter)
+func (r *MongoUserRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
+	// 将 base.Filter 转换为 bson.M 用于查询
+	bsonFilter := bson.M{}
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for k, v := range conditions {
+			bsonFilter[k] = v
+		}
+	}
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bsonFilter)
 	if err != nil {
 		return 0, transformMongoError(err)
 	}

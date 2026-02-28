@@ -112,28 +112,50 @@ func (r *MongoUserAdminRepository) CountByRole(ctx context.Context, role string)
 
 // List 获取用户列表 (基础版本)
 func (r *MongoUserAdminRepository) List(ctx context.Context, filter base.Filter) ([]*users.User, error) {
-	// 将 base.Filter 转换为 bson.M 用于查询
-	bsonFilter := bson.M{}
+	// 直接使用 MongoDB 查询，绕过 baseRepo 以避免 Filter 接口转换问题
+	var bsonFilter bson.M
 	if filter != nil {
 		conditions := filter.GetConditions()
+		bsonFilter = bson.M{}
 		for k, v := range conditions {
 			bsonFilter[k] = v
 		}
+	} else {
+		bsonFilter = bson.M{}
 	}
-	return r.baseRepo.List(ctx, bsonFilter)
+
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, bsonFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*users.User
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 // Count 统计用户数量
 func (r *MongoUserAdminRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
-	// 将 base.Filter 转换为 bson.M 用于查询
-	bsonFilter := bson.M{}
+	// 直接使用 MongoDB 查询，绕过 baseRepo 以避免 Filter 接口转换问题
+	var bsonFilter bson.M
 	if filter != nil {
 		conditions := filter.GetConditions()
+		bsonFilter = bson.M{}
 		for k, v := range conditions {
 			bsonFilter[k] = v
 		}
+	} else {
+		bsonFilter = bson.M{}
 	}
-	return r.baseRepo.Count(ctx, bsonFilter)
+
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bsonFilter)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // Exists 检查用户是否存在
