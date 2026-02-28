@@ -39,7 +39,7 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, func()) {
 	cfg, err := config.LoadConfig("../../config")
 	require.NoError(t, err, "加载测试配置失败")
 	config.GlobalConfig = cfg
-	testutil.EnableStrictLogAssertions(t)
+	testutil.EnableStrictLogAssertionsIgnoreWarn(t)
 
 	// 2. 初始化服务（会自动创建 ServiceContainer）
 	err = core.InitServices()

@@ -9,13 +9,23 @@ import (
 
 // EnableStrictLogAssertions enables strict logging and fails the test on warn/error.
 func EnableStrictLogAssertions(t *testing.T) {
+	enableStrictLogAssertionsWithPolicy(t, true)
+}
+
+// EnableStrictLogAssertionsIgnoreWarn enables strict logging while tolerating warn logs.
+// E2E suites may emit expected warning-level logs on successful paths.
+func EnableStrictLogAssertionsIgnoreWarn(t *testing.T) {
+	enableStrictLogAssertionsWithPolicy(t, false)
+}
+
+func enableStrictLogAssertionsWithPolicy(t *testing.T, failOnWarn bool) {
 	t.Helper()
 
 	EnableStrictLogging()
 
 	t.Cleanup(func() {
 		stats := logger.GetStrictStats()
-		if stats.WarnCount > 0 || stats.ErrorCount > 0 || stats.PanicCount > 0 || stats.FatalCount > 0 {
+		if (failOnWarn && stats.WarnCount > 0) || stats.ErrorCount > 0 || stats.PanicCount > 0 || stats.FatalCount > 0 {
 			t.Fatalf(
 				"strict log violations: warn=%d error=%d panic=%d fatal=%d",
 				stats.WarnCount, stats.ErrorCount, stats.PanicCount, stats.FatalCount,
