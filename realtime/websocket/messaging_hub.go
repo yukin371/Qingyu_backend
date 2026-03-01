@@ -80,7 +80,7 @@ func (h *MessagingWSHub) Run() {
 			h.mu.Lock()
 			h.clients[client.UserID] = client
 			h.mu.Unlock()
-			log.Printf("用户 %s 连接到消息WebSocket", client.UserID)
+			log.Printf("消息WebSocket客户端已连接")
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -89,7 +89,7 @@ func (h *MessagingWSHub) Run() {
 				close(client.Send)
 			}
 			h.mu.Unlock()
-			log.Printf("用户 %s 断开消息WebSocket", client.UserID)
+			log.Printf("消息WebSocket客户端已断开")
 
 		case broadcast := <-h.broadcast:
 			// broadcast从channel接收的是指针类型
