@@ -3,6 +3,7 @@ package handler
 import (
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -46,7 +47,7 @@ func (h *ProfileHandler) SetStorageService(storageSvc sharedStorage.StorageServi
 //	@Failure		500		{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/profile [get]
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
-	// 从Context中获取当前用户ID（由JWT中间件设置）
+	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
 		shared.Unauthorized(c, "未认证")
@@ -60,7 +61,8 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 
 	resp, err := h.userService.GetUser(c.Request.Context(), serviceReq)
 	if err != nil {
-		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
+		var serviceErr *serviceInterfaces.ServiceError
+		if errors.As(err, &serviceErr) {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
 				shared.NotFound(c, "用户不存在")
