@@ -3,6 +3,9 @@ package admin
 import (
 	"context"
 	"errors"
+	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +15,8 @@ import (
 
 	"Qingyu_backend/models/bookstore"
 )
+
+var categoryNamePattern = regexp.MustCompile(`^[\p{L}\p{N}\p{Han}\s._\-()]{1,64}$`)
 
 // CategoryAdminMongoRepository 分类管理 MongoDB 实现
 type CategoryAdminMongoRepository struct {
@@ -59,6 +64,10 @@ func (r *CategoryAdminMongoRepository) BatchUpdateStatus(ctx context.Context, ca
 
 // GetDescendantIDs 获取所有子孙分类ID
 func (r *CategoryAdminMongoRepository) GetDescendantIDs(ctx context.Context, categoryID string) ([]string, error) {
+	if err := validateCategoryObjectID(categoryID); err != nil {
+		return nil, err
+	}
+
 	var descendantIDs []string
 
 	// 获取直接子分类
@@ -89,6 +98,10 @@ func (r *CategoryAdminMongoRepository) GetDescendantIDs(ctx context.Context, cat
 
 // HasChildren 检查是否有子分类
 func (r *CategoryAdminMongoRepository) HasChildren(ctx context.Context, categoryID string) (bool, error) {
+	if err := validateCategoryObjectID(categoryID); err != nil {
+		return false, err
+	}
+
 	count, err := r.collection.CountDocuments(ctx, bson.M{"parent_id": categoryID})
 	if err != nil {
 		return false, err
@@ -98,7 +111,12 @@ func (r *CategoryAdminMongoRepository) HasChildren(ctx context.Context, category
 
 // NameExistsAtLevel 检查同级分类名称是否存在
 func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, parentID *string, name string, excludeID string) (bool, error) {
-	filter := bson.M{"name": name}
+	safeName, err := sanitizeCategoryName(name)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"name": safeName}
 
 	if parentID == nil {
 		// 顶级分类：parent_id 为 null 或不存在
@@ -107,6 +125,9 @@ func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, pa
 			{"parent_id": nil},
 		}
 	} else {
+		if err := validateCategoryObjectID(*parentID); err != nil {
+			return false, err
+		}
 		filter["parent_id"] = *parentID
 	}
 
@@ -208,6 +229,11 @@ func (r *CategoryAdminMongoRepository) Delete(ctx context.Context, id string) er
 
 // List 获取分类列表
 func (r *CategoryAdminMongoRepository) List(ctx context.Context, filter interface{}, opts ...interface{}) ([]*bookstore.Category, error) {
+	safeFilter, err := sanitizeCategoryListFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+
 	var findOpts *options.FindOptions
 	if len(opts) > 0 {
 		if fo, ok := opts[0].(*options.FindOptions); ok {
@@ -215,7 +241,7 @@ func (r *CategoryAdminMongoRepository) List(ctx context.Context, filter interfac
 		}
 	}
 
-	cursor, err := r.collection.Find(ctx, filter, findOpts)
+	cursor, err := r.collection.Find(ctx, safeFilter, findOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -247,4 +273,95 @@ func (r *CategoryAdminMongoRepository) GetTree(ctx context.Context) ([]*bookstor
 	}
 
 	return rootCategories, nil
+}
+
+func validateCategoryObjectID(id string) error {
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		return fmt.Errorf("invalid category id: %w", err)
+	}
+	return nil
+}
+
+func sanitizeCategoryName(name string) (string, error) {
+	trimmed := strings.TrimSpace(name)
+	if !categoryNamePattern.MatchString(trimmed) {
+		return "", errors.New("invalid category name format")
+	}
+	return trimmed, nil
+}
+
+func sanitizeCategoryListFilter(filter interface{}) (bson.M, error) {
+	if filter == nil {
+		return bson.M{}, nil
+	}
+
+	allowedKeys := map[string]struct{}{
+		"_id":       {},
+		"name":      {},
+		"parent_id": {},
+		"is_active": {},
+		"level":     {},
+	}
+
+	out := bson.M{}
+	var input map[string]interface{}
+
+	switch f := filter.(type) {
+	case bson.M:
+		input = map[string]interface{}(f)
+	case map[string]interface{}:
+		input = f
+	default:
+		return nil, errors.New("invalid filter type")
+	}
+
+	for key, value := range input {
+		if strings.HasPrefix(key, "$") {
+			return nil, errors.New("operator filters are not allowed")
+		}
+		if _, ok := allowedKeys[key]; !ok {
+			return nil, fmt.Errorf("unsupported filter key: %s", key)
+		}
+
+		switch key {
+		case "_id", "parent_id":
+			id, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("%s must be string", key)
+			}
+			if err := validateCategoryObjectID(id); err != nil {
+				return nil, err
+			}
+			out[key] = id
+		case "name":
+			name, ok := value.(string)
+			if !ok {
+				return nil, errors.New("name must be string")
+			}
+			safeName, err := sanitizeCategoryName(name)
+			if err != nil {
+				return nil, err
+			}
+			out[key] = safeName
+		case "is_active":
+			active, ok := value.(bool)
+			if !ok {
+				return nil, errors.New("is_active must be bool")
+			}
+			out[key] = active
+		case "level":
+			switch lv := value.(type) {
+			case int:
+				out[key] = lv
+			case int32:
+				out[key] = int(lv)
+			case int64:
+				out[key] = int(lv)
+			default:
+				return nil, errors.New("level must be integer")
+			}
+		}
+	}
+
+	return out, nil
 }
