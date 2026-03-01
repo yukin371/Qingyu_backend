@@ -28,9 +28,7 @@ func main() {
 
 	// 注册配置重载处理器
 	config.RegisterReloadHandler("database", func() {
-		if err := core.InitDB(); err != nil {
-			log.Printf("Failed to reload database configuration: %v", err)
-		}
+		log.Println("Database configuration changed - restart service to apply")
 	})
 
 	config.RegisterReloadHandler("server", func() {
