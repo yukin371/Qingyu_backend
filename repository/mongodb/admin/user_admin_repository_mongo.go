@@ -16,6 +16,8 @@ import (
 	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
+	base "Qingyu_backend/repository/interfaces/infrastructure"
+	sharedrepo "Qingyu_backend/repository/mongodb/shared"
 )
 
 const (
@@ -24,7 +26,9 @@ const (
 )
 
 type MongoUserAdminRepository struct {
-	db *mongo.Database
+	// 组合使用统一的MongoUserRepository
+	baseRepo *sharedrepo.MongoUserRepository
+	db       *mongo.Database
 }
 
 type userEmailFilter struct {
@@ -33,11 +37,136 @@ type userEmailFilter struct {
 
 // NewMongoUserAdminRepository 创建用户管理仓储
 func NewMongoUserAdminRepository(db *mongo.Database) adminrepo.UserAdminRepository {
-	return &MongoUserAdminRepository{db: db}
+	return &MongoUserAdminRepository{
+		baseRepo: sharedrepo.NewMongoUserRepository(db),
+		db:       db,
+	}
 }
 
-// List 获取用户列表（分页、筛选）
-func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error) {
+// === 委托共享方法到 baseRepo (使用string ID) ===
+
+// Create 创建用户
+func (r *MongoUserAdminRepository) Create(ctx context.Context, user *users.User) error {
+	return r.baseRepo.Create(ctx, user)
+}
+
+// GetByID 根据ID获取用户 (string ID version)
+func (r *MongoUserAdminRepository) GetByID(ctx context.Context, id string) (*users.User, error) {
+	return r.baseRepo.GetByID(ctx, id)
+}
+
+// Update 更新用户信息 (string ID version)
+func (r *MongoUserAdminRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	return r.baseRepo.Update(ctx, id, updates)
+}
+
+// Delete 删除用户 (string ID version)
+func (r *MongoUserAdminRepository) Delete(ctx context.Context, id string) error {
+	return r.baseRepo.Delete(ctx, id)
+}
+
+// GetByUsername 根据用户名获取用户
+func (r *MongoUserAdminRepository) GetByUsername(ctx context.Context, username string) (*users.User, error) {
+	return r.baseRepo.GetByUsername(ctx, username)
+}
+
+// GetByEmail 根据邮箱获取用户
+func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string) (*users.User, error) {
+	return r.baseRepo.GetByEmail(ctx, email)
+}
+
+// UpdateStatus 更新用户状态 (string ID version)
+func (r *MongoUserAdminRepository) UpdateStatus(ctx context.Context, id string, status users.UserStatus) error {
+	return r.baseRepo.UpdateStatus(ctx, id, status)
+}
+
+// UpdatePassword 更新用户密码 (string ID version)
+func (r *MongoUserAdminRepository) UpdatePassword(ctx context.Context, id string, hashedPassword string) error {
+	return r.baseRepo.UpdatePassword(ctx, id, hashedPassword)
+}
+
+// SetEmailVerified 设置邮箱验证状态 (string ID version)
+func (r *MongoUserAdminRepository) SetEmailVerified(ctx context.Context, id string, verified bool) error {
+	return r.baseRepo.SetEmailVerified(ctx, id, verified)
+}
+
+// BatchUpdateStatus 批量更新用户状态 (string IDs version)
+func (r *MongoUserAdminRepository) BatchUpdateStatus(ctx context.Context, ids []string, status users.UserStatus) error {
+	return r.baseRepo.BatchUpdateStatus(ctx, ids, status)
+}
+
+// BatchDelete 批量删除用户 (string IDs version)
+func (r *MongoUserAdminRepository) BatchDelete(ctx context.Context, ids []string) error {
+	return r.baseRepo.BatchDelete(ctx, ids)
+}
+
+// CountByStatus 按状态统计用户数量 (返回int64)
+func (r *MongoUserAdminRepository) CountByStatus(ctx context.Context, status users.UserStatus) (int64, error) {
+	return r.baseRepo.CountByStatus(ctx, status)
+}
+
+// CountByRole 按角色统计用户数量
+func (r *MongoUserAdminRepository) CountByRole(ctx context.Context, role string) (int64, error) {
+	return r.baseRepo.CountByRole(ctx, role)
+}
+
+// List 获取用户列表 (基础版本)
+func (r *MongoUserAdminRepository) List(ctx context.Context, filter base.Filter) ([]*users.User, error) {
+	// 直接使用 MongoDB 查询，绕过 baseRepo 以避免 Filter 接口转换问题
+	var bsonFilter bson.M
+	if filter != nil {
+		conditions := filter.GetConditions()
+		bsonFilter = bson.M{}
+		for k, v := range conditions {
+			bsonFilter[k] = v
+		}
+	} else {
+		bsonFilter = bson.M{}
+	}
+
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, bsonFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*users.User
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// Count 统计用户数量
+func (r *MongoUserAdminRepository) Count(ctx context.Context, filter base.Filter) (int64, error) {
+	// 直接使用 MongoDB 查询，绕过 baseRepo 以避免 Filter 接口转换问题
+	var bsonFilter bson.M
+	if filter != nil {
+		conditions := filter.GetConditions()
+		bsonFilter = bson.M{}
+		for k, v := range conditions {
+			bsonFilter[k] = v
+		}
+	} else {
+		bsonFilter = bson.M{}
+	}
+
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bsonFilter)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// Exists 检查用户是否存在
+func (r *MongoUserAdminRepository) Exists(ctx context.Context, id string) (bool, error) {
+	return r.baseRepo.Exists(ctx, id)
+}
+
+// === admin特有方法的实现 ===
+
+// ListWithPagination 获取用户列表（带分页和筛选，admin特有）
+func (r *MongoUserAdminRepository) ListWithPagination(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error) {
 	// Use a fixed DB query and perform filtering in-memory to avoid dynamic query construction.
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
@@ -80,17 +209,7 @@ func (r *MongoUserAdminRepository) List(ctx context.Context, filter *adminrepo.U
 	return filtered[start:end], total, nil
 }
 
-// Create 创建用户
-func (r *MongoUserAdminRepository) Create(ctx context.Context, user *users.User) error {
-	user.ID = primitive.NewObjectID()
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
-
-	_, err := r.db.Collection(UserCollection).InsertOne(ctx, user)
-	return err
-}
-
-// BatchCreate 批量创建用户
+// BatchCreate 批量创建用户（admin特有）
 func (r *MongoUserAdminRepository) BatchCreate(ctx context.Context, usersList []*users.User) error {
 	if len(usersList) == 0 {
 		return nil
@@ -108,86 +227,14 @@ func (r *MongoUserAdminRepository) BatchCreate(ctx context.Context, usersList []
 	return err
 }
 
-// GetByID 根据ID获取用户
-func (r *MongoUserAdminRepository) GetByID(ctx context.Context, userID primitive.ObjectID) (*users.User, error) {
-	var user users.User
-	filter := bson.M{"_id": userID}
-
-	err := r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-// GetByEmail 根据邮箱获取用户
-func (r *MongoUserAdminRepository) GetByEmail(ctx context.Context, email string) (*users.User, error) {
-	canonicalEmail, err := normalizeEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	var user users.User
-	filter := userEmailFilter{Email: canonicalEmail}
-
-	err = r.db.Collection(UserCollection).FindOne(ctx, filter).Decode(&user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func normalizeEmail(email string) (string, error) {
-	trimmed := strings.TrimSpace(email)
-	parsed, err := mail.ParseAddress(trimmed)
-	if err != nil || parsed == nil {
-		return "", fmt.Errorf("invalid email format")
-	}
-	if parsed.Address != trimmed {
-		return "", fmt.Errorf("invalid email format")
-	}
-	return strings.ToLower(parsed.Address), nil
-}
-
-// Update 更新用户信息
-func (r *MongoUserAdminRepository) Update(ctx context.Context, userID primitive.ObjectID, user *users.User) error {
-	user.UpdatedAt = time.Now()
-	user.Touch()
-
-	filter := bson.M{"_id": userID}
-	update := bson.M{"$set": user}
-
-	_, err := r.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
-	return err
-}
-
-// UpdateStatus 更新用户状态
-func (r *MongoUserAdminRepository) UpdateStatus(ctx context.Context, userID primitive.ObjectID, status users.UserStatus) error {
-	filter := bson.M{"_id": userID}
-	update := bson.M{
-		"$set": bson.M{
-			"status":     status,
-			"updated_at": time.Now(),
-		},
-	}
-
-	_, err := r.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
-	return err
-}
-
-// Delete 删除用户（软删除）
-func (r *MongoUserAdminRepository) Delete(ctx context.Context, userID primitive.ObjectID) error {
-	return r.UpdateStatus(ctx, userID, users.UserStatusDeleted)
-}
-
-// HardDelete 硬删除用户
+// HardDelete 硬删除用户（admin特有）
 func (r *MongoUserAdminRepository) HardDelete(ctx context.Context, userID primitive.ObjectID) error {
 	filter := bson.M{"_id": userID}
 	_, err := r.db.Collection(UserCollection).DeleteOne(ctx, filter)
 	return err
 }
 
-// GetActivities 获取用户活动记录
+// GetActivities 获取用户活动记录（admin特有）
 func (r *MongoUserAdminRepository) GetActivities(ctx context.Context, userID primitive.ObjectID, page, pageSize int) ([]*users.UserActivity, int64, error) {
 	filter := bson.M{"user_id": userID}
 
@@ -216,24 +263,10 @@ func (r *MongoUserAdminRepository) GetActivities(ctx context.Context, userID pri
 	return activities, total, nil
 }
 
-// UpdateRoles 更新用户角色
-func (r *MongoUserAdminRepository) UpdateRoles(ctx context.Context, userID primitive.ObjectID, role string) error {
-	filter := bson.M{"_id": userID}
-	update := bson.M{
-		"$set": bson.M{
-			"role":       role,
-			"updated_at": time.Now(),
-		},
-	}
-
-	_, err := r.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
-	return err
-}
-
-// GetStatistics 获取用户统计信息
+// GetStatistics 获取用户统计信息（admin特有）
 func (r *MongoUserAdminRepository) GetStatistics(ctx context.Context, userID primitive.ObjectID) (*users.UserStatistics, error) {
 	// 简化实现，实际应该从各个集合统计
-	user, err := r.GetByID(ctx, userID)
+	user, err := r.GetByID(ctx, userID.Hex())
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +283,9 @@ func (r *MongoUserAdminRepository) GetStatistics(ctx context.Context, userID pri
 	return stats, nil
 }
 
-// ResetPassword 重置用户密码
+// ResetPassword 重置用户密码（admin特有）
 func (r *MongoUserAdminRepository) ResetPassword(ctx context.Context, userID primitive.ObjectID, newPassword string) error {
-	user, err := r.GetByID(ctx, userID)
+	user, err := r.GetByID(ctx, userID.Hex())
 	if err != nil {
 		return err
 	}
@@ -273,55 +306,21 @@ func (r *MongoUserAdminRepository) ResetPassword(ctx context.Context, userID pri
 	return err
 }
 
-// BatchUpdateStatus 批量更新用户状态
-func (r *MongoUserAdminRepository) BatchUpdateStatus(ctx context.Context, userIDs []primitive.ObjectID, status users.UserStatus) error {
-	filter := bson.M{"_id": bson.M{"$in": userIDs}}
+// UpdateRoles 更新用户角色（admin特有）
+func (r *MongoUserAdminRepository) UpdateRoles(ctx context.Context, userID primitive.ObjectID, role string) error {
+	filter := bson.M{"_id": userID}
 	update := bson.M{
 		"$set": bson.M{
-			"status":     status,
+			"role":       role,
 			"updated_at": time.Now(),
 		},
 	}
 
-	_, err := r.db.Collection(UserCollection).UpdateMany(ctx, filter, update)
+	_, err := r.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
 	return err
 }
 
-// BatchDelete 批量删除用户
-func (r *MongoUserAdminRepository) BatchDelete(ctx context.Context, userIDs []primitive.ObjectID) error {
-	return r.BatchUpdateStatus(ctx, userIDs, users.UserStatusDeleted)
-}
-
-// GetUsersByRole 根据角色获取用户列表
-func (r *MongoUserAdminRepository) GetUsersByRole(ctx context.Context, role string, page, pageSize int) ([]*users.User, int64, error) {
-	filter := bson.M{"role": role}
-
-	total, err := r.db.Collection(UserCollection).CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	skip := (page - 1) * pageSize
-	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(pageSize)).
-		SetSort(bson.D{{Key: "created_at", Value: -1}})
-
-	cursor, err := r.db.Collection(UserCollection).Find(ctx, filter, opts)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer cursor.Close(ctx)
-
-	var userList []*users.User
-	if err = cursor.All(ctx, &userList); err != nil {
-		return nil, 0, err
-	}
-
-	return userList, total, nil
-}
-
-// SearchUsers 搜索用户
+// SearchUsers 搜索用户（admin特有）
 func (r *MongoUserAdminRepository) SearchUsers(ctx context.Context, keyword string, page, pageSize int) ([]*users.User, int64, error) {
 	filter := bson.M{
 		"$or": []bson.M{
@@ -356,8 +355,37 @@ func (r *MongoUserAdminRepository) SearchUsers(ctx context.Context, keyword stri
 	return userList, total, nil
 }
 
-// CountByStatus 按状态统计用户数量
-func (r *MongoUserAdminRepository) CountByStatus(ctx context.Context) (map[string]int64, error) {
+// GetUsersByRole 根据角色获取用户列表（admin特有）
+func (r *MongoUserAdminRepository) GetUsersByRole(ctx context.Context, role string, page, pageSize int) ([]*users.User, int64, error) {
+	filter := bson.M{"role": role}
+
+	total, err := r.db.Collection(UserCollection).CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	skip := (page - 1) * pageSize
+	opts := options.Find().
+		SetSkip(int64(skip)).
+		SetLimit(int64(pageSize)).
+		SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.db.Collection(UserCollection).Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var userList []*users.User
+	if err = cursor.All(ctx, &userList); err != nil {
+		return nil, 0, err
+	}
+
+	return userList, total, nil
+}
+
+// CountByStatusMap 按状态统计用户数量（admin特有，返回map）
+func (r *MongoUserAdminRepository) CountByStatusMap(ctx context.Context) (map[string]int64, error) {
 	pipeline := []bson.M{
 		{
 			"$group": bson.M{
@@ -396,7 +424,7 @@ func (r *MongoUserAdminRepository) CountByStatus(ctx context.Context) (map[strin
 	return results, nil
 }
 
-// GetRecentUsers 获取最近注册的用户
+// GetRecentUsers 获取最近注册的用户（admin特有）
 func (r *MongoUserAdminRepository) GetRecentUsers(ctx context.Context, limit int) ([]*users.User, error) {
 	opts := options.Find().
 		SetLimit(int64(limit)).
@@ -416,7 +444,7 @@ func (r *MongoUserAdminRepository) GetRecentUsers(ctx context.Context, limit int
 	return userList, nil
 }
 
-// GetActiveUsers 获取活跃用户
+// GetActiveUsers 获取活跃用户（admin特有）
 func (r *MongoUserAdminRepository) GetActiveUsers(ctx context.Context, days int, limit int) ([]*users.User, error) {
 	cutoffDate := time.Now().AddDate(0, 0, -days)
 	filter := bson.M{
@@ -442,51 +470,18 @@ func (r *MongoUserAdminRepository) GetActiveUsers(ctx context.Context, days int,
 	return userList, nil
 }
 
-// buildFilter 构建查询过滤器
-func (r *MongoUserAdminRepository) buildFilter(filter *adminrepo.UserFilter) bson.M {
-	mongoFilter := bson.M{}
+// === 辅助方法 ===
 
-	if filter != nil {
-		if filter.Keyword != "" {
-			normalizedKeyword := strings.TrimSpace(filter.Keyword)
-			if len(normalizedKeyword) > 64 {
-				normalizedKeyword = normalizedKeyword[:64]
-			}
-			escapedKeyword := regexp.QuoteMeta(normalizedKeyword)
-			mongoFilter["$or"] = []bson.M{
-				{"username": bson.M{"$regex": escapedKeyword, "$options": "i"}},
-				{"email": bson.M{"$regex": escapedKeyword, "$options": "i"}},
-				{"nickname": bson.M{"$regex": escapedKeyword, "$options": "i"}},
-			}
-		}
-		if filter.Status != "" {
-			if status, ok := normalizeUserStatus(filter.Status); ok {
-				mongoFilter["status"] = exactUserMatchRegex(status)
-			}
-		}
-		if filter.Role != "" {
-			if role, ok := normalizeUserRole(filter.Role); ok {
-				mongoFilter["role"] = exactUserMatchRegex(role)
-			}
-		}
-		if filter.DateFrom != nil {
-			if _, exists := mongoFilter["created_at"]; !exists {
-				mongoFilter["created_at"] = bson.M{}
-			}
-			mongoFilter["created_at"].(bson.M)["$gte"] = *filter.DateFrom
-		}
-		if filter.DateTo != nil {
-			if _, exists := mongoFilter["created_at"]; !exists {
-				mongoFilter["created_at"] = bson.M{}
-			}
-			mongoFilter["created_at"].(bson.M)["$lte"] = *filter.DateTo
-		}
-		if filter.LastActive != nil {
-			mongoFilter["last_login_at"] = bson.M{"$gte": *filter.LastActive}
-		}
+func normalizeEmail(email string) (string, error) {
+	trimmed := strings.TrimSpace(email)
+	parsed, err := mail.ParseAddress(trimmed)
+	if err != nil || parsed == nil {
+		return "", fmt.Errorf("invalid email format")
 	}
-
-	return mongoFilter
+	if parsed.Address != trimmed {
+		return "", fmt.Errorf("invalid email format")
+	}
+	return strings.ToLower(parsed.Address), nil
 }
 
 func exactUserMatchRegex(value string) primitive.Regex {

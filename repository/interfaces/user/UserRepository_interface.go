@@ -82,50 +82,52 @@ type UserRepository interface {
 	base.CRUDRepository[*usersModel.User, string]
 	// 继承 HealthRepository 接口
 	base.HealthRepository
+	// 继承BaseUserRepository共享基础接口
+	BaseUserRepository
 
-	// 用户特定的查询方法
-	GetByUsername(ctx context.Context, username string) (*usersModel.User, error)
-	GetByEmail(ctx context.Context, email string) (*usersModel.User, error)
+	// === user模块特有方法 ===
+
+	// 用户特定的查询方法（user特有）
 	GetByPhone(ctx context.Context, phone string) (*usersModel.User, error)
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByPhone(ctx context.Context, phone string) (bool, error)
 
-	// 用户状态管理
+	// 用户状态管理（user特有）
 	UpdateLastLogin(ctx context.Context, id string, ip string) error
-	UpdatePassword(ctx context.Context, id string, hashedPassword string) error
 	UpdatePasswordByEmail(ctx context.Context, email string, hashedPassword string) error
-	UpdateStatus(ctx context.Context, id string, status usersModel.UserStatus) error
 	GetActiveUsers(ctx context.Context, limit int64) ([]*usersModel.User, error)
 	GetUsersByRole(ctx context.Context, role string, limit int64) ([]*usersModel.User, error)
 
-	// 验证状态管理
-	SetEmailVerified(ctx context.Context, id string, verified bool) error
+	// 验证状态管理（user特有）
 	SetPhoneVerified(ctx context.Context, id string, verified bool) error
 	UnbindEmail(ctx context.Context, id string) error
 	UnbindPhone(ctx context.Context, id string) error
 
-	// 设备管理
+	// 设备管理（user特有）
 	DeleteDevice(ctx context.Context, userID string, deviceID string) error
 	GetDevices(ctx context.Context, userID string) ([]interface{}, error)
 
-	// 批量操作
-	BatchUpdateStatus(ctx context.Context, ids []string, status usersModel.UserStatus) error
-	BatchDelete(ctx context.Context, ids []string) error
-
-	// 高级查询
+	// 高级查询（user特有）
 	FindWithFilter(ctx context.Context, filter *usersModel.UserFilter) ([]*usersModel.User, int64, error)
 	SearchUsers(ctx context.Context, keyword string, limit int) ([]*usersModel.User, error)
 
-	// 统计
-	CountByRole(ctx context.Context, role string) (int64, error)
-	CountByStatus(ctx context.Context, status usersModel.UserStatus) (int64, error)
-
-	// 事务操作
+	// 事务操作（user特有）
 	Transaction(ctx context.Context,
 		user *usersModel.User,
 		fn func(ctx context.Context, repo UserRepository) error) error
 }
+
+// 注意：以下方法已通过 BaseUserRepository 提供，不再重复定义：
+// - GetByUsername(ctx, string) (*usersModel.User, error)
+// - GetByEmail(ctx, string) (*usersModel.User, error)
+// - UpdateStatus(ctx, string, UserStatus) error
+// - UpdatePassword(ctx, string, string) error
+// - SetEmailVerified(ctx, string, bool) error
+// - BatchUpdateStatus(ctx, []string, UserStatus) error
+// - BatchDelete(ctx, []string) error
+// - CountByRole(ctx, string) (int64, error)
+// - CountByStatus(ctx, UserStatus) (int64, error)
 
 // RepositoryFactory 仓储工厂接口
 type RepositoryFactory interface {
