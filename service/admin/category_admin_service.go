@@ -67,9 +67,8 @@ type CategoryTreeNode struct {
 
 // MoveCategoryRequest 移动分类请求
 type MoveCategoryRequest struct {
-	ParentID  *string `json:"parent_id"`
-	Position  string  `json:"position"`
-	TargetID  string  `json:"target_id"`
+	ParentID *string `json:"parent_id"`
+	TargetID string  `json:"target_id"`
 }
 
 // CreateCategory 创建分类
@@ -198,7 +197,31 @@ func (s *CategoryAdminServiceImpl) GetCategoryTree(ctx context.Context) ([]*Cate
 		}
 	}
 
+	// 对根节点和每个节点的子节点按 sort_order 排序
+	s.sortCategoryNodes(rootNodes)
+
 	return rootNodes, nil
+}
+
+// sortCategoryNodes 递归排序分类节点
+func (s *CategoryAdminServiceImpl) sortCategoryNodes(nodes []*CategoryTreeNode) {
+	if len(nodes) == 0 {
+		return
+	}
+
+	// 按sort_order升序排序
+	for i := 0; i < len(nodes)-1; i++ {
+		for j := i + 1; j < len(nodes); j++ {
+			if nodes[i].SortOrder > nodes[j].SortOrder {
+				nodes[i], nodes[j] = nodes[j], nodes[i]
+			}
+		}
+	}
+
+	// 递归排序子节点
+	for _, node := range nodes {
+		s.sortCategoryNodes(node.Children)
+	}
 }
 
 // GetCategories 获取分类列表
