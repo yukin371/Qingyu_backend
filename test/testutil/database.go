@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -12,6 +15,37 @@ import (
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/container"
 )
+
+var testDBSequence uint64
+
+func isTestDBIsolationEnabled() bool {
+	v := strings.TrimSpace(strings.ToLower(os.Getenv("QINGYU_TEST_DB_ISOLATION")))
+	if v == "" {
+		return true
+	}
+	return v != "0" && v != "false" && v != "off" && v != "no"
+}
+
+func resolveTestMongoDatabaseName(base string) string {
+	if base == "" {
+		base = "qingyu_test"
+	}
+	if !isTestDBIsolationEnabled() {
+		return base
+	}
+
+	seq := atomic.AddUint64(&testDBSequence, 1)
+	// MongoDB database name limit is 63 characters.
+	uniqueSuffix := fmt.Sprintf("_%d_%d_%d", os.Getpid(), time.Now().UnixNano(), seq)
+	maxBaseLen := 63 - len(uniqueSuffix)
+	if maxBaseLen < 1 {
+		maxBaseLen = 1
+	}
+	if len(base) > maxBaseLen {
+		base = base[:maxBaseLen]
+	}
+	return base + uniqueSuffix
+}
 
 // SetupTestDB 设置测试数据库
 // 返回数据库实例和清理函数
@@ -24,9 +58,7 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 	// 优先从环境变量获取配置（CI 环境）
 	if mongoURI := os.Getenv("MONGODB_URI"); mongoURI != "" {
 		mongoDB := os.Getenv("MONGODB_DATABASE")
-		if mongoDB == "" {
-			mongoDB = "qingyu_test"
-		}
+		mongoDB = resolveTestMongoDatabaseName(mongoDB)
 
 		cfg = &config.Config{
 			Database: &config.DatabaseConfig{
@@ -117,6 +149,9 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		_ = db.Collection("push_devices").Drop(ctx)
 		_ = db.Collection("notification_templates").Drop(ctx)
 
+		// 最后直接删除测试数据库，防止跨包污染。
+		_ = db.Drop(ctx)
+
 		// 关闭服务容器
 		_ = c.Close(ctx)
 	}
@@ -135,9 +170,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 	// 优先从环境变量获取配置（CI 环境）
 	if mongoURI := os.Getenv("MONGODB_URI"); mongoURI != "" {
 		mongoDB := os.Getenv("MONGODB_DATABASE")
-		if mongoDB == "" {
-			mongoDB = "qingyu_test"
-		}
+		mongoDB = resolveTestMongoDatabaseName(mongoDB)
 
 		cfg = &config.Config{
 			Database: &config.DatabaseConfig{
@@ -213,6 +246,9 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		_ = db.Collection("notification_preferences").Drop(ctx)
 		_ = db.Collection("push_devices").Drop(ctx)
 		_ = db.Collection("notification_templates").Drop(ctx)
+
+		// 最后直接删除测试数据库，防止跨包污染。
+		_ = db.Drop(ctx)
 
 		// 关闭服务容器
 		_ = service.CloseServices(ctx)
