@@ -3,7 +3,7 @@ package internalapi
 import (
 	"github.com/gin-gonic/gin"
 
-	internalService "Qingyu_backend/service/internal"
+	internalService "Qingyu_backend/service/internalapi"
 	"Qingyu_backend/api/v1/internalapi/ai"
 )
 

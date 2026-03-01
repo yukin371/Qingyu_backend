@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	internalService "Qingyu_backend/service/internal"
+	internalService "Qingyu_backend/service/internalapi"
 )
 
 // 全局服务实例（用于向后兼容的函数式handler）
