@@ -26,6 +26,7 @@ func RegisterAdminRoutes(
 	userAdminSvc adminservice.UserAdminService,
 	permissionSvc sharedService.PermissionService,
 	eventBus eventservice.PersistedEventBusInterface,
+	categorySvc adminservice.CategoryAdminService,
 ) {
 	// 创建admin API实例
 	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
@@ -33,6 +34,12 @@ func RegisterAdminRoutes(
 	systemAdminAPI := admin.NewSystemAdminAPI(adminSvc)
 	configAdminAPI := admin.NewConfigAPI(configSvc)
 	announcementAdminAPI := admin.NewAnnouncementAPI(announcementSvc)
+
+	// 分类管理API
+	var categoryAdminAPI *admin.CategoryAdminAPI
+	if categorySvc != nil {
+		categoryAdminAPI = admin.NewCategoryAdminAPI(categorySvc)
+	}
 
 	// 权限管理API
 	var permissionAPI *admin.PermissionAPI
@@ -200,6 +207,25 @@ func RegisterAdminRoutes(
 			eventsGroup := adminGroup.Group("/events")
 			{
 				eventsGroup.POST("/replay", eventsAPI.ReplayEvents) // 事件回放
+			}
+		}
+
+		// ===========================
+		// 分类管理
+		// ===========================
+		if categorySvc != nil {
+			categoriesGroup := adminGroup.Group("/categories")
+			{
+				categoriesGroup.GET("", categoryAdminAPI.GetCategories)
+				categoriesGroup.GET("/tree", categoryAdminAPI.GetCategoryTree)
+				categoriesGroup.GET("/:id", categoryAdminAPI.GetCategoryByID)
+				categoriesGroup.POST("", categoryAdminAPI.CreateCategory)
+				categoriesGroup.PUT("/:id", categoryAdminAPI.UpdateCategory)
+				categoriesGroup.DELETE("/:id", categoryAdminAPI.DeleteCategory)
+				categoriesGroup.PUT("/:id/move", categoryAdminAPI.MoveCategory)
+				categoriesGroup.PUT("/:id/sort", categoryAdminAPI.SortCategory)
+				// TODO: 拖拽排序（后续实现）
+				// categoriesGroup.PUT("/batch-sort", categoryAdminAPI.BatchSortCategories)
 			}
 		}
 	}
