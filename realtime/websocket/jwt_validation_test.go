@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -143,5 +144,36 @@ func TestMessagingHubValidateToken(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Empty(t, userID)
+	})
+}
+
+func TestExtractWebSocketToken(t *testing.T) {
+	t.Run("nil request", func(t *testing.T) {
+		token := extractWebSocketToken(nil)
+		assert.Equal(t, "", token)
+	})
+
+	t.Run("from subprotocol", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodGet, "/ws/messages", nil)
+		req.Header["Sec-WebSocket-Protocol"] = []string{"Bearer-Token", "subprotocol-token"}
+
+		token := extractWebSocketToken(req)
+		assert.Equal(t, "subprotocol-token", token)
+	})
+
+	t.Run("fallback to authorization", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodGet, "/ws/messages", nil)
+		req.Header.Set("Authorization", "Bearer header-token")
+
+		token := extractWebSocketToken(req)
+		assert.Equal(t, "header-token", token)
+	})
+
+	t.Run("invalid auth format", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodGet, "/ws/messages", nil)
+		req.Header.Set("Authorization", "Token abc")
+
+		token := extractWebSocketToken(req)
+		assert.Equal(t, "", token)
 	})
 }

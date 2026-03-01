@@ -55,6 +55,8 @@ var messagingUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // TODO: 在生产环境中应该检查origin
 	},
+	// 允许客户端通过子协议安全传递 token
+	Subprotocols: []string{"Bearer-Token"},
 }
 
 // NewMessagingWSHub 创建消息WebSocket Hub
@@ -110,9 +112,10 @@ func (h *MessagingWSHub) broadcastToConversation(broadcast *MessageBroadcast) {
 		return
 	}
 
-	h.mu.RLock()
-	defer h.mu.RUnlock()
+	// 第一阶段：读锁下收集需要剔除的连接
+	var userIDsToDelete []string
 
+	h.mu.RLock()
 	for userID, client := range h.clients {
 		// 排除发送者
 		if userID == broadcast.ExcludeUserID {
@@ -124,9 +127,21 @@ func (h *MessagingWSHub) broadcastToConversation(broadcast *MessageBroadcast) {
 		select {
 		case client.Send <- data:
 		default:
-			close(client.Send)
-			delete(h.clients, userID)
+			userIDsToDelete = append(userIDsToDelete, userID)
 		}
+	}
+	h.mu.RUnlock()
+
+	// 第二阶段：写锁下删除失效连接
+	if len(userIDsToDelete) > 0 {
+		h.mu.Lock()
+		for _, userID := range userIDsToDelete {
+			if client, ok := h.clients[userID]; ok {
+				delete(h.clients, userID)
+				close(client.Send)
+			}
+		}
+		h.mu.Unlock()
 	}
 }
 
@@ -142,14 +157,14 @@ func (h *MessagingWSHub) SendMessage(conversationID string, message interface{},
 
 // HandleMessagingWebSocket WebSocket连接处理器
 // @Summary WebSocket消息端点
-// @Description 实时接收会话消息，需要在URL中传递token参数
+// @Description 实时接收会话消息，通过 WebSocket 子协议或 Authorization Header 传递 token
 // @Tags Social Messages
-// @Param token query string true "JWT认证token"
+// @Param token header string true "JWT认证token (Sec-WebSocket-Protocol 或 Authorization: Bearer)"
 // @Router /ws/messages [get]
 func (h *MessagingWSHub) HandleMessagingWebSocket(c *gin.Context) {
-	token := c.Query("token")
+	token := extractWebSocketToken(c.Request)
 	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少token参数"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少token参数，请通过Sec-WebSocket-Protocol或Authorization传递"})
 		return
 	}
 
@@ -177,6 +192,27 @@ func (h *MessagingWSHub) HandleMessagingWebSocket(c *gin.Context) {
 
 	go client.writePump()
 	go client.readPump()
+}
+
+func extractWebSocketToken(req *http.Request) string {
+	if req == nil {
+		return ""
+	}
+
+	// 优先从子协议中提取，避免 token 出现在 URL
+	for _, subprotocol := range req.Header["Sec-WebSocket-Protocol"] {
+		if subprotocol != "" && subprotocol != "Bearer-Token" {
+			return subprotocol
+		}
+	}
+
+	// 回退到 Authorization: Bearer <token>
+	authHeader := req.Header.Get("Authorization")
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		return authHeader[7:]
+	}
+
+	return ""
 }
 
 // readPump 从WebSocket读取消息（处理typing状态等）
