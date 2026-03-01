@@ -10,6 +10,7 @@ import (
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
+	internalAPI "Qingyu_backend/api/v1/internalapi/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
@@ -48,6 +49,7 @@ import (
 	"Qingyu_backend/pkg/cache"
 	syncService "Qingyu_backend/pkg/sync"
 	messagingService "Qingyu_backend/service/messaging"
+	"Qingyu_backend/service/internalapi"
 	readerservice "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
 
@@ -538,6 +540,32 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("  - /api/v1/ai/creative/* (Phase3创作工作流)")
 		}
 	}
+
+	// ============ 注册内部AI API路由 ============
+	// 供AI服务内部调用的API，需要AI服务认证
+	internalAIGroup := v1.Group("/internal/ai")
+	internalAIGroup.Use(internalapi.AIAuthMiddleware())
+	{
+		// 文档管理
+		internalAIGroup.POST("/documents", internalAPI.CreateOrUpdateDocument)
+		internalAIGroup.GET("/documents/:id", internalAPI.GetDocument)
+		internalAIGroup.GET("/documents", internalAPI.ListDocuments)
+		internalAIGroup.DELETE("/documents/:id", internalAPI.DeleteDocument)
+		internalAIGroup.POST("/documents/batch", internalAPI.BatchGetDocuments)
+
+		// 概念管理
+		internalAIGroup.POST("/concepts", internalAPI.CreateConcept)
+		internalAIGroup.GET("/concepts/:id", internalAPI.GetConcept)
+		internalAIGroup.PUT("/concepts/:id", internalAPI.UpdateConcept)
+		internalAIGroup.DELETE("/concepts/:id", internalAPI.DeleteConcept)
+		internalAIGroup.GET("/concepts", internalAPI.SearchConcepts)
+		internalAIGroup.POST("/concepts/batch", internalAPI.BatchGetConcepts)
+	}
+
+	logger.Info("✓ 内部AI API路由已注册到: /api/v1/internal/ai/")
+	logger.Info("  - /api/v1/internal/ai/documents/* (文档管理)")
+	logger.Info("  - /api/v1/internal/ai/concepts/* (概念管理)")
+	logger.Info("  ⚠️  需要AI服务认证(X-AI-Service-Key)")
 
 	// ============ 注册统一搜索路由 ============
 	if searchSvc != nil {
