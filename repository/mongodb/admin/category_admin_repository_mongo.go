@@ -102,11 +102,16 @@ func (r *CategoryAdminMongoRepository) HasChildren(ctx context.Context, category
 		return false, err
 	}
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"parent_id": categoryID})
+	allCategories, err := r.List(ctx, bson.M{})
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	for _, cat := range allCategories {
+		if cat.ParentID != nil && *cat.ParentID == categoryID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // NameExistsAtLevel 检查同级分类名称是否存在
@@ -140,11 +145,32 @@ func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, pa
 		filter["_id"] = bson.M{"$ne": excludeObjectID}
 	}
 
-	count, err := r.collection.CountDocuments(ctx, filter)
+	categories, err := r.List(ctx, bson.M{})
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	for _, cat := range categories {
+		if cat == nil {
+			continue
+		}
+		if cat.Name != safeName {
+			continue
+		}
+		if parentID == nil {
+			if cat.ParentID != nil {
+				continue
+			}
+		} else {
+			if cat.ParentID == nil || *cat.ParentID != *parentID {
+				continue
+			}
+		}
+		if excludeID != "" && cat.ID == excludeID {
+			continue
+		}
+		return true, nil
+	}
+	return false, nil
 }
 
 // ============ 基础CRUD方法实现 ============
@@ -241,18 +267,18 @@ func (r *CategoryAdminMongoRepository) List(ctx context.Context, filter interfac
 		}
 	}
 
-	cursor, err := r.collection.Find(ctx, safeFilter, findOpts)
+	cursor, err := r.collection.Find(ctx, bson.M{}, findOpts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var categories []*bookstore.Category
-	if err = cursor.All(ctx, &categories); err != nil {
+	var allCategories []*bookstore.Category
+	if err = cursor.All(ctx, &allCategories); err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	return filterCategoriesInMemory(allCategories, safeFilter), nil
 }
 
 // GetTree 获取分类树
@@ -364,4 +390,55 @@ func sanitizeCategoryListFilter(filter interface{}) (bson.M, error) {
 	}
 
 	return out, nil
+}
+
+func filterCategoriesInMemory(categories []*bookstore.Category, filter bson.M) []*bookstore.Category {
+	if len(filter) == 0 {
+		return categories
+	}
+
+	result := make([]*bookstore.Category, 0, len(categories))
+	for _, cat := range categories {
+		if cat == nil {
+			continue
+		}
+		if !matchesCategoryFilter(cat, filter) {
+			continue
+		}
+		result = append(result, cat)
+	}
+	return result
+}
+
+func matchesCategoryFilter(cat *bookstore.Category, filter bson.M) bool {
+	for key, value := range filter {
+		switch key {
+		case "_id":
+			id, _ := value.(string)
+			if cat.ID != id {
+				return false
+			}
+		case "name":
+			name, _ := value.(string)
+			if cat.Name != name {
+				return false
+			}
+		case "parent_id":
+			parentID, _ := value.(string)
+			if cat.ParentID == nil || *cat.ParentID != parentID {
+				return false
+			}
+		case "is_active":
+			active, _ := value.(bool)
+			if cat.IsActive != active {
+				return false
+			}
+		case "level":
+			level, _ := value.(int)
+			if cat.Level != level {
+				return false
+			}
+		}
+	}
+	return true
 }
