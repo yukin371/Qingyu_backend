@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"Qingyu_backend/models/admin"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
@@ -129,8 +131,7 @@ func (s *UserAdminServiceImpl) GetUserList(ctx context.Context, filter *adminrep
 
 // GetUserDetail 获取用户详情
 func (s *UserAdminServiceImpl) GetUserDetail(ctx context.Context, userID string) (*users.User, error) {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return nil, ErrInvalidUserID
 	}
 
@@ -144,8 +145,7 @@ func (s *UserAdminServiceImpl) GetUserDetail(ctx context.Context, userID string)
 
 // UpdateUserStatus 更新用户状态
 func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID string, status users.UserStatus) error {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return ErrInvalidUserID
 	}
 
@@ -165,8 +165,7 @@ func (s *UserAdminServiceImpl) UpdateUserStatus(ctx context.Context, userID stri
 
 // UpdateUserStatusWithReason 更新用户状态（带封禁原因记录）
 func (s *UserAdminServiceImpl) UpdateUserStatusWithReason(ctx context.Context, userID string, status users.UserStatus, operatorID string, banReason *string) error {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return ErrInvalidUserID
 	}
 
@@ -250,8 +249,7 @@ func (s *UserAdminServiceImpl) recordBanHistory(ctx context.Context, userID stri
 
 // UpdateUserRole 更新用户角色
 func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role string) error {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return ErrInvalidUserID
 	}
 
@@ -280,8 +278,7 @@ func (s *UserAdminServiceImpl) UpdateUserRole(ctx context.Context, userID, role 
 
 // DeleteUser 删除用户
 func (s *UserAdminServiceImpl) DeleteUser(ctx context.Context, userID string) error {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return ErrInvalidUserID
 	}
 
@@ -304,8 +301,8 @@ func (s *UserAdminServiceImpl) BatchUpdateStatus(ctx context.Context, userIDs []
 	// 过滤有效的 ID
 	validIDs := make([]string, 0, len(userIDs))
 	for _, idStr := range userIDs {
-		if idStr == "" {
-			continue // 跳过空ID
+		if !isValidUserID(idStr) {
+			continue // 跳过无效ID
 		}
 
 		// 检查是否是管理员
@@ -332,8 +329,7 @@ func (s *UserAdminServiceImpl) BatchDeleteUsers(ctx context.Context, userIDs []s
 
 // GetUserActivities 获取用户活动记录
 func (s *UserAdminServiceImpl) GetUserActivities(ctx context.Context, userID string, page, pageSize int) ([]*users.UserActivity, int64, error) {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return nil, 0, ErrInvalidUserID
 	}
 
@@ -356,8 +352,7 @@ func (s *UserAdminServiceImpl) GetUserActivities(ctx context.Context, userID str
 
 // GetUserStatistics 获取用户统计信息
 func (s *UserAdminServiceImpl) GetUserStatistics(ctx context.Context, userID string) (*users.UserStatistics, error) {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return nil, ErrInvalidUserID
 	}
 
@@ -373,8 +368,7 @@ func (s *UserAdminServiceImpl) GetUserStatistics(ctx context.Context, userID str
 
 // ResetUserPassword 重置用户密码
 func (s *UserAdminServiceImpl) ResetUserPassword(ctx context.Context, userID string) (string, error) {
-	// 验证 ID 格式
-	if userID == "" {
+	if !isValidUserID(userID) {
 		return "", ErrInvalidUserID
 	}
 
@@ -488,6 +482,14 @@ func generateRandomPassword(length int) (string, error) {
 	}
 
 	return string(b), nil
+}
+
+func isValidUserID(userID string) bool {
+	if userID == "" {
+		return false
+	}
+	_, err := primitive.ObjectIDFromHex(userID)
+	return err == nil
 }
 
 // ============ 创建用户相关 ============
