@@ -26,6 +26,21 @@ func main() {
 	}
 	log.Println("[Main] Configuration loaded successfully")
 
+	// 注册配置重载处理器
+	config.RegisterReloadHandler("database", func() {
+		if err := core.InitDB(); err != nil {
+			log.Printf("Failed to reload database configuration: %v", err)
+		}
+	})
+
+	config.RegisterReloadHandler("server", func() {
+		log.Println("Server configuration reloaded")
+	})
+
+	// 启用配置热重载
+	config.EnableHotReload()
+	log.Println("[Main] Configuration hot reload enabled")
+
 	// 初始化服务器（包含数据库和路由）
 	r, err := core.InitServer()
 	if err != nil {
