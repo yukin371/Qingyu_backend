@@ -60,6 +60,12 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
       - name: Verify dependencies
         run: go mod verify
 
@@ -100,10 +106,11 @@ jobs:
 
       - name: Run unit tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
         run: |
@@ -196,12 +203,19 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
       - name: Run integration tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
         run: |
@@ -266,15 +280,22 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
       - name: Build application
         run: go build -o server cmd/server/main.go
 
       - name: Run application in background
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
         run: |
           ./server &
@@ -282,10 +303,11 @@ jobs:
 
       - name: Run API tests
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
         run: |
           go test -v -race -count=1 \
@@ -339,12 +361,19 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
       - name: Run E2E Layer 1 - Basic Flows
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
@@ -355,10 +384,11 @@ jobs:
 
       - name: Run E2E Layer 2 - Data Consistency
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |
@@ -369,10 +399,11 @@ jobs:
 
       - name: Run E2E Layer 3 - Boundary Scenarios
         env:
-          MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          MONGODB_DATABASE: qingyu_test
-          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/qingyu?authSource=admin
-          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: qingyu_test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           ENVIRONMENT: test
         run: |

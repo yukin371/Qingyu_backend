@@ -28,9 +28,7 @@ func InitTestConfig() {
 
 		// 从环境变量获取数据库名，如果没有则使用默认值
 		mongoDB := os.Getenv("MONGODB_DATABASE")
-		if mongoDB == "" {
-			mongoDB = "qingyu_test"
-		}
+		mongoDB = resolveTestMongoDatabaseName(mongoDB)
 
 		config.GlobalConfig = &config.Config{
 			JWT: &config.JWTConfig{
