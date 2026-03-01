@@ -61,13 +61,8 @@ func (r *CategoryAdminMongoRepository) BatchUpdateStatus(ctx context.Context, ca
 func (r *CategoryAdminMongoRepository) GetDescendantIDs(ctx context.Context, categoryID string) ([]string, error) {
 	var descendantIDs []string
 
-	objectID, err := primitive.ObjectIDFromHex(categoryID)
-	if err != nil {
-		return nil, err
-	}
-
 	// 获取直接子分类
-	filter := bson.M{"parent_id": objectID}
+	filter := bson.M{"parent_id": categoryID}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -94,12 +89,7 @@ func (r *CategoryAdminMongoRepository) GetDescendantIDs(ctx context.Context, cat
 
 // HasChildren 检查是否有子分类
 func (r *CategoryAdminMongoRepository) HasChildren(ctx context.Context, categoryID string) (bool, error) {
-	objectID, err := primitive.ObjectIDFromHex(categoryID)
-	if err != nil {
-		return false, err
-	}
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{"parent_id": objectID})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"parent_id": categoryID})
 	if err != nil {
 		return false, err
 	}
@@ -117,11 +107,7 @@ func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, pa
 			{"parent_id": nil},
 		}
 	} else {
-		parentObjectID, err := primitive.ObjectIDFromHex(*parentID)
-		if err != nil {
-			return false, err
-		}
-		filter["parent_id"] = parentObjectID
+		filter["parent_id"] = *parentID
 	}
 
 	// 排除当前分类（用于更新时校验）

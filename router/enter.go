@@ -604,12 +604,16 @@ func RegisterRoutes(r *gin.Engine) {
 		// 创建用户管理服务
 		userAdminSvc := adminservice.NewUserAdminService(userAdminRepo)
 
+		// 创建分类管理仓储和服务
+		categoryAdminRepo := adminrep.NewCategoryAdminMongoRepository(mongoDB)
+		categorySvc := adminservice.NewCategoryAdminService(categoryAdminRepo)
+
 		// 创建权限管理仓储和服务
 		permissionRepo := authRep.NewMongoPermissionRepository(mongoDB)
 		permissionSvc := sharedService.NewPermissionService(permissionRepo)
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, categorySvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
 		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, nil)

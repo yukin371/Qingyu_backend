@@ -2,6 +2,7 @@ package admin
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -62,6 +63,14 @@ func (api *CategoryAdminAPI) GetCategories(c *gin.Context) {
 
 	if parentID := c.Query("parent_id"); parentID != "" {
 		filter.ParentID = &parentID
+	}
+	if levelStr := c.Query("level"); levelStr != "" {
+		level, err := strconv.Atoi(levelStr)
+		if err != nil {
+			response.ErrorJSON(c, http.StatusBadRequest, "level参数格式错误")
+			return
+		}
+		filter.Level = &level
 	}
 
 	categories, err := api.categoryService.GetCategories(c.Request.Context(), &filter)

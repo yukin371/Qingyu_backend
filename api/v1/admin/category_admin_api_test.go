@@ -221,6 +221,39 @@ func TestCategoryAdminAPI_GetCategories_WithFilter(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+// 测试获取分类列表 - 带level筛选参数
+func TestCategoryAdminAPI_GetCategories_WithLevelFilter(t *testing.T) {
+	mockService := new(MockCategoryAdminService)
+	router := setupCategoryTestRouter(mockService)
+
+	expectedCategories := []*bookstore.Category{
+		{ID: "1", Name: "玄幻"},
+	}
+
+	mockService.On("GetCategories", mock.Anything, mock.MatchedBy(func(filter *adminsvc.CategoryFilter) bool {
+		return filter != nil && filter.Level != nil && *filter.Level == 2
+	})).Return(expectedCategories, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/admin/categories?level=2", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+// 测试获取分类列表 - level参数格式错误
+func TestCategoryAdminAPI_GetCategories_InvalidLevel(t *testing.T) {
+	mockService := new(MockCategoryAdminService)
+	router := setupCategoryTestRouter(mockService)
+
+	req, _ := http.NewRequest("GET", "/api/v1/admin/categories?level=abc", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 // 测试获取分类列表 - 服务错误
 func TestCategoryAdminAPI_GetCategories_ServiceError(t *testing.T) {
 	mockService := new(MockCategoryAdminService)
