@@ -26,13 +26,13 @@ type CreateOrUpdateRequest struct {
 	UserID    string `json:"user_id" binding:"required"`
 	ProjectID string `json:"project_id" binding:"required"`
 	Action    string `json:"action" binding:"required"` // create, update, create_or_update, append
-	Document  WriterDraftData
+	Document  WriterDraftData `json:"document" binding:"required"`
 }
 
 // WriterDraftData 文档数据
 type WriterDraftData struct {
 	ChapterNum int    `json:"chapter_num"`
-	Title      string `json:"title" binding:"required"`
+	Title      string `json:"title"`
 	Content    string `json:"content"`
 	Format     string `json:"format"`
 }

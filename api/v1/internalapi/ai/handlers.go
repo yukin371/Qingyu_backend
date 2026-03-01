@@ -49,6 +49,17 @@ func (api *DocumentAPI) CreateOrUpdateDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if req.Document.ChapterNum == 0 && req.Document.Title == "" && req.Document.Content == "" && req.Document.Format == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "document is required"})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
+		})
+		return
+	}
 
 	doc, err := api.service.CreateOrUpdate(c.Request.Context(), &req)
 	if err != nil {
@@ -85,6 +96,13 @@ func (api *DocumentAPI) GetDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
 			"message": "user_id和project_id参数必填",
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
@@ -127,6 +145,13 @@ func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
 			"message": "user_id和project_id参数必填",
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
@@ -175,6 +200,13 @@ func (api *DocumentAPI) DeleteDocument(c *gin.Context) {
 		})
 		return
 	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
+		})
+		return
+	}
 
 	if err := api.service.DeleteDocument(c.Request.Context(), userID, projectID, docID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -214,6 +246,13 @@ func (api *DocumentAPI) BatchGetDocuments(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
 			"message": "参数错误",
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
@@ -412,6 +451,13 @@ func (api *ConceptAPI) CreateConcept(c *gin.Context) {
 		})
 		return
 	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
+		})
+		return
+	}
 
 	concept, err := api.service.Create(c.Request.Context(), &req)
 	if err != nil {
@@ -455,6 +501,13 @@ func (api *ConceptAPI) GetConcept(c *gin.Context) {
 		})
 		return
 	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
+		})
+		return
+	}
 
 	concept, err := api.service.GetConcept(c.Request.Context(), userID, projectID, conceptID)
 	if err != nil {
@@ -492,6 +545,13 @@ func (api *ConceptAPI) UpdateConcept(c *gin.Context) {
 			"code":    400,
 			"message": "参数错误",
 			"error":   err.Error(),
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
@@ -535,6 +595,13 @@ func (api *ConceptAPI) DeleteConcept(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
 			"message": "user_id和project_id参数必填",
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
@@ -587,6 +654,13 @@ func (api *ConceptAPI) SearchConcepts(c *gin.Context) {
 		})
 		return
 	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
+		})
+		return
+	}
 
 	concepts, total, err := api.service.Search(c.Request.Context(), userID, projectID, category, keyword, limit)
 	if err != nil {
@@ -630,6 +704,13 @@ func (api *ConceptAPI) BatchGetConcepts(c *gin.Context) {
 			"code":    400,
 			"message": "参数错误",
 			"error":   err.Error(),
+		})
+		return
+	}
+	if api.service == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "服务未初始化",
 		})
 		return
 	}
