@@ -3,16 +3,17 @@ package writer
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"Qingyu_backend/models/writer"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/repository/mongodb/base"
 
+	"Qingyu_backend/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"Qingyu_backend/pkg/errors"
 )
 
 // normalizeAndValidateConceptQueryID 规范化并验证设定查询ID
@@ -131,7 +132,8 @@ func (r *ConceptRepositoryMongo) Search(ctx context.Context, projectID, category
 
 	// 添加关键词搜索（在名称和内容中搜索）
 	if keyword != "" {
-		keywordPattern := bson.M{"$regex": keyword, "$options": "i"}
+		escapedKeyword := regexp.QuoteMeta(strings.TrimSpace(keyword))
+		keywordPattern := bson.M{"$regex": escapedKeyword, "$options": "i"}
 		filter["$or"] = []bson.M{
 			{"name": keywordPattern},
 			{"content": keywordPattern},
