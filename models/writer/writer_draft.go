@@ -9,14 +9,14 @@ import (
 // WriterDraft AI写作草稿模型
 // 用于AI写作助手功能中的文档草稿管理
 type WriterDraft struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ProjectID string             `bson:"project_id" json:"project_id"`
-	ChapterNum int               `bson:"chapter_num" json:"chapter_num"`
-	Title      string            `bson:"title" json:"title"`
-	Content    string            `bson:"content" json:"content"`
-	Format     string            `bson:"format" json:"format"` // markdown, html, text
-	WordCount  int               `bson:"word_count" json:"word_count"`
-	Version    int               `bson:"version" json:"version"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ProjectID  string             `bson:"project_id" json:"project_id"`
+	ChapterNum int                `bson:"chapter_num" json:"chapter_num"`
+	Title      string             `bson:"title" json:"title"`
+	Content    string             `bson:"content" json:"content"`
+	Format     string             `bson:"format" json:"format"` // markdown, html, text
+	WordCount  int                `bson:"word_count" json:"word_count"`
+	Version    int                `bson:"version" json:"version"`
 
 	// 元数据
 	Status string   `bson:"status" json:"status"` // draft, reviewing, completed
@@ -28,9 +28,9 @@ type WriterDraft struct {
 
 // DraftStatus 草稿状态常量
 const (
-	DraftStatusDraft      = "draft"      // 草稿中
-	DraftStatusReviewing  = "reviewing"  // 审核中
-	DraftStatusCompleted  = "completed"  // 已完成
+	DraftStatusDraft     = "draft"     // 草稿中
+	DraftStatusReviewing = "reviewing" // 审核中
+	DraftStatusCompleted = "completed" // 已完成
 )
 
 // ContentFormat 内容格式常量
@@ -66,7 +66,6 @@ func (d *WriterDraft) BeforeUpdate() {
 func (d *WriterDraft) UpdateContent(content string) {
 	d.Content = content
 	d.WordCount = len([]rune(content))
-	d.BeforeUpdate()
 }
 
 // IsMarkdown 判断是否为Markdown格式

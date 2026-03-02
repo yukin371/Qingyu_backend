@@ -82,7 +82,14 @@ func (s *ConceptService) Create(ctx context.Context, req *CreateConceptRequest) 
 //   - *writer.Concept: 设定对象
 //   - error: 查询错误
 func (s *ConceptService) GetConcept(ctx context.Context, userID, projectID, conceptID string) (*writer.Concept, error) {
-	return s.repo.GetByID(ctx, conceptID)
+	concept, err := s.repo.GetByID(ctx, conceptID)
+	if err != nil {
+		return nil, err
+	}
+	if !sameProjectID(concept.ProjectID, projectID) {
+		return nil, errors.New("concept not found")
+	}
+	return concept, nil
 }
 
 // Update 更新设定
@@ -114,8 +121,6 @@ func (s *ConceptService) Update(ctx context.Context, conceptID string, req *Upda
 	}
 
 	// 更新时间戳
-	concept.BeforeUpdate()
-
 	if err := s.repo.Update(ctx, concept); err != nil {
 		return nil, err
 	}
@@ -135,6 +140,13 @@ func (s *ConceptService) Update(ctx context.Context, conceptID string, req *Upda
 // 返回：
 //   - error: 删除错误
 func (s *ConceptService) Delete(ctx context.Context, userID, projectID, conceptID string) error {
+	concept, err := s.repo.GetByID(ctx, conceptID)
+	if err != nil {
+		return err
+	}
+	if !sameProjectID(concept.ProjectID, projectID) {
+		return errors.New("concept not found")
+	}
 	return s.repo.Delete(ctx, conceptID)
 }
 
@@ -182,7 +194,17 @@ func (s *ConceptService) Search(ctx context.Context, userID, projectID, category
 //   - []*writer.Concept: 设定列表
 //   - error: 查询错误
 func (s *ConceptService) BatchGet(ctx context.Context, userID, projectID string, conceptIDs []string) ([]*writer.Concept, error) {
-	return s.repo.BatchGetByIDs(ctx, conceptIDs)
+	concepts, err := s.repo.BatchGetByIDs(ctx, conceptIDs)
+	if err != nil {
+		return nil, err
+	}
+	filtered := make([]*writer.Concept, 0, len(concepts))
+	for _, concept := range concepts {
+		if sameProjectID(concept.ProjectID, projectID) {
+			filtered = append(filtered, concept)
+		}
+	}
+	return filtered, nil
 }
 
 // ListByProject 获取项目的设定列表

@@ -23,9 +23,9 @@ func NewWriterDraftService(repo writerRepo.WriterDraftRepository) *WriterDraftSe
 
 // CreateOrUpdateRequest 创建或更新请求
 type CreateOrUpdateRequest struct {
-	UserID    string `json:"user_id" binding:"required"`
-	ProjectID string `json:"project_id" binding:"required"`
-	Action    string `json:"action" binding:"required"` // create, update, create_or_update, append
+	UserID    string          `json:"user_id" binding:"required"`
+	ProjectID string          `json:"project_id" binding:"required"`
+	Action    string          `json:"action" binding:"required"` // create, update, create_or_update, append
 	Document  WriterDraftData `json:"document" binding:"required"`
 }
 
@@ -150,7 +150,14 @@ func (s *WriterDraftService) append(ctx context.Context, req *CreateOrUpdateRequ
 
 // GetDocument 获取文档
 func (s *WriterDraftService) GetDocument(ctx context.Context, userID, projectID, documentID string) (*writer.WriterDraft, error) {
-	return s.repo.GetByID(ctx, documentID)
+	doc, err := s.repo.GetByID(ctx, documentID)
+	if err != nil {
+		return nil, err
+	}
+	if !sameProjectID(doc.ProjectID, projectID) {
+		return nil, errors.New("document not found")
+	}
+	return doc, nil
 }
 
 // ListDocuments 列出文档
@@ -161,12 +168,29 @@ func (s *WriterDraftService) ListDocuments(ctx context.Context, userID, projectI
 
 // DeleteDocument 删除文档
 func (s *WriterDraftService) DeleteDocument(ctx context.Context, userID, projectID, documentID string) error {
+	doc, err := s.repo.GetByID(ctx, documentID)
+	if err != nil {
+		return err
+	}
+	if !sameProjectID(doc.ProjectID, projectID) {
+		return errors.New("document not found")
+	}
 	return s.repo.Delete(ctx, documentID)
 }
 
 // BatchGetDocuments 批量获取文档
 func (s *WriterDraftService) BatchGetDocuments(ctx context.Context, userID, projectID string, documentIDs []string) ([]*writer.WriterDraft, error) {
-	return s.repo.BatchGetByIDs(ctx, documentIDs)
+	docs, err := s.repo.BatchGetByIDs(ctx, documentIDs)
+	if err != nil {
+		return nil, err
+	}
+	filtered := make([]*writer.WriterDraft, 0, len(docs))
+	for _, doc := range docs {
+		if sameProjectID(doc.ProjectID, projectID) {
+			filtered = append(filtered, doc)
+		}
+	}
+	return filtered, nil
 }
 
 // GetDocumentByProjectAndChapter 根据项目和章节获取文档

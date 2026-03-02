@@ -3,8 +3,8 @@ package internalapi
 import (
 	"github.com/gin-gonic/gin"
 
-	internalService "Qingyu_backend/service/internalapi"
 	"Qingyu_backend/api/v1/internalapi/ai"
+	internalService "Qingyu_backend/service/internalapi"
 )
 
 // RegisterInternalAPIRoutes 注册内部AI API路由
