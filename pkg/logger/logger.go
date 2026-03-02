@@ -52,6 +52,13 @@ func sanitizeLogMessage(msg string) string {
 	return replacer.Replace(msg)
 }
 
+func appendLogMessageField(fields []zap.Field, msg string) []zap.Field {
+	out := make([]zap.Field, 0, len(fields)+1)
+	out = append(out, fields...)
+	out = append(out, zap.String("event_message", sanitizeLogMessage(msg)))
+	return out
+}
+
 // Config 日志配置
 type Config struct {
 	Level       string `json:"level"`       // debug/info/warn/error/dpanic/panic/fatal
@@ -343,37 +350,37 @@ func (l *Logger) WithError(err error) *Logger {
 
 // Debug 调试日志
 func (l *Logger) Debug(msg string, fields ...zap.Field) {
-	l.Logger.Debug(sanitizeLogMessage(msg), fields...)
+	l.Logger.Debug("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Info 信息日志
 func (l *Logger) Info(msg string, fields ...zap.Field) {
-	l.Logger.Info(sanitizeLogMessage(msg), fields...)
+	l.Logger.Info("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Warn 警告日志
 func (l *Logger) Warn(msg string, fields ...zap.Field) {
-	l.Logger.Warn(sanitizeLogMessage(msg), fields...)
+	l.Logger.Warn("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Error 错误日志
 func (l *Logger) Error(msg string, fields ...zap.Field) {
-	l.Logger.Error(sanitizeLogMessage(msg), fields...)
+	l.Logger.Error("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Fatal 致命错误日志
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
-	l.Logger.Fatal(sanitizeLogMessage(msg), fields...)
+	l.Logger.Fatal("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Panic Panic日志
 func (l *Logger) Panic(msg string, fields ...zap.Field) {
-	l.Logger.Panic(sanitizeLogMessage(msg), fields...)
+	l.Logger.Panic("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // DPanic 开发模式Panic日志
 func (l *Logger) DPanic(msg string, fields ...zap.Field) {
-	l.Logger.DPanic(sanitizeLogMessage(msg), fields...)
+	l.Logger.DPanic("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Debugf 格式化调试日志
