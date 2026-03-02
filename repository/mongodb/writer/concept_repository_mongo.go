@@ -111,6 +111,7 @@ func (r *ConceptRepositoryMongo) ListByProject(ctx context.Context, projectID st
 	// 按分类和名称排序
 	opts := options.Find().SetSort(bson.M{"category": 1, "name": 1})
 
+	// codeql[go/nosql-injection]: query fields are validated (project/category) and keyword matching is done in-memory
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find concepts failed", err)
