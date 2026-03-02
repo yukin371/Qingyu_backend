@@ -16,6 +16,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var conceptCategoryPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,64}$`)
+
 // normalizeAndValidateConceptQueryID 规范化并验证设定查询ID
 //
 // 确保ID格式正确，避免不同大小写/格式带来的查询歧义喵~
@@ -30,6 +32,17 @@ func normalizeAndValidateConceptQueryID(field, value string, allowEmpty bool) (s
 	// 验证hex格式（这里不做转换，因为concept.ID可能已经是字符串格式）
 	if len(normalized) != 24 {
 		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
+	}
+	return normalized, nil
+}
+
+func normalizeAndValidateConceptCategory(value string) (string, error) {
+	normalized := strings.TrimSpace(value)
+	if normalized == "" {
+		return "", nil
+	}
+	if !conceptCategoryPattern.MatchString(normalized) {
+		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid category format", nil)
 	}
 	return normalized, nil
 }
@@ -120,24 +133,18 @@ func (r *ConceptRepositoryMongo) Search(ctx context.Context, projectID, category
 	if err != nil {
 		return nil, err
 	}
+	safeCategory, err := normalizeAndValidateConceptCategory(category)
+	if err != nil {
+		return nil, err
+	}
 
 	filter := bson.M{
 		"project_id": safeProjectID,
 	}
 
 	// 添加分类筛选
-	if category != "" {
-		filter["category"] = category
-	}
-
-	// 添加关键词搜索（在名称和内容中搜索）
-	if keyword != "" {
-		escapedKeyword := regexp.QuoteMeta(strings.TrimSpace(keyword))
-		keywordPattern := bson.M{"$regex": escapedKeyword, "$options": "i"}
-		filter["$or"] = []bson.M{
-			{"name": keywordPattern},
-			{"content": keywordPattern},
-		}
+	if safeCategory != "" {
+		filter["category"] = safeCategory
 	}
 
 	// 按分类和名称排序
@@ -154,7 +161,22 @@ func (r *ConceptRepositoryMongo) Search(ctx context.Context, projectID, category
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "decode concepts failed", err)
 	}
 
-	return concepts, nil
+	normalizedKeyword := strings.ToLower(strings.TrimSpace(keyword))
+	if normalizedKeyword == "" {
+		return concepts, nil
+	}
+
+	filtered := make([]*writer.Concept, 0, len(concepts))
+	for _, concept := range concepts {
+		name := strings.ToLower(concept.Name)
+		content := strings.ToLower(concept.Content)
+		if strings.Contains(name, normalizedKeyword) || strings.Contains(content, normalizedKeyword) {
+			filtered = append(filtered, concept)
+		}
+	}
+
+	return filtered, nil
+
 }
 
 // Update 更新设定
