@@ -26,11 +26,10 @@ func AIAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 1. 验证API Key
 		apiKey := c.GetHeader(AIServiceKeyHeader)
-		expectedKey := cfg.AI.AIService.InternalAPIKey
+		expectedKey := strings.TrimSpace(cfg.AI.AIService.InternalAPIKey)
 
-		if apiKey == "" || apiKey != expectedKey {
+		if apiKey == "" || expectedKey == "" || apiKey != expectedKey {
 			logger.Warn("AI service authentication failed",
 				zap.String("client_ip", c.ClientIP()),
 				zap.Bool("has_key", apiKey != ""))
@@ -65,8 +64,12 @@ func isAllowedIP(clientIP string, allowedIPs []string) bool {
 
 	for _, allowed := range allowedIPs {
 		// 检查CIDR
-		if strings.Contains(allowed, "/") {
-			_, ipNet, err := net.ParseCIDR(allowed)
+		candidate := strings.TrimSpace(allowed)
+		if candidate == "" {
+			continue
+		}
+		if strings.Contains(candidate, "/") {
+			_, ipNet, err := net.ParseCIDR(candidate)
 			if err != nil {
 				continue
 			}
@@ -75,7 +78,8 @@ func isAllowedIP(clientIP string, allowedIPs []string) bool {
 			}
 		} else {
 			// 精确匹配
-			if allowed == clientIP {
+			allowedIP := net.ParseIP(candidate)
+			if allowedIP != nil && allowedIP.Equal(ip) {
 				return true
 			}
 		}

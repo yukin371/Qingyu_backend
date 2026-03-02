@@ -444,8 +444,8 @@ func setDefaults() {
 	v.SetDefault("ai.ai_service.endpoint", "localhost:50052")
 	v.SetDefault("ai.ai_service.enable_fallback", false)
 	v.SetDefault("ai.ai_service.timeout", 30)
-	v.SetDefault("ai.ai_service.internal_api_key", "change-me-in-production")
-	v.SetDefault("ai.ai_service.allowed_ips", []string{"127.0.0.1", "10.0.0.0/8", "172.16.0.0/12"})
+	v.SetDefault("ai.ai_service.internal_api_key", "")
+	v.SetDefault("ai.ai_service.allowed_ips", []string{"127.0.0.1", "::1"})
 
 	// Elasticsearch 默认配置
 	v.SetDefault("elasticsearch.enabled", false)
