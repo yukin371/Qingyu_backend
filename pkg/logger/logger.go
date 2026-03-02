@@ -350,21 +350,25 @@ func (l *Logger) WithError(err error) *Logger {
 
 // Debug 调试日志
 func (l *Logger) Debug(msg string, fields ...zap.Field) {
+	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Debug("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Info 信息日志
 func (l *Logger) Info(msg string, fields ...zap.Field) {
+	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Info("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Warn 警告日志
 func (l *Logger) Warn(msg string, fields ...zap.Field) {
+	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Warn("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Error 错误日志
 func (l *Logger) Error(msg string, fields ...zap.Field) {
+	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Error("application_log", appendLogMessageField(fields, msg)...)
 }
 
