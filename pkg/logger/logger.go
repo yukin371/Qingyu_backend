@@ -41,6 +41,17 @@ type Logger struct {
 	sugar *zap.SugaredLogger
 }
 
+// sanitizeLogMessage removes control characters that may cause log injection
+// in line-based log processors.
+func sanitizeLogMessage(msg string) string {
+	replacer := strings.NewReplacer(
+		"\r", "\\r",
+		"\n", "\\n",
+		"\t", "\\t",
+	)
+	return replacer.Replace(msg)
+}
+
 // Config 日志配置
 type Config struct {
 	Level       string `json:"level"`       // debug/info/warn/error/dpanic/panic/fatal
@@ -332,37 +343,37 @@ func (l *Logger) WithError(err error) *Logger {
 
 // Debug 调试日志
 func (l *Logger) Debug(msg string, fields ...zap.Field) {
-	l.Logger.Debug(msg, fields...)
+	l.Logger.Debug(sanitizeLogMessage(msg), fields...)
 }
 
 // Info 信息日志
 func (l *Logger) Info(msg string, fields ...zap.Field) {
-	l.Logger.Info(msg, fields...)
+	l.Logger.Info(sanitizeLogMessage(msg), fields...)
 }
 
 // Warn 警告日志
 func (l *Logger) Warn(msg string, fields ...zap.Field) {
-	l.Logger.Warn(msg, fields...)
+	l.Logger.Warn(sanitizeLogMessage(msg), fields...)
 }
 
 // Error 错误日志
 func (l *Logger) Error(msg string, fields ...zap.Field) {
-	l.Logger.Error(msg, fields...)
+	l.Logger.Error(sanitizeLogMessage(msg), fields...)
 }
 
 // Fatal 致命错误日志
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
-	l.Logger.Fatal(msg, fields...)
+	l.Logger.Fatal(sanitizeLogMessage(msg), fields...)
 }
 
 // Panic Panic日志
 func (l *Logger) Panic(msg string, fields ...zap.Field) {
-	l.Logger.Panic(msg, fields...)
+	l.Logger.Panic(sanitizeLogMessage(msg), fields...)
 }
 
 // DPanic 开发模式Panic日志
 func (l *Logger) DPanic(msg string, fields ...zap.Field) {
-	l.Logger.DPanic(msg, fields...)
+	l.Logger.DPanic(sanitizeLogMessage(msg), fields...)
 }
 
 // Debugf 格式化调试日志
