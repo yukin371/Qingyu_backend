@@ -31,10 +31,10 @@ require (
 	github.com/swaggo/swag v1.16.6
 	github.com/xuri/excelize/v2 v2.10.1
 	go.mongodb.org/mongo-driver v1.17.4
-	go.opentelemetry.io/otel v1.39.0
+	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
-	go.opentelemetry.io/otel/trace v1.39.0
+	go.opentelemetry.io/otel/trace v1.40.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/oauth2 v0.30.0
@@ -124,7 +124,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
