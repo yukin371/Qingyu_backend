@@ -115,7 +115,8 @@ type DocumentContentRepository interface {
 	GetByDocumentID(ctx context.Context, documentID string) (*writer.DocumentContent, error)
 
 	// 带版本号的更新（乐观锁）
-	UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error
+	// 仅执行持久化层更新，业务字段计算应在Service层完成
+	UpdateWithVersion(ctx context.Context, documentID string, updates map[string]interface{}, expectedVersion int) error
 
 	// 批量更新
 	BatchUpdateContent(ctx context.Context, updates map[string]string) error
