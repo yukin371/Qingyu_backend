@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mozillazg/go-pinyin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -48,9 +49,22 @@ func (api *KeywordApi) SearchKeywords(c *gin.Context) {
 		return
 	}
 
+	// 验证projectId格式
+	if _, err := primitive.ObjectIDFromHex(projectID); err != nil {
+		response.BadRequest(c, "项目ID格式无效", "")
+		return
+	}
+
 	query := strings.TrimSpace(c.Query("q"))
 	if query == "" {
 		response.BadRequest(c, "q 不能为空", "")
+		return
+	}
+
+	// 限制查询长度，防止DoS攻击
+	const maxQueryLength = 50
+	if len(query) > maxQueryLength {
+		response.BadRequest(c, "查询字符串过长（最大50字符）", "")
 		return
 	}
 

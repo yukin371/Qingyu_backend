@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/pkg/response"
 )
@@ -79,6 +80,12 @@ func (api *RecommendationAPI) GetTable(c *gin.Context) {
 	}
 
 	id := c.Param("id")
+	// 验证id格式
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		response.BadRequest(c, "ID格式无效", "")
+		return
+	}
+
 	table, err := api.tableService.GetTable(c.Request.Context(), id)
 	if err != nil {
 		c.Error(err)
@@ -111,8 +118,16 @@ func (api *RecommendationAPI) UpsertAutoTable(c *gin.Context) {
 		return
 	}
 
-	updatedBy, _ := c.Get("user_id")
-	updatedByStr, _ := updatedBy.(string)
+	updatedBy, exists := c.Get("user_id")
+	if !exists {
+		response.BadRequest(c, "用户未认证", "")
+		return
+	}
+	updatedByStr, ok := updatedBy.(string)
+	if !ok || updatedByStr == "" {
+		response.BadRequest(c, "用户ID无效", "")
+		return
+	}
 
 	if err := api.tableService.UpsertAutoTable(c.Request.Context(), reco.TableType(tableType), period, req.Items, updatedByStr); err != nil {
 		c.Error(err)
@@ -134,8 +149,16 @@ func (api *RecommendationAPI) CreateManualTable(c *gin.Context) {
 		return
 	}
 
-	updatedBy, _ := c.Get("user_id")
-	updatedByStr, _ := updatedBy.(string)
+	updatedBy, exists := c.Get("user_id")
+	if !exists {
+		response.BadRequest(c, "用户未认证", "")
+		return
+	}
+	updatedByStr, ok := updatedBy.(string)
+	if !ok || updatedByStr == "" {
+		response.BadRequest(c, "用户ID无效", "")
+		return
+	}
 	if err := api.tableService.CreateManualTable(c.Request.Context(), req.Name, req.Period, req.Items, updatedByStr); err != nil {
 		c.Error(err)
 		return
@@ -151,14 +174,28 @@ func (api *RecommendationAPI) UpdateManualTable(c *gin.Context) {
 	}
 
 	id := c.Param("id")
+	// 验证id格式
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		response.BadRequest(c, "ID格式无效", "")
+		return
+	}
+
 	var req updateManualTableRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	updatedBy, _ := c.Get("user_id")
-	updatedByStr, _ := updatedBy.(string)
+	updatedBy, exists := c.Get("user_id")
+	if !exists {
+		response.BadRequest(c, "用户未认证", "")
+		return
+	}
+	updatedByStr, ok := updatedBy.(string)
+	if !ok || updatedByStr == "" {
+		response.BadRequest(c, "用户ID无效", "")
+		return
+	}
 	if err := api.tableService.UpdateManualTable(c.Request.Context(), id, req.Name, req.Period, req.Items, req.Status, updatedByStr); err != nil {
 		c.Error(err)
 		return
@@ -174,6 +211,12 @@ func (api *RecommendationAPI) DeleteTable(c *gin.Context) {
 	}
 
 	id := c.Param("id")
+	// 验证id格式
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		response.BadRequest(c, "ID格式无效", "")
+		return
+	}
+
 	if err := api.tableService.DeleteTable(c.Request.Context(), id); err != nil {
 		c.Error(err)
 		return
