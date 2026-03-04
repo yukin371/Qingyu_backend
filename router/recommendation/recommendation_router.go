@@ -34,5 +34,19 @@ func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.Recommen
 
 		// 相似物品推荐
 		reco.GET("/similar", api.GetSimilarItems)
+
+		// 推荐榜查询（公开）
+		reco.GET("/tables", api.ListTables)
+		reco.GET("/tables/:id", api.GetTable)
+
+		// 推荐榜管理（管理员，当前使用JWT认证）
+		admin := reco.Group("/admin")
+		admin.Use(auth.JWTAuth())
+		{
+			admin.PUT("/tables/auto/:tableType/:period", api.UpsertAutoTable)
+			admin.POST("/tables/manual", api.CreateManualTable)
+			admin.PUT("/tables/manual/:id", api.UpdateManualTable)
+			admin.DELETE("/tables/manual/:id", api.DeleteTable)
+		}
 	}
 }
