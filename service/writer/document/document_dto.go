@@ -85,3 +85,23 @@ type DocumentContentResponse = dto.DocumentContentResponse
 // UpdateContentRequest 更新内容请求
 // Deprecated: 使用 dto.UpdateContentRequest 替代
 type UpdateContentRequest = dto.UpdateContentRequest
+
+// ParagraphContent 段落内容
+// Deprecated: 使用 dto.ParagraphContent 替代
+type ParagraphContent = dto.ParagraphContent
+
+// DocumentContentsResponse 文档段落内容响应
+// Deprecated: 使用 dto.DocumentContentsResponse 替代
+type DocumentContentsResponse = dto.DocumentContentsResponse
+
+// ReplaceDocumentContentsRequest 替换文档段落请求
+// Deprecated: 使用 dto.ReplaceDocumentContentsRequest 替代
+type ReplaceDocumentContentsRequest = dto.ReplaceDocumentContentsRequest
+
+// ReplaceDocumentContentsResponse 替换文档段落响应
+// Deprecated: 使用 dto.ReplaceDocumentContentsResponse 替代
+type ReplaceDocumentContentsResponse = dto.ReplaceDocumentContentsResponse
+
+// ReindexDocumentContentsResponse 重新编号响应
+// Deprecated: 使用 dto.ReindexDocumentContentsResponse 替代
+type ReindexDocumentContentsResponse = dto.ReindexDocumentContentsResponse

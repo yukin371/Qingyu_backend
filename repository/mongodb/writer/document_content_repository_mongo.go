@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -34,16 +33,6 @@ func NewMongoDocumentContentRepository(db *mongo.Database) writingInterface.Docu
 func (r *MongoDocumentContentRepository) Create(ctx context.Context, content *writer.DocumentContent) error {
 	if content == nil {
 		return fmt.Errorf("文档内容对象不能为空")
-	}
-
-	if content.ID.IsZero() {
-		content.ID = primitive.NewObjectID()
-	}
-
-	content.TouchForCreate()
-
-	if err := content.Validate(); err != nil {
-		return fmt.Errorf("文档内容数据验证失败: %w", err)
 	}
 
 	_, err := r.GetCollection().InsertOne(ctx, content)
@@ -95,8 +84,13 @@ func (r *MongoDocumentContentRepository) GetByDocumentID(ctx context.Context, do
 
 // Update 更新文档内容
 func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
 	updates["updated_at"] = time.Now()
-	result, err := r.GetCollection().UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": updates})
+	result, err := r.GetCollection().UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("更新文档内容失败: %w", err)
 	}
@@ -109,7 +103,7 @@ func (r *MongoDocumentContentRepository) Update(ctx context.Context, id string, 
 }
 
 // UpdateWithVersion 带版本号的更新（乐观锁）
-func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
+func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, updates map[string]interface{}, expectedVersion int) error {
 	objectID, err := r.ParseID(documentID)
 	if err != nil {
 		return fmt.Errorf("无效的DocumentID: %w", err)
@@ -120,17 +114,15 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 		"version":     expectedVersion,
 	}
 
-	// 计算字数统计
-	wordCount := len([]rune(content))
-	charCount := len(content)
+	setUpdates := map[string]interface{}{
+		"updated_at": time.Now(),
+	}
+	for k, v := range updates {
+		setUpdates[k] = v
+	}
 
 	update := bson.M{
-		"$set": bson.M{
-			"content":    content,
-			"word_count": wordCount,
-			"char_count": charCount,
-			"updated_at": time.Now(),
-		},
+		"$set": setUpdates,
 		"$inc": bson.M{
 			"version": 1,
 		},
@@ -142,7 +134,7 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("版本冲突，请重新获取最新内容")
+		return writingInterface.ErrOptimisticLockConflict
 	}
 
 	return nil
@@ -150,7 +142,12 @@ func (r *MongoDocumentContentRepository) UpdateWithVersion(ctx context.Context, 
 
 // Delete 删除文档内容
 func (r *MongoDocumentContentRepository) Delete(ctx context.Context, id string) error {
-	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": id})
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID: %w", err)
+	}
+
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("删除文档内容失败: %w", err)
 	}
@@ -164,7 +161,26 @@ func (r *MongoDocumentContentRepository) Delete(ctx context.Context, id string) 
 
 // List 列出文档内容
 func (r *MongoDocumentContentRepository) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.DocumentContent, error) {
-	cursor, err := r.GetCollection().Find(ctx, bson.M{})
+	query := bson.M{}
+	findOptions := options.Find()
+
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for key, value := range conditions {
+			query[key] = value
+		}
+
+		sortMap := filter.GetSort()
+		if len(sortMap) > 0 {
+			sort := bson.D{}
+			for key, value := range sortMap {
+				sort = append(sort, bson.E{Key: key, Value: value})
+			}
+			findOptions.SetSort(sort)
+		}
+	}
+
+	cursor, err := r.GetCollection().Find(ctx, query, findOptions)
 	if err != nil {
 		return nil, fmt.Errorf("查询文档内容列表失败: %w", err)
 	}
@@ -180,7 +196,15 @@ func (r *MongoDocumentContentRepository) List(ctx context.Context, filter infras
 
 // Count 统计文档内容数量
 func (r *MongoDocumentContentRepository) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
-	count, err := r.GetCollection().CountDocuments(ctx, bson.M{})
+	query := bson.M{}
+	if filter != nil {
+		conditions := filter.GetConditions()
+		for key, value := range conditions {
+			query[key] = value
+		}
+	}
+
+	count, err := r.GetCollection().CountDocuments(ctx, query)
 	if err != nil {
 		return 0, fmt.Errorf("统计文档内容数量失败: %w", err)
 	}
@@ -189,7 +213,12 @@ func (r *MongoDocumentContentRepository) Count(ctx context.Context, filter infra
 
 // Exists 检查文档内容是否存在
 func (r *MongoDocumentContentRepository) Exists(ctx context.Context, id string) (bool, error) {
-	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": id})
+	objectID, err := r.ParseID(id)
+	if err != nil {
+		return false, fmt.Errorf("无效的ID: %w", err)
+	}
+
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, fmt.Errorf("检查文档内容存在性失败: %w", err)
 	}
@@ -205,8 +234,13 @@ func (r *MongoDocumentContentRepository) BatchUpdateContent(ctx context.Context,
 
 // GetContentStats 获取内容统计
 func (r *MongoDocumentContentRepository) GetContentStats(ctx context.Context, documentID string) (wordCount, charCount int, err error) {
+	objectID, err := r.ParseID(documentID)
+	if err != nil {
+		return 0, 0, fmt.Errorf("无效的DocumentID: %w", err)
+	}
+
 	var content writer.DocumentContent
-	err = r.GetCollection().FindOne(ctx, bson.M{"document_id": documentID}, options.FindOne().SetProjection(bson.M{"word_count": 1, "char_count": 1})).Decode(&content)
+	err = r.GetCollection().FindOne(ctx, bson.M{"document_id": objectID}, options.FindOne().SetProjection(bson.M{"word_count": 1, "char_count": 1})).Decode(&content)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, 0, nil
