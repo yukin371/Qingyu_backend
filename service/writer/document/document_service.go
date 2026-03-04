@@ -3,12 +3,15 @@ package document
 import (
 	"Qingyu_backend/models/writer"
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	pkgErrors "Qingyu_backend/pkg/errors"
+	repoInfra "Qingyu_backend/repository/interfaces/infrastructure"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	serviceBase "Qingyu_backend/service/base"
 )
@@ -82,7 +85,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 
 	// 4. 创建文档对象（使用base mixins）
 	doc := &writer.Document{}
-	
+
 	// 转换 ProjectID string -> ObjectID
 	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
 	if err != nil {
@@ -90,7 +93,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	}
 	doc.ProjectID = projectID
 	doc.Title = req.Title
-	
+
 	// 转换 ParentID string -> ObjectID（如果有）
 	var parentID primitive.ObjectID
 	if req.ParentID != "" {
@@ -100,13 +103,13 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		}
 	}
 	doc.ParentID = parentID
-	
+
 	doc.Type = req.Type // DocumentType现在是string类型
 	doc.Level = level
 	doc.Order = req.Order
 	doc.Status = "planned"
 	doc.WordCount = 0
-	
+
 	// 转换 CharacterIDs []string -> []ObjectID
 	doc.CharacterIDs = make([]primitive.ObjectID, 0, len(req.CharacterIDs))
 	for _, id := range req.CharacterIDs {
@@ -116,7 +119,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		}
 		doc.CharacterIDs = append(doc.CharacterIDs, charID)
 	}
-	
+
 	// 转换 LocationIDs []string -> []ObjectID
 	doc.LocationIDs = make([]primitive.ObjectID, 0, len(req.LocationIDs))
 	for _, id := range req.LocationIDs {
@@ -126,7 +129,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		}
 		doc.LocationIDs = append(doc.LocationIDs, locID)
 	}
-	
+
 	// 转换 TimelineIDs []string -> []ObjectID
 	doc.TimelineIDs = make([]primitive.ObjectID, 0, len(req.TimelineIDs))
 	for _, id := range req.TimelineIDs {
@@ -136,7 +139,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		}
 		doc.TimelineIDs = append(doc.TimelineIDs, timeID)
 	}
-	
+
 	doc.Tags = req.Tags
 	doc.Notes = req.Notes
 
@@ -578,6 +581,9 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 			WordCount:   len([]rune(req.Content)),
 			CharCount:   len(req.Content),
 		}
+		if err := s.prepareDocumentContentForCreate(newContent); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档内容初始化失败", "", err)
+		}
 		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)
 		}
@@ -590,15 +596,15 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 			expectedVersion = content.Version
 		}
 
-		err := s.documentContentRepo.UpdateWithVersion(
-			ctx,
-			req.DocumentID,
-			req.Content,
-			expectedVersion,
-		)
+		err := s.documentContentRepo.UpdateWithVersion(ctx, req.DocumentID, map[string]interface{}{
+			"content":      req.Content,
+			"content_type": "markdown",
+			"word_count":   len([]rune(req.Content)),
+			"char_count":   len(req.Content),
+		}, expectedVersion)
 
 		if err != nil {
-			if err.Error() == "版本冲突，请重新获取最新内容" {
+			if errors.Is(err, writerRepo.ErrOptimisticLockConflict) {
 				// 版本冲突
 				return &AutoSaveResponse{
 					Saved:       false,
@@ -783,6 +789,9 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 			WordCount:   len([]rune(req.Content)),
 			CharCount:   len(req.Content),
 		}
+		if err := s.prepareDocumentContentForCreate(newContent); err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档内容初始化失败", "", err)
+		}
 		if err := s.documentContentRepo.Create(ctx, newContent); err != nil {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档内容失败", "", err)
 		}
@@ -794,15 +803,15 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 			expectedVersion = existingContent.Version
 		}
 
-		err := s.documentContentRepo.UpdateWithVersion(
-			ctx,
-			req.DocumentID,
-			req.Content,
-			expectedVersion,
-		)
+		err := s.documentContentRepo.UpdateWithVersion(ctx, req.DocumentID, map[string]interface{}{
+			"content":      req.Content,
+			"content_type": "markdown",
+			"word_count":   len([]rune(req.Content)),
+			"char_count":   len(req.Content),
+		}, expectedVersion)
 
 		if err != nil {
-			if err.Error() == "版本冲突，请重新获取最新内容" {
+			if errors.Is(err, writerRepo.ErrOptimisticLockConflict) {
 				return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorBusiness, "版本冲突，请刷新后重试", "", err)
 			}
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "保存内容失败", "", err)
@@ -832,6 +841,305 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
 		})
+	}
+
+	return nil
+}
+
+// GetDocumentContents 获取文档分段内容（tiptap）
+func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID string) (*DocumentContentsResponse, error) {
+	if documentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	_, doc, _, err := s.authHelper.VerifyDocumentView(ctx, documentID)
+	if err != nil {
+		return nil, err
+	}
+
+	docObjectID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
+	}
+
+	filter := &repoInfra.BaseFilter{
+		Conditions: map[string]interface{}{
+			"document_id":  docObjectID,
+			"content_type": "tiptap",
+		},
+		Sort: map[string]int{
+			"paragraph_order": 1,
+			"created_at":      1,
+		},
+	}
+
+	rows, err := s.documentContentRepo.List(ctx, filter)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档段落失败", "", err)
+	}
+
+	contents := make([]ParagraphContent, 0, len(rows))
+	wordCount := 0
+	for _, row := range rows {
+		paragraph := rowToParagraph(row)
+		contents = append(contents, paragraphToDTO(paragraph))
+		wordCount += len([]rune(paragraph.Content))
+	}
+
+	// 兼容旧模型：若不存在tiptap分段内容，则回退到单content
+	if len(contents) == 0 {
+		legacy, legacyErr := s.documentContentRepo.GetByDocumentID(ctx, documentID)
+		if legacyErr == nil && legacy != nil {
+			paragraph := rowToParagraph(legacy)
+			paragraph.Order = 1
+			contents = append(contents, paragraphToDTO(paragraph))
+			wordCount = len([]rune(paragraph.Content))
+		}
+	}
+
+	if wordCount == 0 {
+		wordCount = doc.WordCount
+	}
+
+	return &DocumentContentsResponse{
+		DocumentID: documentID,
+		Contents:   contents,
+		Total:      len(contents),
+		WordCount:  wordCount,
+		UpdatedAt:  doc.UpdatedAt,
+	}, nil
+}
+
+// ReplaceDocumentContents 批量替换文档分段内容（tiptap）
+func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *ReplaceDocumentContentsRequest) (*ReplaceDocumentContentsResponse, error) {
+	if req == nil || req.DocumentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+	if err := s.validateParagraphInputs(req.Contents); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, err.Error(), "", err)
+	}
+
+	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
+	if err != nil {
+		return nil, err
+	}
+
+	docObjectID, err := primitive.ObjectIDFromHex(req.DocumentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
+	}
+
+	filter := &repoInfra.BaseFilter{
+		Conditions: map[string]interface{}{
+			"document_id":  docObjectID,
+			"content_type": "tiptap",
+		},
+		Sort: map[string]int{
+			"paragraph_order": 1,
+		},
+	}
+	existingRows, err := s.documentContentRepo.List(ctx, filter)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询历史段落失败", "", err)
+	}
+
+	existingMap := make(map[string]*writer.DocumentContent, len(existingRows))
+	for _, row := range existingRows {
+		existingMap[row.ID.Hex()] = row
+	}
+
+	keepIDs := make(map[string]struct{}, len(req.Contents))
+	totalWordCount := 0
+
+	for idx, input := range req.Contents {
+		paragraph := dtoToParagraph(input, idx+1)
+		totalWordCount += len([]rune(paragraph.Content))
+
+		if paragraph.ID != "" {
+			if existing, ok := existingMap[paragraph.ID]; ok {
+				keepIDs[paragraph.ID] = struct{}{}
+				updates := map[string]interface{}{
+					"content":         paragraph.Content,
+					"content_type":    paragraph.ContentType,
+					"paragraph_order": paragraph.Order,
+					"word_count":      len([]rune(paragraph.Content)),
+					"char_count":      len(paragraph.Content),
+					"version":         existing.Version + 1,
+				}
+				if err := s.documentContentRepo.Update(ctx, paragraph.ID, updates); err != nil {
+					return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新段落失败", "", err)
+				}
+				continue
+			}
+		}
+
+		newRow := &writer.DocumentContent{
+			DocumentID:     docObjectID,
+			Content:        paragraph.Content,
+			ContentType:    paragraph.ContentType,
+			ParagraphOrder: paragraph.Order,
+			WordCount:      len([]rune(paragraph.Content)),
+			CharCount:      len(paragraph.Content),
+			Version:        1,
+		}
+
+		if paragraph.ID != "" {
+			oid, parseErr := primitive.ObjectIDFromHex(paragraph.ID)
+			if parseErr == nil {
+				newRow.ID = oid
+				keepIDs[paragraph.ID] = struct{}{}
+			}
+		}
+
+		if err := s.prepareDocumentContentForCreate(newRow); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "段落内容初始化失败", "", err)
+		}
+
+		if err := s.documentContentRepo.Create(ctx, newRow); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建段落失败", "", err)
+		}
+		keepIDs[newRow.ID.Hex()] = struct{}{}
+	}
+
+	for _, row := range existingRows {
+		if _, ok := keepIDs[row.ID.Hex()]; !ok {
+			if err := s.documentContentRepo.Delete(ctx, row.ID.Hex()); err != nil {
+				return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "删除旧段落失败", "", err)
+			}
+		}
+	}
+
+	now := time.Now()
+	if err := s.documentRepo.Update(ctx, req.DocumentID, map[string]interface{}{
+		"word_count": totalWordCount,
+		"updated_at": now,
+	}); err != nil {
+		fmt.Printf("警告：更新文档字数失败: %v\n", err)
+	}
+
+	if s.eventBus != nil {
+		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
+			EventType: "document.contents_replaced",
+			EventData: map[string]interface{}{
+				"document_id": req.DocumentID,
+				"total":       len(req.Contents),
+				"word_count":  totalWordCount,
+			},
+			Timestamp: now,
+			Source:    s.serviceName,
+		})
+	}
+
+	return &ReplaceDocumentContentsResponse{
+		DocumentID: req.DocumentID,
+		Total:      len(req.Contents),
+		WordCount:  totalWordCount,
+		UpdatedAt:  now,
+	}, nil
+}
+
+// ReindexDocumentContents 重建段落序号
+func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentID string) (*ReindexDocumentContentsResponse, error) {
+	if documentID == "" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
+	}
+
+	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, documentID)
+	if err != nil {
+		return nil, err
+	}
+
+	docObjectID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
+	}
+
+	filter := &repoInfra.BaseFilter{
+		Conditions: map[string]interface{}{
+			"document_id":  docObjectID,
+			"content_type": "tiptap",
+		},
+		Sort: map[string]int{
+			"paragraph_order": 1,
+			"created_at":      1,
+		},
+	}
+	rows, err := s.documentContentRepo.List(ctx, filter)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询段落失败", "", err)
+	}
+
+	for idx, row := range rows {
+		expectedOrder := idx + 1
+		if row.ParagraphOrder == expectedOrder {
+			continue
+		}
+		if err := s.documentContentRepo.Update(ctx, row.ID.Hex(), map[string]interface{}{
+			"paragraph_order": expectedOrder,
+			"version":         row.Version + 1,
+		}); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新段落顺序失败", "", err)
+		}
+	}
+
+	return &ReindexDocumentContentsResponse{
+		DocumentID: documentID,
+		Total:      len(rows),
+	}, nil
+}
+
+func (s *DocumentService) validateParagraphInputs(inputs []ParagraphContent) error {
+	seenID := make(map[string]struct{}, len(inputs))
+	seenOrder := make(map[int]struct{}, len(inputs))
+
+	for idx, input := range inputs {
+		if strings.TrimSpace(input.Content) == "" {
+			return fmt.Errorf("第%d段内容不能为空", idx+1)
+		}
+
+		if input.ParagraphID != "" {
+			if _, ok := seenID[input.ParagraphID]; ok {
+				return fmt.Errorf("存在重复段落ID: %s", input.ParagraphID)
+			}
+			seenID[input.ParagraphID] = struct{}{}
+		}
+
+		if input.Order > 0 {
+			if _, ok := seenOrder[input.Order]; ok {
+				return fmt.Errorf("存在重复段落顺序: %d", input.Order)
+			}
+			seenOrder[input.Order] = struct{}{}
+		}
+	}
+
+	return nil
+}
+
+func (s *DocumentService) prepareDocumentContentForCreate(content *writer.DocumentContent) error {
+	if content == nil {
+		return fmt.Errorf("文档内容不能为空")
+	}
+
+	if content.ID.IsZero() {
+		content.ID = primitive.NewObjectID()
+	}
+
+	now := time.Now()
+	if content.CreatedAt.IsZero() {
+		content.CreatedAt = now
+	}
+	if content.UpdatedAt.IsZero() {
+		content.UpdatedAt = now
+	}
+	if content.LastSavedAt.IsZero() {
+		content.LastSavedAt = now
+	}
+	if content.Version <= 0 {
+		content.Version = 1
+	}
+
+	if err := content.Validate(); err != nil {
+		return err
 	}
 
 	return nil

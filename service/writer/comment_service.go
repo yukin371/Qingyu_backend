@@ -80,9 +80,13 @@ func NewCommentService(commentRepo writerrepo.CommentRepository) CommentService 
 
 // CreateComment 创建批注
 func (s *CommentServiceImpl) CreateComment(ctx context.Context, comment *writer.DocumentComment) (*writer.DocumentComment, error) {
-	// 验证位置信息
-	if err := s.validatePosition(comment.Position); err != nil {
-		return nil, err
+	if comment == nil {
+		return nil, InvalidInput("comment")
+	}
+
+	// 新模型：评论必须绑定段落ID
+	if comment.ParagraphID.IsZero() {
+		return nil, InvalidInput("paragraphId")
 	}
 
 	// 验证类型
@@ -135,10 +139,9 @@ func (s *CommentServiceImpl) UpdateComment(ctx context.Context, commentID string
 		return CommentNotFound()
 	}
 
-	// 更新允许的字段
+	// 更新允许的字段（不允许修改绑定段落/位置）
 	existing.Content = comment.Content
 	existing.Type = comment.Type
-	existing.Position = comment.Position
 	existing.Metadata = comment.Metadata
 	existing.UpdatedAt = time.Now()
 
@@ -241,18 +244,19 @@ func (s *CommentServiceImpl) ReplyComment(ctx context.Context, parentID, content
 
 	// 创建回复
 	reply := &writer.DocumentComment{
-		DocumentID: parent.DocumentID,
-		ChapterID:  parent.ChapterID,
-		UserID:     userIDObj,
-		UserName:   userName,
-		Content:    content,
-		Type:       writer.CommentTypeComment,
-		Position:   parent.Position, // 继承父评论的位置
-		ParentID:   &parentIDObj,
-		ReplyTo:    &parentIDObj,
-		ThreadID:   parent.ThreadID,
-		Resolved:   false,
-		Metadata:   writer.CommentMetadata{},
+		DocumentID:  parent.DocumentID,
+		ParagraphID: parent.ParagraphID,
+		ChapterID:   parent.ChapterID,
+		UserID:      userIDObj,
+		UserName:    userName,
+		Content:     content,
+		Type:        writer.CommentTypeComment,
+		Position:    parent.Position, // 兼容历史数据
+		ParentID:    &parentIDObj,
+		ReplyTo:     &parentIDObj,
+		ThreadID:    parent.ThreadID,
+		Resolved:    false,
+		Metadata:    writer.CommentMetadata{},
 	}
 
 	if err := s.commentRepo.Create(ctx, reply); err != nil {

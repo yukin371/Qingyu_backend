@@ -43,12 +43,12 @@ type CreateProjectResponse struct {
 // UpdateProjectRequest 更新项目请求
 // 使用指针类型表示可选字段，允许部分更新
 type UpdateProjectRequest struct {
-	Title    *string   `json:"title,omitempty" validate:"omitempty,min=1,max=100"`
-	Summary  *string   `json:"summary,omitempty" validate:"omitempty,max=500"`
-	CoverURL *string   `json:"coverUrl,omitempty" validate:"omitempty,url"`
-	Category *string   `json:"category,omitempty" validate:"omitempty,max=50"`
-	Tags     []string  `json:"tags,omitempty" validate:"max=10"`
-	Status   *string   `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
+	Title    *string  `json:"title,omitempty" validate:"omitempty,min=1,max=100"`
+	Summary  *string  `json:"summary,omitempty" validate:"omitempty,max=500"`
+	CoverURL *string  `json:"coverUrl,omitempty" validate:"omitempty,url"`
+	Category *string  `json:"category,omitempty" validate:"omitempty,max=50"`
+	Tags     []string `json:"tags,omitempty" validate:"max=10"`
+	Status   *string  `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
 }
 
 // ListProjectsRequest 项目列表请求
@@ -124,13 +124,13 @@ type CreateDocumentResponse struct {
 // UpdateDocumentRequest 更新文档请求
 // 所有字段都是可选的，允许部分更新
 type UpdateDocumentRequest struct {
-	Title        *string   `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Notes        *string   `json:"notes,omitempty" validate:"omitempty,max=1000"`
-	Status       *string   `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
-	CharacterIDs []string  `json:"characterIds,omitempty" validate:"max=50"`
-	LocationIDs  []string  `json:"locationIds,omitempty" validate:"max=50"`
-	TimelineIDs  []string  `json:"timelineIds,omitempty" validate:"max=50"`
-	Tags         []string  `json:"tags,omitempty" validate:"max=20"`
+	Title        *string  `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Notes        *string  `json:"notes,omitempty" validate:"omitempty,max=1000"`
+	Status       *string  `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
+	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
+	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
+	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
+	Tags         []string `json:"tags,omitempty" validate:"max=20"`
 }
 
 // ListDocumentsRequest 文档列表请求
@@ -172,7 +172,7 @@ type ReorderDocumentsRequest struct {
 type AutoSaveRequest struct {
 	DocumentID     string `json:"documentId" validate:"required"`
 	Content        string `json:"content" validate:"required"`
-	CurrentVersion int    `json:"currentVersion" validate:"min=0"` // 客户端当前版本号
+	CurrentVersion int    `json:"currentVersion" validate:"min=0"`                 // 客户端当前版本号
 	SaveType       string `json:"saveType" validate:"omitempty,oneof=auto manual"` // auto|manual
 }
 
@@ -210,6 +210,45 @@ type UpdateContentRequest struct {
 	Version    int    `json:"version" validate:"min=0"` // 用于版本冲突检测
 }
 
+// ParagraphContent 段落内容
+type ParagraphContent struct {
+	ParagraphID string    `json:"paragraphId,omitempty"`
+	Order       int       `json:"order"`
+	Content     string    `json:"content"`
+	ContentType string    `json:"contentType,omitempty"` // tiptap | markdown
+	Version     int       `json:"version,omitempty"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+}
+
+// DocumentContentsResponse 文档段落内容响应
+type DocumentContentsResponse struct {
+	DocumentID string             `json:"documentId"`
+	Contents   []ParagraphContent `json:"contents"`
+	Total      int                `json:"total"`
+	WordCount  int                `json:"wordCount"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+}
+
+// ReplaceDocumentContentsRequest 替换文档段落请求
+type ReplaceDocumentContentsRequest struct {
+	DocumentID string             `json:"documentId" validate:"required"`
+	Contents   []ParagraphContent `json:"contents"`
+}
+
+// ReplaceDocumentContentsResponse 替换文档段落响应
+type ReplaceDocumentContentsResponse struct {
+	DocumentID string    `json:"documentId"`
+	Total      int       `json:"total"`
+	WordCount  int       `json:"wordCount"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+// ReindexDocumentContentsResponse 重新编号响应
+type ReindexDocumentContentsResponse struct {
+	DocumentID string `json:"documentId"`
+	Total      int    `json:"total"`
+}
+
 // DuplicateRequest 复制文档/项目请求
 type DuplicateRequest struct {
 	NewTitle      string `json:"newTitle" validate:"required,min=1,max=200"`
@@ -237,12 +276,12 @@ type VersionHistoryResponse struct {
 
 // VersionInfo 版本信息
 type VersionInfo struct {
-	VersionID  string    `json:"versionId"`
-	Version    int       `json:"version"`
-	Message    string    `json:"message"`
-	CreatedAt  time.Time `json:"createdAt"`
-	CreatedBy  string    `json:"createdBy"`
-	WordCount  int       `json:"wordCount"`
+	VersionID string    `json:"versionId"`
+	Version   int       `json:"version"`
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"createdAt"`
+	CreatedBy string    `json:"createdBy"`
+	WordCount int       `json:"wordCount"`
 }
 
 // VersionDetail 版本详情
@@ -259,11 +298,11 @@ type VersionDetail struct {
 
 // VersionDiff 版本差异
 type VersionDiff struct {
-	FromVersion  string      `json:"fromVersion"`
-	ToVersion    string      `json:"toVersion"`
+	FromVersion  string       `json:"fromVersion"`
+	ToVersion    string       `json:"toVersion"`
 	Changes      []ChangeItem `json:"changes"`
-	AddedLines   int         `json:"addedLines"`
-	DeletedLines int         `json:"deletedLines"`
+	AddedLines   int          `json:"addedLines"`
+	DeletedLines int          `json:"deletedLines"`
 }
 
 // ChangeItem 变更项
@@ -307,9 +346,9 @@ type UpdateOutlineRequest struct {
 type OutlineTreeNode struct {
 	// 这里应该嵌入实际的大纲节点模型
 	// *writer.OutlineNode
-	Title     string             `json:"title"`
-	Type      string             `json:"type"`
-	Children  []*OutlineTreeNode `json:"children,omitempty"`
+	Title    string             `json:"title"`
+	Type     string             `json:"type"`
+	Children []*OutlineTreeNode `json:"children,omitempty"`
 }
 
 // ============================================================================
@@ -393,11 +432,11 @@ type LocationNode struct {
 
 // CreateLocationRelationRequest 创建地点关系请求
 type CreateLocationRelationRequest struct {
-	FromID   string  `json:"fromId" validate:"required"`
-	ToID     string  `json:"toId" validate:"required"`
-	Type     string  `json:"type" validate:"required,max=50"`
-	Distance *int    `json:"distance,omitempty" validate:"omitempty,min=0"`
-	Notes    string  `json:"notes,omitempty" validate:"max=500"`
+	FromID   string `json:"fromId" validate:"required"`
+	ToID     string `json:"toId" validate:"required"`
+	Type     string `json:"type" validate:"required,max=50"`
+	Distance *int   `json:"distance,omitempty" validate:"omitempty,min=0"`
+	Notes    string `json:"notes,omitempty" validate:"max=500"`
 }
 
 // ============================================================================
@@ -470,18 +509,18 @@ type EventConnection struct {
 
 // PublishProjectRequest 发布项目请求
 type PublishProjectRequest struct {
-	BookstoreID    string     `json:"bookstoreId" validate:"required"`
-	CategoryID     string     `json:"categoryId" validate:"required"`
-	Tags           []string   `json:"tags" validate:"max=10"`
-	Description    string     `json:"description" validate:"max=1000"`
-	CoverImage     string     `json:"coverImage" validate:"omitempty,url"`
-	PublishType    string     `json:"publishType" validate:"required,oneof=serial complete"`
-	PublishTime    *time.Time `json:"publishTime,omitempty"`
-	Price          *float64   `json:"price,omitempty" validate:"omitempty,min=0"`
-	FreeChapters   int        `json:"freeChapters" validate:"min=0"`
-	AuthorNote     string     `json:"authorNote" validate:"max=500"`
-	EnableComment  bool       `json:"enableComment"`
-	EnableShare    bool       `json:"enableShare"`
+	BookstoreID   string     `json:"bookstoreId" validate:"required"`
+	CategoryID    string     `json:"categoryId" validate:"required"`
+	Tags          []string   `json:"tags" validate:"max=10"`
+	Description   string     `json:"description" validate:"max=1000"`
+	CoverImage    string     `json:"coverImage" validate:"omitempty,url"`
+	PublishType   string     `json:"publishType" validate:"required,oneof=serial complete"`
+	PublishTime   *time.Time `json:"publishTime,omitempty"`
+	Price         *float64   `json:"price,omitempty" validate:"omitempty,min=0"`
+	FreeChapters  int        `json:"freeChapters" validate:"min=0"`
+	AuthorNote    string     `json:"authorNote" validate:"max=500"`
+	EnableComment bool       `json:"enableComment"`
+	EnableShare   bool       `json:"enableShare"`
 }
 
 // PublishDocumentRequest 发布文档（章节）请求
@@ -539,7 +578,7 @@ type PublicationRecord struct {
 	ScheduledTime   *time.Time          `json:"scheduledTime"`
 	UnpublishTime   *time.Time          `json:"unpublishTime,omitempty"`
 	UnpublishReason string              `json:"unpublishReason,omitempty"`
-	Metadata        PublicationMetadata  `json:"metadata"`
+	Metadata        PublicationMetadata `json:"metadata"`
 	CreatedBy       string              `json:"createdBy"`
 	CreatedAt       time.Time           `json:"createdAt"`
 	UpdatedAt       time.Time           `json:"updatedAt"`
@@ -634,9 +673,9 @@ type ExportOptions struct {
 
 // ExportProjectRequest 导出项目请求
 type ExportProjectRequest struct {
-	Format          string `json:"format" validate:"required,oneof=txt md pdf docx epub"`
+	Format           string `json:"format" validate:"required,oneof=txt md pdf docx epub"`
 	IncludeDocuments bool   `json:"includeDocuments"`
-	IncludeMeta     bool   `json:"includeMeta"`
+	IncludeMeta      bool   `json:"includeMeta"`
 }
 
 // ExportTask 导出任务
@@ -672,7 +711,7 @@ type ExportFile struct {
 
 // DocumentTreeNode 文档树节点
 type DocumentTreeNode struct {
-	Document interface{}        `json:"document"`
+	Document interface{}         `json:"document"`
 	Children []*DocumentTreeNode `json:"children"`
 }
 
@@ -719,11 +758,11 @@ type ChapterListResponse struct {
 
 // ChapterPublishStatus 章节发布状态
 type ChapterPublishStatus struct {
-	ChapterID     string    `json:"chapterId"`
-	IsPublished   bool      `json:"isPublished"`
-	ChapterNumber int       `json:"chapterNumber"`
+	ChapterID     string     `json:"chapterId"`
+	IsPublished   bool       `json:"isPublished"`
+	ChapterNumber int        `json:"chapterNumber"`
 	PublishTime   *time.Time `json:"publishTime,omitempty"`
-	UpdateTime    time.Time `json:"updateTime"`
+	UpdateTime    time.Time  `json:"updateTime"`
 }
 
 // UpdateChapterPublishStatusRequest 更新章节发布状态请求
@@ -790,39 +829,39 @@ type ReadingStatsResponse struct {
 
 // ReadingHistoryResponse 阅读历史响应
 type ReadingHistoryResponse struct {
-	Progresses  []*ReadingProgressResponse `json:"progresses"`
-	Total       int64                      `json:"total"`
-	Page        int                        `json:"page"`
-	PageSize    int                        `json:"pageSize"`
-	TotalPages  int                        `json:"totalPages"`
+	Progresses []*ReadingProgressResponse `json:"progresses"`
+	Total      int64                      `json:"total"`
+	Page       int                        `json:"page"`
+	PageSize   int                        `json:"pageSize"`
+	TotalPages int                        `json:"totalPages"`
 }
 
 // ReadingTrendsResponse 阅读趋势响应
 type ReadingTrendsResponse struct {
-	Period string           `json:"period"` // daily, weekly, monthly
+	Period string            `json:"period"` // daily, weekly, monthly
 	Trends []*TrendDataPoint `json:"trends"`
 }
 
 // TrendDataPoint 趋势数据点
 type TrendDataPoint struct {
-	Date       string `json:"date"`
+	Date        string `json:"date"`
 	ReadingTime int64  `json:"readingTime"` // 秒
-	WordsRead  int64  `json:"wordsRead"`
-	BooksRead  int    `json:"booksRead"`
+	WordsRead   int64  `json:"wordsRead"`
+	BooksRead   int    `json:"booksRead"`
 }
 
 // ReadingStreakResponse 连续阅读天数响应
 type ReadingStreakResponse struct {
-	CurrentStreak int `json:"currentStreak"`
-	MaxStreak     int `json:"maxStreak"`
+	CurrentStreak int   `json:"currentStreak"`
+	MaxStreak     int   `json:"maxStreak"`
 	LastReadDate  int64 `json:"lastReadDate"`
 }
 
 // ProgressSyncData 进度同步数据
 type ProgressSyncData struct {
-	Progresses   []*ReadingProgressResponse `json:"progresses"`
-	SyncTime     int64                      `json:"syncTime"`
-	HasMore      bool                       `json:"hasMore"`
+	Progresses []*ReadingProgressResponse `json:"progresses"`
+	SyncTime   int64                      `json:"syncTime"`
+	HasMore    bool                       `json:"hasMore"`
 }
 
 // ============================================================================
@@ -831,17 +870,17 @@ type ProgressSyncData struct {
 
 // ProjectResponse 项目响应
 type ProjectResponse struct {
-	ProjectID   string              `json:"projectId"`
-	Title       string              `json:"title"`
-	Summary     string              `json:"summary"`
-	CoverURL    string              `json:"coverUrl"`
-	Category    string              `json:"category"`
-	Tags        []string            `json:"tags"`
-	Status      string              `json:"status"`
-	Statistics  *ProjectStatistics  `json:"statistics"`
-	CreatedBy   string              `json:"createdBy"`
-	CreatedAt   time.Time           `json:"createdAt"`
-	UpdatedAt   time.Time           `json:"updatedAt"`
+	ProjectID  string             `json:"projectId"`
+	Title      string             `json:"title"`
+	Summary    string             `json:"summary"`
+	CoverURL   string             `json:"coverUrl"`
+	Category   string             `json:"category"`
+	Tags       []string           `json:"tags"`
+	Status     string             `json:"status"`
+	Statistics *ProjectStatistics `json:"statistics"`
+	CreatedBy  string             `json:"createdBy"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
 }
 
 // ProjectStatistics 项目统计
@@ -874,23 +913,22 @@ type CollaboratorInfo struct {
 
 // DocumentResponse 文档响应
 type DocumentResponse struct {
-	DocumentID    string    `json:"documentId"`
-	ProjectID     string    `json:"projectId"`
-	ParentID      string    `json:"parentId,omitempty"`
-	Title         string    `json:"title"`
-	Type          string    `json:"type"`
-	Level         int       `json:"level"`
-	Order         int       `json:"order"`
-	Status        string    `json:"status"`
-	CharacterIDs  []string  `json:"characterIds,omitempty"`
-	LocationIDs   []string  `json:"locationIds,omitempty"`
-	TimelineIDs   []string  `json:"timelineIds,omitempty"`
-	Tags          []string  `json:"tags,omitempty"`
-	Notes         string    `json:"notes,omitempty"`
-	CreatedBy     string    `json:"createdBy"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	WordCount     int       `json:"wordCount"`
-	Version       int       `json:"version"`
+	DocumentID   string    `json:"documentId"`
+	ProjectID    string    `json:"projectId"`
+	ParentID     string    `json:"parentId,omitempty"`
+	Title        string    `json:"title"`
+	Type         string    `json:"type"`
+	Level        int       `json:"level"`
+	Order        int       `json:"order"`
+	Status       string    `json:"status"`
+	CharacterIDs []string  `json:"characterIds,omitempty"`
+	LocationIDs  []string  `json:"locationIds,omitempty"`
+	TimelineIDs  []string  `json:"timelineIds,omitempty"`
+	Tags         []string  `json:"tags,omitempty"`
+	Notes        string    `json:"notes,omitempty"`
+	CreatedBy    string    `json:"createdBy"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	WordCount    int       `json:"wordCount"`
+	Version      int       `json:"version"`
 }
-
