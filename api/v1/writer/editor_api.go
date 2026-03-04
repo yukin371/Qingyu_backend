@@ -1,13 +1,13 @@
 package writer
 
 import (
-	"context"
 	documentModel "Qingyu_backend/models/writer"
+	"context"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/document"
 )
 
 // EditorApi 编辑器API
@@ -36,13 +36,13 @@ func NewEditorApi(documentService *document.DocumentService) *EditorApi {
 // @Param request body object true "自动保存请求"
 // @Success 200 {object} response.APIResponse
 // @Failure 409 {object} response.APIResponse "版本冲突"
-// @Router /api/v1/documents/{id}/autosave [post]
+// @Router /api/v1/writer/documents/{id}/autosave [post]
 func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req document.AutoSaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -76,7 +76,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/documents/{id}/save-status [get]
+// @Router /api/v1/writer/documents/{id}/save-status [get]
 func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 	documentID := c.Param("id")
 
@@ -96,6 +96,7 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 }
 
 // GetDocumentContent 获取文档内容
+// Deprecated: 使用 GET /api/v1/writer/documents/{id}/contents
 // @Summary 获取文档内容
 // @Description 获取文档的完整内容（用于编辑器加载）
 // @Tags 编辑器
@@ -103,9 +104,11 @@ func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 // @Produce json
 // @Param id path string true "文档ID"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/documents/{id}/content [get]
+// @Router /api/v1/writer/documents/{id}/content [get]
 func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
+	c.Header("X-API-Deprecated", "true")
+	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
 	// 从gin.Context获取userId并添加到context.Context
 	ctx := c.Request.Context()
@@ -123,6 +126,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 }
 
 // UpdateDocumentContent 更新文档内容
+// Deprecated: 使用 PUT /api/v1/writer/documents/{id}/contents
 // @Summary 更新文档内容
 // @Description 手动更新文档内容（非自动保存）
 // @Tags 编辑器
@@ -131,13 +135,15 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 // @Param id path string true "文档ID"
 // @Param request body object true "更新内容请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/documents/{id}/content [put]
+// @Router /api/v1/writer/documents/{id}/content [put]
 func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	documentID := c.Param("id")
+	c.Header("X-API-Deprecated", "true")
+	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
 	var req document.UpdateContentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -157,6 +163,67 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// GetDocumentContents 获取文档分段内容
+func (api *EditorApi) GetDocumentContents(c *gin.Context) {
+	documentID := c.Param("id")
+
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	contents, err := api.documentService.GetDocumentContents(ctx, documentID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, contents)
+}
+
+// ReplaceDocumentContents 批量替换文档分段内容
+func (api *EditorApi) ReplaceDocumentContents(c *gin.Context) {
+	documentID := c.Param("id")
+
+	var req document.ReplaceDocumentContentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+	req.DocumentID = documentID
+
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	resp, err := api.documentService.ReplaceDocumentContents(ctx, &req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// ReindexDocumentContents 重建段落顺序
+func (api *EditorApi) ReindexDocumentContents(c *gin.Context) {
+	documentID := c.Param("id")
+
+	ctx := c.Request.Context()
+	if userID, exists := c.Get("user_id"); exists {
+		ctx = context.WithValue(ctx, "userID", userID)
+	}
+
+	resp, err := api.documentService.ReindexDocumentContents(ctx, documentID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
 // CalculateWordCount 计算字数
 // @Summary 计算字数
 // @Description 计算文档内容的字数统计（支持Markdown过滤）
@@ -166,11 +233,11 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 // @Param id path string true "文档ID"
 // @Param request body WordCountRequest true "字数统计请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/documents/{id}/word-count [post]
+// @Router /api/v1/writer/documents/{id}/word-count [post]
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -191,15 +258,15 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/user/shortcuts [get]
+// @Router /api/v1/writer/user/shortcuts [get]
 func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getAuthUserID(c)
+	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
-	config, err := api.shortcutService.GetUserShortcuts(c.Request.Context(), userID.(string))
+	config, err := api.shortcutService.GetUserShortcuts(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -216,21 +283,21 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 // @Produce json
 // @Param request body UpdateShortcutsRequest true "快捷键配置"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/user/shortcuts [put]
+// @Router /api/v1/writer/user/shortcuts [put]
 func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getAuthUserID(c)
+	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateShortcutsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	if err := api.shortcutService.UpdateUserShortcuts(c.Request.Context(), userID.(string), req.Shortcuts); err != nil {
+	if err := api.shortcutService.UpdateUserShortcuts(c.Request.Context(), userID, req.Shortcuts); err != nil {
 		c.Error(err)
 		return
 	}
@@ -245,15 +312,15 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/user/shortcuts/reset [post]
+// @Router /api/v1/writer/user/shortcuts/reset [post]
 func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getAuthUserID(c)
+	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
-	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID.(string)); err != nil {
+	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID); err != nil {
 		c.Error(err)
 		return
 	}
@@ -268,15 +335,15 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/user/shortcuts/help [get]
+// @Router /api/v1/writer/user/shortcuts/help [get]
 func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getAuthUserID(c)
+	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
-	help, err := api.shortcutService.GetShortcutHelp(c.Request.Context(), userID.(string))
+	help, err := api.shortcutService.GetShortcutHelp(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -294,4 +361,18 @@ type WordCountRequest struct {
 // UpdateShortcutsRequest 更新快捷键请求
 type UpdateShortcutsRequest struct {
 	Shortcuts map[string]documentModel.Shortcut `json:"shortcuts" validate:"required"`
+}
+
+func getAuthUserID(c *gin.Context) (string, bool) {
+	if v, ok := c.Get("user_id"); ok {
+		if s, ok := v.(string); ok && s != "" {
+			return s, true
+		}
+	}
+	if v, ok := c.Get("userID"); ok {
+		if s, ok := v.(string); ok && s != "" {
+			return s, true
+		}
+	}
+	return "", false
 }

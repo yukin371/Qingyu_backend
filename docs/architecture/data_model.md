@@ -3,6 +3,7 @@
 ## 1. 概述
 
 本文档描述 Qingyu Backend 系统中的数据模型结构，包括所有领域模型及其关系。
+注意：本页已按 2026-03-04 的 Writer/Recommendation 新方案同步更新。
 
 ## 2. 核心业务模型
 
@@ -75,7 +76,82 @@ type PublishedWork struct {
 }
 ```
 
-### 2.4 社交模块 (Social)
+#### DocumentContent (文档内容/段落存储，Writer V2)
+```go
+type DocumentContent struct {
+    ID             primitive.ObjectID `bson:"_id"`
+    DocumentID     primitive.ObjectID `bson:"document_id"`
+    Content        string             `bson:"content"`
+    ContentType    string             `bson:"content_type"`      // markdown | richtext | tiptap
+    ParagraphOrder int                `bson:"paragraph_order"`   // tiptap 分段顺序
+    WordCount      int                `bson:"word_count"`
+    CharCount      int                `bson:"char_count"`
+    Version        int                `bson:"version"`           // 乐观锁版本
+    LastEditedBy   string             `bson:"last_edited_by"`
+    LastSavedAt    time.Time          `bson:"last_saved_at"`
+    CreatedAt      time.Time          `bson:"created_at"`
+    UpdatedAt      time.Time          `bson:"updated_at"`
+}
+```
+
+#### Paragraph (领域层轻量类型，不单独建表)
+```go
+type Paragraph struct {
+    ID          string
+    DocumentID  string
+    Order       int
+    Content     string
+    ContentType string
+    Version     int
+    UpdatedAt   time.Time
+}
+```
+
+Writer 模型说明：
+- `Paragraph` 仅用于 Service/DTO 语义表达，持久化仍落在 `document_content`。
+- 章节内容采用批量提交段落（ReplaceDocumentContents），不引入独立 paragraph 集合。
+- 评论按段落绑定，字段为 `document_comment.paragraph_id`。
+
+### 2.4 推荐模块 (Recommendation)
+
+#### RecommendationTable (推荐榜单)
+```go
+type RecommendationTable struct {
+    ID        primitive.ObjectID     `bson:"_id,omitempty"`
+    Name      string                 `bson:"name"`
+    Type      TableType              `bson:"type"`      // weekly | monthly | monthly_vote | manual
+    Period    string                 `bson:"period"`    // 例: 2026-W10, 2026-03, custom
+    Source    TableSource            `bson:"source"`    // auto | manual
+    Status    TableStatus            `bson:"status"`    // active | archived
+    Items     []TableItem            `bson:"items"`
+    Metadata  map[string]interface{} `bson:"metadata,omitempty"`
+    UpdatedBy string                 `bson:"updated_by,omitempty"`
+    CreatedAt time.Time              `bson:"created_at"`
+    UpdatedAt time.Time              `bson:"updated_at"`
+}
+```
+
+#### TableItem (榜单项)
+```go
+type TableItem struct {
+    BookID  string  `bson:"book_id"`
+    Rank    int     `bson:"rank"`
+    Score   float64 `bson:"score,omitempty"`
+    Reason  string  `bson:"reason,omitempty"`
+    Manual  bool    `bson:"manual"`
+    AddedBy string  `bson:"added_by,omitempty"`
+    AddedAt int64   `bson:"added_at,omitempty"`
+}
+```
+
+推荐榜说明：
+- 支持自动榜（周榜/月榜/月票榜）与手动推荐榜并存。
+- 自动榜为快照覆盖更新；手动榜由管理员维护。
+
+相关设计文档：
+- `docs/architecture/2026-03-04-writer-paragraph-type-design.md`
+
+### 2.5 社交模块 (Social)
 
 #### Comment (评论)
 ```go
@@ -197,6 +273,20 @@ erDiagram
 
 ## 7. 索引设计
 
+### 7.0 Writer/Recommendation 新增索引（建议）
+```javascript
+// writer.document_content
+{ "document_id": 1, "content_type": 1, "paragraph_order": 1 }
+{ "document_id": 1, "updated_at": -1 }
+
+// writer.document_comment
+{ "document_id": 1, "paragraph_id": 1, "created_at": 1 }
+
+// recommendation.tables
+{ "type": 1, "period": 1, "source": 1 }, { unique: true }
+{ "status": 1, "updated_at": -1 }
+```
+
 ### 7.1 ExportHistory 索引
 ```javascript
 {
@@ -250,6 +340,6 @@ erDiagram
 
 ---
 
-**文档版本**: v1.0
-**最后更新**: 2026-02-27
+**文档版本**: v1.1
+**最后更新**: 2026-03-04
 **维护者**: yukin371
