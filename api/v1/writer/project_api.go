@@ -80,13 +80,15 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
-	project, err := api.projectService.GetProject(ctx, projectID)
+	projectModel, err := api.projectService.GetProject(ctx, projectID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.Success(c, project)
+	// 将模型转换为DTO响应
+	resp := dto.ToProjectResponse(projectModel)
+	response.Success(c, resp)
 }
 
 // ListProjects 获取项目列表
