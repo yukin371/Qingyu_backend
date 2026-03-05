@@ -96,8 +96,8 @@ type CreateDocumentRequest struct {
 	ParentID  *string      `json:"parentId,omitempty"`
 	Title     string       `json:"title" validate:"required,min=1,max=200"`
 	Type      DocumentType `json:"type" validate:"required,oneof=volume chapter section scene"`
-	Level     int          `json:"level" validate:"min=0,max=10"`
-	Order     int          `json:"order" validate:"min=0"`
+	Level     int          `json:"level" validate:"min=0,max=2"` // 0=volume, 1=chapter, 2=section/scene
+	OrderKey  string       `json:"orderKey,omitempty"`           // LexoRank排序键，可选，不传则自动生成
 }
 
 // UpdateDocumentRequest 更新文档元数据请求
@@ -120,8 +120,8 @@ type DocumentResponse struct {
 	Title        string         `json:"title"`
 	Type         DocumentType   `json:"type"`
 	Level        int            `json:"level"`
-	Order        int            `json:"order"`
-	OrderKey     string         `json:"orderKey"`
+	Order        int            `json:"order"`    // 向后兼容字段
+	OrderKey     string         `json:"orderKey"` // LexoRank排序键
 	Status       DocumentStatus `json:"status"`
 	WordCount    int            `json:"wordCount"`
 	CharacterIDs []string       `json:"characterIds,omitempty"`
