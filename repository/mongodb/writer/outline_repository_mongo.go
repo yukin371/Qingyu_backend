@@ -49,9 +49,14 @@ func (r *OutlineRepositoryMongo) Create(ctx context.Context, outline *writer.Out
 	// 设置默认值
 	outline.TouchForCreate()
 
-	_, err := r.GetCollection().InsertOne(ctx, outline)
+	result, err := r.GetCollection().InsertOne(ctx, outline)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create outline failed", err)
+	}
+
+	// 将插入后的ID设置回outline对象，确保后续操作能正确使用
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		outline.ID = oid
 	}
 
 	return nil

@@ -883,6 +883,7 @@ func TestBookListRepository_DeleteBookListLike(t *testing.T) {
 	// 验证书单点赞数减少
 	found, err := repo.GetBookListByID(ctx, bookList.ID.Hex())
 	require.NoError(t, err)
+	assert.NotNil(t, found, "BookList should still exist after deleting like")  // 添加nil检查
 	assert.Equal(t, 0, found.LikeCount)
 }
 

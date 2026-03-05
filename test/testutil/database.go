@@ -282,6 +282,10 @@ func loadLocalConfigWithFallback() (*config.Config, error) {
 	for _, candidate := range candidates {
 		cfg, err := config.LoadConfig(candidate)
 		if err == nil {
+			// 确保使用唯一的测试数据库名称，避免测试之间数据污染
+			if cfg.Database != nil && cfg.Database.Primary.MongoDB != nil {
+				cfg.Database.Primary.MongoDB.Database = resolveTestMongoDatabaseName(cfg.Database.Primary.MongoDB.Database)
+			}
 			return cfg, nil
 		}
 	}
