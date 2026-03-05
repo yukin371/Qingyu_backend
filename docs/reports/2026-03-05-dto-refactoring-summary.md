@@ -6,6 +6,17 @@
 
 ---
 
+## 📚 相关文档
+
+| 文档类型 | 文档名称 | 路径 |
+|----------|----------|------|
+| 📐 设计文档 | API 集成设计 v2 | [docs/plans/2026-03-05-api-integration-design.md](../plans/2026-03-05-api-integration-design.md) |
+| 🔍 设计审查 | 设计审查报告 | [docs/plans/2026-03-05-api-integration-design-review.md](../plans/2026-03-05-api-integration-design-review.md) |
+| 📋 实施计划 | Phase 1 实施计划 | [docs/plans/2026-03-05-api-integration-phase1-implementation.md](../plans/2026-03-05-api-integration-phase1-implementation.md) |
+| 📊 总结报告 | 本报告 | [docs/reports/2026-03-05-dto-refactoring-summary.md](./2026-03-05-dto-refactoring-summary.md) |
+
+---
+
 ## 一、本次重构完成的任务
 
 ### 1.1 核心 DTO 系统构建
@@ -336,4 +347,3 @@ opts := options.Find().SetSort(bson.D{{Key: "category", Value: 1}, {Key: "create
 
 **报告生成时间**: 2026-03-05
 **报告生成者**: 猫娘助手 Kore
-**审核状态**: 待主人审核 🐱
