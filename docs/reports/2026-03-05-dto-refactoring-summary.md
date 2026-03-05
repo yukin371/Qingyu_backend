@@ -14,7 +14,21 @@
 | 🔍 设计审查 | 设计审查报告 | [docs/plans/2026-03-05-api-integration-design-review.md](../plans/2026-03-05-api-integration-design-review.md) |
 | 📋 实施计划 | Phase 1 实施计划 | [docs/plans/2026-03-05-api-integration-phase1-implementation.md](../plans/2026-03-05-api-integration-phase1-implementation.md) |
 | 📊 总结报告 | 本报告 | [docs/reports/2026-03-05-dto-refactoring-summary.md](./2026-03-05-dto-refactoring-summary.md) |
+| 🗂️ 归档报告 | 历史审计报告 | [docs/reports/archived/](./archived/) |
 | 🐛 问题追踪 | Issue 列表 | [docs/issues/](../issues/) |
+
+### 🗂️ 归档报告（从主仓库迁移）
+
+| 报告类型 | 文档名称 | 来源 |
+|----------|----------|------|
+| 📊 综合审计 | 后端综合审计报告 | [backend-comprehensive-audit-summary-2026-01-26.md](./archived/backend-comprehensive-audit-summary-2026-01-26.md) |
+| 🔍 ID 诊断 | ID 类型诊断报告 | [2026-02-01-id-type-diagnosis-report.md](./archived/2026-02-01-id-type-diagnosis-report.md) |
+| 🔄 API 对齐 | 前后端 API 对齐报告 | [2026-01-25-frontend-backend-api-alignment-report.md](./archived/2026-01-25-frontend-backend-api-alignment-report.md) |
+| 📦 API 分析 | 后端 API 分析 | [backend-api-analysis-2026-01-26.md](./archived/backend-api-analysis-2026-01-26.md) |
+| 🏗️ 架构分析 | 后端架构分析 | [backend-architecture-analysis-2026-01-26.md](./archived/backend-architecture-analysis-2026-01-26.md) |
+| 🗄️ 数据库分析 | 后端数据库分析 | [backend-database-analysis-2026-01-26.md](./archived/backend-database-analysis-2026-01-26.md) |
+| 🧩 模型分析 | 后端数据模型分析 | [backend-model-analysis-2026-01-26.md](./archived/backend-model-analysis-2026-01-26.md) |
+| ⚙️ 中间件分析 | 后端中间件分析 | [backend-middleware-analysis-2026-01-26.md](./archived/backend-middleware-analysis-2026-01-26.md) |
 
 ### 🐛 相关 Issue
 
@@ -24,6 +38,11 @@
 | [#002](../issues/002-create-method-id-not-set-bug.md) | Repository Create 方法未回设 ID | 高 (P0) | 部分修复 |
 | [#003](../issues/003-test-infrastructure-improvements.md) | 测试基础设施改进 | 中 (P1) | 部分修复 |
 | [#004](../issues/004-code-quality-improvements.md) | 代码质量改进 | 中 (P1) | 待处理 |
+| [#005](../issues/005-api-standardization-issues.md) | API 标准化问题 | 高 (P0) | 待处理 |
+| [#006](../issues/006-database-index-issues.md) | 数据库索引问题 | 高 (P0) | 待处理 |
+| [#007](../issues/007-transaction-management.md) | Service 层事务管理缺失 | 高 (P0) | 待处理 |
+| [#008](../issues/008-middleware-architecture-issues.md) | 中间件架构问题 | 高 (P0) | 待处理 |
+| [#009](../issues/009-test-coverage-issues.md) | 测试覆盖率不足 | 高 (P0) | 待处理 |
 
 ---
 
