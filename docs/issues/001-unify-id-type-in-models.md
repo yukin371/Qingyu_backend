@@ -2,9 +2,39 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: 待处理
+**状态**: ⚠️ 部分存在（已审查）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ⚠️ 部分存在问题
+
+### 审查发现
+
+1. ✅ **176+ 个模型已正确使用 `primitive.ObjectID`**
+2. ❌ **约 37 个模型仍使用 `ID string`**
+
+### 需要修复的模型（优先级排序）
+
+1. **models/auth/** - PermissionTemplate, Role, Session, OAuth
+2. **models/social/** - Review, Comment, Message
+3. **models/messaging/** - Message, Conversation
+4. **models/writer/** - Version, Timeline
+5. **models/bookstore/** - Chapter, Category
+6. **models/finance/** - Wallet
+7. **models/ai/** - Context, RequestLog, Provider
+
+### 已正确实现的领域
+
+- ✅ Writer域（Project, Document等）
+- ✅ Reader域
+- ✅ Bookstore域（Book, BookDetail）
+- ✅ Social域（部分）
 
 ---
 

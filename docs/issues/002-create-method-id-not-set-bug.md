@@ -2,9 +2,54 @@
 
 **优先级**: 高 (P0)
 **类型**: 业务逻辑 Bug
-**状态**: 部分修复
+**状态**: ✅ 主流已修复（已审查）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ✅ 主流已修复
+
+### 审查发现
+
+1. ✅ **主流 Repository 已正确实现 ID 回设**:
+   - Writer域（Project, Document, Outline）
+   - Reader域
+   - Bookstore域
+   - Social域
+
+2. ✅ **两种正确模式**:
+   - 使用 `result.InsertedID` 回设 ID
+   - 预先生成 `primitive.NewObjectID()` 并赋值
+
+3. ⚠️ **使用 string ID 的模型对应的 Repository 仍需要修复**:
+   - 约37个模型使用 string ID
+   - 这些模型对应的 Create 方法需要特别处理
+
+### 已修复的 Repository
+
+```go
+// ✅ 正确实现示例 (writer/project_repository_mongo.go)
+func (r *ProjectRepositoryMongo) Create(ctx context.Context, project *writer.Project) error {
+    project.TouchForCreate()
+
+    result, err := r.GetCollection().InsertOne(ctx, project)
+    if err != nil {
+        return errors.NewRepositoryError(...)
+    }
+
+    // ✅ 正确回设 ID
+    if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+        project.ID = oid
+    }
+
+    return nil
+}
+```
 
 ---
 

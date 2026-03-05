@@ -2,9 +2,59 @@
 
 **优先级**: 高 (P0)
 **类型**: 兼容性问题
-**状态**: 待处理
+**状态**: ⚠️ 部分存在问题（已审查）
 **创建日期**: 2026-03-05
 **来源报告**: [前后端数据类型对比报告](../reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md)、[类型转换兼容性分析](../reports/archived/type-conversion-compatibility-analysis.md)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ⚠️ 部分存在问题（比预期更复杂）
+
+### 审查发现
+
+#### BookStatus 枚举冲突
+- ❌ **后端存在三套不同定义**：
+  - `models/bookstore/book.go`: draft, ongoing, completed, paused
+  - `models/shared/types/enums.go`: draft, **published** ← 冲突, completed, paused, deleted
+  - `internal/domain/book.go`: draft, ongoing, completed, paused, deleted
+- ❌ **前端使用 `serializing`**，后端使用 `ongoing`
+
+#### CategoryIDs 类型不一致
+- ❌ **后端内部不一致**：
+  - `Book` 模型: `[]primitive.ObjectID`
+  - `BookDetail` 模型: `[]string`
+- ❌ **前端使用单值** `categoryId: string`，后端使用数组
+
+#### 其他问题
+- ✅ is_* 字段 JSON 标签已正确配置
+- ❌ BehaviorType 存在两套不同定义（stats vs recommendation）
+
+---
+
+## 设计方案
+
+### BookStatus 枚举统一
+
+**设计文档**: [BookStatus 枚举统一设计方案](../plans/2026-03-05-book-status-unification-design.md)
+
+**选择**: 以 `internal/domain/book.go` 为唯一定义源（5个状态）
+
+**预计实施时间**: 4-6小时
+
+### CategoryIDs 类型统一
+
+**设计文档**: [CategoryIDs 类型统一设计方案](../plans/2026-03-05-category-ids-unification-design.md)
+
+**选择**:
+- 数据库: `[]primitive.ObjectID`
+- DTO/API: `[]string`
+- 前端: `[]string`（单值改数组）
+
+**预计实施时间**: 6-8小时
 
 ---
 

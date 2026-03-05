@@ -2,9 +2,36 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: 待处理
+**状态**: ❌ 待修复（已审查确认）
 **创建日期**: 2026-03-05
 **来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ❌ 问题确认存在
+
+### 审查发现
+
+#### #010-A: Bookstore域 Repository 重构（P0）- ❌ 待修复
+
+1. ❌ **`repository/mongodb/bookstore/ranking_repository_mongo.go` 包含榜单计算业务逻辑**
+2. ❌ **权重配置硬编码**（0.7, 0.3等）
+3. ❌ **无独立的 RankingService**
+
+**证据**:
+- 第523-586行：`CalculateRealtimeRanking` 包含热度分数计算
+- 第532-540行：权重配置硬编码
+- Service层直接调用Repository的计算方法
+
+#### #010-C: Finance域 Repository 重构（P0）- ⚠️ 部分修复
+
+1. ✅ **Service层已实现余额验证**（transaction_service.go, withdraw_service.go）
+2. ❌ **事务编排不完整**（存在TODO注释）
+3. ⚠️ **存在竞态条件风险**
 
 ---
 

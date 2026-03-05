@@ -2,9 +2,54 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: 待处理
+**状态**: ❌ 待修复（已审查确认）
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../reports/archived/backend-service-analysis-2026-01-26.md)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ❌ 问题确认存在
+
+### 审查发现
+
+1. ❌ **`pkg/transaction/` 目录不存在**
+2. ❌ **没有事务管理器接口** - `transaction.Manager` 未定义
+3. ❌ **Service层无 `RunInTransaction` 模式**
+4. ⚠️ **`transaction_service.go:187` 存在 TODO 注释** - `// TODO: 需要回滚`
+
+### 证据代码
+
+```go
+// service/finance/wallet/transaction_service.go:182-189
+if err := s.walletRepo.UpdateBalance(ctx, fromWalletID, -amount); err != nil {
+    return fmt.Errorf("更新源钱包余额失败: %w", err)
+}
+if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
+    // TODO: 需要回滚  ← 确认问题存在
+    return fmt.Errorf("更新目标钱包余额失败: %w", err)
+}
+```
+
+**影响**: 如果第二步失败，第一步已扣款无法回滚，用户余额会不一致，财务数据完整性风险
+
+---
+
+## 设计方案
+
+**设计文档**: [事务管理器实现设计方案](../plans/2026-03-05-transaction-manager-design.md)
+
+### 设计要点
+
+1. **创建 `pkg/transaction/` 包** - 实现 Manager 接口和 MongoManager
+2. **Service层集成** - 使用 `RunInTransaction` 模式包装事务操作
+3. **Repository层支持** - 事务感知的 Repository 基类
+4. **依赖注入配置** - 在 ServiceContainer 中注册事务管理器
+
+**预计实施时间**: 15小时（2个工作日）
 
 ---
 
