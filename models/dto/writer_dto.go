@@ -24,18 +24,23 @@ import "time"
 
 // CreateProjectRequest 创建项目请求
 type CreateProjectRequest struct {
-	Title    string   `json:"title" validate:"required,min=1,max=100"`
-	Summary  string   `json:"summary,omitempty" validate:"max=500"`
-	CoverURL string   `json:"coverUrl,omitempty" validate:"omitempty,url,max=500"`
-	Tags     []string `json:"tags,omitempty" validate:"max=10,dive,min=1,max=50"`
+	Title       string   `json:"title" validate:"required,min=1,max=100"`
+	Summary     string   `json:"summary,omitempty" validate:"max=500"`
+	CoverURL    string   `json:"coverUrl,omitempty" validate:"omitempty,url,max=500"`
+	Tags        []string `json:"tags,omitempty" validate:"max=10,dive,min=1,max=50"`
+	Category    string   `json:"category,omitempty" validate:"max=50"`
+	WritingType string   `json:"writingType,omitempty" validate:"omitempty,oneof=novel article script"`
 }
 
 // UpdateProjectRequest 更新项目请求
 type UpdateProjectRequest struct {
-	Title    *string   `json:"title,omitempty" validate:"omitempty,min=1,max=100"`
-	Summary  *string   `json:"summary,omitempty" validate:"omitempty,max=500"`
-	CoverURL *string   `json:"coverUrl,omitempty" validate:"omitempty,url,max=500"`
-	Tags     *[]string `json:"tags,omitempty" validate:"omitempty,max=10,dive,min=1,max=50"`
+	Title       *string   `json:"title,omitempty" validate:"omitempty,min=1,max=100"`
+	Summary     *string   `json:"summary,omitempty" validate:"omitempty,max=500"`
+	CoverURL    *string   `json:"coverUrl,omitempty" validate:"omitempty,url,max=500"`
+	Tags        *[]string `json:"tags,omitempty" validate:"omitempty,max=10,dive,min=1,max=50"`
+	Category    *string   `json:"category,omitempty" validate:"omitempty,max=50"`
+	Status      *string   `json:"status,omitempty" validate:"omitempty,oneof=draft serializing completed suspended archived"`
+	WritingType *string   `json:"writingType,omitempty" validate:"omitempty,oneof=novel article script"`
 }
 
 // ProjectResponse 项目响应
@@ -181,4 +186,31 @@ type ReorderItem struct {
 	DocumentID string  `json:"documentId" validate:"required"`
 	ParentID   *string `json:"parentId,omitempty"`
 	OrderKey   string  `json:"orderKey" validate:"required"`
+}
+
+// ===========================
+// Additional Response DTOs
+// ===========================
+
+// CreateProjectResponse 创建项目响应（用于兼容旧代码）
+type CreateProjectResponse struct {
+	ProjectID string    `json:"projectId"`
+	Title     string    `json:"title"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// CreateDocumentResponse 创建文档响应
+type CreateDocumentResponse struct {
+	DocumentID string    `json:"documentId"`
+	Title      string    `json:"title"`
+	Type       string    `json:"type"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
+// MoveDocumentRequest 移动文档请求
+type MoveDocumentRequest struct {
+	DocumentID  string  `json:"documentId" validate:"required"`
+	NewParentID *string `json:"newParentId,omitempty"`
+	OrderKey    string  `json:"orderKey,omitempty"`
 }

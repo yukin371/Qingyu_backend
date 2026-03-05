@@ -6,9 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/models/dto"
 	documentModel "Qingyu_backend/models/writer" // Import for Swagger annotations
-	"Qingyu_backend/service/writer/project"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/project"
 )
 
 // ProjectApi 项目API
@@ -29,15 +30,15 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 // @Tags 项目管理
 // @Accept json
 // @Produce json
-// @Param request body object true "创建项目请求"
+// @Param request body dto.CreateProjectRequest true "创建项目请求"
 // @Success 201 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects [post]
 func (api *ProjectApi) CreateProject(c *gin.Context) {
-	var req project.CreateProjectRequest
+	var req dto.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -47,12 +48,16 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
-	resp, err := api.projectService.CreateProject(ctx, &req)
+	// 将DTO转换为服务层请求类型（使用类型别名，兼容性处理）
+	serviceReq := project.CreateProjectRequest(req)
+	projectModel, err := api.projectService.CreateProject(ctx, &serviceReq)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
+	// 将模型转换为DTO响应
+	resp := dto.ToProjectResponse(projectModel)
 	response.Created(c, resp)
 }
 
@@ -93,20 +98,23 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "项目状态"
-// @Param category query string false "项目分类"
+// @Param sort query string false "排序字段"
+// @Param order query string false "排序方向"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects [get]
 func (api *ProjectApi) ListProjects(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	status := c.Query("status")
-	category := c.Query("category")
+	sort := c.Query("sort")
+	order := c.Query("order")
 
-	req := &project.ListProjectsRequest{
+	req := &dto.ListProjectsRequest{
 		Page:     page,
 		PageSize: pageSize,
 		Status:   status,
-		Category: category,
+		Sort:     sort,
+		Order:    order,
 	}
 
 	// 从gin.Context获取userId并添加到context.Context
@@ -115,13 +123,22 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 		ctx = context.WithValue(ctx, "userId", userID)
 	}
 
-	resp, err := api.projectService.ListMyProjects(ctx, req)
+	// 将DTO转换为服务层请求类型
+	serviceReq := project.ListProjectsRequest(*req)
+	resp, err := api.projectService.ListMyProjects(ctx, &serviceReq)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.Success(c, resp)
+	// 将服务层响应转换为DTO响应
+	dtoResp := &dto.ProjectListResponse{
+		Items:    dto.ToProjectResponseList(resp.Projects),
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+	}
+	response.Success(c, dtoResp)
 }
 
 // UpdateProject 更新项目
@@ -141,7 +158,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 
 	var req project.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -183,7 +200,11 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, nil)
+	// 返回成功响应（包含删除的项目ID）
+	response.Success(c, map[string]interface{}{
+		"projectId": projectID,
+		"deleted":   true,
+	})
 }
 
 // UpdateProjectStatistics 更新项目统计信息

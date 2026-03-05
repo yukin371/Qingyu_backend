@@ -41,6 +41,22 @@ type GetProjectResponse struct {
 	Status string `json:"status"`
 }
 
+// ListProjectsResponse 项目列表响应（服务层专用）
+type ListProjectsResponse struct {
+	Projects interface{} `json:"projects"`
+	Total    int64       `json:"total"`
+	Page     int         `json:"page"`
+	PageSize int         `json:"pageSize"`
+}
+
+// ListDocumentsResponse 文档列表响应（服务层专用）
+type ListDocumentsResponse struct {
+	Documents interface{} `json:"documents"`
+	Total     int64       `json:"total"`
+	Page      int         `json:"page"`
+	PageSize  int         `json:"pageSize"`
+}
+
 // UpdateStatisticsRequest 更新统计请求
 type UpdateStatisticsRequest struct {
 	ProjectID string `json:"projectId" validate:"required"`

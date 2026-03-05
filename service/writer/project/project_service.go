@@ -33,7 +33,7 @@ func NewProjectService(
 }
 
 // CreateProject 创建项目
-func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*CreateProjectResponse, error) {
+func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*writer.Project, error) {
 	// 1. 参数验证
 	if err := s.validateCreateProjectRequest(req); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
@@ -76,13 +76,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		})
 	}
 
-	// 6. 返回响应
-	return &CreateProjectResponse{
-		ProjectID: project.ID.Hex(),
-		Title:     project.Title,
-		Status:    string(project.Status),
-		CreatedAt: project.CreatedAt,
-	}, nil
+	// 6. 返回创建的项目模型
+	return project, nil
 }
 
 // GetProject 获取项目详情
@@ -357,13 +352,14 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	coverURL := req.CoverURL
 	category := req.Category
 	status := string(req.Status)
+	tags := req.Tags
 
 	updateReq := &UpdateProjectRequest{
 		Title:    &title,
 		Summary:  &summary,
 		CoverURL: &coverURL,
 		Category: &category,
-		Tags:     req.Tags,
+		Tags:     &tags,
 		Status:   &status,
 	}
 
