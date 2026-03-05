@@ -97,12 +97,18 @@ const (
 
 // CreateDocumentRequest 创建文档请求（树形结构）
 type CreateDocumentRequest struct {
-	ProjectID string       `json:"projectId" validate:"required"`
-	ParentID  *string      `json:"parentId,omitempty"`
-	Title     string       `json:"title" validate:"required,min=1,max=200"`
-	Type      DocumentType `json:"type" validate:"required,oneof=volume chapter section scene"`
-	Level     int          `json:"level" validate:"min=0,max=2"` // 0=volume, 1=chapter, 2=section/scene
-	OrderKey  string       `json:"orderKey,omitempty"`           // LexoRank排序键，可选，不传则自动生成
+	ProjectID    string       `json:"projectId" validate:"required"`
+	ParentID     *string      `json:"parentId,omitempty"`
+	Title        string       `json:"title" validate:"required,min=1,max=200"`
+	Type         DocumentType `json:"type" validate:"required,oneof=volume chapter section scene"`
+	Level        int          `json:"level" validate:"min=0,max=2"`    // 0=volume, 1=chapter, 2=section/scene
+	Order        int          `json:"order,omitempty" validate:"min=0"` // 向后兼容字段
+	OrderKey     string       `json:"orderKey,omitempty"`              // LexoRank排序键，可选，不传则自动生成
+	CharacterIDs []string     `json:"characterIds,omitempty"`
+	LocationIDs  []string     `json:"locationIds,omitempty"`
+	TimelineIDs  []string     `json:"timelineIds,omitempty"`
+	Tags         []string     `json:"tags,omitempty"`
+	Notes        string       `json:"notes,omitempty"`
 }
 
 // UpdateDocumentRequest 更新文档元数据请求
