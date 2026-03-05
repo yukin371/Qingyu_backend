@@ -14,6 +14,16 @@
 | 🔍 设计审查 | 设计审查报告 | [docs/plans/2026-03-05-api-integration-design-review.md](../plans/2026-03-05-api-integration-design-review.md) |
 | 📋 实施计划 | Phase 1 实施计划 | [docs/plans/2026-03-05-api-integration-phase1-implementation.md](../plans/2026-03-05-api-integration-phase1-implementation.md) |
 | 📊 总结报告 | 本报告 | [docs/reports/2026-03-05-dto-refactoring-summary.md](./2026-03-05-dto-refactoring-summary.md) |
+| 🐛 问题追踪 | Issue 列表 | [docs/issues/](../issues/) |
+
+### 🐛 相关 Issue
+
+| Issue ID | 标题 | 优先级 | 状态 |
+|----------|------|--------|------|
+| [#001](../issues/001-unify-id-type-in-models.md) | 统一模型层 ID 字段类型 | 高 (P0) | 待处理 |
+| [#002](../issues/002-create-method-id-not-set-bug.md) | Repository Create 方法未回设 ID | 高 (P0) | 部分修复 |
+| [#003](../issues/003-test-infrastructure-improvements.md) | 测试基础设施改进 | 中 (P1) | 部分修复 |
+| [#004](../issues/004-code-quality-improvements.md) | 代码质量改进 | 中 (P1) | 待处理 |
 
 ---
 
@@ -216,25 +226,29 @@ opts := options.Find().SetSort(bson.D{{Key: "category", Value: 1}, {Key: "create
 
 ## 三、技术债务清单
 
+> 详细问题追踪请参阅 [docs/issues/](../issues/) 目录中的 Issue 文档
+
 ### 3.1 高优先级
-| 债务 | 影响 | 建议处理时间 |
-|------|------|-------------|
-| ID 类型统一 | 查询失败、类型混乱 | Phase 2 重构 |
-| Create 方法 ID 回设检查 | 数据丢失风险 | 立即检查 |
-| 测试数据隔离不稳定 | 测试结果不可靠 | 已修复，需验证 |
+| 债务 | 影响 | 建议处理时间 | Issue |
+|------|------|-------------|-------|
+| ID 类型统一 | 查询失败、类型混乱 | Phase 2 重构 | [#001](../issues/001-unify-id-type-in-models.md) |
+| Create 方法 ID 回设检查 | 数据丢失风险 | 立即检查 | [#002](../issues/002-create-method-id-not-set-bug.md) |
+| 测试数据隔离不稳定 | 测试结果不可靠 | 已修复，需验证 | [#003](../issues/003-test-infrastructure-improvements.md) |
 
 ### 3.2 中优先级
-| 债务 | 影响 | 建议处理时间 |
-|------|------|-------------|
-| 错误消息语言统一 | 国际化支持 | Phase 3 |
-| Swagger 文档更新 | API 文档过时 | Phase 2 |
-| DTO 覆盖其他模块 | 架构一致性 | Phase 2+ |
+| 债务 | 影响 | 建议处理时间 | Issue |
+|------|------|-------------|-------|
+| 错误消息语言统一 | 国际化支持 | Phase 3 | [#004](../issues/004-code-quality-improvements.md) |
+| Swagger 文档更新 | API 文档过时 | Phase 2 | - |
+| DTO 覆盖其他模块 | 架构一致性 | Phase 2+ | - |
+| MongoDB 排序参数修复 | 排序不稳定 | Phase 2 | [#004](../issues/004-code-quality-improvements.md) |
 
 ### 3.3 低优先级
-| 债务 | 影响 | 建议处理时间 |
-|------|------|-------------|
-| 测试 Nil 检查补充 | 测试健壮性 | 持续改进 |
-| 代码注释完善 | 可维护性 | 持续改进 |
+| 债务 | 影响 | 建议处理时间 | Issue |
+|------|------|-------------|-------|
+| 测试 Nil 检查补充 | 测试健壮性 | 持续改进 | [#003](../issues/003-test-infrastructure-improvements.md) |
+| 代码注释完善 | 可维护性 | 持续改进 | - |
+| Magic Number 消除 | 代码可读性 | 持续改进 | [#004](../issues/004-code-quality-improvements.md) |
 
 ---
 
