@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"Qingyu_backend/models/dto"
-	"Qingyu_backend/models/writer"
 	writerService "Qingyu_backend/service/writer/document"
 )
 
@@ -49,12 +48,12 @@ func (a *DocumentAdapter) CreateDocument(ctx context.Context, req *dto.CreateDoc
 		return nil, fmt.Errorf("创建文档失败: %w", err)
 	}
 
-	// 转换为新的响应类型
+	// 转换为新的响应类型 - service现在返回CreateDocumentResponse
 	return &dto.DocumentResponse{
-		DocumentID: resp.DocumentID,
-		Title:      resp.Title,
-		Type:       resp.Type,
-		CreatedAt:  resp.CreatedAt,
+		ID:        resp.DocumentID,
+		Title:     resp.Title,
+		Type:      dto.DocumentType(resp.Type), // 转换类型
+		CreatedAt: resp.CreatedAt,
 	}, nil
 }
 
@@ -77,26 +76,26 @@ func (a *DocumentAdapter) UpdateDocument(ctx context.Context, id string, req *dt
 		return nil, fmt.Errorf("更新文档失败: %w", err)
 	}
 
-	// 获取更新后的文档信息
-	doc, err := a.documentService.GetDocument(ctx, id)
+	// 获取更新后的文档信息 - service现在返回DTO
+	docDTO, err := a.documentService.GetDocument(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("获取更新后的文档失败: %w", err)
 	}
 
-	// 转换为新的响应类型
-	return a.convertToDocumentResponse(doc), nil
+	// 直接返回DTO，不需要额外转换
+	return docDTO, nil
 }
 
 // GetDocument 获取文档详情
 func (a *DocumentAdapter) GetDocument(ctx context.Context, id string) (*dto.DocumentResponse, error) {
-	// 调用现有服务
-	doc, err := a.documentService.GetDocument(ctx, id)
+	// 调用现有服务 - 现在返回DTO
+	docDTO, err := a.documentService.GetDocument(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("获取文档失败: %w", err)
 	}
 
-	// 转换为新的响应类型
-	return a.convertToDocumentResponse(doc), nil
+	// 直接返回DTO
+	return docDTO, nil
 }
 
 // DeleteDocument 删除文档
@@ -121,20 +120,16 @@ func (a *DocumentAdapter) ListDocuments(ctx context.Context, req *dto.ListDocume
 		Status:    req.Status,
 	}
 
-	// 调用现有服务
+	// 调用现有服务 - 现在返回DTO
 	resp, err := a.documentService.ListDocuments(ctx, oldReq)
 	if err != nil {
 		return nil, fmt.Errorf("获取文档列表失败: %w", err)
 	}
 
-	// 转换文档列表为DTO格式
-	documents := make([]*dto.DocumentResponse, 0, len(resp.Documents))
-	for _, doc := range resp.Documents {
-		documents = append(documents, a.convertToDocumentResponse(doc))
-	}
-
+	// resp现在已经是*dto.DocumentListResponse，使用Items字段
+	// 但content接口期望使用Documents字段，所以需要适配
 	return &dto.ListDocumentsResponse{
-		Documents: documents,
+		Documents: resp.Items, // 使用Items字段
 		Total:     resp.Total,
 		Page:      resp.Page,
 		PageSize:  resp.PageSize,
@@ -166,17 +161,26 @@ func (a *DocumentAdapter) DuplicateDocument(ctx context.Context, id string) (*dt
 		return nil, fmt.Errorf("获取复制的文档失败: %w", err)
 	}
 
-	// 转换为新的响应类型
-	return a.convertToDocumentResponse(newDoc), nil
+	// service现在返回DTO，直接返回
+	return newDoc, nil
 }
 
 // MoveDocument 移动文档
 func (a *DocumentAdapter) MoveDocument(ctx context.Context, id string, newParentID string, order int) error {
-	// 转换为旧版请求类型
+	// 转换为新的DTO请求类型
+	var newParentIDPtr *string
+	if newParentID != "" {
+		newParentIDPtr = &newParentID
+	}
+
+	// DTO现在使用OrderKey而不是Order
+	// 这里我们生成一个简单的orderKey值
+	orderKey := fmt.Sprintf("a%d", order)
+
 	oldReq := &writerService.MoveDocumentRequest{
 		DocumentID:  id,
-		NewParentID: newParentID,
-		Order:       order,
+		NewParentID: newParentIDPtr, // 使用*string
+		OrderKey:    orderKey,        // 使用OrderKey
 	}
 
 	// 调用现有服务
@@ -196,10 +200,10 @@ func (a *DocumentAdapter) GetDocumentTree(ctx context.Context, projectID string)
 		return nil, fmt.Errorf("获取文档树失败: %w", err)
 	}
 
-	// 转换文档树为DTO格式
-	documents := make([]*dto.DocumentTreeNode, 0, len(resp.Documents))
+	// 转换DocumentTreeNode到dto.DocumentTreeItem
+	documents := make([]*dto.DocumentTreeItem, 0, len(resp.Documents))
 	for _, docNode := range resp.Documents {
-		documents = append(documents, a.convertDocumentTreeNode(docNode))
+		documents = append(documents, a.convertToDocumentTreeItem(docNode))
 	}
 
 	return &dto.DocumentTreeResponse{
@@ -315,15 +319,9 @@ func (a *DocumentAdapter) BatchDeleteDocuments(ctx context.Context, documentIDs 
 
 // ReorderDocuments 重新排序文档
 func (a *DocumentAdapter) ReorderDocuments(ctx context.Context, req *dto.ReorderDocumentsRequest) error {
-	// 转换为旧版请求类型
-	oldReq := &writerService.ReorderDocumentsRequest{
-		ProjectID: req.ProjectID,
-		ParentID:  req.ParentID,
-		Orders:    req.Orders,
-	}
-
-	// 调用现有服务
-	err := a.documentService.ReorderDocuments(ctx, oldReq)
+	// dto.ReorderDocumentsRequest使用Items字段，直接传递
+	// 因为writerService.ReorderDocumentsRequest现在是dto.ReorderDocumentsRequest的别名
+	err := a.documentService.ReorderDocuments(ctx, req)
 	if err != nil {
 		return fmt.Errorf("重新排序文档失败: %w", err)
 	}
@@ -335,75 +333,35 @@ func (a *DocumentAdapter) ReorderDocuments(ctx context.Context, req *dto.Reorder
 // 私有辅助方法
 // =========================
 
-// convertToDocumentResponse 将Document模型转换为DocumentResponse DTO
-func (a *DocumentAdapter) convertToDocumentResponse(doc *writer.Document) *dto.DocumentResponse {
-	if doc == nil {
-		return nil
-	}
-
-	// 转换ObjectID数组为字符串数组
-	characterIDs := make([]string, 0, len(doc.CharacterIDs))
-	for _, id := range doc.CharacterIDs {
-		characterIDs = append(characterIDs, id.Hex())
-	}
-
-	locationIDs := make([]string, 0, len(doc.LocationIDs))
-	for _, id := range doc.LocationIDs {
-		locationIDs = append(locationIDs, id.Hex())
-	}
-
-	timelineIDs := make([]string, 0, len(doc.TimelineIDs))
-	for _, id := range doc.TimelineIDs {
-		timelineIDs = append(timelineIDs, id.Hex())
-	}
-
-	// 转换ParentID（如果是零值则不设置）
-	parentID := ""
-	if !doc.ParentID.IsZero() {
-		parentID = doc.ParentID.Hex()
-	}
-
-	return &dto.DocumentResponse{
-		DocumentID:    doc.ID.Hex(),
-		ProjectID:     doc.ProjectID.Hex(),
-		ParentID:      parentID,
-		Title:         doc.Title,
-		Type:          doc.Type,
-		Level:         doc.Level,
-		Order:         doc.Order,
-		Status:        doc.Status,
-		CharacterIDs:  characterIDs,
-		LocationIDs:   locationIDs,
-		TimelineIDs:   timelineIDs,
-		Tags:          doc.Tags,
-		Notes:         doc.Notes,
-		CreatedBy:     "", // 需要从doc获取，如果Document模型有CreatedBy字段
-		CreatedAt:     doc.CreatedAt,
-		UpdatedAt:     doc.UpdatedAt,
-		WordCount:     doc.WordCount,
-		Version:       1, // 默认版本，实际应从DocumentContent获取
-	}
-}
-
-// convertDocumentTreeNode 递归转换文档树节点
-func (a *DocumentAdapter) convertDocumentTreeNode(node *writerService.DocumentTreeNode) *dto.DocumentTreeNode {
+// convertToDocumentTreeItem 将DocumentTreeNode转换为dto.DocumentTreeItem
+func (a *DocumentAdapter) convertToDocumentTreeItem(node *writerService.DocumentTreeNode) *dto.DocumentTreeItem {
 	if node == nil {
 		return nil
 	}
 
-	// 转换当前节点的Document为DocumentResponse
-	docResponse := a.convertToDocumentResponse(node.Document)
+	// 转换ParentID
+	var parentID *string
+	if !node.Document.ParentID.IsZero() {
+		s := node.Document.ParentID.Hex()
+		parentID = &s
+	}
 
 	// 转换当前节点
-	convertedNode := &dto.DocumentTreeNode{
-		Document: docResponse,
-		Children: make([]*dto.DocumentTreeNode, 0, len(node.Children)),
+	item := &dto.DocumentTreeItem{
+		ID:        node.Document.ID.Hex(),
+		ParentID:  parentID,
+		Title:     node.Document.Title,
+		Type:      dto.DocumentType(node.Document.Type),
+		Level:     node.Document.Level,
+		OrderKey:  node.Document.OrderKey,
+		WordCount: node.Document.WordCount,
+		Children:  make([]*dto.DocumentTreeItem, 0, len(node.Children)),
 	}
 
 	// 递归转换子节点
 	for _, child := range node.Children {
-		convertedNode.Children = append(convertedNode.Children, a.convertDocumentTreeNode(child))
+		item.Children = append(item.Children, a.convertToDocumentTreeItem(child))
 	}
 
-	return convertedNode
+	return item
 }
