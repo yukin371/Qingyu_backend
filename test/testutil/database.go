@@ -84,6 +84,9 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		}
 	}
 
+	// 保存旧的配置，避免并发测试修改全局变量
+	oldConfig := config.GlobalConfig
+
 	// 初始化全局配置
 	config.GlobalConfig = cfg
 	EnableStrictLogAssertions(t)
@@ -105,6 +108,9 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 	cleanup := func() {
 		// 清理测试集合
 		ctx := context.Background()
+
+		// 恢复旧的配置，避免影响其他测试
+		config.GlobalConfig = oldConfig
 
 		// 推荐系统测试集合
 		_ = db.Collection("user_behaviors").Drop(ctx)
@@ -196,6 +202,9 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		}
 	}
 
+	// 保存旧的配置，避免并发测试修改全局变量
+	oldConfig := config.GlobalConfig
+
 	// 初始化全局配置
 	config.GlobalConfig = cfg
 	EnableStrictLogAssertions(t)
@@ -216,6 +225,9 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		db := c.GetMongoDB()
 
 		// 清理测试集合
+
+		// 恢复旧的配置，避免影响其他测试
+		config.GlobalConfig = oldConfig
 		_ = db.Collection("user_behaviors").Drop(ctx)
 		_ = db.Collection("user_profiles").Drop(ctx)
 		_ = db.Collection("item_features").Drop(ctx)
