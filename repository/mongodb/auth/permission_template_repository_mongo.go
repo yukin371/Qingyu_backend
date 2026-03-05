@@ -85,14 +85,9 @@ func (r *PermissionTemplateRepositoryMongo) GetTemplateByID(ctx context.Context,
 		}
 	}
 
-	// 从数据库获取
-	objectID, err := primitive.ObjectIDFromHex(templateID)
-	if err != nil {
-		// 如果不是有效的ObjectID，尝试按ID字符串查询（严格格式校验）
-		return r.findOneByStringID(ctx, templateID)
-	}
-
-	template, err := r.findOneByObjectID(ctx, objectID)
+	// 从数据库获取 - 由于模型ID字段是string类型，_id存储为字符串
+	// 直接使用字符串ID查询，而不是转换为ObjectId
+	template, err := r.findOneByStringID(ctx, templateID)
 	if err != nil {
 		return nil, authModel.ErrTemplateNotFound
 	}
@@ -128,15 +123,10 @@ func (r *PermissionTemplateRepositoryMongo) UpdateTemplate(ctx context.Context, 
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
-	// 执行更新
-	objectID, err := primitive.ObjectIDFromHex(templateID)
-	if err != nil {
-		filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
-		_, err = r.getCollection().UpdateOne(ctx, filter, bson.M{"$set": updates})
-	} else {
-		filter := bson.M{"_id": objectID}
-		_, err = r.getCollection().UpdateOne(ctx, filter, bson.M{"$set": updates})
-	}
+	// 执行更新 - 由于模型ID字段是string类型，_id存储为字符串
+	// 直接使用字符串ID查询，而不是转换为ObjectId
+	filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
+	_, err = r.getCollection().UpdateOne(ctx, filter, bson.M{"$set": updates})
 
 	if err != nil {
 		return fmt.Errorf("更新模板失败: %w", err)
@@ -162,16 +152,10 @@ func (r *PermissionTemplateRepositoryMongo) DeleteTemplate(ctx context.Context, 
 		return authModel.ErrTemplateIsSystem
 	}
 
-	// 执行删除
-	objectID, err := primitive.ObjectIDFromHex(templateID)
-	var result *mongo.DeleteResult
-	if err != nil {
-		filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
-		result, err = r.getCollection().DeleteOne(ctx, filter)
-	} else {
-		filter := bson.M{"_id": objectID}
-		result, err = r.getCollection().DeleteOne(ctx, filter)
-	}
+	// 执行删除 - 由于模型ID字段是string类型，_id存储为字符串
+	// 直接使用字符串ID查询，而不是转换为ObjectId
+	filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
+	result, err := r.getCollection().DeleteOne(ctx, filter)
 
 	if err != nil {
 		return fmt.Errorf("删除模板失败: %w", err)
@@ -204,7 +188,7 @@ func (r *PermissionTemplateRepositoryMongo) ListTemplates(ctx context.Context) (
 
 	// 从数据库获取
 	filter := bson.M{}
-	opts := options.Find().SetSort(bson.M{"category": 1, "created_at": -1})
+	opts := options.Find().SetSort(bson.D{{Key: "category", Value: 1}, {Key: "created_at", Value: -1}})
 
 	cursor, err := r.getCollection().Find(ctx, filter, opts)
 	if err != nil {

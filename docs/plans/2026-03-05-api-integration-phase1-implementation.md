@@ -144,60 +144,127 @@ git commit -m "feat(writer): add Project DTOs with validation tags"
 **Files:**
 - Modify: `models/dto/writer_dto.go`
 
-**Step 1: Read existing Document model to understand structure**
+**Context:**
+- Documents support tree structure (parentId, type, level, order)
+- Document types: volume, chapter, section, scene
+- Matches frontend types in `Qingyu_fronted/src/modules/writer/types/document.ts`
+- Aligns with Editor V2 OpenAPI design
 
-Reference: `models/writer/document.go`
-
-**Step 2: Add Document DTOs to writer_dto.go**
+**Step 1: Add Document DTOs to writer_dto.go**
 
 Append to `models/dto/writer_dto.go`:
 
 ```go
-// CreateDocumentRequest represents a request to create a new document
+// DocumentType represents the type of a document node
+type DocumentType string
+
+const (
+	DocumentTypeVolume  DocumentType = "volume"  // 卷
+	DocumentTypeChapter DocumentType = "chapter" // 章
+	DocumentTypeSection DocumentType = "section" // 节
+	DocumentTypeScene   DocumentType = "scene"   // 场景
+)
+
+// DocumentStatus represents the writing status of a document
+type DocumentStatus string
+
+const (
+	DocumentStatusPlanned   DocumentStatus = "planned"   // 计划中
+	DocumentStatusWriting   DocumentStatus = "writing"   // 写作中
+	DocumentStatusCompleted DocumentStatus = "completed" // 已完成
+)
+
+// CreateDocumentRequest 创建文档请求（树形结构）
 type CreateDocumentRequest struct {
-	ProjectID string  `json:"projectId" validate:"required"`
-	Title     string  `json:"title" validate:"required,min=1,max=200"`
-	Content   string  `json:"content,omitempty"`
-	Summary   string  `json:"summary,omitempty" validate:"max=500"`
+	ProjectID string       `json:"projectId" validate:"required"`
+	ParentID  *string      `json:"parentId,omitempty"`              // 父节点ID，null表示根节点
+	Title     string       `json:"title" validate:"required,min=1,max=200"`
+	Type      DocumentType `json:"type" validate:"required,oneof=volume chapter section scene"`
+	Level     int          `json:"level" validate:"min=0,max=10"`    // 层级深度
+	Order     int          `json:"order" validate:"min=0"`          // 排序位置
 }
 
-// UpdateDocumentRequest represents a request to update an existing document
+// UpdateDocumentRequest 更新文档元数据请求
 type UpdateDocumentRequest struct {
-	Title   *string `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Content *string `json:"content,omitempty"`
-	Summary *string `json:"summary,omitempty" validate:"omitempty,max=500"`
+	Title        *string       `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Status       *DocumentStatus `json:"status,omitempty" validate:"omitempty,oneof=planned writing completed"`
+	CharacterIDs *[]string     `json:"characterIds,omitempty" validate:"omitempty,max=50"`
+	LocationIDs  *[]string     `json:"locationIds,omitempty" validate:"omitempty,max=50"`
+	TimelineIDs  *[]string     `json:"timelineIds,omitempty" validate:"omitempty,max=50"`
+	Tags         *[]string     `json:"tags,omitempty" validate:"omitempty,max=20"`
+	Notes        *string       `json:"notes,omitempty" validate:"omitempty,max=1000"`
+	OrderKey     *string       `json:"orderKey,omitempty"`           // LexoRank排序键
 }
 
-// DocumentResponse represents a document in API responses
+// DocumentResponse 文档响应（树形结构）
 type DocumentResponse struct {
-	ID          string    `json:"id"`
-	ProjectID   string    `json:"projectId"`
-	ProjectName *string   `json:"projectName,omitempty"`
-	Title       string    `json:"title"`
-	Content     string    `json:"content"`
-	Summary     string    `json:"summary"`
-	WordCount   int       `json:"wordCount"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          string        `json:"id"`
+	ProjectID   string        `json:"projectId"`
+	ParentID    *string       `json:"parentId,omitempty"`           // 父节点ID
+	Title       string        `json:"title"`
+	Type        DocumentType  `json:"type"`
+	Level       int           `json:"level"`
+	Order       int           `json:"order"`
+	OrderKey    string        `json:"orderKey"`                    // LexoRank排序键
+	Status      DocumentStatus `json:"status"`
+	WordCount   int           `json:"wordCount"`
+	CharacterIDs []string      `json:"characterIds,omitempty"`
+	LocationIDs  []string      `json:"locationIds,omitempty"`
+	TimelineIDs  []string      `json:"timelineIds,omitempty"`
+	Tags        []string      `json:"tags,omitempty"`
+	Notes       string        `json:"notes,omitempty"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
 }
 
-// ListDocumentsRequest represents query parameters for listing documents
+// DocumentTreeResponse 文档树响应（嵌套结构）
+type DocumentTreeResponse struct {
+	ProjectID string             `json:"projectId"`
+	Documents []*DocumentTreeItem `json:"documents"`
+}
+
+// DocumentTreeItem 文档树节点
+type DocumentTreeItem struct {
+	ID       string             `json:"id"`
+	ParentID *string            `json:"parentId,omitempty"`
+	Title    string             `json:"title"`
+	Type     DocumentType       `json:"type"`
+	Level    int                `json:"level"`
+	OrderKey string             `json:"orderKey"`
+	WordCount int               `json:"wordCount"`
+	Children []*DocumentTreeItem `json:"children,omitempty"` // 子节点
+}
+
+// ListDocumentsRequest 查询文档列表请求
 type ListDocumentsRequest struct {
 	ProjectID string `form:"project_id" validate:"required"`
+	ParentID  string `form:"parent_id,omitempty"`           // 筛选父节点下的文档
+	Type      string `form:"type,omitempty" validate:"omitempty,oneof=volume chapter section scene"`
+	Status    string `form:"status,omitempty" validate:"omitempty,oneof=planned writing completed"`
 	Page      int    `form:"page" validate:"min=1"`
 	PageSize  int    `form:"page_size" validate:"min=1,max=100"`
-	Status    string `form:"status" validate:"omitempty,oneof=draft published archived"`
-	Sort      string `form:"sort" validate:"omitempty,oneof=created_at updated_at title"`
-	Order     string `form:"order" validate:"omitempty,oneof=asc desc"`
 }
 
-// DocumentListResponse represents a paginated list of documents
+// DocumentListResponse 文档列表响应
 type DocumentListResponse struct {
 	Items    []DocumentResponse `json:"items"`
 	Total    int64              `json:"total"`
 	Page     int                `json:"page"`
 	PageSize int                `json:"pageSize"`
+}
+
+// ReorderDocumentsRequest 重排序文档请求
+type ReorderDocumentsRequest struct {
+	ProjectID string           `json:"projectId" validate:"required"`
+	ParentID  *string          `json:"parentId,omitempty"`  // 父节点ID
+	Items     []ReorderItem    `json:"items" validate:"required,min=1,dive"` // 重排序项列表
+}
+
+// ReorderItem 重排序项
+type ReorderItem struct {
+	DocumentID string `json:"documentId" validate:"required"`
+	ParentID   *string `json:"parentId,omitempty"`
+	OrderKey   string `json:"orderKey" validate:"required"` // 目标排序键
 }
 ```
 
@@ -215,78 +282,11 @@ git commit -m "feat(writer): add Document DTOs with validation tags"
 
 ---
 
-## Task 4: Add Chapter DTOs
-
-**Files:**
-- Modify: `models/dto/writer_dto.go`
-
-**Step 1: Read existing Chapter model to understand structure**
-
-Reference: `models/writer/chapter.go`
-
-**Step 2: Add Chapter DTOs to writer_dto.go**
-
-Append to `models/dto/writer_dto.go`:
-
-```go
-// CreateChapterRequest represents a request to create a new chapter
-type CreateChapterRequest struct {
-	DocumentID string  `json:"documentId" validate:"required"`
-	Title      string  `json:"title" validate:"required,min=1,max=200"`
-	Content    string  `json:"content,omitempty"`
-	Order      int     `json:"order" validate:"min=0"`
-}
-
-// UpdateChapterRequest represents a request to update an existing chapter
-type UpdateChapterRequest struct {
-	Title   *string `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Content *string `json:"content,omitempty"`
-	Order   *int    `json:"order,omitempty" validate:"omitempty,min=0"`
-}
-
-// ChapterResponse represents a chapter in API responses
-type ChapterResponse struct {
-	ID         string    `json:"id"`
-	DocumentID string    `json:"documentId"`
-	Title      string    `json:"title"`
-	Content    string    `json:"content"`
-	WordCount  int       `json:"wordCount"`
-	Order      int       `json:"order"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-}
-
-// ListChaptersRequest represents query parameters for listing chapters
-type ListChaptersRequest struct {
-	DocumentID string `form:"document_id" validate:"required"`
-	Page       int    `form:"page" validate:"min=1"`
-	PageSize   int    `form:"page_size" validate:"min=1,max=100"`
-}
-
-// ChapterListResponse represents a paginated list of chapters
-type ChapterListResponse struct {
-	Items    []ChapterResponse `json:"items"`
-	Total    int64             `json:"total"`
-	Page     int               `json:"page"`
-	PageSize int               `json:"pageSize"`
-}
-```
-
-**Step 3: Run go build to verify syntax**
-
-Run: `go build ./models/dto/...`
-Expected: No errors
-
-**Step 4: Commit**
-
-```bash
-git add models/dto/writer_dto.go
-git commit -m "feat(writer): add Chapter DTOs with validation tags"
-```
+**NOTE: Chapter is not a separate model - chapters are documents with type="chapter"**
 
 ---
 
-## Task 5: Create DTO Converter Functions
+## Task 4: Create DTO Converter Functions
 
 **Files:**
 - Create: `models/dto/writer_converter.go`
