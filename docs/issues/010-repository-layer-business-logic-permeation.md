@@ -504,8 +504,24 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#007: Service 层事务管理缺失](./007-transaction-management.md)
-- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md)
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
+### 依赖Issue（必须先处理）
+- [#007: Service 层事务管理缺失](./007-transaction-management.md) - ⚠️ 需要先实现事务管理器，才能处理跨表事务问题
+
+### 相关Issue（联合处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - Repository重构时需要确保ID类型正确
+- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - Create方法问题属于Repository层职责
+- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - Repository重构需要测试支持
+
+### 建议拆分
+本Issue规模较大（58个方法，23个文件），建议按域拆分为：
+- **#010-A**: Bookstore域（P0）- ranking_repository, book_statistics_repository
+- **#010-B**: Reader域（P1）- reading_progress_repository, collection_repository
+- **#010-C**: Finance域（P0）- wallet_repository
+- **#010-D**: Writer域（P1）- project_repository, document_repository等
+- **#010-E**: Stats域（P2）- reader_behavior_repository, book_stats_repository
+- **#010-F**: Social域（P2）- follow_repository
+- **#010-G**: User域（P2）- user_repository
+
+详细拆分方案见 [Issue关联关系分析](./ISSUE_RELATIONSHIPS.md)

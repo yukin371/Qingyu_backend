@@ -350,8 +350,17 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
-- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md)
-- [#009: 测试覆盖率不足](./009-test-coverage-issues.md)
+### 依赖Issue（必须先处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ⚠️ 需要先统一ID类型，确保种子数据使用正确的ObjectID
+
+### 相关Issue（联合处理）
+- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - 种子数据修复后，Create方法需要正确处理ID
+- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - 种子数据是测试基础设施的一部分
+- [#009: 测试覆盖率不足](./009-test-coverage-issues.md) - 种子数据修复后，E2E测试才能运行，覆盖率才能提升
+
+### 关联问题
+- 测试用户种子数据未设置ID字段
+- 登录API可能误用用户名为ID
+- 影响E2E测试登录功能（返回500错误）

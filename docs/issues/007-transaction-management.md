@@ -334,7 +334,12 @@ func (s *OrderService) CreateOrder(
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
+### 相关Issue（联合处理）
+- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - ⚠️ Repository层中的跨表事务需要依赖事务管理器
+- [#005: API 标准化问题](./005-api-standardization-issues.md) - 事务失败后的错误响应需要标准化
+
+### 依赖关系
+- 本Issue是 #010 中的跨表事务问题的前置依赖
+- 实现事务管理器后，才能将Repository层的事务逻辑移到Service层

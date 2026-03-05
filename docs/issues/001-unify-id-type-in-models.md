@@ -129,6 +129,19 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 | API 兼容性 | 中 | DTO 层保持 string，对外透明 |
 | 性能影响 | 低 | ObjectID 查询性能更好 |
 
+## 相关Issue
+
+### 依赖Issue（必须先处理）
+- 无
+
+### 相关Issue（联合处理）
+- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - ID类型统一后需要确保Create方法正确回设ID
+- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 包含ID类型转换边界不清晰问题
+- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据需要使用正确的ObjectID类型
+
+### 架构相关
+- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - Repository层重构时需要确保ID类型正确
+
 ## 相关代码
 
 需要修改的文件示例：

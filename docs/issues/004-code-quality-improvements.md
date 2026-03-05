@@ -301,8 +301,16 @@ grep -r "require.NoError" --include="*_test.go" -A1 | grep "assert\|found\." | g
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
-- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md)
-- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md)
+### 相关Issue（联合处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型重构时需要注意代码质量
+- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - Create方法修复需要保证代码质量
+- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - 测试Nil检查是代码质量的一部分
+
+### 独立问题
+本Issue主要是代码质量问题，可以独立于其他Issue处理
+- 错误消息语言不一致（中文/英文）
+- MongoDB sort参数类型错误
+- 测试中缺少Nil检查
+- 魔术数字和字符串

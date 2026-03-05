@@ -263,8 +263,17 @@ func TestA(t *testing.T) {
 
 ---
 
+## 相关Issue
+
+### 相关Issue（联合处理）
+- [#009: 测试覆盖率不足](./009-test-coverage-issues.md) - 测试基础设施改进后，覆盖率才能提升
+- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据是测试基础设施的一部分
+
+### 依赖关系
+- 本Issue是提升测试覆盖率（#009）的基础
+- 种子数据修复（#013）是E2E测试能运行的前提
+
 ## 参考链接
 
 - [Go Testing 最佳实践](https://go.dev/doc/tutorial/add-a-test)
 - [Table-Driven Tests](https://dave.cheney.net/2019/05/07/prefer-table-driven-tests)
-- 相关 Issue: [#002 Create 方法未回设 ID](./002-create-method-id-not-set-bug.md)

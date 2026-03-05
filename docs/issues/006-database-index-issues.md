@@ -255,7 +255,14 @@ func logSlowQuery(event *event.CommandSucceededEvent, duration time.Duration) {
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
+### 相关Issue（联合处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型统一后，索引策略需要相应调整
+- [#005: API 标准化问题](./005-api-standardization-issues.md) - API性能优化需要索引支持
+- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 数据类型统一后，查询模式可能改变，需要索引优化
+
+### 关联问题
+- 规范中定义的数据库索引很多未创建
+- 慢查询监控缺失
+- 查询性能问题

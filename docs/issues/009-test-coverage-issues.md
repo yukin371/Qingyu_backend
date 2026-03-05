@@ -436,7 +436,15 @@ func TestXxx(t *testing.T) {
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md)
-- [#007: Service 层事务管理缺失](./007-transaction-management.md)
+### 依赖Issue（必须先处理）
+- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - ⚠️ 需要先改进测试基础设施，才能有效提升覆盖率
+- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据修复后，E2E测试才能运行
+
+### 相关Issue（联合处理）
+- [#007: Service 层事务管理缺失](./007-transaction-management.md) - 事务相关代码需要测试覆盖
+
+### 依赖关系
+- 测试基础设施（#003）是提升覆盖率（#009）的基础
+- 种子数据修复（#013）是E2E测试能运行的前提

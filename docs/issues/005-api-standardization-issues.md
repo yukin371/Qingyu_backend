@@ -258,7 +258,12 @@ type Pagination struct {
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
-- [#006: 数据库索引问题](./006-database-index-issues.md)
+### 依赖Issue（必须先处理）
+- 无
+
+### 相关Issue（联合处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型转换影响API响应格式
+- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 响应拦截器处理不一致与API响应格式相关
+- [#006: 数据库索引问题](./006-database-index-issues.md) - API性能优化需要索引支持

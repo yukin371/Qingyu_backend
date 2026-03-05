@@ -323,7 +323,14 @@ find . -name "*.go" -exec sed -i 's|Qingyu_backend/pkg/middleware|Qingyu_backend
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
-- [#007: Service 层事务管理缺失](./007-transaction-management.md)
+### 相关Issue（联合处理）
+- [#012: 401认证错误和权限配置问题](./012-auth-401-and-permission-issues.md) - 权限中间件实现需要中间件架构支持
+- [#005: API 标准化问题](./005-api-standardization-issues.md) - 中间件错误响应需要标准化
+
+### 关联问题
+- 中间件目录结构混乱（middleware/ vs pkg/middleware/）
+- CORS中间件位置错误（安全风险）
+- 限流实现分散（3个不同实现）
+- 权限检查架构需要优化

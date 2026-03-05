@@ -349,8 +349,21 @@ API Layer (string) → Service Layer (string) → Repository Layer (ObjectID)
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md)
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
-- [#006: 数据库索引问题](./006-database-index-issues.md)
+### 依赖Issue（必须先处理）
+- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ⚠️ ID类型统一后，ID类型转换边界会更清晰
+
+### 相关Issue（联合处理）
+- [#005: API 标准化问题](./005-api-standardization-issues.md) - 响应码和分页格式需要与数据类型协调
+- [#006: 数据库索引问题](./006-database-index-issues.md) - 索引优化与数据类型相关
+
+### 建议拆分
+本Issue规模较大（28个问题），建议按类型拆分为：
+- **#011-A**: 枚举值不一致问题（P0）- BookStatus, UserRole, BehaviorType等
+- **#011-B**: 字段类型和转换问题（P0）- is_*字段, CategoryIDs, 响应拦截器
+- **#011-C**: 时间和金额处理问题（P1）- Price单位, 时间格式
+- **#011-D**: V2架构兼容性问题（P1）- DocumentContent, stableRef/orderKey
+- **#011-E**: 通用类型转换问题（P2）- 分页参数, Tags, 指针类型
+
+详细拆分方案见 [Issue关联关系分析](./ISSUE_RELATIONSHIPS.md)

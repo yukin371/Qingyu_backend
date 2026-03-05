@@ -268,7 +268,15 @@ type User struct {
 
 ---
 
-## 相关 Issue
+## 相关Issue
 
-- [#008: 中间件架构问题](./008-middleware-architecture-issues.md)
-- [#005: API 标准化问题](./005-api-standardization-issues.md)
+### 依赖Issue（必须先处理）
+- [#008: 中间件架构问题](./008-middleware-architecture-issues.md) - ⚠️ 需要先修复中间件目录结构和CORS位置，才能正确实现权限中间件
+
+### 相关Issue（联合处理）
+- [#005: API 标准化问题](./005-api-standardization-issues.md) - 权限错误返回的HTTP状态码需要标准化
+
+### 关联问题
+- 权限配置缺失导致 author 角色无法访问 Project 相关接口
+- 权限中间件未正确启用，权限配置不生效
+- 权限检查逻辑分散在 Handler 层，缺少统一验证器
