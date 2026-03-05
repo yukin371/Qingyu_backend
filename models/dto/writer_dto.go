@@ -66,3 +66,119 @@ type ProjectListResponse struct {
 	Page     int               `json:"page"`
 	PageSize int               `json:"pageSize"`
 }
+
+// ===========================
+// Document DTOs
+// ===========================
+
+// DocumentType represents the type of a document node
+type DocumentType string
+
+const (
+	DocumentTypeVolume  DocumentType = "volume"  // 卷
+	DocumentTypeChapter DocumentType = "chapter" // 章
+	DocumentTypeSection DocumentType = "section" // 节
+	DocumentTypeScene   DocumentType = "scene"   // 场景
+)
+
+// DocumentStatus represents the writing status of a document
+type DocumentStatus string
+
+const (
+	DocumentStatusPlanned   DocumentStatus = "planned"   // 计划中
+	DocumentStatusWriting   DocumentStatus = "writing"   // 写作中
+	DocumentStatusCompleted DocumentStatus = "completed" // 已完成
+)
+
+// CreateDocumentRequest 创建文档请求（树形结构）
+type CreateDocumentRequest struct {
+	ProjectID string       `json:"projectId" validate:"required"`
+	ParentID  *string      `json:"parentId,omitempty"`
+	Title     string       `json:"title" validate:"required,min=1,max=200"`
+	Type      DocumentType `json:"type" validate:"required,oneof=volume chapter section scene"`
+	Level     int          `json:"level" validate:"min=0,max=10"`
+	Order     int          `json:"order" validate:"min=0"`
+}
+
+// UpdateDocumentRequest 更新文档元数据请求
+type UpdateDocumentRequest struct {
+	Title        *string         `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Status       *DocumentStatus `json:"status,omitempty" validate:"omitempty,oneof=planned writing completed"`
+	CharacterIDs *[]string       `json:"characterIds,omitempty" validate:"omitempty,max=50"`
+	LocationIDs  *[]string       `json:"locationIds,omitempty" validate:"omitempty,max=50"`
+	TimelineIDs  *[]string       `json:"timelineIds,omitempty" validate:"omitempty,max=50"`
+	Tags         *[]string       `json:"tags,omitempty" validate:"omitempty,max=20"`
+	Notes        *string         `json:"notes,omitempty" validate:"omitempty,max=1000"`
+	OrderKey     *string         `json:"orderKey,omitempty"`
+}
+
+// DocumentResponse 文档响应（树形结构）
+type DocumentResponse struct {
+	ID           string         `json:"id"`
+	ProjectID    string         `json:"projectId"`
+	ParentID     *string        `json:"parentId,omitempty"`
+	Title        string         `json:"title"`
+	Type         DocumentType   `json:"type"`
+	Level        int            `json:"level"`
+	Order        int            `json:"order"`
+	OrderKey     string         `json:"orderKey"`
+	Status       DocumentStatus `json:"status"`
+	WordCount    int            `json:"wordCount"`
+	CharacterIDs []string       `json:"characterIds,omitempty"`
+	LocationIDs  []string       `json:"locationIds,omitempty"`
+	TimelineIDs  []string       `json:"timelineIds,omitempty"`
+	Tags         []string       `json:"tags,omitempty"`
+	Notes        string         `json:"notes,omitempty"`
+	CreatedAt    time.Time      `json:"createdAt"`
+	UpdatedAt    time.Time      `json:"updatedAt"`
+}
+
+// DocumentTreeResponse 文档树响应（嵌套结构）
+type DocumentTreeResponse struct {
+	ProjectID string              `json:"projectId"`
+	Documents []*DocumentTreeItem `json:"documents"`
+}
+
+// DocumentTreeItem 文档树节点
+type DocumentTreeItem struct {
+	ID        string              `json:"id"`
+	ParentID  *string             `json:"parentId,omitempty"`
+	Title     string              `json:"title"`
+	Type      DocumentType        `json:"type"`
+	Level     int                 `json:"level"`
+	OrderKey  string              `json:"orderKey"`
+	WordCount int                 `json:"wordCount"`
+	Children  []*DocumentTreeItem `json:"children,omitempty"`
+}
+
+// ListDocumentsRequest 查询文档列表请求
+type ListDocumentsRequest struct {
+	ProjectID string `form:"project_id" validate:"required"`
+	ParentID  string `form:"parent_id,omitempty"`
+	Type      string `form:"type,omitempty" validate:"omitempty,oneof=volume chapter section scene"`
+	Status    string `form:"status,omitempty" validate:"omitempty,oneof=planned writing completed"`
+	Page      int    `form:"page" validate:"min=1"`
+	PageSize  int    `form:"page_size" validate:"min=1,max=100"`
+}
+
+// DocumentListResponse 文档列表响应
+type DocumentListResponse struct {
+	Items    []DocumentResponse `json:"items"`
+	Total    int64              `json:"total"`
+	Page     int                `json:"page"`
+	PageSize int                `json:"pageSize"`
+}
+
+// ReorderDocumentsRequest 重排序文档请求
+type ReorderDocumentsRequest struct {
+	ProjectID string        `json:"projectId" validate:"required"`
+	ParentID  *string       `json:"parentId,omitempty"`
+	Items     []ReorderItem `json:"items" validate:"required,min=1,dive"`
+}
+
+// ReorderItem 重排序项
+type ReorderItem struct {
+	DocumentID string  `json:"documentId" validate:"required"`
+	ParentID   *string `json:"parentId,omitempty"`
+	OrderKey   string  `json:"orderKey" validate:"required"`
+}

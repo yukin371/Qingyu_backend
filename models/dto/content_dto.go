@@ -60,74 +60,84 @@ type RemoveCollaboratorRequest struct {
 }
 
 // ============================================================================
-// 文档管理 DTO
+// 文档管理 DTO（已迁移至 writer_dto.go）
 // ============================================================================
+//
+// 以下 DTO 已迁移至 writer_dto.go：
+// - CreateDocumentRequest
+// - CreateDocumentResponse
+// - UpdateDocumentRequest
+// - ListDocumentsRequest
+// - ListDocumentsResponse
+// - MoveDocumentRequest
+// - ReorderDocumentsRequest
+//
+// 请使用 dto 包中的统一定义（支持树形结构）
 
-// CreateDocumentRequest 创建文档请求
-type CreateDocumentRequest struct {
-	ProjectID    string   `json:"projectId" validate:"required"`
-	ParentID     string   `json:"parentId,omitempty"`
-	Title        string   `json:"title" validate:"required,min=1,max=200"`
-	Type         string   `json:"type" validate:"required,oneof=chapter scene note"`
-	Level        int      `json:"level,omitempty" validate:"min=0,max=10"`
-	Order        int      `json:"order,omitempty" validate:"min=0"`
-	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
-	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
-	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
-	Tags         []string `json:"tags,omitempty" validate:"max=20"`
-	Notes        string   `json:"notes,omitempty" validate:"max=1000"`
-}
+// Deprecated: 使用 dto.CreateDocumentRequest 替代
+// type CreateDocumentRequest struct {
+// 	ProjectID    string   `json:"projectId" validate:"required"`
+// 	ParentID     string   `json:"parentId,omitempty"`
+// 	Title        string   `json:"title" validate:"required,min=1,max=200"`
+// 	Type         string   `json:"type" validate:"required,oneof=chapter scene note"`
+// 	Level        int      `json:"level,omitempty" validate:"min=0,max=10"`
+// 	Order        int      `json:"order,omitempty" validate:"min=0"`
+// 	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
+// 	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
+// 	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
+// 	Tags         []string `json:"tags,omitempty" validate:"max=20"`
+// 	Notes        string   `json:"notes,omitempty" validate:"max=1000"`
+// }
 
-// CreateDocumentResponse 创建文档响应
-type CreateDocumentResponse struct {
-	DocumentID string    `json:"documentId"`
-	Title      string    `json:"title"`
-	Type       string    `json:"type"`
-	CreatedAt  time.Time `json:"createdAt"`
-}
+// Deprecated: 使用 dto.CreateDocumentResponse 替代
+// type CreateDocumentResponse struct {
+// 	DocumentID string    `json:"documentId"`
+// 	Title      string    `json:"title"`
+// 	Type       string    `json:"type"`
+// 	CreatedAt  time.Time `json:"createdAt"`
+// }
 
-// UpdateDocumentRequest 更新文档请求
-// 所有字段都是可选的，允许部分更新
-type UpdateDocumentRequest struct {
-	Title        *string  `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Notes        *string  `json:"notes,omitempty" validate:"omitempty,max=1000"`
-	Status       *string  `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
-	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
-	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
-	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
-	Tags         []string `json:"tags,omitempty" validate:"max=20"`
-}
+// Deprecated: 使用 dto.UpdateDocumentRequest 替代
+// type UpdateDocumentRequest struct {
+// 	Title        *string  `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+// 	Notes        *string  `json:"notes,omitempty" validate:"omitempty,max=1000"`
+// 	Status       *string  `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
+// 	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
+// 	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
+// 	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
+// 	Tags         []string `json:"tags,omitempty" validate:"max=20"`
+// }
 
-// ListDocumentsRequest 文档列表请求
-type ListDocumentsRequest struct {
-	ProjectID string `json:"projectId" validate:"required"`
-	ParentID  string `json:"parentId,omitempty"`
-	Page      int    `json:"page" validate:"min=1"`
-	PageSize  int    `json:"pageSize" validate:"min=1,max=100"`
-	Status    string `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
-}
+// Deprecated: 使用 dto.ListDocumentsRequest 替代
+// type ListDocumentsRequest struct {
+// 	ProjectID string `json:"projectId" validate:"required"`
+// 	ParentID  string `json:"parentId,omitempty"`
+// 	Page      int    `json:"page" validate:"min=1"`
+// 	PageSize  int    `json:"pageSize" validate:"min=1,max=100"`
+// 	Status    string `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
+// }
 
-// ListDocumentsResponse 文档列表响应
-type ListDocumentsResponse struct {
-	Documents interface{} `json:"documents"`
-	Total     int         `json:"total"`
-	Page      int         `json:"page"`
-	PageSize  int         `json:"pageSize"`
-}
+// Deprecated: 使用 dto.DocumentListResponse 替代
+// type ListDocumentsResponse struct {
+// 	Documents interface{} `json:"documents"`
+// 	Total     int         `json:"total"`
+// 	Page      int         `json:"page"`
+// 	PageSize  int         `json:"pageSize"`
+// }
 
-// MoveDocumentRequest 移动文档请求
-type MoveDocumentRequest struct {
-	DocumentID  string `json:"documentId" validate:"required"`
-	NewParentID string `json:"newParentId,omitempty"`
-	Order       int    `json:"order" validate:"min=0"`
-}
+// Deprecated: 使用 dto.MoveDocumentRequest 替代
+// type MoveDocumentRequest struct {
+// 	DocumentID  string `json:"documentId" validate:"required"`
+// 	NewParentID string `json:"newParentId,omitempty"`
+// 	Order       int    `json:"order" validate:"min=0"`
+// }
 
-// ReorderDocumentsRequest 重新排序文档请求
-type ReorderDocumentsRequest struct {
-	ProjectID string         `json:"projectId" validate:"required"`
-	ParentID  string         `json:"parentId,omitempty"`
-	Orders    map[string]int `json:"orders" validate:"required,min=1"` // documentID -> order
-}
+// Deprecated: 使用 dto.ReorderDocumentsRequest 替代
+// type ReorderDocumentsRequest struct {
+// 	ProjectID string         `json:"projectId" validate:"required"`
+// 	ParentID  string         `json:"parentId,omitempty"`
+// 	Orders    map[string]int `json:"orders" validate:"required,min=1"` // documentID -> order
+// }
 
 // ============================================================================
 // 文档内容 DTO
@@ -632,20 +642,26 @@ type ExportFile struct {
 }
 
 // ============================================================================
-// 文档树 DTO
+// 文档树 DTO（已迁移至 writer_dto.go）
 // ============================================================================
+//
+// 以下 DTO 已迁移至 writer_dto.go：
+// - DocumentTreeResponse
+// - DocumentTreeItem
+//
+// 请使用 dto 包中的统一定义（支持树形结构）
 
-// DocumentTreeNode 文档树节点
-type DocumentTreeNode struct {
-	Document interface{}         `json:"document"`
-	Children []*DocumentTreeNode `json:"children"`
-}
+// Deprecated: 使用 dto.DocumentTreeItem 替代
+// type DocumentTreeNode struct {
+// 	Document interface{}         `json:"document"`
+// 	Children []*DocumentTreeNode `json:"children"`
+// }
 
-// DocumentTreeResponse 文档树响应
-type DocumentTreeResponse struct {
-	ProjectID string              `json:"projectId"`
-	Documents []*DocumentTreeNode `json:"documents"`
-}
+// Deprecated: 使用 dto.DocumentTreeResponse 替代
+// type DocumentTreeResponse struct {
+// 	ProjectID string              `json:"projectId"`
+// 	Documents []*DocumentTreeNode `json:"documents"`
+// }
 
 // ============================================================================
 // 章节内容 DTO
@@ -825,24 +841,24 @@ type CollaboratorInfo struct {
 	JoinedAt  time.Time `json:"joinedAt"`
 }
 
-// DocumentResponse 文档响应
-type DocumentResponse struct {
-	DocumentID   string    `json:"documentId"`
-	ProjectID    string    `json:"projectId"`
-	ParentID     string    `json:"parentId,omitempty"`
-	Title        string    `json:"title"`
-	Type         string    `json:"type"`
-	Level        int       `json:"level"`
-	Order        int       `json:"order"`
-	Status       string    `json:"status"`
-	CharacterIDs []string  `json:"characterIds,omitempty"`
-	LocationIDs  []string  `json:"locationIds,omitempty"`
-	TimelineIDs  []string  `json:"timelineIds,omitempty"`
-	Tags         []string  `json:"tags,omitempty"`
-	Notes        string    `json:"notes,omitempty"`
-	CreatedBy    string    `json:"createdBy"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-	WordCount    int       `json:"wordCount"`
-	Version      int       `json:"version"`
-}
+// Deprecated: 使用 dto.DocumentResponse 替代（已迁移至 writer_dto.go）
+// type DocumentResponse struct {
+// 	DocumentID   string    `json:"documentId"`
+// 	ProjectID    string    `json:"projectId"`
+// 	ParentID     string    `json:"parentId,omitempty"`
+// 	Title        string    `json:"title"`
+// 	Type         string    `json:"type"`
+// 	Level        int       `json:"level"`
+// 	Order        int       `json:"order"`
+// 	Status       string    `json:"status"`
+// 	CharacterIDs []string  `json:"characterIds,omitempty"`
+// 	LocationIDs  []string  `json:"locationIds,omitempty"`
+// 	TimelineIDs  []string  `json:"timelineIds,omitempty"`
+// 	Tags         []string  `json:"tags,omitempty"`
+// 	Notes        string    `json:"notes,omitempty"`
+// 	CreatedBy    string    `json:"createdBy"`
+// 	CreatedAt    time.Time `json:"createdAt"`
+// 	UpdatedAt    time.Time `json:"updatedAt"`
+// 	WordCount    int       `json:"wordCount"`
+// 	Version      int       `json:"version"`
+// }
