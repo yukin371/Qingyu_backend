@@ -44,6 +44,7 @@
 - ⚠️ BehaviorType 已拆分为 recommendation/stats 两组共享定义，并对 recommendation 入口兼容 `favorite -> collect`、`complete -> finish`；前端仍需同步规范值
 - ✅ `models/shared/types.DocumentStatus` 已与 writer 文档流转状态对齐为 `planned/writing/completed`
 - ✅ 书城搜索与列表分页响应已统一走 `pagination` 包装，避免前端拦截器在搜索类接口丢失分页元信息
+- ✅ `models/dto/writer_dto.go` 的项目列表状态校验已从旧 `published` 口径收敛到 `draft/serializing/completed/suspended/archived`
 
 ---
 
