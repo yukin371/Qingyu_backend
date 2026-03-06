@@ -247,7 +247,7 @@ func TestPermissionTemplateRepository_UpdateSystemTemplate(t *testing.T) {
 
 	err = repo.UpdateTemplate(ctx, template.ID, updates)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "system template")
+	assert.Contains(t, err.Error(), "系统模板")
 
 	// 清理
 	_ = repo.DeleteTemplate(ctx, template.ID)
@@ -315,7 +315,7 @@ func TestPermissionTemplateRepository_DeleteSystemTemplate(t *testing.T) {
 	// 尝试删除系统模板
 	err = repo.DeleteTemplate(ctx, template.ID)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "system template")
+	assert.Contains(t, err.Error(), "系统模板")
 
 	// 清理
 	_ = repo.DeleteTemplate(ctx, template.ID)
