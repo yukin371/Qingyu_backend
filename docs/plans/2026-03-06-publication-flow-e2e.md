@@ -3,6 +3,7 @@
 最小联调脚本：
 
 - [e2e_publication_flow.py](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.py)
+- [e2e_publication_flow.ps1](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.ps1) 已废弃，仅输出迁移提示
 
 覆盖链路：
 
@@ -16,8 +17,14 @@
 示例：
 
 ```bash
+python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090"
+```
+
+显式传入 token / ID 的模式仍然支持：
+
+```bash
 python .\scripts\e2e_publication_flow.py \
-  --base-url "http://localhost:8080" \
+  --base-url "http://localhost:9090" \
   --author-token "<author-jwt>" \
   --admin-token "<admin-jwt>" \
   --project-id "<project-id>" \
@@ -28,13 +35,15 @@ python .\scripts\e2e_publication_flow.py \
 前提：
 
 - 服务已启动
-- `ProjectId` 和 `DocumentId` 对应同一作者项目
-- `DocumentId` 对应的文档内容已存在于 `document_contents`
-- `AuthorToken` 具备作者身份
-- `AdminToken` 具备管理员身份
+- 默认种子账号存在：`author_new / Author@123456`、`admin / Admin@123456`
+- 默认联调项目存在：`联调发布示例项目`
+- 默认联调文档存在：`第1章 风起青川`
+- 如果显式传入 `ProjectId` / `DocumentId`，它们需要对应同一作者项目
+- 目标文档内容已存在于 `document_contents`
 
 当前限制：
 
 - 审批脚本默认审批项目发布单；文档发布单只做提交，不自动审批
 - reader 校验使用当前实现的现有读侧接口，不补额外适配
 - 脚本会优先读取发布记录里的 `externalId` 作为真实 `bookId`，再从 `bookstore/books/:id/chapters` 响应里解析真实 `chapterId`
+- 脚本默认会在执行前检查项目是否已发布；若已发布，会自动调用 `unpublish` 做清场。可通过 `--skip-reset` 关闭
