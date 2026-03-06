@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme + notification 已推进）
+**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme + notification + admin audit/log 已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -24,7 +24,8 @@
 6. ⚠️ **ai 域核心持久化模型（AIModel/AIProvider/APIRequestLog/NovelContext/WorldSettings/PlotThread）已完成迁移**
 7. ⚠️ **reader 域 ReadingSettings/ReaderTheme 已完成迁移**
 8. ⚠️ **notification 域 Notification/NotificationPreference/PushDevice/NotificationTemplate 已完成迁移**
-9. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
+9. ⚠️ **admin 历史审计模型（AuditRecord/AdminLog）已完成迁移**
+10. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
 
 ### 需要修复的模型（优先级排序）
 
@@ -36,6 +37,7 @@
 6. **models/finance/** - Wallet 已完成，本轮重点转向 recommendation/reader 边缘模型
 7. **models/ai/** - Context, RequestLog, Provider, NovelContext 已完成，本轮重点转向其余边缘模型/仓储
 8. **models/notification/** - Notification/Preference/PushDevice/Template 已完成，本轮重点转向其他边缘域
+9. **models/users/** - AdminLog/AuditRecord 已完成，本轮重点转向更边缘的历史模型
 
 ### 已正确实现的领域
 
@@ -44,6 +46,7 @@
 - ✅ Bookstore域（Book, BookDetail, Chapter, Category）
 - ✅ AI域（Chat, Quota, Core metadata models）
 - ✅ Notification域（Notification, Preference, PushDevice, Template）
+- ✅ Admin域（AdminLog, AuditRecord）
 - ✅ Social域（部分）
 
 ---

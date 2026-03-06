@@ -34,6 +34,7 @@ import (
 	// Notification service
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	// Shared services
 	"Qingyu_backend/service/admin"
@@ -1380,13 +1381,17 @@ var _ admin.AuditRepository = (*adminAuditRepositoryAdapter)(nil)
 // Create 创建审核记录
 func (a *adminAuditRepositoryAdapter) Create(ctx context.Context, record *admin.AuditRecord) error {
 	adminRecord := &adminModel.AuditRecord{
-		ID:          record.ID,
 		ContentID:   record.ContentID,
 		ContentType: record.ContentType,
 		Status:      record.Status,
 		ReviewerID:  record.ReviewerID,
 		CreatedAt:   record.CreatedAt,
 		UpdatedAt:   record.UpdatedAt,
+	}
+	if record.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(record.ID); err == nil {
+			adminRecord.ID = oid
+		}
 	}
 	return a.repo.CreateAuditRecord(ctx, adminRecord)
 }
@@ -1398,7 +1403,7 @@ func (a *adminAuditRepositoryAdapter) Get(ctx context.Context, recordID string) 
 		return nil, err
 	}
 	return &admin.AuditRecord{
-		ID:          adminRecord.ID,
+		ID:          adminRecord.ID.Hex(),
 		ContentID:   adminRecord.ContentID,
 		ContentType: adminRecord.ContentType,
 		Status:      adminRecord.Status,
@@ -1429,7 +1434,7 @@ func (a *adminAuditRepositoryAdapter) ListByStatus(ctx context.Context, contentT
 	result := make([]*admin.AuditRecord, len(records))
 	for i, r := range records {
 		result[i] = &admin.AuditRecord{
-			ID:          r.ID,
+			ID:          r.ID.Hex(),
 			ContentID:   r.ContentID,
 			ContentType: r.ContentType,
 			Status:      r.Status,
@@ -1449,7 +1454,7 @@ func (a *adminAuditRepositoryAdapter) ListByContent(ctx context.Context, content
 	}
 
 	return []*admin.AuditRecord{{
-		ID:          record.ID,
+		ID:          record.ID.Hex(),
 		ContentID:   record.ContentID,
 		ContentType: record.ContentType,
 		Status:      record.Status,
@@ -1469,12 +1474,16 @@ var _ admin.LogRepository = (*adminLogRepositoryAdapter)(nil)
 // Create 创建日志
 func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.AdminLog) error {
 	adminLog := &adminModel.AdminLog{
-		ID:        log.ID,
 		AdminID:   log.AdminID,
 		Operation: log.Operation,
 		Target:    log.Target, // shared/admin 只有一个 Target 字段
 		Details:   log.Details,
 		CreatedAt: log.CreatedAt,
+	}
+	if log.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(log.ID); err == nil {
+			adminLog.ID = oid
+		}
 	}
 	return a.repo.CreateAdminLog(ctx, adminLog)
 }
@@ -1498,7 +1507,7 @@ func (a *adminLogRepositoryAdapter) List(ctx context.Context, filter *admin.LogF
 	result := make([]*admin.AdminLog, len(logs))
 	for i, l := range logs {
 		result[i] = &admin.AdminLog{
-			ID:        l.ID,
+			ID:        l.ID.Hex(),
 			AdminID:   l.AdminID,
 			Operation: l.Operation,
 			Target:    l.Target, // adminModel 只有一个 Target 字段
