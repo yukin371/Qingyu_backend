@@ -2,6 +2,8 @@ package writer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -228,7 +230,7 @@ func (s *PublishService) executeProjectPublish(
 			"bookstoreId": req.BookstoreID,
 			"publishedAt": time.Now(),
 		}
-		_ = s.eventBus.PublishAsync(ctx, event)
+		s.publishEventWithAudit(ctx, record, event, "project.published")
 	}
 }
 
@@ -273,7 +275,7 @@ func (s *PublishService) UnpublishProject(ctx context.Context, projectID, userID
 			"projectId":     projectID,
 			"unpublishedAt": now,
 		}
-		_ = s.eventBus.PublishAsync(ctx, event)
+		s.publishEventWithAudit(ctx, record, event, "project.unpublished")
 	}
 
 	return nil
@@ -448,6 +450,17 @@ func (s *PublishService) executeDocumentPublish(
 	record.UpdatedAt = time.Now()
 
 	_ = s.publicationRepo.Update(ctx, record)
+
+	if s.eventBus != nil {
+		event := map[string]interface{}{
+			"eventType":   "document.published",
+			"documentId":  document.ID,
+			"projectId":   document.ProjectID,
+			"externalId":  resp.ExternalID,
+			"publishedAt": time.Now(),
+		}
+		s.publishEventWithAudit(ctx, record, event, "document.published")
+	}
 }
 
 // UpdateDocumentPublishStatus 更新文档发布状态
@@ -516,7 +529,20 @@ func (s *PublishService) unpublishDocument(ctx context.Context, record *serviceI
 	record.UnpublishReason = reason
 	record.UpdatedAt = now
 
-	return s.publicationRepo.Update(ctx, record)
+	if err := s.publicationRepo.Update(ctx, record); err != nil {
+		return err
+	}
+
+	if s.eventBus != nil {
+		event := map[string]interface{}{
+			"eventType":     "document.unpublished",
+			"documentId":    record.ResourceID,
+			"unpublishedAt": now,
+		}
+		s.publishEventWithAudit(ctx, record, event, "document.unpublished")
+	}
+
+	return nil
 }
 
 // BatchPublishDocuments 批量发布文档
@@ -686,4 +712,23 @@ func (s *PublishService) ReviewPublication(
 		return nil, err
 	}
 	return updated, nil
+}
+
+func (s *PublishService) publishEventWithAudit(ctx context.Context, record *serviceInterfaces.PublicationRecord, event interface{}, eventName string) {
+	if s.eventBus == nil || record == nil {
+		return
+	}
+
+	if err := s.eventBus.PublishAsync(ctx, event); err != nil {
+		note := fmt.Sprintf("event dispatch failed for %s: %v", eventName, err)
+		if !strings.Contains(record.ReviewNote, note) {
+			if record.ReviewNote == "" {
+				record.ReviewNote = note
+			} else {
+				record.ReviewNote = record.ReviewNote + "; " + note
+			}
+		}
+		record.UpdatedAt = time.Now()
+		_ = s.publicationRepo.Update(ctx, record)
+	}
 }

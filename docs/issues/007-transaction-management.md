@@ -58,6 +58,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 16. ✅ 已补关注关系回滚测试，验证互关状态更新失败时不会留下半成功关系
 17. ✅ `CommentService` 的回复/删除回复已改为事务内统一维护子评论与父评论回复计数
 18. ✅ 已补评论回滚测试，验证回复计数更新失败时不会留下脏回复或错误计数
+19. ✅ `PublishService` 对发布/下架事件失败已改为可审计，不再静默吞错
+20. ✅ 已补发布事件失败测试，验证失败信息会回写到 `PublicationRecord`
 
 ---
 
@@ -388,6 +390,7 @@ func (s *OrderService) CreateOrder(
 - [x] 会员订阅/续费事务支持
 - [x] 关注/取关事务支持
 - [x] 评论回复/删除回复事务支持
+- [x] 发布事件失败可见化
 - [ ] 点赞等其他社交互动事务支持
 
 ### 测试验证
