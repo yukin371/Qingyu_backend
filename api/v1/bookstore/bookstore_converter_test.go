@@ -68,6 +68,7 @@ func TestToBookDTO(t *testing.T) {
 
 	// 验证分类和标签
 	assert.Equal(t, 2, len(bookDTO.CategoryIDs))
+	assert.Equal(t, categoryID1.Hex(), bookDTO.CategoryID)
 	assert.Contains(t, bookDTO.CategoryIDs, categoryID1.Hex())
 	assert.Contains(t, bookDTO.CategoryIDs, categoryID2.Hex())
 	assert.Equal(t, []string{"玄幻", "修仙"}, bookDTO.Categories)
@@ -147,30 +148,31 @@ func TestToBookModel(t *testing.T) {
 	lastUpdateAt := now.Add(-1 * time.Hour)
 
 	bookDTO := &dto.BookDTO{
-		ID:           bookID.Hex(),
-		CreatedAt:    now.Format(time.RFC3339),
-		UpdatedAt:    now.Format(time.RFC3339),
-		Title:        "测试书籍",
-		Author:       "测试作者",
-		AuthorID:     authorID.Hex(), // AuthorID 现在是 string 类型
-		Introduction: "这是一本测试书籍的简介",
-		Cover:        "https://example.com/cover.jpg",
-		CategoryIDs:  []string{categoryID1.Hex(), categoryID2.Hex()},
-		Categories:   []string{"玄幻", "修仙"},
-		Tags:         []string{"热血", "爽文"},
-		Status:       "ongoing",
-		Rating:       4.5,
-		RatingCount:  1000,
-		ViewCount:    50000,
-		WordCount:    1000000,
-		ChapterCount: 500,
-		Price:        "¥99.00",
-		IsFree:       false,
+		ID:            bookID.Hex(),
+		CreatedAt:     now.Format(time.RFC3339),
+		UpdatedAt:     now.Format(time.RFC3339),
+		Title:         "测试书籍",
+		Author:        "测试作者",
+		AuthorID:      authorID.Hex(), // AuthorID 现在是 string 类型
+		Introduction:  "这是一本测试书籍的简介",
+		Cover:         "https://example.com/cover.jpg",
+		CategoryID:    categoryID1.Hex(),
+		CategoryIDs:   []string{categoryID1.Hex(), categoryID2.Hex()},
+		Categories:    []string{"玄幻", "修仙"},
+		Tags:          []string{"热血", "爽文"},
+		Status:        "ongoing",
+		Rating:        4.5,
+		RatingCount:   1000,
+		ViewCount:     50000,
+		WordCount:     1000000,
+		ChapterCount:  500,
+		Price:         "¥99.00",
+		IsFree:        false,
 		IsRecommended: true,
-		IsFeatured:   false,
-		IsHot:        true,
-		PublishedAt:  publishedAt.Format(time.RFC3339),
-		LastUpdateAt: lastUpdateAt.Format(time.RFC3339),
+		IsFeatured:    false,
+		IsHot:         true,
+		PublishedAt:   publishedAt.Format(time.RFC3339),
+		LastUpdateAt:  lastUpdateAt.Format(time.RFC3339),
 	}
 
 	// 执行转换
@@ -223,6 +225,30 @@ func TestToBookModel(t *testing.T) {
 	require.NotNil(t, bookModel.LastUpdateAt)
 	assert.WithinDuration(t, publishedAt, *bookModel.PublishedAt, time.Second)
 	assert.WithinDuration(t, lastUpdateAt, *bookModel.LastUpdateAt, time.Second)
+}
+
+func TestToBookModel_UsesLegacyCategoryIDFallback(t *testing.T) {
+	bookID := primitive.NewObjectID()
+	authorID := primitive.NewObjectID()
+	categoryID := primitive.NewObjectID()
+	now := time.Now()
+
+	bookDTO := &dto.BookDTO{
+		ID:         bookID.Hex(),
+		CreatedAt:  now.Format(time.RFC3339),
+		UpdatedAt:  now.Format(time.RFC3339),
+		Title:      "测试书籍",
+		Author:     "测试作者",
+		AuthorID:   authorID.Hex(),
+		CategoryID: categoryID.Hex(),
+		Status:     "ongoing",
+		Price:      "¥9.90",
+	}
+
+	bookModel, err := ToBookModel(bookDTO)
+	require.NoError(t, err)
+	require.Len(t, bookModel.CategoryIDs, 1)
+	assert.Equal(t, categoryID, bookModel.CategoryIDs[0])
 }
 
 // TestToBookModelWithNil 测试 nil 输入

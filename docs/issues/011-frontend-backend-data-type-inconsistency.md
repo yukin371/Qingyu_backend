@@ -33,10 +33,17 @@
   - `BookDetail` 模型: `[]string`
 - ❌ **前端使用单值** `categoryId: string`，后端使用数组
 
+**当前进展（2026-03-06）**:
+- 已在 `BookDTO` 增加兼容字段 `categoryId`
+- `BookDTO` 与 converter 现在同时输出 `categoryIds` 和首个 `categoryId`
+- DTO 入参在仅提供旧字段 `categoryId` 时也会回填到 `categoryIds`
+- `BookDetail` 内部模型残留仍在，后续单独收敛
+
 #### 其他问题
 - ✅ is_* 字段 JSON 标签已正确配置
 - ⚠️ BehaviorType 已拆分为 recommendation/stats 两组共享定义，并对 recommendation 入口兼容 `favorite -> collect`、`complete -> finish`；前端仍需同步规范值
 - ✅ `models/shared/types.DocumentStatus` 已与 writer 文档流转状态对齐为 `planned/writing/completed`
+- ✅ 书城搜索与列表分页响应已统一走 `pagination` 包装，避免前端拦截器在搜索类接口丢失分页元信息
 
 ---
 

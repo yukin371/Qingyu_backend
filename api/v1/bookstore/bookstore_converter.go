@@ -34,6 +34,11 @@ func ToBookDTO(book *bookstore.Book) *dto.BookDTO {
 
 	// 转换价格：分 → 金额字符串（Price 现在是 float64，需要转为 int64）
 	money := types.NewMoneyFromCents(int64(book.Price))
+	categoryIDs := converter.ModelIDsToDTO(book.CategoryIDs)
+	categoryID := ""
+	if len(categoryIDs) > 0 {
+		categoryID = categoryIDs[0]
+	}
 
 	return &dto.BookDTO{
 		ID:        converter.ModelIDToDTO(book.ID),
@@ -48,7 +53,8 @@ func ToBookDTO(book *bookstore.Book) *dto.BookDTO {
 		Cover:        book.Cover,
 
 		// 分类和标签
-		CategoryIDs: converter.ModelIDsToDTO(book.CategoryIDs),
+		CategoryID:  categoryID,
+		CategoryIDs: categoryIDs,
 		Categories:  book.Categories,
 		Tags:        book.Tags,
 
@@ -118,7 +124,12 @@ func ToBookModel(dto *dto.BookDTO) (*bookstore.Book, error) {
 	authorID := dto.AuthorID
 
 	// 转换分类 ID 列表
-	categoryIDs, err := converter.DTOIDsToModel(dto.CategoryIDs)
+	dtoCategoryIDs := dto.CategoryIDs
+	if len(dtoCategoryIDs) == 0 && dto.CategoryID != "" {
+		dtoCategoryIDs = []string{dto.CategoryID}
+	}
+
+	categoryIDs, err := converter.DTOIDsToModel(dtoCategoryIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +223,12 @@ func ToBookModelWithoutID(dto *dto.BookDTO) (*bookstore.Book, error) {
 	authorID := dto.AuthorID
 
 	// 转换分类 ID 列表
-	categoryIDs, err := converter.DTOIDsToModel(dto.CategoryIDs)
+	dtoCategoryIDs := dto.CategoryIDs
+	if len(dtoCategoryIDs) == 0 && dto.CategoryID != "" {
+		dtoCategoryIDs = []string{dto.CategoryID}
+	}
+
+	categoryIDs, err := converter.DTOIDsToModel(dtoCategoryIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +270,7 @@ func ToBookModelWithoutID(dto *dto.BookDTO) (*bookstore.Book, error) {
 
 	return &bookstore.Book{
 		IdentifiedEntity: shared.IdentifiedEntity{}, // ID 将由数据库生成
-		BaseEntity:       shared.BaseEntity{},        // 时间戳将由数据库设置
+		BaseEntity:       shared.BaseEntity{},       // 时间戳将由数据库设置
 
 		Title:        dto.Title,
 		Author:       dto.Author,
