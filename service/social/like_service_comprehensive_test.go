@@ -83,6 +83,10 @@ func (m *MockLikeRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
+func (m *MockLikeRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 // TestLikeServiceBusinessRules 业务规则测试
 func TestLikeServiceBusinessRules(t *testing.T) {
 	mockRepo := new(MockLikeRepository)

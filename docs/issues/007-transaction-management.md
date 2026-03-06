@@ -63,6 +63,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 20. ✅ 已补发布事件失败测试，验证失败信息会回写到 `PublicationRecord`
 21. ✅ `ServiceContainer` 已切换为 `PersistedEventBus + MongoEventStore`，admin 事件回放接口恢复真实数据源
 22. ✅ `PublishEventBusAdapter` 已保留真实业务事件类型，避免 `project.published` / `document.published` 被统一折叠为通用事件名
+23. ✅ `LikeService` 的评论点赞/取消点赞已改为事务内统一维护点赞记录与评论点赞计数
+24. ✅ 已补点赞回滚测试，验证评论计数更新失败时不会留下脏点赞或错误计数
 
 ---
 
