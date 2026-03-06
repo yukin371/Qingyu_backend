@@ -73,6 +73,12 @@ func isAllowedIP(clientIP string, allowedIPs []string) bool {
 		allowedIP := net.ParseIP(candidate)
 		if allowedIP != nil && allowedIP.Equal(ip) {
 			return true
+		} else {
+			// 精确匹配
+			allowedIP := net.ParseIP(candidate)
+			if allowedIP != nil && allowedIP.Equal(ip) {
+				return true
+			}
 		}
 	}
 	return false
