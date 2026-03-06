@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/bookstore"
 )
 
@@ -417,7 +418,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, purchases, total, page, size, "获取成功")
+	response.Paginated(c, purchases, total, page, size, "获取成功")
 }
 
 // GetBookPurchases 获取某本书的购买记录
@@ -482,7 +483,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, purchases, total, page, size, "获取成功")
+	response.Paginated(c, purchases, total, page, size, "获取成功")
 }
 
 // CheckChapterAccess 检查章节访问权限

@@ -300,6 +300,13 @@ type Pagination struct {
    - `GET /api/v1/finance/wallet/withdrawals`
    - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
 
+11. bookstore 分页响应继续收敛
+   - `GET /api/v1/reading/statistics/time-range`
+   - `GET /api/v1/reading/statistics/search`
+   - `GET /api/v1/reader/purchases`
+   - `GET /api/v1/reader/purchases/{bookId}`
+   - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理
