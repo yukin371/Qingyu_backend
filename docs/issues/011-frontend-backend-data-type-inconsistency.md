@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 兼容性问题
-**状态**: ⚠️ 部分存在问题（已审查）
+**状态**: ⚠️ 部分存在问题（后端枚举源已开始收敛）
 **创建日期**: 2026-03-05
 **来源报告**: [前后端数据类型对比报告](../reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md)、[类型转换兼容性分析](../reports/archived/type-conversion-compatibility-analysis.md)
 **审查日期**: 2026-03-05
@@ -17,11 +17,15 @@
 ### 审查发现
 
 #### BookStatus 枚举冲突
-- ❌ **后端存在三套不同定义**：
+- ⚠️ **后端历史上存在三套不同定义**：
   - `models/bookstore/book.go`: draft, ongoing, completed, paused
   - `models/shared/types/enums.go`: draft, **published** ← 冲突, completed, paused, deleted
   - `internal/domain/book.go`: draft, ongoing, completed, paused, deleted
 - ❌ **前端使用 `serializing`**，后端使用 `ongoing`
+
+**当前进展（2026-03-06）**:
+- 已将共享 `BookStatus` 口径收敛为 `draft/ongoing/completed/paused/deleted`
+- 后端查询已兼容历史 `published` 数据，但新口径不再把 `published` 作为规范枚举值
 
 #### CategoryIDs 类型不一致
 - ❌ **后端内部不一致**：
@@ -31,7 +35,8 @@
 
 #### 其他问题
 - ✅ is_* 字段 JSON 标签已正确配置
-- ❌ BehaviorType 存在两套不同定义（stats vs recommendation）
+- ⚠️ BehaviorType 仍存在两套定义（stats vs recommendation），需要单独收敛
+- ✅ `models/shared/types.DocumentStatus` 已与 writer 文档流转状态对齐为 `planned/writing/completed`
 
 ---
 
