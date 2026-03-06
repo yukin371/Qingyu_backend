@@ -2,22 +2,22 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ⚠️ 部分修复
+**状态**: ✅ 核心问题已解决（已归档）
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../reports/archived/backend-service-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../../reports/archived/backend-service-analysis-2026-01-26.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
 ## 审查结果
 
-**状态**: ⚠️ 问题仍存在，但高风险财务链路已基本收敛
+**状态**: ✅ 高风险业务事务问题已解决，剩余为后续优化项
 
 ### 审查发现
 
-1. ⚠️ **仓库级事务管理仍未全域统一，但已新增通用 Mongo transaction runner**
-2. ⚠️ **Service层仍未形成全域统一 `RunInTransaction` 规范**
+1. ✅ **高风险业务链路已完成事务收敛**
+2. ⚠️ **仓库级事务规范和系统级 outbox 仍属于后续优化项**
 3. ✅ **wallet 交易/提现服务已接入事务执行**
 4. ✅ **作者收入提现申请已接入钱包冻结与双写回滚**
 5. ✅ **会员订阅/续费已接入钱包扣款与回滚**
@@ -76,9 +76,17 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 
 ---
 
+## 后续 TODO
+
+1. 基于当前 `PersistedEventBus` 补 `retry/dead-letter` 闭环，而不是继续停留在“可审计失败”
+2. 补充统一事务约定文档，明确哪些 Service/Repository 必须暴露 `RunInTransaction`
+3. 随后在 `#010` 中继续把剩余 Repository 业务逻辑外移，避免事务职责再次下沉
+
+---
+
 ## 设计方案
 
-**设计文档**: [事务管理器实现设计方案](../plans/2026-03-05-transaction-manager-design.md)
+**设计文档**: [事务管理器实现设计方案](../../plans/2026-03-05-transaction-manager-design.md)
 
 ### 设计要点
 
