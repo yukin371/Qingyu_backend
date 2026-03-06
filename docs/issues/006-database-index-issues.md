@@ -2,9 +2,32 @@
 
 **优先级**: 高 (P0)
 **类型**: 性能问题
-**状态**: 待处理
+**状态**: ⚠️ 部分修复
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端数据库分析](../reports/archived/backend-database-analysis-2026-01-26.md)
+
+---
+
+## 当前进展
+
+### 已落地
+
+1. ✅ 已有正式 migration:
+   - `002_create_users_indexes`
+   - `003_create_books_indexes_p0`
+   - `004_create_chapters_indexes`
+   - `005_create_reading_progress_indexes`
+2. ✅ 新增 `006_create_core_query_indexes`
+   - `users`: `username`, `email`, `phone`
+   - `comments`: `target_id + target_type + state + created_at` 等
+   - `notifications`: `user_id + created_at` 等列表索引
+3. ✅ `cmd/migrate` 已注册新迁移
+
+### 仍待处理
+
+1. ⚠️ issue 中引用的 `docs/database/indexes.yaml` 规范文件当前不存在，需要补统一索引清单
+2. ⚠️ 慢查询监控仍未实现
+3. ⚠️ 其他低优先级集合索引尚未系统化收敛到 migration
 
 ---
 
