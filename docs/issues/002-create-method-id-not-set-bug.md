@@ -28,7 +28,8 @@
 
 3. ⚠️ **剩余问题主要集中在尚未完成 ObjectID 迁移的模型/仓储**:
    - auth 域本轮已补 `PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession` 的 Create 回设
-   - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
+   - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设
+   - writer 域本轮已补 `Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
 
 ### 已修复的 Repository
 
@@ -115,9 +116,11 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 
 ### Writer 模块
 - [x] `outline_repository_mongo.go` - 已修复
-- [ ] `project_repository_mongo.go` - 需检查
-- [ ] `document_repository_mongo.go` - 需检查
+- [x] `project_repository_mongo.go`
+- [x] `document_repository_mongo.go`
 - [ ] `batch_operation_repository_mongo.go` - 需检查
+- [x] `timeline_repository_mongo.go`
+- [x] `version_service.go` 相关 `file_revisions/file_patches/commits` 写入回设
 
 ### Social 模块
 - [x] `booklist_repository_mongo.go`

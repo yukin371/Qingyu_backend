@@ -29,6 +29,14 @@ func (s *VersionService) revCol() *mongo.Collection     { return s.db.Collection
 func (s *VersionService) patchCol() *mongo.Collection   { return s.db.Collection("file_patches") }      // 补丁集合
 func (s *VersionService) commitCol() *mongo.Collection  { return s.db.Collection("commits") }           // 提交集合
 
+func objectIDFromHex(id, resource string) (primitive.ObjectID, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("invalid %s id: %w", resource, err)
+	}
+	return objectID, nil
+}
+
 // getDocumentContent 获取文档内容（辅助函数）
 func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*writer.DocumentContent, error) {
 	var content writer.DocumentContent
@@ -143,15 +151,8 @@ func (s *VersionService) BumpVersionAndCreateRevision(projectID, nodeID, authorI
 	if err != nil {
 		return nil, err
 	}
-	// 尝试从 InsertedID 中提取字符串 id（兼容 primitive.ObjectID）
-	switch v := res.InsertedID.(type) {
-	case string:
-		rev.ID = v
-	case interface{ Hex() string }:
-		rev.ID = v.Hex()
-	default:
-		// 使用默认的格式化作为回退
-		rev.ID = fmt.Sprintf("%v", res.InsertedID)
+	if objectID, ok := res.InsertedID.(primitive.ObjectID); ok {
+		rev.ID = objectID
 	}
 	return rev, nil
 }
@@ -227,8 +228,7 @@ func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 使用字符串 id（Hex）来避免类型不一致
-	id := primitive.NewObjectID().Hex()
+	id := primitive.NewObjectID()
 	p := &writer.FilePatch{
 		ID:          id,
 		ProjectID:   projectID,
@@ -242,8 +242,7 @@ func (s *VersionService) CreatePatch(projectID, nodeID string, baseVersion int, 
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	// 手动指定 _id 字段为字符串 id
-	_, err := s.patchCol().InsertOne(ctx, bson.M{"_id": id, "project_id": p.ProjectID, "node_id": p.NodeID, "base_version": p.BaseVersion, "diff_format": p.DiffFormat, "diff_payload": p.DiffPayload, "created_by": p.CreatedBy, "status": p.Status, "preview": p.Preview, "created_at": p.CreatedAt, "updated_at": p.UpdatedAt})
+	_, err := s.patchCol().InsertOne(ctx, p)
 	if err != nil {
 		return nil, err
 	}
@@ -258,9 +257,14 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*writ
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
+	patchObjectID, err := objectIDFromHex(patchID, "patch")
+	if err != nil {
+		return nil, err
+	}
+
 	// 查找补丁
 	var p writer.FilePatch
-	if err := s.patchCol().FindOne(ctx, bson.M{"_id": patchID, "project_id": projectID}).Decode(&p); err != nil {
+	if err := s.patchCol().FindOne(ctx, bson.M{"_id": patchObjectID, "project_id": projectID}).Decode(&p); err != nil {
 		return nil, err
 	}
 	if p.Status != "pending" {
@@ -299,7 +303,7 @@ func (s *VersionService) ApplyPatch(projectID, patchID, applierID string) (*writ
 	}
 
 	// 标记补丁为 applied
-	if _, err := s.patchCol().UpdateOne(ctx, bson.M{"_id": patchID}, bson.M{"$set": bson.M{"status": "applied", "updated_at": time.Now()}}); err != nil {
+	if _, err := s.patchCol().UpdateOne(ctx, bson.M{"_id": patchObjectID}, bson.M{"$set": bson.M{"status": "applied", "updated_at": time.Now()}}); err != nil {
 		// 不致命，仍返回 rev
 	}
 
@@ -455,7 +459,7 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 
 	// 创建提交记录
 	commit := &writer.Commit{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        primitive.NewObjectID(),
 		ProjectID: projectID,
 		AuthorID:  authorID,
 		Message:   message,
@@ -506,7 +510,7 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 
 			// 创建修订记录
 			revision := &writer.FileRevision{
-				ID:         primitive.NewObjectID().Hex(),
+				ID:         primitive.NewObjectID(),
 				ProjectID:  projectID,
 				NodeID:     file.NodeID,
 				Version:    file.ExpectedVersion + 1,
@@ -515,7 +519,7 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 				Snapshot:   snapshot,
 				StorageRef: storageRef,
 				ParentVers: file.ExpectedVersion,
-				CommitID:   commit.ID,
+				CommitID:   commit.ID.Hex(),
 				CreatedAt:  time.Now(),
 			}
 			revisions = append(revisions, revision)
@@ -607,9 +611,14 @@ func (s *VersionService) GetCommitDetails(ctx context.Context, projectID, commit
 		return nil, nil, errors.New("invalid arguments")
 	}
 
+	commitObjectID, err := objectIDFromHex(commitID, "commit")
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// 获取提交信息
 	var commit writer.Commit
-	err := s.commitCol().FindOne(ctx, bson.M{"_id": commitID, "project_id": projectID}).Decode(&commit)
+	err = s.commitCol().FindOne(ctx, bson.M{"_id": commitObjectID, "project_id": projectID}).Decode(&commit)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil, errors.New("commit_not_found")
@@ -771,7 +780,7 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 	versions := make([]*VersionInfo, 0, len(revisions))
 	for _, rev := range revisions {
 		versions = append(versions, &VersionInfo{
-			VersionID: rev.ID,
+			VersionID: rev.ID.Hex(),
 			Version:   rev.Version,
 			Message:   rev.Message,
 			CreatedAt: rev.CreatedAt,
@@ -790,9 +799,13 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 
 // GetVersion 获取特定版本
 func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID string) (*VersionDetail, error) {
-	// 查询版本 - versionID直接是string类型
+	versionObjectID, err := objectIDFromHex(versionID, "version")
+	if err != nil {
+		return nil, err
+	}
+
 	var revision writer.FileRevision
-	err := s.revCol().FindOne(ctx, bson.M{"_id": versionID, "node_id": documentID}).Decode(&revision)
+	err = s.revCol().FindOne(ctx, bson.M{"_id": versionObjectID, "node_id": documentID}).Decode(&revision)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.New("版本不存在")
@@ -807,7 +820,7 @@ func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID s
 	}
 
 	return &VersionDetail{
-		VersionID:  revision.ID,
+		VersionID:  revision.ID.Hex(),
 		DocumentID: revision.NodeID,
 		Version:    revision.Version,
 		Content:    content,

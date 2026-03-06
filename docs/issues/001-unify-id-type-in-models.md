@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging 核心域已推进）
+**状态**: ⚠️ 部分存在（auth + messaging + writer 版本/时间线已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -18,14 +18,15 @@
 
 1. ✅ **176+ 个模型已正确使用 `primitive.ObjectID`**
 2. ⚠️ **auth 域 Mongo 主键模型已完成迁移（PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession），Redis Session 不在本 issue 的 Mongo `_id` 统一范围**
-3. ❌ **其他领域仍有约 10+ 个模型使用 `ID string`，主要集中在 writer 辅助模型和少量历史/边缘子域**
+3. ⚠️ **writer 域 Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent 已完成迁移**
+4. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
 
 ### 需要修复的模型（优先级排序）
 
 1. **models/auth/** - Redis Session 属于会话键，不在 Mongo `_id` 统一范围；OAuth/Permission/Role 已完成
 2. **models/social/** - 核心持久化模型已完成，剩余主要是 DTO/外键 string 边界，不属于模型 `_id` 阻塞
 3. **models/messaging/** - 其余消息模型（Message/MessageTemplate/NotificationDelivery 已完成，Conversation/Announcement/InboxNotification 已使用基础 ObjectID 混入）
-4. **models/writer/** - Version, Timeline
+4. **models/writer/** - Version, Timeline 已完成，本轮重点转向剩余边缘模型
 5. **models/bookstore/** - Chapter, Category
 6. **models/finance/** - Wallet
 7. **models/ai/** - Context, RequestLog, Provider
@@ -137,7 +138,7 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 
 1. [x] `models/auth/` - PermissionTemplate, Role, Permission, OAuthAccount, OAuthSession
 2. [ ] `models/social/` - BookList, Collection 等剩余模型（Comment/Review/Message 已完成）
-3. [ ] `models/writer/` - 检查是否有 string ID
+3. [x] `models/writer/` - Version, Timeline 已迁移
 4. [ ] 其他模块
 
 每个模块迁移步骤：
