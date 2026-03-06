@@ -1186,7 +1186,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.membershipService = financeService.NewMembershipService(membershipRepo)
 
 	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
-	c.authorRevenueService = financeService.NewAuthorRevenueService(authorRevenueRepo)
+	mongoTxRunnerInstance, err := c.GetProvider("mongoTransactionRunner")
+	if err != nil {
+		return fmt.Errorf("获取通用事务Provider失败: %w", err)
+	}
+	mongoTxRunner, ok := mongoTxRunnerInstance.(pkgtransaction.Runner)
+	if !ok {
+		return fmt.Errorf("mongoTransactionRunner 类型不正确")
+	}
+	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
 

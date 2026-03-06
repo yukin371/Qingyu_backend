@@ -3,7 +3,9 @@ package finance
 import (
 	financeModel "Qingyu_backend/models/finance"
 	"Qingyu_backend/models/shared/types"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/interfaces/finance"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"context"
 	"fmt"
 
@@ -38,12 +40,21 @@ type AuthorRevenueService interface {
 // AuthorRevenueServiceImpl 作者收入服务实现
 type AuthorRevenueServiceImpl struct {
 	revenueRepo finance.AuthorRevenueRepository
+	walletRepo  sharedRepo.WalletRepository
+	txRunner    pkgtransaction.Runner
 }
 
 // NewAuthorRevenueService 创建作者收入服务
 func NewAuthorRevenueService(revenueRepo finance.AuthorRevenueRepository) AuthorRevenueService {
+	return NewAuthorRevenueServiceWithDependencies(revenueRepo, nil, nil)
+}
+
+// NewAuthorRevenueServiceWithDependencies 创建带钱包与事务依赖的作者收入服务。
+func NewAuthorRevenueServiceWithDependencies(revenueRepo finance.AuthorRevenueRepository, walletRepo sharedRepo.WalletRepository, txRunner pkgtransaction.Runner) AuthorRevenueService {
 	return &AuthorRevenueServiceImpl{
 		revenueRepo: revenueRepo,
+		walletRepo:  walletRepo,
+		txRunner:    txRunner,
 	}
 }
 
@@ -158,10 +169,7 @@ func (s *AuthorRevenueServiceImpl) CreateWithdrawalRequest(ctx context.Context, 
 	}
 	actualAmount := amount - fee
 
-	// 3. TODO: 检查用户钱包余额是否足够
-	// 这里需要集成钱包服务
-
-	// 4. 创建提现申请
+	// 3. 创建提现申请
 	request := &financeModel.WithdrawalRequest{
 		UserID:       userID,
 		Amount:       types.NewMoneyFromYuan(amount),
@@ -172,13 +180,55 @@ func (s *AuthorRevenueServiceImpl) CreateWithdrawalRequest(ctx context.Context, 
 		Status:       financeModel.WithdrawStatusPending,
 	}
 
-	err := s.revenueRepo.CreateWithdrawalRequest(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("创建提现申请失败: %w", err)
+	if s.walletRepo == nil || s.txRunner == nil {
+		err := s.revenueRepo.CreateWithdrawalRequest(ctx, request)
+		if err != nil {
+			return nil, fmt.Errorf("创建提现申请失败: %w", err)
+		}
+
+		return request, nil
 	}
 
-	// 5. TODO: 冻结钱包余额
-	// 这里需要集成钱包服务
+	walletRequest := &financeModel.WithdrawRequest{
+		UserID:       userID,
+		Amount:       request.Amount,
+		Fee:          request.Fee,
+		ActualAmount: request.ActualAmount,
+		Account:      account.AccountNo,
+		AccountType:  method,
+		AccountName:  account.AccountName,
+		Status:       financeModel.WithdrawStatusPending,
+	}
+
+	if err := s.txRunner.Run(ctx, func(txCtx context.Context) error {
+		wallet, err := s.walletRepo.GetWallet(txCtx, userID)
+		if err != nil {
+			return fmt.Errorf("获取钱包失败: %w", err)
+		}
+		if wallet.Frozen {
+			return fmt.Errorf("钱包已冻结，无法提现")
+		}
+		if int64(wallet.Balance) < int64(request.Amount) {
+			return fmt.Errorf("余额不足")
+		}
+
+		if err := s.walletRepo.CreateWithdrawRequest(txCtx, walletRequest); err != nil {
+			return fmt.Errorf("创建钱包提现申请失败: %w", err)
+		}
+
+		request.TransactionID = walletRequest.ID
+		if err := s.revenueRepo.CreateWithdrawalRequest(txCtx, request); err != nil {
+			return fmt.Errorf("创建提现申请失败: %w", err)
+		}
+
+		if err := s.walletRepo.UpdateBalance(txCtx, wallet.ID, -int64(request.Amount)); err != nil {
+			return fmt.Errorf("冻结钱包余额失败: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
 	return request, nil
 }

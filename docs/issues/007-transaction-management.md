@@ -12,14 +12,15 @@
 
 ## 审查结果
 
-**状态**: ⚠️ 问题仍存在，但核心财务链路已补事务
+**状态**: ⚠️ 问题仍存在，但高风险财务链路已继续前推
 
 ### 审查发现
 
 1. ⚠️ **仓库级事务管理仍未全域统一，但已新增通用 Mongo transaction runner**
-2. ⚠️ **Service层仍未形成通用 `RunInTransaction` 模式**
-3. ✅ **wallet 交易/提现服务已接入 Repository 事务执行**
-4. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
+2. ⚠️ **Service层仍未形成全域统一 `RunInTransaction` 规范**
+3. ✅ **wallet 交易/提现服务已接入事务执行**
+4. ✅ **作者收入提现申请已接入钱包冻结与双写回滚**
+5. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
 
@@ -46,6 +47,9 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 6. ✅ `ServiceContainer` 已通过 provider 注入 wallet 事务入口
 7. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
 8. ✅ `pkg/transaction` 已提供领域无关的 `Runner`，为后续跨域统一事务入口打底
+9. ✅ `AuthorRevenueService.CreateWithdrawalRequest` 已改为统一事务内同时创建作者提现单、钱包提现单并冻结余额
+10. ✅ `ServiceContainer` 已为 `AuthorRevenueService` 注入通用 Mongo transaction runner
+11. ✅ 已补作者提现单测，验证钱包写失败和扣款失败时会整体回滚
 
 ---
 
@@ -364,18 +368,19 @@ func (s *OrderService) CreateOrder(
 ## 检查清单
 
 ### 基础设施
-- [ ] 统一事务管理器实现
+- [x] 统一事务管理器基础实现
 - [x] wallet 财务链路单元测试覆盖
-- [ ] 集成到 DI 容器
+- [x] 财务高风险链路已集成到 DI 容器
 
 ### 业务迁移
 - [ ] 书籍管理事务支持
 - [ ] 订单管理事务支持
 - [x] 钱包充值/消费/转账/提现事务支持
+- [x] 作者收入提现申请事务支持
 - [ ] 社交互动事务支持
 
 ### 测试验证
-- [ ] 回滚测试
+- [x] 高风险财务回滚测试
 - [ ] 并发测试
 - [ ] 性能测试
 
