@@ -235,10 +235,13 @@ function formatPrice(cents: number): string {
 | 字段用途 | 后端命名 | 前端期望 | 状态 |
 |---------|---------|---------|------|
 | 创建时间 | `CreatedAt` | `createdAt` | ✅ |
-| 更新时间 | `UpdatedAt` | `updateTime` | ⚠️ 不一致 |
-| 发布时间 | `PublishedAt` | `publishTime` | ⚠️ 不一致 |
+| 更新时间 | `UpdatedAt` | `updateTime` | ⚠️ 兼容中 |
+| 发布时间 | `PublishedAt` | `publishTime` | ⚠️ 兼容中 |
 
-**修复方案**: 统一命名规范 `createdAt`, `updatedAt`, `publishedAt`
+**当前进展（2026-03-06）**:
+- 阅读进度响应已同时输出 `updateTime` 与 `updatedAt`
+- 章节发布状态 DTO 已同时保留 `publishTime` 与 `publishedAt`、`updateTime` 与 `updatedAt`
+- 仍有部分旧接口和前端类型使用 `updateTime/publishTime`，后续以前端切换为主再移除兼容字段
 
 ---
 

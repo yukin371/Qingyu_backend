@@ -720,7 +720,9 @@ type ChapterPublishStatus struct {
 	IsPublished   bool       `json:"isPublished"`
 	ChapterNumber int        `json:"chapterNumber"`
 	PublishTime   *time.Time `json:"publishTime,omitempty"`
+	PublishedAt   *time.Time `json:"publishedAt,omitempty"`
 	UpdateTime    time.Time  `json:"updateTime"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 // UpdateChapterPublishStatusRequest 更新章节发布状态请求
@@ -744,6 +746,7 @@ type ReadingProgressResponse struct {
 	Progress    float64 `json:"progress"`
 	ReadingTime int64   `json:"readingTime"`
 	UpdateTime  int64   `json:"updateTime"`
+	UpdatedAt   int64   `json:"updatedAt"`
 	BookTitle   string  `json:"bookTitle"`
 	ChapterNum  int     `json:"chapterNum"`
 }
