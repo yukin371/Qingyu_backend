@@ -41,7 +41,7 @@ func TestPermissionTemplateRepository_CreateTemplate(t *testing.T) {
 
 	// 验证
 	require.NoError(t, err)
-	assert.NotEmpty(t, template.ID)
+	assert.False(t, template.ID.IsZero())
 
 	// 从数据库验证
 	stored, err := repo.GetTemplateByCode(ctx, "test_template")
@@ -51,7 +51,7 @@ func TestPermissionTemplateRepository_CreateTemplate(t *testing.T) {
 	assert.Equal(t, template.Permissions, stored.Permissions)
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_CreateSystemTemplate 测试创建系统模板
@@ -77,15 +77,15 @@ func TestPermissionTemplateRepository_CreateSystemTemplate(t *testing.T) {
 
 	err := repo.CreateTemplate(ctx, template)
 	require.NoError(t, err)
-	assert.NotEmpty(t, template.ID)
+	assert.False(t, template.ID.IsZero())
 
 	// 验证是系统模板
-	stored, err := repo.GetTemplateByID(ctx, template.ID)
+	stored, err := repo.GetTemplateByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.True(t, stored.IsSystem)
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_CodeUnique 测试模板代码唯一性
@@ -127,7 +127,7 @@ func TestPermissionTemplateRepository_CodeUnique(t *testing.T) {
 	assert.Error(t, err)
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template1.ID)
+	_ = repo.DeleteTemplate(ctx, template1.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_GetTemplateByID 测试根据ID获取模板
@@ -156,7 +156,7 @@ func TestPermissionTemplateRepository_GetTemplateByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// 获取模板
-	stored, err := repo.GetTemplateByID(ctx, template.ID)
+	stored, err := repo.GetTemplateByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, template.Name, stored.Name)
 	assert.Equal(t, template.Code, stored.Code)
@@ -166,7 +166,7 @@ func TestPermissionTemplateRepository_GetTemplateByID(t *testing.T) {
 	assert.Error(t, err)
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_UpdateTemplate 测试更新模板
@@ -201,18 +201,18 @@ func TestPermissionTemplateRepository_UpdateTemplate(t *testing.T) {
 		"permissions": []string{"user.read", "user.write"},
 	}
 
-	err = repo.UpdateTemplate(ctx, template.ID, updates)
+	err = repo.UpdateTemplate(ctx, template.ID.Hex(), updates)
 	require.NoError(t, err)
 
 	// 验证更新
-	stored, err := repo.GetTemplateByID(ctx, template.ID)
+	stored, err := repo.GetTemplateByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "新名称", stored.Name)
 	assert.Equal(t, "新描述", stored.Description)
 	assert.Equal(t, []string{"user.read", "user.write"}, stored.Permissions)
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_UpdateSystemTemplate 测试不能更新系统模板
@@ -245,12 +245,12 @@ func TestPermissionTemplateRepository_UpdateSystemTemplate(t *testing.T) {
 		"name": "新名称",
 	}
 
-	err = repo.UpdateTemplate(ctx, template.ID, updates)
+	err = repo.UpdateTemplate(ctx, template.ID.Hex(), updates)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "系统模板")
+	assert.Contains(t, err.Error(), "system template")
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_DeleteTemplate 测试删除模板
@@ -279,11 +279,11 @@ func TestPermissionTemplateRepository_DeleteTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// 删除模板
-	err = repo.DeleteTemplate(ctx, template.ID)
+	err = repo.DeleteTemplate(ctx, template.ID.Hex())
 	require.NoError(t, err)
 
 	// 验证已删除
-	_, err = repo.GetTemplateByID(ctx, template.ID)
+	_, err = repo.GetTemplateByID(ctx, template.ID.Hex())
 	assert.Error(t, err)
 }
 
@@ -313,12 +313,12 @@ func TestPermissionTemplateRepository_DeleteSystemTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// 尝试删除系统模板
-	err = repo.DeleteTemplate(ctx, template.ID)
+	err = repo.DeleteTemplate(ctx, template.ID.Hex())
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "系统模板")
+	assert.Contains(t, err.Error(), "system template")
 
 	// 清理
-	_ = repo.DeleteTemplate(ctx, template.ID)
+	_ = repo.DeleteTemplate(ctx, template.ID.Hex())
 }
 
 // TestPermissionTemplateRepository_ListTemplates 测试列出所有模板
@@ -365,7 +365,7 @@ func TestPermissionTemplateRepository_ListTemplates(t *testing.T) {
 
 	// 清理
 	for _, tmpl := range templates {
-		_ = repo.DeleteTemplate(ctx, tmpl.ID)
+		_ = repo.DeleteTemplate(ctx, tmpl.ID.Hex())
 	}
 }
 
@@ -425,7 +425,7 @@ func TestPermissionTemplateRepository_ListTemplatesByCategory(t *testing.T) {
 
 	// 清理
 	for _, tmpl := range templates {
-		_ = repo.DeleteTemplate(ctx, tmpl.ID)
+		_ = repo.DeleteTemplate(ctx, tmpl.ID.Hex())
 	}
 }
 

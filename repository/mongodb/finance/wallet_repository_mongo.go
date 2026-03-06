@@ -43,17 +43,16 @@ func NewWalletRepository(db *mongo.Database) financeInterface.WalletRepository {
 
 // CreateWallet 创建钱包
 func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error {
+	if wallet.ID.IsZero() {
+		wallet.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	wallet.CreatedAt = now
 	wallet.UpdatedAt = now
 
-	result, err := r.walletCollection.InsertOne(ctx, wallet)
+	_, err := r.walletCollection.InsertOne(ctx, wallet)
 	if err != nil {
 		return fmt.Errorf("创建钱包失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		wallet.ID = oid.Hex()
 	}
 
 	return nil
@@ -155,16 +154,15 @@ func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string,
 
 // CreateTransaction 创建交易记录
 func (r *WalletRepositoryImpl) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
+	if transaction.ID.IsZero() {
+		transaction.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	transaction.CreatedAt = now
 
-	result, err := r.transactionCollection.InsertOne(ctx, transaction)
+	_, err := r.transactionCollection.InsertOne(ctx, transaction)
 	if err != nil {
 		return fmt.Errorf("创建交易记录失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		transaction.ID = oid.Hex()
 	}
 
 	return nil
@@ -271,17 +269,16 @@ func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *fi
 
 // CreateWithdrawRequest 创建提现请求
 func (r *WalletRepositoryImpl) CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error {
+	if request.ID.IsZero() {
+		request.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	request.CreatedAt = now
 	request.UpdatedAt = now
 
-	result, err := r.withdrawRequestCollection.InsertOne(ctx, request)
+	_, err := r.withdrawRequestCollection.InsertOne(ctx, request)
 	if err != nil {
 		return fmt.Errorf("创建提现请求失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		request.ID = oid.Hex()
 	}
 
 	return nil
@@ -408,4 +405,25 @@ func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter
 // Health 健康检查
 func (r *WalletRepositoryImpl) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
+}
+
+// RunInTransaction 在事务中执行钱包相关操作
+func (r *WalletRepositoryImpl) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.db.Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("启动事务失败: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		if err := fn(sessCtx); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return fmt.Errorf("事务执行失败: %w", err)
+	}
+
+	return nil
 }

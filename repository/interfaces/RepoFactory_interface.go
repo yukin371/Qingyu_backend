@@ -18,6 +18,7 @@ import (
 	storageInterfaces "Qingyu_backend/repository/interfaces/storage"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/repository/interfaces/writer"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ProjectInterface 项目仓储接口
@@ -121,4 +122,6 @@ type RepositoryFactory interface {
 	Health(ctx context.Context) error
 	Close() error
 	GetDatabaseType() string
+	GetDatabase() *mongo.Database
+	GetClient() *mongo.Client
 }

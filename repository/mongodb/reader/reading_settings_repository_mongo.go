@@ -34,6 +34,9 @@ func (r *MongoReadingSettingsRepository) Create(ctx context.Context, settings *r
 	if settings == nil {
 		return errors.New("阅读设置对象不能为空")
 	}
+	if settings.ID.IsZero() {
+		settings.ID = primitive.NewObjectID()
+	}
 
 	settings.CreatedAt = time.Now()
 	settings.UpdatedAt = time.Now()
@@ -129,11 +132,27 @@ func (r *MongoReadingSettingsRepository) GetByUserID(ctx context.Context, userID
 // UpdateByUserID 根据用户ID更新阅读设置
 func (r *MongoReadingSettingsRepository) UpdateByUserID(ctx context.Context, userID string, settings *reader.ReadingSettings) error {
 	settings.UpdatedAt = time.Now()
+	updateFields := bson.M{
+		"font_family":  settings.FontFamily,
+		"font_size":    settings.FontSize,
+		"line_height":  settings.LineHeight,
+		"theme":        settings.Theme,
+		"background":   settings.Background,
+		"page_mode":    settings.PageMode,
+		"auto_scroll":  settings.AutoScroll,
+		"scroll_speed": settings.ScrollSpeed,
+		"updated_at":   settings.UpdatedAt,
+	}
+	if settings.CreatedAt.IsZero() {
+		updateFields["created_at"] = time.Now()
+	} else {
+		updateFields["created_at"] = settings.CreatedAt
+	}
 
 	_, err := r.collection.UpdateOne(
 		ctx,
 		bson.M{"user_id": userID},
-		bson.M{"$set": settings},
+		bson.M{"$set": updateFields},
 		options.Update().SetUpsert(true),
 	)
 	return err
@@ -187,6 +206,9 @@ func (r *MongoReadingSettingsRepository) BatchCreate(ctx context.Context, settin
 		if setting == nil {
 			continue
 		}
+		if setting.ID.IsZero() {
+			setting.ID = primitive.NewObjectID()
+		}
 		setting.CreatedAt = now
 		setting.UpdatedAt = now
 		documents = append(documents, setting)
@@ -205,9 +227,17 @@ func (r *MongoReadingSettingsRepository) BatchUpdate(ctx context.Context, ids []
 	if len(ids) == 0 {
 		return nil
 	}
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return err
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
 
 	updates["updated_at"] = time.Now()
-	filter := bson.M{"_id": bson.M{"$in": ids}}
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 	update := bson.M{"$set": updates}
 
 	_, err := r.collection.UpdateMany(ctx, filter, update)
@@ -219,15 +249,27 @@ func (r *MongoReadingSettingsRepository) BatchDelete(ctx context.Context, ids []
 	if len(ids) == 0 {
 		return nil
 	}
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return err
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
 
-	filter := bson.M{"_id": bson.M{"$in": ids}}
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 	_, err := r.collection.DeleteMany(ctx, filter)
 	return err
 }
 
 // Exists 检查阅读设置是否存在
 func (r *MongoReadingSettingsRepository) Exists(ctx context.Context, id string) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, err
 	}

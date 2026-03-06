@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -37,6 +38,9 @@ func (r *MongoProfileRepository) Upsert(ctx context.Context, p *reco.UserProfile
 
 	// 设置时间戳
 	now := time.Now()
+	if p.ID.IsZero() {
+		p.ID = primitive.NewObjectID()
+	}
 	p.UpdatedAt = now
 	if p.CreatedAt.IsZero() {
 		p.CreatedAt = now
@@ -52,6 +56,7 @@ func (r *MongoProfileRepository) Upsert(ctx context.Context, p *reco.UserProfile
 			"updated_at": p.UpdatedAt,
 		},
 		"$setOnInsert": bson.M{
+			"_id":        p.ID,
 			"created_at": p.CreatedAt,
 		},
 	}

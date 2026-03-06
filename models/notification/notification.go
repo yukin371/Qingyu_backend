@@ -104,7 +104,7 @@ const (
 
 // Notification 通知模型
 type Notification struct {
-	ID        string                 `json:"id" bson:"_id"`
+	ID        primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
 	UserID    string                 `json:"userId" bson:"user_id"`
 	Type      NotificationType       `json:"type" bson:"type"`
 	Priority  NotificationPriority   `json:"priority" bson:"priority"`
@@ -134,7 +134,7 @@ type NotificationFilter struct {
 
 // NotificationPreference 通知偏好设置
 type NotificationPreference struct {
-	ID                string                    `json:"id" bson:"_id"`
+	ID                primitive.ObjectID        `json:"id" bson:"_id,omitempty"`
 	UserID            string                    `json:"userId" bson:"user_id"`
 	EnableSystem      bool                      `json:"enableSystem" bson:"enable_system"`
 	EnableSocial      bool                      `json:"enableSocial" bson:"enable_social"`
@@ -167,19 +167,19 @@ type SMSNotificationSettings struct {
 
 // PushDevice 推送设备
 type PushDevice struct {
-	ID          string    `json:"id" bson:"_id"`
-	UserID      string    `json:"userId" bson:"user_id"`
-	DeviceType  string    `json:"deviceType" bson:"device_type"` // ios, android, web
-	DeviceToken string    `json:"deviceToken" bson:"device_token"`
-	DeviceID    string    `json:"deviceId" bson:"device_id"` // 设备唯一标识
-	IsActive    bool      `json:"isActive" bson:"is_active"`
-	LastUsedAt  time.Time `json:"lastUsedAt" bson:"last_used_at"`
-	CreatedAt   time.Time `json:"createdAt" bson:"created_at"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID      string             `json:"userId" bson:"user_id"`
+	DeviceType  string             `json:"deviceType" bson:"device_type"` // ios, android, web
+	DeviceToken string             `json:"deviceToken" bson:"device_token"`
+	DeviceID    string             `json:"deviceId" bson:"device_id"` // 设备唯一标识
+	IsActive    bool               `json:"isActive" bson:"is_active"`
+	LastUsedAt  time.Time          `json:"lastUsedAt" bson:"last_used_at"`
+	CreatedAt   time.Time          `json:"createdAt" bson:"created_at"`
 }
 
 // NotificationTemplate 通知模板
 type NotificationTemplate struct {
-	ID        string                 `json:"id" bson:"_id"`
+	ID        primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
 	Type      NotificationType       `json:"type" bson:"type"`
 	Action    string                 `json:"action" bson:"action"` // follow, like, comment, review, etc.
 	Title     string                 `json:"title" bson:"title"`
@@ -204,7 +204,7 @@ type NotificationStats struct {
 func NewNotification(userID string, notificationType NotificationType, title, content string) *Notification {
 	now := time.Now()
 	return &Notification{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        primitive.NewObjectID(),
 		UserID:    userID,
 		Type:      notificationType,
 		Priority:  NotificationPriorityNormal,
@@ -235,7 +235,7 @@ func (n *Notification) IsExpired() bool {
 func NewNotificationPreference(userID string) *NotificationPreference {
 	now := time.Now()
 	return &NotificationPreference{
-		ID:               primitive.NewObjectID().Hex(),
+		ID:               primitive.NewObjectID(),
 		UserID:           userID,
 		EnableSystem:     true,
 		EnableSocial:     true,
@@ -311,7 +311,7 @@ func (np *NotificationPreference) IsSMSEnabledForType(notificationType Notificat
 func NewPushDevice(userID, deviceType, deviceToken, deviceID string) *PushDevice {
 	now := time.Now()
 	return &PushDevice{
-		ID:          primitive.NewObjectID().Hex(),
+		ID:          primitive.NewObjectID(),
 		UserID:      userID,
 		DeviceType:  deviceType,
 		DeviceToken: deviceToken,

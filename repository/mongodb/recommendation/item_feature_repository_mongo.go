@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -37,6 +38,9 @@ func (r *MongoItemFeatureRepository) Create(ctx context.Context, feature *reco.I
 
 	// 设置时间戳
 	now := time.Now()
+	if feature.ID.IsZero() {
+		feature.ID = primitive.NewObjectID()
+	}
 	feature.CreatedAt = now
 	feature.UpdatedAt = now
 
@@ -75,6 +79,7 @@ func (r *MongoItemFeatureRepository) Upsert(ctx context.Context, feature *reco.I
 			"updated_at": feature.UpdatedAt,
 		},
 		"$setOnInsert": bson.M{
+			"_id":        primitive.NewObjectID(),
 			"created_at": feature.CreatedAt,
 		},
 	}

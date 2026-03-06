@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -647,7 +647,7 @@ func (api *ChapterAPI) UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	chapter.ID = id.Hex()
+	chapter.ID = id
 
 	if err := api.service.UpdateChapter(c.Request.Context(), &chapter); err != nil {
 		c.Error(err)

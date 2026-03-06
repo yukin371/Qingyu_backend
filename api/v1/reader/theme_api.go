@@ -1,12 +1,11 @@
 package reader
 
 import (
-	"strconv"
-
 	readerModels "Qingyu_backend/models/reader"
 
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/pkg/response"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ThemeAPI 主题API
@@ -101,7 +100,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 
 	// 创建自定义主题
 	theme := &readerModels.ReaderTheme{
-		ID:          generateID(), // 应该使用ObjectID生成
+		ID:          primitive.NewObjectID(),
 		Name:        req.Name,
 		DisplayName: req.DisplayName,
 		Description: req.Description,
@@ -236,9 +235,4 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 		"themeName": themeName,
 		"userId":    userID,
 	})
-}
-
-// generateID 生成ID（临时方法，实际应使用primitive.NewObjectID）
-func generateID() string {
-	return strconv.FormatInt(int64(len("temp")), 10)
 }

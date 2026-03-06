@@ -182,10 +182,10 @@ func TestBookListRepository_GetBookListsByUser_Pagination(t *testing.T) {
 	// 创建15个书单
 	for i := 0; i < 15; i++ {
 		bookList := &social.BookList{
-			UserID:      userID,
-			UserName:    "测试用户",
-			Title:       "书单标题",
-			IsPublic:    true,
+			UserID:   userID,
+			UserName: "测试用户",
+			Title:    "书单标题",
+			IsPublic: true,
 		}
 		err := repo.CreateBookList(ctx, bookList)
 		require.NoError(t, err)
@@ -849,10 +849,10 @@ func TestBookListRepository_CreateBookListLike(t *testing.T) {
 	assert.NotEmpty(t, bookListLike.ID)
 	assert.NotZero(t, bookListLike.CreatedAt)
 
-	// 验证书单点赞数增加
+	// 验证书单点赞记录已创建，计数由Service层负责维护
 	found, err := repo.GetBookListByID(ctx, bookList.ID.Hex())
 	require.NoError(t, err)
-	assert.Equal(t, 1, found.LikeCount)
+	assert.Equal(t, 0, found.LikeCount)
 }
 
 // TestBookListRepository_DeleteBookListLike 测试删除书单点赞
@@ -880,9 +880,10 @@ func TestBookListRepository_DeleteBookListLike(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 
-	// 验证书单点赞数减少
+	// 验证删除点赞记录不会隐式修改计数，计数由Service层负责维护
 	found, err := repo.GetBookListByID(ctx, bookList.ID.Hex())
 	require.NoError(t, err)
+	assert.NotNil(t, found, "BookList should still exist after deleting like") // 添加nil检查
 	assert.Equal(t, 0, found.LikeCount)
 }
 
@@ -1102,10 +1103,10 @@ func TestBookListRepository_ForkBookList(t *testing.T) {
 	assert.NotNil(t, forkedList.OriginalID)
 	assert.Equal(t, originalList.ID, *forkedList.OriginalID)
 
-	// 验证原始书单的fork_count增加
+	// 验证复制不会隐式修改原始书单计数，计数由Service层负责维护
 	original, err := repo.GetBookListByID(ctx, originalList.ID.Hex())
 	require.NoError(t, err)
-	assert.Equal(t, 1, original.ForkCount)
+	assert.Equal(t, 0, original.ForkCount)
 }
 
 // TestBookListRepository_ForkBookList_OriginalNotExists 测试复制不存在的书单
@@ -1348,6 +1349,8 @@ func TestBookListRepository_ComprehensiveFlow(t *testing.T) {
 	}
 	err = repo.CreateBookListLike(ctx, bookListLike)
 	require.NoError(t, err)
+	err = repo.IncrementBookListLikeCount(ctx, bookList.ID.Hex())
+	require.NoError(t, err)
 
 	// 6. 检查点赞
 	liked, err := repo.IsBookListLiked(ctx, bookList.ID.Hex(), likerID)
@@ -1363,6 +1366,8 @@ func TestBookListRepository_ComprehensiveFlow(t *testing.T) {
 	forkedList, err := repo.ForkBookList(ctx, bookList.ID.Hex(), forkUserID)
 	require.NoError(t, err)
 	assert.NotNil(t, forkedList)
+	err = repo.IncrementForkCount(ctx, bookList.ID.Hex())
+	require.NoError(t, err)
 
 	// 9. 验证最终状态
 	final, err := repo.GetBookListByID(ctx, bookList.ID.Hex())

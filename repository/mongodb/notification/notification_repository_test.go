@@ -11,6 +11,7 @@ import (
 	"Qingyu_backend/models/notification"
 	notificationRepo "Qingyu_backend/repository/mongodb/notification"
 	"Qingyu_backend/test/testutil"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // setupNotificationRepo 测试辅助函数
@@ -53,7 +54,7 @@ func TestNotificationRepository_Create_WithInvalidID(t *testing.T) {
 	defer cleanup()
 
 	notif := &notification.Notification{
-		ID:        "invalid-id",
+		ID:        primitive.NewObjectID(),
 		UserID:    "user123",
 		Type:      notification.NotificationTypeSystem,
 		Priority:  notification.NotificationPriorityNormal,
@@ -69,7 +70,7 @@ func TestNotificationRepository_Create_WithInvalidID(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotEmpty(t, notif.ID)
-	assert.NotEqual(t, "invalid-id", notif.ID)
+	assert.NotEqual(t, primitive.NilObjectID, notif.ID)
 }
 
 // TestNotificationRepository_GetByID 测试根据ID获取通知
@@ -91,7 +92,7 @@ func TestNotificationRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, notif.ID)
+	found, err := repo.GetByID(ctx, notif.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -154,13 +155,13 @@ func TestNotificationRepository_Update(t *testing.T) {
 		"title": "更新后的标题",
 		"read":  true,
 	}
-	err = repo.Update(ctx, notif.ID, updates)
+	err = repo.Update(ctx, notif.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, notif.ID)
+	found, err := repo.GetByID(ctx, notif.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "更新后的标题", found.Title)
 	assert.True(t, found.Read)
@@ -203,13 +204,13 @@ func TestNotificationRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除通知
-	err = repo.Delete(ctx, notif.ID)
+	err = repo.Delete(ctx, notif.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, notif.ID)
+	found, err := repo.GetByID(ctx, notif.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 }
@@ -247,7 +248,7 @@ func TestNotificationRepository_Exists(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	exists, err := repo.Exists(ctx, notif.ID)
+	exists, err := repo.Exists(ctx, notif.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -400,7 +401,7 @@ func TestNotificationRepository_BatchMarkAsRead(t *testing.T) {
 		}
 		err := repo.Create(ctx, notif)
 		require.NoError(t, err)
-		ids = append(ids, notif.ID)
+		ids = append(ids, notif.ID.Hex())
 	}
 
 	// Act
@@ -437,14 +438,14 @@ func TestNotificationRepository_BatchMarkAsRead_WithInvalidID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 包含无效ID
-	ids := []string{notif.ID, "invalid-id"}
+	ids := []string{notif.ID.Hex(), "invalid-id"}
 	err = repo.BatchMarkAsRead(ctx, ids)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证有效ID的通知已被标记为已读
-	found, err := repo.GetByID(ctx, notif.ID)
+	found, err := repo.GetByID(ctx, notif.ID.Hex())
 	require.NoError(t, err)
 	assert.True(t, found.Read)
 }
@@ -510,7 +511,7 @@ func TestNotificationRepository_BatchDelete(t *testing.T) {
 		}
 		err := repo.Create(ctx, notif)
 		require.NoError(t, err)
-		ids = append(ids, notif.ID)
+		ids = append(ids, notif.ID.Hex())
 	}
 
 	// Act
@@ -732,12 +733,12 @@ func TestNotificationRepository_DeleteExpired(t *testing.T) {
 	assert.GreaterOrEqual(t, count, int64(1))
 
 	// 验证过期通知已删除
-	found, err := repo.GetByID(ctx, expiredNotif.ID)
+	found, err := repo.GetByID(ctx, expiredNotif.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 
 	// 验证有效通知仍然存在
-	found, err = repo.GetByID(ctx, validNotif.ID)
+	found, err = repo.GetByID(ctx, validNotif.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 }
@@ -784,12 +785,12 @@ func TestNotificationRepository_DeleteOldNotifications(t *testing.T) {
 	assert.GreaterOrEqual(t, count, int64(1))
 
 	// 验证旧通知已删除
-	found, err := repo.GetByID(ctx, oldNotif.ID)
+	found, err := repo.GetByID(ctx, oldNotif.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 
 	// 验证新通知仍然存在
-	found, err = repo.GetByID(ctx, newNotif.ID)
+	found, err = repo.GetByID(ctx, newNotif.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 }
@@ -839,7 +840,7 @@ func TestNotificationRepository_DeleteReadForUser(t *testing.T) {
 	assert.GreaterOrEqual(t, count, int64(3))
 
 	// 验证未读通知仍然存在
-	found, err := repo.GetByID(ctx, unreadNotif.ID)
+	found, err := repo.GetByID(ctx, unreadNotif.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 }

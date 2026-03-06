@@ -21,7 +21,6 @@ type MessageRepositoryImpl struct {
 	templatesCollection     *mongo.Collection
 }
 
-// NewMessageRepository 创建MongoDB Message Repository
 func NewMessageRepository(db *mongo.Database) messagingInterface.MessageRepository {
 	return &MessageRepositoryImpl{
 		db:                      db,
@@ -31,9 +30,16 @@ func NewMessageRepository(db *mongo.Database) messagingInterface.MessageReposito
 	}
 }
 
+func toObjectID(id string, resource string) (primitive.ObjectID, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("invalid %s ID: %w", resource, err)
+	}
+	return objectID, nil
+}
+
 // ============ 消息队列管理 ============
 
-// CreateMessage 创建消息
 func (r *MessageRepositoryImpl) CreateMessage(ctx context.Context, message *messagingModel.Message) error {
 	if message == nil {
 		return fmt.Errorf("message cannot be nil")
@@ -41,9 +47,12 @@ func (r *MessageRepositoryImpl) CreateMessage(ctx context.Context, message *mess
 
 	now := time.Now()
 	message.CreatedAt = now
+	if message.UpdatedAt.IsZero() {
+		message.UpdatedAt = now
+	}
 
-	if message.ID == "" {
-		message.ID = primitive.NewObjectID().Hex()
+	if message.ID.IsZero() {
+		message.ID = primitive.NewObjectID()
 	}
 
 	_, err := r.messagesCollection.InsertOne(ctx, message)
@@ -54,11 +63,14 @@ func (r *MessageRepositoryImpl) CreateMessage(ctx context.Context, message *mess
 	return nil
 }
 
-// GetMessage 获取消息
 func (r *MessageRepositoryImpl) GetMessage(ctx context.Context, messageID string) (*messagingModel.Message, error) {
-	var message messagingModel.Message
-	err := r.messagesCollection.FindOne(ctx, bson.M{"_id": messageID}).Decode(&message)
+	objectID, err := toObjectID(messageID, "message")
+	if err != nil {
+		return nil, err
+	}
 
+	var message messagingModel.Message
+	err = r.messagesCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&message)
 	if err == mongo.ErrNoDocuments {
 		return nil, fmt.Errorf("message not found: %s", messageID)
 	}
@@ -69,43 +81,40 @@ func (r *MessageRepositoryImpl) GetMessage(ctx context.Context, messageID string
 	return &message, nil
 }
 
-// UpdateMessage 更新消息
 func (r *MessageRepositoryImpl) UpdateMessage(ctx context.Context, messageID string, updates map[string]interface{}) error {
+	objectID, err := toObjectID(messageID, "message")
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
 
-	result, err := r.messagesCollection.UpdateOne(
-		ctx,
-		bson.M{"_id": messageID},
-		bson.M{"$set": updates},
-	)
-
+	result, err := r.messagesCollection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)
 	}
-
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("message not found: %s", messageID)
 	}
-
 	return nil
 }
 
-// DeleteMessage 删除消息
 func (r *MessageRepositoryImpl) DeleteMessage(ctx context.Context, messageID string) error {
-	result, err := r.messagesCollection.DeleteOne(ctx, bson.M{"_id": messageID})
+	objectID, err := toObjectID(messageID, "message")
+	if err != nil {
+		return err
+	}
 
+	result, err := r.messagesCollection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete message: %w", err)
 	}
-
 	if result.DeletedCount == 0 {
 		return fmt.Errorf("message not found: %s", messageID)
 	}
-
 	return nil
 }
 
-// ListMessages 获取消息列表
 func (r *MessageRepositoryImpl) ListMessages(ctx context.Context, filter *messagingInterface.MessageFilter) ([]*messagingModel.Message, error) {
 	query := bson.M{}
 
@@ -150,7 +159,6 @@ func (r *MessageRepositoryImpl) ListMessages(ctx context.Context, filter *messag
 	return messages, nil
 }
 
-// CountMessages 统计消息数量
 func (r *MessageRepositoryImpl) CountMessages(ctx context.Context, filter *messagingInterface.MessageFilter) (int64, error) {
 	query := bson.M{}
 
@@ -183,7 +191,6 @@ func (r *MessageRepositoryImpl) CountMessages(ctx context.Context, filter *messa
 
 // ============ 通知记录管理 ============
 
-// CreateNotification 创建通知
 func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notification *messagingModel.NotificationDelivery) error {
 	if notification == nil {
 		return fmt.Errorf("notification cannot be nil")
@@ -191,9 +198,8 @@ func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notifica
 
 	now := time.Now()
 	notification.CreatedAt = now
-
-	if notification.ID == "" {
-		notification.ID = primitive.NewObjectID().Hex()
+	if notification.ID.IsZero() {
+		notification.ID = primitive.NewObjectID()
 	}
 
 	_, err := r.notificationsCollection.InsertOne(ctx, notification)
@@ -204,11 +210,14 @@ func (r *MessageRepositoryImpl) CreateNotification(ctx context.Context, notifica
 	return nil
 }
 
-// GetNotification 获取通知
 func (r *MessageRepositoryImpl) GetNotification(ctx context.Context, notificationID string) (*messagingModel.NotificationDelivery, error) {
-	var notification messagingModel.NotificationDelivery
-	err := r.notificationsCollection.FindOne(ctx, bson.M{"_id": notificationID}).Decode(&notification)
+	objectID, err := toObjectID(notificationID, "notification")
+	if err != nil {
+		return nil, err
+	}
 
+	var notification messagingModel.NotificationDelivery
+	err = r.notificationsCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&notification)
 	if err == mongo.ErrNoDocuments {
 		return nil, fmt.Errorf("notification not found: %s", notificationID)
 	}
@@ -219,41 +228,38 @@ func (r *MessageRepositoryImpl) GetNotification(ctx context.Context, notificatio
 	return &notification, nil
 }
 
-// UpdateNotification 更新通知
 func (r *MessageRepositoryImpl) UpdateNotification(ctx context.Context, notificationID string, updates map[string]interface{}) error {
-	result, err := r.notificationsCollection.UpdateOne(
-		ctx,
-		bson.M{"_id": notificationID},
-		bson.M{"$set": updates},
-	)
+	objectID, err := toObjectID(notificationID, "notification")
+	if err != nil {
+		return err
+	}
 
+	result, err := r.notificationsCollection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to update notification: %w", err)
 	}
-
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("notification not found: %s", notificationID)
 	}
-
 	return nil
 }
 
-// DeleteNotification 删除通知
 func (r *MessageRepositoryImpl) DeleteNotification(ctx context.Context, notificationID string) error {
-	result, err := r.notificationsCollection.DeleteOne(ctx, bson.M{"_id": notificationID})
+	objectID, err := toObjectID(notificationID, "notification")
+	if err != nil {
+		return err
+	}
 
+	result, err := r.notificationsCollection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete notification: %w", err)
 	}
-
 	if result.DeletedCount == 0 {
 		return fmt.Errorf("notification not found: %s", notificationID)
 	}
-
 	return nil
 }
 
-// ListNotifications 获取通知列表
 func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) ([]*messagingModel.NotificationDelivery, int64, error) {
 	query := bson.M{}
 
@@ -282,13 +288,11 @@ func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *m
 		}
 	}
 
-	// 统计总数
 	total, err := r.notificationsCollection.CountDocuments(ctx, query)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count notifications: %w", err)
 	}
 
-	// 查询列表
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 	if filter != nil {
 		if filter.PageSize > 0 {
@@ -318,7 +322,6 @@ func (r *MessageRepositoryImpl) ListNotifications(ctx context.Context, filter *m
 	return notifications, total, nil
 }
 
-// CountNotifications 统计通知数量
 func (r *MessageRepositoryImpl) CountNotifications(ctx context.Context, filter *messagingInterface.NotificationFilter) (int64, error) {
 	query := bson.M{}
 
@@ -347,50 +350,39 @@ func (r *MessageRepositoryImpl) CountNotifications(ctx context.Context, filter *
 
 // ============ 通知已读状态管理 ============
 
-// MarkAsRead 标记为已读
 func (r *MessageRepositoryImpl) MarkAsRead(ctx context.Context, notificationID string) error {
-	now := time.Now()
-	updates := bson.M{
-		"is_read": true,
-		"read_at": now,
+	objectID, err := toObjectID(notificationID, "notification")
+	if err != nil {
+		return err
 	}
 
-	result, err := r.notificationsCollection.UpdateOne(
-		ctx,
-		bson.M{"_id": notificationID},
-		bson.M{"$set": updates},
-	)
-
+	now := time.Now()
+	updates := bson.M{"is_read": true, "read_at": now}
+	result, err := r.notificationsCollection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to mark notification as read: %w", err)
 	}
-
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("notification not found: %s", notificationID)
 	}
-
 	return nil
 }
 
-// MarkMultipleAsRead 批量标记为已读
 func (r *MessageRepositoryImpl) MarkMultipleAsRead(ctx context.Context, userID string, notificationIDs []string) error {
+	objectIDs := make([]primitive.ObjectID, 0, len(notificationIDs))
+	for _, id := range notificationIDs {
+		objectID, err := toObjectID(id, "notification")
+		if err != nil {
+			return err
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
+
 	now := time.Now()
-	updates := bson.M{
-		"is_read": true,
-		"read_at": now,
-	}
+	updates := bson.M{"is_read": true, "read_at": now}
+	query := bson.M{"user_id": userID, "_id": bson.M{"$in": objectIDs}}
 
-	query := bson.M{
-		"user_id": userID,
-		"_id":     bson.M{"$in": notificationIDs},
-	}
-
-	_, err := r.notificationsCollection.UpdateMany(
-		ctx,
-		query,
-		bson.M{"$set": updates},
-	)
-
+	_, err := r.notificationsCollection.UpdateMany(ctx, query, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to mark notifications as read: %w", err)
 	}
@@ -398,53 +390,46 @@ func (r *MessageRepositoryImpl) MarkMultipleAsRead(ctx context.Context, userID s
 	return nil
 }
 
-// GetUnreadCount 获取未读数量
 func (r *MessageRepositoryImpl) GetUnreadCount(ctx context.Context, userID string) (int64, error) {
-	query := bson.M{
-		"user_id": userID,
-		"is_read": false,
-	}
-
+	query := bson.M{"user_id": userID, "is_read": false}
 	count, err := r.notificationsCollection.CountDocuments(ctx, query)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get unread count: %w", err)
 	}
-
 	return count, nil
 }
 
 // ============ 批量操作 ============
 
-// BatchDeleteNotifications 批量删除通知
 func (r *MessageRepositoryImpl) BatchDeleteNotifications(ctx context.Context, userID string, notificationIDs []string) error {
-	query := bson.M{
-		"user_id": userID,
-		"_id":     bson.M{"$in": notificationIDs},
+	objectIDs := make([]primitive.ObjectID, 0, len(notificationIDs))
+	for _, id := range notificationIDs {
+		objectID, err := toObjectID(id, "notification")
+		if err != nil {
+			return err
+		}
+		objectIDs = append(objectIDs, objectID)
 	}
 
+	query := bson.M{"user_id": userID, "_id": bson.M{"$in": objectIDs}}
 	_, err := r.notificationsCollection.DeleteMany(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to batch delete notifications: %w", err)
 	}
-
 	return nil
 }
 
-// ClearAllNotifications 清空所有通知
 func (r *MessageRepositoryImpl) ClearAllNotifications(ctx context.Context, userID string) error {
 	query := bson.M{"user_id": userID}
-
 	_, err := r.notificationsCollection.DeleteMany(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to clear all notifications: %w", err)
 	}
-
 	return nil
 }
 
 // ============ 消息模板管理 ============
 
-// CreateTemplate 创建消息模板
 func (r *MessageRepositoryImpl) CreateTemplate(ctx context.Context, template *messagingModel.MessageTemplate) error {
 	if template == nil {
 		return fmt.Errorf("template cannot be nil")
@@ -453,89 +438,81 @@ func (r *MessageRepositoryImpl) CreateTemplate(ctx context.Context, template *me
 	now := time.Now()
 	template.CreatedAt = now
 	template.UpdatedAt = now
-
-	if template.ID == "" {
-		template.ID = primitive.NewObjectID().Hex()
+	if template.ID.IsZero() {
+		template.ID = primitive.NewObjectID()
 	}
 
 	_, err := r.templatesCollection.InsertOne(ctx, template)
 	if err != nil {
 		return fmt.Errorf("failed to create template: %w", err)
 	}
-
 	return nil
 }
 
-// GetTemplate 获取模板
 func (r *MessageRepositoryImpl) GetTemplate(ctx context.Context, templateID string) (*messagingModel.MessageTemplate, error) {
-	var template messagingModel.MessageTemplate
-	err := r.templatesCollection.FindOne(ctx, bson.M{"_id": templateID}).Decode(&template)
+	objectID, err := toObjectID(templateID, "template")
+	if err != nil {
+		return nil, err
+	}
 
+	var template messagingModel.MessageTemplate
+	err = r.templatesCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&template)
 	if err == mongo.ErrNoDocuments {
 		return nil, fmt.Errorf("template not found: %s", templateID)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template: %w", err)
 	}
-
 	return &template, nil
 }
 
-// GetTemplateByName 根据名称获取模板
 func (r *MessageRepositoryImpl) GetTemplateByName(ctx context.Context, name string) (*messagingModel.MessageTemplate, error) {
 	var template messagingModel.MessageTemplate
 	err := r.templatesCollection.FindOne(ctx, bson.M{"name": name}).Decode(&template)
-
 	if err == mongo.ErrNoDocuments {
 		return nil, fmt.Errorf("template not found: %s", name)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template by name: %w", err)
 	}
-
 	return &template, nil
 }
 
-// UpdateTemplate 更新模板
 func (r *MessageRepositoryImpl) UpdateTemplate(ctx context.Context, templateID string, updates map[string]interface{}) error {
+	objectID, err := toObjectID(templateID, "template")
+	if err != nil {
+		return err
+	}
+
 	updates["updated_at"] = time.Now()
-
-	result, err := r.templatesCollection.UpdateOne(
-		ctx,
-		bson.M{"_id": templateID},
-		bson.M{"$set": updates},
-	)
-
+	result, err := r.templatesCollection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updates})
 	if err != nil {
 		return fmt.Errorf("failed to update template: %w", err)
 	}
-
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("template not found: %s", templateID)
 	}
-
 	return nil
 }
 
-// DeleteTemplate 删除模板
 func (r *MessageRepositoryImpl) DeleteTemplate(ctx context.Context, templateID string) error {
-	result, err := r.templatesCollection.DeleteOne(ctx, bson.M{"_id": templateID})
+	objectID, err := toObjectID(templateID, "template")
+	if err != nil {
+		return err
+	}
 
+	result, err := r.templatesCollection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return fmt.Errorf("failed to delete template: %w", err)
 	}
-
 	if result.DeletedCount == 0 {
 		return fmt.Errorf("template not found: %s", templateID)
 	}
-
 	return nil
 }
 
-// ListTemplates 获取模板列表
 func (r *MessageRepositoryImpl) ListTemplates(ctx context.Context, templateType string, isActive *bool) ([]*messagingModel.MessageTemplate, error) {
 	query := bson.M{}
-
 	if templateType != "" {
 		query["type"] = templateType
 	}
@@ -553,13 +530,11 @@ func (r *MessageRepositoryImpl) ListTemplates(ctx context.Context, templateType 
 	if err = cursor.All(ctx, &templates); err != nil {
 		return nil, fmt.Errorf("failed to decode templates: %w", err)
 	}
-
 	return templates, nil
 }
 
 // ============ 健康检查 ============
 
-// Health 健康检查
 func (r *MessageRepositoryImpl) Health(ctx context.Context) error {
 	if err := r.db.Client().Ping(ctx, nil); err != nil {
 		return fmt.Errorf("database connection failed: %w", err)

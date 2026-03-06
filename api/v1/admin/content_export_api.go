@@ -376,7 +376,7 @@ type ChapterExportAdapter struct {
 
 func (a *ChapterExportAdapter) ToExportRow() []string {
 	return []string{
-		a.chapter.ID,
+		a.chapter.ID.Hex(),
 		a.chapter.BookID,
 		a.chapter.Title,
 		strconv.Itoa(a.chapter.ChapterNum),

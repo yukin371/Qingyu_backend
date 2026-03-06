@@ -12,6 +12,7 @@ import (
 	"Qingyu_backend/models/ai"
 	usersModel "Qingyu_backend/models/users"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -77,7 +78,7 @@ type TransactionUserRepository interface {
 
 // TransactionAIRepository AI事务Repository接口
 type TransactionAIRepository interface {
-	CRUDRepository[*ai.AIModel, string]
+	CRUDRepository[*ai.AIModel, primitive.ObjectID]
 	GetByType(ctx context.Context, modelType string) ([]*ai.AIModel, error)
 }
 
@@ -362,15 +363,15 @@ func NewUserRegistrationSaga(userReq *UserRegistrationRequest) *Saga {
 					}
 
 					// 创建用户
-user := &usersModel.User{
-    BaseEntity: shared.BaseEntity{
-        CreatedAt: time.Now(),
-        UpdatedAt: time.Now(),
-    },
-    Username:  userReq.Username,
-    Email:     userReq.Email,
-    Password:  userReq.HashedPassword,
-}
+					user := &usersModel.User{
+						BaseEntity: shared.BaseEntity{
+							CreatedAt: time.Now(),
+							UpdatedAt: time.Now(),
+						},
+						Username: userReq.Username,
+						Email:    userReq.Email,
+						Password: userReq.HashedPassword,
+					}
 
 					// Note: 实际实现中需要调用 userRepo.Create 方法
 					return userRepo.Create(txCtx, user)
@@ -407,7 +408,7 @@ user := &usersModel.User{
 					}
 
 					// 分配角色（使用 Hex 转换 ObjectID 为 string）
-					return roleRepo.AssignRole(txCtx, user.ID.Hex(), defaultRole.ID)
+					return roleRepo.AssignRole(txCtx, user.ID.Hex(), defaultRole.ID.Hex())
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					// 角色分配的补偿操作
