@@ -338,9 +338,10 @@ func TestCommentAPI_GetCommentList_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
-	data := response["data"].(map[string]interface{})
-	assert.NotNil(t, data["comments"])
-	assert.Equal(t, float64(2), data["total"])
+	assert.NotNil(t, response["data"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }

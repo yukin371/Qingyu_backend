@@ -102,7 +102,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, bookLists, int(total), pagination.Page, pagination.PageSize, "")
+	response.Paginated(c, bookLists, total, pagination.Page, pagination.PageSize, "获取成功")
 }
 
 // GetBookListDetail 获取书单详情

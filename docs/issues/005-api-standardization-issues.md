@@ -282,6 +282,14 @@ type Pagination struct {
    - `PATCH /api/v1/reader/comments/:id`
    - `PATCH /api/v1/social/booklists/:id`
 
+9. 分页响应继续收敛
+   - `GET /api/v1/social/booklists`
+   - `GET /api/v1/reader/collections`
+   - `GET /api/v1/reader/collections/tag/:tag`
+   - `GET /api/v1/public/collections`
+   - `GET /api/v1/reader/comments`
+   - 从旧的 `data.list/comments + total/page/size` 收敛为统一 `data + pagination`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理

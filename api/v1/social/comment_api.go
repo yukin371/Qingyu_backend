@@ -107,12 +107,7 @@ func (api *CommentAPI) GetCommentList(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"comments": comments,
-		"total":    total,
-		"page":     pagination.Page,
-		"size":     pagination.PageSize,
-	})
+	response.Paginated(c, comments, total, pagination.Page, pagination.PageSize, "获取成功")
 }
 
 // GetCommentDetail 获取评论详情
@@ -398,10 +393,5 @@ func (api *CommentAPI) GetCommentReplies(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"replies": replies,
-		"total":   total,
-		"page":    pagination.Page,
-		"size":    pagination.PageSize,
-	})
+	response.Paginated(c, replies, total, pagination.Page, pagination.PageSize, "获取成功")
 }

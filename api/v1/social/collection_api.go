@@ -220,7 +220,7 @@ func (api *CollectionAPI) GetCollections(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // UpdateCollectionRequest 更新收藏请求
@@ -405,7 +405,7 @@ func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // =========================
@@ -679,7 +679,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // ShareCollectionWithURL 分享收藏并返回分享链接
