@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"Qingyu_backend/models/bookstore"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -92,7 +93,7 @@ func (r *MongoHotRecommendationRepository) GetHotBooksByCategory(ctx context.Con
 		// 从books集合开始，筛选分类
 		bson.D{{Key: "$match", Value: bson.M{
 			"category": category,
-			"status":   "published", // 只推荐已发布的书籍
+			"status":   bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 		}}},
 		// 关联book_statistics集合
 		bson.D{{Key: "$lookup", Value: bson.M{
@@ -212,7 +213,7 @@ func (r *MongoHotRecommendationRepository) GetNewPopularBooks(ctx context.Contex
 		// 筛选新书（最近N天上架）
 		bson.D{{Key: "$match", Value: bson.M{
 			"created_at": bson.M{"$gte": timeThreshold},
-			"status":     "published",
+			"status":     bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 		}}},
 		// 关联book_statistics集合
 		bson.D{{Key: "$lookup", Value: bson.M{

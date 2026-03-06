@@ -142,7 +142,7 @@ func TestProjectResponse_EmptyFields(t *testing.T) {
 		Summary:   "",
 		CoverURL:  "",
 		Tags:      []string{},
-		Status:    "published",
+		Status:    "serializing",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -151,7 +151,7 @@ func TestProjectResponse_EmptyFields(t *testing.T) {
 	assert.Empty(t, resp.Summary)
 	assert.Empty(t, resp.CoverURL)
 	assert.Empty(t, resp.Tags)
-	assert.Equal(t, "published", resp.Status)
+	assert.Equal(t, "serializing", resp.Status)
 }
 
 func TestListProjectsRequest_DefaultValues(t *testing.T) {
@@ -185,7 +185,7 @@ func TestProjectListResponse_Structure(t *testing.T) {
 	now := time.Now()
 	items := []ProjectResponse{
 		{ID: "1", Title: "Project 1", Status: "draft", CreatedAt: now, UpdatedAt: now},
-		{ID: "2", Title: "Project 2", Status: "published", CreatedAt: now, UpdatedAt: now},
+		{ID: "2", Title: "Project 2", Status: "serializing", CreatedAt: now, UpdatedAt: now},
 	}
 
 	resp := ProjectListResponse{
@@ -318,7 +318,7 @@ func TestToProjectResponse_EmptyFields(t *testing.T) {
 		Summary:   "",
 		CoverURL:  "",
 		Tags:      []string{},
-		Status:    "published",
+		Status:    "serializing",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -339,7 +339,7 @@ func TestToProjectResponse_EmptyFields(t *testing.T) {
 	assert.Empty(t, response.Summary)
 	assert.Empty(t, response.CoverURL)
 	assert.Empty(t, response.Tags)
-	assert.Equal(t, "published", response.Status)
+	assert.Equal(t, "serializing", response.Status)
 }
 
 func TestToProjectResponseList(t *testing.T) {
@@ -348,7 +348,7 @@ func TestToProjectResponseList(t *testing.T) {
 
 	projects := []*mockProject{
 		{ID: objID1, Title: "Project 1", Status: "draft", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		{ID: objID2, Title: "Project 2", Status: "published", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{ID: objID2, Title: "Project 2", Status: "serializing", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 
 	responses := make([]ProjectResponse, len(projects))
@@ -369,7 +369,7 @@ func TestToProjectResponseList(t *testing.T) {
 	assert.Equal(t, "Project 1", responses[0].Title)
 	assert.Equal(t, "draft", responses[0].Status)
 	assert.Equal(t, "Project 2", responses[1].Title)
-	assert.Equal(t, "published", responses[1].Status)
+	assert.Equal(t, "serializing", responses[1].Status)
 }
 
 func TestToProjectResponseList_Empty(t *testing.T) {

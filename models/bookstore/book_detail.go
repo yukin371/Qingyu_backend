@@ -14,26 +14,26 @@ import (
 // 包含统计数据、交互数据等详细信息，适用于书籍详情页面
 type BookDetail struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`                      // 书籍ID
-	Title        string `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
-	Subtitle     string `bson:"subtitle" json:"subtitle" validate:"max=200"`            // 副标题
-	Author       string `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者名
-	AuthorID     string `bson:"author_id" json:"authorId"`                              // 作者ID
-	Description  string `bson:"description" json:"description" validate:"max=5000"`     // 详细描述
-	Introduction string `bson:"introduction" json:"introduction" validate:"max=1000"`   // 简介
-	CoverURL     string `bson:"cover_url" json:"coverUrl" validate:"url"`               // 封面图片URL
+	Title        string             `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
+	Subtitle     string             `bson:"subtitle" json:"subtitle" validate:"max=200"`            // 副标题
+	Author       string             `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者名
+	AuthorID     string             `bson:"author_id" json:"authorId"`                              // 作者ID
+	Description  string             `bson:"description" json:"description" validate:"max=5000"`     // 详细描述
+	Introduction string             `bson:"introduction" json:"introduction" validate:"max=1000"`   // 简介
+	CoverURL     string             `bson:"cover_url" json:"coverUrl" validate:"url"`               // 封面图片URL
 
 	// 网络小说特有字段
 	SerializedAt time.Time  `bson:"serialized_at" json:"serializedAt"`                   // 开始连载时间
 	CompletedAt  *time.Time `bson:"completed_at,omitempty" json:"completedAt,omitempty"` // 完结时间
 
-	Categories   []string   `bson:"categories" json:"categories"`                       // 分类列表
-	CategoryIDs  []string   `bson:"category_ids" json:"categoryIds"`                    // 分类ID列表
-	Tags         []string   `bson:"tags" json:"tags"`                                   // 标签
-	Status       BookStatus `bson:"status" json:"status"`                               // 状态
-	WordCount    int64      `bson:"word_count" json:"wordCount" validate:"min=0"`       // 总字数
-	ChapterCount int        `bson:"chapter_count" json:"chapterCount" validate:"min=0"` // 章节数
-	Price        float64    `bson:"price" json:"price" validate:"min=0"`                  // 价格 (分，按章节或全本，使用float64兼容MongoDB)
-	IsFree       bool       `bson:"is_free" json:"isFree"`                              // 是否免费
+	Categories   []string             `bson:"categories" json:"categories"`                       // 分类列表
+	CategoryIDs  []primitive.ObjectID `bson:"category_ids" json:"categoryIds"`                    // 分类ID列表
+	Tags         []string             `bson:"tags" json:"tags"`                                   // 标签
+	Status       BookStatus           `bson:"status" json:"status"`                               // 状态
+	WordCount    int64                `bson:"word_count" json:"wordCount" validate:"min=0"`       // 总字数
+	ChapterCount int                  `bson:"chapter_count" json:"chapterCount" validate:"min=0"` // 章节数
+	Price        float64              `bson:"price" json:"price" validate:"min=0"`                // 价格 (分，按章节或全本，使用float64兼容MongoDB)
+	IsFree       bool                 `bson:"is_free" json:"isFree"`                              // 是否免费
 
 	// 统计数据
 	ViewCount    int64        `bson:"view_count" json:"viewCount" validate:"min=0"`       // 浏览量

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/recommendation"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/recommendation"
 )
 
 // RecommendationAPI 推荐API
@@ -68,7 +68,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	itemID := c.Query("itemId")
 	if itemID == "" {
-		response.BadRequest(c,  "参数错误", "itemId参数不能为空")
+		response.BadRequest(c, "参数错误", "itemId参数不能为空")
 		return
 	}
 
@@ -112,13 +112,13 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	var req struct {
 		ItemID       string                 `json:"itemId" binding:"required"`
 		ItemType     string                 `json:"itemType"`                        // book/article等，默认book
-		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/favorite/read等
+		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/collect/read/finish等
 		Duration     int64                  `json:"duration"`                        // 阅读时长（秒）
 		Metadata     map[string]interface{} `json:"metadata"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -237,7 +237,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	category := c.Query("category")
 	if category == "" {
-		response.BadRequest(c,  "参数错误", "category参数不能为空")
+		response.BadRequest(c, "参数错误", "category参数不能为空")
 		return
 	}
 

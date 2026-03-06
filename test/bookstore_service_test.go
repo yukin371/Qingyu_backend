@@ -798,7 +798,7 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 	book1 := &bookstore2.Book{
 		Title:  "测试书籍",
 		Author: "测试作者",
-		Status: "published",
+		Status: bookstore2.BookStatusOngoing,
 	}
 	book1.ID = primitive.NewObjectID()
 	expectedBooks := []*bookstore2.Book{book1}
@@ -863,7 +863,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 
 	book1 := &bookstore2.Book{
 		Title:         "测试书籍",
-		Status:        "published",
+		Status:        bookstore2.BookStatusOngoing,
 		IsRecommended: true,
 	}
 	book1.ID = primitive.NewObjectID()

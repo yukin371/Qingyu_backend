@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 兼容性问题
-**状态**: ⚠️ 部分存在问题（已审查）
+**状态**: ⚠️ 部分存在问题（后端枚举源已开始收敛）
 **创建日期**: 2026-03-05
 **来源报告**: [前后端数据类型对比报告](../reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md)、[类型转换兼容性分析](../reports/archived/type-conversion-compatibility-analysis.md)
 **审查日期**: 2026-03-05
@@ -17,21 +17,34 @@
 ### 审查发现
 
 #### BookStatus 枚举冲突
-- ❌ **后端存在三套不同定义**：
+- ⚠️ **后端历史上存在三套不同定义**：
   - `models/bookstore/book.go`: draft, ongoing, completed, paused
   - `models/shared/types/enums.go`: draft, **published** ← 冲突, completed, paused, deleted
   - `internal/domain/book.go`: draft, ongoing, completed, paused, deleted
 - ❌ **前端使用 `serializing`**，后端使用 `ongoing`
 
+**当前进展（2026-03-06）**:
+- 已将共享 `BookStatus` 口径收敛为 `draft/ongoing/completed/paused/deleted`
+- 后端查询已兼容历史 `published` 数据，但新口径不再把 `published` 作为规范枚举值
+
 #### CategoryIDs 类型不一致
-- ❌ **后端内部不一致**：
+- ✅ **后端内部模型已收敛**：
   - `Book` 模型: `[]primitive.ObjectID`
-  - `BookDetail` 模型: `[]string`
-- ❌ **前端使用单值** `categoryId: string`，后端使用数组
+  - `BookDetail` 模型: `[]primitive.ObjectID`
+- ❌ **前端仍存在旧单值字段** `categoryId: string`，后端规范口径是数组
+
+**当前进展（2026-03-06）**:
+- 已在 `BookDTO` 增加兼容字段 `categoryId`
+- `BookDTO` 与 converter 现在同时输出 `categoryIds` 和首个 `categoryId`
+- DTO 入参在仅提供旧字段 `categoryId` 时也会回填到 `categoryIds`
+- `BookDetail` 仓储查询、分类批量更新与相似书推荐已改为按 `ObjectID` 一致处理 `category_ids`
 
 #### 其他问题
 - ✅ is_* 字段 JSON 标签已正确配置
-- ❌ BehaviorType 存在两套不同定义（stats vs recommendation）
+- ⚠️ BehaviorType 已拆分为 recommendation/stats 两组共享定义，并对 recommendation 入口兼容 `favorite -> collect`、`complete -> finish`；前端仍需同步规范值
+- ✅ `models/shared/types.DocumentStatus` 已与 writer 文档流转状态对齐为 `planned/writing/completed`
+- ✅ 书城搜索与列表分页响应已统一走 `pagination` 包装，避免前端拦截器在搜索类接口丢失分页元信息
+- ✅ `models/dto/writer_dto.go` 的项目列表状态校验已从旧 `published` 口径收敛到 `draft/serializing/completed/suspended/archived`
 
 ---
 
@@ -222,10 +235,14 @@ function formatPrice(cents: number): string {
 | 字段用途 | 后端命名 | 前端期望 | 状态 |
 |---------|---------|---------|------|
 | 创建时间 | `CreatedAt` | `createdAt` | ✅ |
-| 更新时间 | `UpdatedAt` | `updateTime` | ⚠️ 不一致 |
-| 发布时间 | `PublishedAt` | `publishTime` | ⚠️ 不一致 |
+| 更新时间 | `UpdatedAt` | `updateTime` | ⚠️ 兼容中 |
+| 发布时间 | `PublishedAt` | `publishTime` | ⚠️ 兼容中 |
 
-**修复方案**: 统一命名规范 `createdAt`, `updatedAt`, `publishedAt`
+**当前进展（2026-03-06）**:
+- 阅读进度响应已同时输出 `updateTime` 与 `updatedAt`
+- 章节发布状态 DTO 已同时保留 `publishTime` 与 `publishedAt`、`updateTime` 与 `updatedAt`
+- `service/interfaces/reader` 的章节响应 JSON tag 已从 snake_case 收敛到 camelCase，避免迁移适配层继续传播旧字段名
+- 仍有部分旧接口和前端类型使用 `updateTime/publishTime`，后续以前端切换为主再移除兼容字段
 
 ---
 

@@ -431,7 +431,7 @@ func CreateTestBook(id primitive.ObjectID, title string) map[string]interface{} 
 		"title":     title,
 		"cover_url": "http://example.com/cover.jpg",
 		"author":    "Test Author",
-		"status":    "published",
+		"status":    "ongoing",
 	}
 }
 

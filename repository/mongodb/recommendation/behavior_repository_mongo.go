@@ -2,6 +2,7 @@ package recommendation
 
 import (
 	reco "Qingyu_backend/models/recommendation"
+	sharedtypes "Qingyu_backend/models/shared/types"
 	"context"
 	"fmt"
 	"time"
@@ -29,6 +30,9 @@ func NewMongoBehaviorRepository(db *mongo.Database) recoRepo.BehaviorRepository 
 func (r *MongoBehaviorRepository) Create(ctx context.Context, b *reco.Behavior) error {
 	if b == nil {
 		return fmt.Errorf("behavior cannot be nil")
+	}
+	if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(b.BehaviorType); err == nil {
+		b.BehaviorType = behaviorType.String()
 	}
 
 	// 生成ID（如果为空）
@@ -63,6 +67,9 @@ func (r *MongoBehaviorRepository) BatchCreate(ctx context.Context, bs []*reco.Be
 	docs := make([]interface{}, len(bs))
 	now := time.Now()
 	for i, b := range bs {
+		if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(b.BehaviorType); err == nil {
+			b.BehaviorType = behaviorType.String()
+		}
 		if b.OccurredAt.IsZero() {
 			b.OccurredAt = now
 		}
@@ -103,6 +110,11 @@ func (r *MongoBehaviorRepository) GetByUser(ctx context.Context, userID string, 
 	var behaviors []*reco.Behavior
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, fmt.Errorf("failed to decode behaviors: %w", err)
+	}
+	for _, behavior := range behaviors {
+		if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(behavior.BehaviorType); err == nil {
+			behavior.BehaviorType = behaviorType.String()
+		}
 	}
 
 	return behaviors, nil

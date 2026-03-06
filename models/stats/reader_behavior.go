@@ -1,6 +1,9 @@
 package stats
 
-import "time"
+import (
+	sharedtypes "Qingyu_backend/models/shared/types"
+	"time"
+)
 
 // ReaderBehavior 读者行为数据模型
 type ReaderBehavior struct {
@@ -65,13 +68,13 @@ type ReaderRetention struct {
 
 // BehaviorType 行为类型常量
 const (
-	BehaviorTypeView      = "view"      // 浏览
-	BehaviorTypeComplete  = "complete"  // 完读
-	BehaviorTypeDropOff   = "drop_off"  // 跳出
-	BehaviorTypeSubscribe = "subscribe" // 订阅
-	BehaviorTypeBookmark  = "bookmark"  // 书签
-	BehaviorTypeComment   = "comment"   // 评论
-	BehaviorTypeLike      = "like"      // 点赞
+	BehaviorTypeView      = string(sharedtypes.ReaderBehaviorView)      // 浏览
+	BehaviorTypeComplete  = string(sharedtypes.ReaderBehaviorComplete)  // 完读
+	BehaviorTypeDropOff   = string(sharedtypes.ReaderBehaviorDropOff)   // 跳出
+	BehaviorTypeSubscribe = string(sharedtypes.ReaderBehaviorSubscribe) // 订阅
+	BehaviorTypeBookmark  = string(sharedtypes.ReaderBehaviorBookmark)  // 书签
+	BehaviorTypeComment   = string(sharedtypes.ReaderBehaviorComment)   // 评论
+	BehaviorTypeLike      = string(sharedtypes.ReaderBehaviorLike)      // 点赞
 )
 
 // DeviceType 设备类型常量
