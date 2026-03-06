@@ -24,27 +24,30 @@ type Book struct {
 	shared.IdentifiedEntity `bson:",inline"`
 	shared.BaseEntity       `bson:",inline"`
 
-	Title         string `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
-	Author        string `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者
-	AuthorID      string `bson:"author_id,omitempty" json:"authorId,omitempty"`        // 作者ID（字符串格式，支持UUID）
-	Introduction  string `bson:"introduction" json:"introduction" validate:"max=1000"` // 简介
-	Cover         string               `bson:"cover" json:"cover" validate:"url"`                    // 封面URL
-	CategoryIDs   []primitive.ObjectID `bson:"category_ids" json:"categoryIds"`                     // 分类ID列表
-	Categories    []string             `bson:"categories" json:"categories"`                        // 分类名称（冗余字段，便于展示）
-	Tags          []string             `bson:"tags" json:"tags"`                                    // 标签
-	Status        BookStatus           `bson:"status" json:"status" validate:"required"`            // 状态
-	Rating        types.Rating         `bson:"rating" json:"rating" validate:"min=0,max=5"`         // 评分 (0-5星，平均分可为0)
-	RatingCount   int64                `bson:"rating_count" json:"ratingCount" validate:"min=0"`    // 评分人数
-	ViewCount     int64                `bson:"view_count" json:"viewCount" validate:"min=0"`        // 浏览量
-	WordCount     int64                `bson:"word_count" json:"wordCount" validate:"min=0"`        // 字数
-	ChapterCount  int                  `bson:"chapter_count" json:"chapterCount"`                   // 章节数
-	Price         float64              `bson:"price" json:"price" validate:"min=0"`                  // 价格 (分，使用float64以兼容MongoDB默认数字类型)
-	IsFree        bool                 `bson:"is_free" json:"isFree"`                               // 是否免费
-	IsRecommended bool                 `bson:"is_recommended" json:"isRecommended"`                 // 是否推荐
-	IsFeatured    bool                 `bson:"is_featured" json:"isFeatured"`                       // 是否精选
-	IsHot         bool                 `bson:"is_hot" json:"isHot"`                                 // 是否热门
-	PublishedAt   *time.Time           `bson:"published_at,omitempty" json:"publishedAt,omitempty"` // 发布时间
+	Title         string               `bson:"title" json:"title" validate:"required,min=1,max=200"`   // 书名
+	Author        string               `bson:"author" json:"author" validate:"required,min=1,max=100"` // 作者
+	AuthorID      string               `bson:"author_id,omitempty" json:"authorId,omitempty"`          // 作者ID（字符串格式，支持UUID）
+	Introduction  string               `bson:"introduction" json:"introduction" validate:"max=1000"`   // 简介
+	Cover         string               `bson:"cover" json:"cover" validate:"url"`                      // 封面URL
+	CategoryIDs   []primitive.ObjectID `bson:"category_ids" json:"categoryIds"`                        // 分类ID列表
+	Categories    []string             `bson:"categories" json:"categories"`                           // 分类名称（冗余字段，便于展示）
+	Tags          []string             `bson:"tags" json:"tags"`                                       // 标签
+	ProjectID     *string              `bson:"project_id,omitempty" json:"projectId,omitempty"`        // 来源项目ID（writer project）
+	SourceType    string               `bson:"source_type,omitempty" json:"sourceType,omitempty"`      // 来源类型：writer_project 等
+	Status        BookStatus           `bson:"status" json:"status" validate:"required"`               // 状态
+	Rating        types.Rating         `bson:"rating" json:"rating" validate:"min=0,max=5"`            // 评分 (0-5星，平均分可为0)
+	RatingCount   int64                `bson:"rating_count" json:"ratingCount" validate:"min=0"`       // 评分人数
+	ViewCount     int64                `bson:"view_count" json:"viewCount" validate:"min=0"`           // 浏览量
+	WordCount     int64                `bson:"word_count" json:"wordCount" validate:"min=0"`           // 字数
+	ChapterCount  int                  `bson:"chapter_count" json:"chapterCount"`                      // 章节数
+	Price         float64              `bson:"price" json:"price" validate:"min=0"`                    // 价格 (分，使用float64以兼容MongoDB默认数字类型)
+	IsFree        bool                 `bson:"is_free" json:"isFree"`                                  // 是否免费
+	IsRecommended bool                 `bson:"is_recommended" json:"isRecommended"`                    // 是否推荐
+	IsFeatured    bool                 `bson:"is_featured" json:"isFeatured"`                          // 是否精选
+	IsHot         bool                 `bson:"is_hot" json:"isHot"`                                    // 是否热门
+	PublishedAt   *time.Time           `bson:"published_at,omitempty" json:"publishedAt,omitempty"`    // 发布时间
 	LastUpdateAt  *time.Time           `bson:"last_update_at,omitempty" json:"lastUpdateAt,omitempty"` // 最后更新时间
+	LastSyncedAt  *time.Time           `bson:"last_synced_at,omitempty" json:"lastSyncedAt,omitempty"` // 最近同步时间
 }
 
 // BookFilter 书籍查询过滤器
