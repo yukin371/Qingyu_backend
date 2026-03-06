@@ -24,7 +24,11 @@ type UnifiedWalletService struct {
 
 // NewUnifiedWalletService 创建统一钱包服务
 func NewUnifiedWalletService(walletRepo sharedRepo.WalletRepository) WalletService {
-	txRunner := NewRepositoryTransactionRunner(walletRepo)
+	return NewUnifiedWalletServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
+}
+
+// NewUnifiedWalletServiceWithRunner 创建统一钱包服务，并显式注入事务入口。
+func NewUnifiedWalletServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) WalletService {
 	return &UnifiedWalletService{
 		walletRepo:     walletRepo,
 		txRunner:       txRunner,

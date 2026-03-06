@@ -137,10 +137,11 @@ type ServiceContainer struct {
 // Repository工厂将在Initialize()时自动创建
 func NewServiceContainer() *ServiceContainer {
 	return &ServiceContainer{
-		services:       make(map[string]serviceInterfaces.BaseService),
-		serviceMetrics: make(map[string]*metrics.ServiceMetrics),
-		initialized:    false,
-		eventBus:       base.NewSimpleEventBus(), // 创建事件总线
+		services:         make(map[string]serviceInterfaces.BaseService),
+		serviceMetrics:   make(map[string]*metrics.ServiceMetrics),
+		initialized:      false,
+		eventBus:         base.NewSimpleEventBus(), // 创建事件总线
+		providerRegistry: NewProviderRegistry(),
 	}
 }
 
@@ -893,7 +894,31 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
 	walletRepo := c.repositoryFactory.CreateWalletRepository()
-	walletSvc := financeWalletService.NewUnifiedWalletService(walletRepo)
+	if c.providerRegistry == nil {
+		c.providerRegistry = NewProviderRegistry()
+	}
+	if _, exists := c.providerRegistry.Get("walletTransactionRunner"); !exists {
+		if err := c.RegisterProvider(Provider{
+			Name:      "walletTransactionRunner",
+			Singleton: true,
+			Lazy:      true,
+			Factory: func(container *ServiceContainer) (interface{}, error) {
+				return financeWalletService.NewRepositoryTransactionRunner(walletRepo), nil
+			},
+		}); err != nil {
+			return fmt.Errorf("注册钱包事务Provider失败: %w", err)
+		}
+	}
+	txRunnerInstance, err := c.GetProvider("walletTransactionRunner")
+	if err != nil {
+		return fmt.Errorf("获取钱包事务Provider失败: %w", err)
+	}
+	txRunner, ok := txRunnerInstance.(financeWalletService.TransactionRunner)
+	if !ok {
+		return fmt.Errorf("walletTransactionRunner 类型不正确")
+	}
+
+	walletSvc := financeWalletService.NewUnifiedWalletServiceWithRunner(walletRepo, txRunner)
 	c.walletService = walletSvc // 保存为接口类型
 
 	// 类型断言为 BaseService，以便注册到服务映射
