@@ -7,6 +7,7 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
 )
 
@@ -50,7 +51,7 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, earnings, total, page, pageSize, "获取收入列表成功")
+	response.Paginated(c, earnings, total, page, pageSize, "获取收入列表成功")
 }
 
 // GetBookEarnings 获取某本书的收入
@@ -88,7 +89,7 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	shared.Paginated(c, earnings, total, page, pageSize, "获取书籍收入成功")
+	response.Paginated(c, earnings, total, page, pageSize, "获取书籍收入成功")
 }
 
 // GetWithdrawals 获取提现记录
@@ -119,7 +120,7 @@ func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, withdrawals, total, page, pageSize, "获取提现记录成功")
+	response.Paginated(c, withdrawals, total, page, pageSize, "获取提现记录成功")
 }
 
 // WithdrawRequest 提现申请请求
@@ -207,7 +208,7 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, details, total, page, pageSize, "获取收入明细成功")
+	response.Paginated(c, details, total, page, pageSize, "获取收入明细成功")
 }
 
 // GetRevenueStatistics 获取收入统计
@@ -267,7 +268,7 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, settlements, total, page, pageSize, "获取结算记录成功")
+	response.Paginated(c, settlements, total, page, pageSize, "获取结算记录成功")
 }
 
 // GetSettlement 获取结算详情

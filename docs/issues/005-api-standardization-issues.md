@@ -290,6 +290,16 @@ type Pagination struct {
    - `GET /api/v1/reader/comments`
    - 从旧的 `data.list/comments + total/page/size` 收敛为统一 `data + pagination`
 
+10. finance 分页响应继续收敛
+   - `GET /api/v1/finance/author/earnings`
+   - `GET /api/v1/finance/author/earnings/:bookId`
+   - `GET /api/v1/finance/author/withdrawals`
+   - `GET /api/v1/finance/author/revenue-details`
+   - `GET /api/v1/finance/author/settlements`
+   - `GET /api/v1/finance/membership/cards`
+   - `GET /api/v1/finance/wallet/withdrawals`
+   - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理
