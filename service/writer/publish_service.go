@@ -211,7 +211,9 @@ func (s *PublishService) executeProjectPublish(
 
 	// 更新发布记录为成功
 	record.Status = serviceInterfaces.PublicationStatusPublished
+	record.BookstoreID = resp.BookstoreID
 	record.BookstoreName = resp.BookstoreName
+	record.ExternalID = resp.ExternalID
 	record.PublishTime = &time.Time{}
 	*record.PublishTime = time.Now()
 	record.UpdatedAt = time.Now()
@@ -436,9 +438,11 @@ func (s *PublishService) executeDocumentPublish(
 
 	// 更新发布记录
 	record.Status = serviceInterfaces.PublicationStatusPublished
+	record.BookstoreID = resp.BookstoreID
 	if record.BookstoreName == "" {
 		record.BookstoreName = resp.BookstoreName
 	}
+	record.ExternalID = resp.ExternalID
 	record.PublishTime = &time.Time{}
 	*record.PublishTime = time.Now()
 	record.UpdatedAt = time.Now()

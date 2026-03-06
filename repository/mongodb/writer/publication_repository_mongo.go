@@ -37,6 +37,7 @@ type publicationRecordDocument struct {
 	ResourceTitle   string                      `bson:"resource_title"`
 	BookstoreID     string                      `bson:"bookstore_id"`
 	BookstoreName   string                      `bson:"bookstore_name"`
+	ExternalID      string                      `bson:"external_id,omitempty"`
 	Status          string                      `bson:"status"`
 	PublishTime     *time.Time                  `bson:"publish_time,omitempty"`
 	ScheduledTime   *time.Time                  `bson:"scheduled_time,omitempty"`
@@ -225,6 +226,7 @@ func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *ser
 		ResourceTitle:   record.ResourceTitle,
 		BookstoreID:     record.BookstoreID,
 		BookstoreName:   record.BookstoreName,
+		ExternalID:      record.ExternalID,
 		Status:          record.Status,
 		PublishTime:     record.PublishTime,
 		ScheduledTime:   record.ScheduledTime,
@@ -271,6 +273,7 @@ func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *s
 		ResourceTitle:   doc.ResourceTitle,
 		BookstoreID:     doc.BookstoreID,
 		BookstoreName:   doc.BookstoreName,
+		ExternalID:      doc.ExternalID,
 		Status:          doc.Status,
 		PublishTime:     doc.PublishTime,
 		ScheduledTime:   doc.ScheduledTime,

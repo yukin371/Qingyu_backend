@@ -2,7 +2,7 @@
 
 最小联调脚本：
 
-- [e2e_publication_flow.ps1](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.ps1)
+- [e2e_publication_flow.py](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.py)
 
 覆盖链路：
 
@@ -15,14 +15,14 @@
 
 示例：
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\e2e_publication_flow.ps1 `
-  -BaseUrl "http://localhost:8080" `
-  -AuthorToken "<author-jwt>" `
-  -AdminToken "<admin-jwt>" `
-  -ProjectId "<project-id>" `
-  -DocumentId "<document-id>" `
-  -ChapterNumber 1
+```bash
+python .\scripts\e2e_publication_flow.py \
+  --base-url "http://localhost:8080" \
+  --author-token "<author-jwt>" \
+  --admin-token "<admin-jwt>" \
+  --project-id "<project-id>" \
+  --document-id "<document-id>" \
+  --chapter-number 1
 ```
 
 前提：
@@ -37,4 +37,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\e2e_publication_flow.ps1 `
 
 - 审批脚本默认审批项目发布单；文档发布单只做提交，不自动审批
 - reader 校验使用当前实现的现有读侧接口，不补额外适配
-- 如果读侧章节接口要求的 `chapterId` 与 `project document id` 不一致，需要先从 `bookstore/books/:id/chapters` 响应里取真实章节 ID 再做下一跳
+- 脚本会优先读取发布记录里的 `externalId` 作为真实 `bookId`，再从 `bookstore/books/:id/chapters` 响应里解析真实 `chapterId`

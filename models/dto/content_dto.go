@@ -525,6 +525,7 @@ type PublicationRecord struct {
 	ResourceTitle   string              `json:"resourceTitle"`
 	BookstoreID     string              `json:"bookstoreId"`
 	BookstoreName   string              `json:"bookstoreName"`
+	ExternalID      string              `json:"externalId,omitempty"`
 	Status          string              `json:"status"`
 	PublishTime     *time.Time          `json:"publishTime"`
 	ScheduledTime   *time.Time          `json:"scheduledTime"`
