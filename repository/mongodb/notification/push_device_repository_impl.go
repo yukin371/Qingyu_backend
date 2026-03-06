@@ -30,25 +30,10 @@ func NewPushDeviceRepository(db *mongo.Database) repo.PushDeviceRepository {
 
 // Create 创建推送设备
 func (r *PushDeviceRepositoryImpl) Create(ctx context.Context, device *notification.PushDevice) error {
-	objectID, err := primitive.ObjectIDFromHex(device.ID)
-	if err != nil {
-		// 如果ID无效，生成新的
-		objectID = primitive.NewObjectID()
-		device.ID = objectID.Hex()
+	if device.ID.IsZero() {
+		device.ID = primitive.NewObjectID()
 	}
-
-	doc := bson.M{
-		"_id":          objectID,
-		"user_id":      device.UserID,
-		"device_type":  device.DeviceType,
-		"device_token": device.DeviceToken,
-		"device_id":    device.DeviceID,
-		"is_active":    device.IsActive,
-		"last_used_at": device.LastUsedAt,
-		"created_at":   device.CreatedAt,
-	}
-
-	_, err = r.deviceCollection.InsertOne(ctx, doc)
+	_, err := r.deviceCollection.InsertOne(ctx, device)
 	if err != nil {
 		return fmt.Errorf("创建推送设备失败: %w", err)
 	}

@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme 已推进）
+**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme + notification 已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -23,7 +23,8 @@
 5. ⚠️ **bookstore 域 Chapter/Category 已完成迁移**
 6. ⚠️ **ai 域核心持久化模型（AIModel/AIProvider/APIRequestLog/NovelContext/WorldSettings/PlotThread）已完成迁移**
 7. ⚠️ **reader 域 ReadingSettings/ReaderTheme 已完成迁移**
-8. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
+8. ⚠️ **notification 域 Notification/NotificationPreference/PushDevice/NotificationTemplate 已完成迁移**
+9. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
 
 ### 需要修复的模型（优先级排序）
 
@@ -32,8 +33,9 @@
 3. **models/messaging/** - 其余消息模型（Message/MessageTemplate/NotificationDelivery 已完成，Conversation/Announcement/InboxNotification 已使用基础 ObjectID 混入）
 4. **models/writer/** - Version, Timeline 已完成，本轮重点转向剩余边缘模型
 5. **models/bookstore/** - Chapter, Category 已完成，本轮重点转向其余边缘模型
-6. **models/finance/** - Wallet 已完成，本轮重点转向 recommendation/notification/reader 边缘模型
+6. **models/finance/** - Wallet 已完成，本轮重点转向 recommendation/reader 边缘模型
 7. **models/ai/** - Context, RequestLog, Provider, NovelContext 已完成，本轮重点转向其余边缘模型/仓储
+8. **models/notification/** - Notification/Preference/PushDevice/Template 已完成，本轮重点转向其他边缘域
 
 ### 已正确实现的领域
 
@@ -41,6 +43,7 @@
 - ✅ Reader域（Progress, History, Annotation, Bookmark, ReadingSettings, ReaderTheme）
 - ✅ Bookstore域（Book, BookDetail, Chapter, Category）
 - ✅ AI域（Chat, Quota, Core metadata models）
+- ✅ Notification域（Notification, Preference, PushDevice, Template）
 - ✅ Social域（部分）
 
 ---
@@ -148,7 +151,8 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 5. [x] `models/bookstore/` - Chapter, Category 已迁移
 6. [x] `models/ai/` - AIModel, AIProvider, APIRequestLog, NovelContext, WorldSettings, PlotThread 已迁移
 7. [x] `models/reader/` - ReadingSettings, ReaderTheme 已迁移
-8. [ ] 其他模块
+8. [x] `models/notification/` - Notification, NotificationPreference, PushDevice, NotificationTemplate 已迁移
+9. [ ] 其他模块
 
 每个模块迁移步骤：
 1. 修改 Model 定义：`ID string` → `ID primitive.ObjectID`

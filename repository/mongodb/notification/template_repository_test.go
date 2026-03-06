@@ -7,10 +7,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/notification"
-	notificationRepo "Qingyu_backend/repository/mongodb/notification"
 	repoInterfaces "Qingyu_backend/repository/interfaces/notification"
+	notificationRepo "Qingyu_backend/repository/mongodb/notification"
 	"Qingyu_backend/test/testutil"
 )
 
@@ -55,7 +56,7 @@ func TestNotificationTemplateRepository_Create_WithInvalidID(t *testing.T) {
 	defer cleanup()
 
 	template := &notification.NotificationTemplate{
-		ID:        "invalid-id",
+		ID:        primitive.NewObjectID(),
 		Type:      notification.NotificationTypeSocial,
 		Action:    "follow",
 		Title:     "关注通知",
@@ -73,7 +74,7 @@ func TestNotificationTemplateRepository_Create_WithInvalidID(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotEmpty(t, template.ID)
-	assert.NotEqual(t, "invalid-id", template.ID)
+	assert.NotEqual(t, primitive.NilObjectID, template.ID)
 }
 
 // TestNotificationTemplateRepository_GetByID 测试根据ID获取通知模板
@@ -97,7 +98,7 @@ func TestNotificationTemplateRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, template.ID)
+	found, err := repo.GetByID(ctx, template.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -164,13 +165,13 @@ func TestNotificationTemplateRepository_Update(t *testing.T) {
 		"is_active":  false,
 		"updated_at": time.Now(),
 	}
-	err = repo.Update(ctx, template.ID, updates)
+	err = repo.Update(ctx, template.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, template.ID)
+	found, err := repo.GetByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "更新后的打赏标题", found.Title)
 	assert.False(t, found.IsActive)
@@ -214,13 +215,13 @@ func TestNotificationTemplateRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除模板
-	err = repo.Delete(ctx, template.ID)
+	err = repo.Delete(ctx, template.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, template.ID)
+	found, err := repo.GetByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 }
@@ -260,7 +261,7 @@ func TestNotificationTemplateRepository_Exists(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	exists, err := repo.Exists(ctx, template.ID)
+	exists, err := repo.Exists(ctx, template.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -720,20 +721,20 @@ func TestNotificationTemplateRepository_Update_MultipleFields(t *testing.T) {
 	// Act - 更新多个字段
 	newVariables := []string{"expiry_date", "renewal_url"}
 	updates := map[string]interface{}{
-		"title":     "会员到期提醒",
-		"content":   "您的会员即将到期，请及时续费",
-		"variables": newVariables,
-		"language":  "en-US",
-		"is_active": false,
+		"title":      "会员到期提醒",
+		"content":    "您的会员即将到期，请及时续费",
+		"variables":  newVariables,
+		"language":   "en-US",
+		"is_active":  false,
 		"updated_at": time.Now(),
 	}
-	err = repo.Update(ctx, template.ID, updates)
+	err = repo.Update(ctx, template.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, template.ID)
+	found, err := repo.GetByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "会员到期提醒", found.Title)
 	assert.Equal(t, "您的会员即将到期，请及时续费", found.Content)
@@ -774,7 +775,7 @@ func TestNotificationTemplateRepository_Create_WithData(t *testing.T) {
 	assert.NotEmpty(t, template.ID)
 
 	// 验证数据已保存
-	found, err := repo.GetByID(ctx, template.ID)
+	found, err := repo.GetByID(ctx, template.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found.Data)
 	assert.Equal(t, "high", found.Data["priority"])

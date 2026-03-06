@@ -34,6 +34,7 @@
    - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
    - ai 域活跃仓储 `ChatSession/ChatMessage/UserQuota/QuotaTransaction` 已具备 Create 回设；其余核心 metadata 模型已改为 `BeforeCreate + ObjectID`
    - reader 域本轮已补 `ReadingSettings/ReaderTheme` 的 Create 回设与 ObjectID 边界
+   - notification 域本轮已补 `Notification/NotificationPreference/PushDevice/NotificationTemplate` 的 Create 回设与 ObjectID 边界
 
 ### 已修复的 Repository
 
@@ -152,7 +153,10 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 
 ### 其他模块
 - [x] `finance/wallet_repository_mongo.go` - `wallets/transactions/withdraw_requests`
-- [ ] `notification_repository_mongo.go`
+- [x] `notification/notification_repository_impl.go`
+- [x] `notification/preference_repository_impl.go`
+- [x] `notification/push_device_repository_impl.go`
+- [x] `notification/template_repository_impl.go`
 - [ ] `message_repository_mongo.go`
 - [ ] 所有其他 Repository
 

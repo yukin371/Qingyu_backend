@@ -465,7 +465,6 @@ func (s *notificationServiceImpl) resendPush(ctx context.Context, notif *notific
 	return nil
 }
 
-
 // SendNotification 发送通知
 func (s *notificationServiceImpl) SendNotification(ctx context.Context, userID string, notificationType notification.NotificationType, title, content string, data map[string]interface{}) error {
 	// 获取用户通知偏好设置
@@ -623,7 +622,7 @@ func (s *notificationServiceImpl) UpdateNotificationPreference(ctx context.Conte
 
 	updates["updated_at"] = time.Now()
 
-	if err := s.preferenceRepo.Update(ctx, preference.ID, updates); err != nil {
+	if err := s.preferenceRepo.Update(ctx, preference.ID.Hex(), updates); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("PREFERENCE_UPDATE_FAILED", "更新通知偏好设置失败", err)
 	}
 
@@ -639,7 +638,7 @@ func (s *notificationServiceImpl) ResetNotificationPreference(ctx context.Contex
 	}
 
 	if preference != nil {
-		if err := s.preferenceRepo.Delete(ctx, preference.ID); err != nil {
+		if err := s.preferenceRepo.Delete(ctx, preference.ID.Hex()); err != nil {
 			return errors.BookstoreServiceFactory.InternalError("PREFERENCE_DELETE_FAILED", "删除通知偏好设置失败", err)
 		}
 	}
@@ -707,12 +706,12 @@ func (s *notificationServiceImpl) RegisterPushDevice(ctx context.Context, req *R
 			"last_used_at": time.Now(),
 		}
 
-		if err := s.pushDeviceRepo.Update(ctx, existingDevice.ID, updates); err != nil {
+		if err := s.pushDeviceRepo.Update(ctx, existingDevice.ID.Hex(), updates); err != nil {
 			return nil, errors.BookstoreServiceFactory.InternalError("DEVICE_UPDATE_FAILED", "更新设备信息失败", err)
 		}
 
 		// 获取更新后的设备信息
-		return s.pushDeviceRepo.GetByID(ctx, existingDevice.ID)
+		return s.pushDeviceRepo.GetByID(ctx, existingDevice.ID.Hex())
 	}
 
 	// 创建新设备
@@ -742,7 +741,7 @@ func (s *notificationServiceImpl) UnregisterPushDevice(ctx context.Context, devi
 		return errors.BookstoreServiceFactory.ForbiddenError("NO_PERMISSION", "无权操作此设备")
 	}
 
-	if err := s.pushDeviceRepo.Delete(ctx, device.ID); err != nil {
+	if err := s.pushDeviceRepo.Delete(ctx, device.ID.Hex()); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("DEVICE_DELETE_FAILED", "删除设备信息失败", err)
 	}
 
@@ -783,7 +782,7 @@ func (s *notificationServiceImpl) UpdatePushDeviceToken(ctx context.Context, dev
 		"is_active":    true,
 	}
 
-	if err := s.pushDeviceRepo.Update(ctx, device.ID, updates); err != nil {
+	if err := s.pushDeviceRepo.Update(ctx, device.ID.Hex(), updates); err != nil {
 		return errors.BookstoreServiceFactory.InternalError("DEVICE_UPDATE_FAILED", "更新设备令牌失败", err)
 	}
 
@@ -812,6 +811,7 @@ func (s *notificationServiceImpl) CleanupOldNotifications(ctx context.Context, d
 	}
 	return count, nil
 }
+
 // MarkMultipleAsReadWithResult 批量标记通知为已读（返回结果）
 func (s *notificationServiceImpl) MarkMultipleAsReadWithResult(ctx context.Context, ids []string, userID string) (succeeded int, failed int, err error) {
 	if len(ids) == 0 {
@@ -836,8 +836,8 @@ func (s *notificationServiceImpl) MarkMultipleAsReadWithResult(ctx context.Conte
 
 		// 更新已读状态
 		updates := map[string]interface{}{
-			"read":     true,
-			"read_at":  &now,
+			"read":       true,
+			"read_at":    &now,
 			"updated_at": &now,
 		}
 
@@ -884,4 +884,3 @@ func (s *notificationServiceImpl) BatchDeleteNotificationsWithResult(ctx context
 
 	return succeeded, failed, nil
 }
-
