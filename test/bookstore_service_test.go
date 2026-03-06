@@ -180,6 +180,14 @@ func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID string,
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
 }
 
+func (m *MockBookRepository) GetByProjectID(ctx context.Context, projectID string) (*bookstore2.Book, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*bookstore2.Book), args.Error(1)
+}
+
 func (m *MockBookRepository) GetByPriceRange(ctx context.Context, minPrice, maxPrice float64, limit, offset int) ([]*bookstore2.Book, error) {
 	args := m.Called(ctx, minPrice, maxPrice, limit, offset)
 	return args.Get(0).([]*bookstore2.Book), args.Error(1)
@@ -729,7 +737,7 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 
 func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	// 准备测试数据
-	categoryID := primitive.NewObjectID().Hex()
+	categoryID := primitive.NewObjectID()
 	expectedCategory := &bookstore2.Category{
 		ID:       categoryID,
 		Name:     "测试分类",
@@ -742,7 +750,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望
-	mockCategoryRepo.On("GetByID", mock.Anything, categoryID).Return(expectedCategory, nil)
+	mockCategoryRepo.On("GetByID", mock.Anything, categoryID.Hex()).Return(expectedCategory, nil)
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -751,7 +759,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
 
 	// 执行测试
-	result, err := service.GetCategoryByID(context.Background(), categoryID)
+	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
 
 	// 验证结果
 	assert.NoError(t, err)
@@ -761,7 +769,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 
 func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	// 准备测试数据
-	categoryID := primitive.NewObjectID().Hex()
+	categoryID := primitive.NewObjectID()
 	category := &bookstore2.Category{
 		ID:       categoryID,
 		Name:     "测试分类",
@@ -774,7 +782,7 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	mockBannerRepo := new(MockBannerRepository)
 
 	// 设置Mock期望
-	mockCategoryRepo.On("GetByID", mock.Anything, categoryID).Return(category, nil)
+	mockCategoryRepo.On("GetByID", mock.Anything, categoryID.Hex()).Return(category, nil)
 
 	// 创建 MockRankingRepository
 	mockRankingRepo := new(MockRankingRepository)
@@ -783,7 +791,7 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
 
 	// 执行测试
-	result, err := service.GetCategoryByID(context.Background(), categoryID)
+	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
 
 	// 验证结果
 	assert.Error(t, err)
@@ -870,7 +878,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 	expectedBooks := []*bookstore2.Book{book1}
 	expectedCategories := []*bookstore2.Category{
 		{
-			ID:       primitive.NewObjectID().Hex(),
+			ID:       primitive.NewObjectID(),
 			Name:     "测试分类",
 			IsActive: true,
 		},

@@ -43,9 +43,9 @@ type User struct {
 }
 
 var (
-	dbName  = flag.String("db", "qingyu_permission_test", "测试数据库名称")
+	dbName   = flag.String("db", "qingyu_permission_test", "测试数据库名称")
 	mongoURI = flag.String("uri", "mongodb://localhost:27017", "MongoDB连接URI")
-	verbose = flag.Bool("v", false, "详细输出")
+	verbose  = flag.Bool("v", false, "详细输出")
 )
 
 func main() {
@@ -170,7 +170,7 @@ func createTestRoles() []authModel.Role {
 
 	return []authModel.Role{
 		{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			Name:        "admin",
 			Description: "系统管理员，拥有所有权限",
 			Permissions: []string{
@@ -182,7 +182,7 @@ func createTestRoles() []authModel.Role {
 			UpdatedAt: now,
 		},
 		{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			Name:        "author",
 			Description: "作者，可以创作和管理自己的作品",
 			Permissions: []string{
@@ -209,7 +209,7 @@ func createTestRoles() []authModel.Role {
 			UpdatedAt: now,
 		},
 		{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			Name:        "reader",
 			Description: "读者，可以阅读内容",
 			Permissions: []string{
@@ -225,7 +225,7 @@ func createTestRoles() []authModel.Role {
 			UpdatedAt: now,
 		},
 		{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			Name:        "editor",
 			Description: "编辑，可以审核和管理内容",
 			Permissions: []string{
@@ -248,7 +248,7 @@ func createTestRoles() []authModel.Role {
 		},
 		// 测试特殊角色
 		{
-			ID:          primitive.NewObjectID().Hex(),
+			ID:          primitive.NewObjectID(),
 			Name:        "limited_user",
 			Description: "受限用户，只有基本读取权限",
 			Permissions: []string{

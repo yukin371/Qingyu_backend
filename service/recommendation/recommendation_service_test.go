@@ -4,6 +4,8 @@ import (
 	recModel "Qingyu_backend/models/recommendation"
 	"context"
 	"testing"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type stubRecommendationRepository struct {
@@ -49,7 +51,7 @@ func TestRecordUserBehavior_NormalizesLegacyFavorite(t *testing.T) {
 func TestGetUserBehaviors_NormalizesLegacyFavorite(t *testing.T) {
 	repo := &stubRecommendationRepository{
 		behaviors: []*recModel.UserBehavior{{
-			ID:         "1",
+			ID:         primitive.NewObjectID(),
 			UserID:     "user-1",
 			ItemID:     "book-1",
 			ItemType:   "book",

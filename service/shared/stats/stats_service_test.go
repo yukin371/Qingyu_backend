@@ -5,9 +5,9 @@ import (
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/models/writer"
-	userRepo "Qingyu_backend/repository/interfaces/user"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 	"context"
 	"errors"
 	"testing"
@@ -293,6 +293,14 @@ func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID string,
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*bookstore.Book), args.Error(1)
+}
+
+func (m *MockBookRepository) GetByProjectID(ctx context.Context, projectID string) (*bookstore.Book, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*bookstore.Book), args.Error(1)
 }
 
 func (m *MockBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
@@ -772,12 +780,12 @@ func createTestUser(roles []string, vipLevel int) *users.User {
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
-		Username:  "testuser",
-		Email:     "test@example.com",
-		Roles:     roles,
-		VIPLevel:  vipLevel,
-		Status:    users.UserStatusActive,
-		Password:   "hashedpassword",
+		Username: "testuser",
+		Email:    "test@example.com",
+		Roles:    roles,
+		VIPLevel: vipLevel,
+		Status:   users.UserStatusActive,
+		Password: "hashedpassword",
 	}
 }
 
@@ -1068,7 +1076,7 @@ func TestGetContentStats_Success(t *testing.T) {
 	assert.Equal(t, testUserID, stats.UserID)
 	assert.Equal(t, int64(10), stats.TotalProjects)
 	assert.Equal(t, int64(0), stats.PublishedBooks) // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.TotalWords)    // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.TotalWords)     // TODO: 当前返回0
 
 	mockUserRepo.AssertExpectations(t)
 	mockProjectRepo.AssertExpectations(t)
@@ -1134,11 +1142,11 @@ func TestGetPlatformUserStats_Success(t *testing.T) {
 	// Assert - 当前返回空数据
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
-	assert.Equal(t, int64(0), stats.TotalUsers)       // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.NewUsers)         // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.ActiveUsers)      // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.VIPUsers)         // TODO: 当前返回0
-	assert.Equal(t, float64(0), stats.RetentionRate)   // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.TotalUsers)         // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.NewUsers)           // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.ActiveUsers)        // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.VIPUsers)           // TODO: 当前返回0
+	assert.Equal(t, float64(0), stats.RetentionRate)    // TODO: 当前返回0
 	assert.Equal(t, float64(0), stats.AverageActiveDay) // TODO: 当前返回0
 
 	t.Log("✓ GetPlatformUserStats test passed (RED phase - TODOs)")
@@ -1166,13 +1174,13 @@ func TestGetPlatformContentStats_Success(t *testing.T) {
 	// Assert - 当前返回空数据
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
-	assert.Equal(t, int64(0), stats.TotalBooks)        // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.NewBooks)          // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.TotalChapters)     // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.TotalWords)        // TODO: 当前返回0
-	assert.Equal(t, int64(0), stats.TotalViews)        // TODO: 当前返回0
-	assert.Equal(t, float64(0), stats.AverageRating)    // TODO: 当前返回0
-	assert.Empty(t, stats.PopularCategories)           // TODO: 当前返回空
+	assert.Equal(t, int64(0), stats.TotalBooks)      // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.NewBooks)        // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.TotalChapters)   // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.TotalWords)      // TODO: 当前返回0
+	assert.Equal(t, int64(0), stats.TotalViews)      // TODO: 当前返回0
+	assert.Equal(t, float64(0), stats.AverageRating) // TODO: 当前返回0
+	assert.Empty(t, stats.PopularCategories)         // TODO: 当前返回空
 
 	t.Log("✓ GetPlatformContentStats test passed (RED phase - TODOs)")
 }
@@ -1220,7 +1228,7 @@ func TestGetUserActivityStats_NegativeDays(t *testing.T) {
 	// Assert - 应该使用默认值7天
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
-	assert.Equal(t, 7, stats.Days) // 应该被纠正为7
+	assert.Equal(t, 7, stats.Days)                // 应该被纠正为7
 	assert.Equal(t, int64(0), stats.TotalActions) // TODO: 当前返回0
 
 	t.Log("✓ GetUserActivityStats NegativeDays test passed (RED phase)")
@@ -1271,10 +1279,10 @@ func TestGetUserActivityStats_Success(t *testing.T) {
 	assert.NotNil(t, stats)
 	assert.Equal(t, testUserID, stats.UserID)
 	assert.Equal(t, 30, stats.Days)
-	assert.Equal(t, int64(0), stats.TotalActions)  // TODO: 当前返回0
-	assert.Empty(t, stats.DailyActions)            // TODO: 当前返回空
-	assert.Empty(t, stats.ActionTypes)             // TODO: 当前返回空
-	assert.Empty(t, stats.ActiveHours)             // TODO: 当前返回空
+	assert.Equal(t, int64(0), stats.TotalActions) // TODO: 当前返回0
+	assert.Empty(t, stats.DailyActions)           // TODO: 当前返回空
+	assert.Empty(t, stats.ActionTypes)            // TODO: 当前返回空
+	assert.Empty(t, stats.ActiveHours)            // TODO: 当前返回空
 
 	t.Log("✓ GetUserActivityStats test passed (RED phase - TODOs)")
 }
@@ -1328,11 +1336,11 @@ func TestGetRevenueStats_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
 	assert.Equal(t, testUserID, stats.UserID)
-	assert.Equal(t, float64(0), stats.TotalRevenue)   // TODO: 当前返回0
-	assert.Equal(t, float64(0), stats.PeriodRevenue)  // TODO: 当前返回0
-	assert.Empty(t, stats.DailyRevenue)                // TODO: 当前返回空
-	assert.Empty(t, stats.RevenueByBook)               // TODO: 当前返回空
-	assert.Empty(t, stats.RevenueByType)               // TODO: 当前返回空
+	assert.Equal(t, float64(0), stats.TotalRevenue)  // TODO: 当前返回0
+	assert.Equal(t, float64(0), stats.PeriodRevenue) // TODO: 当前返回0
+	assert.Empty(t, stats.DailyRevenue)              // TODO: 当前返回空
+	assert.Empty(t, stats.RevenueByBook)             // TODO: 当前返回空
+	assert.Empty(t, stats.RevenueByType)             // TODO: 当前返回空
 
 	t.Log("✓ GetRevenueStats test passed (RED phase - TODOs)")
 }
@@ -1371,7 +1379,7 @@ func TestServiceBaseMethods(t *testing.T) {
 	ctx := context.Background()
 
 	// 类型断言获取具体实现
-ServiceImpl, ok := service.(*PlatformStatsServiceImpl)
+	ServiceImpl, ok := service.(*PlatformStatsServiceImpl)
 	assert.True(t, ok, "service should be of type *PlatformStatsServiceImpl")
 
 	t.Run("Initialize", func(t *testing.T) {
@@ -1427,8 +1435,8 @@ func TestGetUserStats_TableDriven(t *testing.T) {
 		projectCount  int64
 		projectError  error
 		expectedLevel string
-		wantErr      bool
-		errContains  string
+		wantErr       bool
+		errContains   string
 	}{
 		{
 			name:          "普通读者",
