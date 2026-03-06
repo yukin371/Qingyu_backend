@@ -33,6 +33,7 @@
    - finance 域本轮已补 `Wallet/Transaction/WithdrawRequest` 的 Create 回设
    - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
    - ai 域活跃仓储 `ChatSession/ChatMessage/UserQuota/QuotaTransaction` 已具备 Create 回设；其余核心 metadata 模型已改为 `BeforeCreate + ObjectID`
+   - reader 域本轮已补 `ReadingSettings/ReaderTheme` 的 Create 回设与 ObjectID 边界
 
 ### 已修复的 Repository
 
@@ -134,7 +135,9 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 - [x] `message_repository_mongo.go`
 
 ### Reader 模块
-- [ ] `reading_progress_repository_mongo.go`
+- [x] `reading_progress_repository_mongo.go`
+- [x] `reading_settings_repository_mongo.go`
+- [x] `reader_theme_repository_mongo.go`
 - [ ] `collection_repository_mongo.go`
 - [ ] `comment_repository_mongo.go`
 

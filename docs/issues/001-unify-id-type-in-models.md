@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models 已推进）
+**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme 已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -22,7 +22,8 @@
 4. ⚠️ **finance 域 Wallet/Transaction/WithdrawRequest 已完成迁移**
 5. ⚠️ **bookstore 域 Chapter/Category 已完成迁移**
 6. ⚠️ **ai 域核心持久化模型（AIModel/AIProvider/APIRequestLog/NovelContext/WorldSettings/PlotThread）已完成迁移**
-7. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
+7. ⚠️ **reader 域 ReadingSettings/ReaderTheme 已完成迁移**
+8. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
 
 ### 需要修复的模型（优先级排序）
 
@@ -37,7 +38,7 @@
 ### 已正确实现的领域
 
 - ✅ Writer域（Project, Document等）
-- ✅ Reader域
+- ✅ Reader域（Progress, History, Annotation, Bookmark, ReadingSettings, ReaderTheme）
 - ✅ Bookstore域（Book, BookDetail, Chapter, Category）
 - ✅ AI域（Chat, Quota, Core metadata models）
 - ✅ Social域（部分）
@@ -146,7 +147,8 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 4. [x] `models/finance/` - Wallet, Transaction, WithdrawRequest 已迁移
 5. [x] `models/bookstore/` - Chapter, Category 已迁移
 6. [x] `models/ai/` - AIModel, AIProvider, APIRequestLog, NovelContext, WorldSettings, PlotThread 已迁移
-7. [ ] 其他模块
+7. [x] `models/reader/` - ReadingSettings, ReaderTheme 已迁移
+8. [ ] 其他模块
 
 每个模块迁移步骤：
 1. 修改 Model 定义：`ID string` → `ID primitive.ObjectID`

@@ -1,16 +1,20 @@
 package reader
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // ReaderTheme 阅读器主题
 type ReaderTheme struct {
-	ID          string `bson:"_id,omitempty" json:"id"`
-	Name        string `bson:"name" json:"name"`                      // 主题名称
-	DisplayName string `bson:"display_name" json:"displayName"`       // 显示名称
-	Description string `bson:"description" json:"description"`        // 主题描述
-	IsBuiltIn   bool   `bson:"is_built_in" json:"isBuiltIn"`          // 是否内置主题
-	IsPublic    bool   `bson:"is_public" json:"isPublic"`             // 是否公开（其他用户可见）
-	CreatorID   string `bson:"creator_id,omitempty" json:"creatorId"` // 创建者ID（自定义主题）
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name        string             `bson:"name" json:"name"`                      // 主题名称
+	DisplayName string             `bson:"display_name" json:"displayName"`       // 显示名称
+	Description string             `bson:"description" json:"description"`        // 主题描述
+	IsBuiltIn   bool               `bson:"is_built_in" json:"isBuiltIn"`          // 是否内置主题
+	IsPublic    bool               `bson:"is_public" json:"isPublic"`             // 是否公开（其他用户可见）
+	CreatorID   string             `bson:"creator_id,omitempty" json:"creatorId"` // 创建者ID（自定义主题）
 
 	// 颜色设置
 	Colors ThemeColors `bson:"colors" json:"colors"` // 主题颜色配置

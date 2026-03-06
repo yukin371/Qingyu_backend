@@ -79,7 +79,7 @@ func (s *SettingService) ResetSetting(ctx context.Context, userID string) (*read
 		}
 
 		if currentSettings != nil {
-			err = s.settingsRepo.Delete(ctx, currentSettings.ID)
+			err = s.settingsRepo.Delete(ctx, currentSettings.ID.Hex())
 			if err != nil {
 				return nil, err
 			}
