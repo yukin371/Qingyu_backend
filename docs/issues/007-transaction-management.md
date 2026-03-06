@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ❌ 待修复（已审查确认）
+**状态**: ⚠️ 部分修复
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../reports/archived/backend-service-analysis-2026-01-26.md)
 **审查日期**: 2026-03-05
@@ -12,14 +12,14 @@
 
 ## 审查结果
 
-**状态**: ❌ 问题确认存在
+**状态**: ⚠️ 问题仍存在，但核心财务链路已补事务
 
 ### 审查发现
 
-1. ❌ **`pkg/transaction/` 目录不存在**
-2. ❌ **没有事务管理器接口** - `transaction.Manager` 未定义
-3. ❌ **Service层无 `RunInTransaction` 模式**
-4. ⚠️ **`transaction_service.go:187` 存在 TODO 注释** - `// TODO: 需要回滚`
+1. ⚠️ **仓库中已存在多套事务实现，但没有统一入口**
+2. ⚠️ **Service层仍未形成通用 `RunInTransaction` 模式**
+3. ✅ **wallet 交易服务已接入 Repository 事务执行**
+4. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
 
@@ -34,7 +34,14 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 }
 ```
 
-**影响**: 如果第二步失败，第一步已扣款无法回滚，用户余额会不一致，财务数据完整性风险
+**影响**: 原先如果第二步失败，第一步已扣款无法回滚；该财务完整性风险现已修复
+
+### 本轮已落地
+
+1. ✅ `WalletRepository` 新增 `RunInTransaction`
+2. ✅ Mongo 钱包仓储已实现 `StartSession + WithTransaction`
+3. ✅ `Recharge / Consume / Transfer` 已改为事务执行
+4. ✅ 已补单测，验证目标钱包加款失败时会整体回滚
 
 ---
 
@@ -44,10 +51,10 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 
 ### 设计要点
 
-1. **创建 `pkg/transaction/` 包** - 实现 Manager 接口和 MongoManager
-2. **Service层集成** - 使用 `RunInTransaction` 模式包装事务操作
-3. **Repository层支持** - 事务感知的 Repository 基类
-4. **依赖注入配置** - 在 ServiceContainer 中注册事务管理器
+1. **统一事务入口** - 收敛现有散落的事务实现
+2. **Service层集成** - 将高风险跨仓储操作统一迁移到 `RunInTransaction`
+3. **Repository层支持** - 补足需要事务的仓储接口
+4. **依赖注入配置** - 在 ServiceContainer 中注册统一事务管理器
 
 **预计实施时间**: 15小时（2个工作日）
 
@@ -241,9 +248,9 @@ func (r *TransactionalRepository) GetCollection(ctx context.Context) *mongo.Coll
 
 ### Phase 1: 基础设施（1 周）
 
-1. **实现事务管理器**
-   - [ ] 定义事务接口
-   - [ ] 实现 MongoDB 事务管理器
+1. **统一事务管理器**
+   - [ ] 收敛已有事务接口/实现
+   - [ ] 统一 MongoDB 事务管理器入口
    - [ ] 编写单元测试
 
 2. **集成到 ServiceContainer**
@@ -353,14 +360,14 @@ func (s *OrderService) CreateOrder(
 ## 检查清单
 
 ### 基础设施
-- [ ] 事务管理器实现
-- [ ] 单元测试覆盖
+- [ ] 统一事务管理器实现
+- [x] wallet 财务链路单元测试覆盖
 - [ ] 集成到 DI 容器
 
 ### 业务迁移
 - [ ] 书籍管理事务支持
 - [ ] 订单管理事务支持
-- [ ] 支付流程事务支持
+- [x] 钱包充值/消费/转账事务支持
 - [ ] 社交互动事务支持
 
 ### 测试验证

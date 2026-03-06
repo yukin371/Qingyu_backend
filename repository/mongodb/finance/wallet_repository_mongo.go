@@ -409,3 +409,24 @@ func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter
 func (r *WalletRepositoryImpl) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
 }
+
+// RunInTransaction 在事务中执行钱包相关操作
+func (r *WalletRepositoryImpl) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.db.Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("启动事务失败: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		if err := fn(sessCtx); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return fmt.Errorf("事务执行失败: %w", err)
+	}
+
+	return nil
+}

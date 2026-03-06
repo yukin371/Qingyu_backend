@@ -6,24 +6,28 @@ import (
 	"fmt"
 	"time"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"Qingyu_backend/models/shared/types"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
 // MockWalletRepositoryV2 模拟WalletRepository（用于统一测试）
 type MockWalletRepositoryV2 struct {
-	wallets          map[string]*financeModel.Wallet
-	transactions     map[string]*financeModel.Transaction
-	withdrawRequests map[string]*financeModel.WithdrawRequest
-	txCounter        int // 交易ID计数器，确保唯一性
+	wallets           map[string]*financeModel.Wallet
+	transactions      map[string]*financeModel.Transaction
+	withdrawRequests  map[string]*financeModel.WithdrawRequest
+	txCounter         int // 交易ID计数器，确保唯一性
+	failUpdateForUser map[string]error
+	failCreateTxType  map[string]error
 }
 
 // NewMockWalletRepositoryV2 创建Mock Repository
 func NewMockWalletRepositoryV2() *MockWalletRepositoryV2 {
 	return &MockWalletRepositoryV2{
-		wallets:          make(map[string]*financeModel.Wallet),
-		transactions:     make(map[string]*financeModel.Transaction),
-		withdrawRequests: make(map[string]*financeModel.WithdrawRequest),
+		wallets:           make(map[string]*financeModel.Wallet),
+		transactions:      make(map[string]*financeModel.Transaction),
+		withdrawRequests:  make(map[string]*financeModel.WithdrawRequest),
+		failUpdateForUser: make(map[string]error),
+		failCreateTxType:  make(map[string]error),
 	}
 }
 
@@ -64,6 +68,9 @@ func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID str
 	for _, wallet := range m.wallets {
 		// 支持通过wallet.ID或userID查找
 		if wallet.ID == walletID || wallet.UserID == walletID {
+			if err, ok := m.failUpdateForUser[wallet.UserID]; ok {
+				return err
+			}
 			wallet.Balance = wallet.Balance.Add(types.Money(amount))
 			wallet.UpdatedAt = time.Now()
 			return nil
@@ -74,6 +81,9 @@ func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID str
 
 // CreateTransaction 创建交易
 func (m *MockWalletRepositoryV2) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
+	if err, ok := m.failCreateTxType[transaction.Type]; ok {
+		return err
+	}
 	// 使用计数器和时间戳确保ID唯一性
 	m.txCounter++
 	transaction.ID = fmt.Sprintf("tx_%s_%d", time.Now().Format("20060102150405"), m.txCounter)
@@ -200,4 +210,67 @@ func (m *MockWalletRepositoryV2) CountWithdrawRequests(ctx context.Context, filt
 // Health 健康检查
 func (m *MockWalletRepositoryV2) Health(ctx context.Context) error {
 	return nil
+}
+
+func (m *MockWalletRepositoryV2) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	walletSnapshot := cloneWalletMap(m.wallets)
+	transactionSnapshot := cloneTransactionMap(m.transactions)
+	withdrawSnapshot := cloneWithdrawRequestMap(m.withdrawRequests)
+	txCounterSnapshot := m.txCounter
+
+	if err := fn(ctx); err != nil {
+		m.wallets = walletSnapshot
+		m.transactions = transactionSnapshot
+		m.withdrawRequests = withdrawSnapshot
+		m.txCounter = txCounterSnapshot
+		return err
+	}
+	return nil
+}
+
+func (m *MockWalletRepositoryV2) SetUpdateBalanceError(userID string, err error) {
+	m.failUpdateForUser[userID] = err
+}
+
+func (m *MockWalletRepositoryV2) SetCreateTransactionError(txType string, err error) {
+	m.failCreateTxType[txType] = err
+}
+
+func cloneWalletMap(source map[string]*financeModel.Wallet) map[string]*financeModel.Wallet {
+	cloned := make(map[string]*financeModel.Wallet, len(source))
+	for key, wallet := range source {
+		if wallet == nil {
+			cloned[key] = nil
+			continue
+		}
+		copyWallet := *wallet
+		cloned[key] = &copyWallet
+	}
+	return cloned
+}
+
+func cloneTransactionMap(source map[string]*financeModel.Transaction) map[string]*financeModel.Transaction {
+	cloned := make(map[string]*financeModel.Transaction, len(source))
+	for key, tx := range source {
+		if tx == nil {
+			cloned[key] = nil
+			continue
+		}
+		copyTx := *tx
+		cloned[key] = &copyTx
+	}
+	return cloned
+}
+
+func cloneWithdrawRequestMap(source map[string]*financeModel.WithdrawRequest) map[string]*financeModel.WithdrawRequest {
+	cloned := make(map[string]*financeModel.WithdrawRequest, len(source))
+	for key, req := range source {
+		if req == nil {
+			cloned[key] = nil
+			continue
+		}
+		copyReq := *req
+		cloned[key] = &copyReq
+	}
+	return cloned
 }
