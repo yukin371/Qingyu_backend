@@ -26,7 +26,8 @@
 8. ⚠️ **notification 域 Notification/NotificationPreference/PushDevice/NotificationTemplate 已完成迁移**
 9. ⚠️ **admin 历史审计模型（AuditRecord/AdminLog）已完成迁移**
 10. ⚠️ **recommendation 域核心持久化模型（Behavior/ItemFeature/UserProfile/UserBehaviorRecord）已完成迁移**
-11. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
+11. ✅ **当前 `models/` 下已无 `string _id` 主键残留**
+12. ❌ **剩余工作主要是边界与文档收口，不再是模型层系统性阻塞**
 
 ### 需要修复的模型（优先级排序）
 
@@ -39,7 +40,7 @@
 7. **models/ai/** - Context, RequestLog, Provider, NovelContext 已完成，本轮重点转向其余边缘模型/仓储
 8. **models/notification/** - Notification/Preference/PushDevice/Template 已完成，本轮重点转向其他边缘域
 9. **models/users/** - AdminLog/AuditRecord 已完成，本轮重点转向更边缘的历史模型
-10. **models/recommendation/** - Behavior/ItemFeature/UserProfile/UserBehaviorRecord 已完成，本轮重点转向剩余边缘域
+10. **models/recommendation/** - Behavior/ItemFeature/UserProfile/UserBehaviorRecord 已完成，本轮重点转向剩余边界清理
 
 ### 已正确实现的领域
 

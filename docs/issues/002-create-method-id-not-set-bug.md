@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 业务逻辑 Bug
-**状态**: ✅ 主流已修复（已审查）
+**状态**: ✅ 核心问题已修复（剩余低频批量入口待收口）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
 **审查日期**: 2026-03-05
@@ -39,6 +39,18 @@
    - notification 域本轮已补 `Notification/NotificationPreference/PushDevice/NotificationTemplate` 的 Create 回设与 ObjectID 边界
    - admin 域本轮已补 `AdminLog/AuditRecord` 的 Create 回设与 ObjectID 查询边界
    - recommendation 域本轮已补 `Behavior/ItemFeature/UserProfile/UserBehaviorRecord` 的 Create/Upsert 回设与 ObjectID 边界
+   - 当前残留主要是少量低频 `BatchCreate/InsertMany` 入口的显式回设语义不统一，不再是主链路阻塞
+
+### 当前剩余 TODO
+
+1. `repository/mongodb/finance/membership_repository_impl.go`
+   - `BatchCreateMembershipCards` 仍未显式回设每个卡对象的 ID
+2. `repository/mongodb/bookstore/chapter_content_repository_mongo.go`
+   - `BatchCreate` 依赖 `BeforeCreate()`，可再补显式回设测试
+3. `repository/mongodb/bookstore/ranking_repository_mongo.go`
+   - `UpdateRankings -> InsertMany` 走批量重建，当前未要求回填调用方对象，但语义可再统一
+4. 其余类似低频批量入口
+   - 主要是“显式保证”和“补测试”，不是线上阻塞缺陷
 
 ### 已修复的 Repository
 
