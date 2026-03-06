@@ -54,6 +54,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 12. ✅ `MembershipService.Subscribe / RenewMembership` 已改为统一事务内完成会员生效与钱包扣款
 13. ✅ `ServiceContainer` 已为 `MembershipService` 注入通用 Mongo transaction runner
 14. ✅ 已补会员订阅/续费回滚测试，验证扣款失败和流水失败时不会留下已生效会员
+15. ✅ `FollowService` 的关注/取关已改为事务内统一更新关注关系和互关状态
+16. ✅ 已补关注关系回滚测试，验证互关状态更新失败时不会留下半成功关系
 
 ---
 
@@ -382,7 +384,8 @@ func (s *OrderService) CreateOrder(
 - [x] 钱包充值/消费/转账/提现事务支持
 - [x] 作者收入提现申请事务支持
 - [x] 会员订阅/续费事务支持
-- [ ] 社交互动事务支持
+- [x] 关注/取关事务支持
+- [ ] 评论/点赞等其他社交互动事务支持
 
 ### 测试验证
 - [x] 高风险财务回滚测试
