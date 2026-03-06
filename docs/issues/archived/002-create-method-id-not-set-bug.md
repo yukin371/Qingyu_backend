@@ -4,15 +4,15 @@
 **类型**: 业务逻辑 Bug
 **状态**: ✅ 核心问题已修复（低频批量入口已收口）
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
+**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
 ## 审查结果
 
-**状态**: ✅ 主流已修复
+**状态**: ✅ 已解决
 
 ### 审查发现
 

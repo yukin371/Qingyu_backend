@@ -2,17 +2,17 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category + ai core models + reader settings/theme + notification + admin audit/log + recommendation 已推进）
+**状态**: ✅ 已解决（模型层 `_id` 统一已完成）
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
+**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
 ## 审查结果
 
-**状态**: ⚠️ 部分存在问题
+**状态**: ✅ 已解决
 
 ### 审查发现
 
