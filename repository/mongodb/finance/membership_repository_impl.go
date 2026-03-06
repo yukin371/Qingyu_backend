@@ -342,6 +342,9 @@ func (r *MembershipRepositoryImpl) BatchCreateMembershipCards(ctx context.Contex
 
 	documents := make([]interface{}, len(cards))
 	for i, card := range cards {
+		if card.ID.IsZero() {
+			card.ID = primitive.NewObjectID()
+		}
 		card.CreatedAt = now
 		card.UpdatedAt = now
 		documents[i] = card
