@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 
+	internalAPI "Qingyu_backend/api/v1/internalapi/ai"
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
+	internalAPIRouter "Qingyu_backend/router/internalapi"
 	notificationsRouter "Qingyu_backend/router/notifications"
 	readerRouter "Qingyu_backend/router/reader"
 	readingstatsRouter "Qingyu_backend/router/reading-stats"
@@ -540,6 +542,30 @@ func RegisterRoutes(r *gin.Engine) {
 		if phase3Client != nil {
 			logger.Info("  - /api/v1/ai/creative/* (Phase3创作工作流)")
 		}
+	}
+
+	// ============ 注册内部AI API路由 ============
+	// 供AI服务内部调用，使用服务密钥 + IP白名单保护
+	if mongoDB := serviceContainer.GetMongoDB(); mongoDB != nil {
+		draftRepo := mongoWriterRepo.NewWriterDraftRepository(mongoDB)
+		conceptRepo := mongoWriterRepo.NewConceptRepository(mongoDB)
+		draftService := internalAPIService.NewWriterDraftService(draftRepo)
+		conceptService := internalAPIService.NewConceptService(conceptRepo)
+
+		// 向后兼容：初始化函数式handler依赖
+		internalAPI.InitDocumentHandlers(draftService)
+		internalAPI.InitConceptHandlers(conceptService)
+
+		internalAIGroup := v1.Group("/internal/ai")
+		internalAIGroup.Use(internalAPIService.AIAuthMiddleware())
+		internalAPIRouter.RegisterInternalAPIRoutes(internalAIGroup, draftService, conceptService)
+
+		logger.Info("✓ 内部AI API路由已注册到: /api/v1/internal/ai/")
+		logger.Info("  - /api/v1/internal/ai/documents/* (文档管理)")
+		logger.Info("  - /api/v1/internal/ai/concepts/* (概念管理)")
+		logger.Info("  ⚠️  需要AI服务认证(X-AI-Service-Key)")
+	} else {
+		logger.Warn("⚠ MongoDB未初始化，跳过内部AI API路由注册")
 	}
 
 	// ============ 注册统一搜索路由 ============

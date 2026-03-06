@@ -19,24 +19,25 @@ type BookDTO struct {
 	Cover        string `json:"cover,omitempty"`
 
 	// 分类和标签
-	CategoryIDs []string `json:"categoryIds"` // 分类ID列表
-	Categories  []string `json:"categories"`  // 分类名称列表
-	Tags        []string `json:"tags"`        // 标签列表
+	CategoryID  string   `json:"categoryId,omitempty"` // 兼容旧前端单分类字段
+	CategoryIDs []string `json:"categoryIds"`          // 分类ID列表
+	Categories  []string `json:"categories"`           // 分类名称列表
+	Tags        []string `json:"tags"`                 // 标签列表
 
 	// 状态和统计
-	Status      string  `json:"status" validate:"required,oneof=draft published rejected deleted"`
-	Price       string  `json:"price" validate:"omitempty,numeric"` // 价格（字符串格式，避免浮点数精度问题）
-	Rating      float64 `json:"rating" validate:"min=0,max=5"`       // 平均评分 0-5
-	RatingCount int     `json:"ratingCount" validate:"min=0"`        // 评分人数
-	ViewCount   int64   `json:"viewCount" validate:"min=0"`         // 浏览次数
-	WordCount   int64   `json:"wordCount" validate:"min=0"`         // 字数
-	ChapterCount int    `json:"chapterCount" validate:"min=0"`      // 章节数
+	Status       string  `json:"status" validate:"required,oneof=draft ongoing completed paused deleted"`
+	Price        string  `json:"price" validate:"omitempty,numeric"` // 价格（字符串格式，避免浮点数精度问题）
+	Rating       float64 `json:"rating" validate:"min=0,max=5"`      // 平均评分 0-5
+	RatingCount  int     `json:"ratingCount" validate:"min=0"`       // 评分人数
+	ViewCount    int64   `json:"viewCount" validate:"min=0"`         // 浏览次数
+	WordCount    int64   `json:"wordCount" validate:"min=0"`         // 字数
+	ChapterCount int     `json:"chapterCount" validate:"min=0"`      // 章节数
 
 	// 标记
-	IsFree       bool `json:"isFree"`       // 是否免费
+	IsFree        bool `json:"isFree"`        // 是否免费
 	IsRecommended bool `json:"isRecommended"` // 是否推荐
 	IsFeatured    bool `json:"isFeatured"`    // 是否精选
-	IsHot        bool `json:"isHot"`         // 是否热门
+	IsHot         bool `json:"isHot"`         // 是否热门
 
 	// 发布信息
 	PublishedAt  string `json:"publishedAt,omitempty"`  // 发布时间（ISO8601）

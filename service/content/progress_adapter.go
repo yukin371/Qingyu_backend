@@ -44,6 +44,7 @@ func (a *ProgressAdapter) GetProgress(ctx context.Context, userID, bookID string
 		Progress:    float64(progress.Progress),
 		ReadingTime: progress.ReadingTime,
 		UpdateTime:  progress.UpdatedAt.Unix(),
+		UpdatedAt:   progress.UpdatedAt.Unix(),
 	}
 
 	return response, nil
@@ -411,6 +412,7 @@ func convertToProgressResponse(p *reader.ReadingProgress) *dto.ReadingProgressRe
 		Progress:    float64(p.Progress),
 		ReadingTime: p.ReadingTime,
 		UpdateTime:  p.UpdatedAt.Unix(),
+		UpdatedAt:   p.UpdatedAt.Unix(),
 		BookTitle:   "", // 需要从bookstore获取
 		ChapterNum:  0,  // 需要从chapter获取
 	}

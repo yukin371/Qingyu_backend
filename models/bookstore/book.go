@@ -19,6 +19,26 @@ const (
 	BookStatusPaused    BookStatus = "paused"    // 暂停更新
 )
 
+const legacyBookStatusPublished BookStatus = "published"
+
+// NormalizeBookStatus 将历史 published 状态统一映射到 ongoing。
+func NormalizeBookStatus(status BookStatus) BookStatus {
+	if status == legacyBookStatusPublished {
+		return BookStatusOngoing
+	}
+	return status
+}
+
+// PublicBookStatusValues 返回对外公开书籍的规范状态值。
+func PublicBookStatusValues() []BookStatus {
+	return []BookStatus{BookStatusOngoing, BookStatusCompleted}
+}
+
+// PublicBookStatusQueryValues 返回查询公开书籍时兼容历史数据的状态值。
+func PublicBookStatusQueryValues() []string {
+	return []string{string(BookStatusOngoing), string(BookStatusCompleted), string(legacyBookStatusPublished)}
+}
+
 // Book 书籍模型 - 用于书城列表展示的简略信息
 type Book struct {
 	shared.IdentifiedEntity `bson:",inline"`
@@ -82,7 +102,7 @@ type BookStats struct {
 
 // IsValid 检查状态是否有效
 func (s BookStatus) IsValid() bool {
-	switch s {
+	switch NormalizeBookStatus(s) {
 	case BookStatusDraft, BookStatusOngoing,
 		BookStatusCompleted, BookStatusPaused:
 		return true
@@ -98,12 +118,14 @@ func (s BookStatus) String() string {
 
 // IsPublic 是否公开
 func (s BookStatus) IsPublic() bool {
-	return s == BookStatusOngoing || s == BookStatusCompleted
+	normalized := NormalizeBookStatus(s)
+	return normalized == BookStatusOngoing || normalized == BookStatusCompleted
 }
 
 // CanEdit 是否可编辑
 func (s BookStatus) CanEdit() bool {
-	return s == BookStatusDraft || s == BookStatusPaused
+	normalized := NormalizeBookStatus(s)
+	return normalized == BookStatusDraft || normalized == BookStatusPaused
 }
 
 // GetID 实现Cacheable接口 - 返回字符串形式的ID（使用值接收者）

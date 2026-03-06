@@ -1,6 +1,7 @@
 package recommendation
 
 import (
+	sharedtypes "Qingyu_backend/models/shared/types"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,3 +20,16 @@ type Behavior struct {
 	OccurredAt   time.Time              `bson:"occurred_at" json:"occurredAt"`
 	CreatedAt    time.Time              `bson:"created_at" json:"createdAt"`
 }
+
+const (
+	BehaviorTypeView     = string(sharedtypes.RecommendationBehaviorView)
+	BehaviorTypeClick    = string(sharedtypes.RecommendationBehaviorClick)
+	BehaviorTypeCollect  = string(sharedtypes.RecommendationBehaviorCollect)
+	BehaviorTypeRead     = string(sharedtypes.RecommendationBehaviorRead)
+	BehaviorTypeFinish   = string(sharedtypes.RecommendationBehaviorFinish)
+	BehaviorTypeLike     = string(sharedtypes.RecommendationBehaviorLike)
+	BehaviorTypeShare    = string(sharedtypes.RecommendationBehaviorShare)
+	BehaviorTypePurchase = string(sharedtypes.RecommendationBehaviorPurchase)
+	BehaviorTypeComment  = string(sharedtypes.RecommendationBehaviorComment)
+	BehaviorTypeRate     = string(sharedtypes.RecommendationBehaviorRate)
+)
