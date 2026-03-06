@@ -16,7 +16,7 @@
 
 ### 审查发现
 
-1. ⚠️ **仓库级事务实现仍然分散，但 wallet 域已收敛成容器可注入事务入口**
+1. ⚠️ **仓库级事务管理仍未全域统一，但已新增通用 Mongo transaction runner**
 2. ⚠️ **Service层仍未形成通用 `RunInTransaction` 模式**
 3. ✅ **wallet 交易/提现服务已接入 Repository 事务执行**
 4. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
@@ -45,6 +45,7 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 5. ✅ wallet 域已引入显式 `TransactionRunner`，不再由业务方法直接依赖仓储事务细节
 6. ✅ `ServiceContainer` 已通过 provider 注入 wallet 事务入口
 7. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
+8. ✅ `pkg/transaction` 已提供领域无关的 `Runner`，为后续跨域统一事务入口打底
 
 ---
 

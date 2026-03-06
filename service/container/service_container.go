@@ -51,6 +51,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
 	pkgmetrics "Qingyu_backend/pkg/metrics"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 
@@ -897,13 +898,34 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	if c.providerRegistry == nil {
 		c.providerRegistry = NewProviderRegistry()
 	}
-	if _, exists := c.providerRegistry.Get("walletTransactionRunner"); !exists {
+	if _, exists := c.providerRegistry.Get("mongoTransactionRunner"); !exists {
 		if err := c.RegisterProvider(Provider{
-			Name:      "walletTransactionRunner",
+			Name:      "mongoTransactionRunner",
 			Singleton: true,
 			Lazy:      true,
 			Factory: func(container *ServiceContainer) (interface{}, error) {
-				return financeWalletService.NewRepositoryTransactionRunner(walletRepo), nil
+				return pkgtransaction.NewMongoRunner(container.repositoryFactory.GetClient()), nil
+			},
+		}); err != nil {
+			return fmt.Errorf("注册通用事务Provider失败: %w", err)
+		}
+	}
+	if _, exists := c.providerRegistry.Get("walletTransactionRunner"); !exists {
+		if err := c.RegisterProvider(Provider{
+			Name:         "walletTransactionRunner",
+			Dependencies: []string{"mongoTransactionRunner"},
+			Singleton:    true,
+			Lazy:         true,
+			Factory: func(container *ServiceContainer) (interface{}, error) {
+				runner, err := container.GetProvider("mongoTransactionRunner")
+				if err != nil {
+					return nil, err
+				}
+				txRunner, ok := runner.(pkgtransaction.Runner)
+				if !ok {
+					return nil, fmt.Errorf("mongoTransactionRunner 类型不正确")
+				}
+				return financeWalletService.NewGenericTransactionRunner(txRunner), nil
 			},
 		}); err != nil {
 			return fmt.Errorf("注册钱包事务Provider失败: %w", err)
