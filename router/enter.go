@@ -33,6 +33,7 @@ import (
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
+	internalAPIService "Qingyu_backend/service/internalapi"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
