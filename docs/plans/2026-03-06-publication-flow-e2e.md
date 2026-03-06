@@ -4,6 +4,7 @@
 
 - [e2e_publication_flow.py](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.py)
 - [e2e_publication_flow.ps1](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/e2e_publication_flow.ps1) 已废弃，仅输出迁移提示
+- [publication_flow_smoke.py](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/testing/publication_flow_smoke.py) 用于 CI / 一键 smoke 运行
 
 覆盖链路：
 
@@ -18,6 +19,12 @@
 
 ```bash
 python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090"
+```
+
+自动审批文档发布单：
+
+```bash
+python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090" --approve-document
 ```
 
 显式传入 token / ID 的模式仍然支持：
@@ -43,7 +50,17 @@ python .\scripts\e2e_publication_flow.py \
 
 当前限制：
 
-- 审批脚本默认审批项目发布单；文档发布单只做提交，不自动审批
+- 默认只审批项目发布单；加 `--approve-document` 后会继续审批文档发布单
 - reader 校验使用当前实现的现有读侧接口，不补额外适配
 - 脚本会优先读取发布记录里的 `externalId` 作为真实 `bookId`，再从 `bookstore/books/:id/chapters` 响应里解析真实 `chapterId`
 - 脚本默认会在执行前检查项目是否已发布；若已发布，会自动调用 `unpublish` 做清场。可通过 `--skip-reset` 关闭
+
+CI 入口：
+
+- workflow: [publication-flow-smoke.yml](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/.github/workflows/publication-flow-smoke.yml)
+- 本地/CI 通用 runner: [publication_flow_smoke.py](/E:/Github/Qingyu/_wt_qy_backend_publication_mvp/scripts/testing/publication_flow_smoke.py)
+- runner 会完成：
+  - 非交互 seed
+  - 构建并启动后端
+  - 等待健康检查
+  - 调用 `e2e_publication_flow.py --approve-document`

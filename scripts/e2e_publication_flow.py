@@ -185,7 +185,11 @@ def resolve_book_id(reviewed_record: dict) -> str:
     raise RuntimeError("review response did not contain a usable book id")
 
 
-def resolve_chapter(chapters: list, document_id: str, chapter_number: int):
+def resolve_chapter(chapters: list, document_id: str, chapter_number: int, external_id: str | None = None):
+    if external_id:
+        for chapter in chapters:
+            if chapter.get("id") == external_id:
+                return chapter
     for chapter in chapters:
         if chapter.get("projectChapterId") == document_id:
             return chapter
@@ -196,6 +200,19 @@ def resolve_chapter(chapters: list, document_id: str, chapter_number: int):
         if chapter_num == chapter_number:
             return chapter
     raise RuntimeError("could not resolve chapter id from chapter list")
+
+
+def approve_publication(base_url: str, admin_token: str, record_id: str, note: str) -> dict:
+    response = request_json(
+        "POST",
+        build_url(base_url, f"/api/v1/admin/publications/{record_id}/review"),
+        token=admin_token,
+        body={"action": "approve", "note": note},
+    )
+    data = api_data(response)
+    if not isinstance(data, dict):
+        raise RuntimeError(f"review response did not contain a record for {record_id}")
+    return data
 
 
 def get_project_publications(base_url: str, author_token: str, project_id: str) -> list[dict]:
@@ -241,6 +258,7 @@ def main() -> int:
     parser.add_argument("--project-title", default=DEFAULT_PROJECT_TITLE)
     parser.add_argument("--document-title", default=DEFAULT_DOCUMENT_TITLE)
     parser.add_argument("--chapter-number", type=int, default=1)
+    parser.add_argument("--approve-document", action="store_true")
     parser.add_argument("--skip-reset", action="store_true")
     args = parser.parse_args()
 
@@ -329,18 +347,26 @@ def main() -> int:
     print(f"   pending count (response page): {len(pending_items)}")
 
     print("4. Admin approves the project publication")
-    review_resp = request_json(
-        "POST",
-        build_url(args.base_url, f"/api/v1/admin/publications/{project_record['id']}/review"),
-        token=admin_token,
-        body={"action": "approve", "note": "Approved by e2e publication flow script"},
+    reviewed_record = approve_publication(
+        args.base_url,
+        admin_token,
+        project_record["id"],
+        "Approved by e2e publication flow script",
     )
-    reviewed_record = api_data(review_resp)
-    if not isinstance(reviewed_record, dict):
-        raise RuntimeError("project review response did not contain a record")
     print(f"   project review status: {reviewed_record.get('status')}")
 
     book_id = resolve_book_id(reviewed_record)
+
+    reviewed_document_record = None
+    if args.approve_document:
+        print("4.1 Admin approves the document publication")
+        reviewed_document_record = approve_publication(
+            args.base_url,
+            admin_token,
+            document_record["id"],
+            "Approved document by e2e publication flow script",
+        )
+        print(f"   document review status: {reviewed_document_record.get('status')}")
 
     print("5. Read-side verification through bookstore routes")
     bookstore_book_resp = request_json(
@@ -357,7 +383,10 @@ def main() -> int:
         build_url(args.base_url, f"/api/v1/bookstore/books/{bookstore_book['id']}/chapters"),
     )
     chapter_items = normalize_items(api_data(chapter_list_resp))
-    chapter = resolve_chapter(chapter_items, document_id, args.chapter_number)
+    chapter_external_id = None
+    if isinstance(reviewed_document_record, dict):
+        chapter_external_id = reviewed_document_record.get("externalId")
+    chapter = resolve_chapter(chapter_items, document_id, args.chapter_number, chapter_external_id)
 
     print("6. Reader-side chapter access verification")
     reader_chapter_resp = request_json(
@@ -374,6 +403,8 @@ def main() -> int:
         "documentId": document_id,
         "projectPublicationRecordId": project_record["id"],
         "documentPublicationRecordId": document_record["id"],
+        "documentApproved": args.approve_document,
+        "documentReviewRecord": reviewed_document_record,
         "bookId": bookstore_book["id"],
         "chapterId": chapter["id"],
         "resetPerformed": reset_done,
