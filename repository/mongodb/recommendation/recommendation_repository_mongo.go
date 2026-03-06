@@ -2,6 +2,7 @@ package recommendation
 
 import (
 	recModel "Qingyu_backend/models/recommendation"
+	sharedtypes "Qingyu_backend/models/shared/types"
 	recoInterface "Qingyu_backend/repository/interfaces/recommendation"
 	"context"
 	"fmt"
@@ -29,11 +30,27 @@ func NewRecommendationRepository(db *mongo.Database) recoInterface.Recommendatio
 	}
 }
 
+func normalizeUserBehavior(behavior *recModel.UserBehavior) {
+	if behavior == nil {
+		return
+	}
+	if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(behavior.ActionType); err == nil {
+		behavior.ActionType = behaviorType.String()
+	}
+}
+
+func normalizeUserBehaviors(behaviors []*recModel.UserBehavior) {
+	for _, behavior := range behaviors {
+		normalizeUserBehavior(behavior)
+	}
+}
+
 // ============ 行为记录 ============
 
 // RecordBehavior 记录用户行为
 func (r *RecommendationRepositoryImpl) RecordBehavior(ctx context.Context, behavior *recModel.UserBehavior) error {
 	behavior.CreatedAt = time.Now()
+	normalizeUserBehavior(behavior)
 
 	result, err := r.behaviorCollection.InsertOne(ctx, behavior)
 	if err != nil {
@@ -66,6 +83,8 @@ func (r *RecommendationRepositoryImpl) GetUserBehaviors(ctx context.Context, use
 		return nil, fmt.Errorf("解析用户行为失败: %w", err)
 	}
 
+	normalizeUserBehaviors(behaviors)
+
 	return behaviors, nil
 }
 
@@ -87,6 +106,8 @@ func (r *RecommendationRepositoryImpl) GetItemBehaviors(ctx context.Context, ite
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, fmt.Errorf("解析物品行为失败: %w", err)
 	}
+
+	normalizeUserBehaviors(behaviors)
 
 	return behaviors, nil
 }
@@ -116,7 +137,12 @@ func (r *RecommendationRepositoryImpl) GetItemStatistics(ctx context.Context, it
 		if err := cursor.Decode(&result); err != nil {
 			continue
 		}
-		stats[result.ID] = result.Count
+		actionType, err := sharedtypes.ParseRecommendationBehaviorType(result.ID)
+		if err != nil {
+			stats[result.ID] += result.Count
+			continue
+		}
+		stats[actionType.String()] += result.Count
 	}
 
 	return stats, nil
@@ -143,14 +169,27 @@ func (r *RecommendationRepositoryImpl) GetHotItems(ctx context.Context, itemType
 			}}}},
 			bson.E{Key: "favorite_count", Value: bson.D{bson.E{Key: "$sum", Value: bson.D{
 				bson.E{Key: "$cond", Value: bson.A{
-					bson.D{bson.E{Key: "$eq", Value: bson.A{"$action_type", "favorite"}}},
+					bson.D{bson.E{Key: "$in", Value: bson.A{
+						"$action_type",
+						bson.A{
+							sharedtypes.RecommendationBehaviorCollect.String(),
+							"favorite",
+						},
+					}}},
 					1,
 					0,
 				}},
 			}}}},
 			bson.E{Key: "read_count", Value: bson.D{bson.E{Key: "$sum", Value: bson.D{
 				bson.E{Key: "$cond", Value: bson.A{
-					bson.D{bson.E{Key: "$eq", Value: bson.A{"$action_type", "read"}}},
+					bson.D{bson.E{Key: "$in", Value: bson.A{
+						"$action_type",
+						bson.A{
+							sharedtypes.RecommendationBehaviorRead.String(),
+							sharedtypes.RecommendationBehaviorFinish.String(),
+							"complete",
+						},
+					}}},
 					1,
 					0,
 				}},

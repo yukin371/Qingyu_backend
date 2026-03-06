@@ -35,7 +35,7 @@
 
 #### 其他问题
 - ✅ is_* 字段 JSON 标签已正确配置
-- ⚠️ BehaviorType 仍存在两套定义（stats vs recommendation），需要单独收敛
+- ⚠️ BehaviorType 已拆分为 recommendation/stats 两组共享定义，并对 recommendation 入口兼容 `favorite -> collect`、`complete -> finish`；前端仍需同步规范值
 - ✅ `models/shared/types.DocumentStatus` 已与 writer 文档流转状态对齐为 `planned/writing/completed`
 
 ---
