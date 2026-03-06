@@ -278,6 +278,10 @@ type Pagination struct {
    - `PATCH /api/v1/social/collections/:id`
    - `PATCH /api/v1/social/collections/folders/:id`
 
+8. PATCH 第三批落地
+   - `PATCH /api/v1/reader/comments/:id`
+   - `PATCH /api/v1/social/booklists/:id`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理

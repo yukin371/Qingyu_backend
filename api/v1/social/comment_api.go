@@ -145,6 +145,7 @@ func (api *CommentAPI) GetCommentDetail(c *gin.Context) {
 //	@Param		request	body		UpdateCommentRequest	true	"评论内容"
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{id} [put]
+//	@Router		/api/v1/reader/comments/{id} [patch]
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
 	if !ok {

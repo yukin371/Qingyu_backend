@@ -110,6 +110,7 @@ func setupBookListTestRouter(bookListService interfaces.BookListService, userID 
 		v1.GET("/booklists", api.GetBookLists)
 		v1.GET("/booklists/:id", api.GetBookListDetail)
 		v1.PUT("/booklists/:id", api.UpdateBookList)
+		v1.PATCH("/booklists/:id", api.UpdateBookList)
 		v1.DELETE("/booklists/:id", api.DeleteBookList)
 		v1.POST("/booklists/:id/like", api.LikeBookList)
 		v1.POST("/booklists/:id/fork", api.ForkBookList)
@@ -305,6 +306,41 @@ func TestBookListAPI_UpdateBookList_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
+
+	mockService.AssertExpectations(t)
+}
+
+// TestBookListAPI_PatchBookList_Success 测试PATCH更新书单成功
+func TestBookListAPI_PatchBookList_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookListService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupBookListTestRouter(mockService, userID)
+
+	bookListID := primitive.NewObjectID().Hex()
+	newTitle := "PATCH更新后的书单标题"
+
+	mockService.On("UpdateBookList", mock.Anything, userID, bookListID, mock.Anything).Return(nil)
+
+	reqBody := map[string]interface{}{
+		"title": &newTitle,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest(http.MethodPatch, "/api/v1/social/booklists/"+bookListID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
 
 	mockService.AssertExpectations(t)
 }

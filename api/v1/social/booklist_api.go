@@ -147,6 +147,7 @@ type UpdateBookListRequest struct {
 // @Param request body UpdateBookListRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [put]
+// @Router /api/v1/social/booklists/{id} [patch]
 // @Security Bearer
 func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
