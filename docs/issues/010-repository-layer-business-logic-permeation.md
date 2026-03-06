@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ❌ 待修复（已审查确认）
+**状态**: ⚠️ 部分修复
 **创建日期**: 2026-03-05
 **来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
 **审查日期**: 2026-03-05
@@ -16,16 +16,21 @@
 
 ### 审查发现
 
-#### #010-A: Bookstore域 Repository 重构（P0）- ❌ 待修复
+#### #010-A: Bookstore域 Repository 重构（P0）- ⚠️ 部分修复
 
-1. ❌ **`repository/mongodb/bookstore/ranking_repository_mongo.go` 包含榜单计算业务逻辑**
-2. ❌ **权重配置硬编码**（0.7, 0.3等）
-3. ❌ **无独立的 RankingService**
+1. ✅ **榜单计算已从 `ranking_repository_mongo.go` 移到 `service/bookstore/bookstore_service.go`**
+2. ✅ **榜单更新事务编排已移到 Service 层**
+3. ⚠️ **权重配置仍硬编码在 Service 层**
+4. ⚠️ **尚无独立的 RankingService / 定时更新入口**
 
 **证据**:
-- 第523-586行：`CalculateRealtimeRanking` 包含热度分数计算
-- 第532-540行：权重配置硬编码
-- Service层直接调用Repository的计算方法
+- Repository 接口已删除 `Calculate*Ranking` / `UpdateRankings`
+- `BookstoreServiceImpl.UpdateRankings` 现在负责：
+  - 获取书籍列表
+  - 计算分数
+  - 排序生成榜单
+  - 调用 Repository 事务执行删除和批量写入
+- Repository 仅保留 `DeleteByTypeAndPeriod`、`BatchUpsertRankingItems`、`Transaction`
 
 #### #010-C: Finance域 Repository 重构（P0）- ⚠️ 部分修复
 
@@ -141,6 +146,13 @@ func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context) {
 - Repository 层不应该包含业务逻辑
 
 **应该移到**: `RankingService.CalculateRealtimeRanking()`
+
+**当前剩余 TODO**:
+- [ ] 抽离独立 `RankingService`，避免继续挂在 `BookstoreService`
+- [ ] 将榜单权重配置外置，避免 Service 中继续硬编码
+- [ ] 为榜单刷新补独立调度/任务入口
+- [ ] 明确榜单算法依赖的统计字段来源，补齐 `like_count` 等独立统计口径
+- [ ] 评估是否需要按统计快照而不是全量 `List()` 计算榜单
 
 #### Stats 域 - 统计计算
 

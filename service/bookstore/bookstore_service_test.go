@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/models/shared"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -641,11 +642,6 @@ func (m *MockRankingRepositoryForService) BatchUpsertRankingItems(ctx context.Co
 	return args.Error(0)
 }
 
-func (m *MockRankingRepositoryForService) UpdateRankings(ctx context.Context, rankingType bookstoreModel.RankingType, period string, items []*bookstoreModel.RankingItem) error {
-	args := m.Called(ctx, rankingType, period, items)
-	return args.Error(0)
-}
-
 func (m *MockRankingRepositoryForService) DeleteByPeriod(ctx context.Context, period string) error {
 	args := m.Called(ctx, period)
 	return args.Error(0)
@@ -656,46 +652,22 @@ func (m *MockRankingRepositoryForService) DeleteByType(ctx context.Context, rank
 	return args.Error(0)
 }
 
+func (m *MockRankingRepositoryForService) DeleteByTypeAndPeriod(ctx context.Context, rankingType bookstoreModel.RankingType, period string) error {
+	args := m.Called(ctx, rankingType, period)
+	return args.Error(0)
+}
+
 func (m *MockRankingRepositoryForService) DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error {
 	args := m.Called(ctx, beforeDate)
 	return args.Error(0)
 }
 
-func (m *MockRankingRepositoryForService) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
 func (m *MockRankingRepositoryForService) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	args := m.Called(ctx, fn)
-	return args.Error(0)
+	if err := args.Error(0); err != nil {
+		return err
+	}
+	return fn(ctx)
 }
 
 // =========================
@@ -1537,15 +1509,31 @@ func TestBookstoreService_GetRankingByType(t *testing.T) {
 // TestBookstoreService_UpdateRankings 测试更新榜单
 func TestBookstoreService_UpdateRankings(t *testing.T) {
 	// Arrange
-	service, _, _, _, mockRankingRepo := setupBookstoreServiceForTest()
+	service, mockBookRepo, _, _, mockRankingRepo := setupBookstoreServiceForTest()
 	ctx := context.Background()
 
-	items := []*bookstoreModel.RankingItem{
-		{BookID: primitive.NewObjectID(), Rank: 1},
+	bookID := primitive.NewObjectID()
+	books := []*bookstoreModel.Book{
+		{
+			IdentifiedEntity: shared.IdentifiedEntity{ID: bookID},
+			Status:           bookstoreModel.BookStatusOngoing,
+			ViewCount:        120,
+			ChapterCount:     8,
+			RatingCount:      6,
+			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now()},
+		},
 	}
 
-	mockRankingRepo.On("CalculateWeeklyRanking", ctx, mock.Anything).Return(items, nil)
-	mockRankingRepo.On("UpdateRankings", ctx, mock.Anything, mock.Anything, items).Return(nil)
+	mockBookRepo.On("List", ctx, mock.Anything).Return(books, nil)
+	mockRankingRepo.On("Transaction", ctx, mock.Anything).Return(nil)
+	mockRankingRepo.On("DeleteByTypeAndPeriod", ctx, bookstoreModel.RankingTypeWeekly, mock.AnythingOfType("string")).Return(nil)
+	mockRankingRepo.On("BatchUpsertRankingItems", ctx, mock.MatchedBy(func(items []*bookstoreModel.RankingItem) bool {
+		return len(items) == 1 &&
+			items[0].BookID == bookID &&
+			items[0].Type == bookstoreModel.RankingTypeWeekly &&
+			items[0].Rank == 1 &&
+			items[0].Score > 0
+	})).Return(nil)
 
 	// Act
 	err := service.UpdateRankings(ctx, bookstoreModel.RankingTypeWeekly, "")
