@@ -31,6 +31,7 @@
    - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设
    - writer 域本轮已补 `Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
    - writer 发布链路本轮已补 `PublicationRecord` 仓储 Create 回设
+   - writer 边缘仓储本轮已补 `BatchOperation/OperationLog/Template` 的显式 Create 回设保证
    - finance 域本轮已补 `Wallet/Transaction/WithdrawRequest` 的 Create 回设
    - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
    - ai 域活跃仓储 `ChatSession/ChatMessage/UserQuota/QuotaTransaction` 已具备 Create 回设；其余核心 metadata 模型已改为 `BeforeCreate + ObjectID`
