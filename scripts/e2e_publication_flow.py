@@ -215,6 +215,19 @@ def approve_publication(base_url: str, admin_token: str, record_id: str, note: s
     return data
 
 
+def review_publication(base_url: str, admin_token: str, record_id: str, action: str, note: str) -> dict:
+    response = request_json(
+        "POST",
+        build_url(base_url, f"/api/v1/admin/publications/{record_id}/review"),
+        token=admin_token,
+        body={"action": action, "note": note},
+    )
+    data = api_data(response)
+    if not isinstance(data, dict):
+        raise RuntimeError(f"review response did not contain a record for {record_id}")
+    return data
+
+
 def get_project_publications(base_url: str, author_token: str, project_id: str) -> list[dict]:
     response = request_json(
         "GET",
@@ -224,7 +237,7 @@ def get_project_publications(base_url: str, author_token: str, project_id: str) 
     return normalize_items(api_data(response))
 
 
-def maybe_reset_publication(base_url: str, author_token: str, project_id: str, enabled: bool) -> bool:
+def maybe_reset_project_publication(base_url: str, author_token: str, project_id: str, enabled: bool) -> bool:
     if not enabled:
         return False
 
@@ -244,6 +257,45 @@ def maybe_reset_publication(base_url: str, author_token: str, project_id: str, e
     return True
 
 
+def maybe_reset_document_publication(
+    base_url: str,
+    author_token: str,
+    project_id: str,
+    document_id: str,
+    chapter_number: int,
+    enabled: bool,
+) -> bool:
+    if not enabled:
+        return False
+
+    records = get_project_publications(base_url, author_token, project_id)
+    has_published_document = any(
+        record.get("type") == "document"
+        and record.get("resourceId") == document_id
+        and record.get("status") == "published"
+        for record in records
+    )
+    if not has_published_document:
+        return False
+
+    request_json(
+        "PUT",
+        build_url(
+            base_url,
+            f"/api/v1/writer/documents/{document_id}/publish-status",
+            {"projectId": project_id},
+        ),
+        token=author_token,
+        body={
+            "isPublished": False,
+            "isFree": True,
+            "chapterNumber": chapter_number,
+            "unpublishReason": "Reset by e2e publication flow script",
+        },
+    )
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="E2E validate writer -> publish -> review -> reader flow")
     parser.add_argument("--base-url", default="http://localhost:8080")
@@ -259,8 +311,15 @@ def main() -> int:
     parser.add_argument("--document-title", default=DEFAULT_DOCUMENT_TITLE)
     parser.add_argument("--chapter-number", type=int, default=1)
     parser.add_argument("--approve-document", action="store_true")
+    parser.add_argument("--reject-project", action="store_true")
+    parser.add_argument("--reject-document", action="store_true")
     parser.add_argument("--skip-reset", action="store_true")
     args = parser.parse_args()
+
+    if args.reject_project and args.reject_document:
+        raise RuntimeError("--reject-project and --reject-document cannot be used together")
+    if args.approve_document and args.reject_project:
+        raise RuntimeError("--approve-document cannot be combined with --reject-project")
 
     print("0. Resolve auth tokens")
     author_user = {}
@@ -287,8 +346,17 @@ def main() -> int:
     print(f"   document: {document.get('title')} ({document_id})")
 
     print("0.2 Reset published state when needed")
-    reset_done = maybe_reset_publication(args.base_url, author_token, project_id, not args.skip_reset)
-    print(f"   reset performed: {reset_done}")
+    project_reset_done = maybe_reset_project_publication(args.base_url, author_token, project_id, not args.skip_reset)
+    document_reset_done = maybe_reset_document_publication(
+        args.base_url,
+        author_token,
+        project_id,
+        document_id,
+        args.chapter_number,
+        not args.skip_reset,
+    )
+    print(f"   project reset performed: {project_reset_done}")
+    print(f"   document reset performed: {document_reset_done}")
 
     project_publish_body = {
         "bookstoreId": "local",
@@ -346,25 +414,53 @@ def main() -> int:
     pending_items = normalize_items(api_data(pending_resp))
     print(f"   pending count (response page): {len(pending_items)}")
 
-    print("4. Admin approves the project publication")
-    reviewed_record = approve_publication(
+    project_review_action = "reject" if args.reject_project else "approve"
+    project_review_note = (
+        "Rejected by e2e publication flow script" if args.reject_project else "Approved by e2e publication flow script"
+    )
+    print(f"4. Admin {project_review_action}s the project publication")
+    reviewed_record = review_publication(
         args.base_url,
         admin_token,
         project_record["id"],
-        "Approved by e2e publication flow script",
+        project_review_action,
+        project_review_note,
     )
     print(f"   project review status: {reviewed_record.get('status')}")
+
+    if args.reject_project:
+        summary = {
+            "author": author_user.get("username", args.author_username),
+            "admin": admin_user.get("username", args.admin_username),
+            "projectId": project_id,
+            "documentId": document_id,
+            "projectPublicationRecordId": project_record["id"],
+            "documentPublicationRecordId": document_record["id"],
+            "projectReviewAction": project_review_action,
+            "projectReviewRecord": reviewed_record,
+            "projectResetPerformed": project_reset_done,
+            "documentResetPerformed": document_reset_done,
+        }
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 0
 
     book_id = resolve_book_id(reviewed_record)
 
     reviewed_document_record = None
-    if args.approve_document:
-        print("4.1 Admin approves the document publication")
-        reviewed_document_record = approve_publication(
+    if args.approve_document or args.reject_document:
+        document_review_action = "reject" if args.reject_document else "approve"
+        document_review_note = (
+            "Rejected document by e2e publication flow script"
+            if args.reject_document
+            else "Approved document by e2e publication flow script"
+        )
+        print(f"4.1 Admin {document_review_action}s the document publication")
+        reviewed_document_record = review_publication(
             args.base_url,
             admin_token,
             document_record["id"],
-            "Approved document by e2e publication flow script",
+            document_review_action,
+            document_review_note,
         )
         print(f"   document review status: {reviewed_document_record.get('status')}")
 
@@ -404,10 +500,13 @@ def main() -> int:
         "projectPublicationRecordId": project_record["id"],
         "documentPublicationRecordId": document_record["id"],
         "documentApproved": args.approve_document,
+        "documentRejected": args.reject_document,
+        "projectRejected": args.reject_project,
         "documentReviewRecord": reviewed_document_record,
         "bookId": bookstore_book["id"],
         "chapterId": chapter["id"],
-        "resetPerformed": reset_done,
+        "projectResetPerformed": project_reset_done,
+        "documentResetPerformed": document_reset_done,
         "chapterList": chapter_items,
         "readerChapter": reader_chapter,
     }

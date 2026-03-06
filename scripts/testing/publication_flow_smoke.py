@@ -49,10 +49,17 @@ def main() -> int:
     parser.add_argument("--health-timeout", type=int, default=90)
     parser.add_argument("--server-log", default=None)
     parser.add_argument("--approve-document", action="store_true")
+    parser.add_argument("--reject-project", action="store_true")
+    parser.add_argument("--reject-document", action="store_true")
     parser.add_argument("--skip-seed", action="store_true")
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--keep-server", action="store_true")
     args = parser.parse_args()
+
+    if args.reject_project and args.reject_document:
+        raise RuntimeError("--reject-project and --reject-document cannot be used together")
+    if args.approve_document and args.reject_project:
+        raise RuntimeError("--approve-document cannot be combined with --reject-project")
 
     repo_root = Path(args.repo_root).resolve()
     script_path = repo_root / "scripts" / "e2e_publication_flow.py"
@@ -93,6 +100,10 @@ def main() -> int:
         command = [sys.executable, str(script_path), "--base-url", args.base_url]
         if args.approve_document:
             command.append("--approve-document")
+        if args.reject_project:
+            command.append("--reject-project")
+        if args.reject_document:
+            command.append("--reject-document")
         run_checked(command, repo_root, env)
         print("publication flow smoke passed")
     except Exception:
