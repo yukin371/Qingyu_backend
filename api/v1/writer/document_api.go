@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/service/writer/document"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
@@ -402,11 +403,16 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 	}
 
 	// 构造 CreateDocumentRequest
+	var parentIDPtr *string
+	if req.ParentID != "" {
+		parentIDPtr = &req.ParentID
+	}
+
 	createReq := &document.CreateDocumentRequest{
 		ProjectID:    req.ProjectID,
-		ParentID:     req.ParentID,
+		ParentID:     parentIDPtr,
 		Title:        req.Title,
-		Type:         req.Type,
+		Type:         dto.DocumentType(req.Type),
 		CharacterIDs: req.CharacterIDs,
 		LocationIDs:  req.LocationIDs,
 		TimelineIDs:  req.TimelineIDs,

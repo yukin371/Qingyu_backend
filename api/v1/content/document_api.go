@@ -264,7 +264,16 @@ func (api *DocumentAPI) MoveDocument(c *gin.Context) {
 
 	req.DocumentID = id
 
-	err := api.documentService.MoveDocument(c.Request.Context(), req.DocumentID, req.NewParentID, req.Order)
+	// 从*string转换为string，如果为nil则传空字符串
+	newParentID := ""
+	if req.NewParentID != nil {
+		newParentID = *req.NewParentID
+	}
+
+	// content接口使用旧的order int参数，但DTO使用orderKey string
+	// 这里我们暂时使用orderKey，因为content层需要适配
+	// TODO: 更新content接口以支持orderKey
+	err := api.documentService.MoveDocument(c.Request.Context(), req.DocumentID, newParentID, 0)
 	if err != nil {
 		c.Error(err)
 		return

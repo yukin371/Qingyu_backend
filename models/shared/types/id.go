@@ -1,3 +1,7 @@
+/*
+ * 该文件应该被弃用
+ */
+
 package types
 
 import (

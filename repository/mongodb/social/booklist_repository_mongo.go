@@ -712,7 +712,6 @@ func (r *MongoBookListRepository) CountUserBookLists(ctx context.Context, userID
 
 // Health 健康检查
 func (r *MongoBookListRepository) Health(ctx context.Context) error {
-	// 执行一个简单的查询来检查连接
-	_, err := r.GetCollection().FindOne(ctx, bson.M{}).Raw()
-	return err
+	// 执行简单的ping检查数据库连接
+	return r.GetDB().Client().Ping(ctx, nil)
 }

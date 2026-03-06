@@ -170,7 +170,7 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 //	@Router			/api/v1/content/projects [get]
 func (api *ProjectAPI) ListProjects(c *gin.Context) {
 	status := c.Query("status")
-	category := c.Query("category")
+	// category参数已移除，因为dto.ListProjectsRequest不支持
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
@@ -185,7 +185,8 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 		Page:     page,
 		PageSize: pageSize,
 		Status:   status,
-		Category: category,
+		// Category字段已从dto.ListProjectsRequest移除
+		// 如需按分类筛选，请使用其他方式
 	}
 
 	result, err := api.projectService.ListProjects(c.Request.Context(), req)
