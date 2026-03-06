@@ -12,22 +12,24 @@ import (
 
 // MockWalletRepositoryV2 模拟WalletRepository（用于统一测试）
 type MockWalletRepositoryV2 struct {
-	wallets           map[string]*financeModel.Wallet
-	transactions      map[string]*financeModel.Transaction
-	withdrawRequests  map[string]*financeModel.WithdrawRequest
-	txCounter         int // 交易ID计数器，确保唯一性
-	failUpdateForUser map[string]error
-	failCreateTxType  map[string]error
+	wallets            map[string]*financeModel.Wallet
+	transactions       map[string]*financeModel.Transaction
+	withdrawRequests   map[string]*financeModel.WithdrawRequest
+	txCounter          int // 交易ID计数器，确保唯一性
+	failUpdateForUser  map[string]error
+	failCreateTxType   map[string]error
+	failWithdrawUpdate map[string]error
 }
 
 // NewMockWalletRepositoryV2 创建Mock Repository
 func NewMockWalletRepositoryV2() *MockWalletRepositoryV2 {
 	return &MockWalletRepositoryV2{
-		wallets:           make(map[string]*financeModel.Wallet),
-		transactions:      make(map[string]*financeModel.Transaction),
-		withdrawRequests:  make(map[string]*financeModel.WithdrawRequest),
-		failUpdateForUser: make(map[string]error),
-		failCreateTxType:  make(map[string]error),
+		wallets:            make(map[string]*financeModel.Wallet),
+		transactions:       make(map[string]*financeModel.Transaction),
+		withdrawRequests:   make(map[string]*financeModel.WithdrawRequest),
+		failUpdateForUser:  make(map[string]error),
+		failCreateTxType:   make(map[string]error),
+		failWithdrawUpdate: make(map[string]error),
 	}
 }
 
@@ -167,6 +169,9 @@ func (m *MockWalletRepositoryV2) GetWithdrawRequest(ctx context.Context, withdra
 
 // UpdateWithdrawRequest 更新提现请求
 func (m *MockWalletRepositoryV2) UpdateWithdrawRequest(ctx context.Context, withdrawID string, updates map[string]interface{}) error {
+	if err, ok := m.failWithdrawUpdate[withdrawID]; ok {
+		return err
+	}
 	if req, ok := m.withdrawRequests[withdrawID]; ok {
 		if status, ok := updates["status"].(string); ok {
 			req.Status = status
@@ -234,6 +239,10 @@ func (m *MockWalletRepositoryV2) SetUpdateBalanceError(userID string, err error)
 
 func (m *MockWalletRepositoryV2) SetCreateTransactionError(txType string, err error) {
 	m.failCreateTxType[txType] = err
+}
+
+func (m *MockWalletRepositoryV2) SetUpdateWithdrawError(withdrawID string, err error) {
+	m.failWithdrawUpdate[withdrawID] = err
 }
 
 func cloneWalletMap(source map[string]*financeModel.Wallet) map[string]*financeModel.Wallet {

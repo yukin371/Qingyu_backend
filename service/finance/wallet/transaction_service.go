@@ -64,7 +64,7 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 		Reason:  "充值",
 	}
 
-	if err := s.walletRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	if err := runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
 			return fmt.Errorf("创建交易记录失败: %w", err)
 		}
@@ -110,7 +110,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 		Reason: reason,
 	}
 
-	if err := s.walletRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	if err := runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
 			return fmt.Errorf("创建交易记录失败: %w", err)
 		}
@@ -172,7 +172,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 		RelatedUserID: fromWallet.UserID,
 	}
 
-	return s.walletRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	return runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, outTransaction); err != nil {
 			return fmt.Errorf("创建转出记录失败: %w", err)
 		}

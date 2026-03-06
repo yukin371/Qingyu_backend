@@ -18,7 +18,7 @@
 
 1. ⚠️ **仓库中已存在多套事务实现，但没有统一入口**
 2. ⚠️ **Service层仍未形成通用 `RunInTransaction` 模式**
-3. ✅ **wallet 交易服务已接入 Repository 事务执行**
+3. ✅ **wallet 交易/提现服务已接入 Repository 事务执行**
 4. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
@@ -41,7 +41,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 1. ✅ `WalletRepository` 新增 `RunInTransaction`
 2. ✅ Mongo 钱包仓储已实现 `StartSession + WithTransaction`
 3. ✅ `Recharge / Consume / Transfer` 已改为事务执行
-4. ✅ 已补单测，验证目标钱包加款失败时会整体回滚
+4. ✅ `CreateWithdrawRequest / ApproveWithdraw / RejectWithdraw` 已改为事务执行
+5. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
 
 ---
 
@@ -367,7 +368,7 @@ func (s *OrderService) CreateOrder(
 ### 业务迁移
 - [ ] 书籍管理事务支持
 - [ ] 订单管理事务支持
-- [x] 钱包充值/消费/转账事务支持
+- [x] 钱包充值/消费/转账/提现事务支持
 - [ ] 社交互动事务支持
 
 ### 测试验证
