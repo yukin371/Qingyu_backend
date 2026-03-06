@@ -50,7 +50,6 @@ func AIAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// isAllowedIP 检查IP是否在白名单中
 func isAllowedIP(clientIP string, allowedIPs []string) bool {
 	ip := net.ParseIP(clientIP)
 	if ip == nil {
