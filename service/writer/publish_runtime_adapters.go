@@ -195,10 +195,7 @@ func (c *LocalBookstoreClient) UnpublishChapter(ctx context.Context, chapterID, 
 		return err
 	}
 
-	objectID, err := primitive.ObjectIDFromHex(chapter.ID)
-	if err != nil {
-		return err
-	}
+	objectID := chapter.ID
 	if _, err := c.db.Collection("chapter_contents").DeleteMany(ctx, bson.M{"chapter_id": objectID}); err != nil {
 		return err
 	}

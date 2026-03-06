@@ -30,6 +30,7 @@
    - auth 域本轮已补 `PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession` 的 Create 回设
    - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设
    - writer 域本轮已补 `Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
+   - writer 发布链路本轮已补 `PublicationRecord` 仓储 Create 回设
    - finance 域本轮已补 `Wallet/Transaction/WithdrawRequest` 的 Create 回设
    - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
    - ai 域活跃仓储 `ChatSession/ChatMessage/UserQuota/QuotaTransaction` 已具备 Create 回设；其余核心 metadata 模型已改为 `BeforeCreate + ObjectID`

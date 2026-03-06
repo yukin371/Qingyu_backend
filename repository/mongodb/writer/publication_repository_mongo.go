@@ -70,6 +70,14 @@ func (r *MongoPublicationRepository) Create(ctx context.Context, record *service
 	if err != nil {
 		return err
 	}
+	if doc.ID.IsZero() {
+		doc.ID = primitive.NewObjectID()
+	}
+
+	if record.ID == "" {
+		record.ID = doc.ID.Hex()
+	}
+
 	_, err = r.collection.InsertOne(ctx, doc)
 	return err
 }
