@@ -65,6 +65,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 22. ✅ `PublishEventBusAdapter` 已保留真实业务事件类型，避免 `project.published` / `document.published` 被统一折叠为通用事件名
 23. ✅ `LikeService` 的评论点赞/取消点赞已改为事务内统一维护点赞记录与评论点赞计数
 24. ✅ 已补点赞回滚测试，验证评论计数更新失败时不会留下脏点赞或错误计数
+25. ✅ `CollectionService` 的新增收藏、删除收藏、迁移收藏夹已改为事务内统一维护收藏记录与收藏夹计数
+26. ✅ 已补收藏回滚测试，验证收藏夹计数更新失败时不会留下脏收藏或错误计数
 
 ---
 
