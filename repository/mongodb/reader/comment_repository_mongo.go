@@ -738,3 +738,20 @@ func (r *MongoCommentRepository) DeleteCommentsByBookID(ctx context.Context, boo
 func (r *MongoCommentRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
 }
+
+// RunInTransaction 在事务中执行评论相关操作
+func (r *MongoCommentRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.collection.Database().Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start comment transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("comment transaction failed: %w", err)
+	}
+	return nil
+}

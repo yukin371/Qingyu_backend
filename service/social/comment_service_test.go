@@ -148,6 +148,10 @@ func (m *MockCommentRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
+func (m *MockCommentRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 // Exists 检查评论是否存在
 func (m *MockCommentRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
