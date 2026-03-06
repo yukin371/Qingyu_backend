@@ -32,6 +32,7 @@ python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090" --ap
 ```bash
 python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090" --reject-project
 python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090" --reject-document
+python .\scripts\e2e_publication_flow.py --base-url "http://localhost:9090" --retry-after-reject
 ```
 
 显式传入 token / ID 的模式仍然支持：
@@ -60,6 +61,7 @@ python .\scripts\e2e_publication_flow.py \
 - 默认只审批项目发布单；加 `--approve-document` 后会继续审批文档发布单
 - `--reject-project` 会在项目审核阶段返回 `rejected` 并提前结束，不进入读侧验证
 - `--reject-document` 会先通过项目审核，再拒绝文档发布单，保留项目读侧验证
+- `--retry-after-reject` 会先拒绝首次项目发布，再由作者重提项目和文档发布，最后审批通过并完成读侧验证
 - reader 校验使用当前实现的现有读侧接口，不补额外适配
 - 脚本会优先读取发布记录里的 `externalId` 作为真实 `bookId`，再从 `bookstore/books/:id/chapters` 响应里解析真实 `chapterId`
 - 脚本默认会在执行前检查项目是否已发布；若已发布，会自动调用 `unpublish` 做清场。可通过 `--skip-reset` 关闭
@@ -73,4 +75,4 @@ CI 入口：
   - 构建并启动后端
   - 等待健康检查
   - 调用 `e2e_publication_flow.py`
-  - 可选追加 `--approve-document` / `--reject-project` / `--reject-document`
+  - 可选追加 `--approve-document` / `--reject-project` / `--reject-document` / `--retry-after-reject`

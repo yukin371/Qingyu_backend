@@ -409,6 +409,19 @@ jobs:
         run: |
           python scripts/testing/publication_flow_smoke.py --reject-document
 
+      - name: Run publication resubmit-after-reject smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --retry-after-reject
+
   # E2E 测试
   e2e-test:
     name: E2E Tests

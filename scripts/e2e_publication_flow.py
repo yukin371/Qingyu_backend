@@ -228,6 +228,42 @@ def review_publication(base_url: str, admin_token: str, record_id: str, action: 
     return data
 
 
+def submit_project_publication(base_url: str, author_token: str, project_id: str, body: dict) -> dict:
+    response = request_json(
+        "POST",
+        build_url(base_url, f"/api/v1/writer/projects/{project_id}/publish"),
+        token=author_token,
+        body=body,
+    )
+    record = api_data(response)
+    if not isinstance(record, dict) or not record.get("id"):
+        raise RuntimeError("project publication record was not returned")
+    return record
+
+
+def submit_document_publication(
+    base_url: str,
+    author_token: str,
+    project_id: str,
+    document_id: str,
+    body: dict,
+) -> dict:
+    response = request_json(
+        "POST",
+        build_url(
+            base_url,
+            f"/api/v1/writer/documents/{document_id}/publish",
+            {"projectId": project_id},
+        ),
+        token=author_token,
+        body=body,
+    )
+    record = api_data(response)
+    if not isinstance(record, dict) or not record.get("id"):
+        raise RuntimeError("document publication record was not returned")
+    return record
+
+
 def get_project_publications(base_url: str, author_token: str, project_id: str) -> list[dict]:
     response = request_json(
         "GET",
@@ -313,6 +349,7 @@ def main() -> int:
     parser.add_argument("--approve-document", action="store_true")
     parser.add_argument("--reject-project", action="store_true")
     parser.add_argument("--reject-document", action="store_true")
+    parser.add_argument("--retry-after-reject", action="store_true")
     parser.add_argument("--skip-reset", action="store_true")
     args = parser.parse_args()
 
@@ -320,6 +357,8 @@ def main() -> int:
         raise RuntimeError("--reject-project and --reject-document cannot be used together")
     if args.approve_document and args.reject_project:
         raise RuntimeError("--approve-document cannot be combined with --reject-project")
+    if args.retry_after_reject and (args.reject_project or args.reject_document):
+        raise RuntimeError("--retry-after-reject cannot be combined with reject modes")
 
     print("0. Resolve auth tokens")
     author_user = {}
@@ -372,15 +411,7 @@ def main() -> int:
     }
 
     print("1. Author submits project publication for review")
-    project_publish_resp = request_json(
-        "POST",
-        build_url(args.base_url, f"/api/v1/writer/projects/{project_id}/publish"),
-        token=author_token,
-        body=project_publish_body,
-    )
-    project_record = api_data(project_publish_resp)
-    if not isinstance(project_record, dict) or not project_record.get("id"):
-        raise RuntimeError("project publication record was not returned")
+    project_record = submit_project_publication(args.base_url, author_token, project_id, project_publish_body)
     print(f"   project record id: {project_record['id']}, status: {project_record.get('status')}")
 
     print("2. Author submits single document publication for review")
@@ -390,19 +421,13 @@ def main() -> int:
         "isFree": True,
         "authorNote": "Document publish from e2e python script",
     }
-    document_publish_resp = request_json(
-        "POST",
-        build_url(
-            args.base_url,
-            f"/api/v1/writer/documents/{document_id}/publish",
-            {"projectId": project_id},
-        ),
-        token=author_token,
-        body=document_publish_body,
+    document_record = submit_document_publication(
+        args.base_url,
+        author_token,
+        project_id,
+        document_id,
+        document_publish_body,
     )
-    document_record = api_data(document_publish_resp)
-    if not isinstance(document_record, dict) or not document_record.get("id"):
-        raise RuntimeError("document publication record was not returned")
     print(f"   document record id: {document_record['id']}, status: {document_record.get('status')}")
 
     print("3. Admin fetches pending publication queue")
@@ -414,9 +439,11 @@ def main() -> int:
     pending_items = normalize_items(api_data(pending_resp))
     print(f"   pending count (response page): {len(pending_items)}")
 
-    project_review_action = "reject" if args.reject_project else "approve"
+    project_review_action = "reject" if (args.reject_project or args.retry_after_reject) else "approve"
     project_review_note = (
-        "Rejected by e2e publication flow script" if args.reject_project else "Approved by e2e publication flow script"
+        "Rejected by e2e publication flow script"
+        if (args.reject_project or args.retry_after_reject)
+        else "Approved by e2e publication flow script"
     )
     print(f"4. Admin {project_review_action}s the project publication")
     reviewed_record = review_publication(
@@ -427,6 +454,57 @@ def main() -> int:
         project_review_note,
     )
     print(f"   project review status: {reviewed_record.get('status')}")
+
+    retry_project_record = None
+    retry_document_record = None
+    retry_project_review_record = None
+    retry_document_review_record = None
+    first_document_review_record = None
+    if args.retry_after_reject:
+        print("4.1 Admin rejects the first document publication for retry regression")
+        first_document_review_record = review_publication(
+            args.base_url,
+            admin_token,
+            document_record["id"],
+            "reject",
+            "Rejected first document submission to verify resubmission flow",
+        )
+        print(f"   first document review status: {first_document_review_record.get('status')}")
+
+        print("4.2 Author resubmits project publication after rejection")
+        retry_project_record = submit_project_publication(args.base_url, author_token, project_id, project_publish_body)
+        print(f"   retry project record id: {retry_project_record['id']}, status: {retry_project_record.get('status')}")
+
+        print("4.3 Author resubmits document publication after rejection")
+        retry_document_record = submit_document_publication(
+            args.base_url,
+            author_token,
+            project_id,
+            document_id,
+            document_publish_body,
+        )
+        print(f"   retry document record id: {retry_document_record['id']}, status: {retry_document_record.get('status')}")
+
+        print("4.4 Admin approves the resubmitted project publication")
+        retry_project_review_record = review_publication(
+            args.base_url,
+            admin_token,
+            retry_project_record["id"],
+            "approve",
+            "Approved resubmitted project publication",
+        )
+        print(f"   retry project review status: {retry_project_review_record.get('status')}")
+        book_id = resolve_book_id(retry_project_review_record)
+
+        print("4.5 Admin approves the resubmitted document publication")
+        retry_document_review_record = review_publication(
+            args.base_url,
+            admin_token,
+            retry_document_record["id"],
+            "approve",
+            "Approved resubmitted document publication",
+        )
+        print(f"   retry document review status: {retry_document_review_record.get('status')}")
 
     if args.reject_project:
         summary = {
@@ -444,10 +522,13 @@ def main() -> int:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         return 0
 
-    book_id = resolve_book_id(reviewed_record)
+    if not args.retry_after_reject:
+        book_id = resolve_book_id(reviewed_record)
 
     reviewed_document_record = None
-    if args.approve_document or args.reject_document:
+    if args.retry_after_reject:
+        reviewed_document_record = retry_document_review_record
+    elif args.approve_document or args.reject_document:
         document_review_action = "reject" if args.reject_document else "approve"
         document_review_note = (
             "Rejected document by e2e publication flow script"
@@ -502,6 +583,12 @@ def main() -> int:
         "documentApproved": args.approve_document,
         "documentRejected": args.reject_document,
         "projectRejected": args.reject_project,
+        "retryAfterReject": args.retry_after_reject,
+        "initialProjectReviewRecord": reviewed_record,
+        "initialDocumentReviewRecord": first_document_review_record if args.retry_after_reject else None,
+        "retryProjectPublicationRecord": retry_project_record,
+        "retryDocumentPublicationRecord": retry_document_record,
+        "retryProjectReviewRecord": retry_project_review_record,
         "documentReviewRecord": reviewed_document_record,
         "bookId": bookstore_book["id"],
         "chapterId": chapter["id"],

@@ -51,6 +51,7 @@ def main() -> int:
     parser.add_argument("--approve-document", action="store_true")
     parser.add_argument("--reject-project", action="store_true")
     parser.add_argument("--reject-document", action="store_true")
+    parser.add_argument("--retry-after-reject", action="store_true")
     parser.add_argument("--skip-seed", action="store_true")
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--keep-server", action="store_true")
@@ -60,6 +61,8 @@ def main() -> int:
         raise RuntimeError("--reject-project and --reject-document cannot be used together")
     if args.approve_document and args.reject_project:
         raise RuntimeError("--approve-document cannot be combined with --reject-project")
+    if args.retry_after_reject and (args.reject_project or args.reject_document):
+        raise RuntimeError("--retry-after-reject cannot be combined with reject modes")
 
     repo_root = Path(args.repo_root).resolve()
     script_path = repo_root / "scripts" / "e2e_publication_flow.py"
@@ -104,6 +107,8 @@ def main() -> int:
             command.append("--reject-project")
         if args.reject_document:
             command.append("--reject-document")
+        if args.retry_after_reject:
+            command.append("--retry-after-reject")
         run_checked(command, repo_root, env)
         print("publication flow smoke passed")
     except Exception:
