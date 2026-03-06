@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	authModel "Qingyu_backend/models/auth"
 )
@@ -248,7 +249,7 @@ func TestPermissionTemplateService_CreateTemplate_CodeExists(t *testing.T) {
 	}
 
 	existingTemplate := &authModel.PermissionTemplate{
-		ID:     "existing_id",
+		ID:     primitive.NewObjectID(),
 		Code:   "existing_code",
 		Name:   "已存在的模板",
 		IsSystem: false,
@@ -272,7 +273,7 @@ func TestPermissionTemplateService_UpdateSystemTemplate(t *testing.T) {
 
 	ctx := context.Background()
 	systemTemplate := &authModel.PermissionTemplate{
-		ID:       "system_id",
+		ID:       primitive.NewObjectID(),
 		Name:     "系统模板",
 		Code:     "system_template",
 		IsSystem: true,
@@ -321,7 +322,7 @@ func TestPermissionTemplateService_ListTemplates_WithCategory(t *testing.T) {
 
 	templates := []*authModel.PermissionTemplate{
 		{
-			ID:          "1",
+			ID:          primitive.NewObjectID(),
 			Name:        "读者模板1",
 			Code:        "reader_1",
 			Category:    authModel.CategoryReader,
@@ -331,7 +332,7 @@ func TestPermissionTemplateService_ListTemplates_WithCategory(t *testing.T) {
 			UpdatedAt:   time.Now(),
 		},
 		{
-			ID:          "2",
+			ID:          primitive.NewObjectID(),
 			Name:        "读者模板2",
 			Code:        "reader_2",
 			Category:    authModel.CategoryReader,
@@ -365,7 +366,7 @@ func TestPermissionTemplateService_ListTemplates_All(t *testing.T) {
 
 	templates := []*authModel.PermissionTemplate{
 		{
-			ID:          "1",
+			ID:          primitive.NewObjectID(),
 			Name:        "模板1",
 			Code:        "template_1",
 			Category:    authModel.CategoryReader,
@@ -375,7 +376,7 @@ func TestPermissionTemplateService_ListTemplates_All(t *testing.T) {
 			UpdatedAt:   time.Now(),
 		},
 		{
-			ID:          "2",
+			ID:          primitive.NewObjectID(),
 			Name:        "模板2",
 			Code:        "template_2",
 			Category:    authModel.CategoryAuthor,
@@ -405,7 +406,7 @@ func TestPermissionTemplateService_ApplyTemplate(t *testing.T) {
 	ctx := context.Background()
 
 	template := &authModel.PermissionTemplate{
-		ID:          "template_id",
+		ID:          primitive.NewObjectID(),
 		Name:        "测试模板",
 		Code:        "test_template",
 		Permissions: []string{"user.read", "book.write"},
@@ -448,7 +449,7 @@ func TestPermissionTemplateService_GetTemplate(t *testing.T) {
 	ctx := context.Background()
 
 	template := &authModel.PermissionTemplate{
-		ID:          "template_id",
+		ID:          primitive.NewObjectID(),
 		Name:        "测试模板",
 		Code:        "test_code",
 		Description: "测试描述",
@@ -482,7 +483,7 @@ func TestPermissionTemplateService_GetTemplateByCode(t *testing.T) {
 	ctx := context.Background()
 
 	template := &authModel.PermissionTemplate{
-		ID:          "template_id",
+		ID:          primitive.NewObjectID(),
 		Name:        "测试模板",
 		Code:        "test_code",
 		Description: "测试描述",
@@ -513,7 +514,7 @@ func TestPermissionTemplateService_UpdateTemplate(t *testing.T) {
 	ctx := context.Background()
 
 	template := &authModel.PermissionTemplate{
-		ID:       "template_id",
+		ID:       primitive.NewObjectID(),
 		Name:     "原始名称",
 		Code:     "test_code",
 		IsSystem: false,
@@ -544,7 +545,7 @@ func TestPermissionTemplateService_UpdateTemplate_EmptyUpdates(t *testing.T) {
 	ctx := context.Background()
 
 	template := &authModel.PermissionTemplate{
-		ID:       "template_id",
+		ID:       primitive.NewObjectID(),
 		Name:     "原始名称",
 		Code:     "test_code",
 		IsSystem: false,

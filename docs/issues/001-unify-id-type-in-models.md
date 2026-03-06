@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（已审查）
+**状态**: ⚠️ 部分存在（auth 域已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -17,11 +17,12 @@
 ### 审查发现
 
 1. ✅ **176+ 个模型已正确使用 `primitive.ObjectID`**
-2. ❌ **约 37 个模型仍使用 `ID string`**
+2. ⚠️ **auth 域首批 string 主键模型已完成迁移**
+3. ❌ **其他领域仍有约 30+ 个模型使用 `ID string`**
 
 ### 需要修复的模型（优先级排序）
 
-1. **models/auth/** - PermissionTemplate, Role, Session, OAuth
+1. **models/auth/** - Session, OAuth（PermissionTemplate/Role/Permission 已完成）
 2. **models/social/** - Review, Comment, Message
 3. **models/messaging/** - Message, Conversation
 4. **models/writer/** - Version, Timeline
@@ -134,7 +135,7 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 ### Phase 2: 逐模块迁移
 按以下顺序迁移模块（从依赖少的开始）：
 
-1. [ ] `models/auth/` - PermissionTemplate, Role, Permission
+1. [x] `models/auth/` - PermissionTemplate, Role, Permission
 2. [ ] `models/social/` - BookListLike, Comment, Review
 3. [ ] `models/writer/` - 检查是否有 string ID
 4. [ ] 其他模块

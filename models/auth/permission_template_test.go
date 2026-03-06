@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestPermissionTemplate_Validate_ValidTemplate 测试有效模板验证
@@ -171,8 +172,9 @@ func TestPermissionTemplate_ErrorMessages(t *testing.T) {
 // TestPermissionTemplate_Fields 测试模板字段
 func TestPermissionTemplate_Fields(t *testing.T) {
 	now := time.Now()
+	templateID := primitive.NewObjectID()
 	template := &PermissionTemplate{
-		ID:          "template123",
+		ID:          templateID,
 		Name:        "测试模板",
 		Code:        "template_test",
 		Description: "这是一个测试模板",
@@ -184,7 +186,7 @@ func TestPermissionTemplate_Fields(t *testing.T) {
 		CreatedBy:   "admin123",
 	}
 
-	assert.Equal(t, "template123", template.ID)
+	assert.Equal(t, templateID, template.ID)
 	assert.Equal(t, "测试模板", template.Name)
 	assert.Equal(t, "template_test", template.Code)
 	assert.Equal(t, "这是一个测试模板", template.Description)
@@ -206,7 +208,7 @@ func TestPermissionTemplate_EmptyID(t *testing.T) {
 	}
 
 	// 空ID是允许的（创建时）
-	assert.Equal(t, "", template.ID)
+	assert.True(t, template.ID.IsZero())
 }
 
 // TestPermissionTemplate_EmptyDescription 测试空描述

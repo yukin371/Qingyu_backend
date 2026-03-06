@@ -26,9 +26,9 @@
    - 使用 `result.InsertedID` 回设 ID
    - 预先生成 `primitive.NewObjectID()` 并赋值
 
-3. ⚠️ **使用 string ID 的模型对应的 Repository 仍需要修复**:
-   - 约37个模型使用 string ID
-   - 这些模型对应的 Create 方法需要特别处理
+3. ⚠️ **剩余问题主要集中在尚未完成 ObjectID 迁移的模型/仓储**:
+   - auth 域本轮已补 `PermissionTemplate/Role/Permission` 的 Create 回设
+   - 其他仍保留 string 主键的模型在迁移时仍需逐个复核
 
 ### 已修复的 Repository
 
@@ -132,8 +132,8 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 - [ ] `comment_repository_mongo.go`
 
 ### Auth 模块
-- [ ] `role_repository_mongo.go`
-- [ ] `permission_repository_mongo.go`
+- [x] `role_repository_mongo.go`
+- [x] `permission_repository_mongo.go`
 - [ ] `user_repository_mongo.go`
 
 ### 其他模块

@@ -86,7 +86,7 @@ func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*
 	}
 
 	if role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID.Hex())
 	}
 
 	// 3. 生成JWT Token
@@ -254,7 +254,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 	defaultRole := "reader"
 	role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
 	if err == nil && role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID)
+		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID.Hex())
 	}
 
 	// 5. 创建OAuth账号记录

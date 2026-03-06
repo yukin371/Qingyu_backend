@@ -407,7 +407,7 @@ user := &usersModel.User{
 					}
 
 					// 分配角色（使用 Hex 转换 ObjectID 为 string）
-					return roleRepo.AssignRole(txCtx, user.ID.Hex(), defaultRole.ID)
+					return roleRepo.AssignRole(txCtx, user.ID.Hex(), defaultRole.ID.Hex())
 				},
 				Compensate: func(txCtx TransactionContext) error {
 					// 角色分配的补偿操作
