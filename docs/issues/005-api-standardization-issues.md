@@ -271,6 +271,13 @@ type Pagination struct {
    - `PATCH /api/v1/notifications/preferences`
    - 复用现有部分更新 handler，无新增 service 风险
 
+7. PATCH 第二批落地
+   - `PATCH /api/v1/reader/bookmarks/:id`
+   - `PATCH /api/v1/reader/collections/:id`
+   - `PATCH /api/v1/reader/folders/:id`（测试路由）
+   - `PATCH /api/v1/social/collections/:id`
+   - `PATCH /api/v1/social/collections/folders/:id`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理

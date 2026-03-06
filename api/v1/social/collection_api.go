@@ -240,6 +240,7 @@ type UpdateCollectionRequest struct {
 // @Param request body UpdateCollectionRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id} [put]
+// @Router /api/v1/reader/collections/{id} [patch]
 // @Security Bearer
 func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
@@ -499,6 +500,7 @@ type UpdateFolderRequest struct {
 // @Param request body UpdateFolderRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders/{id} [put]
+// @Router /api/v1/reader/collections/folders/{id} [patch]
 // @Security Bearer
 func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 	folderID, ok := shared.GetRequiredParam(c, "id", "收藏夹ID")

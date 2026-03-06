@@ -192,6 +192,7 @@ func InitReaderRouter(
 				bookmarks.GET("", bookmarkApiHandler.GetBookmarks)          // 获取书签列表
 				bookmarks.GET("/:id", bookmarkApiHandler.GetBookmark)       // 获取书签详情
 				bookmarks.PUT("/:id", bookmarkApiHandler.UpdateBookmark)    // 更新书签
+				bookmarks.PATCH("/:id", bookmarkApiHandler.UpdateBookmark)  // 部分更新书签
 				bookmarks.DELETE("/:id", bookmarkApiHandler.DeleteBookmark) // 删除书签
 
 				// 按书籍获取
