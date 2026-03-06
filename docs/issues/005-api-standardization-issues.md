@@ -235,8 +235,8 @@ type Pagination struct {
 - [ ] 测试验证
 
 ### URL 前缀统一
-- [ ] 列出所有需要迁移的端点
-- [ ] 修改路由定义
+- [x] 列出所有需要迁移的端点
+- [x] 修改路由定义
 - [ ] 更新 API 文档
 - [ ] 前端调用更新
 
@@ -268,9 +268,16 @@ type Pagination struct {
 
 未完成：
 
-- `/system/*` 前缀迁移
+- `/system/*` 的历史文档与 swagger 注解清理
 - PATCH 方法补齐
 - 其他仍使用旧 `shared`/裸 `c.JSON` 的 handler 收口
+
+补充确认：
+
+- `router/enter.go` 当前调用 `systemRouter.InitSystemRoutes(v1)`
+- `router/system/system_router.go` 在 `v1` 分组下注册 `"/system"`
+- 运行时真实路径已是 `/api/v1/system/*`
+- 本轮新增测试已验证不会注册裸 `/system/*`
 
 注意：
 
