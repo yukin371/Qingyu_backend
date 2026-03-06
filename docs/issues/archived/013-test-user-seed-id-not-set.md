@@ -2,11 +2,16 @@
 
 **优先级**: 高 (P0)
 **类型**: 测试/数据问题
-**状态**: ✅ 已修复（已审查确认）
+**状态**: ✅ 已修复并归档
 **创建日期**: 2026-03-05
-**来源报告**: [E2E测试P0问题深度调查报告](../reports/archived/e2e-p0-investigation-2026-02-06.md)
+**归档日期**: 2026-03-06
+**来源报告**: [E2E测试P0问题深度调查报告](../../reports/archived/e2e-p0-investigation-2026-02-06.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+**解决说明**:
+- 用户种子数据已稳定生成固定 ObjectID
+- `seed_data` 已接入联调发布数据生成
+- 已通过真实 seeder 执行和发布链路联调验证
 
 ---
 
@@ -374,7 +379,7 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 
 | 文档 | 说明 |
 |------|------|
-| [E2E测试P0问题深度调查报告](../reports/archived/e2e-p0-investigation-2026-02-06.md) | 详细问题分析 |
+| [E2E测试P0问题深度调查报告](../../reports/archived/e2e-p0-investigation-2026-02-06.md) | 详细问题分析 |
 | [种子数据代码](../../migration/seeds/users.go) | 用户种子数据实现 |
 | [用户仓储层](../../repository/mongodb/user/user_repository_mongo.go) | 用户数据访问层 |
 | [用户服务层](../../service/user/user_service.go) | 用户业务逻辑层 |
@@ -384,12 +389,12 @@ func SeedUsers(ctx context.Context, db *mongo.Database) error {
 ## 相关Issue
 
 ### 依赖Issue（必须先处理）
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ⚠️ 需要先统一ID类型，确保种子数据使用正确的ObjectID
+- [#001: 统一模型层 ID 字段类型](../001-unify-id-type-in-models.md) - ⚠️ 需要先统一ID类型，确保种子数据使用正确的ObjectID
 
 ### 相关Issue（联合处理）
-- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - 种子数据修复后，Create方法需要正确处理ID
-- [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - 种子数据是测试基础设施的一部分
-- [#009: 测试覆盖率不足](./009-test-coverage-issues.md) - 种子数据修复后，E2E测试才能运行，覆盖率才能提升
+- [#002: Repository Create 方法未回设 ID](../002-create-method-id-not-set-bug.md) - 种子数据修复后，Create方法需要正确处理ID
+- [#003: 测试基础设施改进](../003-test-infrastructure-improvements.md) - 种子数据是测试基础设施的一部分
+- [#009: 测试覆盖率不足](../009-test-coverage-issues.md) - 种子数据修复后，E2E测试才能运行，覆盖率才能提升
 
 ### 关联问题
 - 测试用户种子数据未设置ID字段
