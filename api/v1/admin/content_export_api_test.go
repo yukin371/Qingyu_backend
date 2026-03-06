@@ -110,6 +110,14 @@ func (m *MockBookRepository) GetByAuthorID(ctx context.Context, authorID string,
 	return args.Get(0).([]*bookstore.Book), args.Error(1)
 }
 
+func (m *MockBookRepository) GetByProjectID(ctx context.Context, projectID string) (*bookstore.Book, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*bookstore.Book), args.Error(1)
+}
+
 func (m *MockBookRepository) GetByStatus(ctx context.Context, status bookstore.BookStatus, limit, offset int) ([]*bookstore.Book, error) {
 	args := m.Called(ctx, status, limit, offset)
 	if args.Get(0) == nil {
@@ -597,13 +605,13 @@ func createTestChapters(count int) []*bookstore.Chapter {
 	now := time.Now()
 	for i := 0; i < count; i++ {
 		chapters[i] = &bookstore.Chapter{
-			ID:         "chapter-id",
-			BookID:     "book-id",
-			Title:      "测试章节",
-			ChapterNum: i + 1,
-			WordCount:  1000,
-			IsFree:     true,
-			Price:      0,
+			ID:          "chapter-id",
+			BookID:      "book-id",
+			Title:       "测试章节",
+			ChapterNum:  i + 1,
+			WordCount:   1000,
+			IsFree:      true,
+			Price:       0,
 			PublishTime: now,
 			CreatedAt:   now,
 			UpdatedAt:   now,

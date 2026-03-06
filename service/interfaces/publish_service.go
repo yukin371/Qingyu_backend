@@ -20,6 +20,8 @@ type PublishService interface {
 	// 发布记录管理
 	GetPublicationRecords(ctx context.Context, projectID string, page, pageSize int) ([]*PublicationRecord, int64, error)
 	GetPublicationRecord(ctx context.Context, recordID string) (*PublicationRecord, error)
+	GetPendingPublicationRecords(ctx context.Context, page, pageSize int) ([]*PublicationRecord, int64, error)
+	ReviewPublication(ctx context.Context, recordID, reviewerID string, approved bool, note string) (*PublicationRecord, error)
 }
 
 // PublishProjectRequest 发布项目请求
@@ -58,6 +60,7 @@ type PublicationStatus = dto.PublicationStatus
 const (
 	PublicationStatusPending     = dto.PublicationStatusPending     // 等待发布
 	PublicationStatusPublished   = dto.PublicationStatusPublished   // 已发布
+	PublicationStatusRejected    = dto.PublicationStatusRejected    // 已拒绝
 	PublicationStatusUnpublished = dto.PublicationStatusUnpublished // 已取消发布
 	PublicationStatusFailed      = dto.PublicationStatusFailed      // 发布失败
 )

@@ -26,6 +26,7 @@ type PublicationRepository interface {
 	Create(ctx context.Context, record *serviceInterfaces.PublicationRecord) error
 	FindByID(ctx context.Context, id string) (*serviceInterfaces.PublicationRecord, error)
 	FindByProjectID(ctx context.Context, projectID string, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error)
+	FindPending(ctx context.Context, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error)
 	FindByResourceID(ctx context.Context, resourceID string) (*serviceInterfaces.PublicationRecord, error)
 	Update(ctx context.Context, record *serviceInterfaces.PublicationRecord) error
 	Delete(ctx context.Context, id string) error
@@ -167,14 +168,6 @@ func (s *PublishService) PublishProject(
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "创建发布记录失败", "", err)
 	}
 
-	// 如果是立即发布，调用书城API
-	if req.PublishTime == nil || req.PublishTime.Before(time.Now()) {
-		go s.executeProjectPublish(context.Background(), record, project, req)
-	} else {
-		// 定时发布任务应该由定时任务调度器处理
-		// 这里暂时返回记录
-	}
-
 	return record, nil
 }
 
@@ -292,8 +285,12 @@ func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projec
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "项目不存在", "", err)
 	}
 
-	// 查找发布记录
-	record, _ := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
+	// 查找最近发布记录，优先展示待审核/已发布状态
+	var record *serviceInterfaces.PublicationRecord
+	records, _, _ := s.publicationRepo.FindByProjectID(ctx, projectID, 1, 1)
+	if len(records) > 0 {
+		record = records[0]
+	}
 
 	status := &serviceInterfaces.PublicationStatus{
 		ProjectID:    projectID,
@@ -308,7 +305,7 @@ func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projec
 	}
 
 	// 获取项目统计
-	if record != nil {
+	if record != nil && record.Status == serviceInterfaces.PublicationStatusPublished {
 		stats, _ := s.bookstoreClient.GetStatistics(ctx, projectID, record.BookstoreID)
 		if stats != nil {
 			status.Statistics = *stats
@@ -333,6 +330,10 @@ func (s *PublishService) PublishDocument(
 	document, err := s.documentRepo.FindByID(ctx, documentID)
 	if err != nil {
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "文档不存在", "", err)
+	}
+
+	if projectID == "" {
+		projectID = document.ProjectID.Hex()
 	}
 
 	// 验证项目权限
@@ -395,10 +396,6 @@ func (s *PublishService) PublishDocument(
 	}
 
 	// 如果是立即发布
-	if req.PublishTime == nil || req.PublishTime.Before(time.Now()) {
-		go s.executeDocumentPublish(context.Background(), record, document, req)
-	}
-
 	return record, nil
 }
 
@@ -459,6 +456,10 @@ func (s *PublishService) UpdateDocumentPublishStatus(
 	document, err := s.documentRepo.FindByID(ctx, documentID)
 	if err != nil {
 		return errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "文档不存在", "", err)
+	}
+
+	if projectID == "" {
+		projectID = document.ProjectID.Hex()
 	}
 
 	if document.ProjectID.Hex() != projectID {
@@ -592,4 +593,93 @@ func (s *PublishService) GetPublicationRecord(ctx context.Context, recordID stri
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "发布记录不存在", "", err)
 	}
 	return record, nil
+}
+
+// GetPendingPublicationRecords 获取待审核发布记录
+func (s *PublishService) GetPendingPublicationRecords(
+	ctx context.Context,
+	page, pageSize int,
+) ([]*serviceInterfaces.PublicationRecord, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.publicationRepo.FindPending(ctx, page, pageSize)
+}
+
+// ReviewPublication 审核发布记录，审核通过后执行真正发布。
+func (s *PublishService) ReviewPublication(
+	ctx context.Context,
+	recordID, reviewerID string,
+	approved bool,
+	note string,
+) (*serviceInterfaces.PublicationRecord, error) {
+	record, err := s.publicationRepo.FindByID(ctx, recordID)
+	if err != nil || record == nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "发布记录不存在", "", err)
+	}
+	if record.Status != serviceInterfaces.PublicationStatusPending {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorValidation, "当前记录不处于待审核状态", "", nil)
+	}
+
+	now := time.Now()
+	record.ReviewedBy = reviewerID
+	record.ReviewedAt = &now
+	record.ReviewNote = note
+	record.UpdatedAt = now
+
+	if !approved {
+		record.Status = serviceInterfaces.PublicationStatusRejected
+		if err := s.publicationRepo.Update(ctx, record); err != nil {
+			return nil, err
+		}
+		return record, nil
+	}
+
+	switch record.Type {
+	case "project":
+		project, err := s.projectRepo.FindByID(ctx, record.ResourceID)
+		if err != nil {
+			return nil, err
+		}
+		req := &serviceInterfaces.PublishProjectRequest{
+			BookstoreID:   record.BookstoreID,
+			CategoryID:    record.Metadata.CategoryID,
+			Tags:          record.Metadata.Tags,
+			Description:   record.Metadata.Description,
+			CoverImage:    record.Metadata.CoverImage,
+			PublishType:   record.Metadata.PublishType,
+			FreeChapters:  record.Metadata.FreeChapters,
+			AuthorNote:    record.Metadata.AuthorNote,
+			EnableComment: record.Metadata.EnableComment,
+			EnableShare:   record.Metadata.EnableShare,
+		}
+		if record.Metadata.Price > 0 {
+			price := record.Metadata.Price
+			req.Price = &price
+		}
+		s.executeProjectPublish(ctx, record, project, req)
+	case "document":
+		document, err := s.documentRepo.FindByID(ctx, record.ResourceID)
+		if err != nil {
+			return nil, err
+		}
+		req := &serviceInterfaces.PublishDocumentRequest{
+			ChapterTitle:  record.Metadata.ChapterTitle,
+			ChapterNumber: record.Metadata.ChapterNumber,
+			IsFree:        record.Metadata.IsFree,
+			AuthorNote:    record.Metadata.AuthorNote,
+		}
+		s.executeDocumentPublish(ctx, record, document, req)
+	default:
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorValidation, "未知发布类型", "", nil)
+	}
+
+	updated, err := s.publicationRepo.FindByID(ctx, recordID)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }

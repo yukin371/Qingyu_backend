@@ -81,6 +81,22 @@ func (m *MockPublishService) GetPublicationRecord(ctx context.Context, recordID 
 	return args.Get(0).(*interfaces.PublicationRecord), args.Error(1)
 }
 
+func (m *MockPublishService) GetPendingPublicationRecords(ctx context.Context, page, pageSize int) ([]*interfaces.PublicationRecord, int64, error) {
+	args := m.Called(ctx, page, pageSize)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*interfaces.PublicationRecord), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPublishService) ReviewPublication(ctx context.Context, recordID, reviewerID string, approved bool, note string) (*interfaces.PublicationRecord, error) {
+	args := m.Called(ctx, recordID, reviewerID, approved, note)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.PublicationRecord), args.Error(1)
+}
+
 // setupPublishTestRouter 设置测试路由
 func setupPublishTestRouter(publishService interfaces.PublishService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)

@@ -532,6 +532,9 @@ type PublicationRecord struct {
 	UnpublishReason string              `json:"unpublishReason,omitempty"`
 	Metadata        PublicationMetadata `json:"metadata"`
 	CreatedBy       string              `json:"createdBy"`
+	ReviewedBy      string              `json:"reviewedBy,omitempty"`
+	ReviewedAt      *time.Time          `json:"reviewedAt,omitempty"`
+	ReviewNote      string              `json:"reviewNote,omitempty"`
 	CreatedAt       time.Time           `json:"createdAt"`
 	UpdatedAt       time.Time           `json:"updatedAt"`
 }
@@ -590,6 +593,8 @@ const (
 	PublicationStatusPending = "pending"
 	// PublicationStatusPublished 已发布
 	PublicationStatusPublished = "published"
+	// PublicationStatusRejected 审核拒绝
+	PublicationStatusRejected = "rejected"
 	// PublicationStatusUnpublished 已取消发布
 	PublicationStatusUnpublished = "unpublished"
 	// PublicationStatusFailed 发布失败

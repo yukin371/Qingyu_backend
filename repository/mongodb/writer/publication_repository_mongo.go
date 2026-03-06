@@ -44,6 +44,9 @@ type publicationRecordDocument struct {
 	UnpublishReason string                      `bson:"unpublish_reason,omitempty"`
 	Metadata        publicationMetadataDocument `bson:"metadata,omitempty"`
 	CreatedBy       string                      `bson:"created_by"`
+	ReviewedBy      string                      `bson:"reviewed_by,omitempty"`
+	ReviewedAt      *time.Time                  `bson:"reviewed_at,omitempty"`
+	ReviewNote      string                      `bson:"review_note,omitempty"`
 	CreatedAt       time.Time                   `bson:"created_at"`
 	UpdatedAt       time.Time                   `bson:"updated_at"`
 }
@@ -105,6 +108,42 @@ func (r *MongoPublicationRepository) FindByProjectID(ctx context.Context, projec
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var docs []publicationRecordDocument
+	if err := cursor.All(ctx, &docs); err != nil {
+		return nil, 0, err
+	}
+
+	records := make([]*serviceInterfaces.PublicationRecord, 0, len(docs))
+	for i := range docs {
+		records = append(records, r.toRecord(&docs[i]))
+	}
+	return records, total, nil
+}
+
+func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	filter := bson.M{"status": serviceInterfaces.PublicationStatusPending}
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	opts := options.Find().
+		SetSkip(int64((page - 1) * pageSize)).
+		SetLimit(int64(pageSize)).
+		SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, err
@@ -206,9 +245,12 @@ func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *ser
 			ChapterNumber: record.Metadata.ChapterNumber,
 			IsFree:        record.Metadata.IsFree,
 		},
-		CreatedBy: record.CreatedBy,
-		CreatedAt: record.CreatedAt,
-		UpdatedAt: record.UpdatedAt,
+		CreatedBy:  record.CreatedBy,
+		ReviewedBy: record.ReviewedBy,
+		ReviewedAt: record.ReviewedAt,
+		ReviewNote: record.ReviewNote,
+		CreatedAt:  record.CreatedAt,
+		UpdatedAt:  record.UpdatedAt,
 	}
 
 	if record.ID != "" {
@@ -249,9 +291,12 @@ func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *s
 			ChapterNumber: doc.Metadata.ChapterNumber,
 			IsFree:        doc.Metadata.IsFree,
 		},
-		CreatedBy: doc.CreatedBy,
-		CreatedAt: doc.CreatedAt,
-		UpdatedAt: doc.UpdatedAt,
+		CreatedBy:  doc.CreatedBy,
+		ReviewedBy: doc.ReviewedBy,
+		ReviewedAt: doc.ReviewedAt,
+		ReviewNote: doc.ReviewNote,
+		CreatedAt:  doc.CreatedAt,
+		UpdatedAt:  doc.UpdatedAt,
 	}
 }
 

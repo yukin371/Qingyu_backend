@@ -242,3 +242,11 @@ func (m *MockPublishService) GetPublicationRecords(ctx context.Context, projectI
 func (m *MockPublishService) GetPublicationRecord(ctx context.Context, recordID string) (*interfaces.PublicationRecord, error) {
 	return nil, nil
 }
+
+func (m *MockPublishService) GetPendingPublicationRecords(ctx context.Context, page, pageSize int) ([]*interfaces.PublicationRecord, int64, error) {
+	return []*interfaces.PublicationRecord{}, 0, nil
+}
+
+func (m *MockPublishService) ReviewPublication(ctx context.Context, recordID, reviewerID string, approved bool, note string) (*interfaces.PublicationRecord, error) {
+	return nil, nil
+}
