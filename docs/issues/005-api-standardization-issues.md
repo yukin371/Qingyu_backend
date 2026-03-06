@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: 待处理
+**状态**: 部分修复
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 API 分析](../reports/archived/backend-api-analysis-2026-01-26.md)
 
@@ -228,8 +228,8 @@ type Pagination struct {
 ## 检查清单
 
 ### 响应码统一
-- [ ] 定义统一的响应常量
-- [ ] 创建响应工具函数
+- [x] 定义统一的响应常量
+- [x] 创建响应工具函数
 - [ ] 更新所有 API Handler
 - [ ] 前端适配完成
 - [ ] 测试验证
@@ -245,6 +245,37 @@ type Pagination struct {
 - [ ] 实现 PATCH Handler
 - [ ] 实现 Service 层方法
 - [ ] 添加测试
+
+---
+
+## 当前进展（2026-03-06）
+
+已完成一批低风险、可独立合并的 API 标准化修复：
+
+1. `api/v1/admin/analytics_api.go`
+   - 从裸 `c.JSON` 切换到 `pkg/response`
+   - 成功响应统一为 `code=0`
+   - 参数错误统一走 `response.BadRequest`
+
+2. `api/v1/admin/audit_api.go`
+   - 列表接口改为统一 `pagination` 响应结构
+   - 成功响应统一为 `code=0`
+
+3. `api/v1/content/project_api.go`
+4. `api/v1/content/document_api.go`
+5. `api/v1/content/progress_api.go`
+   - 分页接口从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
+未完成：
+
+- `/system/*` 前缀迁移
+- PATCH 方法补齐
+- 其他仍使用旧 `shared`/裸 `c.JSON` 的 handler 收口
+
+注意：
+
+- 当前分支基线存在与本 issue 无关的 `ObjectID` 迁移编译错误，导致无法在该 worktree 上完成 `go test ./api/v1/admin ./api/v1/content/...` 的整体验证。
+- 本轮修改已完成代码收敛和测试断言调整，但需在基线修复后再做完整测试。
 
 ---
 

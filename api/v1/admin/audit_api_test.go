@@ -101,8 +101,8 @@ func TestAuditAPI_GetAuditTrail_Success(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
 
-	if response["code"].(float64) != 200 {
-		t.Errorf("期望 code 为 200, 实际为 %v", response["code"])
+	if response["code"].(float64) != 0 {
+		t.Errorf("期望 code 为 0, 实际为 %v", response["code"])
 	}
 }
 
@@ -199,8 +199,8 @@ func TestAuditAPI_GetAuditTrailWithPagination_Success(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
 
-	data := response["data"].(map[string]interface{})
-	total := data["total"].(float64)
+	pagination := response["pagination"].(map[string]interface{})
+	total := pagination["total"].(float64)
 	if total != 25 {
 		t.Errorf("期望总数为 25, 实际为 %v", total)
 	}
@@ -267,8 +267,8 @@ func TestAuditAPI_GetAuditStatistics_Success(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
 
-	if response["code"].(float64) != 200 {
-		t.Errorf("期望 code 为 200, 实际为 %v", response["code"])
+	if response["code"].(float64) != 0 {
+		t.Errorf("期望 code 为 0, 实际为 %v", response["code"])
 	}
 
 	data := response["data"].(map[string]interface{})
