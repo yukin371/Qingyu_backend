@@ -539,6 +539,10 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 	}
 
+	// ============ 内部AI API路由 ============
+	// 当前分支仅提供内部API基础设施，业务handler尚未实现，暂不暴露路由。
+	logger.Info("ℹ 内部AI API路由未启用（handler待实现）")
+
 	// ============ 注册统一搜索路由 ============
 	if searchSvc != nil {
 		// 注册搜索路由
