@@ -22,6 +22,8 @@
    - `comments`: `target_id + target_type + state + created_at` 等
    - `notifications`: `user_id + created_at` 等列表索引
 3. ✅ `cmd/migrate` 已注册新迁移
+4. ✅ 已补 `docs/database/indexes.yaml`
+5. ✅ 已补 `cmd/verify_indexes` 校验工具
 
 ### 仍待处理
 

@@ -46,6 +46,18 @@ go build -o migrate cmd/migrate/main.go
 ./migrate -command=seed
 ```
 
+### 3. 校验索引规范
+
+```bash
+go run ./cmd/verify_indexes
+```
+
+如需指定规范文件：
+
+```bash
+go run ./cmd/verify_indexes -spec docs/database/indexes.yaml
+```
+
 ---
 
 ## 📚 命令详解

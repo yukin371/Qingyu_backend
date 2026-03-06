@@ -1,0 +1,87 @@
+version: 1
+updated_at: "2026-03-06"
+scope: "p0-and-core-query-indexes"
+collections:
+  users:
+    indexes:
+      - name: username_1_unique
+        priority: p0
+        source: 006_create_core_query_indexes
+      - name: email_1_unique_non_empty
+        priority: p0
+        source: 006_create_core_query_indexes
+      - name: phone_1_unique_non_empty
+        priority: p1
+        source: 006_create_core_query_indexes
+      - name: status_1_created_at_-1
+        priority: p0
+        source: 002_create_users_indexes
+      - name: roles_1
+        priority: p1
+        source: 002_create_users_indexes
+      - name: last_login_at_-1
+        priority: p1
+        source: 002_create_users_indexes
+
+  books:
+    indexes:
+      - name: status_1_created_at_-1
+        priority: p0
+        source: 003_create_books_indexes_p0
+      - name: status_1_rating_-1
+        priority: p0
+        source: 003_create_books_indexes_p0
+      - name: author_id_1_status_1_created_at_-1
+        priority: p0
+        source: 003_create_books_indexes_p0
+      - name: category_ids_1_rating_-1
+        priority: p1
+        source: 003_create_books_indexes_p0
+      - name: is_completed_1_status_1
+        priority: p1
+        source: 003_create_books_indexes_p0
+
+  chapters:
+    indexes:
+      - name: book_id_1_chapter_num_1
+        priority: p0
+        source: 004_create_chapters_indexes
+      - name: book_id_1_status_1_chapter_num_1
+        priority: p0
+        source: 004_create_chapters_indexes
+
+  reading_progress:
+    indexes:
+      - name: user_id_1_book_id_1
+        priority: p0
+        source: 005_create_reading_progress_indexes
+      - name: user_id_1_last_read_at_-1
+        priority: p1
+        source: 005_create_reading_progress_indexes
+      - name: book_id_1
+        priority: p1
+        source: 005_create_reading_progress_indexes
+
+  comments:
+    indexes:
+      - name: target_id_1_target_type_1_state_1_created_at_-1
+        priority: p0
+        source: 006_create_core_query_indexes
+      - name: author_id_1_state_1_created_at_-1
+        priority: p1
+        source: 006_create_core_query_indexes
+      - name: parent_id_1_state_1_created_at_1
+        priority: p1
+        source: 006_create_core_query_indexes
+
+  notifications:
+    indexes:
+      - name: user_id_1_created_at_-1
+        priority: p0
+        source: 006_create_core_query_indexes
+      - name: user_id_1_is_read_1_created_at_-1
+        priority: p0
+        source: 006_create_core_query_indexes
+      - name: user_id_1_type_1_created_at_-1
+        priority: p1
+        source: 006_create_core_query_indexes
