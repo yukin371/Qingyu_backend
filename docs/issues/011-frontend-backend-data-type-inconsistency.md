@@ -241,6 +241,7 @@ function formatPrice(cents: number): string {
 **当前进展（2026-03-06）**:
 - 阅读进度响应已同时输出 `updateTime` 与 `updatedAt`
 - 章节发布状态 DTO 已同时保留 `publishTime` 与 `publishedAt`、`updateTime` 与 `updatedAt`
+- `service/interfaces/reader` 的章节响应 JSON tag 已从 snake_case 收敛到 camelCase，避免迁移适配层继续传播旧字段名
 - 仍有部分旧接口和前端类型使用 `updateTime/publishTime`，后续以前端切换为主再移除兼容字段
 
 ---
