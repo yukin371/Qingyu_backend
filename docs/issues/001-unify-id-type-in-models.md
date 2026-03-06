@@ -17,7 +17,7 @@
 ### 审查发现
 
 1. ✅ **176+ 个模型已正确使用 `primitive.ObjectID`**
-2. ⚠️ **auth 域首批 string 主键模型已完成迁移**
+2. ⚠️ **auth 域 Mongo 主键模型已完成迁移（PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession），Redis Session 不在本 issue 的 Mongo `_id` 统一范围**
 3. ❌ **其他领域仍有约 30+ 个模型使用 `ID string`**
 
 ### 需要修复的模型（优先级排序）
@@ -135,7 +135,7 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 ### Phase 2: 逐模块迁移
 按以下顺序迁移模块（从依赖少的开始）：
 
-1. [x] `models/auth/` - PermissionTemplate, Role, Permission
+1. [x] `models/auth/` - PermissionTemplate, Role, Permission, OAuthAccount, OAuthSession
 2. [ ] `models/social/` - BookListLike, Comment, Review
 3. [ ] `models/writer/` - 检查是否有 string ID
 4. [ ] 其他模块
@@ -191,3 +191,5 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 
 - [MongoDB ObjectId 规范](https://www.mongodb.com/docs/manual/reference/method/ObjectId/)
 - [Go MongoDB Driver 类型转换](https://pkg.go.dev/go.mongodb.org/mongo-driver/bson/primitive)
+
+

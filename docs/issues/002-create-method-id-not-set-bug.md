@@ -27,7 +27,7 @@
    - 预先生成 `primitive.NewObjectID()` 并赋值
 
 3. ⚠️ **剩余问题主要集中在尚未完成 ObjectID 迁移的模型/仓储**:
-   - auth 域本轮已补 `PermissionTemplate/Role/Permission` 的 Create 回设
+   - auth 域本轮已补 `PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession` 的 Create 回设
    - 其他仍保留 string 主键的模型在迁移时仍需逐个复核
 
 ### 已修复的 Repository
@@ -238,3 +238,4 @@ func (r *MongoBookListRepository) CreateBookList(ctx context.Context, bookList *
 ## 参考链接
 
 - [MongoDB InsertOne 文档](https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo#Collection.InsertOne)
+

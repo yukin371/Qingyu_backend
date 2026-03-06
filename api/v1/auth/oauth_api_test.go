@@ -12,11 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
-	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/internal/middleware/builtin"
+	authModel "Qingyu_backend/models/auth"
 	"Qingyu_backend/service/auth"
 )
 
@@ -291,7 +292,7 @@ func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
 	}
 
 	session := &authModel.OAuthSession{
-		ID:        "session-123",
+		ID:        primitive.NewObjectID(),
 		LinkMode:  false,
 		CreatedAt: time.Now(),
 	}
@@ -358,7 +359,7 @@ func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
 	}
 
 	session := &authModel.OAuthSession{
-		ID:        "session-123",
+		ID:        primitive.NewObjectID(),
 		UserID:    userID,
 		LinkMode:  true,
 		CreatedAt: time.Now(),
@@ -371,7 +372,7 @@ func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
 	}
 
 	account := &authModel.OAuthAccount{
-		ID:       "account-123",
+		ID:       primitive.NewObjectID(),
 		UserID:   userID,
 		Provider: authModel.OAuthProviderGitHub,
 	}
@@ -488,7 +489,7 @@ func TestOAuthAPI_HandleCallback_GetUserInfoError(t *testing.T) {
 	}
 
 	session := &authModel.OAuthSession{
-		ID:        "session-123",
+		ID:        primitive.NewObjectID(),
 		LinkMode:  false,
 		CreatedAt: time.Now(),
 	}
@@ -525,7 +526,7 @@ func TestOAuthAPI_HandleCallback_OAuthLoginError(t *testing.T) {
 	}
 
 	session := &authModel.OAuthSession{
-		ID:        "session-123",
+		ID:        primitive.NewObjectID(),
 		LinkMode:  false,
 		CreatedAt: time.Now(),
 	}
@@ -571,7 +572,7 @@ func TestOAuthAPI_HandleCallback_LinkAccountError(t *testing.T) {
 	}
 
 	session := &authModel.OAuthSession{
-		ID:        "session-123",
+		ID:        primitive.NewObjectID(),
 		UserID:    userID,
 		LinkMode:  true,
 		CreatedAt: time.Now(),
@@ -610,13 +611,13 @@ func TestOAuthAPI_GetLinkedAccounts_Success(t *testing.T) {
 
 	expectedAccounts := []*authModel.OAuthAccount{
 		{
-			ID:       "account-123",
+			ID:       primitive.NewObjectID(),
 			UserID:   userID,
 			Provider: authModel.OAuthProviderGoogle,
 			Email:    "user@example.com",
 		},
 		{
-			ID:       "account-456",
+			ID:       primitive.NewObjectID(),
 			UserID:   userID,
 			Provider: authModel.OAuthProviderGitHub,
 			Username: "githubuser",

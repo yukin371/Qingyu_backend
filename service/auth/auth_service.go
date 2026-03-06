@@ -193,7 +193,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 		}
 
 		// 更新最后登录时间
-		_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID)
+		_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID.Hex())
 
 		// 获取用户角色
 		userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID)
