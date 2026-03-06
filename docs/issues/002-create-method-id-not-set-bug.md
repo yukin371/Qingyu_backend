@@ -37,6 +37,7 @@
    - reader 域本轮已补 `ReadingSettings/ReaderTheme` 的 Create 回设与 ObjectID 边界
    - notification 域本轮已补 `Notification/NotificationPreference/PushDevice/NotificationTemplate` 的 Create 回设与 ObjectID 边界
    - admin 域本轮已补 `AdminLog/AuditRecord` 的 Create 回设与 ObjectID 查询边界
+   - recommendation 域本轮已补 `Behavior/ItemFeature/UserProfile/UserBehaviorRecord` 的 Create/Upsert 回设与 ObjectID 边界
 
 ### 已修复的 Repository
 

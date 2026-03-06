@@ -199,7 +199,7 @@ func (s *RecommendationServiceImpl) GetUserBehaviors(ctx context.Context, userID
 	result := make([]*UserBehavior, len(behaviors))
 	for i, b := range behaviors {
 		result[i] = &UserBehavior{
-			ID:         b.ID,
+			ID:         b.ID.Hex(),
 			UserID:     b.UserID,
 			ItemID:     b.ItemID,
 			ItemType:   b.ItemType,

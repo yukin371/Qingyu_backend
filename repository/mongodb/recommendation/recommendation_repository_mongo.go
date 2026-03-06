@@ -34,6 +34,9 @@ func NewRecommendationRepository(db *mongo.Database) recoInterface.Recommendatio
 // RecordBehavior 记录用户行为
 func (r *RecommendationRepositoryImpl) RecordBehavior(ctx context.Context, behavior *recModel.UserBehavior) error {
 	behavior.CreatedAt = time.Now()
+	if behavior.ID.IsZero() {
+		behavior.ID = primitive.NewObjectID()
+	}
 
 	result, err := r.behaviorCollection.InsertOne(ctx, behavior)
 	if err != nil {
@@ -41,7 +44,7 @@ func (r *RecommendationRepositoryImpl) RecordBehavior(ctx context.Context, behav
 	}
 
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		behavior.ID = oid.Hex()
+		behavior.ID = oid
 	}
 
 	return nil
