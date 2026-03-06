@@ -12,7 +12,7 @@
 
 ## 审查结果
 
-**状态**: ⚠️ 问题仍存在，但高风险财务链路已继续前推
+**状态**: ⚠️ 问题仍存在，但高风险财务链路已基本收敛
 
 ### 审查发现
 
@@ -20,7 +20,8 @@
 2. ⚠️ **Service层仍未形成全域统一 `RunInTransaction` 规范**
 3. ✅ **wallet 交易/提现服务已接入事务执行**
 4. ✅ **作者收入提现申请已接入钱包冻结与双写回滚**
-5. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
+5. ✅ **会员订阅/续费已接入钱包扣款与回滚**
+6. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
 
@@ -50,6 +51,9 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 9. ✅ `AuthorRevenueService.CreateWithdrawalRequest` 已改为统一事务内同时创建作者提现单、钱包提现单并冻结余额
 10. ✅ `ServiceContainer` 已为 `AuthorRevenueService` 注入通用 Mongo transaction runner
 11. ✅ 已补作者提现单测，验证钱包写失败和扣款失败时会整体回滚
+12. ✅ `MembershipService.Subscribe / RenewMembership` 已改为统一事务内完成会员生效与钱包扣款
+13. ✅ `ServiceContainer` 已为 `MembershipService` 注入通用 Mongo transaction runner
+14. ✅ 已补会员订阅/续费回滚测试，验证扣款失败和流水失败时不会留下已生效会员
 
 ---
 
@@ -377,6 +381,7 @@ func (s *OrderService) CreateOrder(
 - [ ] 订单管理事务支持
 - [x] 钱包充值/消费/转账/提现事务支持
 - [x] 作者收入提现申请事务支持
+- [x] 会员订阅/续费事务支持
 - [ ] 社交互动事务支持
 
 ### 测试验证
