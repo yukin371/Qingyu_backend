@@ -307,6 +307,11 @@ type Pagination struct {
    - `GET /api/v1/reader/purchases/{bookId}`
    - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
 
+12. admin 权限模板接口响应收敛
+   - `api/v1/admin/permission_template_api.go`
+   - 从裸 `c.JSON + success/error 自定义结构` 收敛到 `pkg/response`
+   - 列表接口保持非分页，但成功响应统一为 `code=0`
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理
