@@ -241,8 +241,8 @@ type Pagination struct {
 - [ ] 前端调用更新
 
 ### PATCH 方法支持
-- [ ] 识别需要部分更新的资源
-- [ ] 实现 PATCH Handler
+- [x] 识别需要部分更新的资源
+- [x] 实现 PATCH Handler
 - [ ] 实现 Service 层方法
 - [ ] 添加测试
 
@@ -266,10 +266,15 @@ type Pagination struct {
 5. `api/v1/content/progress_api.go`
    - 分页接口从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
 
+6. PATCH 首批落地
+   - `PATCH /api/v1/reader/settings`
+   - `PATCH /api/v1/notifications/preferences`
+   - 复用现有部分更新 handler，无新增 service 风险
+
 未完成：
 
 - `/system/*` 的历史文档与 swagger 注解清理
-- PATCH 方法补齐
+- 其他资源的 PATCH 方法补齐
 - 其他仍使用旧 `shared`/裸 `c.JSON` 的 handler 收口
 
 补充确认：
