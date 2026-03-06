@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ============ 测试辅助函数 ============
@@ -73,7 +74,7 @@ func newTestContext() context.Context {
 // newActiveTemplate 创建激活的模板
 func newActiveTemplate() *messaging.MessageTemplate {
 	return &messaging.MessageTemplate{
-		ID:        "tpl-001",
+		ID:        primitive.NewObjectID(),
 		Name:      "welcome",
 		Subject:   "Welcome {{Name}}",
 		Content:   "Hello {{Name}}, welcome to our service!",
@@ -92,7 +93,7 @@ func newInactiveTemplate() *messaging.MessageTemplate {
 // newTemplateWithMultipleVariables 创建多变量模板
 func newTemplateWithMultipleVariables() *messaging.MessageTemplate {
 	return &messaging.MessageTemplate{
-		ID:        "tpl-002",
+		ID:        primitive.NewObjectID(),
 		Name:      "order-confirmation",
 		Subject:   "Order Confirmation - Order #{{OrderID}}",
 		Content:   "Dear {{Name}}, your order #{{OrderID}} has been confirmed. Total: ${{Amount}}",

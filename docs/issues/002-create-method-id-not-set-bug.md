@@ -28,7 +28,7 @@
 
 3. ⚠️ **剩余问题主要集中在尚未完成 ObjectID 迁移的模型/仓储**:
    - auth 域本轮已补 `PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession` 的 Create 回设
-   - 其他仍保留 string 主键的模型在迁移时仍需逐个复核
+   - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
 
 ### 已修复的 Repository
 
@@ -120,11 +120,12 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 - [ ] `batch_operation_repository_mongo.go` - 需检查
 
 ### Social 模块
-- [ ] `booklist_repository_mongo.go`
-- [ ] `comment_repository_mongo.go`
-- [ ] `review_repository_mongo.go`
-- [ ] `like_repository_mongo.go`
-- [ ] `follow_repository_mongo.go`
+- [x] `booklist_repository_mongo.go`
+- [x] `comment_repository_mongo.go`
+- [x] `review_repository_mongo.go`
+- [x] `like_repository_mongo.go`
+- [x] `follow_repository_mongo.go`
+- [x] `message_repository_mongo.go`
 
 ### Reader 模块
 - [ ] `reading_progress_repository_mongo.go`
