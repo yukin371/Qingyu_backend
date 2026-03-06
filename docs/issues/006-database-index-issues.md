@@ -24,12 +24,12 @@
 3. ✅ `cmd/migrate` 已注册新迁移
 4. ✅ 已补 `docs/database/indexes.yaml`
 5. ✅ 已补 `cmd/verify_indexes` 校验工具
+6. ✅ 已在本地 `qingyu_dev` 执行 `002`-`006` 索引迁移并通过校验
 
 ### 仍待处理
 
-1. ⚠️ issue 中引用的 `docs/database/indexes.yaml` 规范文件当前不存在，需要补统一索引清单
-2. ⚠️ 慢查询监控仍未实现
-3. ⚠️ 其他低优先级集合索引尚未系统化收敛到 migration
+1. ⚠️ 慢查询监控仍未实现
+2. ⚠️ 其他低优先级集合索引尚未系统化收敛到 migration
 
 ---
 
