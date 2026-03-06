@@ -28,16 +28,16 @@
 - 后端查询已兼容历史 `published` 数据，但新口径不再把 `published` 作为规范枚举值
 
 #### CategoryIDs 类型不一致
-- ❌ **后端内部不一致**：
+- ✅ **后端内部模型已收敛**：
   - `Book` 模型: `[]primitive.ObjectID`
-  - `BookDetail` 模型: `[]string`
-- ❌ **前端使用单值** `categoryId: string`，后端使用数组
+  - `BookDetail` 模型: `[]primitive.ObjectID`
+- ❌ **前端仍存在旧单值字段** `categoryId: string`，后端规范口径是数组
 
 **当前进展（2026-03-06）**:
 - 已在 `BookDTO` 增加兼容字段 `categoryId`
 - `BookDTO` 与 converter 现在同时输出 `categoryIds` 和首个 `categoryId`
 - DTO 入参在仅提供旧字段 `categoryId` 时也会回填到 `categoryIds`
-- `BookDetail` 内部模型残留仍在，后续单独收敛
+- `BookDetail` 仓储查询、分类批量更新与相似书推荐已改为按 `ObjectID` 一致处理 `category_ids`
 
 #### 其他问题
 - ✅ is_* 字段 JSON 标签已正确配置
