@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 性能问题
-**状态**: ⚠️ 部分修复
+**状态**: ✅ 核心问题已解决（保留持续优化项）
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端数据库分析](../reports/archived/backend-database-analysis-2026-01-26.md)
 
@@ -25,11 +25,17 @@
 4. ✅ 已补 `docs/database/indexes.yaml`
 5. ✅ 已补 `cmd/verify_indexes` 校验工具
 6. ✅ 已在本地 `qingyu_dev` 执行 `002`-`006` 索引迁移并通过校验
+7. ✅ MongoDB 运行时已接入 `CommandMonitor`
+   - 统一记录 `db_query_duration_seconds` / `db_queries_total`
+   - 超过 `slow_ms` 阈值的查询会输出慢查询告警日志
+8. ✅ MongoDB 初始化时会按配置尝试启用 profiler
+   - `profiling_level=0` 时跳过
+   - `profiling_level=1/2` 时自动下发 `profile` / `slowms`
 
 ### 仍待处理
 
-1. ⚠️ 慢查询监控仍未实现
-2. ⚠️ 其他低优先级集合索引尚未系统化收敛到 migration
+1. ⚠️ 其他低优先级集合索引尚未系统化收敛到 migration
+2. ⚠️ 告警规则与 dashboard 仍需按生产环境接入
 
 ---
 
@@ -51,7 +57,7 @@
 
 #### 2. 慢查询监控缺失 🟡 P1
 
-**问题**: 没有慢查询监控和告警机制。
+**问题**: 历史上没有统一接入的慢查询监控和告警机制。
 
 **影响**:
 - 无法及时发现性能问题
@@ -211,9 +217,9 @@ func logSlowQuery(event *event.CommandSucceededEvent, duration time.Duration) {
 
 ### Phase 3: 部署监控工具（2-3 天）
 
-1. 集成查询日志监控
-2. 设置慢查询阈值（建议 100ms）
-3. 配置告警规则
+1. ✅ 集成查询日志监控
+2. ✅ 设置慢查询阈值（默认 100ms，可配置）
+3. ⚠️ 配置告警规则
 
 ### Phase 4: 持续优化（持续）
 
@@ -265,7 +271,7 @@ func logSlowQuery(event *event.CommandSucceededEvent, duration time.Duration) {
 - [ ] 验证索引效果
 
 ### 监控阶段
-- [ ] 部署慢查询监控
+- [x] 部署慢查询监控
 - [ ] 设置告警规则
 - [ ] 定期审查慢查询
 

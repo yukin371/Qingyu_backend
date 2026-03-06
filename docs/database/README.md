@@ -58,6 +58,24 @@ go run ./cmd/verify_indexes
 go run ./cmd/verify_indexes -spec docs/database/indexes.yaml
 ```
 
+### 4. 慢查询监控
+
+应用启动后会自动接入 MongoDB `CommandMonitor`，并按以下配置输出慢查询告警日志：
+
+```yaml
+database:
+  primary:
+    mongodb:
+      profiling_level: 1  # 0=关闭, 1=仅慢查询, 2=记录所有命令
+      slow_ms: 100        # 慢查询阈值（毫秒）
+```
+
+如需手动校准 MongoDB profiler，可使用：
+
+```bash
+go run ./cmd/mongodb-profiler
+```
+
 ---
 
 ## 📚 命令详解

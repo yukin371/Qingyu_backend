@@ -50,10 +50,12 @@ import (
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
+	pkgmetrics "Qingyu_backend/pkg/metrics"
 	"Qingyu_backend/repository/mongodb"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 
 	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -519,12 +521,20 @@ func (c *ServiceContainer) initMongoDB() error {
 		return fmt.Errorf("获取MongoDB配置失败: %w", err)
 	}
 
+	dbMetricsCollector := pkgmetrics.NewDbMetricsCollector(
+		mongoCfg.Database,
+		time.Duration(mongoCfg.SlowMS)*time.Millisecond,
+		mongoCfg.ProfilingLevel,
+	)
+
 	clientOptions := options.Client().
 		ApplyURI(mongoCfg.URI).
 		SetMaxPoolSize(mongoCfg.MaxPoolSize).
 		SetMinPoolSize(mongoCfg.MinPoolSize).
 		SetConnectTimeout(mongoCfg.ConnectTimeout).
-		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
+		SetServerSelectionTimeout(mongoCfg.ServerTimeout).
+		SetMonitor(dbMetricsCollector.GetMonitorCommand()).
+		SetPoolMonitor(dbMetricsCollector.GetPoolMonitor())
 
 	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
 	defer cancel()
@@ -542,8 +552,40 @@ func (c *ServiceContainer) initMongoDB() error {
 	c.mongoClient = client
 	c.mongoDB = client.Database(mongoCfg.Database)
 
+	if err := c.configureMongoProfiler(ctx, mongoCfg); err != nil {
+		zap.L().Warn("配置MongoDB profiler失败，继续以驱动监控模式运行",
+			zap.Error(err),
+			zap.Int("profiling_level", mongoCfg.ProfilingLevel),
+			zap.Int64("slow_ms", mongoCfg.SlowMS),
+		)
+	}
+
 	// 不再设置全局DB变量（ARCH-002重构）
 	// 所有依赖应该通过容器注入，而不是使用全局变量
+	return nil
+}
+
+func (c *ServiceContainer) configureMongoProfiler(ctx context.Context, mongoCfg *config.MongoDBConfig) error {
+	if mongoCfg == nil || mongoCfg.ProfilingLevel <= 0 {
+		return nil
+	}
+
+	command := bson.D{
+		{Key: "profile", Value: mongoCfg.ProfilingLevel},
+		{Key: "slowms", Value: mongoCfg.SlowMS},
+	}
+
+	var result bson.M
+	if err := c.mongoDB.RunCommand(ctx, command).Decode(&result); err != nil {
+		return err
+	}
+
+	zap.L().Info("MongoDB profiler configured",
+		zap.String("database", mongoCfg.Database),
+		zap.Int("profiling_level", mongoCfg.ProfilingLevel),
+		zap.Int64("slow_ms", mongoCfg.SlowMS),
+		zap.Int64("profiler_size_mb", mongoCfg.ProfilerSizeMB),
+	)
 	return nil
 }
 
