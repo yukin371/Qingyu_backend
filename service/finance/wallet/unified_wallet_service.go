@@ -12,6 +12,7 @@ import (
 // 实现 WalletService 接口，整合钱包、交易、提现三大功能
 type UnifiedWalletService struct {
 	walletRepo sharedRepo.WalletRepository
+	txRunner   TransactionRunner
 
 	// 内部组件服务
 	walletMgr      *WalletServiceImpl
@@ -23,11 +24,13 @@ type UnifiedWalletService struct {
 
 // NewUnifiedWalletService 创建统一钱包服务
 func NewUnifiedWalletService(walletRepo sharedRepo.WalletRepository) WalletService {
+	txRunner := NewRepositoryTransactionRunner(walletRepo)
 	return &UnifiedWalletService{
 		walletRepo:     walletRepo,
+		txRunner:       txRunner,
 		walletMgr:      &WalletServiceImpl{walletRepo: walletRepo},
-		transactionMgr: &TransactionServiceImpl{walletRepo: walletRepo},
-		withdrawMgr:    &WithdrawServiceImpl{walletRepo: walletRepo},
+		transactionMgr: &TransactionServiceImpl{walletRepo: walletRepo, txRunner: txRunner},
+		withdrawMgr:    &WithdrawServiceImpl{walletRepo: walletRepo, txRunner: txRunner},
 	}
 }
 

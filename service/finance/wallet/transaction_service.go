@@ -12,6 +12,7 @@ import (
 // TransactionServiceImpl 交易服务实现
 type TransactionServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
+	txRunner   TransactionRunner
 }
 
 // TransactionService 交易服务接口
@@ -25,8 +26,14 @@ type TransactionService interface {
 
 // NewTransactionService 创建交易服务
 func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionService {
+	return NewTransactionServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
+}
+
+// NewTransactionServiceWithRunner 创建带显式事务入口的交易服务
+func NewTransactionServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) TransactionService {
 	return &TransactionServiceImpl{
 		walletRepo: walletRepo,
+		txRunner:   txRunner,
 	}
 }
 
@@ -64,7 +71,7 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 		Reason:  "充值",
 	}
 
-	if err := runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
 			return fmt.Errorf("创建交易记录失败: %w", err)
 		}
@@ -110,7 +117,7 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 		Reason: reason,
 	}
 
-	if err := runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
 			return fmt.Errorf("创建交易记录失败: %w", err)
 		}
@@ -172,7 +179,7 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 		RelatedUserID: fromWallet.UserID,
 	}
 
-	return runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateTransaction(txCtx, outTransaction); err != nil {
 			return fmt.Errorf("创建转出记录失败: %w", err)
 		}

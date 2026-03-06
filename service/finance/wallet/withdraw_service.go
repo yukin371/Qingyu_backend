@@ -13,6 +13,7 @@ import (
 // WithdrawServiceImpl 提现服务实现
 type WithdrawServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
+	txRunner   TransactionRunner
 }
 
 // WithdrawService 提现服务接口
@@ -26,8 +27,14 @@ type WithdrawService interface {
 
 // NewWithdrawService 创建提现服务
 func NewWithdrawService(walletRepo sharedRepo.WalletRepository) WithdrawService {
+	return NewWithdrawServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
+}
+
+// NewWithdrawServiceWithRunner 创建带显式事务入口的提现服务
+func NewWithdrawServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) WithdrawService {
 	return &WithdrawServiceImpl{
 		walletRepo: walletRepo,
+		txRunner:   txRunner,
 	}
 }
 
@@ -70,7 +77,7 @@ func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID,
 		Status:      "pending",
 	}
 
-	if err := runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.CreateWithdrawRequest(txCtx, request); err != nil {
 			return fmt.Errorf("创建提现请求失败: %w", err)
 		}
@@ -117,7 +124,7 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 		Reason: "提现",
 	}
 
-	return runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.UpdateWithdrawRequest(txCtx, requestID, updates); err != nil {
 			return fmt.Errorf("更新提现请求失败: %w", err)
 		}
@@ -155,7 +162,7 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 		"remark":      reason,
 	}
 
-	return runWalletTransaction(ctx, s.walletRepo, func(txCtx context.Context) error {
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
 		if err := s.walletRepo.UpdateBalance(txCtx, wallet.ID, int64(request.Amount)); err != nil {
 			return fmt.Errorf("退还金额失败: %w", err)
 		}

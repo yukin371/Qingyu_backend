@@ -16,7 +16,7 @@
 
 ### 审查发现
 
-1. ⚠️ **仓库中已存在多套事务实现，但没有统一入口**
+1. ⚠️ **仓库级事务实现仍然分散，但 wallet 域已收敛成可注入事务入口**
 2. ⚠️ **Service层仍未形成通用 `RunInTransaction` 模式**
 3. ✅ **wallet 交易/提现服务已接入 Repository 事务执行**
 4. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
@@ -42,7 +42,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 2. ✅ Mongo 钱包仓储已实现 `StartSession + WithTransaction`
 3. ✅ `Recharge / Consume / Transfer` 已改为事务执行
 4. ✅ `CreateWithdrawRequest / ApproveWithdraw / RejectWithdraw` 已改为事务执行
-5. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
+5. ✅ wallet 域已引入显式 `TransactionRunner`，不再由业务方法直接依赖仓储事务细节
+6. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
 
 ---
 
