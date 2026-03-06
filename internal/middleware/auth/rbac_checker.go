@@ -3,8 +3,12 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+
+	"gopkg.in/yaml.v3"
 )
 
 // RBACChecker 基于角色的权限检查器
@@ -25,6 +29,20 @@ type RBACChecker struct {
 	mu sync.RWMutex
 }
 
+type permissionFile struct {
+	Permissions permissionConfig `yaml:"permissions"`
+}
+
+type permissionConfig struct {
+	RolePermissions map[string][]string         `yaml:"role_permissions"`
+	UserRoles       map[string][]string         `yaml:"user_roles"`
+	RoleHierarchy   map[string]roleInheritance  `yaml:"role_hierarchy"`
+}
+
+type roleInheritance struct {
+	Inherits []string `yaml:"inherits"`
+}
+
 // NewRBACChecker 创建RBAC检查器
 func NewRBACChecker(config *CheckerConfig) (Checker, error) {
 	checker := &RBACChecker{
@@ -34,11 +52,88 @@ func NewRBACChecker(config *CheckerConfig) (Checker, error) {
 
 	// 如果提供了配置文件路径，从配置文件加载
 	if config != nil && config.ConfigPath != "" {
-		// TODO: 实现从配置文件加载
-		// 这里暂时返回空检查器
+		if err := checker.LoadFromFile(config.ConfigPath); err != nil {
+			return nil, err
+		}
 	}
 
 	return checker, nil
+}
+
+// LoadFromFile 从 YAML 配置文件加载权限配置
+func (c *RBACChecker) LoadFromFile(configPath string) error {
+	resolvedPath, err := resolveConfigPath(configPath)
+	if err != nil {
+		return err
+	}
+
+	raw, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return fmt.Errorf("read permission config: %w", err)
+	}
+
+	var cfg permissionFile
+	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+		return fmt.Errorf("parse permission config: %w", err)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.rolePerms = make(map[string]map[string]bool)
+	c.userRoles = make(map[string][]string)
+
+	for role, perms := range cfg.Permissions.RolePermissions {
+		if c.rolePerms[role] == nil {
+			c.rolePerms[role] = make(map[string]bool)
+		}
+		for _, perm := range perms {
+			c.rolePerms[role][perm] = true
+		}
+	}
+
+	for userID, roles := range cfg.Permissions.UserRoles {
+		c.userRoles[userID] = append([]string(nil), roles...)
+	}
+
+	for role, relation := range cfg.Permissions.RoleHierarchy {
+		if c.rolePerms[role] == nil {
+			c.rolePerms[role] = make(map[string]bool)
+		}
+		for _, inheritedRole := range relation.Inherits {
+			for perm := range c.rolePerms[inheritedRole] {
+				c.rolePerms[role][perm] = true
+			}
+		}
+	}
+
+	return nil
+}
+
+func resolveConfigPath(configPath string) (string, error) {
+	if filepath.IsAbs(configPath) {
+		if _, err := os.Stat(configPath); err != nil {
+			return "", fmt.Errorf("permission config not found: %w", err)
+		}
+		return configPath, nil
+	}
+
+	candidates := []string{configPath}
+	for i := 0; i < 6; i++ {
+		prefix := make([]string, i)
+		for j := 0; j < i; j++ {
+			prefix[j] = ".."
+		}
+		candidates = append(candidates, filepath.Join(append(prefix, configPath)...))
+	}
+
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("permission config not found: %s", configPath)
 }
 
 // Name 返回检查器名称
