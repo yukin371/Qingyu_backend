@@ -318,6 +318,17 @@ type Pagination struct {
 - 其他资源的 PATCH 方法补齐
 - 其他仍使用旧 `shared`/裸 `c.JSON` 的 handler 收口
 
+### TODO 清单
+
+- [ ] 清理 `/system/*` 的残余 Swagger 注解和文档示例，统一为 `/api/v1/system/*`
+- [ ] 继续补 `PATCH` 到剩余明显的部分更新接口，优先 `review`、`message`、`writer` 侧资源
+- [ ] 收敛公开 API 中仍使用裸 `c.JSON` 的 handler，优先 `content/project_api.go`
+- [ ] 收敛公开 API 中仍使用 `shared.Success/BadRequest/InternalError` 的旧风格 handler 到 `pkg/response`
+- [ ] 统一剩余列表接口的分页结构，清理 `data.total/page/size` 和 `shared.Paginated` 尾项
+- [ ] 评估并处理重复端点问题，给出保留、兼容或弃用策略
+- [ ] 在基线 `ObjectID` 编译问题修复后，补跑 `go test ./api/v1/...` 的整体验证
+- [ ] 前端适配剩余响应结构变化，确保分页与成功码口径一致
+
 补充确认：
 
 - `router/enter.go` 当前调用 `systemRouter.InitSystemRoutes(v1)`
