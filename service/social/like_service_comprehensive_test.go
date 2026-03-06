@@ -207,14 +207,13 @@ func TestLikeServiceCommentInteraction(t *testing.T) {
 			return l.TargetType == social.LikeTargetTypeComment
 		})).Return(nil).Once()
 		mockCommentRepo.On("IncrementLikeCount", ctx, testCommentID).Return(errors.New("increment failed")).Once()
-		// 虽然IncrementLikeCount失败，但publishLikeEvent仍然会被调用，获取点赞数
-		mockRepo.On("GetLikeCount", ctx, social.LikeTargetTypeComment, testCommentID).Return(int64(1), nil).Once()
 
 		// Act
 		err := service.LikeComment(ctx, testUserID, testCommentID)
 
-		// Assert - 虽然IncrementLikeCount失败，但函数返回nil（因为错误被吞掉了）
-		assert.NoError(t, err)
+		// Assert - 现在应整体失败并回滚
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "更新评论点赞数失败")
 
 		mockRepo.AssertExpectations(t)
 		mockCommentRepo.AssertExpectations(t)
