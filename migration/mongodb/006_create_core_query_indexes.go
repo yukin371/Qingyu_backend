@@ -76,7 +76,7 @@ func createUserCoreIndexes(ctx context.Context, db *mongo.Database) error {
 				SetName("email_1_unique_non_empty").
 				SetUnique(true).
 				SetBackground(true).
-				SetPartialFilterExpression(bson.M{"email": bson.M{"$exists": true, "$ne": ""}}),
+				SetPartialFilterExpression(bson.M{"email": bson.M{"$exists": true, "$gt": ""}}),
 		},
 		{
 			Keys: bson.D{{Key: "phone", Value: 1}},
@@ -84,7 +84,7 @@ func createUserCoreIndexes(ctx context.Context, db *mongo.Database) error {
 				SetName("phone_1_unique_non_empty").
 				SetUnique(true).
 				SetBackground(true).
-				SetPartialFilterExpression(bson.M{"phone": bson.M{"$exists": true, "$ne": ""}}),
+				SetPartialFilterExpression(bson.M{"phone": bson.M{"$exists": true, "$gt": ""}}),
 		},
 	}
 
