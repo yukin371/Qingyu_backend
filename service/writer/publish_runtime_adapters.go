@@ -91,12 +91,37 @@ func (a *PublishEventBusAdapter) PublishAsync(ctx context.Context, event interfa
 	if typed, ok := event.(baseInterfaces.Event); ok {
 		return a.bus.PublishAsync(ctx, typed)
 	}
+	eventType, source := resolvePublishEventMetadata(event)
 	return a.bus.PublishAsync(ctx, genericPublishEvent{
-		eventType: "writer.publish",
+		eventType: eventType,
 		data:      event,
 		timestamp: time.Now(),
-		source:    "writer.publish_service",
+		source:    source,
 	})
+}
+
+func resolvePublishEventMetadata(event interface{}) (string, string) {
+	const (
+		defaultEventType = "writer.publish"
+		defaultSource    = "writer.publish_service"
+	)
+
+	payload, ok := event.(map[string]interface{})
+	if !ok {
+		return defaultEventType, defaultSource
+	}
+
+	eventType, _ := payload["eventType"].(string)
+	if eventType == "" {
+		eventType = defaultEventType
+	}
+
+	source, _ := payload["source"].(string)
+	if source == "" {
+		source = defaultSource
+	}
+
+	return eventType, source
 }
 
 func (c *LocalBookstoreClient) PublishProject(ctx context.Context, req *BookstorePublishProjectRequest) (*BookstorePublishResponse, error) {

@@ -175,4 +175,17 @@ func TestMongoDBConnection(t *testing.T) {
 		collection := db.Collection("test")
 		assert.NotNil(t, collection, "应该能够创建集合实例")
 	})
+
+	t.Run("Initialize后应暴露持久化事件总线", func(t *testing.T) {
+		container := NewServiceContainer()
+
+		ctx := context.Background()
+		err := container.Initialize(ctx)
+
+		if err != nil {
+			t.Skip("MongoDB未连接，跳过测试")
+		}
+
+		assert.NotNil(t, container.GetPersistedEventBus(), "Initialize后应提供可回放事件总线")
+	})
 }

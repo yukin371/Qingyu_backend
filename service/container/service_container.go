@@ -54,6 +54,7 @@ import (
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
+	eventservice "Qingyu_backend/service/events"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
@@ -141,9 +142,20 @@ func NewServiceContainer() *ServiceContainer {
 		services:         make(map[string]serviceInterfaces.BaseService),
 		serviceMetrics:   make(map[string]*metrics.ServiceMetrics),
 		initialized:      false,
-		eventBus:         base.NewSimpleEventBus(), // 创建事件总线
+		eventBus:         base.NewSimpleEventBus(), // Mongo 初始化前的兜底总线
 		providerRegistry: NewProviderRegistry(),
 	}
+}
+
+func (c *ServiceContainer) initEventBus() error {
+	if c.mongoDB == nil {
+		c.eventBus = base.NewSimpleEventBus()
+		return nil
+	}
+
+	store := eventservice.NewMongoEventStore(c.mongoDB, eventservice.DefaultEventStoreConfig())
+	c.eventBus = eventservice.NewPersistedEventBus(base.NewSimpleEventBus(), store, false)
+	return nil
 }
 
 // RegisterService 注册服务
@@ -462,6 +474,14 @@ func (c *ServiceContainer) GetEventBus() serviceInterfaces.EventBus {
 	return c.eventBus
 }
 
+// GetPersistedEventBus 获取支持事件回放的持久化事件总线。
+func (c *ServiceContainer) GetPersistedEventBus() eventservice.PersistedEventBusInterface {
+	if persisted, ok := c.eventBus.(eventservice.PersistedEventBusInterface); ok {
+		return persisted
+	}
+	return nil
+}
+
 // Initialize 初始化所有服务
 func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	if c.initialized {
@@ -478,6 +498,10 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		c.mongoClient,
 		c.mongoDB,
 	)
+
+	if err := c.initEventBus(); err != nil {
+		return fmt.Errorf("事件总线初始化失败: %w", err)
+	}
 
 	// 3. 初始化Redis客户端（失败不阻塞）
 	if err := c.initRedis(); err != nil {
@@ -640,6 +664,12 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 	for name, service := range c.services {
 		if err := service.Close(ctx); err != nil {
 			lastErr = fmt.Errorf("关闭服务 %s 失败: %w", name, err)
+		}
+	}
+
+	if closer, ok := c.eventBus.(interface{ Close() error }); ok {
+		if err := closer.Close(); err != nil {
+			lastErr = fmt.Errorf("关闭事件总线失败: %w", err)
 		}
 	}
 

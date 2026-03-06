@@ -21,7 +21,8 @@
 3. ✅ **wallet 交易/提现服务已接入事务执行**
 4. ✅ **作者收入提现申请已接入钱包冻结与双写回滚**
 5. ✅ **会员订阅/续费已接入钱包扣款与回滚**
-6. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
+6. ✅ **发布事件总线已切换为持久化存储，不再只依赖内存分发**
+7. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
 
@@ -60,6 +61,8 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 18. ✅ 已补评论回滚测试，验证回复计数更新失败时不会留下脏回复或错误计数
 19. ✅ `PublishService` 对发布/下架事件失败已改为可审计，不再静默吞错
 20. ✅ 已补发布事件失败测试，验证失败信息会回写到 `PublicationRecord`
+21. ✅ `ServiceContainer` 已切换为 `PersistedEventBus + MongoEventStore`，admin 事件回放接口恢复真实数据源
+22. ✅ `PublishEventBusAdapter` 已保留真实业务事件类型，避免 `project.published` / `document.published` 被统一折叠为通用事件名
 
 ---
 
