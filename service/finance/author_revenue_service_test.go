@@ -212,8 +212,8 @@ func (m *mockWalletRepository) CreateWithdrawRequest(ctx context.Context, reques
 		return m.failCreateWithdraw
 	}
 	m.withdrawRequestSeed++
-	request.ID = primitive.NewObjectID().Hex()
-	m.withdraws[request.ID] = cloneWalletWithdraw(request)
+	request.ID = primitive.NewObjectID()
+	m.withdraws[request.ID.Hex()] = cloneWalletWithdraw(request)
 	return nil
 }
 
@@ -268,7 +268,7 @@ func (r rollbackRunner) Run(ctx context.Context, fn func(context.Context) error)
 func TestAuthorRevenueCreateWithdrawalRequestSuccess(t *testing.T) {
 	revenueRepo := newMockAuthorRevenueRepository()
 	walletRepo := newMockWalletRepository()
-	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: "author-1", UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
 	service := NewAuthorRevenueServiceWithDependencies(revenueRepo, walletRepo, rollbackRunner{
 		revenueRepo: revenueRepo,
 		walletRepo:  walletRepo,
@@ -291,7 +291,7 @@ func TestAuthorRevenueCreateWithdrawalRequestSuccess(t *testing.T) {
 func TestAuthorRevenueCreateWithdrawalRequestRollbackOnWalletFailure(t *testing.T) {
 	revenueRepo := newMockAuthorRevenueRepository()
 	walletRepo := newMockWalletRepository()
-	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: "author-1", UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
 	walletRepo.failCreateWithdraw = errors.New("mock wallet withdraw failure")
 	service := NewAuthorRevenueServiceWithDependencies(revenueRepo, walletRepo, rollbackRunner{
 		revenueRepo: revenueRepo,
@@ -314,7 +314,7 @@ func TestAuthorRevenueCreateWithdrawalRequestRollbackOnWalletFailure(t *testing.
 func TestAuthorRevenueCreateWithdrawalRequestRollbackOnBalanceFailure(t *testing.T) {
 	revenueRepo := newMockAuthorRevenueRepository()
 	walletRepo := newMockWalletRepository()
-	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: "author-1", UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["author-1"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "author-1", Balance: types.NewMoneyFromYuan(100)}
 	walletRepo.failUpdateBalance = errors.New("mock balance failure")
 	service := NewAuthorRevenueServiceWithDependencies(revenueRepo, walletRepo, rollbackRunner{
 		revenueRepo: revenueRepo,

@@ -216,12 +216,12 @@ func (s *AuthorRevenueServiceImpl) CreateWithdrawalRequest(ctx context.Context, 
 			return fmt.Errorf("创建钱包提现申请失败: %w", err)
 		}
 
-		request.TransactionID = walletRequest.ID
+		request.TransactionID = walletRequest.ID.Hex()
 		if err := s.revenueRepo.CreateWithdrawalRequest(txCtx, request); err != nil {
 			return fmt.Errorf("创建提现申请失败: %w", err)
 		}
 
-		if err := s.walletRepo.UpdateBalance(txCtx, wallet.ID, -int64(request.Amount)); err != nil {
+		if err := s.walletRepo.UpdateBalance(txCtx, wallet.UserID, -int64(request.Amount)); err != nil {
 			return fmt.Errorf("冻结钱包余额失败: %w", err)
 		}
 

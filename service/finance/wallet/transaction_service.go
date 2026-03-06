@@ -232,7 +232,7 @@ func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, userID st
 // convertToTransactionResponse 转换为响应格式
 func convertToTransactionResponse(transaction *financeModel.Transaction) *Transaction {
 	return &Transaction{
-		ID:              transaction.ID,
+		ID:              transaction.ID.Hex(),
 		UserID:          transaction.UserID,
 		Type:            transaction.Type,
 		Amount:          int64(transaction.Amount),

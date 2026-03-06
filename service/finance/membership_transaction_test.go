@@ -197,10 +197,10 @@ func (m *membershipWalletRepository) CreateTransaction(ctx context.Context, tran
 	if m.failCreateTx != nil {
 		return m.failCreateTx
 	}
-	if transaction.ID == "" {
-		transaction.ID = primitive.NewObjectID().Hex()
+	if transaction.ID.IsZero() {
+		transaction.ID = primitive.NewObjectID()
 	}
-	m.transactions[transaction.ID] = cloneFinanceTransaction(transaction)
+	m.transactions[transaction.ID.Hex()] = cloneFinanceTransaction(transaction)
 	return nil
 }
 func (m *membershipWalletRepository) GetTransaction(ctx context.Context, transactionID string) (*financeModel.Transaction, error) {
@@ -254,7 +254,7 @@ func TestMembershipSubscribeTransactionSuccess(t *testing.T) {
 	plan := createTestPlan("月度VIP", financeModel.MembershipTypeMonthly, 30, 19.9, true)
 	repo := newMembershipStateRepository(plan)
 	walletRepo := newMembershipWalletRepository()
-	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: "user123", UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
 
 	service := NewMembershipServiceWithDependencies(repo, walletRepo, membershipRollbackRunner{
 		membershipRepo: repo,
@@ -274,7 +274,7 @@ func TestMembershipSubscribeRollbackOnWalletTransactionFailure(t *testing.T) {
 	plan := createTestPlan("月度VIP", financeModel.MembershipTypeMonthly, 30, 19.9, true)
 	repo := newMembershipStateRepository(plan)
 	walletRepo := newMembershipWalletRepository()
-	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: "user123", UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
 	walletRepo.failCreateTx = errors.New("mock tx failure")
 
 	service := NewMembershipServiceWithDependencies(repo, walletRepo, membershipRollbackRunner{
@@ -307,7 +307,7 @@ func TestMembershipRenewRollbackOnBalanceFailure(t *testing.T) {
 	}
 
 	walletRepo := newMembershipWalletRepository()
-	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: "user123", UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
+	walletRepo.wallets["user123"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user123", Balance: types.NewMoneyFromYuan(100)}
 	walletRepo.failUpdateBalance = errors.New("mock balance failure")
 
 	service := NewMembershipServiceWithDependencies(repo, walletRepo, membershipRollbackRunner{

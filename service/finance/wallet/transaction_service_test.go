@@ -7,6 +7,7 @@ import (
 
 	financeModel "Qingyu_backend/models/finance"
 	"Qingyu_backend/models/shared/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,8 +15,8 @@ import (
 
 func TestTransactionServiceTransferSuccess(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
-	repo.wallets["user_from"] = &financeModel.Wallet{ID: "wallet_from", UserID: "user_from", Balance: types.Money(1000)}
-	repo.wallets["user_to"] = &financeModel.Wallet{ID: "wallet_to", UserID: "user_to", Balance: types.Money(200)}
+	repo.wallets["user_from"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_from", Balance: types.Money(1000)}
+	repo.wallets["user_to"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_to", Balance: types.Money(200)}
 
 	service := NewTransactionService(repo)
 
@@ -29,8 +30,8 @@ func TestTransactionServiceTransferSuccess(t *testing.T) {
 
 func TestTransactionServiceTransferRollbackOnTargetBalanceFailure(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
-	repo.wallets["user_from"] = &financeModel.Wallet{ID: "wallet_from", UserID: "user_from", Balance: types.Money(1000)}
-	repo.wallets["user_to"] = &financeModel.Wallet{ID: "wallet_to", UserID: "user_to", Balance: types.Money(200)}
+	repo.wallets["user_from"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_from", Balance: types.Money(1000)}
+	repo.wallets["user_to"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_to", Balance: types.Money(200)}
 	repo.SetUpdateBalanceError("user_to", errors.New("mock target balance failure"))
 
 	service := NewTransactionService(repo)
@@ -46,7 +47,7 @@ func TestTransactionServiceTransferRollbackOnTargetBalanceFailure(t *testing.T) 
 
 func TestTransactionServiceRechargeRollbackOnBalanceFailure(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
-	repo.wallets["user_a"] = &financeModel.Wallet{ID: "wallet_a", UserID: "user_a", Balance: types.Money(100)}
+	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(100)}
 	repo.SetUpdateBalanceError("user_a", errors.New("mock balance failure"))
 
 	service := NewTransactionService(repo)

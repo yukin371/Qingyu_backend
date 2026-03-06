@@ -163,7 +163,7 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 	}
 
 	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
-		if err := s.walletRepo.UpdateBalance(txCtx, wallet.ID, int64(request.Amount)); err != nil {
+		if err := s.walletRepo.UpdateBalance(txCtx, wallet.UserID, int64(request.Amount)); err != nil {
 			return fmt.Errorf("退还金额失败: %w", err)
 		}
 		if err := s.walletRepo.UpdateWithdrawRequest(txCtx, requestID, updates); err != nil {
@@ -210,7 +210,7 @@ func (s *WithdrawServiceImpl) ListWithdrawRequests(ctx context.Context, userID, 
 // convertToWithdrawResponse 转换为响应格式
 func convertToWithdrawResponse(request *financeModel.WithdrawRequest) *WithdrawRequest {
 	return &WithdrawRequest{
-		ID:           request.ID,
+		ID:           request.ID.Hex(),
 		UserID:       request.UserID,
 		Amount:       int64(request.Amount),
 		Account:      request.Account,

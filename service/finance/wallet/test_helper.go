@@ -3,11 +3,11 @@ package wallet
 import (
 	financeModel "Qingyu_backend/models/finance"
 	"context"
-	"fmt"
 	"time"
 
 	"Qingyu_backend/models/shared/types"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // MockWalletRepositoryV2 模拟WalletRepository（用于统一测试）
@@ -35,7 +35,7 @@ func NewMockWalletRepositoryV2() *MockWalletRepositoryV2 {
 
 // CreateWallet 创建钱包
 func (m *MockWalletRepositoryV2) CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error {
-	wallet.ID = "wallet_" + wallet.UserID
+	wallet.ID = primitive.NewObjectID()
 	wallet.CreatedAt = time.Now()
 	wallet.UpdatedAt = time.Now()
 	m.wallets[wallet.UserID] = wallet
@@ -53,7 +53,7 @@ func (m *MockWalletRepositoryV2) GetWallet(ctx context.Context, userID string) (
 // UpdateWallet 更新钱包
 func (m *MockWalletRepositoryV2) UpdateWallet(ctx context.Context, walletID string, updates map[string]interface{}) error {
 	for _, wallet := range m.wallets {
-		if wallet.ID == walletID {
+		if wallet.ID.Hex() == walletID {
 			if frozen, ok := updates["frozen"].(bool); ok {
 				wallet.Frozen = frozen
 			}
@@ -69,7 +69,7 @@ func (m *MockWalletRepositoryV2) UpdateWallet(ctx context.Context, walletID stri
 func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID string, amount int64) error {
 	for _, wallet := range m.wallets {
 		// 支持通过wallet.ID或userID查找
-		if wallet.ID == walletID || wallet.UserID == walletID {
+		if wallet.ID.Hex() == walletID || wallet.UserID == walletID {
 			if err, ok := m.failUpdateForUser[wallet.UserID]; ok {
 				return err
 			}
@@ -88,10 +88,10 @@ func (m *MockWalletRepositoryV2) CreateTransaction(ctx context.Context, transact
 	}
 	// 使用计数器和时间戳确保ID唯一性
 	m.txCounter++
-	transaction.ID = fmt.Sprintf("tx_%s_%d", time.Now().Format("20060102150405"), m.txCounter)
+	transaction.ID = primitive.NewObjectID()
 	transaction.CreatedAt = time.Now()
 	transaction.TransactionTime = time.Now()
-	m.transactions[transaction.ID] = transaction
+	m.transactions[transaction.ID.Hex()] = transaction
 	return nil
 }
 
@@ -152,10 +152,10 @@ func (m *MockWalletRepositoryV2) CountTransactions(ctx context.Context, filter *
 
 // CreateWithdrawRequest 创建提现请求
 func (m *MockWalletRepositoryV2) CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error {
-	request.ID = "wd_" + time.Now().Format("20060102150405")
+	request.ID = primitive.NewObjectID()
 	request.CreatedAt = time.Now()
 	request.UpdatedAt = time.Now()
-	m.withdrawRequests[request.ID] = request
+	m.withdrawRequests[request.ID.Hex()] = request
 	return nil
 }
 
