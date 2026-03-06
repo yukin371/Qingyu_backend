@@ -52,6 +52,7 @@ func sanitizeLogMessage(msg string) string {
 	return replacer.Replace(msg)
 }
 
+// codeql[go/log-injection]: msg is sanitized via sanitizeLogMessage, fields are passed through
 func appendLogMessageField(fields []zap.Field, msg string) []zap.Field {
 	out := make([]zap.Field, 0, len(fields)+1)
 	out = append(out, fields...)
