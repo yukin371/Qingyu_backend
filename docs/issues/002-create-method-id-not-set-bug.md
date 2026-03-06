@@ -31,6 +31,7 @@
    - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设
    - writer 域本轮已补 `Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
    - finance 域本轮已补 `Wallet/Transaction/WithdrawRequest` 的 Create 回设
+   - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
 
 ### 已修复的 Repository
 
@@ -140,6 +141,10 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 - [x] `role_repository_mongo.go`
 - [x] `permission_repository_mongo.go`
 - [ ] `user_repository_mongo.go`
+
+### Bookstore 模块
+- [x] `chapter_repository_mongo.go`
+- [x] `category_repository_mongo.go`
 
 ### 其他模块
 - [x] `finance/wallet_repository_mongo.go` - `wallets/transactions/withdraw_requests`

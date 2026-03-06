@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/internal/middleware/builtin"
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/shared"
-	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -275,7 +275,7 @@ func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 		v1.GET("/books/search", api.SearchBooks)
 		v1.GET("/books/search/title", api.SearchByTitle)
 		v1.GET("/books/search/author", api.SearchByAuthor)
-		v1.GET("/books/tags", api.GetBooksByTags) // 新增：按标签筛选
+		v1.GET("/books/tags", api.GetBooksByTags)     // 新增：按标签筛选
 		v1.GET("/books/status", api.GetBooksByStatus) // 新增：按状态筛选
 		v1.GET("/books/:id/view", api.IncrementBookView)
 		v1.GET("/books/:id/similar", api.GetSimilarBooks)
@@ -577,7 +577,7 @@ func TestBookstoreAPI_GetCategoryByID_Success(t *testing.T) {
 	router := setupBookstoreTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	category := &bookstoreModel.Category{ID: primitive.NewObjectID().Hex(), Name: "测试分类"}
+	category := &bookstoreModel.Category{ID: primitive.NewObjectID(), Name: "测试分类"}
 	mockService.On("GetCategoryByID", mock.Anything, categoryID).Return(category, nil)
 
 	// When

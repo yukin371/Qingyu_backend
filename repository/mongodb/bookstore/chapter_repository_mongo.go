@@ -37,15 +37,16 @@ func (r *MongoChapterRepository) Create(ctx context.Context, chapter *bookstore.
 	if chapter == nil {
 		return errors.New("chapter cannot be nil")
 	}
+	if chapter.ID.IsZero() {
+		chapter.ID = primitive.NewObjectID()
+	}
 
 	chapter.BeforeCreate()
 
-	result, err := r.GetCollection().InsertOne(ctx, chapter)
+	_, err := r.GetCollection().InsertOne(ctx, chapter)
 	if err != nil {
 		return err
 	}
-
-	chapter.ID = result.InsertedID.(primitive.ObjectID).Hex()
 	return nil
 }
 

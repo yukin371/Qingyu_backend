@@ -2,16 +2,18 @@ package bookstore
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Chapter 章节模型（元数据，不含内容）
 type Chapter struct {
-	ID               string  `bson:"_id,omitempty" json:"id"`
-	BookID           string  `bson:"book_id" json:"book_id"`
-	ProjectID        *string `bson:"project_id,omitempty" json:"projectId,omitempty"`
-	ProjectChapterID *string `bson:"project_chapter_id,omitempty" json:"projectChapterId,omitempty"`
-	Title            string  `bson:"title" json:"title"`
-	ChapterNum       int     `bson:"chapter_num" json:"chapter_num"`
+	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	BookID           string             `bson:"book_id" json:"book_id"`
+	ProjectID        *string            `bson:"project_id,omitempty" json:"projectId,omitempty"`
+	ProjectChapterID *string            `bson:"project_chapter_id,omitempty" json:"projectChapterId,omitempty"`
+	Title            string             `bson:"title" json:"title"`
+	ChapterNum       int                `bson:"chapter_num" json:"chapter_num"`
 	// Content 字段已移除，使用 ChapterContent 单独存储
 	WordCount int     `bson:"word_count" json:"word_count"`
 	IsFree    bool    `bson:"is_free" json:"is_free"`

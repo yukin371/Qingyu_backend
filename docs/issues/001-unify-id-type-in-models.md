@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 技术债务
-**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet 已推进）
+**状态**: ⚠️ 部分存在（auth + messaging + writer + finance wallet + bookstore chapter/category 已推进）
 **创建日期**: 2026-03-05
 **相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
@@ -20,7 +20,8 @@
 2. ⚠️ **auth 域 Mongo 主键模型已完成迁移（PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession），Redis Session 不在本 issue 的 Mongo `_id` 统一范围**
 3. ⚠️ **writer 域 Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent 已完成迁移**
 4. ⚠️ **finance 域 Wallet/Transaction/WithdrawRequest 已完成迁移**
-5. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
+5. ⚠️ **bookstore 域 Chapter/Category 已完成迁移**
+6. ❌ **其他领域仍有少量历史/边缘子域保留 `ID string`，需要继续逐域清理**
 
 ### 需要修复的模型（优先级排序）
 
@@ -28,7 +29,7 @@
 2. **models/social/** - 核心持久化模型已完成，剩余主要是 DTO/外键 string 边界，不属于模型 `_id` 阻塞
 3. **models/messaging/** - 其余消息模型（Message/MessageTemplate/NotificationDelivery 已完成，Conversation/Announcement/InboxNotification 已使用基础 ObjectID 混入）
 4. **models/writer/** - Version, Timeline 已完成，本轮重点转向剩余边缘模型
-5. **models/bookstore/** - Chapter, Category
+5. **models/bookstore/** - Chapter, Category 已完成，本轮重点转向其余边缘模型
 6. **models/finance/** - Wallet 已完成，本轮重点转向 recommendation/notification/reader 边缘模型
 7. **models/ai/** - Context, RequestLog, Provider
 
@@ -36,7 +37,7 @@
 
 - ✅ Writer域（Project, Document等）
 - ✅ Reader域
-- ✅ Bookstore域（Book, BookDetail）
+- ✅ Bookstore域（Book, BookDetail, Chapter, Category）
 - ✅ Social域（部分）
 
 ---
@@ -140,8 +141,9 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 1. [x] `models/auth/` - PermissionTemplate, Role, Permission, OAuthAccount, OAuthSession
 2. [ ] `models/social/` - BookList, Collection 等剩余模型（Comment/Review/Message 已完成）
 3. [x] `models/writer/` - Version, Timeline 已迁移
-4. [ ] `models/finance/` - Wallet, Transaction, WithdrawRequest 已迁移
-5. [ ] 其他模块
+4. [x] `models/finance/` - Wallet, Transaction, WithdrawRequest 已迁移
+5. [x] `models/bookstore/` - Chapter, Category 已迁移
+6. [ ] 其他模块
 
 每个模块迁移步骤：
 1. 修改 Model 定义：`ID string` → `ID primitive.ObjectID`

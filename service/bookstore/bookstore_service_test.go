@@ -20,6 +20,14 @@ import (
 // 辅助函数
 // =========================
 
+func mustObjectIDFromHex(hex string) primitive.ObjectID {
+	objectID, err := primitive.ObjectIDFromHex(hex)
+	if err != nil {
+		panic(err)
+	}
+	return objectID
+}
+
 // newTestBook 创建一个测试用的 Book，自动生成 ID
 func newTestBook(title, author string, status bookstoreModel.BookStatus) *bookstoreModel.Book {
 	book := &bookstoreModel.Book{
@@ -34,7 +42,7 @@ func newTestBook(title, author string, status bookstoreModel.BookStatus) *bookst
 // newTestCategory 创建一个测试用的 Category，自动生成 ID
 func newTestCategory(name string) *bookstoreModel.Category {
 	category := &bookstoreModel.Category{Name: name}
-	category.ID = primitive.NewObjectID().Hex()
+	category.ID = primitive.NewObjectID()
 	return category
 }
 
@@ -45,6 +53,14 @@ func newTestCategory(name string) *bookstoreModel.Category {
 // MockBookRepositoryForService Mock书籍仓储 - 仅包含service中使用的方法
 type MockBookRepositoryForService struct {
 	mock.Mock
+}
+
+func (m *MockBookRepositoryForService) GetByProjectID(ctx context.Context, projectID string) (*bookstoreModel.Book, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*bookstoreModel.Book), args.Error(1)
 }
 
 // 基础CRUD方法
@@ -791,8 +807,8 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "无效的书籍ID",
-			bookID:      "invalid-id",
+			name:   "无效的书籍ID",
+			bookID: "invalid-id",
 			setupMock: func(m *MockBookRepositoryForService) {
 				// 无效ID应该返回错误
 				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid book ID"))
@@ -900,7 +916,11 @@ func TestBookstoreService_GetRecommendedBooks(t *testing.T) {
 	ctx := context.Background()
 
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBookRepo.On("GetRecommended", ctx, 10, 0).Return(books, nil)
@@ -923,7 +943,11 @@ func TestBookstoreService_GetFeaturedBooks(t *testing.T) {
 	ctx := context.Background()
 
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBookRepo.On("GetFeatured", ctx, 10, 0).Return(books, nil)
@@ -946,7 +970,11 @@ func TestBookstoreService_GetHotBooks(t *testing.T) {
 	ctx := context.Background()
 
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBookRepo.On("GetHotBooks", ctx, 10, 0).Return(books, nil)
@@ -969,7 +997,11 @@ func TestBookstoreService_GetNewReleases(t *testing.T) {
 	ctx := context.Background()
 
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBookRepo.On("GetNewReleases", ctx, 10, 0).Return(books, nil)
@@ -992,7 +1024,11 @@ func TestBookstoreService_GetFreeBooks(t *testing.T) {
 	ctx := context.Background()
 
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBookRepo.On("GetFreeBooks", ctx, 10, 0).Return(books, nil)
@@ -1022,7 +1058,11 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 			keyword: "玄幻",
 			setupMock: func(m *MockBookRepositoryForService) {
 				books := []*bookstoreModel.Book{
-					func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+					func() *bookstoreModel.Book {
+						b := &bookstoreModel.Book{Title: "$1"}
+						b.ID = primitive.NewObjectID()
+						return b
+					}(),
 				}
 				m.On("Search", mock.Anything, "玄幻", 20, 0).Return(books, nil)
 				m.On("CountByFilter", mock.Anything, mock.Anything).Return(int64(1), nil)
@@ -1143,8 +1183,8 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "无效的书籍ID",
-			bookID:      "invalid-id",
+			name:   "无效的书籍ID",
+			bookID: "invalid-id",
 			setupMock: func(m *MockBookRepositoryForService) {
 				// 无效ID应该返回错误
 				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid book ID"))
@@ -1189,7 +1229,7 @@ func TestBookstoreService_GetCategoryTree(t *testing.T) {
 	tree := []*bookstoreModel.CategoryTree{
 		{
 			Category: bookstoreModel.Category{
-				ID:   primitive.NewObjectID().Hex(),
+				ID:   primitive.NewObjectID(),
 				Name: "玄幻",
 			},
 			Children: []*bookstoreModel.CategoryTree{},
@@ -1222,7 +1262,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 			setupMock: func(m *MockCategoryRepositoryForService) {
 				categoryID := primitive.NewObjectID().Hex()
 				category := &bookstoreModel.Category{
-					ID:       categoryID,
+					ID:       mustObjectIDFromHex(categoryID),
 					Name:     "玄幻",
 					IsActive: true,
 				}
@@ -1236,7 +1276,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 			setupMock: func(m *MockCategoryRepositoryForService) {
 				categoryID := primitive.NewObjectID().Hex()
 				category := &bookstoreModel.Category{
-					ID:       categoryID,
+					ID:       mustObjectIDFromHex(categoryID),
 					Name:     "玄幻",
 					IsActive: false,
 				}
@@ -1303,8 +1343,16 @@ func TestBookstoreService_GetActiveBanners(t *testing.T) {
 	ctx := context.Background()
 
 	banners := []*bookstoreModel.Banner{
-		func() *bookstoreModel.Banner { b := &bookstoreModel.Banner{Title: "Banner1"}; b.ID = primitive.NewObjectID(); return b }(),
-		func() *bookstoreModel.Banner { b := &bookstoreModel.Banner{Title: "Banner2"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Banner {
+			b := &bookstoreModel.Banner{Title: "Banner1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
+		func() *bookstoreModel.Banner {
+			b := &bookstoreModel.Banner{Title: "Banner2"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 
 	mockBannerRepo.On("GetActive", ctx, 5, 0).Return(banners, nil)
@@ -1343,8 +1391,8 @@ func TestBookstoreService_IncrementBannerClick(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "无效的Banner ID",
-			bannerID:    "invalid-id",
+			name:     "无效的Banner ID",
+			bannerID: "invalid-id",
 			setupMock: func(m *MockBannerRepositoryForService) {
 				// 无效ID应该返回错误
 				m.On("GetByID", mock.Anything, "invalid-id").Return(nil, errors.New("invalid banner ID"))
@@ -1533,13 +1581,21 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 
 	// Mock Banner
 	banners := []*bookstoreModel.Banner{
-		func() *bookstoreModel.Banner { b := &bookstoreModel.Banner{Title: "推荐书"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Banner {
+			b := &bookstoreModel.Banner{Title: "推荐书"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 	mockBannerRepo.On("GetActive", ctx, 5, 0).Return(banners, nil)
 
 	// Mock Recommended Books
 	books := []*bookstoreModel.Book{
-		func() *bookstoreModel.Book { b := &bookstoreModel.Book{Title: "$1"}; b.ID = primitive.NewObjectID(); return b }(),
+		func() *bookstoreModel.Book {
+			b := &bookstoreModel.Book{Title: "$1"}
+			b.ID = primitive.NewObjectID()
+			return b
+		}(),
 	}
 	mockBookRepo.On("GetRecommended", ctx, 10, 0).Return(books, nil)
 	mockBookRepo.On("Count", ctx, nil).Return(int64(1), nil)

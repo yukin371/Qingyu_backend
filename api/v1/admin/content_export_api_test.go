@@ -605,7 +605,7 @@ func createTestChapters(count int) []*bookstore.Chapter {
 	now := time.Now()
 	for i := 0; i < count; i++ {
 		chapters[i] = &bookstore.Chapter{
-			ID:          "chapter-id",
+			ID:          primitive.NewObjectID(),
 			BookID:      "book-id",
 			Title:       "测试章节",
 			ChapterNum:  i + 1,
