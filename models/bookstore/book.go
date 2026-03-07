@@ -52,6 +52,8 @@ type Book struct {
 	CategoryIDs   []primitive.ObjectID `bson:"category_ids" json:"categoryIds"`                        // 分类ID列表
 	Categories    []string             `bson:"categories" json:"categories"`                           // 分类名称（冗余字段，便于展示）
 	Tags          []string             `bson:"tags" json:"tags"`                                       // 标签
+	ProjectID     *string              `bson:"project_id,omitempty" json:"projectId,omitempty"`        // 来源项目ID（writer project）
+	SourceType    string               `bson:"source_type,omitempty" json:"sourceType,omitempty"`      // 来源类型：writer_project 等
 	Status        BookStatus           `bson:"status" json:"status" validate:"required"`               // 状态
 	Rating        types.Rating         `bson:"rating" json:"rating" validate:"min=0,max=5"`            // 评分 (0-5星，平均分可为0)
 	RatingCount   int64                `bson:"rating_count" json:"ratingCount" validate:"min=0"`       // 评分人数
@@ -65,6 +67,7 @@ type Book struct {
 	IsHot         bool                 `bson:"is_hot" json:"isHot"`                                    // 是否热门
 	PublishedAt   *time.Time           `bson:"published_at,omitempty" json:"publishedAt,omitempty"`    // 发布时间
 	LastUpdateAt  *time.Time           `bson:"last_update_at,omitempty" json:"lastUpdateAt,omitempty"` // 最后更新时间
+	LastSyncedAt  *time.Time           `bson:"last_synced_at,omitempty" json:"lastSyncedAt,omitempty"` // 最近同步时间
 }
 
 // BookFilter 书籍查询过滤器

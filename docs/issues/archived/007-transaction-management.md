@@ -2,24 +2,27 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ❌ 待修复（已审查确认）
+**状态**: ✅ 核心问题已解决（已归档）
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../reports/archived/backend-service-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../../reports/archived/backend-service-analysis-2026-01-26.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
 ## 审查结果
 
-**状态**: ❌ 问题确认存在
+**状态**: ✅ 高风险业务事务问题已解决，剩余为后续优化项
 
 ### 审查发现
 
-1. ❌ **`pkg/transaction/` 目录不存在**
-2. ❌ **没有事务管理器接口** - `transaction.Manager` 未定义
-3. ❌ **Service层无 `RunInTransaction` 模式**
-4. ⚠️ **`transaction_service.go:187` 存在 TODO 注释** - `// TODO: 需要回滚`
+1. ✅ **高风险业务链路已完成事务收敛**
+2. ⚠️ **仓库级事务规范和系统级 outbox 仍属于后续优化项**
+3. ✅ **wallet 交易/提现服务已接入事务执行**
+4. ✅ **作者收入提现申请已接入钱包冻结与双写回滚**
+5. ✅ **会员订阅/续费已接入钱包扣款与回滚**
+6. ✅ **发布事件总线已切换为持久化存储，不再只依赖内存分发**
+7. ✅ **`transaction_service.go` 中的余额回滚 TODO 已消除**
 
 ### 证据代码
 
@@ -34,20 +37,63 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 }
 ```
 
-**影响**: 如果第二步失败，第一步已扣款无法回滚，用户余额会不一致，财务数据完整性风险
+**影响**: 原先如果第二步失败，第一步已扣款无法回滚；该财务完整性风险现已修复
+
+### 本轮已落地
+
+1. ✅ `WalletRepository` 新增 `RunInTransaction`
+2. ✅ Mongo 钱包仓储已实现 `StartSession + WithTransaction`
+3. ✅ `Recharge / Consume / Transfer` 已改为事务执行
+4. ✅ `CreateWithdrawRequest / ApproveWithdraw / RejectWithdraw` 已改为事务执行
+5. ✅ wallet 域已引入显式 `TransactionRunner`，不再由业务方法直接依赖仓储事务细节
+6. ✅ `ServiceContainer` 已通过 provider 注入 wallet 事务入口
+7. ✅ 已补单测，验证余额更新、状态更新、交易记录失败时会整体回滚
+8. ✅ `pkg/transaction` 已提供领域无关的 `Runner`，为后续跨域统一事务入口打底
+9. ✅ `AuthorRevenueService.CreateWithdrawalRequest` 已改为统一事务内同时创建作者提现单、钱包提现单并冻结余额
+10. ✅ `ServiceContainer` 已为 `AuthorRevenueService` 注入通用 Mongo transaction runner
+11. ✅ 已补作者提现单测，验证钱包写失败和扣款失败时会整体回滚
+12. ✅ `MembershipService.Subscribe / RenewMembership` 已改为统一事务内完成会员生效与钱包扣款
+13. ✅ `ServiceContainer` 已为 `MembershipService` 注入通用 Mongo transaction runner
+14. ✅ 已补会员订阅/续费回滚测试，验证扣款失败和流水失败时不会留下已生效会员
+15. ✅ `FollowService` 的关注/取关已改为事务内统一更新关注关系和互关状态
+16. ✅ 已补关注关系回滚测试，验证互关状态更新失败时不会留下半成功关系
+17. ✅ `CommentService` 的回复/删除回复已改为事务内统一维护子评论与父评论回复计数
+18. ✅ 已补评论回滚测试，验证回复计数更新失败时不会留下脏回复或错误计数
+19. ✅ `PublishService` 对发布/下架事件失败已改为可审计，不再静默吞错
+20. ✅ 已补发布事件失败测试，验证失败信息会回写到 `PublicationRecord`
+21. ✅ `ServiceContainer` 已切换为 `PersistedEventBus + MongoEventStore`，admin 事件回放接口恢复真实数据源
+22. ✅ `PublishEventBusAdapter` 已保留真实业务事件类型，避免 `project.published` / `document.published` 被统一折叠为通用事件名
+23. ✅ `LikeService` 的评论点赞/取消点赞已改为事务内统一维护点赞记录与评论点赞计数
+24. ✅ 已补点赞回滚测试，验证评论计数更新失败时不会留下脏点赞或错误计数
+25. ✅ `CollectionService` 的新增收藏、删除收藏、迁移收藏夹已改为事务内统一维护收藏记录与收藏夹计数
+26. ✅ 已补收藏回滚测试，验证收藏夹计数更新失败时不会留下脏收藏或错误计数
+27. ✅ `BookListService` 的书单点赞、复制书单已改为事务内统一维护记录与计数
+28. ✅ 已补书单回滚测试，验证点赞数/复制数更新失败时不会留下脏点赞或脏复制
+29. ✅ `ReviewService` 的书评点赞/取消点赞已改为事务内统一维护点赞记录与点赞计数
+30. ✅ 已补书评回滚测试，验证书评点赞计数更新失败时不会留下脏点赞或错误计数
+31. ✅ `MessageService` 的发送消息、标记已读已改为事务内统一维护消息、会话最后消息与未读数
+32. ✅ 已补消息回滚测试，验证未读数更新失败时不会留下半成功消息状态
+
+---
+
+## 后续 TODO
+
+1. 基于当前 `PersistedEventBus` 补 `retry/dead-letter` 闭环，而不是继续停留在“可审计失败”
+2. 补充统一事务约定文档，明确哪些 Service/Repository 必须暴露 `RunInTransaction`
+3. 随后在 `#010` 中继续把剩余 Repository 业务逻辑外移，避免事务职责再次下沉
 
 ---
 
 ## 设计方案
 
-**设计文档**: [事务管理器实现设计方案](../plans/2026-03-05-transaction-manager-design.md)
+**设计文档**: [事务管理器实现设计方案](../../plans/2026-03-05-transaction-manager-design.md)
 
 ### 设计要点
 
-1. **创建 `pkg/transaction/` 包** - 实现 Manager 接口和 MongoManager
-2. **Service层集成** - 使用 `RunInTransaction` 模式包装事务操作
-3. **Repository层支持** - 事务感知的 Repository 基类
-4. **依赖注入配置** - 在 ServiceContainer 中注册事务管理器
+1. **统一事务入口** - 收敛现有散落的事务实现
+2. **Service层集成** - 将高风险跨仓储操作统一迁移到 `RunInTransaction`
+3. **Repository层支持** - 补足需要事务的仓储接口
+4. **依赖注入配置** - 在 ServiceContainer 中注册统一事务管理器
 
 **预计实施时间**: 15小时（2个工作日）
 
@@ -241,9 +287,9 @@ func (r *TransactionalRepository) GetCollection(ctx context.Context) *mongo.Coll
 
 ### Phase 1: 基础设施（1 周）
 
-1. **实现事务管理器**
-   - [ ] 定义事务接口
-   - [ ] 实现 MongoDB 事务管理器
+1. **统一事务管理器**
+   - [ ] 收敛已有事务接口/实现
+   - [ ] 统一 MongoDB 事务管理器入口
    - [ ] 编写单元测试
 
 2. **集成到 ServiceContainer**
@@ -353,18 +399,23 @@ func (s *OrderService) CreateOrder(
 ## 检查清单
 
 ### 基础设施
-- [ ] 事务管理器实现
-- [ ] 单元测试覆盖
-- [ ] 集成到 DI 容器
+- [x] 统一事务管理器基础实现
+- [x] wallet 财务链路单元测试覆盖
+- [x] 财务高风险链路已集成到 DI 容器
 
 ### 业务迁移
 - [ ] 书籍管理事务支持
 - [ ] 订单管理事务支持
-- [ ] 支付流程事务支持
-- [ ] 社交互动事务支持
+- [x] 钱包充值/消费/转账/提现事务支持
+- [x] 作者收入提现申请事务支持
+- [x] 会员订阅/续费事务支持
+- [x] 关注/取关事务支持
+- [x] 评论回复/删除回复事务支持
+- [x] 发布事件失败可见化
+- [ ] 点赞等其他社交互动事务支持
 
 ### 测试验证
-- [ ] 回滚测试
+- [x] 高风险财务回滚测试
 - [ ] 并发测试
 - [ ] 性能测试
 

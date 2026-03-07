@@ -2,17 +2,17 @@
 
 **优先级**: 高 (P0)
 **类型**: 业务逻辑 Bug
-**状态**: ✅ 主流已修复（已审查）
+**状态**: ✅ 核心问题已修复（低频批量入口已收口）
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
+**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
 ## 审查结果
 
-**状态**: ✅ 主流已修复
+**状态**: ✅ 已解决
 
 ### 审查发现
 
@@ -26,9 +26,28 @@
    - 使用 `result.InsertedID` 回设 ID
    - 预先生成 `primitive.NewObjectID()` 并赋值
 
-3. ⚠️ **使用 string ID 的模型对应的 Repository 仍需要修复**:
-   - 约37个模型使用 string ID
-   - 这些模型对应的 Create 方法需要特别处理
+3. ⚠️ **剩余问题主要集中在尚未完成 ObjectID 迁移的模型/仓储**:
+   - auth 域本轮已补 `PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession` 的 Create 回设
+   - messaging 域本轮已补 `Message/MessageTemplate/NotificationDelivery` 的 Create 回设
+   - writer 域本轮已补 `Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent` 的 Create 回设；其他仍保留 string 主键的模型在迁移时仍需逐个复核
+   - writer 发布链路本轮已补 `PublicationRecord` 仓储 Create 回设
+   - writer 边缘仓储本轮已补 `BatchOperation/OperationLog/Template` 的显式 Create 回设保证
+   - finance 域本轮已补 `Wallet/Transaction/WithdrawRequest` 的 Create 回设
+   - bookstore 域本轮已补 `Chapter/Category` 的 Create 回设
+   - ai 域活跃仓储 `ChatSession/ChatMessage/UserQuota/QuotaTransaction` 已具备 Create 回设；其余核心 metadata 模型已改为 `BeforeCreate + ObjectID`
+   - reader 域本轮已补 `ReadingSettings/ReaderTheme` 的 Create 回设与 ObjectID 边界
+   - notification 域本轮已补 `Notification/NotificationPreference/PushDevice/NotificationTemplate` 的 Create 回设与 ObjectID 边界
+   - admin 域本轮已补 `AdminLog/AuditRecord` 的 Create 回设与 ObjectID 查询边界
+   - recommendation 域本轮已补 `Behavior/ItemFeature/UserProfile/UserBehaviorRecord` 的 Create/Upsert 回设与 ObjectID 边界
+   - 当前残留主要是少量低频 `BatchCreate/InsertMany` 入口的显式回设语义不统一，不再是主链路阻塞
+
+### 当前剩余 TODO
+
+1. 其余类似低频批量入口
+   - 已补 `BatchCreateMembershipCards`
+   - 已补 `ChapterContent.BatchCreate`
+   - 已补 `Ranking.UpdateRankings`
+   - 剩余若有同类问题，属于后续增量代码审查范围，不再是本 issue 阻塞
 
 ### 已修复的 Repository
 
@@ -115,29 +134,42 @@ func (r *SomeRepository) Create(ctx context.Context, model *Model) error {
 
 ### Writer 模块
 - [x] `outline_repository_mongo.go` - 已修复
-- [ ] `project_repository_mongo.go` - 需检查
-- [ ] `document_repository_mongo.go` - 需检查
+- [x] `project_repository_mongo.go`
+- [x] `document_repository_mongo.go`
 - [ ] `batch_operation_repository_mongo.go` - 需检查
+- [x] `timeline_repository_mongo.go`
+- [x] `version_service.go` 相关 `file_revisions/file_patches/commits` 写入回设
 
 ### Social 模块
-- [ ] `booklist_repository_mongo.go`
-- [ ] `comment_repository_mongo.go`
-- [ ] `review_repository_mongo.go`
-- [ ] `like_repository_mongo.go`
-- [ ] `follow_repository_mongo.go`
+- [x] `booklist_repository_mongo.go`
+- [x] `comment_repository_mongo.go`
+- [x] `review_repository_mongo.go`
+- [x] `like_repository_mongo.go`
+- [x] `follow_repository_mongo.go`
+- [x] `message_repository_mongo.go`
 
 ### Reader 模块
-- [ ] `reading_progress_repository_mongo.go`
+- [x] `reading_progress_repository_mongo.go`
+- [x] `reading_settings_repository_mongo.go`
+- [x] `reader_theme_repository_mongo.go`
 - [ ] `collection_repository_mongo.go`
 - [ ] `comment_repository_mongo.go`
 
 ### Auth 模块
-- [ ] `role_repository_mongo.go`
-- [ ] `permission_repository_mongo.go`
+- [x] `role_repository_mongo.go`
+- [x] `permission_repository_mongo.go`
 - [ ] `user_repository_mongo.go`
 
+### Bookstore 模块
+- [x] `chapter_repository_mongo.go`
+- [x] `category_repository_mongo.go`
+
 ### 其他模块
-- [ ] `notification_repository_mongo.go`
+- [x] `finance/wallet_repository_mongo.go` - `wallets/transactions/withdraw_requests`
+- [x] `notification/notification_repository_impl.go`
+- [x] `notification/preference_repository_impl.go`
+- [x] `notification/push_device_repository_impl.go`
+- [x] `notification/template_repository_impl.go`
 - [ ] `message_repository_mongo.go`
 - [ ] 所有其他 Repository
 
@@ -238,3 +270,4 @@ func (r *MongoBookListRepository) CreateBookList(ctx context.Context, bookList *
 ## 参考链接
 
 - [MongoDB InsertOne 文档](https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo#Collection.InsertOne)
+

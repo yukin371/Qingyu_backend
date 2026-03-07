@@ -98,7 +98,7 @@ func (s *OAuthService) GetAuthURL(ctx context.Context, provider authModel.OAuthP
 	// 创建OAuth会话
 	oauthState := s.generateState()
 	session := &authModel.OAuthSession{
-		ID:          generateSessionID(),
+
 		State:       oauthState,
 		Provider:    provider,
 		RedirectURI: redirectURI,
@@ -112,9 +112,9 @@ func (s *OAuthService) GetAuthURL(ctx context.Context, provider authModel.OAuthP
 	}
 
 	// 保存会话
-	s.stateStore[session.ID] = session
+	s.stateStore[session.State] = session
 	s.logger.Debug("OAuth session created",
-		zap.String("session_id", session.ID),
+		zap.String("session_state", session.State),
 		zap.String("provider", string(provider)),
 		zap.Bool("link_mode", session.LinkMode),
 	)
@@ -389,10 +389,6 @@ func (s *OAuthService) generateState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
-}
-
-func generateSessionID() string {
-	return fmt.Sprintf("oauth_%d", time.Now().UnixNano())
 }
 
 // getTokenExtraString 从token的Extra中安全地获取字符串值

@@ -4,31 +4,33 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Role 角色模型
 type Role struct {
-	ID          string    `json:"id" bson:"_id,omitempty"`
-	Name        string    `json:"name" bson:"name"`               // 角色名称：reader, author, admin
-	Description string    `json:"description" bson:"description"` // 角色描述
-	Permissions []string  `json:"permissions" bson:"permissions"` // 权限列表
-	IsSystem    bool      `json:"is_system" bson:"is_system"`     // 是否系统角色（不可删除）
-	IsDefault   bool      `json:"is_default" bson:"is_default"`   // 是否默认角色（新用户默认分配）
-	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" bson:"updated_at"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name        string             `json:"name" bson:"name"`               // 角色名称：reader, author, admin
+	Description string             `json:"description" bson:"description"` // 角色描述
+	Permissions []string           `json:"permissions" bson:"permissions"` // 权限列表
+	IsSystem    bool               `json:"is_system" bson:"is_system"`     // 是否系统角色（不可删除）
+	IsDefault   bool               `json:"is_default" bson:"is_default"`   // 是否默认角色（新用户默认分配）
+	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // Permission 权限定义（可选，可以只用字符串）
 type Permission struct {
-	ID          string    `json:"id,omitempty" bson:"_id,omitempty"`
-	Code        string    `json:"code" bson:"code"`                     // 权限代码：user.read, book.write
-	Name        string    `json:"name" bson:"name"`                     // 权限名称
-	Description string    `json:"description" bson:"description"`       // 权限描述
-	Resource    string    `json:"resource" bson:"resource"`             // 资源类型：user, book, wallet
-	Action      string    `json:"action" bson:"action"`                 // 操作类型：read, write, delete
-	Effect      string    `json:"effect" bson:"effect"`                 // 权限效果：allow 或 deny
-	Priority    int       `json:"priority" bson:"priority"`             // 优先级，数值越大优先级越高
-	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+	ID          primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Code        string             `json:"code" bson:"code"`                     // 权限代码：user.read, book.write
+	Name        string             `json:"name" bson:"name"`                     // 权限名称
+	Description string             `json:"description" bson:"description"`       // 权限描述
+	Resource    string             `json:"resource" bson:"resource"`             // 资源类型：user, book, wallet
+	Action      string             `json:"action" bson:"action"`                 // 操作类型：read, write, delete
+	Effect      string             `json:"effect" bson:"effect"`                 // 权限效果：allow 或 deny
+	Priority    int                `json:"priority" bson:"priority"`             // 优先级，数值越大优先级越高
+	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 }
 
 // UserRole 用户角色关联（存储在users集合中的roles字段，或单独的集合）

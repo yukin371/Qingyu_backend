@@ -165,6 +165,9 @@ func (r *MongoChapterContentRepository) BatchCreate(ctx context.Context, content
 	docs := make([]interface{}, len(contents))
 	for i, content := range contents {
 		if content != nil {
+			if content.ID.IsZero() {
+				content.ID = primitive.NewObjectID()
+			}
 			content.BeforeCreate()
 			docs[i] = content
 		}

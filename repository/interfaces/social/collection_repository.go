@@ -70,6 +70,9 @@ type CollectionRepository interface {
 	// CountUserCollections 统计用户收藏数
 	CountUserCollections(ctx context.Context, userID string) (int64, error)
 
+	// RunInTransaction 在事务中执行收藏相关操作
+	RunInTransaction(ctx context.Context, fn func(context.Context) error) error
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }

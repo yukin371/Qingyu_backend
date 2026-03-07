@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
@@ -116,15 +115,19 @@ func (s *CollectionService) AddToCollection(ctx context.Context, userID, bookID,
 		UpdatedAt: time.Now(),
 	}
 
-	if err := s.collectionRepo.Create(ctx, collection); err != nil {
-		return nil, fmt.Errorf("添加收藏失败: %w", err)
-	}
-
-	// 更新收藏夹计数
-	if folderID != "" {
-		if err := s.collectionRepo.IncrementFolderBookCount(ctx, folderID); err != nil {
-			log.Printf("Warning: failed to increment folder book count")
+	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.collectionRepo.Create(txCtx, collection); err != nil {
+			return fmt.Errorf("添加收藏失败: %w", err)
 		}
+
+		if folderID != "" {
+			if err := s.collectionRepo.IncrementFolderBookCount(txCtx, folderID); err != nil {
+				return fmt.Errorf("更新收藏夹计数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	// 发布事件
@@ -153,16 +156,19 @@ func (s *CollectionService) RemoveFromCollection(ctx context.Context, userID, co
 		return fmt.Errorf("无权删除该收藏")
 	}
 
-	// 删除收藏
-	if err := s.collectionRepo.Delete(ctx, collectionID); err != nil {
-		return fmt.Errorf("删除收藏失败: %w", err)
-	}
-
-	// 更新收藏夹计数
-	if collection.FolderID != "" {
-		if err := s.collectionRepo.DecrementFolderBookCount(ctx, collection.FolderID); err != nil {
-			log.Printf("Warning: failed to decrement folder book count")
+	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.collectionRepo.Delete(txCtx, collectionID); err != nil {
+			return fmt.Errorf("删除收藏失败: %w", err)
 		}
+
+		if collection.FolderID != "" {
+			if err := s.collectionRepo.DecrementFolderBookCount(txCtx, collection.FolderID); err != nil {
+				return fmt.Errorf("更新收藏夹计数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件
@@ -208,28 +214,29 @@ func (s *CollectionService) UpdateCollection(ctx context.Context, userID, collec
 		}
 	}
 
-	// 处理收藏夹变更
-	if newFolderID, ok := updates["folder_id"].(string); ok {
-		oldFolderID := collection.FolderID
-		if oldFolderID != newFolderID {
-			// 旧收藏夹计数-1
-			if oldFolderID != "" {
-				if err := s.collectionRepo.DecrementFolderBookCount(ctx, oldFolderID); err != nil {
-					log.Printf("Warning: failed to decrement old folder count")
+	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if newFolderID, ok := updates["folder_id"].(string); ok {
+			oldFolderID := collection.FolderID
+			if oldFolderID != newFolderID {
+				if oldFolderID != "" {
+					if err := s.collectionRepo.DecrementFolderBookCount(txCtx, oldFolderID); err != nil {
+						return fmt.Errorf("更新旧收藏夹计数失败: %w", err)
+					}
 				}
-			}
-			// 新收藏夹计数+1
-			if newFolderID != "" {
-				if err := s.collectionRepo.IncrementFolderBookCount(ctx, newFolderID); err != nil {
-					log.Printf("Warning: failed to increment new folder count")
+				if newFolderID != "" {
+					if err := s.collectionRepo.IncrementFolderBookCount(txCtx, newFolderID); err != nil {
+						return fmt.Errorf("更新新收藏夹计数失败: %w", err)
+					}
 				}
 			}
 		}
-	}
 
-	// 更新收藏
-	if err := s.collectionRepo.Update(ctx, collectionID, updates); err != nil {
-		return fmt.Errorf("更新收藏失败: %w", err)
+		if err := s.collectionRepo.Update(txCtx, collectionID, updates); err != nil {
+			return fmt.Errorf("更新收藏失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil

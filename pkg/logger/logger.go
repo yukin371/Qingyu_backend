@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -163,6 +164,13 @@ func NewLogger(config *Config) (*Logger, error) {
 		if config.Filename == "" {
 			config.Filename = "logs/app.log"
 		}
+		// 确保日志目录存在
+		logDir := path.Dir(config.Filename)
+		if logDir != "" && logDir != "." {
+			if err := os.MkdirAll(logDir, 0755); err != nil {
+				return nil, err
+			}
+		}
 		// TODO: 支持日志轮转
 		file, err := os.OpenFile(config.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -208,6 +216,13 @@ func NewLogger(config *Config) (*Logger, error) {
 		// 打开日志文件
 		if config.Filename == "" {
 			config.Filename = "logs/app.log"
+		}
+		// 确保日志目录存在
+		logDir := path.Dir(config.Filename)
+		if logDir != "" && logDir != "." {
+			if err := os.MkdirAll(logDir, 0755); err != nil {
+				return nil, err
+			}
 		}
 		file, err := os.OpenFile(config.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {

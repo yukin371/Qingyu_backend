@@ -71,6 +71,9 @@ type ReviewRepository interface {
 	// CountUserReviews 统计用户书评数
 	CountUserReviews(ctx context.Context, userID string) (int64, error)
 
+	// RunInTransaction 在事务中执行书评相关操作
+	RunInTransaction(ctx context.Context, fn func(context.Context) error) error
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }

@@ -1,11 +1,15 @@
 package recommendation
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // ItemFeature 物品特征（书籍特征）
 // 用于内容推荐与相似度计算
 type ItemFeature struct {
-	ID         string             `bson:"_id,omitempty" json:"id"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	ItemID     string             `bson:"item_id" json:"itemId"` // 对应书籍ID
 	Tags       map[string]float64 `bson:"tags" json:"tags"`
 	Authors    []string           `bson:"authors" json:"authors"`

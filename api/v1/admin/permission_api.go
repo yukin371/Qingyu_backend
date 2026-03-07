@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/auth"
@@ -270,7 +271,12 @@ func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	req.ID = roleID
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "角色ID格式无效")
+		return
+	}
+	req.ID = objectID
 	if err := api.permissionService.UpdateRole(c.Request.Context(), &req); err != nil {
 		c.Error(err)
 		return

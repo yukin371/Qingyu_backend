@@ -8,14 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	adminModel "Qingyu_backend/models/users"
 	adminService "Qingyu_backend/service/admin"
+	"github.com/gin-gonic/gin"
 )
 
 // MockAuditLogServiceForAPI Mock审计日志服务（用于API测试）
 type MockAuditLogServiceForAPI struct {
-	QueryFunc        func(req interface{}) (interface{}, int64, error)
+	QueryFunc         func(req interface{}) (interface{}, int64, error)
 	GetByResourceFunc func(resourceType, resourceID string) (interface{}, error)
 }
 
@@ -71,7 +73,7 @@ func TestAuditAPI_GetAuditTrail_Success(t *testing.T) {
 		QueryFunc: func(req interface{}) (interface{}, int64, error) {
 			return []*adminModel.AdminLog{
 				{
-					ID:           "log1",
+					ID:           primitive.NewObjectID(),
 					AdminID:      "admin123",
 					AdminName:    "管理员A",
 					Operation:    "ban_user",
@@ -110,7 +112,7 @@ func TestAuditAPI_GetAuditTrailByResource_Success(t *testing.T) {
 		GetByResourceFunc: func(resourceType, resourceID string) (interface{}, error) {
 			return []*adminModel.AdminLog{
 				{
-					ID:           "log1",
+					ID:           primitive.NewObjectID(),
 					AdminID:      "admin123",
 					Operation:    "update_role",
 					ResourceType: resourceType,
@@ -140,7 +142,7 @@ func TestAuditAPI_GetAuditTrailByAction_Success(t *testing.T) {
 		QueryFunc: func(req interface{}) (interface{}, int64, error) {
 			return []*adminModel.AdminLog{
 				{
-					ID:        "log1",
+					ID:        primitive.NewObjectID(),
 					AdminID:   "admin123",
 					Operation: "delete_user",
 				},
@@ -170,10 +172,10 @@ func TestAuditAPI_GetAuditTrailWithPagination_Success(t *testing.T) {
 			logs := make([]*adminModel.AdminLog, 25)
 			for i := 0; i < 25; i++ {
 				logs[i] = &adminModel.AdminLog{
-					ID:         "log" + string(rune('0'+i)),
-					AdminID:    "admin123",
-					Operation:  "ban_user",
-					CreatedAt:  time.Now(),
+					ID:        primitive.NewObjectID(),
+					AdminID:   "admin123",
+					Operation: "ban_user",
+					CreatedAt: time.Now(),
 				}
 			}
 			return logs, 25, nil
@@ -210,7 +212,7 @@ func TestAuditAPI_ExportAuditTrail_Success(t *testing.T) {
 		QueryFunc: func(req interface{}) (interface{}, int64, error) {
 			return []*adminModel.AdminLog{
 				{
-					ID:           "log1",
+					ID:           primitive.NewObjectID(),
 					AdminID:      "admin123",
 					AdminName:    "管理员A",
 					Operation:    "ban_user",
@@ -281,10 +283,10 @@ func TestAuditAPI_GetAuditTrailWithDateRange_Success(t *testing.T) {
 		QueryFunc: func(req interface{}) (interface{}, int64, error) {
 			return []*adminModel.AdminLog{
 				{
-					ID:         "log1",
-					AdminID:    "admin123",
-					Operation:  "ban_user",
-					CreatedAt:  time.Now(),
+					ID:        primitive.NewObjectID(),
+					AdminID:   "admin123",
+					Operation: "ban_user",
+					CreatedAt: time.Now(),
 				},
 			}, 1, nil
 		},

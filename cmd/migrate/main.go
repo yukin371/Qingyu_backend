@@ -105,6 +105,7 @@ func main() {
 		{"003_create_books_indexes_p0", &mongodbpkg.CreateBooksIndexesP0{}},
 		{"004_create_chapters_indexes", &mongodbpkg.CreateChaptersIndexes{}},
 		{"005_create_reading_progress_indexes", &mongodbpkg.CreateReadingProgressIndexes{}},
+		{"006_create_core_query_indexes", &mongodbpkg.CreateCoreQueryIndexes{}},
 	}
 
 	for _, m := range migrations {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/notification"
 	notificationRepo "Qingyu_backend/repository/mongodb/notification"
@@ -28,14 +29,14 @@ func TestNotificationPreferenceRepository_Create(t *testing.T) {
 	defer cleanup()
 
 	preference := &notification.NotificationPreference{
-		UserID:            "user123",
-		EnableSystem:      true,
-		EnableSocial:      true,
-		EnableContent:     true,
-		EnableReward:      true,
-		EnableMessage:     true,
-		EnableUpdate:      true,
-		EnableMembership:  true,
+		UserID:           "user123",
+		EnableSystem:     true,
+		EnableSocial:     true,
+		EnableContent:    true,
+		EnableReward:     true,
+		EnableMessage:    true,
+		EnableUpdate:     true,
+		EnableMembership: true,
 		EmailNotification: notification.EmailNotificationSettings{
 			Enabled:   true,
 			Types:     []string{"system", "social"},
@@ -67,7 +68,7 @@ func TestNotificationPreferenceRepository_Create_WithInvalidID(t *testing.T) {
 	defer cleanup()
 
 	preference := &notification.NotificationPreference{
-		ID:               "invalid-id",
+		ID:               primitive.NewObjectID(),
 		UserID:           "user123",
 		EnableSystem:     true,
 		EnableSocial:     true,
@@ -86,7 +87,7 @@ func TestNotificationPreferenceRepository_Create_WithInvalidID(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotEmpty(t, preference.ID)
-	assert.NotEqual(t, "invalid-id", preference.ID)
+	assert.NotEqual(t, primitive.NilObjectID, preference.ID)
 }
 
 // TestNotificationPreferenceRepository_GetByID 测试根据ID获取通知偏好设置
@@ -121,7 +122,7 @@ func TestNotificationPreferenceRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, preference.ID)
+	found, err := repo.GetByID(ctx, preference.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -250,8 +251,8 @@ func TestNotificationPreferenceRepository_Update(t *testing.T) {
 
 	// Act - 更新偏好设置
 	updates := map[string]interface{}{
-		"enable_social":       false,
-		"push_notification":   false,
+		"enable_social":     false,
+		"push_notification": false,
 		"email_notification": notification.EmailNotificationSettings{
 			Enabled:   true,
 			Types:     []string{"system", "content"},
@@ -259,13 +260,13 @@ func TestNotificationPreferenceRepository_Update(t *testing.T) {
 		},
 		"updated_at": time.Now(),
 	}
-	err = repo.Update(ctx, preference.ID, updates)
+	err = repo.Update(ctx, preference.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, preference.ID)
+	found, err := repo.GetByID(ctx, preference.ID.Hex())
 	require.NoError(t, err)
 	assert.False(t, found.EnableSocial)
 	assert.False(t, found.PushNotification)
@@ -321,13 +322,13 @@ func TestNotificationPreferenceRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除偏好设置
-	err = repo.Delete(ctx, preference.ID)
+	err = repo.Delete(ctx, preference.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, preference.ID)
+	found, err := repo.GetByID(ctx, preference.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 }
@@ -433,7 +434,7 @@ func TestNotificationPreferenceRepository_BatchUpdate(t *testing.T) {
 		}
 		err := repo.Create(ctx, preference)
 		require.NoError(t, err)
-		ids = append(ids, preference.ID)
+		ids = append(ids, preference.ID.Hex())
 	}
 
 	// Act - 批量更新
@@ -486,7 +487,7 @@ func TestNotificationPreferenceRepository_BatchUpdate_WithInvalidID(t *testing.T
 	require.NoError(t, err)
 
 	// Act - 包含无效ID
-	ids := []string{preference.ID, "invalid-id"}
+	ids := []string{preference.ID.Hex(), "invalid-id"}
 	updates := map[string]interface{}{
 		"push_notification": false,
 		"updated_at":        time.Now(),
@@ -497,7 +498,7 @@ func TestNotificationPreferenceRepository_BatchUpdate_WithInvalidID(t *testing.T
 	require.NoError(t, err)
 
 	// 验证有效ID的偏好设置已更新
-	found, err := repo.GetByID(ctx, preference.ID)
+	found, err := repo.GetByID(ctx, preference.ID.Hex())
 	require.NoError(t, err)
 	assert.False(t, found.PushNotification)
 }
@@ -670,11 +671,11 @@ func TestNotificationPreferenceRepository_Update_QuietHours(t *testing.T) {
 			Enabled: false,
 			Types:   []string{},
 		},
-		PushNotification:  true,
-		QuietHoursStart:   func() *string { s := "22:00"; return &s }(),
-		QuietHoursEnd:     func() *string { s := "08:00"; return &s }(),
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+		PushNotification: true,
+		QuietHoursStart:  func() *string { s := "22:00"; return &s }(),
+		QuietHoursEnd:    func() *string { s := "08:00"; return &s }(),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 	err := repo.Create(ctx, preference)
 	require.NoError(t, err)
@@ -687,13 +688,13 @@ func TestNotificationPreferenceRepository_Update_QuietHours(t *testing.T) {
 		"quiet_hours_end":   &newEnd,
 		"updated_at":        time.Now(),
 	}
-	err = repo.Update(ctx, preference.ID, updates)
+	err = repo.Update(ctx, preference.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, preference.ID)
+	found, err := repo.GetByID(ctx, preference.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "23:00", *found.QuietHoursStart)
 	assert.Equal(t, "07:00", *found.QuietHoursEnd)

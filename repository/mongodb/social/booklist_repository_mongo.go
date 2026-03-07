@@ -433,9 +433,7 @@ func (r *MongoBookListRepository) CreateBookListLike(ctx context.Context, bookLi
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		bookListLike.ID = oid
 	}
-
-	// 增加书单点赞数
-	return r.IncrementBookListLikeCount(ctx, bookListLike.BookListID)
+	return nil
 }
 
 // DeleteBookListLike 删除书单点赞
@@ -453,8 +451,7 @@ func (r *MongoBookListRepository) DeleteBookListLike(ctx context.Context, bookLi
 	}
 
 	if result.DeletedCount > 0 {
-		// 减少书单点赞数
-		return r.DecrementBookListLikeCount(ctx, bookListID)
+		return nil
 	}
 
 	return nil
@@ -616,12 +613,6 @@ func (r *MongoBookListRepository) ForkBookList(ctx context.Context, originalID, 
 		return nil, err
 	}
 
-	// 增加原始书单的被复制次数
-	err = r.IncrementForkCount(ctx, originalID)
-	if err != nil {
-		return nil, err
-	}
-
 	return forked, nil
 }
 
@@ -715,4 +706,22 @@ func (r *MongoBookListRepository) Health(ctx context.Context) error {
 	// 执行一个简单的查询来检查连接
 	_, err := r.GetCollection().FindOne(ctx, bson.M{}).Raw()
 	return err
+}
+
+// RunInTransaction 在事务中执行书单相关操作
+func (r *MongoBookListRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.GetDB().Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start booklist transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("booklist transaction failed: %w", err)
+	}
+
+	return nil
 }

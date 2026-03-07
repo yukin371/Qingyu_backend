@@ -16,10 +16,10 @@ import (
 
 // MongoMessageRepository MongoDB消息仓储实现
 type MongoMessageRepository struct {
-	*base.BaseMongoRepository  // 嵌入基类，管理主collection (conversations)
-	db               *mongo.Database  // 保留db字段用于事务和健康检查
-	messagesCol      *mongo.Collection  // 消息collection独立管理
-	mentionsCol      *mongo.Collection  // @提醒collection独立管理
+	*base.BaseMongoRepository                   // 嵌入基类，管理主collection (conversations)
+	db                        *mongo.Database   // 保留db字段用于事务和健康检查
+	messagesCol               *mongo.Collection // 消息collection独立管理
+	mentionsCol               *mongo.Collection // @提醒collection独立管理
 }
 
 // NewMongoMessageRepository 创建MongoDB消息仓储实例
@@ -162,7 +162,7 @@ func (r *MongoMessageRepository) GetConversationByParticipants(ctx context.Conte
 	// 私聊会话的参与者数量相等
 	filter := bson.M{
 		"participants": bson.M{
-			"$all": participantIDs,
+			"$all":  participantIDs,
 			"$size": len(participantIDs),
 		},
 	}
@@ -626,7 +626,7 @@ func (r *MongoMessageRepository) GetUserMentions(ctx context.Context, userID str
 // GetUnreadMentions 获取未读的@提醒
 func (r *MongoMessageRepository) GetUnreadMentions(ctx context.Context, userID string, page, size int) ([]*social.Mention, int64, error) {
 	filter := bson.M{
-		"user_id":             userID,
+		"user_id":            userID,
 		"readstatus.is_read": false,
 	}
 
@@ -684,7 +684,7 @@ func (r *MongoMessageRepository) MarkMentionAsRead(ctx context.Context, mentionI
 // MarkAllMentionsAsRead 标记所有@提醒为已读
 func (r *MongoMessageRepository) MarkAllMentionsAsRead(ctx context.Context, userID string) error {
 	filter := bson.M{
-		"user_id":             userID,
+		"user_id":            userID,
 		"readstatus.is_read": false,
 	}
 
@@ -708,7 +708,7 @@ func (r *MongoMessageRepository) MarkAllMentionsAsRead(ctx context.Context, user
 // CountUnreadMentions 统计未读@提醒数
 func (r *MongoMessageRepository) CountUnreadMentions(ctx context.Context, userID string) (int, error) {
 	count, err := r.mentionsCol.CountDocuments(ctx, bson.M{
-		"user_id":             userID,
+		"user_id":            userID,
 		"readstatus.is_read": false,
 	})
 	if err != nil {
@@ -737,4 +737,22 @@ func (r *MongoMessageRepository) DeleteMention(ctx context.Context, mentionID st
 func (r *MongoMessageRepository) Health(ctx context.Context) error {
 	// 检查数据库连接
 	return r.db.Client().Ping(ctx, nil)
+}
+
+// RunInTransaction 在事务中执行消息相关操作
+func (r *MongoMessageRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.db.Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start message transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("message transaction failed: %w", err)
+	}
+
+	return nil
 }

@@ -461,6 +461,9 @@ func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType
 				if item == nil {
 					continue
 				}
+				if item.ID.IsZero() {
+					item.ID = primitive.NewObjectID()
+				}
 				item.CreatedAt = now
 				item.UpdatedAt = now
 				docs = append(docs, item)

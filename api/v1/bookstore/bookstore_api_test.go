@@ -638,7 +638,7 @@ func TestBookstoreAPI_GetCategoryByID_Success(t *testing.T) {
 	router := setupBookstoreTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	category := &bookstoreModel.Category{ID: primitive.NewObjectID().Hex(), Name: "测试分类"}
+	category := &bookstoreModel.Category{ID: primitive.NewObjectID(), Name: "测试分类"}
 	mockService.On("GetCategoryByID", mock.Anything, categoryID).Return(category, nil)
 
 	// When

@@ -8,7 +8,7 @@ import (
 
 // NovelContext 小说上下文模型
 type NovelContext struct {
-	ID         string                 `bson:"_id,omitempty" json:"id"`
+	ID         primitive.ObjectID     `bson:"_id,omitempty" json:"id"`
 	ProjectID  string                 `bson:"project_id" json:"projectId"`
 	Type       string                 `bson:"type" json:"type"` // character, plot, setting, chapter
 	Title      string                 `bson:"title" json:"title"`
@@ -23,27 +23,27 @@ type NovelContext struct {
 
 // MemoryRelation 记忆关联模型
 type MemoryRelation struct {
-	ID           string    `bson:"_id,omitempty" json:"id"`
-	SourceID     string    `bson:"source_id" json:"sourceId"`
-	TargetID     string    `bson:"target_id" json:"targetId"`
-	RelationType string    `bson:"relation_type" json:"relationType"`
-	Strength     float32   `bson:"strength" json:"strength"`
-	CreatedAt    time.Time `bson:"created_at" json:"createdAt"`
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	SourceID     string             `bson:"source_id" json:"sourceId"`
+	TargetID     string             `bson:"target_id" json:"targetId"`
+	RelationType string             `bson:"relation_type" json:"relationType"`
+	Strength     float32            `bson:"strength" json:"strength"`
+	CreatedAt    time.Time          `bson:"created_at" json:"createdAt"`
 }
 
 // ContextMemory 上下文记忆层次
 type ContextMemory struct {
-	ID          string    `bson:"_id,omitempty" json:"id"`
-	ProjectID   string    `bson:"project_id" json:"projectId"`
-	MemoryType  string    `bson:"memory_type" json:"memoryType"` // short_term, medium_term, long_term
-	Content     string    `bson:"content" json:"content"`
-	Summary     string    `bson:"summary" json:"summary"`
-	Embedding   []float32 `bson:"embedding" json:"-"`
-	Importance  int       `bson:"importance" json:"importance"`
-	AccessCount int       `bson:"access_count" json:"accessCount"`
-	LastAccess  time.Time `bson:"last_access" json:"lastAccess"`
-	CreatedAt   time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updatedAt"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ProjectID   string             `bson:"project_id" json:"projectId"`
+	MemoryType  string             `bson:"memory_type" json:"memoryType"` // short_term, medium_term, long_term
+	Content     string             `bson:"content" json:"content"`
+	Summary     string             `bson:"summary" json:"summary"`
+	Embedding   []float32          `bson:"embedding" json:"-"`
+	Importance  int                `bson:"importance" json:"importance"`
+	AccessCount int                `bson:"access_count" json:"accessCount"`
+	LastAccess  time.Time          `bson:"last_access" json:"lastAccess"`
+	CreatedAt   time.Time          `bson:"created_at" json:"createdAt"`
+	UpdatedAt   time.Time          `bson:"updated_at" json:"updatedAt"`
 }
 
 // RetrievalResult 检索结果
@@ -77,8 +77,8 @@ func (nc *NovelContext) BeforeCreate() {
 	now := time.Now()
 	nc.CreatedAt = now
 	nc.UpdatedAt = now
-	if nc.ID == "" {
-		nc.ID = primitive.NewObjectID().Hex()
+	if nc.ID.IsZero() {
+		nc.ID = primitive.NewObjectID()
 	}
 }
 
@@ -90,8 +90,8 @@ func (nc *NovelContext) BeforeUpdate() {
 // BeforeCreate 在创建前设置时间戳
 func (mr *MemoryRelation) BeforeCreate() {
 	mr.CreatedAt = time.Now()
-	if mr.ID == "" {
-		mr.ID = primitive.NewObjectID().Hex()
+	if mr.ID.IsZero() {
+		mr.ID = primitive.NewObjectID()
 	}
 }
 
@@ -101,8 +101,8 @@ func (cm *ContextMemory) BeforeCreate() {
 	cm.CreatedAt = now
 	cm.UpdatedAt = now
 	cm.LastAccess = now
-	if cm.ID == "" {
-		cm.ID = primitive.NewObjectID().Hex()
+	if cm.ID.IsZero() {
+		cm.ID = primitive.NewObjectID()
 	}
 }
 

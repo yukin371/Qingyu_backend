@@ -185,7 +185,7 @@ func (s *PermissionServiceImpl) CreateRole(ctx context.Context, role *auth.Role)
 
 func (s *PermissionServiceImpl) UpdateRole(ctx context.Context, role *auth.Role) error {
 	// 检查角色是否存在
-	existingRole, err := s.permissionRepo.GetRoleByID(ctx, role.ID)
+	existingRole, err := s.permissionRepo.GetRoleByID(ctx, role.ID.Hex())
 	if err != nil {
 		return ErrRoleNotFound
 	}

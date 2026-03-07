@@ -236,8 +236,12 @@ func (s *PermissionTemplateServiceImpl) InitializeSystemTemplates(ctx context.Co
 
 // convertToTemplateResponse 转换为响应格式
 func convertToTemplateResponse(template *authModel.PermissionTemplate) *TemplateResponse {
+	templateID := ""
+	if !template.ID.IsZero() {
+		templateID = template.ID.Hex()
+	}
 	return &TemplateResponse{
-		ID:          template.ID,
+		ID:          templateID,
 		Name:        template.Name,
 		Code:        template.Code,
 		Description: template.Description,

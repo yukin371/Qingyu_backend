@@ -208,8 +208,12 @@ func (s *RoleServiceImpl) RemovePermissions(ctx context.Context, roleID string, 
 
 // convertToRoleResponse 转换为响应格式
 func convertToRoleResponse(role *authModel.Role) *Role {
+	roleID := ""
+	if !role.ID.IsZero() {
+		roleID = role.ID.Hex()
+	}
 	return &Role{
-		ID:          role.ID,
+		ID:          roleID,
 		Name:        role.Name,
 		Description: role.Description,
 		Permissions: role.Permissions,

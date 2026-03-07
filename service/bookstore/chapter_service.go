@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
@@ -172,7 +171,7 @@ func (s *ChapterServiceImpl) UpdateChapter(ctx context.Context, chapter *booksto
 	}
 
 	// 更新章节
-	if err := s.chapterRepo.Update(ctx, chapter.ID, updates); err != nil {
+	if err := s.chapterRepo.Update(ctx, chapter.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("failed to update chapter: %w", err)
 	}
 
@@ -605,7 +604,7 @@ func (s *ChapterServiceImpl) UpdateChapterContent(ctx context.Context, chapterID
 		"updated_at":      chapter.UpdatedAt,
 	}
 
-	if err := s.chapterRepo.Update(ctx, chapter.ID, updates); err != nil {
+	if err := s.chapterRepo.Update(ctx, chapter.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("failed to update chapter metadata: %w", err)
 	}
 
@@ -798,7 +797,7 @@ func (s *ChapterServiceImpl) invalidateRelatedCache(ctx context.Context, chapter
 	}
 
 	// 清除章节缓存
-	s.cacheService.InvalidateChapterCache(ctx, chapter.ID)
+	s.cacheService.InvalidateChapterCache(ctx, chapter.ID.Hex())
 
 	// 清除书籍章节列表缓存
 	s.cacheService.InvalidateBookChaptersCache(ctx, chapter.BookID)

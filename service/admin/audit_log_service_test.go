@@ -9,6 +9,7 @@ import (
 	adminRepo "Qingyu_backend/repository/interfaces/admin"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // MockAuditLogRepository Mock审计日志仓储
@@ -191,13 +192,13 @@ func TestAuditLogService_QueryLogsByUser_Success(t *testing.T) {
 	ctx := context.Background()
 	expectedLogs := []*adminModel.AdminLog{
 		{
-			ID:        "log1",
+			ID:        primitive.NewObjectID(),
 			AdminID:   "admin123",
 			Operation: "ban_user",
 			CreatedAt: time.Now(),
 		},
 		{
-			ID:        "log2",
+			ID:        primitive.NewObjectID(),
 			AdminID:   "admin123",
 			Operation: "update_role",
 			CreatedAt: time.Now(),
@@ -244,7 +245,7 @@ func TestAuditLogService_QueryLogsByDateRange_Success(t *testing.T) {
 
 	expectedLogs := []*adminModel.AdminLog{
 		{
-			ID:        "log1",
+			ID:        primitive.NewObjectID(),
 			AdminID:   "admin123",
 			Operation: "ban_user",
 			CreatedAt: time.Now().AddDate(0, 0, -15),
@@ -286,7 +287,7 @@ func TestAuditLogService_GetLogsByResource_Success(t *testing.T) {
 	ctx := context.Background()
 	expectedLogs := []*adminModel.AdminLog{
 		{
-			ID:           "log1",
+			ID:           primitive.NewObjectID(),
 			AdminID:      "admin123",
 			Operation:    "update_role",
 			ResourceType: "role",
@@ -529,7 +530,7 @@ func TestAuditLogService_GetLogsByDateRange_Success(t *testing.T) {
 
 	expectedLogs := []*adminModel.AdminLog{
 		{
-			ID:        "log1",
+			ID:        primitive.NewObjectID(),
 			AdminID:   "admin123",
 			Operation: "update_user",
 			CreatedAt: time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),

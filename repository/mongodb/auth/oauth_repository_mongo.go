@@ -31,7 +31,6 @@ func NewMongoOAuthRepository(db *mongo.Database) authrepo.OAuthRepository {
 
 // ==================== OAuth账号管理 ====================
 
-// FindByProviderAndProviderID 根据提供商和提供商用户ID查找OAuth账号
 func (r *MongoOAuthRepository) FindByProviderAndProviderID(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 	var account authModel.OAuthAccount
 	filter := bson.M{
@@ -42,7 +41,7 @@ func (r *MongoOAuthRepository) FindByProviderAndProviderID(ctx context.Context, 
 	err := r.db.Collection(OAuthAccountCollection).FindOne(ctx, filter).Decode(&account)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil // 未找到不返回错误
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -50,7 +49,6 @@ func (r *MongoOAuthRepository) FindByProviderAndProviderID(ctx context.Context, 
 	return &account, nil
 }
 
-// FindByUserID 根据用户ID查找所有OAuth账号
 func (r *MongoOAuthRepository) FindByUserID(ctx context.Context, userID string) ([]*authModel.OAuthAccount, error) {
 	filter := bson.M{"user_id": userID}
 	cursor, err := r.db.Collection(OAuthAccountCollection).Find(ctx, filter)
@@ -67,7 +65,6 @@ func (r *MongoOAuthRepository) FindByUserID(ctx context.Context, userID string) 
 	return accounts, nil
 }
 
-// FindByID 根据ID查找OAuth账号
 func (r *MongoOAuthRepository) FindByID(ctx context.Context, id string) (*authModel.OAuthAccount, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -88,13 +85,12 @@ func (r *MongoOAuthRepository) FindByID(ctx context.Context, id string) (*authMo
 	return &account, nil
 }
 
-// Create 创建OAuth账号
 func (r *MongoOAuthRepository) Create(ctx context.Context, account *authModel.OAuthAccount) error {
 	account.CreatedAt = time.Now()
 	account.UpdatedAt = time.Now()
 
-	if account.ID == "" {
-		account.ID = primitive.NewObjectID().Hex()
+	if account.ID.IsZero() {
+		account.ID = primitive.NewObjectID()
 	}
 
 	if account.LastLoginAt.IsZero() {
@@ -105,16 +101,14 @@ func (r *MongoOAuthRepository) Create(ctx context.Context, account *authModel.OA
 	return err
 }
 
-// Update 更新OAuth账号
 func (r *MongoOAuthRepository) Update(ctx context.Context, account *authModel.OAuthAccount) error {
 	account.UpdatedAt = time.Now()
 
-	objectID, err := primitive.ObjectIDFromHex(account.ID)
-	if err != nil {
-		return err
+	if account.ID.IsZero() {
+		return errors.New("invalid oauth account id")
 	}
 
-	filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": account.ID}
 	update := bson.M{"$set": account}
 
 	result, err := r.db.Collection(OAuthAccountCollection).UpdateOne(ctx, filter, update)
@@ -129,7 +123,6 @@ func (r *MongoOAuthRepository) Update(ctx context.Context, account *authModel.OA
 	return nil
 }
 
-// Delete 删除OAuth账号
 func (r *MongoOAuthRepository) Delete(ctx context.Context, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -149,7 +142,6 @@ func (r *MongoOAuthRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// UpdateLastLogin 更新最后登录时间
 func (r *MongoOAuthRepository) UpdateLastLogin(ctx context.Context, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -168,7 +160,6 @@ func (r *MongoOAuthRepository) UpdateLastLogin(ctx context.Context, id string) e
 	return err
 }
 
-// UpdateTokens 更新访问令牌
 func (r *MongoOAuthRepository) UpdateTokens(ctx context.Context, id string, accessToken, refreshToken string, expiresAt primitive.DateTime) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -189,9 +180,7 @@ func (r *MongoOAuthRepository) UpdateTokens(ctx context.Context, id string, acce
 	return err
 }
 
-// SetPrimaryAccount 设置主账号
 func (r *MongoOAuthRepository) SetPrimaryAccount(ctx context.Context, userID string, accountID string) error {
-	// 取消该用户所有账号的主账号状态
 	filter := bson.M{"user_id": userID}
 	unsetUpdate := bson.M{"$set": bson.M{"is_primary": false, "updated_at": time.Now()}}
 	_, err := r.db.Collection(OAuthAccountCollection).UpdateMany(ctx, filter, unsetUpdate)
@@ -199,7 +188,6 @@ func (r *MongoOAuthRepository) SetPrimaryAccount(ctx context.Context, userID str
 		return err
 	}
 
-	// 设置指定账号为主账号
 	accountObjectID, err := primitive.ObjectIDFromHex(accountID)
 	if err != nil {
 		return err
@@ -219,7 +207,6 @@ func (r *MongoOAuthRepository) SetPrimaryAccount(ctx context.Context, userID str
 	return nil
 }
 
-// GetPrimaryAccount 获取用户的主账号
 func (r *MongoOAuthRepository) GetPrimaryAccount(ctx context.Context, userID string) (*authModel.OAuthAccount, error) {
 	var account authModel.OAuthAccount
 	filter := bson.M{
@@ -238,7 +225,6 @@ func (r *MongoOAuthRepository) GetPrimaryAccount(ctx context.Context, userID str
 	return &account, nil
 }
 
-// CountByUserID 统计用户的OAuth账号数量
 func (r *MongoOAuthRepository) CountByUserID(ctx context.Context, userID string) (int64, error) {
 	filter := bson.M{"user_id": userID}
 	count, err := r.db.Collection(OAuthAccountCollection).CountDocuments(ctx, filter)
@@ -247,19 +233,17 @@ func (r *MongoOAuthRepository) CountByUserID(ctx context.Context, userID string)
 
 // ==================== OAuth会话管理 ====================
 
-// CreateSession 创建OAuth会话
 func (r *MongoOAuthRepository) CreateSession(ctx context.Context, session *authModel.OAuthSession) error {
 	session.CreatedAt = time.Now()
 
-	if session.ID == "" {
-		session.ID = primitive.NewObjectID().Hex()
+	if session.ID.IsZero() {
+		session.ID = primitive.NewObjectID()
 	}
 
 	_, err := r.db.Collection(OAuthSessionCollection).InsertOne(ctx, session)
 	return err
 }
 
-// FindSessionByID 根据ID查找OAuth会话
 func (r *MongoOAuthRepository) FindSessionByID(ctx context.Context, id string) (*authModel.OAuthSession, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -280,7 +264,6 @@ func (r *MongoOAuthRepository) FindSessionByID(ctx context.Context, id string) (
 	return &session, nil
 }
 
-// FindSessionByState 根据state查找OAuth会话
 func (r *MongoOAuthRepository) FindSessionByState(ctx context.Context, state string) (*authModel.OAuthSession, error) {
 	var session authModel.OAuthSession
 	filter := bson.M{"state": state}
@@ -296,7 +279,6 @@ func (r *MongoOAuthRepository) FindSessionByState(ctx context.Context, state str
 	return &session, nil
 }
 
-// DeleteSession 删除OAuth会话
 func (r *MongoOAuthRepository) DeleteSession(ctx context.Context, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -308,7 +290,6 @@ func (r *MongoOAuthRepository) DeleteSession(ctx context.Context, id string) err
 	return err
 }
 
-// CleanupExpiredSessions 清理过期的OAuth会话
 func (r *MongoOAuthRepository) CleanupExpiredSessions(ctx context.Context) (int64, error) {
 	filter := bson.M{"expires_at": bson.M{"$lt": time.Now()}}
 	result, err := r.db.Collection(OAuthSessionCollection).DeleteMany(ctx, filter)
@@ -319,9 +300,7 @@ func (r *MongoOAuthRepository) CleanupExpiredSessions(ctx context.Context) (int6
 	return result.DeletedCount, nil
 }
 
-// EnsureIndexes 创建索引（在初始化时调用）
 func (r *MongoOAuthRepository) EnsureIndexes(ctx context.Context) error {
-	// OAuth账号索引
 	oauthAccountIndexes := []mongo.IndexModel{
 		{
 			Keys: bson.D{
@@ -346,13 +325,12 @@ func (r *MongoOAuthRepository) EnsureIndexes(ctx context.Context) error {
 		return err
 	}
 
-	// OAuth会话索引
 	oauthSessionIndexes := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "state", Value: 1}},
 			Options: options.Index().
 				SetUnique(true).
-				SetExpireAfterSeconds(600), // 10分钟自动过期
+				SetExpireAfterSeconds(600),
 		},
 		{
 			Keys: bson.D{{Key: "expires_at", Value: 1}},

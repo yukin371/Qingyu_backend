@@ -209,7 +209,7 @@ func (s *RecommendationServiceImpl) GetUserBehaviors(ctx context.Context, userID
 			actionType = sharedtypes.RecommendationBehaviorType(b.ActionType)
 		}
 		result[i] = &UserBehavior{
-			ID:         b.ID,
+			ID:         b.ID.Hex(),
 			UserID:     b.UserID,
 			ItemID:     b.ItemID,
 			ItemType:   b.ItemType,

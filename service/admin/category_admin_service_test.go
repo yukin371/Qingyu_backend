@@ -2,14 +2,39 @@ package admin
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/bookstore"
 )
+
+func oid(seed string) primitive.ObjectID {
+	sum := sha1.Sum([]byte(seed))
+	normalized := hex.EncodeToString(sum[:])[:24]
+	objectID, err := primitive.ObjectIDFromHex(normalized)
+	if err != nil {
+		panic(err)
+	}
+	return objectID
+}
+
+func hexID(seed string) string {
+	return oid(seed).Hex()
+}
+
+func mustObjectIDFromHex(value string) primitive.ObjectID {
+	objectID, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		panic(err)
+	}
+	return objectID
+}
 
 // MockCategoryAdminRepository Mock仓储
 type MockCategoryAdminRepository struct {
@@ -143,9 +168,9 @@ func TestCategoryAdminService_CreateCategory_WithParent(t *testing.T) {
 	}
 
 	parentCategory := &bookstore.Category{
-		ID:     parentID,
-		Name:   "小说",
-		Level:  0,
+		ID:       oid(parentID),
+		Name:     "小说",
+		Level:    0,
 		ParentID: nil,
 	}
 
@@ -201,7 +226,7 @@ func TestCategoryAdminService_CreateCategory_LevelExceeded(t *testing.T) {
 	}
 
 	parentCategory := &bookstore.Category{
-		ID:       parentID,
+		ID:       oid(parentID),
 		Name:     "子分类",
 		Level:    2,
 		ParentID: nil,
@@ -236,7 +261,7 @@ func TestCategoryAdminService_UpdateCategory_Success(t *testing.T) {
 	}
 
 	existingCategory := &bookstore.Category{
-		ID:          id,
+		ID:          oid(id),
 		Name:        "玄幻",
 		Description: "旧描述",
 		SortOrder:   1,
@@ -294,7 +319,7 @@ func TestCategoryAdminService_UpdateCategory_DuplicateName(t *testing.T) {
 	}
 
 	existingCategory := &bookstore.Category{
-		ID:       id,
+		ID:       oid(id),
 		Name:     "玄幻",
 		ParentID: nil,
 	}
@@ -319,7 +344,7 @@ func TestCategoryAdminService_DeleteCategory_Success(t *testing.T) {
 	id := "category123"
 
 	category := &bookstore.Category{
-		ID:        id,
+		ID:        oid(id),
 		Name:      "玄幻",
 		BookCount: 0,
 	}
@@ -360,7 +385,7 @@ func TestCategoryAdminService_DeleteCategory_HasBooks(t *testing.T) {
 	id := "category123"
 
 	category := &bookstore.Category{
-		ID:        id,
+		ID:        oid(id),
 		Name:      "玄幻",
 		BookCount: 10,
 	}
@@ -401,9 +426,9 @@ func TestCategoryAdminService_GetCategoryTree_Success(t *testing.T) {
 	ctx := context.Background()
 
 	categories := []*bookstore.Category{
-		{ID: "1", Name: "小说", ParentID: nil, Level: 0},
-		{ID: "2", Name: "玄幻", ParentID: strPtr("1"), Level: 1},
-		{ID: "3", Name: "武侠", ParentID: strPtr("1"), Level: 1},
+		{ID: oid("1"), Name: "小说", ParentID: nil, Level: 0},
+		{ID: oid("2"), Name: "玄幻", ParentID: strPtr(hexID("1")), Level: 1},
+		{ID: oid("3"), Name: "武侠", ParentID: strPtr(hexID("1")), Level: 1},
 	}
 
 	mockRepo.On("List", ctx, mock.Anything).Return(categories, nil)
@@ -426,8 +451,8 @@ func TestCategoryAdminService_GetCategories_Success(t *testing.T) {
 	ctx := context.Background()
 
 	categories := []*bookstore.Category{
-		{ID: "1", Name: "玄幻", ParentID: nil},
-		{ID: "2", Name: "武侠", ParentID: nil},
+		{ID: oid("1"), Name: "玄幻", ParentID: nil},
+		{ID: oid("2"), Name: "武侠", ParentID: nil},
 	}
 
 	mockRepo.On("List", ctx, mock.AnythingOfType("map[string]interface {}")).Return(categories, nil)
@@ -452,7 +477,7 @@ func TestCategoryAdminService_GetCategories_WithFilter(t *testing.T) {
 	isActive := true
 
 	categories := []*bookstore.Category{
-		{ID: "1", Name: "玄幻", ParentID: &parentID},
+		{ID: oid("1"), Name: "玄幻", ParentID: &parentID},
 	}
 
 	mockRepo.On("List", ctx, mock.AnythingOfType("map[string]interface {}")).Return(categories, nil)
@@ -478,7 +503,7 @@ func TestCategoryAdminService_GetCategoryByID_Success(t *testing.T) {
 	id := "category123"
 
 	category := &bookstore.Category{
-		ID:   id,
+		ID:   oid(id),
 		Name: "玄幻",
 	}
 
@@ -498,22 +523,22 @@ func TestCategoryAdminService_MoveCategory_Success(t *testing.T) {
 	service := NewCategoryAdminService(mockRepo)
 
 	ctx := context.Background()
-	id := "category123"
-	newParentID := "parent456"
+	id := hexID("category123")
+	newParentID := hexID("parent456")
 
 	req := &MoveCategoryRequest{
 		ParentID: &newParentID,
 	}
 
 	category := &bookstore.Category{
-		ID:     id,
-		Name:   "玄幻",
-		Level:  0,
+		ID:       mustObjectIDFromHex(id),
+		Name:     "玄幻",
+		Level:    0,
 		ParentID: nil,
 	}
 
 	newParent := &bookstore.Category{
-		ID:       newParentID,
+		ID:       mustObjectIDFromHex(newParentID),
 		Name:     "小说",
 		Level:    0,
 		ParentID: nil,
@@ -557,31 +582,29 @@ func TestCategoryAdminService_MoveCategory_CircularReference(t *testing.T) {
 	service := NewCategoryAdminService(mockRepo)
 
 	ctx := context.Background()
-	id := "category123"
-	newParentID := "child456"
+	id := hexID("category123")
+	newParentID := hexID("child456")
 
 	req := &MoveCategoryRequest{
 		ParentID: &newParentID,
 	}
 
 	category := &bookstore.Category{
-		ID:       id,
+		ID:       mustObjectIDFromHex(id),
 		Name:     "玄幻",
 		Level:    0,
 		ParentID: nil,
 	}
 
 	childCategory := &bookstore.Category{
-		ID:       newParentID,
+		ID:       mustObjectIDFromHex(newParentID),
 		Name:     "子分类",
 		Level:    1,
-		ParentID: &id,
+		ParentID: strPtr(id),
 	}
 
 	mockRepo.On("GetByID", ctx, id).Return(category, nil)
 	mockRepo.On("GetByID", ctx, newParentID).Return(childCategory, nil)
-	mockRepo.On("GetByID", ctx, newParentID).Return(childCategory, nil)
-
 	err := service.MoveCategory(ctx, id, req)
 
 	assert.Error(t, err)
@@ -595,22 +618,22 @@ func TestCategoryAdminService_MoveCategory_LevelExceeded(t *testing.T) {
 	service := NewCategoryAdminService(mockRepo)
 
 	ctx := context.Background()
-	id := "category123"
-	newParentID := "parent456"
+	id := hexID("category123")
+	newParentID := hexID("parent456")
 
 	req := &MoveCategoryRequest{
 		ParentID: &newParentID,
 	}
 
 	category := &bookstore.Category{
-		ID:     id,
-		Name:   "玄幻",
-		Level:  0,
+		ID:       mustObjectIDFromHex(id),
+		Name:     "玄幻",
+		Level:    0,
 		ParentID: nil,
 	}
 
 	newParent := &bookstore.Category{
-		ID:       newParentID,
+		ID:       mustObjectIDFromHex(newParentID),
 		Name:     "子分类",
 		Level:    2,
 		ParentID: nil,
@@ -639,7 +662,7 @@ func TestCategoryAdminService_MoveCategory_MoveToSelf(t *testing.T) {
 	}
 
 	category := &bookstore.Category{
-		ID:       id,
+		ID:       oid(id),
 		Name:     "玄幻",
 		Level:    0,
 		ParentID: nil,
@@ -664,7 +687,7 @@ func TestCategoryAdminService_SortCategory_Success(t *testing.T) {
 	newSortOrder := 10
 
 	category := &bookstore.Category{
-		ID:        id,
+		ID:        oid(id),
 		Name:      "玄幻",
 		SortOrder: 1,
 	}

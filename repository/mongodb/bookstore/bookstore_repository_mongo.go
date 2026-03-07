@@ -214,6 +214,19 @@ func (r *MongoBookRepository) GetByAuthorID(ctx context.Context, authorID string
 	return books, nil
 }
 
+// GetByProjectID 根据来源项目ID获取书籍
+func (r *MongoBookRepository) GetByProjectID(ctx context.Context, projectID string) (*bookstore.Book, error) {
+	var book bookstore.Book
+	err := r.GetCollection().FindOne(ctx, bson.M{"project_id": projectID}).Decode(&book)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &book, nil
+}
+
 // GetByCategory 根据分类获取书籍列表
 func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID string, limit, offset int) ([]*bookstore.Book, error) {
 	objectID, err := r.ParseID(categoryID)

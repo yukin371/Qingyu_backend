@@ -1,14 +1,16 @@
 package recommendation
 
 import (
-	sharedtypes "Qingyu_backend/models/shared/types"
 	"time"
+
+	sharedtypes "Qingyu_backend/models/shared/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // UserBehaviorRecord 用户行为记录（旧版，保留用于兼容）
 // 注意：新的推荐系统应使用 Behavior 模型
 type UserBehaviorRecord struct {
-	ID         string                 `json:"id" bson:"_id,omitempty"`
+	ID         primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
 	UserID     string                 `json:"user_id" bson:"user_id"`
 	ItemID     string                 `json:"item_id" bson:"item_id"`
 	ItemType   string                 `json:"item_type" bson:"item_type"`                   // book, chapter, article

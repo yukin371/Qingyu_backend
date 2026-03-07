@@ -34,12 +34,14 @@ import (
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
 	internalAPIService "Qingyu_backend/service/internalapi"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
 	sharedService "Qingyu_backend/service/shared"
 	statsService "Qingyu_backend/service/shared/stats"
 	sharedStorage "Qingyu_backend/service/shared/storage"
+	writerservice "Qingyu_backend/service/writer"
 
 	versionAPI "Qingyu_backend/api/v1"
 	financeApi "Qingyu_backend/api/v1/finance"
@@ -621,10 +623,26 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Fatal("获取用户服务失败", zap.Error(err))
 	}
 
-	// 创建用户管理服务（UserAdminService - 管理员专用）
-	// 和权限管理服务（PermissionService）
 	// 获取 MongoDB 数据库
 	mongoDB := serviceContainer.GetMongoDB()
+
+	var publicationSvc serviceInterfaces.PublishService
+	repositoryFactory := serviceContainer.GetRepositoryFactory()
+	if mongoDB != nil && repositoryFactory != nil {
+		projectRepo := repositoryFactory.CreateProjectRepository()
+		documentRepo := repositoryFactory.CreateDocumentRepository()
+		publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
+		publicationSvc = writerservice.NewPublishService(
+			writerservice.NewPublishProjectRepositoryAdapter(projectRepo),
+			writerservice.NewPublishDocumentRepositoryAdapter(documentRepo, mongoDB),
+			publicationRepo,
+			writerservice.NewLocalBookstoreClient(mongoDB),
+			writerservice.NewPublishEventBusAdapter(serviceContainer.GetEventBus()),
+		)
+	}
+
+	// 创建用户管理服务（UserAdminService - 管理员专用）
+	// 和权限管理服务（PermissionService）
 	if mongoDB != nil {
 		// 创建用户管理仓储
 		userAdminRepo := adminrep.NewMongoUserAdminRepository(mongoDB)
@@ -642,10 +660,10 @@ func RegisterRoutes(r *gin.Engine) {
 		permissionSvc := sharedService.NewPermissionService(permissionRepo)
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, nil, categorySvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, nil, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
@@ -673,7 +691,6 @@ func RegisterRoutes(r *gin.Engine) {
 	// 获取统计服务（用于用户统计功能）
 	var statsSvc statsService.StatsPort
 	var userRepoForUM userRepo.UserRepository // 用于用户路由
-	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
 		userRepoForUM = repositoryFactory.CreateUserRepository()

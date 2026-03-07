@@ -25,6 +25,9 @@ type LikeRepository interface {
 	CountUserLikes(ctx context.Context, userID string) (int64, error)
 	CountTargetLikes(ctx context.Context, targetType, targetID string) (int64, error)
 
+	// RunInTransaction 在事务中执行点赞相关操作
+	RunInTransaction(ctx context.Context, fn func(context.Context) error) error
+
 	// 健康检查
 	Health(ctx context.Context) error
 }
