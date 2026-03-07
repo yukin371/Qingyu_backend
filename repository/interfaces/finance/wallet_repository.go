@@ -13,6 +13,9 @@ type WalletRepository interface {
 	GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error)
 	UpdateWallet(ctx context.Context, userID string, updates map[string]interface{}) error
 	UpdateBalance(ctx context.Context, userID string, amount int64) error
+	// UpdateBalanceWithCheck 更新余额并验证（防止负数余额）
+	// 对于扣款等减少余额的操作，应该使用此方法
+	UpdateBalanceWithCheck(ctx context.Context, userID string, amount int64) error
 
 	// 交易记录
 	CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error
