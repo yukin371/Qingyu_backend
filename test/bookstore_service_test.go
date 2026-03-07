@@ -509,6 +509,11 @@ func (m *MockRankingRepository) DeleteByType(ctx context.Context, rankingType bo
 	return args.Error(0)
 }
 
+func (m *MockRankingRepository) DeleteByTypeAndPeriod(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
+	args := m.Called(ctx, rankingType, period)
+	return args.Error(0)
+}
+
 func (m *MockRankingRepository) DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error {
 	args := m.Called(ctx, beforeDate)
 	return args.Error(0)

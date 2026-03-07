@@ -1,8 +1,9 @@
 package wallet
 
 import (
-	financeModel "Qingyu_backend/models/finance"
 	"context"
+	"errors"
+	financeModel "Qingyu_backend/models/finance"
 	"time"
 
 	"Qingyu_backend/models/shared/types"
@@ -79,6 +80,21 @@ func (m *MockWalletRepositoryV2) UpdateBalance(ctx context.Context, walletID str
 		}
 	}
 	return nil
+}
+
+// UpdateBalanceWithCheck 更新余额并校验余额是否充足。
+func (m *MockWalletRepositoryV2) UpdateBalanceWithCheck(ctx context.Context, walletID string, amount int64) error {
+	if amount < 0 {
+		for _, wallet := range m.wallets {
+			if wallet.ID.Hex() == walletID || wallet.UserID == walletID {
+				if wallet.Balance < types.Money(-amount) {
+					return errors.New("余额不足")
+				}
+				break
+			}
+		}
+	}
+	return m.UpdateBalance(ctx, walletID, amount)
 }
 
 // CreateTransaction 创建交易
