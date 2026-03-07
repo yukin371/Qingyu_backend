@@ -499,6 +499,11 @@ func (m *MockRankingRepository) UpdateRankings(ctx context.Context, rankingType 
 	return args.Error(0)
 }
 
+func (m *MockRankingRepository) GetBooksForRanking(ctx context.Context) ([]*bookstore2.Book, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]*bookstore2.Book), args.Error(1)
+}
+
 func (m *MockRankingRepository) DeleteByPeriod(ctx context.Context, period string) error {
 	args := m.Called(ctx, period)
 	return args.Error(0)

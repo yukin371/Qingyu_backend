@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
-	"Qingyu_backend/pkg/response"
 )
 
 // ChapterAPI 阅读器章节API
@@ -81,7 +81,7 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", content)
+	response.Success(c, content)
 }
 
 // GetChapterByNumber 根据章节号获取内容
@@ -126,7 +126,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", content)
+	response.Success(c, content)
 }
 
 // GetNextChapter 获取下一章
@@ -161,7 +161,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", nextChapter)
+	response.Success(c, nextChapter)
 }
 
 // GetPreviousChapter 获取上一章
@@ -196,7 +196,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", prevChapter)
+	response.Success(c, prevChapter)
 }
 
 // GetChapterList 获取章节目录
@@ -239,7 +239,7 @@ func (api *ChapterAPI) GetChapterList(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", chapterList)
+	response.Success(c, chapterList)
 }
 
 // GetChapterInfo 获取章节信息
@@ -279,5 +279,5 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 	}
 
 	// 响应封装
-	shared.Success(c, 200, "获取成功", chapterInfo)
+	response.Success(c, chapterInfo)
 }

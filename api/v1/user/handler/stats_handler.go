@@ -1,13 +1,12 @@
 package handler
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	shared "Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/shared/stats"
 )
 
@@ -38,7 +37,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未登录")
+		response.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -51,7 +50,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	}
 
 	// 3. 返回结果
-	shared.Success(c, http.StatusOK, "获取成功", statsData)
+	response.Success(c, statsData)
 }
 
 // GetMyContentStats 获取我的内容统计
@@ -69,7 +68,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未登录")
+		response.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -82,7 +81,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	}
 
 	// 3. 返回结果
-	shared.Success(c, http.StatusOK, "获取成功", contentStats)
+	response.Success(c, contentStats)
 }
 
 // GetMyActivityStats 获取我的活跃度统计
@@ -101,7 +100,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未登录")
+		response.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -122,7 +121,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	}
 
 	// 4. 返回结果
-	shared.Success(c, http.StatusOK, "获取成功", activityStats)
+	response.Success(c, activityStats)
 }
 
 // GetMyRevenueStats 获取我的收益统计
@@ -142,7 +141,7 @@ func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 1. 获取当前用户ID
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未登录")
+		response.Unauthorized(c, "未登录")
 		return
 	}
 	userID := userIDInterface.(string)
@@ -173,5 +172,5 @@ func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	}
 
 	// 4. 返回结果
-	shared.Success(c, http.StatusOK, "获取成功", revenueStats)
+	response.Success(c, revenueStats)
 }

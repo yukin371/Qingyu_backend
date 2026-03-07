@@ -642,36 +642,12 @@ func (m *MockRankingRepositoryForService) BatchUpsertRankingItems(ctx context.Co
 	return args.Error(0)
 }
 
-func (m *MockRankingRepositoryForService) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
+func (m *MockRankingRepositoryForService) GetBooksForRanking(ctx context.Context) ([]*bookstoreModel.Book, error) {
+	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
-}
-
-func (m *MockRankingRepositoryForService) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstoreModel.RankingItem, error) {
-	args := m.Called(ctx, period)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*bookstoreModel.RankingItem), args.Error(1)
+	return args.Get(0).([]*bookstoreModel.Book), args.Error(1)
 }
 
 func (m *MockRankingRepositoryForService) UpdateRankings(ctx context.Context, rankingType bookstoreModel.RankingType, period string, items []*bookstoreModel.RankingItem) error {

@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ✅ Phase 2 已完成 (2026-03-07)
+**状态**: ✅ Phase 4 已完成 (2026-03-07)
 **创建日期**: 2026-03-05
 **来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
 **审查日期**: 2026-03-05
@@ -16,27 +16,35 @@
 
 ### 审查发现
 
-#### #010-A: Bookstore域 Repository 重构（P0）- ⚠️ 部分修复
+#### #010-A: Bookstore域 Repository 重构（P0）- ✅ 已完成
 
-1. ✅ **榜单计算已从 `ranking_repository_mongo.go` 移到 `service/bookstore/bookstore_service.go`**
+1. ✅ **榜单计算已从 `ranking_repository_mongo.go` 移到 `service/bookstore/ranking_service.go`**
 2. ✅ **榜单更新事务编排已移到 Service 层**
-3. ⚠️ **权重配置仍硬编码在 Service 层**
-4. ⚠️ **尚无独立的 RankingService / 定时更新入口**
+3. ✅ **权重配置已抽离为 `RankingConfig` 结构体**
+4. ✅ **已创建独立 `RankingService`**
 
-**证据**:
-- Repository 接口已删除 `Calculate*Ranking` / `UpdateRankings`
-- `BookstoreServiceImpl.UpdateRankings` 现在负责：
-  - 获取书籍列表
-  - 计算分数
-  - 排序生成榜单
-  - 调用 Repository 事务执行删除和批量写入
-- Repository 仅保留 `DeleteByTypeAndPeriod`、`BatchUpsertRankingItems`、`Transaction`
+**Phase 4.3 完成 (2026-03-07)**:
+- Repository 接口已删除 `Calculate*Ranking` 方法
+- 新增 `GetBooksForRanking` 数据访问方法
+- `RankingService` 负责所有榜单计算逻辑（分数计算、资格判断、排序、排名）
+- 权重配置通过 `RankingConfig` 可配置化
 
 #### #010-C: Finance域 Repository 重构（P0）- ⚠️ 部分修复
 
 1. ✅ **Service层已实现余额验证**（transaction_service.go, withdraw_service.go）
 2. ❌ **事务编排不完整**（存在TODO注释）
 3. ⚠️ **存在竞态条件风险**
+
+#### #010-E: Stats域 Repository 重构（P2）- ✅ 已完成
+
+**Phase 4.1 BookStatsRepository (2026-03-07)**:
+- ✅ `GetBookTotalViews`, `GetBookTotalLikes`, `CalculateBookAvgRating` 等方法保留在Repository
+- ✅ 这些方法为纯聚合操作(SUM/AVG)，属于数据访问范畴，无需迁移
+
+**Phase 4.2 ReaderBehaviorRepository (2026-03-07)**:
+- ✅ `CalculateCompletionRate`, `CalculateDropOffRate`, `CalculateRetention` 已迁移到 `ReadingStatsService`
+- ✅ `CalculateAvgReadTime` 保留在Repository（纯AVG聚合操作）
+- ✅ 新增数据访问方法: `CountByChapterAndType`, `CountByChapter`, `GetDistinctUsersByBookAndDateRange`, `CountActiveUsersInList`
 
 ---
 
@@ -522,11 +530,11 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 - [ ] follow_repository_mongo.go::UpdateMutualStatus → FollowService.UpdateMutualStatus
 
 ### Stats 域
-- [ ] reader_behavior_repository_mongo.go::CalculateAvgReadTime → StatsService.CalculateAvgReadTime
-- [ ] reader_behavior_repository_mongo.go::CalculateCompletionRate → StatsService.CalculateCompletionRate
-- [ ] reader_behavior_repository_mongo.go::CalculateDropOffRate → StatsService.CalculateDropOffRate
-- [ ] reader_behavior_repository_mongo.go::CalculateRetention → StatsService.CalculateRetention
-- [ ] book_stats_repository_mongo.go::所有Calculate*方法 → BookStatsService
+- [x] reader_behavior_repository_mongo.go::CalculateCompletionRate → ReadingStatsService.CalculateCompletionRate ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateDropOffRate → ReadingStatsService.CalculateDropOffRate ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateRetention → ReadingStatsService.CalculateRetention ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateAvgReadTime → 保留在Repository（纯聚合操作） ✅ (Phase 4.2)
+- [x] book_stats_repository_mongo.go::所有Calculate*方法 → 保留在Repository（纯聚合操作） ✅ (Phase 4.1)
 
 ### User 域
 - [ ] user_repository_mongo.go::ValidateUser → UserService.ValidateUser

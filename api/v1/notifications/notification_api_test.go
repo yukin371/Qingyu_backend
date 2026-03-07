@@ -288,7 +288,7 @@ func TestNotificationAPI_UpdateNotificationPreference_Patch_Success(t *testing.T
 		"enableSystem": true,
 	}
 
-	mockService.On("UpdateNotificationPreference", mock.Anything, userID, mock.AnythingOfType("*service.UpdateNotificationPreferenceRequest")).Return(nil)
+	mockService.On("UpdateNotificationPreference", mock.Anything, userID, mock.AnythingOfType("*notification.UpdateNotificationPreferenceRequest")).Return(nil)
 
 	// When
 	bodyBytes, _ := json.Marshal(reqBody)

@@ -435,27 +435,22 @@ func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, it
 	return nil
 }
 
-// CalculateRealtimeRanking 兼容旧调用方，基于当前书籍数据生成实时榜单项。
-func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
-	return r.calculateRankingItems(ctx, bookstore2.RankingTypeRealtime, period)
+// GetBooksForRanking 获取用于榜单计算的书籍数据（纯数据查询）
+func (r *MongoRankingRepository) GetBooksForRanking(ctx context.Context) ([]*bookstore2.Book, error) {
+	cursor, err := r.bookCollection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query books for ranking: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var books []*bookstore2.Book
+	if err := cursor.All(ctx, &books); err != nil {
+		return nil, fmt.Errorf("failed to decode books for ranking: %w", err)
+	}
+	return books, nil
 }
 
-// CalculateWeeklyRanking 兼容旧调用方，基于当前书籍数据生成周榜项。
-func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
-	return r.calculateRankingItems(ctx, bookstore2.RankingTypeWeekly, period)
-}
-
-// CalculateMonthlyRanking 兼容旧调用方，基于当前书籍数据生成月榜项。
-func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
-	return r.calculateRankingItems(ctx, bookstore2.RankingTypeMonthly, period)
-}
-
-// CalculateNewbieRanking 兼容旧调用方，基于当前书籍数据生成新人榜项。
-func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
-	return r.calculateRankingItems(ctx, bookstore2.RankingTypeNewbie, period)
-}
-
-// UpdateRankings 兼容旧调用方，在事务中替换指定榜单数据。
+// UpdateRankings 在事务中替换指定榜单数据
 func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem) error {
 	return r.Transaction(ctx, func(txCtx context.Context) error {
 		if err := r.DeleteByTypeAndPeriod(txCtx, rankingType, period); err != nil {

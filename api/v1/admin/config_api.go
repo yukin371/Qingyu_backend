@@ -1,9 +1,6 @@
 package admin
 
 import (
-	"net/http"
-
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	sharedService "Qingyu_backend/service/shared"
 
@@ -41,11 +38,11 @@ type GetAllConfigsResponse struct {
 func (api *ConfigAPI) GetAllConfigs(c *gin.Context) {
 	groups, err := api.configService.GetAllConfigs(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取配置失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取配置成功", GetAllConfigsResponse{
+	response.SuccessWithMessage(c, "获取配置成功", GetAllConfigsResponse{
 		Groups: groups,
 	})
 }
@@ -71,13 +68,13 @@ type GetConfigByKeyRequest struct {
 func (api *ConfigAPI) GetConfigByKey(c *gin.Context) {
 	var req GetConfigByKeyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	item, err := api.configService.GetConfigByKey(c.Request.Context(), req.Key)
 	if err != nil {
-		shared.NotFound(c, err.Error())
+		response.NotFound(c, err.Error())
 		return
 	}
 
@@ -107,7 +104,7 @@ type UpdateConfigRequest struct {
 func (api *ConfigAPI) UpdateConfig(c *gin.Context) {
 	var req UpdateConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -118,7 +115,7 @@ func (api *ConfigAPI) UpdateConfig(c *gin.Context) {
 	}
 
 	if err := api.configService.UpdateConfig(c.Request.Context(), serviceReq); err != nil {
-		shared.InternalError(c, "更新配置失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -147,7 +144,7 @@ type BatchUpdateConfigRequest struct {
 func (api *ConfigAPI) BatchUpdateConfig(c *gin.Context) {
 	var req BatchUpdateConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -161,7 +158,7 @@ func (api *ConfigAPI) BatchUpdateConfig(c *gin.Context) {
 	}
 
 	if err := api.configService.BatchUpdateConfig(c.Request.Context(), serviceReqs); err != nil {
-		shared.InternalError(c, "批量更新配置失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -188,12 +185,12 @@ type ValidateConfigRequest struct {
 func (api *ConfigAPI) ValidateConfig(c *gin.Context) {
 	var req ValidateConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if err := api.configService.ValidateConfig(c.Request.Context(), req.YAMLContent); err != nil {
-		shared.BadRequest(c, "配置验证失败", err.Error())
+		response.BadRequest(c, "配置验证失败", err.Error())
 		return
 	}
 
@@ -219,11 +216,11 @@ type GetConfigBackupsResponse struct {
 func (api *ConfigAPI) GetConfigBackups(c *gin.Context) {
 	backups, err := api.configService.GetConfigBackups(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取备份列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "获取备份列表成功", GetConfigBackupsResponse{
+	response.SuccessWithMessage(c, "获取备份列表成功", GetConfigBackupsResponse{
 		Backups: backups,
 	})
 }
@@ -242,7 +239,7 @@ func (api *ConfigAPI) GetConfigBackups(c *gin.Context) {
 // @Router /api/v1/admin/config/restore [post]
 func (api *ConfigAPI) RestoreConfigBackup(c *gin.Context) {
 	if err := api.configService.RestoreConfigBackup(c.Request.Context()); err != nil {
-		shared.InternalError(c, "恢复配置失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
