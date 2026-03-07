@@ -102,6 +102,17 @@ tmp/
 # 其他
 *.bak
 *.backup
+*.out
+*_coverage.out
+coverage.out
+
+# 日志目录
+logs/
+**/logs/
+
+# 测试输出文件
+*.test.txt
+test_*.txt
 
 # scripts目录中的临时文件和日志（但保留有用脚本）
 scripts/*.log
