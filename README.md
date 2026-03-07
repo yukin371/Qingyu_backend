@@ -4,11 +4,39 @@
 [![Go Version](https://img.shields.io/badge/Go-1.24-blue?logo=go)](https://golang.org)
 [![Gin Framework](https://img.shields.io/badge/Gin-1.11.0-red?logo=gin)](https://gin-gonic.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](./doc)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](./docs)
 
-> 一款基于 Go + Gin + MongoDB 的新一代智能创作平台后端，集成了阅读、写作、社交等完整功能，采用模块化架构设计，支持从单体到微服务的平滑演进。
+> **技术应用实践项目** - 一款基于 Go + Gin + MongoDB 的新一代智能创作平台后端，旨在实践和整合主流后端技术栈，涵盖微服务架构、消息队列、分布式部署等企业级技术方案。
 
-## 项目简介
+## 项目定位
+
+### 技术应用实践性质
+
+本项目是一个**技术应用实践项目**，核心目标是学习和实践现代后端开发的主流技术栈。通过构建一个完整的阅读-写作一体化平台，将以下技术方案落地应用：
+
+**已实现技术**：
+- ✅ Go + Gin 框架 - 高性能 HTTP 服务
+- ✅ MongoDB - 文档数据库
+- ✅ Redis - 分布式缓存
+- ✅ Milvus - 向量数据库（AI 语义检索）
+- ✅ gRPC - 服务间通信
+- ✅ JWT - 身份认证
+- ✅ Docker + Docker Compose - 容器化部署
+- ✅ GitHub Actions - CI/CD 流水线
+
+**规划中技术**：
+- 🔜 **消息队列** - RabbitMQ/Kafka（异步任务处理、事件驱动）
+- 🔜 **分布式追踪** - Jaeger/Zipkin（链路追踪）
+- 🔜 **服务网格** - Istio（微服务治理）
+- 🔜 **Kubernetes** - 容器编排与自动扩缩容
+- 🔜 **服务注册发现** - Consul/etcd
+- 🔜 **配置中心** - Apollo/Nacos
+- 🔜 **API 网关** - Kong/Traefik
+- 🔜 **分布式事务** - Saga/TCC 模式
+- 🔜 **读写分离** - MongoDB Replica Set
+- 🔜 **对象存储** - MinIO（文件存储）
+
+### 业务场景
 
 青羽是一个面向中文网络文学领域的**阅读-写作一体化平台**，为创作者提供项目管理、版本控制、协同编辑等强大功能，为读者提供个性化推荐、社交互动、VIP会员等丰富体验。
 
