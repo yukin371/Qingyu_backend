@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -39,23 +38,23 @@ func NewBookStatisticsAPI(bookStatisticsService bookstoreService.BookStatisticsS
 func (api *BookStatisticsAPI) GetBookStatistics(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		shared.BadRequest(c, "参数错误", "图书ID不能为空")
+		response.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
+		response.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
 	statistics, err := api.BookStatisticsService.GetStatisticsByBookID(c.Request.Context(), bookID.Hex())
 	if err != nil {
-		shared.NotFound(c, "统计信息不存在")
+		response.NotFound(c, "统计信息不存在")
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetTopViewedBooks 获取最多浏览的图书
@@ -81,7 +80,7 @@ func (api *BookStatisticsAPI) GetTopViewedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetTopFavoritedBooks 获取最多收藏的图书
@@ -107,7 +106,7 @@ func (api *BookStatisticsAPI) GetTopFavoritedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetTopRatedBooks 获取最高评分的图书
@@ -133,7 +132,7 @@ func (api *BookStatisticsAPI) GetTopRatedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetHottestBooks 获取最热门的图书
@@ -159,7 +158,7 @@ func (api *BookStatisticsAPI) GetHottestBooks(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetTrendingBooks 获取趋势图书
@@ -185,7 +184,7 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // IncrementViewCount 增加浏览量
@@ -202,13 +201,13 @@ func (api *BookStatisticsAPI) GetTrendingBooks(c *gin.Context) {
 func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		shared.BadRequest(c, "参数错误", "图书ID不能为空")
+		response.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
+		response.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
@@ -218,7 +217,7 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, nil)
+	response.Success(c, nil)
 }
 
 // IncrementFavoriteCount 增加收藏量
@@ -235,13 +234,13 @@ func (api *BookStatisticsAPI) IncrementViewCount(c *gin.Context) {
 func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 	bookIDStr := c.Param("book_id")
 	if bookIDStr == "" {
-		shared.BadRequest(c, "参数错误", "图书ID不能为空")
+		response.BadRequest(c, "参数错误", "图书ID不能为空")
 		return
 	}
 
 	bookID, err := primitive.ObjectIDFromHex(bookIDStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的图书ID格式")
+		response.BadRequest(c, "参数错误", "无效的图书ID格式")
 		return
 	}
 
@@ -251,7 +250,7 @@ func (api *BookStatisticsAPI) IncrementFavoriteCount(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, nil)
+	response.Success(c, nil)
 }
 
 // GetAggregatedStatistics 获取聚合统计信息
@@ -270,7 +269,7 @@ func (api *BookStatisticsAPI) GetAggregatedStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, statistics)
+	response.Success(c, statistics)
 }
 
 // GetStatisticsByTimeRange 获取时间范围内的统计信息
@@ -292,19 +291,19 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 	endTimeStr := c.Query("end_time")
 
 	if startTimeStr == "" || endTimeStr == "" {
-		shared.BadRequest(c, "参数错误", "开始时间和结束时间不能为空")
+		response.BadRequest(c, "参数错误", "开始时间和结束时间不能为空")
 		return
 	}
 
 	startTime, err := time.Parse(time.RFC3339, startTimeStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "开始时间格式错误")
+		response.BadRequest(c, "参数错误", "开始时间格式错误")
 		return
 	}
 
 	endTime, err := time.Parse(time.RFC3339, endTimeStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "结束时间格式错误")
+		response.BadRequest(c, "参数错误", "结束时间格式错误")
 		return
 	}
 
@@ -343,13 +342,13 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 	dateStr := c.Query("date")
 	if dateStr == "" {
-		shared.BadRequest(c, "参数错误", "日期不能为空")
+		response.BadRequest(c, "参数错误", "日期不能为空")
 		return
 	}
 
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "日期格式错误")
+		response.BadRequest(c, "参数错误", "日期格式错误")
 		return
 	}
 
@@ -359,7 +358,7 @@ func (api *BookStatisticsAPI) GetDailyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, report)
+	response.Success(c, report)
 }
 
 // GetWeeklyStatisticsReport 获取周统计报告
@@ -379,19 +378,19 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 	weekStr := c.Query("week")
 
 	if yearStr == "" || weekStr == "" {
-		shared.BadRequest(c, "参数错误", "年份和周数不能为空")
+		response.BadRequest(c, "参数错误", "年份和周数不能为空")
 		return
 	}
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "年份格式错误")
+		response.BadRequest(c, "参数错误", "年份格式错误")
 		return
 	}
 
 	week, err := strconv.Atoi(weekStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "周数格式错误")
+		response.BadRequest(c, "参数错误", "周数格式错误")
 		return
 	}
 
@@ -410,7 +409,7 @@ func (api *BookStatisticsAPI) GetWeeklyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, report)
+	response.Success(c, report)
 }
 
 // GetMonthlyStatisticsReport 获取月统计报告
@@ -430,19 +429,19 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 	monthStr := c.Query("month")
 
 	if yearStr == "" || monthStr == "" {
-		shared.BadRequest(c, "参数错误", "年份和月份不能为空")
+		response.BadRequest(c, "参数错误", "年份和月份不能为空")
 		return
 	}
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "年份格式错误")
+		response.BadRequest(c, "参数错误", "年份格式错误")
 		return
 	}
 
 	month, err := strconv.Atoi(monthStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "月份格式错误")
+		response.BadRequest(c, "参数错误", "月份格式错误")
 		return
 	}
 
@@ -452,7 +451,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 		return
 	}
 
-	shared.SuccessData(c, report)
+	response.Success(c, report)
 }
 
 // SearchStatistics 搜索统计信息
@@ -471,7 +470,7 @@ func (api *BookStatisticsAPI) GetMonthlyStatisticsReport(c *gin.Context) {
 func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		shared.BadRequest(c, "参数错误", "搜索关键词不能为空")
+		response.BadRequest(c, "参数错误", "搜索关键词不能为空")
 		return
 	}
 

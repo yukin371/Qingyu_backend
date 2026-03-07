@@ -1,8 +1,6 @@
 package handler
 
 import (
-	serviceInterfaces "Qingyu_backend/service/interfaces/base"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"net/http"
 	"time"
 
@@ -10,7 +8,10 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/pkg/utils"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 )
 
 // AuthHandler 认证处理器
@@ -56,7 +57,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeValidation:
-				shared.BadRequest(c, "注册失败", serviceErr.Message)
+				response.BadRequest(c, "注册失败", serviceErr.Message)
 			case serviceInterfaces.ErrorTypeBusiness:
 				// 根据错误消息返回具体的错误码
 				if serviceErr.Message == "用户名已存在" {
@@ -72,14 +73,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 						Timestamp: time.Now().UnixMilli(),
 					})
 				} else {
-					shared.BadRequest(c, "注册失败", serviceErr.Message)
+					response.BadRequest(c, "注册失败", serviceErr.Message)
 				}
 			default:
-				shared.InternalError(c, "注册失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "注册失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -98,7 +99,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Token:    resp.Token,
 	}
 
-	shared.Success(c, http.StatusCreated, "注册成功", registerResp)
+	response.Created(c, registerResp)
 }
 
 // Login 用户登录
@@ -135,17 +136,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.Unauthorized(c, "用户名或密码错误")
+				response.Unauthorized(c, "用户名或密码错误")
 			case serviceInterfaces.ErrorTypeUnauthorized:
-				shared.Unauthorized(c, "用户名或密码错误")
+				response.Unauthorized(c, "用户名或密码错误")
 			case serviceInterfaces.ErrorTypeValidation:
-				shared.BadRequest(c, "登录失败", serviceErr.Message)
+				response.BadRequest(c, "登录失败", serviceErr.Message)
 			default:
-				shared.InternalError(c, "登录失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "登录失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -166,7 +167,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Roles: resp.User.Roles, // 顶层也返回roles，方便前端访问
 	}
 
-	shared.Success(c, http.StatusOK, "登录成功", loginResp)
+	response.Success(c, loginResp)
 }
 
 // Logout 用户登出
@@ -186,7 +187,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
 		// 即使没有token也返回成功，因为登出应该是幂等的
-		shared.Success(c, http.StatusOK, "登出成功", gin.H{
+		response.Success(c, gin.H{
 			"message": "Logged out successfully",
 		})
 		return
@@ -202,7 +203,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	// 如果需要服务端控制，可以实现token黑名单机制
 
 	// 返回成功响应
-	shared.Success(c, http.StatusOK, "登出成功", gin.H{
+	response.Success(c, gin.H{
 		"message": "Logged out successfully",
 	})
 }

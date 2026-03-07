@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
+
 	"Qingyu_backend/models/dto"
-	response "Qingyu_backend/pkg/response"
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -39,14 +39,14 @@ func NewProgressAPI(progressService contentService.ReadingProgressServicePort) *
 func (api *ProgressAPI) GetProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -56,7 +56,7 @@ func (api *ProgressAPI) GetProgress(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // SaveProgress 保存阅读进度
@@ -75,14 +75,14 @@ func (api *ProgressAPI) GetProgress(c *gin.Context) {
 func (api *ProgressAPI) SaveProgress(c *gin.Context) {
 	var req dto.SaveProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (api *ProgressAPI) SaveProgress(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "保存成功", nil)
+	response.SuccessWithMessage(c, "保存成功", nil)
 }
 
 // UpdateReadingTime 更新阅读时长
@@ -116,14 +116,14 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 		Duration int    `json:"duration" binding:"required,min=1"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -133,7 +133,7 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "更新成功", nil)
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // GetRecentBooks 获取最近阅读的书籍
@@ -152,7 +152,7 @@ func (api *ProgressAPI) GetRecentBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -167,7 +167,7 @@ func (api *ProgressAPI) GetRecentBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetReadingStats 获取阅读统计
@@ -185,7 +185,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -195,7 +195,7 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetReadingHistory 获取阅读历史
@@ -216,7 +216,7 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -254,7 +254,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -264,7 +264,7 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetFinishedBooks 获取已读完的书籍
@@ -282,7 +282,7 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -292,5 +292,5 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
