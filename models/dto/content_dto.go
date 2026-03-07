@@ -201,6 +201,45 @@ type UpdateContentRequest struct {
 	Version    int    `json:"version" validate:"min=0"` // 用于版本冲突检测
 }
 
+// ParagraphContent 段落内容
+type ParagraphContent struct {
+	ParagraphID string    `json:"paragraphId,omitempty"`
+	Order       int       `json:"order"`
+	Content     string    `json:"content"`
+	ContentType string    `json:"contentType,omitempty"` // tiptap | markdown
+	Version     int       `json:"version,omitempty"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+}
+
+// DocumentContentsResponse 文档段落内容响应
+type DocumentContentsResponse struct {
+	DocumentID string             `json:"documentId"`
+	Contents   []ParagraphContent `json:"contents"`
+	Total      int                `json:"total"`
+	WordCount  int                `json:"wordCount"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+}
+
+// ReplaceDocumentContentsRequest 替换文档段落请求
+type ReplaceDocumentContentsRequest struct {
+	DocumentID string             `json:"documentId" validate:"required"`
+	Contents   []ParagraphContent `json:"contents"`
+}
+
+// ReplaceDocumentContentsResponse 替换文档段落响应
+type ReplaceDocumentContentsResponse struct {
+	DocumentID string    `json:"documentId"`
+	Total      int       `json:"total"`
+	WordCount  int       `json:"wordCount"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+// ReindexDocumentContentsResponse 重新编号响应
+type ReindexDocumentContentsResponse struct {
+	DocumentID string `json:"documentId"`
+	Total      int    `json:"total"`
+}
+
 // DuplicateRequest 复制文档/项目请求
 type DuplicateRequest struct {
 	NewTitle      string `json:"newTitle" validate:"required,min=1,max=200"`

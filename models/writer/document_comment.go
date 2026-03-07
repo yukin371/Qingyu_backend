@@ -18,12 +18,13 @@ const (
 
 // DocumentComment 文档批注
 type DocumentComment struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	DocumentID primitive.ObjectID `bson:"document_id" json:"documentId"`
-	ChapterID  primitive.ObjectID `bson:"chapter_id,omitempty" json:"chapterId,omitempty"` // 可选，用于章节级批注
-	UserID     primitive.ObjectID `bson:"user_id" json:"userId"`
-	UserName   string             `bson:"user_name" json:"userName"`
-	UserAvatar string             `bson:"user_avatar,omitempty" json:"userAvatar,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	DocumentID  primitive.ObjectID `bson:"document_id" json:"documentId"`
+	ParagraphID primitive.ObjectID `bson:"paragraph_id,omitempty" json:"paragraphId,omitempty"` // 新模型：评论只对应一个段落
+	ChapterID   primitive.ObjectID `bson:"chapter_id,omitempty" json:"chapterId,omitempty"`     // 可选，用于章节级批注
+	UserID      primitive.ObjectID `bson:"user_id" json:"userId"`
+	UserName    string             `bson:"user_name" json:"userName"`
+	UserAvatar  string             `bson:"user_avatar,omitempty" json:"userAvatar,omitempty"`
 
 	// 批注内容
 	Content  string          `bson:"content" json:"content"`
@@ -77,17 +78,18 @@ type CommentThread struct {
 
 // CommentFilter 批注筛选条件
 type CommentFilter struct {
-	DocumentID *primitive.ObjectID `bson:"document_id,omitempty"`
-	ChapterID  *primitive.ObjectID `bson:"chapter_id,omitempty"`
-	UserID     *primitive.ObjectID `bson:"user_id,omitempty"`
-	Type       CommentType         `bson:"type,omitempty"`
-	Resolved   *bool               `bson:"resolved,omitempty"`
-	ParentID   *primitive.ObjectID `bson:"parent_id,omitempty"` // nil表示顶级评论
-	ThreadID   *primitive.ObjectID `bson:"thread_id,omitempty"`
-	StartDate  *time.Time          `bson:"start_date,omitempty"`
-	EndDate    *time.Time          `bson:"end_date,omitempty"`
-	Keyword    string              `bson:"-"` // 内容关键词搜索
-	Labels     []string            `bson:"-"` // 标签筛选
+	DocumentID  *primitive.ObjectID `bson:"document_id,omitempty"`
+	ParagraphID *primitive.ObjectID `bson:"paragraph_id,omitempty"`
+	ChapterID   *primitive.ObjectID `bson:"chapter_id,omitempty"`
+	UserID      *primitive.ObjectID `bson:"user_id,omitempty"`
+	Type        CommentType         `bson:"type,omitempty"`
+	Resolved    *bool               `bson:"resolved,omitempty"`
+	ParentID    *primitive.ObjectID `bson:"parent_id,omitempty"` // nil表示顶级评论
+	ThreadID    *primitive.ObjectID `bson:"thread_id,omitempty"`
+	StartDate   *time.Time          `bson:"start_date,omitempty"`
+	EndDate     *time.Time          `bson:"end_date,omitempty"`
+	Keyword     string              `bson:"-"` // 内容关键词搜索
+	Labels      []string            `bson:"-"` // 标签筛选
 }
 
 // CommentStats 批注统计

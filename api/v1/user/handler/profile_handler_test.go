@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
@@ -343,6 +344,14 @@ func TestProfileHandler_UpdateProfile(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		require.NoError(t, err)
+		data, ok := response["data"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Equal(t, "Updated Nickname", data["nickname"])
+		assert.Equal(t, "Updated bio", data["bio"])
+		assert.NotContains(t, data, "user")
 		mockService.AssertExpectations(t)
 	})
 

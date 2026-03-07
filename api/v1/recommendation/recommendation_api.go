@@ -11,7 +11,8 @@ import (
 
 // RecommendationAPI 推荐API
 type RecommendationAPI struct {
-	recoService recommendation.RecommendationService
+	recoService  recommendation.RecommendationService
+	tableService recommendation.RecommendationTableService
 }
 
 // NewRecommendationAPI 创建推荐API实例
@@ -19,6 +20,11 @@ func NewRecommendationAPI(recoService recommendation.RecommendationService) *Rec
 	return &RecommendationAPI{
 		recoService: recoService,
 	}
+}
+
+func (api *RecommendationAPI) WithTableService(tableService recommendation.RecommendationTableService) *RecommendationAPI {
+	api.tableService = tableService
+	return api
 }
 
 // GetPersonalizedRecommendations 获取个性化推荐

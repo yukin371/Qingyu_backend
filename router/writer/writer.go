@@ -27,6 +27,8 @@ func InitWriterRouter(
 	commentService writerservice.CommentService,
 	templateService *document.TemplateService,
 	statsService *readingStatsService.ReadingStatsService,
+	characterService interfaces.CharacterService,
+	locationService interfaces.LocationService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -96,6 +98,11 @@ func InitWriterRouter(
 		// 统计路由
 		if statsService != nil {
 			InitStatsRouter(writerGroup, statsService)
+		}
+
+		// 关键词路由
+		if characterService != nil || locationService != nil {
+			InitKeywordRouter(writerGroup, characterService, locationService)
 		}
 	}
 }
@@ -183,6 +190,9 @@ func InitEditorRouter(r *gin.RouterGroup, editorApi *writer.EditorApi) {
 		// 文档内容
 		documentGroup.GET("/content", editorApi.GetDocumentContent)
 		documentGroup.PUT("/content", editorApi.UpdateDocumentContent)
+		documentGroup.GET("/contents", editorApi.GetDocumentContents)
+		documentGroup.PUT("/contents", editorApi.ReplaceDocumentContents)
+		documentGroup.POST("/contents/reindex", editorApi.ReindexDocumentContents)
 
 		// 字数统计
 		documentGroup.POST("/word-count", editorApi.CalculateWordCount)

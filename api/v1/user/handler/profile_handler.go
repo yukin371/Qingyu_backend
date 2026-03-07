@@ -167,8 +167,8 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	// 返回更新后的用户信息
-	shared.Success(c, http.StatusOK, "更新成功", updatedUser)
+	// 与获取个人信息接口保持一致，直接返回用户 DTO。
+	shared.Success(c, http.StatusOK, "更新成功", updatedUser.User)
 }
 
 // UpdatePassword 修改密码
