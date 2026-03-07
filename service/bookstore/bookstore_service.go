@@ -4,16 +4,15 @@ import (
 	bookstore2 "Qingyu_backend/models/bookstore"
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/models/shared/types"
+	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	"context"
 	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"sort"
 	"strings"
 	"sync"
 	"time"
-
-
-	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -84,6 +83,9 @@ type HomepageData struct {
 	Stats            *bookstore2.BookStats                `json:"stats"`
 	Rankings         map[string][]*bookstore2.RankingItem `json:"rankings"` // 各类榜单
 }
+
+type rankingScoreCalculator func(book *bookstore2.Book) float64
+type rankingEligibility func(book *bookstore2.Book, now time.Time) bool
 
 // NewBookstoreService 创建书城服务实例
 func NewBookstoreService(
@@ -354,7 +356,7 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		// 创建一个没有关键词的过滤器，并设置为不分页
 		filterWithoutKeyword := *filter
 		filterWithoutKeyword.Keyword = nil
-		filterWithoutKeyword.Limit = 0  // 不限制数量
+		filterWithoutKeyword.Limit = 0 // 不限制数量
 		filterWithoutKeyword.Offset = 0
 
 		// 获取所有符合其他条件的书籍
@@ -366,7 +368,7 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		fmt.Printf("[DEBUG] 获取到 %d 本书籍，搜索关键词: %s\n", len(allBooks), *filter.Keyword)
 
 		// 在Go代码中过滤关键词和其他条件
-		keyword := *filter.Keyword  // 不使用ToLower，因为中文没有大小写
+		keyword := *filter.Keyword // 不使用ToLower，因为中文没有大小写
 		filteredBooks := make([]*bookstore2.Book, 0)
 		matchCount := 0
 		for _, book := range allBooks {
@@ -772,27 +774,105 @@ func (s *BookstoreServiceImpl) GetRankingByType(ctx context.Context, rankingType
 
 // UpdateRankings 更新榜单数据
 func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
-	var items []*bookstore2.RankingItem
-	var err error
-
 	switch rankingType {
-	case bookstore2.RankingTypeRealtime:
-		items, err = s.rankingRepo.CalculateRealtimeRanking(ctx, period)
-	case bookstore2.RankingTypeWeekly:
-		items, err = s.rankingRepo.CalculateWeeklyRanking(ctx, period)
-	case bookstore2.RankingTypeMonthly:
-		items, err = s.rankingRepo.CalculateMonthlyRanking(ctx, period)
-	case bookstore2.RankingTypeNewbie:
-		items, err = s.rankingRepo.CalculateNewbieRanking(ctx, period)
+	case bookstore2.RankingTypeRealtime, bookstore2.RankingTypeWeekly, bookstore2.RankingTypeMonthly, bookstore2.RankingTypeNewbie:
 	default:
 		return fmt.Errorf("unsupported ranking type: %s", rankingType)
 	}
 
+	if period == "" {
+		period = bookstore2.GetPeriodString(rankingType, time.Now())
+	}
+
+	items, err := s.calculateRankingItems(ctx, rankingType, period)
 	if err != nil {
 		return fmt.Errorf("failed to calculate ranking: %w", err)
 	}
 
-	return s.rankingRepo.UpdateRankings(ctx, rankingType, period, items)
+	return s.rankingRepo.Transaction(ctx, func(txCtx context.Context) error {
+		if err := s.rankingRepo.DeleteByTypeAndPeriod(txCtx, rankingType, period); err != nil {
+			return err
+		}
+		if len(items) == 0 {
+			return nil
+		}
+		return s.rankingRepo.BatchUpsertRankingItems(txCtx, items)
+	})
+}
+
+func (s *BookstoreServiceImpl) calculateRankingItems(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error) {
+	now := time.Now()
+	books, err := s.bookRepo.List(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	scoreFn, eligibleFn, err := rankingStrategy(rankingType)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*bookstore2.RankingItem, 0, len(books))
+	for _, book := range books {
+		if book == nil || !eligibleFn(book, now) {
+			continue
+		}
+
+		items = append(items, &bookstore2.RankingItem{
+			BookID:    book.ID,
+			Type:      rankingType,
+			Score:     scoreFn(book),
+			ViewCount: book.ViewCount,
+			LikeCount: book.RatingCount,
+			Period:    period,
+		})
+	}
+
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Score == items[j].Score {
+			return items[i].BookID.Hex() < items[j].BookID.Hex()
+		}
+		return items[i].Score > items[j].Score
+	})
+
+	if len(items) > 100 {
+		items = items[:100]
+	}
+
+	for i, item := range items {
+		item.Rank = i + 1
+	}
+
+	return items, nil
+}
+
+func rankingStrategy(rankingType bookstore2.RankingType) (rankingScoreCalculator, rankingEligibility, error) {
+	publicOngoing := func(book *bookstore2.Book, _ time.Time) bool {
+		return book.Status == bookstore2.BookStatusOngoing
+	}
+
+	switch rankingType {
+	case bookstore2.RankingTypeRealtime:
+		return func(book *bookstore2.Book) float64 {
+			return float64(book.ViewCount)*0.7 + float64(book.RatingCount)*0.3
+		}, publicOngoing, nil
+	case bookstore2.RankingTypeWeekly:
+		return func(book *bookstore2.Book) float64 {
+			return float64(book.ViewCount)*0.6 + float64(book.ChapterCount)*10
+		}, publicOngoing, nil
+	case bookstore2.RankingTypeMonthly:
+		return func(book *bookstore2.Book) float64 {
+			return float64(book.ViewCount)*0.5 + float64(book.RatingCount)*0.3 + float64(book.WordCount)*0.0001
+		}, publicOngoing, nil
+	case bookstore2.RankingTypeNewbie:
+		return func(book *bookstore2.Book) float64 {
+				return float64(book.ViewCount)*0.6 + float64(book.RatingCount)*0.4
+			}, func(book *bookstore2.Book, now time.Time) bool {
+				return book.Status == bookstore2.BookStatusOngoing && book.CreatedAt.After(now.AddDate(0, -3, 0))
+			}, nil
+	default:
+		return nil, nil, fmt.Errorf("unsupported ranking type: %s", rankingType)
+	}
 }
 
 // boolPtr 返回bool值的指针

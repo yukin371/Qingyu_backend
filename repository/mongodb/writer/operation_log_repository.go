@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	ErrOperationLogNotFound  = errors.New("operation log not found")
+	ErrOperationLogNotFound = errors.New("operation log not found")
 	ErrOperationNotUndoable = errors.New("operation is not undoable")
 	ErrOperationNotRedoable = errors.New("operation is not redoable")
 )
@@ -56,8 +56,16 @@ func NewOperationLogRepository(db *mongo.Database) OperationLogRepository {
 // Create 创建操作日志
 func (r *OperationLogRepositoryImpl) Create(ctx context.Context, log *writer.OperationLog) error {
 	log.TouchForCreate()
-	_, err := r.GetCollection().InsertOne(ctx, log)
-	return err
+	result, err := r.GetCollection().InsertOne(ctx, log)
+	if err != nil {
+		return err
+	}
+	if log.ID.IsZero() {
+		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+			log.ID = oid
+		}
+	}
+	return nil
 }
 
 // GetByID 根据ID获取操作日志

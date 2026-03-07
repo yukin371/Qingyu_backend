@@ -41,6 +41,7 @@ func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.Notifi
 	// 通知偏好设置
 	notificationGroup.GET("/preferences", notificationAPI.GetNotificationPreference)
 	notificationGroup.PUT("/preferences", notificationAPI.UpdateNotificationPreference)
+	notificationGroup.PATCH("/preferences", notificationAPI.UpdateNotificationPreference)
 	notificationGroup.POST("/preferences/reset", notificationAPI.ResetNotificationPreference)
 
 	// 推送设备管理

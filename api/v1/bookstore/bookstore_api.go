@@ -415,12 +415,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 			books := api.convertSearchResponseToBooks(newResp.Data.Results)
 			bookDTOs := ToBookDTOsFromPtrSlice(books)
 
-			responseData := map[string]interface{}{
-				"books": bookDTOs,
-				"total": newResp.Data.Total,
-			}
-
-			response.SuccessWithMessage(c, "搜索书籍成功", responseData)
+			response.Paginated(c, bookDTOs, newResp.Data.Total, page, size, "搜索书籍成功")
 			return
 		}
 
@@ -543,13 +538,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
 
 	// 构造响应数据
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	// 使用response包的响应函数
-	response.SuccessWithMessage(c, "搜索书籍成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索书籍成功")
 }
 
 // SearchByTitle 按标题搜索书籍
@@ -594,12 +583,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 
 	// 响应封装
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	response.SuccessWithMessage(c, "搜索成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索成功")
 }
 
 // SearchByAuthor 按作者搜索书籍
@@ -616,6 +600,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/author [get]
+//
 // SearchByAuthor 按作者搜索书籍
 //
 //	@Summary     按作者搜索书籍
@@ -658,12 +643,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 
 	// 响应封装
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	response.SuccessWithMessage(c, "搜索成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索成功")
 }
 
 // GetCategoryTree 获取分类树
@@ -969,7 +949,6 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 // GetBooksByTags 按标签筛选书籍
 //
 
-
 // ========== 以下方法已移至Service层，保留调用包装 ==========
 
 // buildSearchFilter 构建搜索过滤条件（调用Service层方法）
@@ -1032,6 +1011,7 @@ func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.Searc
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/tags [get]
+//
 // GetBooksByTags 按标签筛选书籍
 //
 //	@Summary     按标签筛选书籍
@@ -1165,6 +1145,7 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 //	@Failure     404 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/{id}/similar [get]
+//
 // GetSimilarBooks 获取相似书籍推荐
 //
 //	@Summary     获取相似书籍推荐

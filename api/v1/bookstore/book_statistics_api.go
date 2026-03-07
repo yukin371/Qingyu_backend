@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -325,7 +326,7 @@ func (api *BookStatisticsAPI) GetStatisticsByTimeRange(c *gin.Context) {
 
 	total := int64(len(statistics))
 
-	shared.Paginated(c, statistics, total, page, limit, "获取成功")
+	response.Paginated(c, statistics, total, page, limit, "获取成功")
 }
 
 // GetDailyStatisticsReport 获取日统计报告
@@ -490,5 +491,5 @@ func (api *BookStatisticsAPI) SearchStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, statistics, total, page, limit, "搜索成功")
+	response.Paginated(c, statistics, total, page, limit, "搜索成功")
 }

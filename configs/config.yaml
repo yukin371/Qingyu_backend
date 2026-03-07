@@ -62,6 +62,16 @@ ai:
     redis_host: "localhost"  # Docker: redis
     redis_port: 6379
 
+  # AI服务配置（gRPC内部API）
+  ai_service:
+    endpoint: "localhost:50052"
+    enable_fallback: false
+    timeout: 30
+    internal_api_key: "${AI_SERVICE_KEY}"
+    allowed_ips:
+      - "127.0.0.1"
+      - "::1"
+
 # Elasticsearch 搜索配置
 elasticsearch:
   enabled: true

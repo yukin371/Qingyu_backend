@@ -311,7 +311,7 @@ func createTestChapters(t *testing.T, ctx context.Context, bookIDHex string) []b
 		require.NoError(t, err)
 		// Chapter.ID 是 string 类型，从 InsertedID 获取
 		insertedID := result.InsertedID.(primitive.ObjectID)
-		chapters[i].ID = insertedID.Hex()
+		chapters[i].ID = insertedID
 	}
 
 	return chapters

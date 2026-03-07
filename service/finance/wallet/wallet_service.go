@@ -98,7 +98,7 @@ func (s *WalletServiceImpl) FreezeWallet(ctx context.Context, userID string, rea
 		"frozen": true,
 	}
 
-	if err := s.walletRepo.UpdateWallet(ctx, wallet.ID, updates); err != nil {
+	if err := s.walletRepo.UpdateWallet(ctx, wallet.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("冻结钱包失败: %w", err)
 	}
 
@@ -121,7 +121,7 @@ func (s *WalletServiceImpl) UnfreezeWallet(ctx context.Context, userID string) e
 		"frozen": false,
 	}
 
-	if err := s.walletRepo.UpdateWallet(ctx, wallet.ID, updates); err != nil {
+	if err := s.walletRepo.UpdateWallet(ctx, wallet.ID.Hex(), updates); err != nil {
 		return fmt.Errorf("解冻钱包失败: %w", err)
 	}
 
@@ -133,7 +133,7 @@ func (s *WalletServiceImpl) UnfreezeWallet(ctx context.Context, userID string) e
 // convertToWalletResponse 转换为响应格式
 func convertToWalletResponse(wallet *financeModel.Wallet) *Wallet {
 	return &Wallet{
-		ID:        wallet.ID,
+		ID:        wallet.ID.Hex(),
 		UserID:    wallet.UserID,
 		Balance:   int64(wallet.Balance),
 		Frozen:    wallet.Frozen,

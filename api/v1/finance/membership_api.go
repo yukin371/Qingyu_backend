@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
 )
 
@@ -235,7 +236,7 @@ func (api *MembershipAPI) ListCards(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, cards, total, page, pageSize, "获取会员卡列表成功")
+	response.Paginated(c, cards, total, page, pageSize, "获取会员卡列表成功")
 }
 
 // ActivateCardRequest 激活会员卡请求

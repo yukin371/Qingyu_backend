@@ -1052,7 +1052,7 @@ func TestUserService_AssignRole_Success(t *testing.T) {
 
 	user := &usersModel.User{}
 	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
-	role := &authModel.Role{ID: req.RoleID}
+	role := &authModel.Role{ID: primitive.NewObjectID()}
 
 	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)
 	mockAuthRepo.On("GetRole", ctx, req.RoleID).Return(role, nil)

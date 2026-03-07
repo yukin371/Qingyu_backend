@@ -234,6 +234,7 @@ func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *ser
 		ResourceTitle:   record.ResourceTitle,
 		BookstoreID:     record.BookstoreID,
 		BookstoreName:   record.BookstoreName,
+		ExternalID:      record.ExternalID,
 		Status:          record.Status,
 		PublishTime:     record.PublishTime,
 		ScheduledTime:   record.ScheduledTime,
@@ -254,9 +255,12 @@ func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *ser
 			ChapterNumber: record.Metadata.ChapterNumber,
 			IsFree:        record.Metadata.IsFree,
 		},
-		CreatedBy: record.CreatedBy,
-		CreatedAt: record.CreatedAt,
-		UpdatedAt: record.UpdatedAt,
+		CreatedBy:  record.CreatedBy,
+		ReviewedBy: record.ReviewedBy,
+		ReviewedAt: record.ReviewedAt,
+		ReviewNote: record.ReviewNote,
+		CreatedAt:  record.CreatedAt,
+		UpdatedAt:  record.UpdatedAt,
 	}
 
 	if record.ID != "" {
@@ -277,6 +281,7 @@ func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *s
 		ResourceTitle:   doc.ResourceTitle,
 		BookstoreID:     doc.BookstoreID,
 		BookstoreName:   doc.BookstoreName,
+		ExternalID:      doc.ExternalID,
 		Status:          doc.Status,
 		PublishTime:     doc.PublishTime,
 		ScheduledTime:   doc.ScheduledTime,
@@ -297,9 +302,12 @@ func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *s
 			ChapterNumber: doc.Metadata.ChapterNumber,
 			IsFree:        doc.Metadata.IsFree,
 		},
-		CreatedBy: doc.CreatedBy,
-		CreatedAt: doc.CreatedAt,
-		UpdatedAt: doc.UpdatedAt,
+		CreatedBy:  doc.CreatedBy,
+		ReviewedBy: doc.ReviewedBy,
+		ReviewedAt: doc.ReviewedAt,
+		ReviewNote: doc.ReviewNote,
+		CreatedAt:  doc.CreatedAt,
+		UpdatedAt:  doc.UpdatedAt,
 	}
 }
 

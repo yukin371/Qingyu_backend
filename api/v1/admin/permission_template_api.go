@@ -1,10 +1,9 @@
 package admin
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/response"
 	authService "Qingyu_backend/service/auth"
 )
 
@@ -55,11 +54,7 @@ type ApplyTemplateRequest struct {
 func (api *PermissionTemplateAPI) CreateTemplate(c *gin.Context) {
 	var req CreateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_REQUEST",
-			Message: "请求参数无效",
-			Details: err.Error(),
-		})
+		response.BadRequest(c, "请求参数无效", err.Error())
 		return
 	}
 
@@ -75,17 +70,11 @@ func (api *PermissionTemplateAPI) CreateTemplate(c *gin.Context) {
 	// 调用服务
 	resp, err := api.templateService.CreateTemplate(c.Request.Context(), serviceReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "CREATE_TEMPLATE_FAILED",
-			Message: err.Error(),
-		})
+		response.BadRequest(c, "创建权限模板失败", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    resp,
-	})
+	response.Success(c, resp)
 }
 
 // GetTemplate 获取权限模板
@@ -101,26 +90,17 @@ func (api *PermissionTemplateAPI) CreateTemplate(c *gin.Context) {
 func (api *PermissionTemplateAPI) GetTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_ID",
-			Message: "模板ID不能为空",
-		})
+		response.BadRequest(c, "模板ID不能为空", nil)
 		return
 	}
 
 	resp, err := api.templateService.GetTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, ErrorResponse{
-			Code:    "TEMPLATE_NOT_FOUND",
-			Message: err.Error(),
-		})
+		response.NotFound(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    resp,
-	})
+	response.Success(c, resp)
 }
 
 // GetTemplateByCode 根据代码获取权限模板
@@ -136,26 +116,17 @@ func (api *PermissionTemplateAPI) GetTemplate(c *gin.Context) {
 func (api *PermissionTemplateAPI) GetTemplateByCode(c *gin.Context) {
 	code := c.Param("code")
 	if code == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_CODE",
-			Message: "模板代码不能为空",
-		})
+		response.BadRequest(c, "模板代码不能为空", nil)
 		return
 	}
 
 	resp, err := api.templateService.GetTemplateByCode(c.Request.Context(), code)
 	if err != nil {
-		c.JSON(http.StatusNotFound, ErrorResponse{
-			Code:    "TEMPLATE_NOT_FOUND",
-			Message: err.Error(),
-		})
+		response.NotFound(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    resp,
-	})
+	response.Success(c, resp)
 }
 
 // UpdateTemplate 更新权限模板
@@ -172,20 +143,13 @@ func (api *PermissionTemplateAPI) GetTemplateByCode(c *gin.Context) {
 func (api *PermissionTemplateAPI) UpdateTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_ID",
-			Message: "模板ID不能为空",
-		})
+		response.BadRequest(c, "模板ID不能为空", nil)
 		return
 	}
 
 	var req UpdateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_REQUEST",
-			Message: "请求参数无效",
-			Details: err.Error(),
-		})
+		response.BadRequest(c, "请求参数无效", err.Error())
 		return
 	}
 
@@ -199,16 +163,11 @@ func (api *PermissionTemplateAPI) UpdateTemplate(c *gin.Context) {
 
 	err := api.templateService.UpdateTemplate(c.Request.Context(), templateID, serviceReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "UPDATE_TEMPLATE_FAILED",
-			Message: err.Error(),
-		})
+		response.BadRequest(c, "更新权限模板失败", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-	})
+	response.Success(c, nil)
 }
 
 // DeleteTemplate 删除权限模板
@@ -224,25 +183,17 @@ func (api *PermissionTemplateAPI) UpdateTemplate(c *gin.Context) {
 func (api *PermissionTemplateAPI) DeleteTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_ID",
-			Message: "模板ID不能为空",
-		})
+		response.BadRequest(c, "模板ID不能为空", nil)
 		return
 	}
 
 	err := api.templateService.DeleteTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "DELETE_TEMPLATE_FAILED",
-			Message: err.Error(),
-		})
+		response.BadRequest(c, "删除权限模板失败", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-	})
+	response.Success(c, nil)
 }
 
 // ListTemplates 列出权限模板
@@ -260,16 +211,13 @@ func (api *PermissionTemplateAPI) ListTemplates(c *gin.Context) {
 
 	templates, err := api.templateService.ListTemplates(c.Request.Context(), category)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Code:    "LIST_TEMPLATES_FAILED",
-			Message: err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, ListResponse{
-		Total: len(templates),
-		Items: templates,
+	response.Success(c, gin.H{
+		"items": templates,
+		"total": len(templates),
 	})
 }
 
@@ -287,10 +235,7 @@ func (api *PermissionTemplateAPI) ListTemplates(c *gin.Context) {
 func (api *PermissionTemplateAPI) ApplyTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_ID",
-			Message: "模板ID不能为空",
-		})
+		response.BadRequest(c, "模板ID不能为空", nil)
 		return
 	}
 
@@ -298,26 +243,17 @@ func (api *PermissionTemplateAPI) ApplyTemplate(c *gin.Context) {
 		RoleID string `json:"roleId" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "INVALID_REQUEST",
-			Message: "请求参数无效",
-			Details: err.Error(),
-		})
+		response.BadRequest(c, "请求参数无效", err.Error())
 		return
 	}
 
 	err := api.templateService.ApplyTemplate(c.Request.Context(), templateID, req.RoleID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "APPLY_TEMPLATE_FAILED",
-			Message: err.Error(),
-		})
+		response.BadRequest(c, "应用权限模板失败", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-	})
+	response.Success(c, nil)
 }
 
 // InitializeSystemTemplates 初始化系统模板
@@ -332,16 +268,11 @@ func (api *PermissionTemplateAPI) ApplyTemplate(c *gin.Context) {
 func (api *PermissionTemplateAPI) InitializeSystemTemplates(c *gin.Context) {
 	err := api.templateService.InitializeSystemTemplates(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Code:    "INITIALIZE_TEMPLATES_FAILED",
-			Message: err.Error(),
-		})
+		response.InternalError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-	})
+	response.Success(c, nil)
 }
 
 // RegisterRoutes 注册路由
@@ -361,23 +292,3 @@ func (api *PermissionTemplateAPI) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // ============ 辅助类型 ============
-
-// ListResponse 列表响应
-type ListResponse struct {
-	Total int         `json:"total"`
-	Items interface{} `json:"items"`
-}
-
-// SuccessResponse 成功响应
-type SuccessResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
-}
-
-// ErrorResponse 错误响应
-type ErrorResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Details string `json:"details,omitempty"`
-}

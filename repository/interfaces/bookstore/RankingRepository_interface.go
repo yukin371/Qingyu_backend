@@ -28,18 +28,17 @@ type RankingRepository interface {
 	// 榜单更新方法
 	UpsertRankingItem(ctx context.Context, item *bookstore.RankingItem) error
 	BatchUpsertRankingItems(ctx context.Context, items []*bookstore.RankingItem) error
+	CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
+	CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
+	CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
+	CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
 	UpdateRankings(ctx context.Context, rankingType bookstore.RankingType, period string, items []*bookstore.RankingItem) error
 
 	// 榜单维护方法
 	DeleteByPeriod(ctx context.Context, period string) error
 	DeleteByType(ctx context.Context, rankingType bookstore.RankingType) error
+	DeleteByTypeAndPeriod(ctx context.Context, rankingType bookstore.RankingType, period string) error
 	DeleteExpiredRankings(ctx context.Context, beforeDate time.Time) error
-
-	// 实时榜单计算
-	CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
-	CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
-	CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
-	CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore.RankingItem, error)
 
 	// 事务支持
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error

@@ -31,7 +31,7 @@ type RecordBehaviorRequest struct {
 	UserID     string                 `json:"user_id" binding:"required"`
 	ItemID     string                 `json:"item_id" binding:"required"`
 	ItemType   string                 `json:"item_type" binding:"required"`   // book, article, etc.
-	ActionType string                 `json:"action_type" binding:"required"` // view, click, favorite, read
+	ActionType string                 `json:"action_type" binding:"required"` // view, click, collect, read, finish
 	Duration   int64                  `json:"duration,omitempty"`             // 阅读时长（秒）
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }

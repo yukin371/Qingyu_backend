@@ -88,9 +88,11 @@ type AIConfig struct {
 
 // AIServiceConfig AI服务配置（gRPC）
 type AIServiceConfig struct {
-	Endpoint       string `mapstructure:"endpoint"`        // gRPC服务端点
-	EnableFallback bool   `mapstructure:"enable_fallback"` // 是否启用适配器回退
-	Timeout        int    `mapstructure:"timeout"`         // 请求超时（秒）
+	Endpoint       string   `mapstructure:"endpoint"`         // gRPC服务端点
+	EnableFallback bool     `mapstructure:"enable_fallback"`  // 是否启用适配器回退
+	Timeout        int      `mapstructure:"timeout"`          // 请求超时（秒）
+	InternalAPIKey string   `mapstructure:"internal_api_key"` // 内部API密钥
+	AllowedIPs     []string `mapstructure:"allowed_ips"`      // 允许的IP白名单
 }
 
 // PythonAIServiceConfig Python AI服务配置
@@ -442,6 +444,8 @@ func setDefaults() {
 	v.SetDefault("ai.ai_service.endpoint", "localhost:50052")
 	v.SetDefault("ai.ai_service.enable_fallback", false)
 	v.SetDefault("ai.ai_service.timeout", 30)
+	v.SetDefault("ai.ai_service.internal_api_key", "")
+	v.SetDefault("ai.ai_service.allowed_ips", []string{"127.0.0.1", "::1"})
 
 	// Elasticsearch 默认配置
 	v.SetDefault("elasticsearch.enabled", false)

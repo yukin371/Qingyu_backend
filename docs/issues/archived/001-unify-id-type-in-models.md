@@ -1,0 +1,216 @@
+# Issue #001: 统一模型层 ID 字段类型
+
+**优先级**: 高 (P0)
+**类型**: 技术债务
+**状态**: ✅ 已解决（模型层 `_id` 统一已完成）
+**创建日期**: 2026-03-05
+**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
+**审查日期**: 2026-03-05
+**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+
+---
+
+## 审查结果
+
+**状态**: ✅ 已解决
+
+### 审查发现
+
+1. ✅ **176+ 个模型已正确使用 `primitive.ObjectID`**
+2. ⚠️ **auth 域 Mongo 主键模型已完成迁移（PermissionTemplate/Role/Permission/OAuthAccount/OAuthSession），Redis Session 不在本 issue 的 Mongo `_id` 统一范围**
+3. ⚠️ **writer 域 Version/Commit/FileRevision/FilePatch/Timeline/TimelineEvent 已完成迁移**
+4. ⚠️ **finance 域 Wallet/Transaction/WithdrawRequest 已完成迁移**
+5. ⚠️ **bookstore 域 Chapter/Category 已完成迁移**
+6. ⚠️ **ai 域核心持久化模型（AIModel/AIProvider/APIRequestLog/NovelContext/WorldSettings/PlotThread）已完成迁移**
+7. ⚠️ **reader 域 ReadingSettings/ReaderTheme 已完成迁移**
+8. ⚠️ **notification 域 Notification/NotificationPreference/PushDevice/NotificationTemplate 已完成迁移**
+9. ⚠️ **admin 历史审计模型（AuditRecord/AdminLog）已完成迁移**
+10. ⚠️ **recommendation 域核心持久化模型（Behavior/ItemFeature/UserProfile/UserBehaviorRecord）已完成迁移**
+11. ✅ **当前 `models/` 下已无 `string _id` 主键残留**
+12. ❌ **剩余工作主要是边界与文档收口，不再是模型层系统性阻塞**
+
+### 需要修复的模型（优先级排序）
+
+1. **models/auth/** - Redis Session 属于会话键，不在 Mongo `_id` 统一范围；OAuth/Permission/Role 已完成
+2. **models/social/** - 核心持久化模型已完成，剩余主要是 DTO/外键 string 边界，不属于模型 `_id` 阻塞
+3. **models/messaging/** - 其余消息模型（Message/MessageTemplate/NotificationDelivery 已完成，Conversation/Announcement/InboxNotification 已使用基础 ObjectID 混入）
+4. **models/writer/** - Version, Timeline 已完成，本轮重点转向剩余边缘模型
+5. **models/bookstore/** - Chapter, Category 已完成，本轮重点转向其余边缘模型
+6. **models/finance/** - Wallet 已完成，本轮重点转向 recommendation/reader 边缘模型
+7. **models/ai/** - Context, RequestLog, Provider, NovelContext 已完成，本轮重点转向其余边缘模型/仓储
+8. **models/notification/** - Notification/Preference/PushDevice/Template 已完成，本轮重点转向其他边缘域
+9. **models/users/** - AdminLog/AuditRecord 已完成，本轮重点转向更边缘的历史模型
+10. **models/recommendation/** - Behavior/ItemFeature/UserProfile/UserBehaviorRecord 已完成，本轮重点转向剩余边界清理
+
+### 已正确实现的领域
+
+- ✅ Writer域（Project, Document等）
+- ✅ Reader域（Progress, History, Annotation, Bookmark, ReadingSettings, ReaderTheme）
+- ✅ Bookstore域（Book, BookDetail, Chapter, Category）
+- ✅ AI域（Chat, Quota, Core metadata models）
+- ✅ Notification域（Notification, Preference, PushDevice, Template）
+- ✅ Admin域（AdminLog, AuditRecord）
+- ✅ Recommendation域（Behavior, ItemFeature, UserProfile, UserBehaviorRecord）
+- ✅ Social域（部分）
+
+---
+
+## 问题描述
+
+项目中存在 ID 字段类型不统一的问题，约 37 个模型使用 `string` 类型，约 176 个模型使用 `primitive.ObjectID` 类型。这种不一致导致：
+
+1. 查询失败：使用 ObjectID 查询 string ID 的记录会找不到
+2. 类型转换开销：需要在多处进行 `.Hex()` 和 `ObjectIDFromHex()` 转换
+3. 代码混乱：开发者不清楚应该使用哪种类型
+
+## 影响范围
+
+### 受影响的模型（string ID）
+- `models/auth/permission_template.go` - PermissionTemplate.ID
+- `models/social/*` - 部分模型
+- 其他约 30+ 个模型
+
+### 具体问题示例
+
+```go
+// 不一致的示例：
+type PermissionTemplate struct {
+    ID string `bson:"_id,omitempty" json:"id"`  // string 类型
+}
+
+type BookList struct {
+    ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`  // ObjectID 类型
+}
+
+// 导致 Repository 层查询逻辑不一致：
+func (r *PermissionTemplateRepository) GetByID(id string) {
+    // 需要使用 string 查询
+    filter := bson.M{"_id": exactMatchRegex(id)}
+}
+
+func (r *BookListRepository) GetByID(id string) {
+    // 需要转换为 ObjectID 查询
+    objectID, _ := primitive.ObjectIDFromHex(id)
+    filter := bson.M{"_id": objectID}
+}
+```
+
+## 推荐解决方案
+
+### 统一原则
+
+```
+┌─────────────┐
+│   API层      │ → 统一使用 string
+├─────────────┤
+│   DTO层      │ → 统一使用 string
+├─────────────┤
+│  Service层   │ → 使用 DTO string，内部转换
+├─────────────┤
+│ Repository层 │ → 负责类型转换
+├─────────────┤
+│  Model层     │ → 统一使用 primitive.ObjectID
+└─────────────┘
+```
+
+### 转换模式
+
+```go
+// Model 层（统一使用 ObjectID）
+type User struct {
+    ID       primitive.ObjectID `bson:"_id,omitempty"`
+    Username string             `bson:"username"`
+}
+
+// DTO 层（统一使用 string）
+type UserResponse struct {
+    ID       string `json:"id"`
+    Username string `json:"username"`
+}
+
+// Converter 负责转换
+func ToUserResponse(user *User) UserResponse {
+    return UserResponse{
+        ID:       user.ID.Hex(),        // ObjectID → string
+        Username: user.Username,
+    }
+}
+
+func ToUserID(id string) (primitive.ObjectID, error) {
+    return primitive.ObjectIDFromHex(id)  // string → ObjectID
+}
+```
+
+## 实施计划
+
+### Phase 1: 评估和准备
+- [ ] 使用工具扫描所有模型，统计 string ID 的使用情况
+- [ ] 分析每个模型的依赖关系
+- [ ] 制定详细的迁移计划
+
+### Phase 2: 逐模块迁移
+按以下顺序迁移模块（从依赖少的开始）：
+
+1. [x] `models/auth/` - PermissionTemplate, Role, Permission, OAuthAccount, OAuthSession
+2. [ ] `models/social/` - BookList, Collection 等剩余模型（Comment/Review/Message 已完成）
+3. [x] `models/writer/` - Version, Timeline 已迁移
+4. [x] `models/finance/` - Wallet, Transaction, WithdrawRequest 已迁移
+5. [x] `models/bookstore/` - Chapter, Category 已迁移
+6. [x] `models/ai/` - AIModel, AIProvider, APIRequestLog, NovelContext, WorldSettings, PlotThread 已迁移
+7. [x] `models/reader/` - ReadingSettings, ReaderTheme 已迁移
+8. [x] `models/notification/` - Notification, NotificationPreference, PushDevice, NotificationTemplate 已迁移
+9. [ ] 其他模块
+
+每个模块迁移步骤：
+1. 修改 Model 定义：`ID string` → `ID primitive.ObjectID`
+2. 修改 Repository 查询逻辑
+3. 更新 Converter 函数
+4. 运行测试验证
+5. 提交并合并
+
+### Phase 3: 清理和验证
+- [ ] 移除过时的 ID 转换代码
+- [ ] 更新文档
+- [ ] 全量测试验证
+
+## 风险评估
+
+| 风险 | 影响 | 缓解措施 |
+|------|------|----------|
+| 数据迁移失败 | 高 | 先在测试环境验证，做好备份 |
+| API 兼容性 | 中 | DTO 层保持 string，对外透明 |
+| 性能影响 | 低 | ObjectID 查询性能更好 |
+
+## 相关Issue
+
+### 依赖Issue（必须先处理）
+- 无
+
+### 相关Issue（联合处理）
+- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - ID类型统一后需要确保Create方法正确回设ID
+- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 包含ID类型转换边界不清晰问题
+- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据需要使用正确的ObjectID类型
+
+### 架构相关
+- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - Repository层重构时需要确保ID类型正确
+
+## 相关代码
+
+需要修改的文件示例：
+- `models/auth/permission_template.go`
+- `repository/mongodb/auth/permission_template_repository_mongo.go`
+- 其他使用 string ID 的模型和 Repository
+
+## 预期收益
+
+1. **一致性**: 所有模型使用相同的 ID 类型
+2. **性能**: ObjectID 索引查询更高效
+3. **简化**: Repository 层查询逻辑统一
+4. **可维护**: 新开发者更容易理解
+
+## 参考链接
+
+- [MongoDB ObjectId 规范](https://www.mongodb.com/docs/manual/reference/method/ObjectId/)
+- [Go MongoDB Driver 类型转换](https://pkg.go.dev/go.mongodb.org/mongo-driver/bson/primitive)
+
+

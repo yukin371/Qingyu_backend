@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +17,23 @@ import (
 
 	"Qingyu_backend/models/bookstore"
 	adminsvc "Qingyu_backend/service/admin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func oid(seed string) primitive.ObjectID {
+	normalized := strings.ToLower(strings.TrimSpace(seed))
+	if len(normalized) < 24 {
+		normalized = strings.Repeat("0", 24-len(normalized)) + normalized
+	}
+	if len(normalized) > 24 {
+		normalized = normalized[:24]
+	}
+	objectID, err := primitive.ObjectIDFromHex(normalized)
+	if err != nil {
+		panic(fmt.Sprintf("invalid oid seed %q: %v", seed, err))
+	}
+	return objectID
+}
 
 // MockCategoryAdminService Mock服务
 type MockCategoryAdminService struct {
@@ -110,7 +128,7 @@ func TestCategoryAdminAPI_CreateCategory_Success(t *testing.T) {
 	bodyBytes, _ := json.Marshal(reqBody)
 
 	expectedCategory := &bookstore.Category{
-		ID:   "123",
+		ID:   oid("123"),
 		Name: "玄幻",
 	}
 
@@ -177,8 +195,8 @@ func TestCategoryAdminAPI_GetCategories_Success(t *testing.T) {
 	router := setupCategoryTestRouter(mockService)
 
 	expectedCategories := []*bookstore.Category{
-		{ID: "1", Name: "玄幻"},
-		{ID: "2", Name: "武侠"},
+		{ID: oid("1"), Name: "玄幻"},
+		{ID: oid("2"), Name: "武侠"},
 	}
 
 	mockService.On("GetCategories", mock.Anything, mock.MatchedBy(func(filter *adminsvc.CategoryFilter) bool {
@@ -205,7 +223,7 @@ func TestCategoryAdminAPI_GetCategories_WithFilter(t *testing.T) {
 	router := setupCategoryTestRouter(mockService)
 
 	expectedCategories := []*bookstore.Category{
-		{ID: "1", Name: "玄幻"},
+		{ID: oid("1"), Name: "玄幻"},
 	}
 
 	mockService.On("GetCategories", mock.Anything, mock.MatchedBy(func(filter *adminsvc.CategoryFilter) bool {
@@ -227,7 +245,7 @@ func TestCategoryAdminAPI_GetCategories_WithLevelFilter(t *testing.T) {
 	router := setupCategoryTestRouter(mockService)
 
 	expectedCategories := []*bookstore.Category{
-		{ID: "1", Name: "玄幻"},
+		{ID: oid("1"), Name: "玄幻"},
 	}
 
 	mockService.On("GetCategories", mock.Anything, mock.MatchedBy(func(filter *adminsvc.CategoryFilter) bool {
@@ -283,9 +301,9 @@ func TestCategoryAdminAPI_GetCategoryTree_Success(t *testing.T) {
 
 	expectedTree := []*adminsvc.CategoryTreeNode{
 		{
-			Category: &bookstore.Category{ID: "1", Name: "小说"},
+			Category: &bookstore.Category{ID: oid("1"), Name: "小说"},
 			Children: []*adminsvc.CategoryTreeNode{
-				{Category: &bookstore.Category{ID: "2", Name: "玄幻"}},
+				{Category: &bookstore.Category{ID: oid("2"), Name: "玄幻"}},
 			},
 		},
 	}
@@ -332,7 +350,7 @@ func TestCategoryAdminAPI_GetCategoryByID_Success(t *testing.T) {
 	router := setupCategoryTestRouter(mockService)
 
 	expectedCategory := &bookstore.Category{
-		ID:   "123",
+		ID:   oid("123"),
 		Name: "玄幻",
 	}
 
@@ -389,13 +407,13 @@ func TestCategoryAdminAPI_UpdateCategory_Success(t *testing.T) {
 	router := setupCategoryTestRouter(mockService)
 
 	reqBody := adminsvc.UpdateCategoryRequest{
-		Name:       strPtr("玄幻小说"),
-		SortOrder:  intPtr(2),
+		Name:      strPtr("玄幻小说"),
+		SortOrder: intPtr(2),
 	}
 	bodyBytes, _ := json.Marshal(reqBody)
 
 	expectedCategory := &bookstore.Category{
-		ID:        "123",
+		ID:        oid("123"),
 		Name:      "玄幻小说",
 		SortOrder: 2,
 	}

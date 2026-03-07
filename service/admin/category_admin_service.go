@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/bookstore"
 	adminrep "Qingyu_backend/repository/interfaces/admin"
 )
@@ -96,7 +94,6 @@ func (s *CategoryAdminServiceImpl) CreateCategory(ctx context.Context, req *Crea
 
 	now := time.Now()
 	category := &bookstore.Category{
-		ID:          primitive.NewObjectID().Hex(),
 		Name:        req.Name,
 		Description: req.Description,
 		Icon:        req.Icon,
@@ -182,12 +179,12 @@ func (s *CategoryAdminServiceImpl) GetCategoryTree(ctx context.Context) ([]*Cate
 
 	categoryMap := make(map[string]*CategoryTreeNode)
 	for _, cat := range allCategories {
-		categoryMap[cat.ID] = &CategoryTreeNode{Category: cat}
+		categoryMap[cat.ID.Hex()] = &CategoryTreeNode{Category: cat}
 	}
 
 	var rootNodes []*CategoryTreeNode
 	for _, cat := range allCategories {
-		node := categoryMap[cat.ID]
+		node := categoryMap[cat.ID.Hex()]
 		if cat.ParentID == nil {
 			rootNodes = append(rootNodes, node)
 		} else {
@@ -296,7 +293,7 @@ func (s *CategoryAdminServiceImpl) detectCircularReference(ctx context.Context, 
 			break
 		}
 
-		if parent.ID == categoryID {
+		if parent.ID.Hex() == categoryID {
 			return errors.New("CATEGORY_CIRCULAR_REF: 检测到循环引用")
 		}
 

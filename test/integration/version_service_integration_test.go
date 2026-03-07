@@ -260,7 +260,7 @@ func TestCreateAndApplyPatch_Full(t *testing.T) {
 		t.Fatalf("CreatePatch failed: %v", err)
 	}
 
-	rev, err := svc.ApplyPatch(projectID, p.ID, "admin")
+	rev, err := svc.ApplyPatch(projectID, p.ID.Hex(), "admin")
 	if err != nil {
 		t.Fatalf("ApplyPatch failed: %v", err)
 	}

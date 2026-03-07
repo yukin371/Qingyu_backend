@@ -84,9 +84,9 @@ func (r *CategoryAdminMongoRepository) GetDescendantIDs(ctx context.Context, cat
 	}
 
 	for _, child := range children {
-		descendantIDs = append(descendantIDs, child.ID)
+		descendantIDs = append(descendantIDs, child.ID.Hex())
 		// 递归获取子分类的子孙
-		subDescendants, err := r.GetDescendantIDs(ctx, child.ID)
+		subDescendants, err := r.GetDescendantIDs(ctx, child.ID.Hex())
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, pa
 				continue
 			}
 		}
-		if excludeID != "" && cat.ID == excludeID {
+		if excludeID != "" && cat.ID.Hex() == excludeID {
 			continue
 		}
 		return true, nil
@@ -177,8 +177,8 @@ func (r *CategoryAdminMongoRepository) NameExistsAtLevel(ctx context.Context, pa
 
 // Create 创建分类
 func (r *CategoryAdminMongoRepository) Create(ctx context.Context, category *bookstore.Category) error {
-	if category.ID == "" {
-		category.ID = primitive.NewObjectID().Hex()
+	if category.ID.IsZero() {
+		category.ID = primitive.NewObjectID()
 	}
 	if category.CreatedAt.IsZero() {
 		category.CreatedAt = time.Now()
@@ -187,14 +187,7 @@ func (r *CategoryAdminMongoRepository) Create(ctx context.Context, category *boo
 		category.UpdatedAt = time.Now()
 	}
 
-	objectID, err := primitive.ObjectIDFromHex(category.ID)
-	if err != nil {
-		return err
-	}
-
-	category.ID = objectID.Hex()
-
-	_, err = r.collection.InsertOne(ctx, category)
+	_, err := r.collection.InsertOne(ctx, category)
 	return err
 }
 
@@ -216,14 +209,9 @@ func (r *CategoryAdminMongoRepository) GetByID(ctx context.Context, id string) (
 
 // Update 更新分类
 func (r *CategoryAdminMongoRepository) Update(ctx context.Context, category *bookstore.Category) error {
-	objectID, err := primitive.ObjectIDFromHex(category.ID)
-	if err != nil {
-		return err
-	}
-
 	category.UpdatedAt = time.Now()
 
-	filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": category.ID}
 	update := bson.M{"$set": category}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
@@ -415,7 +403,7 @@ func matchesCategoryFilter(cat *bookstore.Category, filter bson.M) bool {
 		switch key {
 		case "_id":
 			id, _ := value.(string)
-			if cat.ID != id {
+			if cat.ID.Hex() != id {
 				return false
 			}
 		case "name":

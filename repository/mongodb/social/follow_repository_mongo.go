@@ -552,3 +552,20 @@ func (r *MongoFollowRepository) Health(ctx context.Context) error {
 
 	return nil
 }
+
+// RunInTransaction 在事务中执行关注相关操作
+func (r *MongoFollowRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.GetDB().Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start follow transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("follow transaction failed: %w", err)
+	}
+	return nil
+}

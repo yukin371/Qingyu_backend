@@ -205,9 +205,9 @@ func TestProjectService_CreateProject_Success(t *testing.T) {
 	// Assert
 	assert.NoError(t, err, "创建项目应该成功")
 	assert.NotNil(t, resp, "响应不应为空")
-	assert.NotEmpty(t, resp.ProjectID, "项目ID不应为空")
+	assert.NotEmpty(t, resp.ID, "项目ID不应为空")
 	assert.Equal(t, req.Title, resp.Title, "项目标题应该匹配")
-	assert.Equal(t, "draft", resp.Status, "状态应该是草稿")
+	assert.Equal(t, writer.StatusDraft, resp.Status, "状态应该是草稿")
 
 	mockRepo.AssertExpectations(t)
 	mockEventBus.AssertExpectations(t)

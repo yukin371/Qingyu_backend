@@ -7,8 +7,9 @@ import (
 	"Qingyu_backend/internal/middleware/auth"
 	adminservice "Qingyu_backend/service/admin"
 	aiService "Qingyu_backend/service/ai"
-	auditService "Qingyu_backend/service/interfaces/audit"
 	eventservice "Qingyu_backend/service/events"
+	publishService "Qingyu_backend/service/interfaces"
+	auditService "Qingyu_backend/service/interfaces/audit"
 	userService "Qingyu_backend/service/interfaces/user"
 	messagingService "Qingyu_backend/service/messaging"
 	sharedService "Qingyu_backend/service/shared"
@@ -27,6 +28,7 @@ func RegisterAdminRoutes(
 	permissionSvc sharedService.PermissionService,
 	eventBus eventservice.PersistedEventBusInterface,
 	categorySvc adminservice.CategoryAdminService,
+	publicationSvc publishService.PublishService,
 ) {
 	// 创建admin API实例
 	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
@@ -34,6 +36,7 @@ func RegisterAdminRoutes(
 	systemAdminAPI := admin.NewSystemAdminAPI(adminSvc)
 	configAdminAPI := admin.NewConfigAPI(configSvc)
 	announcementAdminAPI := admin.NewAnnouncementAPI(announcementSvc)
+	publicationAdminAPI := admin.NewPublicationAdminAPI(publicationSvc)
 
 	// 分类管理API
 	var categoryAdminAPI *admin.CategoryAdminAPI
@@ -72,7 +75,7 @@ func RegisterAdminRoutes(
 				usersGroup.GET("/count-by-status", userAdminAPI.CountByStatus) // 按状态统计
 
 				// 批量操作
-				usersGroup.POST("/batch-create", userAdminAPI.BatchCreateUsers)       // 批量创建
+				usersGroup.POST("/batch-create", userAdminAPI.BatchCreateUsers)         // 批量创建
 				usersGroup.POST("/batch-update-status", userAdminAPI.BatchUpdateStatus) // 批量更新状态
 				usersGroup.POST("/batch-delete", userAdminAPI.BatchDeleteUsers)         // 批量删除
 
@@ -111,6 +114,14 @@ func RegisterAdminRoutes(
 				auditGroup.GET("/statistics", auditAdminAPI.GetAuditStatistics)   // 获取审核统计
 				auditGroup.POST("/:id/review", auditAdminAPI.ReviewAudit)         // 审核内容
 				auditGroup.POST("/:id/appeal/review", auditAdminAPI.ReviewAppeal) // 审核申诉
+			}
+		}
+
+		if publicationSvc != nil {
+			publicationGroup := adminGroup.Group("/publications")
+			{
+				publicationGroup.GET("/pending", publicationAdminAPI.GetPendingPublications)
+				publicationGroup.POST("/:id/review", publicationAdminAPI.ReviewPublication)
 			}
 		}
 
@@ -162,13 +173,13 @@ func RegisterAdminRoutes(
 		if announcementSvc != nil {
 			announcementsGroup := adminGroup.Group("/announcements")
 			{
-				announcementsGroup.GET("", announcementAdminAPI.GetAnnouncements)               // 获取公告列表
-				announcementsGroup.GET("/:id", announcementAdminAPI.GetAnnouncementByID)        // 获取公告详情
-				announcementsGroup.POST("", announcementAdminAPI.CreateAnnouncement)            // 创建公告
-				announcementsGroup.PUT("/:id", announcementAdminAPI.UpdateAnnouncement)         // 更新公告
-				announcementsGroup.DELETE("/:id", announcementAdminAPI.DeleteAnnouncement)      // 删除公告
+				announcementsGroup.GET("", announcementAdminAPI.GetAnnouncements)                // 获取公告列表
+				announcementsGroup.GET("/:id", announcementAdminAPI.GetAnnouncementByID)         // 获取公告详情
+				announcementsGroup.POST("", announcementAdminAPI.CreateAnnouncement)             // 创建公告
+				announcementsGroup.PUT("/:id", announcementAdminAPI.UpdateAnnouncement)          // 更新公告
+				announcementsGroup.DELETE("/:id", announcementAdminAPI.DeleteAnnouncement)       // 删除公告
 				announcementsGroup.POST("/batch-status", announcementAdminAPI.BatchUpdateStatus) // 批量更新状态
-				announcementsGroup.DELETE("/batch-delete", announcementAdminAPI.BatchDelete)    // 批量删除
+				announcementsGroup.DELETE("/batch-delete", announcementAdminAPI.BatchDelete)     // 批量删除
 			}
 		}
 

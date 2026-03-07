@@ -156,13 +156,16 @@ func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID s
 	return progress, nil
 }
 
-// SaveReadingProgress 保存阅读进度
+// SaveReadingProgress 保存阅读进度（包含完整业务逻辑）
 func (s *ReaderService) SaveReadingProgress(ctx context.Context, userID, bookID, chapterID string, progress float64) error {
 	if progress < 0 || progress > 1 {
 		return fmt.Errorf("进度值必须在0-1之间")
 	}
 
-	err := s.progressRepo.SaveProgress(ctx, userID, bookID, chapterID, progress)
+	// 业务规则：新记录的初始 reading_time 为 0
+	const initialReadingTime = 0
+
+	err := s.progressRepo.SaveProgressWithInitial(ctx, userID, bookID, chapterID, progress, initialReadingTime)
 	if err != nil {
 		return fmt.Errorf("保存阅读进度失败: %w", err)
 	}
@@ -173,13 +176,25 @@ func (s *ReaderService) SaveReadingProgress(ctx context.Context, userID, bookID,
 	return nil
 }
 
-// UpdateReadingTime 更新阅读时长
+// UpdateReadingTime 更新阅读时长（包含完整业务逻辑）
 func (s *ReaderService) UpdateReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
 	if duration <= 0 {
 		return fmt.Errorf("阅读时长必须大于0")
 	}
 
-	err := s.progressRepo.UpdateReadingTime(ctx, userID, bookID, duration)
+	// 检查记录是否存在
+	existing, err := s.progressRepo.GetByUserAndBook(ctx, userID, bookID)
+	if err != nil {
+		return fmt.Errorf("查询阅读进度失败: %w", err)
+	}
+
+	if existing == nil {
+		// 业务规则：没有记录时创建新记录，初始 progress 为 0
+		return s.progressRepo.UpdateReadingTime(ctx, userID, bookID, duration)
+	}
+
+	// 记录存在，增加阅读时长
+	err = s.progressRepo.IncrementReadingTime(ctx, userID, bookID, duration)
 	if err != nil {
 		return fmt.Errorf("更新阅读时长失败: %w", err)
 	}
@@ -242,22 +257,14 @@ func (s *ReaderService) GetReadingTimeByPeriod(ctx context.Context, userID strin
 	return total, nil
 }
 
-// GetUnfinishedBooks 获取未读完的书籍
+// GetUnfinishedBooks 获取未读完的书籍（业务规则：进度 < 100%）
 func (s *ReaderService) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
-	progresses, err := s.progressRepo.GetUnfinishedBooks(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("获取未读完书籍失败: %w", err)
-	}
-	return progresses, nil
+	return s.progressRepo.GetByUserAndProgressRange(ctx, userID, 0, 1.0)
 }
 
-// GetFinishedBooks 获取已读完的书籍
+// GetFinishedBooks 获取已读完的书籍（业务规则：进度 >= 100%）
 func (s *ReaderService) GetFinishedBooks(ctx context.Context, userID string) ([]*reader2.ReadingProgress, error) {
-	progresses, err := s.progressRepo.GetFinishedBooks(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("获取已读完书籍失败: %w", err)
-	}
-	return progresses, nil
+	return s.progressRepo.GetByUserAndProgressRange(ctx, userID, 1.0, 100.0)
 }
 
 // DeleteReadingProgress 删除阅读进度

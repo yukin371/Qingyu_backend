@@ -108,7 +108,6 @@ func (m *MockNotificationRepository) DeleteReadForUser(ctx context.Context, user
 	return args.Get(0).(int64), args.Error(1)
 }
 
-
 func (m *MockNotificationRepository) Exists(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)
@@ -318,7 +317,6 @@ func setupNotificationService() (*notificationServiceImpl, *MockNotificationRepo
 	return service.(*notificationServiceImpl), mockNotifRepo, mockPrefRepo, mockDeviceRepo, mockTemplateRepo
 }
 
-
 // =========================
 // 创建通知相关测试
 // =========================
@@ -423,7 +421,7 @@ func TestNotificationService_GetNotification_Success(t *testing.T) {
 
 	notifID := primitive.NewObjectID().Hex()
 	expectedNotif := &notifModel.Notification{
-		ID:      notifID,
+		ID:      oid(notifID),
 		UserID:  "user123",
 		Title:   "测试通知",
 		Content: "测试内容",
@@ -475,8 +473,8 @@ func TestNotificationService_GetNotifications_Success(t *testing.T) {
 	}
 
 	expectedNotifs := []*notifModel.Notification{
-		{ID: "notif1", UserID: "user123", Title: "通知1"},
-		{ID: "notif2", UserID: "user123", Title: "通知2"},
+		{ID: primitive.NewObjectID(), UserID: "user123", Title: "通知1"},
+		{ID: primitive.NewObjectID(), UserID: "user123", Title: "通知2"},
 	}
 
 	mockNotifRepo.On("List", ctx, mock.Anything).Return(expectedNotifs, nil)
@@ -563,7 +561,7 @@ func TestNotificationService_MarkAsRead_Success(t *testing.T) {
 	userID := "user123"
 
 	notif := &notifModel.Notification{
-		ID:     notifID,
+		ID:     oid(notifID),
 		UserID: userID,
 		Read:   false,
 	}
@@ -592,7 +590,7 @@ func TestNotificationService_MarkAsRead_AlreadyRead(t *testing.T) {
 	userID := "user123"
 
 	notif := &notifModel.Notification{
-		ID:     notifID,
+		ID:     oid(notifID),
 		UserID: userID,
 		Read:   true, // 已经已读
 	}
@@ -643,7 +641,7 @@ func TestNotificationService_MarkAsRead_NoPermission(t *testing.T) {
 	ownerID := "user456"
 
 	notif := &notifModel.Notification{
-		ID:     notifID,
+		ID:     oid(notifID),
 		UserID: ownerID, // 不是当前用户的通知
 		Read:   false,
 	}
@@ -685,12 +683,16 @@ func TestNotificationService_MarkMultipleAsRead_Success(t *testing.T) {
 	service, mockNotifRepo, _, _, _ := setupNotificationService()
 	ctx := context.Background()
 
-	ids := []string{"notif1", "notif2", "notif3"}
+	ids := []string{
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+	}
 	userID := "user123"
 
 	for _, id := range ids {
 		mockNotifRepo.On("GetByID", ctx, id).Return(&notifModel.Notification{
-			ID:     id,
+			ID:     oid(id),
 			UserID: userID,
 		}, nil)
 	}
@@ -733,7 +735,7 @@ func TestNotificationService_DeleteNotification_Success(t *testing.T) {
 	userID := "user123"
 
 	notif := &notifModel.Notification{
-		ID:     notifID,
+		ID:     oid(notifID),
 		UserID: userID,
 	}
 
@@ -760,7 +762,7 @@ func TestNotificationService_DeleteNotification_NoPermission(t *testing.T) {
 	ownerID := "user456"
 
 	notif := &notifModel.Notification{
-		ID:     notifID,
+		ID:     oid(notifID),
 		UserID: ownerID,
 	}
 
@@ -782,12 +784,15 @@ func TestNotificationService_BatchDeleteNotifications_Success(t *testing.T) {
 	service, mockNotifRepo, _, _, _ := setupNotificationService()
 	ctx := context.Background()
 
-	ids := []string{"notif1", "notif2"}
+	ids := []string{
+		primitive.NewObjectID().Hex(),
+		primitive.NewObjectID().Hex(),
+	}
 	userID := "user123"
 
 	for _, id := range ids {
 		mockNotifRepo.On("GetByID", ctx, id).Return(&notifModel.Notification{
-			ID:     id,
+			ID:     oid(id),
 			UserID: userID,
 		}, nil)
 	}
@@ -836,7 +841,7 @@ func TestNotificationService_SendNotification_Success(t *testing.T) {
 
 	// Mock偏好设置
 	pref := &notifModel.NotificationPreference{
-		ID:           "pref123",
+		ID:           primitive.NewObjectID(),
 		UserID:       userID,
 		EnableSystem: true,
 	}
@@ -864,7 +869,7 @@ func TestNotificationService_SendNotification_TypeDisabled(t *testing.T) {
 
 	// Mock偏好设置-系统通知已禁用
 	pref := &notifModel.NotificationPreference{
-		ID:           "pref123",
+		ID:           primitive.NewObjectID(),
 		UserID:       userID,
 		EnableSystem: false,
 	}
@@ -917,7 +922,7 @@ func TestNotificationService_GetNotificationPreference_Success(t *testing.T) {
 
 	userID := "user123"
 	expectedPref := &notifModel.NotificationPreference{
-		ID:           "pref123",
+		ID:           primitive.NewObjectID(),
 		UserID:       userID,
 		EnableSystem: true,
 	}
@@ -963,7 +968,7 @@ func TestNotificationService_UpdateNotificationPreference_Success(t *testing.T) 
 
 	userID := "user123"
 	existingPref := &notifModel.NotificationPreference{
-		ID:     "pref123",
+		ID:     oid("507f1f77bcf86cd799439011"),
 		UserID: userID,
 	}
 
@@ -973,7 +978,7 @@ func TestNotificationService_UpdateNotificationPreference_Success(t *testing.T) 
 	}
 
 	mockPrefRepo.On("GetByUserID", ctx, userID).Return(existingPref, nil)
-	mockPrefRepo.On("Update", ctx, "pref123", mock.MatchedBy(func(u map[string]interface{}) bool {
+	mockPrefRepo.On("Update", ctx, existingPref.ID.Hex(), mock.MatchedBy(func(u map[string]interface{}) bool {
 		return u["enable_system"] == false && u["enable_social"] == true
 	})).Return(nil)
 
@@ -1019,12 +1024,12 @@ func TestNotificationService_ResetNotificationPreference_Success(t *testing.T) {
 
 	userID := "user123"
 	existingPref := &notifModel.NotificationPreference{
-		ID:     "pref123",
+		ID:     oid("507f1f77bcf86cd799439012"),
 		UserID: userID,
 	}
 
 	mockPrefRepo.On("GetByUserID", ctx, userID).Return(existingPref, nil)
-	mockPrefRepo.On("Delete", ctx, "pref123").Return(nil)
+	mockPrefRepo.On("Delete", ctx, existingPref.ID.Hex()).Return(nil)
 	mockPrefRepo.On("Create", ctx, mock.Anything).Return(nil)
 
 	// Act
@@ -1103,17 +1108,17 @@ func TestNotificationService_RegisterPushDevice_ExistingDevice(t *testing.T) {
 	}
 
 	existingDevice := &notifModel.PushDevice{
-		ID:          "push123",
+		ID:          oid("507f1f77bcf86cd799439013"),
 		UserID:      "user123",
 		DeviceID:    "device123",
 		DeviceToken: "old_token",
 	}
 
 	mockDeviceRepo.On("GetByDeviceID", ctx, req.DeviceID).Return(existingDevice, nil)
-	mockDeviceRepo.On("Update", ctx, "push123", mock.MatchedBy(func(u map[string]interface{}) bool {
+	mockDeviceRepo.On("Update", ctx, existingDevice.ID.Hex(), mock.MatchedBy(func(u map[string]interface{}) bool {
 		return u["device_token"] == "new_token"
 	})).Return(nil)
-	mockDeviceRepo.On("GetByID", ctx, "push123").Return(existingDevice, nil)
+	mockDeviceRepo.On("GetByID", ctx, existingDevice.ID.Hex()).Return(existingDevice, nil)
 
 	// Act
 	device, err := service.RegisterPushDevice(ctx, req)
@@ -1135,12 +1140,12 @@ func TestNotificationService_UnregisterPushDevice_Success(t *testing.T) {
 	userID := "user123"
 
 	device := &notifModel.PushDevice{
-		ID:     "push123",
+		ID:     oid("507f1f77bcf86cd799439014"),
 		UserID: userID,
 	}
 
 	mockDeviceRepo.On("GetByDeviceID", ctx, deviceID).Return(device, nil)
-	mockDeviceRepo.On("Delete", ctx, "push123").Return(nil)
+	mockDeviceRepo.On("Delete", ctx, device.ID.Hex()).Return(nil)
 
 	// Act
 	err := service.UnregisterPushDevice(ctx, deviceID, userID)
@@ -1180,8 +1185,8 @@ func TestNotificationService_GetUserPushDevices_Success(t *testing.T) {
 
 	userID := "user123"
 	expectedDevices := []*notifModel.PushDevice{
-		{ID: "device1", UserID: userID},
-		{ID: "device2", UserID: userID},
+		{ID: primitive.NewObjectID(), UserID: userID},
+		{ID: primitive.NewObjectID(), UserID: userID},
 	}
 
 	mockDeviceRepo.On("GetActiveByUserID", ctx, userID).Return(expectedDevices, nil)
@@ -1260,6 +1265,14 @@ func boolPtr(b bool) *bool {
 	return &b
 }
 
+func oid(hex string) primitive.ObjectID {
+	id, err := primitive.ObjectIDFromHex(hex)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // =========================
 // 新增测试：清除已读和重新发送
 // =========================
@@ -1315,7 +1328,7 @@ func TestNotificationService_ResendNotification_EmailServiceUnavailable(t *testi
 	notificationID := "notif123"
 
 	testNotif := &notifModel.Notification{
-		ID:      notificationID,
+		ID:      oid("507f1f77bcf86cd799439015"),
 		UserID:  userID,
 		Title:   "Test Notification",
 		Content: "Test Content",
@@ -1344,7 +1357,7 @@ func TestNotificationService_ResendNotification_PushServiceUnavailable(t *testin
 	notificationID := "notif123"
 
 	testNotif := &notifModel.Notification{
-		ID:      notificationID,
+		ID:      oid("507f1f77bcf86cd799439016"),
 		UserID:  userID,
 		Title:   "Test Notification",
 		Content: "Test Content",
@@ -1373,7 +1386,7 @@ func TestNotificationService_ResendNotification_UnsupportedMethod(t *testing.T) 
 	notificationID := "notif123"
 
 	testNotif := &notifModel.Notification{
-		ID:      notificationID,
+		ID:      oid("507f1f77bcf86cd799439017"),
 		UserID:  userID,
 		Title:   "Test Notification",
 		Content: "Test Content",
@@ -1422,7 +1435,7 @@ func TestNotificationService_ResendNotification_NoPermission(t *testing.T) {
 	notificationID := "notif123"
 
 	testNotif := &notifModel.Notification{
-		ID:      notificationID,
+		ID:      oid("507f1f77bcf86cd799439018"),
 		UserID:  "other_user",
 		Title:   "Test Notification",
 		Content: "Test Content",
@@ -1449,4 +1462,3 @@ func setupNotificationServiceWithMocks(
 ) NotificationService {
 	return NewNotificationService(mockRepo, mockPrefRepo, mockPushRepo, mockTemplateRepo, nil, nil)
 }
-

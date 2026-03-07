@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"Qingyu_backend/models/shared/types"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
 // WithdrawServiceImpl 提现服务实现
 type WithdrawServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
+	txRunner   TransactionRunner
 }
 
 // WithdrawService 提现服务接口
@@ -26,8 +27,14 @@ type WithdrawService interface {
 
 // NewWithdrawService 创建提现服务
 func NewWithdrawService(walletRepo sharedRepo.WalletRepository) WithdrawService {
+	return NewWithdrawServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
+}
+
+// NewWithdrawServiceWithRunner 创建带显式事务入口的提现服务
+func NewWithdrawServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) WithdrawService {
 	return &WithdrawServiceImpl{
 		walletRepo: walletRepo,
+		txRunner:   txRunner,
 	}
 }
 
@@ -70,13 +77,16 @@ func (s *WithdrawServiceImpl) CreateWithdrawRequest(ctx context.Context, userID,
 		Status:      "pending",
 	}
 
-	if err := s.walletRepo.CreateWithdrawRequest(ctx, request); err != nil {
-		return nil, fmt.Errorf("创建提现请求失败: %w", err)
-	}
-
-	// 6. 冻结提现金额（从余额中扣除，待审核通过后实际提现）
-	if err := s.walletRepo.UpdateBalance(ctx, walletID, -amount); err != nil {
-		return nil, fmt.Errorf("冻结提现金额失败: %w", err)
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.CreateWithdrawRequest(txCtx, request); err != nil {
+			return fmt.Errorf("创建提现请求失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateBalance(txCtx, walletID, -amount); err != nil {
+			return fmt.Errorf("冻结提现金额失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return convertToWithdrawResponse(request), nil
@@ -105,11 +115,6 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 		"processed_at": now,
 	}
 
-	if err := s.walletRepo.UpdateWithdrawRequest(ctx, requestID, updates); err != nil {
-		return fmt.Errorf("更新提现请求失败: %w", err)
-	}
-
-	// 4. 创建提现交易记录
 	transaction := &financeModel.Transaction{
 		UserID: request.UserID,
 		Type:   "withdraw",
@@ -119,11 +124,15 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 		Reason: "提现",
 	}
 
-	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
-		return fmt.Errorf("创建交易记录失败: %w", err)
-	}
-
-	return nil
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.UpdateWithdrawRequest(txCtx, requestID, updates); err != nil {
+			return fmt.Errorf("更新提现请求失败: %w", err)
+		}
+		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
+			return fmt.Errorf("创建交易记录失败: %w", err)
+		}
+		return nil
+	})
 }
 
 // RejectWithdraw 拒绝提现
@@ -145,11 +154,6 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 		return fmt.Errorf("获取钱包失败: %w", err)
 	}
 
-	if err := s.walletRepo.UpdateBalance(ctx, wallet.ID, int64(request.Amount)); err != nil {
-		return fmt.Errorf("退还金额失败: %w", err)
-	}
-
-	// 4. 更新状态
 	now := time.Now()
 	updates := map[string]interface{}{
 		"status":      "rejected",
@@ -158,11 +162,15 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 		"remark":      reason,
 	}
 
-	if err := s.walletRepo.UpdateWithdrawRequest(ctx, requestID, updates); err != nil {
-		return fmt.Errorf("更新提现请求失败: %w", err)
-	}
-
-	return nil
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.UpdateBalance(txCtx, wallet.UserID, int64(request.Amount)); err != nil {
+			return fmt.Errorf("退还金额失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateWithdrawRequest(txCtx, requestID, updates); err != nil {
+			return fmt.Errorf("更新提现请求失败: %w", err)
+		}
+		return nil
+	})
 }
 
 // GetWithdrawRequest 获取提现请求
@@ -202,7 +210,7 @@ func (s *WithdrawServiceImpl) ListWithdrawRequests(ctx context.Context, userID, 
 // convertToWithdrawResponse 转换为响应格式
 func convertToWithdrawResponse(request *financeModel.WithdrawRequest) *WithdrawRequest {
 	return &WithdrawRequest{
-		ID:           request.ID,
+		ID:           request.ID.Hex(),
 		UserID:       request.UserID,
 		Amount:       int64(request.Amount),
 		Account:      request.Account,

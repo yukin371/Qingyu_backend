@@ -82,22 +82,24 @@ func (r *ProviderRegistry) List() []*Provider {
 
 // GetOrCreate 获取或创建服务实例
 func (r *ProviderRegistry) GetOrCreate(name string, container *ServiceContainer) (interface{}, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
+	// 第一次检查：快速路径，只读锁
+	r.mu.RLock()
 	provider, exists := r.providers[name]
 	if !exists {
+		r.mu.RUnlock()
 		return nil, fmt.Errorf("Provider %s 不存在", name)
 	}
 
 	// 如果是单例且已创建，直接返回
 	if provider.Singleton {
 		if instance, exists := r.instances[name]; exists {
+			r.mu.RUnlock()
 			return instance, nil
 		}
 	}
+	r.mu.RUnlock()
 
-	// 调用Factory创建实例
+	// 调用Factory创建实例（不在锁内调用，避免死锁）
 	instance, err := provider.Factory(container)
 	if err != nil {
 		return nil, fmt.Errorf("创建 %s 失败: %w", name, err)
@@ -107,9 +109,16 @@ func (r *ProviderRegistry) GetOrCreate(name string, container *ServiceContainer)
 		return nil, fmt.Errorf("Provider %s 返回nil实例", name)
 	}
 
-	// 缓存单例
+	// 缓存单例（使用双重检查）
 	if provider.Singleton {
+		r.mu.Lock()
+		// 双重检查：可能在创建过程中其他goroutine已经创建了
+		if existing, exists := r.instances[name]; exists {
+			r.mu.Unlock()
+			return existing, nil
+		}
 		r.instances[name] = instance
+		r.mu.Unlock()
 	}
 
 	return instance, nil

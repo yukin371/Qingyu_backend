@@ -81,6 +81,19 @@ func TestMigrator_Register(t *testing.T) {
 		}
 	})
 
+	t.Run("Register valid migration name with numeric suffix", func(t *testing.T) {
+		migrator := NewMigrator(nil)
+		if migrator == nil {
+			t.Fatal("Migrator should not be nil")
+		}
+
+		testMigration := &TestSimpleMigrationImplementation{}
+		err := migrator.Register("003_create_books_indexes_p0", testMigration)
+		if err != nil {
+			t.Errorf("Expected numeric suffix migration name to be valid, got: %v", err)
+		}
+	})
+
 	t.Run("Register invalid migration name format", func(t *testing.T) {
 		migrator := NewMigrator(nil)
 		if migrator == nil {

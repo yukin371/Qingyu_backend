@@ -33,7 +33,7 @@ func NewProjectService(
 }
 
 // CreateProject 创建项目
-func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*CreateProjectResponse, error) {
+func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*writer.Project, error) {
 	// 1. 参数验证
 	if err := s.validateCreateProjectRequest(req); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
@@ -53,16 +53,17 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 	project.CoverURL = req.CoverURL
 	project.Category = req.Category
 	project.Tags = req.Tags
-	project.Status = writer.StatusDraft           // 默认状态为草稿
-	project.Visibility = writer.VisibilityPrivate // 默认为私密
-	project.WritingType = "novel"                 // 默认为小说类型
+	project.WritingType = "novel" // 默认为小说类型
 
-	// 4. 保存到数据库
+	// 4. 设置默认值（业务规则从 Repository 层移到 Service 层）
+	s.SetProjectDefaults(project)
+
+	// 5. 保存到数据库
 	if err := s.projectRepo.Create(ctx, project); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建项目失败", "", err)
 	}
 
-	// 5. 发布事件
+	// 6. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "project.created",
@@ -76,13 +77,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 		})
 	}
 
-	// 6. 返回响应
-	return &CreateProjectResponse{
-		ProjectID: project.ID.Hex(),
-		Title:     project.Title,
-		Status:    string(project.Status),
-		CreatedAt: project.CreatedAt,
-	}, nil
+	// 7. 返回创建的项目模型
+	return project, nil
 }
 
 // GetProject 获取项目详情
@@ -357,13 +353,14 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	coverURL := req.CoverURL
 	category := req.Category
 	status := string(req.Status)
+	tags := req.Tags
 
 	updateReq := &UpdateProjectRequest{
 		Title:    &title,
 		Summary:  &summary,
 		CoverURL: &coverURL,
 		Category: &category,
-		Tags:     req.Tags,
+		Tags:     &tags,
 		Status:   &status,
 	}
 
@@ -442,6 +439,46 @@ func (s *ProjectService) DeleteHard(ctx context.Context, projectID string) error
 	}
 
 	return nil
+}
+
+// SetProjectDefaults 设置项目默认值
+// 业务规则：将默认值设置从 Repository 层移到 Service 层
+// 这是 Issue #010 重构的一部分
+func (s *ProjectService) SetProjectDefaults(project *writer.Project) {
+	if project == nil {
+		return
+	}
+
+	now := time.Now()
+
+	// 默认状态为草稿
+	if project.Status == "" {
+		project.Status = writer.StatusDraft
+	}
+
+	// 默认为私密
+	if project.Visibility == "" {
+		project.Visibility = writer.VisibilityPrivate
+	}
+
+	// 默认写作类型为小说
+	if project.WritingType == "" {
+		project.WritingType = "novel"
+	}
+
+	// 初始化统计信息
+	project.Statistics = writer.ProjectStats{
+		TotalWords:    0,
+		ChapterCount:  0,
+		DocumentCount: 0,
+		LastUpdateAt:  now,
+	}
+
+	// 初始化设置
+	project.Settings = writer.ProjectSettings{
+		AutoBackup:     true,  // 业务规则：默认开启自动备份
+		BackupInterval: 24,    // 业务规则：默认24小时备份一次
+	}
 }
 
 // 私有方法

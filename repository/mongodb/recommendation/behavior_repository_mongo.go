@@ -2,11 +2,13 @@ package recommendation
 
 import (
 	reco "Qingyu_backend/models/recommendation"
+	sharedtypes "Qingyu_backend/models/shared/types"
 	"context"
 	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -30,10 +32,13 @@ func (r *MongoBehaviorRepository) Create(ctx context.Context, b *reco.Behavior) 
 	if b == nil {
 		return fmt.Errorf("behavior cannot be nil")
 	}
+	if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(b.BehaviorType); err == nil {
+		b.BehaviorType = behaviorType.String()
+	}
 
 	// 生成ID（如果为空）
-	if b.ID == "" {
-		b.ID = generateID()
+	if b.ID.IsZero() {
+		b.ID = primitive.NewObjectID()
 	}
 
 	// 设置时间戳
@@ -63,6 +68,9 @@ func (r *MongoBehaviorRepository) BatchCreate(ctx context.Context, bs []*reco.Be
 	docs := make([]interface{}, len(bs))
 	now := time.Now()
 	for i, b := range bs {
+		if b.ID.IsZero() {
+			b.ID = primitive.NewObjectID()
+		}
 		if b.OccurredAt.IsZero() {
 			b.OccurredAt = now
 		}
@@ -104,11 +112,11 @@ func (r *MongoBehaviorRepository) GetByUser(ctx context.Context, userID string, 
 	if err = cursor.All(ctx, &behaviors); err != nil {
 		return nil, fmt.Errorf("failed to decode behaviors: %w", err)
 	}
+	for _, behavior := range behaviors {
+		if behaviorType, err := sharedtypes.ParseRecommendationBehaviorType(behavior.BehaviorType); err == nil {
+			behavior.BehaviorType = behaviorType.String()
+		}
+	}
 
 	return behaviors, nil
-}
-
-// generateID 生成唯一ID（使用雪花算法生成的时间戳+随机数）
-func generateID() string {
-	return fmt.Sprintf("beh_%d", time.Now().UnixNano())
 }

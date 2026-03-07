@@ -55,6 +55,10 @@ permissions:
 
     # 作者权限
     author:
+      - "project:read"
+      - "project:create"
+      - "project:update"
+      - "project:delete"
       - "book:read"
       - "book:create"
       - "book:update"
@@ -67,6 +71,8 @@ permissions:
       - "ai:chat"
       - "document:read"
       - "document:create"
+      - "document:update"
+      - "document:delete"
 
     # 读者权限
     reader:

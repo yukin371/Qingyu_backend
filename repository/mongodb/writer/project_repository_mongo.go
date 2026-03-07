@@ -31,6 +31,8 @@ func NewMongoProjectRepository(db *mongo.Database) writingInterface.ProjectRepos
 }
 
 // Create 创建项目
+// 重构：移除业务逻辑，默认值设置现在由 Service 层的 SetProjectDefaults 方法处理
+// Repository 层只负责数据持久化，参见 Issue #010
 func (r *MongoProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	if project == nil {
 		return fmt.Errorf("项目对象不能为空")
@@ -46,31 +48,10 @@ func (r *MongoProjectRepository) Create(ctx context.Context, project *writer.Pro
 	project.CreatedAt = now
 	project.UpdatedAt = now
 
-	// 设置默认状态
-	if project.Status == "" {
-		project.Status = writer.StatusDraft
-	}
+	// 注意: 默认值设置（Status, Visibility, Statistics, Settings）已移到 Service 层
+	// Repository 层不再包含业务规则
 
-	// 设置默认可见性
-	if project.Visibility == "" {
-		project.Visibility = writer.VisibilityPrivate
-	}
-
-	// 初始化统计信息
-	project.Statistics = writer.ProjectStats{
-		TotalWords:    0,
-		ChapterCount:  0,
-		DocumentCount: 0,
-		LastUpdateAt:  now,
-	}
-
-	// 初始化设置
-	project.Settings = writer.ProjectSettings{
-		AutoBackup:     true,
-		BackupInterval: 24,
-	}
-
-	// 验证数据
+	// 验证数据（仅验证数据格式，不设置默认值）
 	if err := project.Validate(); err != nil {
 		return fmt.Errorf("项目数据验证失败: %w", err)
 	}

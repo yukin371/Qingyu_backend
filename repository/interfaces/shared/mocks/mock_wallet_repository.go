@@ -36,7 +36,7 @@ func (m *MockWalletRepository) UpdateWallet(ctx context.Context, userID string, 
 }
 
 // UpdateBalance 更新余额
-func (m *MockWalletRepository) UpdateBalance(ctx context.Context, userID string, amount float64) error {
+func (m *MockWalletRepository) UpdateBalance(ctx context.Context, userID string, amount int64) error {
 	args := m.Called(ctx, userID, amount)
 	return args.Error(0)
 }
@@ -111,4 +111,13 @@ func (m *MockWalletRepository) CountWithdrawRequests(ctx context.Context, filter
 func (m *MockWalletRepository) Health(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
+}
+
+// RunInTransaction 在事务中执行
+func (m *MockWalletRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	args := m.Called(ctx, fn)
+	if err := args.Error(0); err != nil {
+		return err
+	}
+	return fn(ctx)
 }

@@ -19,6 +19,7 @@ type BookRepository interface {
 	GetByCategory(ctx context.Context, categoryID string, limit, offset int) ([]*bookstore2.Book, error)
 	GetByAuthor(ctx context.Context, author string, limit, offset int) ([]*bookstore2.Book, error)
 	GetByAuthorID(ctx context.Context, authorID string, limit, offset int) ([]*bookstore2.Book, error)
+	GetByProjectID(ctx context.Context, projectID string) (*bookstore2.Book, error)
 	GetByStatus(ctx context.Context, status bookstore2.BookStatus, limit, offset int) ([]*bookstore2.Book, error)
 	GetRecommended(ctx context.Context, limit, offset int) ([]*bookstore2.Book, error)
 	GetFeatured(ctx context.Context, limit, offset int) ([]*bookstore2.Book, error)

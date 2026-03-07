@@ -43,4 +43,7 @@ type CommentRepository interface {
 
 	// 健康检查
 	Health(ctx context.Context) error
+
+	// RunInTransaction 在事务中执行评论相关操作
+	RunInTransaction(ctx context.Context, fn func(context.Context) error) error
 }

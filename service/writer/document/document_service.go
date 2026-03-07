@@ -1,7 +1,9 @@
 package document
 
 import (
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/models/writer/types"
 	"context"
 	"errors"
 	"fmt"
@@ -66,8 +68,8 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 
 	// 3. 验证父文档和层级
 	var level int
-	if req.ParentID != "" {
-		parent, err := s.documentRepo.GetByID(ctx, req.ParentID)
+	if req.ParentID != nil && *req.ParentID != "" {
+		parent, err := s.documentRepo.GetByID(ctx, *req.ParentID)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询父文档失败", "", err)
 		}
@@ -94,17 +96,17 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	doc.ProjectID = projectID
 	doc.Title = req.Title
 
-	// 转换 ParentID string -> ObjectID（如果有）
+	// 转换 ParentID *string -> ObjectID（如果有）
 	var parentID primitive.ObjectID
-	if req.ParentID != "" {
-		parentID, err = primitive.ObjectIDFromHex(req.ParentID)
+	if req.ParentID != nil && *req.ParentID != "" {
+		parentID, err = primitive.ObjectIDFromHex(*req.ParentID)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的父文档ID", "", err)
 		}
 	}
 	doc.ParentID = parentID
 
-	doc.Type = req.Type // DocumentType现在是string类型
+	doc.Type = string(req.Type) // DocumentType -> string
 	doc.Level = level
 	doc.Order = req.Order
 	doc.Status = "planned"
@@ -143,15 +145,23 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	doc.Tags = req.Tags
 	doc.Notes = req.Notes
 
-	// 5. 保存文档
+	// 5. 设置默认值（业务规则从 Repository 层移到 Service 层）
+	s.SetDocumentDefaults(doc)
+
+	// 6. 验证文档
+	if err := s.ValidateDocument(doc, project); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档验证失败", err.Error(), err)
+	}
+
+	// 7. 保存文档
 	if err := s.documentRepo.Create(ctx, doc); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档失败", "", err)
 	}
 
-	// 6. 更新项目统计（异步）
+	// 8. 更新项目统计（异步）
 	go s.updateProjectStatistics(context.Background(), req.ProjectID)
 
-	// 7. 发布事件
+	// 9. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.created",
@@ -174,14 +184,16 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 }
 
 // GetDocument 获取文档详情
-func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*writer.Document, error) {
+func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*dto.DocumentResponse, error) {
 	// 1. 验证文档查看权限
 	_, doc, _, err := s.authHelper.VerifyDocumentView(ctx, documentID)
 	if err != nil {
 		return nil, err
 	}
 
-	return doc, nil
+	// 2. 转换为 DTO
+	response := dto.ToDocumentResponse(doc)
+	return &response, nil
 }
 
 // GetDocumentTree 获取文档树
@@ -293,6 +305,74 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 	return nil
 }
 
+// ValidateDocument 验证文档并设置默认值
+// 业务规则：将验证逻辑从 Repository 层移到 Service 层
+// 这是 Issue #010 重构的一部分
+func (s *DocumentService) ValidateDocument(doc *writer.Document, project *writer.Project) error {
+	if doc == nil {
+		return fmt.Errorf("文档对象不能为空")
+	}
+
+	// 验证标题
+	if doc.Title == "" {
+		return fmt.Errorf("文档标题不能为空")
+	}
+	if len(doc.Title) > 200 {
+		return fmt.Errorf("文档标题不能超过200字符")
+	}
+
+	// 验证项目ID
+	if doc.ProjectID.IsZero() {
+		return fmt.Errorf("项目ID不能为空")
+	}
+
+	// 验证文档类型（基于项目的 writing_type）
+	if doc.Type != "" {
+		wt, ok := types.GlobalRegistry.Get(project.WritingType)
+		if !ok {
+			return fmt.Errorf("无效的写作类型: %s", project.WritingType)
+		}
+		if !wt.ValidateDocumentType(doc.Type) {
+			return fmt.Errorf("无效的文档类型: %s", doc.Type)
+		}
+	}
+
+	// 验证层级（基于项目的写作类型的最大层级）
+	maxDepth := 10 // 默认最大深度
+	if project.WritingType != "" {
+		if wt, ok := types.GlobalRegistry.Get(project.WritingType); ok {
+			maxDepth = wt.GetMaxDepth()
+		}
+	}
+	if doc.Level < 0 || doc.Level >= maxDepth {
+		return fmt.Errorf("无效的文档层级: %d", doc.Level)
+	}
+
+	return nil
+}
+
+// SetDocumentDefaults 设置文档默认值
+// 业务规则：将默认值设置从 Repository 层移到 Service 层
+// 这是 Issue #010 重构的一部分
+func (s *DocumentService) SetDocumentDefaults(doc *writer.Document) {
+	if doc == nil {
+		return
+	}
+
+	// 设置默认状态
+	if doc.Status == "" {
+		doc.Status = writer.DocumentStatusPlanned
+	}
+
+	// 初始化v1.1新增字段的默认值（如果为空）
+	if doc.StableRef == "" {
+		doc.StableRef = primitive.NewObjectID().Hex()
+	}
+	if doc.OrderKey == "" {
+		doc.OrderKey = writer.DefaultOrderKey
+	}
+}
+
 // 私有方法
 func (s *DocumentService) buildDocumentTree(documents []*writer.Document) []*DocumentTreeNode {
 	// 构建树形结构
@@ -337,8 +417,13 @@ func (s *DocumentService) validateCreateDocumentRequest(req *CreateDocumentReque
 		return fmt.Errorf("文档类型不能为空")
 	}
 
-	// 注意：文档类型的具体验证需要在服务层进行，因为需要项目的writing_type
-	// 这里只做基础验证
+	// 验证 DocumentType 枚举值
+	switch req.Type {
+	case dto.DocumentTypeVolume, dto.DocumentTypeChapter, dto.DocumentTypeSection, dto.DocumentTypeScene:
+		// 有效类型
+	default:
+		return fmt.Errorf("无效的文档类型: %s", req.Type)
+	}
 
 	return nil
 }
@@ -399,7 +484,7 @@ func (s *DocumentService) GetVersion() string {
 }
 
 // ListDocuments 获取文档列表
-func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsRequest) (*ListDocumentsResponse, error) {
+func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsRequest) (*dto.DocumentListResponse, error) {
 	// 1. 参数验证
 	if req.ProjectID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
@@ -428,11 +513,12 @@ func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsR
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "统计文档总数失败", "", err)
 	}
 
-	return &ListDocumentsResponse{
-		Documents: documents,
-		Total:     len(allDocs),
-		Page:      page,
-		PageSize:  pageSize,
+	// 5. 转换为 DTO
+	return &dto.DocumentListResponse{
+		Items:    dto.ToDocumentResponseList(documents),
+		Total:    int64(len(allDocs)),
+		Page:     page,
+		PageSize: pageSize,
 	}, nil
 }
 
@@ -452,8 +538,8 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 	// 3. 验证新父节点
 	var level int
 	var newParentID primitive.ObjectID
-	if req.NewParentID != "" {
-		parent, err := s.documentRepo.GetByID(ctx, req.NewParentID)
+	if req.NewParentID != nil && *req.NewParentID != "" {
+		parent, err := s.documentRepo.GetByID(ctx, *req.NewParentID)
 		if err != nil {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询父文档失败", "", err)
 		}
@@ -468,13 +554,20 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 
 		level = parent.GetNextLevel()
 		newParentID = parent.ID
+	} else {
+		// 如果没有新父节点，保持当前层级
+		level = doc.Level
 	}
 
 	// 4. 更新文档
 	updates := map[string]interface{}{
 		"parent_id": newParentID,
 		"level":     level,
-		"order":     req.Order,
+	}
+
+	// 如果提供了 OrderKey，更新它
+	if req.OrderKey != "" {
+		updates["order_key"] = req.OrderKey
 	}
 
 	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
@@ -505,7 +598,7 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
 	}
 
-	if len(req.Orders) == 0 {
+	if len(req.Items) == 0 {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "排序列表不能为空", "", nil)
 	}
 
@@ -516,12 +609,20 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 	}
 
 	// 3. 批量更新排序
-	for docID, order := range req.Orders {
+	for _, item := range req.Items {
 		updates := map[string]interface{}{
-			"order": order,
+			"order_key": item.OrderKey,
 		}
-		if err := s.documentRepo.Update(ctx, docID, updates); err != nil {
-			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, fmt.Sprintf("更新文档 %s 排序失败", docID), "", err)
+		// 如果提供了 ParentID，也更新它
+		if item.ParentID != nil {
+			parentID, err := primitive.ObjectIDFromHex(*item.ParentID)
+			if err != nil {
+				return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的父文档ID: "+*item.ParentID, "", err)
+			}
+			updates["parent_id"] = parentID
+		}
+		if err := s.documentRepo.Update(ctx, item.DocumentID, updates); err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, fmt.Sprintf("更新文档 %s 排序失败", item.DocumentID), "", err)
 		}
 	}
 
@@ -532,7 +633,7 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 			EventData: map[string]interface{}{
 				"project_id": req.ProjectID,
 				"parent_id":  req.ParentID,
-				"count":      len(req.Orders),
+				"count":      len(req.Items),
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,

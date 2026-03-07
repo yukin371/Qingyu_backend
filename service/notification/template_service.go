@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/notification"
 	"Qingyu_backend/pkg/errors"
 	repo "Qingyu_backend/repository/interfaces/notification"
@@ -82,7 +80,6 @@ type UpdateTemplateRequest struct {
 func (s *templateServiceImpl) CreateTemplate(ctx context.Context, req *CreateTemplateRequest) (*notification.NotificationTemplate, error) {
 	now := time.Now()
 	template := &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      req.Type,
 		Action:    req.Action,
 		Title:     req.Title,
@@ -310,7 +307,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 系统通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeSystem,
 		Action:    "announcement",
 		Title:     "平台公告",
@@ -323,7 +319,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeSystem,
 		Action:    "maintenance",
 		Title:     "系统维护通知",
@@ -337,7 +332,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 社交通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeSocial,
 		Action:    "follow",
 		Title:     "您有新的关注者",
@@ -350,7 +344,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeSocial,
 		Action:    "like",
 		Title:     "作品收到点赞",
@@ -363,7 +356,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeSocial,
 		Action:    "comment",
 		Title:     "作品收到新评论",
@@ -377,7 +369,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 内容通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeContent,
 		Action:    "review_approved",
 		Title:     "作品审核通过",
@@ -390,7 +381,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeContent,
 		Action:    "review_rejected",
 		Title:     "作品审核未通过",
@@ -403,7 +393,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeContent,
 		Action:    "book_offline",
 		Title:     "作品下架通知",
@@ -417,7 +406,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 打赏通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeReward,
 		Action:    "received",
 		Title:     "收到打赏",
@@ -431,7 +419,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 私信通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeMessage,
 		Action:    "received",
 		Title:     "收到新私信",
@@ -445,7 +432,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 更新通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeUpdate,
 		Action:    "chapter_update",
 		Title:     "关注作品更新",
@@ -459,7 +445,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 
 	// 会员通知模板
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeMembership,
 		Action:    "expiring_soon",
 		Title:     "会员即将到期",
@@ -472,7 +457,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeMembership,
 		Action:    "expired",
 		Title:     "会员已到期",
@@ -485,7 +469,6 @@ func (s *templateServiceImpl) getDefaultTemplates() []*notification.Notification
 	})
 
 	templates = append(templates, &notification.NotificationTemplate{
-		ID:        primitive.NewObjectID().Hex(),
 		Type:      notification.NotificationTypeMembership,
 		Action:    "renewed",
 		Title:     "会员续费成功",

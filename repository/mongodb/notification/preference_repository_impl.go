@@ -28,33 +28,10 @@ func NewNotificationPreferenceRepository(db *mongo.Database) repo.NotificationPr
 
 // Create 创建通知偏好设置
 func (r *NotificationPreferenceRepositoryImpl) Create(ctx context.Context, preference *notification.NotificationPreference) error {
-	objectID, err := primitive.ObjectIDFromHex(preference.ID)
-	if err != nil {
-		// 如果ID无效，生成新的
-		objectID = primitive.NewObjectID()
-		preference.ID = objectID.Hex()
+	if preference.ID.IsZero() {
+		preference.ID = primitive.NewObjectID()
 	}
-
-	doc := bson.M{
-		"_id":                objectID,
-		"user_id":            preference.UserID,
-		"enable_system":      preference.EnableSystem,
-		"enable_social":      preference.EnableSocial,
-		"enable_content":     preference.EnableContent,
-		"enable_reward":      preference.EnableReward,
-		"enable_message":     preference.EnableMessage,
-		"enable_update":      preference.EnableUpdate,
-		"enable_membership":  preference.EnableMembership,
-		"email_notification": preference.EmailNotification,
-		"sms_notification":   preference.SMSNotification,
-		"push_notification":  preference.PushNotification,
-		"quiet_hours_start":  preference.QuietHoursStart,
-		"quiet_hours_end":    preference.QuietHoursEnd,
-		"created_at":         preference.CreatedAt,
-		"updated_at":         preference.UpdatedAt,
-	}
-
-	_, err = r.preferenceCollection.InsertOne(ctx, doc)
+	_, err := r.preferenceCollection.InsertOne(ctx, preference)
 	if err != nil {
 		return fmt.Errorf("创建通知偏好设置失败: %w", err)
 	}

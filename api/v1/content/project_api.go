@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/models/dto"
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models/dto"
+	response "Qingyu_backend/pkg/response"
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -170,7 +171,7 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 //	@Router			/api/v1/content/projects [get]
 func (api *ProjectAPI) ListProjects(c *gin.Context) {
 	status := c.Query("status")
-	category := c.Query("category")
+	// category参数已移除，因为dto.ListProjectsRequest不支持
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
@@ -185,7 +186,8 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 		Page:     page,
 		PageSize: pageSize,
 		Status:   status,
-		Category: category,
+		// Category字段已从dto.ListProjectsRequest移除
+		// 如需按分类筛选，请使用其他方式
 	}
 
 	result, err := api.projectService.ListProjects(c.Request.Context(), req)
@@ -194,7 +196,7 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Projects, result.Total, page, pageSize, "获取成功")
+	response.Paginated(c, result.Projects, result.Total, page, pageSize, "获取成功")
 }
 
 // GetProjectStatistics 获取项目统计

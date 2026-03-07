@@ -118,7 +118,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	var req struct {
 		ItemID       string                 `json:"itemId" binding:"required"`
 		ItemType     string                 `json:"itemType"`                        // book/article等，默认book
-		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/favorite/read等
+		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/collect/read/finish等
 		Duration     int64                  `json:"duration"`                        // 阅读时长（秒）
 		Metadata     map[string]interface{} `json:"metadata"`
 	}

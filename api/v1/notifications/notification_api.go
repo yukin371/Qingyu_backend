@@ -9,8 +9,8 @@ import (
 	"Qingyu_backend/api/v1/notifications/dto"
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/notification"
-	notifService "Qingyu_backend/service/notification"
 	"Qingyu_backend/pkg/response"
+	notifService "Qingyu_backend/service/notification"
 	"errors"
 )
 
@@ -61,7 +61,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	if typeStr := c.Query("type"); typeStr != "" {
 		t := notification.NotificationType(typeStr)
 		if !t.IsValid() {
-			response.BadRequest(c,  "INVALID_TYPE", "无效的通知类型")
+			response.BadRequest(c, "INVALID_TYPE", "无效的通知类型")
 			return
 		}
 		notifType = &t
@@ -156,7 +156,7 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c, "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
@@ -202,7 +202,7 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c, "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
@@ -242,7 +242,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	var req dto.BatchMarkReadRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -331,7 +331,7 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c, "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
@@ -371,7 +371,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -539,6 +539,7 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 // @Param request body object true "偏好设置"
 // @Success 200 {object} shared.APIResponse
 // @Router /api/v1/notifications/preferences [put]
+// @Router /api/v1/notifications/preferences [patch]
 func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
 	userID, exists := c.Get("user_id")
@@ -556,7 +557,7 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 	// 解析请求
 	var req notifService.UpdateNotificationPreferenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -664,7 +665,7 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 	// 解析请求
 	var settings notification.EmailNotificationSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -735,7 +736,7 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 	// 解析请求
 	var settings notification.SMSNotificationSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -774,7 +775,7 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 	// 解析请求
 	var req notifService.RegisterPushDeviceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 
@@ -823,7 +824,7 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 	// 获取设备ID
 	deviceID := c.Param("deviceId")
 	if deviceID == "" {
-		response.BadRequest(c,  "INVALID_DEVICE_ID", "设备ID不能为空")
+		response.BadRequest(c, "INVALID_DEVICE_ID", "设备ID不能为空")
 		return
 	}
 
@@ -936,7 +937,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 	// 获取通知ID
 	id := c.Param("id")
 	if id == "" {
-		response.BadRequest(c,  "INVALID_ID", "通知ID不能为空")
+		response.BadRequest(c, "INVALID_ID", "通知ID不能为空")
 		return
 	}
 
@@ -945,7 +946,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 		Method string `json:"method" validate:"required,oneof=email push sms"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "INVALID_REQUEST", "请求参数错误")
+		response.BadRequest(c, "INVALID_REQUEST", "请求参数错误")
 		return
 	}
 

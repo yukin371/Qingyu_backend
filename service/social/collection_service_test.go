@@ -137,6 +137,10 @@ func (m *MockCollectionRepository) Health(ctx context.Context) error {
 	return args.Error(0)
 }
 
+func (m *MockCollectionRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 // TestCollectionService_AddCollection 添加收藏测试
 func TestCollectionService_AddCollection(t *testing.T) {
 	mockRepo := new(MockCollectionRepository)

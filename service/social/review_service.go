@@ -196,13 +196,16 @@ func (s *ReviewService) LikeReview(ctx context.Context, userID, reviewID string)
 		CreatedAt: time.Now(),
 	}
 
-	if err := s.reviewRepo.CreateReviewLike(ctx, reviewLike); err != nil {
-		return fmt.Errorf("点赞失败: %w", err)
-	}
-
-	// 增加点赞数
-	if err := s.reviewRepo.IncrementReviewLikeCount(ctx, reviewID); err != nil {
-		fmt.Printf("Warning: Failed to increment like count: %v\n", err)
+	if err := s.reviewRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.reviewRepo.CreateReviewLike(txCtx, reviewLike); err != nil {
+			return fmt.Errorf("点赞失败: %w", err)
+		}
+		if err := s.reviewRepo.IncrementReviewLikeCount(txCtx, reviewID); err != nil {
+			return fmt.Errorf("增加点赞数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -224,13 +227,16 @@ func (s *ReviewService) UnlikeReview(ctx context.Context, userID, reviewID strin
 	}
 
 	// 删除点赞
-	if err := s.reviewRepo.DeleteReviewLike(ctx, reviewID, userID); err != nil {
-		return fmt.Errorf("取消点赞失败: %w", err)
-	}
-
-	// 减少点赞数
-	if err := s.reviewRepo.DecrementReviewLikeCount(ctx, reviewID); err != nil {
-		fmt.Printf("Warning: Failed to decrement like count: %v\n", err)
+	if err := s.reviewRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.reviewRepo.DeleteReviewLike(txCtx, reviewID, userID); err != nil {
+			return fmt.Errorf("取消点赞失败: %w", err)
+		}
+		if err := s.reviewRepo.DecrementReviewLikeCount(txCtx, reviewID); err != nil {
+			return fmt.Errorf("减少点赞数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
