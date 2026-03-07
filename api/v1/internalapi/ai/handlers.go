@@ -14,6 +14,9 @@ import (
 var documentService *internalService.WriterDraftService
 var conceptService *internalService.ConceptService
 
+// 确保 response 包被导入以支持 swagger 文档生成
+var _ = response.APIResponse{}
+
 // InitDocumentHandlers 初始化document handlers（用于向后兼容）
 func InitDocumentHandlers(service *internalService.WriterDraftService) {
 	documentService = service

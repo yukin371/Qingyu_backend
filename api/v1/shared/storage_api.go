@@ -31,6 +31,9 @@ type initiateMultipartUploadPayload struct {
 	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
+// 确保 response 包被导入以支持 swagger 文档生成
+var _ = response.APIResponse{}
+
 // NewStorageAPI 创建存储API实例
 func NewStorageAPI(
 	storageService storage.StorageService,

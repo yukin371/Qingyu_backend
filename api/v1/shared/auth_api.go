@@ -213,10 +213,6 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	response.SuccessWithMessage(c, "获取角色成功", roles)
 }
 
-type sendVerificationCodeRequest struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
 // SendVerificationCode 发送注册邮箱验证码
 //
 //	@Summary		发送邮箱验证码
