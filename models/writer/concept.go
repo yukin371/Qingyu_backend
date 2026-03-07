@@ -17,19 +17,3 @@ type Concept struct {
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
-
-// BeforeCreate 在创建前设置默认值喵~
-func (c *Concept) BeforeCreate() {
-	now := time.Now()
-	if c.CreatedAt.IsZero() {
-		c.CreatedAt = now
-	}
-	if c.UpdatedAt.IsZero() {
-		c.UpdatedAt = now
-	}
-}
-
-// BeforeUpdate 在更新前刷新时间戳喵~
-func (c *Concept) BeforeUpdate() {
-	c.UpdatedAt = time.Now()
-}

@@ -194,7 +194,7 @@ func (r *PermissionTemplateRepositoryMongo) ListTemplates(ctx context.Context) (
 
 	// 从数据库获取
 	filter := bson.M{}
-	opts := options.Find().SetSort(bson.M{"category": 1, "created_at": -1})
+	opts := options.Find().SetSort(bson.D{{Key: "category", Value: 1}, {Key: "created_at", Value: -1}})
 
 	cursor, err := r.getCollection().Find(ctx, filter, opts)
 	if err != nil {

@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/models/dto"
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models/dto"
+	response "Qingyu_backend/pkg/response"
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -196,7 +197,7 @@ func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Documents, int64(result.Total), page, pageSize, "获取成功")
+	response.Paginated(c, result.Documents, int64(result.Total), page, pageSize, "获取成功")
 }
 
 // DuplicateDocument 复制文档
@@ -442,7 +443,7 @@ func (api *DocumentAPI) GetVersionHistory(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Versions, int64(result.Total), page, pageSize, "获取成功")
+	response.Paginated(c, result.Versions, int64(result.Total), page, pageSize, "获取成功")
 }
 
 // RestoreVersion 恢复版本

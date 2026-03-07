@@ -268,6 +268,7 @@ func setupSettingTestRouter(readerService interfaces.ReaderService, userID strin
 		v1.GET("", api.GetReadingSettings)
 		v1.POST("", api.SaveReadingSettings)
 		v1.PUT("", api.UpdateReadingSettings)
+		v1.PATCH("", api.UpdateReadingSettings)
 	}
 
 	return r
@@ -405,4 +406,29 @@ func TestSettingAPI_UpdateReadingSettings_Unauthorized(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestSettingAPI_PatchReadingSettings_Success(t *testing.T) {
+	// Given
+	mockService := new(MockReaderServiceForSettings)
+	userID := primitive.NewObjectID().Hex()
+	router := setupSettingTestRouter(mockService, userID)
+
+	fontSize := 22
+	reqBody := map[string]interface{}{
+		"fontSize": &fontSize,
+	}
+
+	mockService.On("UpdateReadingSettings", mock.Anything, userID, mock.Anything).Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PATCH", "/api/v1/reader/settings", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
 }

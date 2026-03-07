@@ -102,7 +102,7 @@ func (api *BookListAPI) GetBookLists(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, bookLists, int(total), pagination.Page, pagination.PageSize, "")
+	response.Paginated(c, bookLists, total, pagination.Page, pagination.PageSize, "获取成功")
 }
 
 // GetBookListDetail 获取书单详情
@@ -147,6 +147,7 @@ type UpdateBookListRequest struct {
 // @Param request body UpdateBookListRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/booklists/{id} [put]
+// @Router /api/v1/social/booklists/{id} [patch]
 // @Security Bearer
 func (api *BookListAPI) UpdateBookList(c *gin.Context) {
 	bookListID, ok := shared.GetRequiredParam(c, "id", "书单ID")
