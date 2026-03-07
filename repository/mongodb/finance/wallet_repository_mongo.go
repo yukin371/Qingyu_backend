@@ -2,6 +2,7 @@ package finance
 
 import (
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
 	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
@@ -184,14 +185,11 @@ func (r *WalletRepositoryImpl) UpdateBalanceWithCheck(ctx context.Context, userI
 	}
 
 	if result.MatchedCount == 0 {
-		// 可能是钱包不存在，或者余额不足
-		// 需要进一步检查
 		wallet, err := r.GetWallet(ctx, userID)
 		if err != nil {
-			return err // 钱包不存在
+			return err
 		}
-		// types.Money 是 int64 的别名，		// 但需要使用正确的类型进行比较
-		if wallet.Balance+types.Money(amount) < 0 {
+		if wallet.Balance < types.Money(-amount) {
 			return fmt.Errorf("余额不足: 当前余额 %d, 尝试扣款 %d", wallet.Balance, -amount)
 		}
 		return fmt.Errorf("钱包不存在")

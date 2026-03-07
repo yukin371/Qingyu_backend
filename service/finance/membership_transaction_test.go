@@ -193,6 +193,18 @@ func (m *membershipWalletRepository) UpdateBalance(ctx context.Context, userID s
 	wallet.Balance += types.Money(amount)
 	return nil
 }
+func (m *membershipWalletRepository) UpdateBalanceWithCheck(ctx context.Context, userID string, amount int64) error {
+	if amount < 0 {
+		wallet, ok := m.wallets[userID]
+		if !ok {
+			return errors.New("wallet not found")
+		}
+		if wallet.Balance < types.Money(-amount) {
+			return errors.New("余额不足")
+		}
+	}
+	return m.UpdateBalance(ctx, userID, amount)
+}
 func (m *membershipWalletRepository) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
 	if m.failCreateTx != nil {
 		return m.failCreateTx

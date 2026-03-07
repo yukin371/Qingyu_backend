@@ -707,23 +707,6 @@ func (r *MongoBookListRepository) Health(ctx context.Context) error {
 	return r.GetDB().Client().Ping(ctx, nil)
 }
 
-// RunInTransaction 在事务中执行书单相关操作
-func (r *MongoBookListRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.GetDB().Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start booklist transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
-	if err != nil {
-		return fmt.Errorf("booklist transaction failed: %w", err)
-	}
-
-	return nil
-}
 
 // RunInTransaction 在事务中执行书单相关操作
 func (r *MongoBookListRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
