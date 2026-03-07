@@ -2,9 +2,27 @@ name: Pull Request Checks
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
+  branch-policy:
+    name: Branch Policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enforce protected merge flow for main
+        run: |
+          if [ "${{ github.base_ref }}" = "main" ]; then
+            if [ "${{ github.head_ref }}" != "dev" ]; then
+              echo "Only the dev branch can open pull requests into main."
+              echo "Please merge this change into dev first, then promote dev to main."
+              exit 1
+            fi
+            echo "Protected main flow verified: dev -> main"
+            exit 0
+          fi
+          echo "Branch policy check passed for base branch: ${{ github.base_ref }}"
+
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest

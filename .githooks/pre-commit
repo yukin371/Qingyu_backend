@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+cd "$ROOT_DIR"
+
+if git diff --cached --quiet --; then
+  exit 0
+fi
+
+tmp_file="$(mktemp)"
+trap 'rm -f "$tmp_file" "$tmp_file.matches" "$tmp_file.filtered"' EXIT
+
+git diff --cached --unified=0 --no-color --diff-filter=ACMR -- . \
+  | grep -E '^\+' \
+  | grep -Ev '^\+\+\+' \
+  | sed 's/^\+//' > "$tmp_file" || true
+
+if [ ! -s "$tmp_file" ]; then
+  exit 0
+fi
+
+placeholder_pattern='(example|sample|dummy|placeholder|changeme|your[_-]?|replace[_-]?me|do[-_ ]?not[-_ ]?use|test[-_ ]?only|fake|mock|demo)'
+high_confidence_pattern='(gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(live|proj)-[A-Za-z0-9_-]{16,}|AIza[0-9A-Za-z_-]{35}|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN (RSA|DSA|EC|OPENSSH|PGP)? ?PRIVATE KEY-----)'
+generic_assignment_pattern='((api[_-]?key|access[_-]?key|secret|secret[_-]?key|client[_-]?secret|token|auth[_-]?token|password|passwd|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'"'"'"'"']?[A-Za-z0-9/+_=-]{20,})'
+
+if grep -Ein "$high_confidence_pattern" "$tmp_file" > "$tmp_file.matches"; then
+  echo "Commit blocked: possible secret detected in staged changes."
+  echo "High-confidence match:"
+  cat "$tmp_file.matches"
+  echo ""
+  echo "Remove the secret, replace it with an environment variable, or rotate it before committing."
+  exit 1
+fi
+
+if grep -Ein "$generic_assignment_pattern" "$tmp_file" > "$tmp_file.matches"; then
+  if grep -Eiv "$placeholder_pattern" "$tmp_file.matches" > "$tmp_file.filtered"; then
+    echo "Commit blocked: possible credential assignment detected in staged changes."
+    echo "Review these lines:"
+    cat "$tmp_file.filtered"
+    echo ""
+    echo "If this is a real secret, move it to environment variables or secret storage."
+    echo "If this is only example data, replace it with a clearer placeholder."
+    exit 1
+  fi
+fi
+
+exit 0

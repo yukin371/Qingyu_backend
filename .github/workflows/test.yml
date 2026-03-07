@@ -604,6 +604,7 @@ jobs:
         if: always() && github.event_name == 'push' && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
 
   # 性能基准测试
   benchmark:

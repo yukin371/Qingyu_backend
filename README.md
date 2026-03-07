@@ -80,6 +80,24 @@
 - **测试覆盖** - go test + testify
 - **文档生成** - Swagger
 
+## Git Hooks
+
+为避免把密钥、令牌或私钥提交进仓库，项目提供了版本化的 `pre-commit` 钩子。
+
+Linux / macOS:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\scripts\install-git-hooks.ps1
+```
+
+安装后，Git 会在提交前扫描已暂存的新增内容，拦截高风险密钥模式和明显的凭据赋值。
+
 ## 系统架构
 
 ### 分层架构总览
