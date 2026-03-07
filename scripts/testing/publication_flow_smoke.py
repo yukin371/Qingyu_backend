@@ -14,7 +14,10 @@ def wait_for_http(url: str, timeout_seconds: int) -> None:
     last_error = None
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(url) as resp:
+            # 设置单次请求超时为5秒，避免连接阻塞过久
+            remaining = max(1, int(deadline - time.time()))
+            request_timeout = min(5, remaining)
+            with urllib.request.urlopen(url, timeout=request_timeout) as resp:
                 if 200 <= resp.status < 500:
                     return
         except Exception as exc:  # noqa: BLE001
