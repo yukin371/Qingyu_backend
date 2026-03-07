@@ -774,6 +774,12 @@ func (s *BookstoreServiceImpl) GetRankingByType(ctx context.Context, rankingType
 
 // UpdateRankings 更新榜单数据
 func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string) error {
+	switch rankingType {
+	case bookstore2.RankingTypeRealtime, bookstore2.RankingTypeWeekly, bookstore2.RankingTypeMonthly, bookstore2.RankingTypeNewbie:
+	default:
+		return fmt.Errorf("unsupported ranking type: %s", rankingType)
+	}
+
 	if period == "" {
 		period = bookstore2.GetPeriodString(rankingType, time.Now())
 	}

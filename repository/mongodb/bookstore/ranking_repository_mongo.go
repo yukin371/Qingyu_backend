@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -434,6 +435,39 @@ func (r *MongoRankingRepository) BatchUpsertRankingItems(ctx context.Context, it
 	return nil
 }
 
+// CalculateRealtimeRanking 兼容旧调用方，基于当前书籍数据生成实时榜单项。
+func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
+	return r.calculateRankingItems(ctx, bookstore2.RankingTypeRealtime, period)
+}
+
+// CalculateWeeklyRanking 兼容旧调用方，基于当前书籍数据生成周榜项。
+func (r *MongoRankingRepository) CalculateWeeklyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
+	return r.calculateRankingItems(ctx, bookstore2.RankingTypeWeekly, period)
+}
+
+// CalculateMonthlyRanking 兼容旧调用方，基于当前书籍数据生成月榜项。
+func (r *MongoRankingRepository) CalculateMonthlyRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
+	return r.calculateRankingItems(ctx, bookstore2.RankingTypeMonthly, period)
+}
+
+// CalculateNewbieRanking 兼容旧调用方，基于当前书籍数据生成新人榜项。
+func (r *MongoRankingRepository) CalculateNewbieRanking(ctx context.Context, period string) ([]*bookstore2.RankingItem, error) {
+	return r.calculateRankingItems(ctx, bookstore2.RankingTypeNewbie, period)
+}
+
+// UpdateRankings 兼容旧调用方，在事务中替换指定榜单数据。
+func (r *MongoRankingRepository) UpdateRankings(ctx context.Context, rankingType bookstore2.RankingType, period string, items []*bookstore2.RankingItem) error {
+	return r.Transaction(ctx, func(txCtx context.Context) error {
+		if err := r.DeleteByTypeAndPeriod(txCtx, rankingType, period); err != nil {
+			return err
+		}
+		if len(items) == 0 {
+			return nil
+		}
+		return r.BatchUpsertRankingItems(txCtx, items)
+	})
+}
+
 // ========== 榜单维护方法 ==========
 
 // DeleteByPeriod 删除指定周期的榜单
@@ -478,6 +512,87 @@ func (r *MongoRankingRepository) DeleteExpiredRankings(ctx context.Context, befo
 		return fmt.Errorf("failed to delete expired rankings: %w", err)
 	}
 	return nil
+}
+
+func (r *MongoRankingRepository) calculateRankingItems(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error) {
+	now := time.Now()
+	filter := bson.M{}
+	if rankingType != bookstore2.RankingTypeRealtime &&
+		rankingType != bookstore2.RankingTypeWeekly &&
+		rankingType != bookstore2.RankingTypeMonthly &&
+		rankingType != bookstore2.RankingTypeNewbie {
+		return nil, fmt.Errorf("unsupported ranking type: %s", rankingType)
+	}
+
+	cursor, err := r.bookCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query books for ranking: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var books []*bookstore2.Book
+	if err := cursor.All(ctx, &books); err != nil {
+		return nil, fmt.Errorf("failed to decode books for ranking: %w", err)
+	}
+
+	items := make([]*bookstore2.RankingItem, 0, len(books))
+	for _, book := range books {
+		if book == nil || !rankingEligible(book, rankingType, now) {
+			continue
+		}
+		items = append(items, &bookstore2.RankingItem{
+			BookID:    book.ID,
+			Type:      rankingType,
+			Score:     rankingScore(book, rankingType),
+			ViewCount: book.ViewCount,
+			LikeCount: book.RatingCount,
+			Period:    period,
+		})
+	}
+
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Score == items[j].Score {
+			return items[i].BookID.Hex() < items[j].BookID.Hex()
+		}
+		return items[i].Score > items[j].Score
+	})
+
+	if len(items) > 100 {
+		items = items[:100]
+	}
+	for i, item := range items {
+		item.Rank = i + 1
+	}
+
+	return items, nil
+}
+
+func rankingScore(book *bookstore2.Book, rankingType bookstore2.RankingType) float64 {
+	switch rankingType {
+	case bookstore2.RankingTypeRealtime:
+		return float64(book.ViewCount)*0.7 + float64(book.RatingCount)*0.3
+	case bookstore2.RankingTypeWeekly:
+		return float64(book.ViewCount)*0.6 + float64(book.ChapterCount)*10
+	case bookstore2.RankingTypeMonthly:
+		return float64(book.ViewCount)*0.5 + float64(book.RatingCount)*0.3 + float64(book.WordCount)*0.0001
+	case bookstore2.RankingTypeNewbie:
+		return float64(book.ViewCount)*0.6 + float64(book.RatingCount)*0.4
+	default:
+		return 0
+	}
+}
+
+func rankingEligible(book *bookstore2.Book, rankingType bookstore2.RankingType, now time.Time) bool {
+	if book.Status != bookstore2.BookStatusOngoing {
+		return false
+	}
+	if rankingType != bookstore2.RankingTypeNewbie {
+		return true
+	}
+	if book.PublishedAt == nil {
+		return false
+	}
+	return now.Sub(*book.PublishedAt) <= 30*24*time.Hour
 }
 
 // ========== 事务支持 ==========

@@ -85,6 +85,7 @@ config.prod.yaml    # 生产配置不提交
 # 测试覆盖率报告
 coverage/
 coverage.out
+*_cover.out
 coverage.html
 
 # 性能分析文件

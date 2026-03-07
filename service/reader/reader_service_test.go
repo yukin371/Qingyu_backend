@@ -77,7 +77,22 @@ func (m *MockReadingProgressRepository) SaveProgress(ctx context.Context, userID
 	return args.Error(0)
 }
 
+func (m *MockReadingProgressRepository) SaveProgressWithInitial(ctx context.Context, userID, bookID, chapterID string, progress float64, initialReadingTime int64) error {
+	args := m.Called(ctx, userID, bookID, chapterID, progress, initialReadingTime)
+	return args.Error(0)
+}
+
+func (m *MockReadingProgressRepository) UpdateProgressFields(ctx context.Context, userID, bookID string, updates map[string]interface{}) error {
+	args := m.Called(ctx, userID, bookID, updates)
+	return args.Error(0)
+}
+
 func (m *MockReadingProgressRepository) UpdateReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
+	args := m.Called(ctx, userID, bookID, duration)
+	return args.Error(0)
+}
+
+func (m *MockReadingProgressRepository) IncrementReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
 	args := m.Called(ctx, userID, bookID, duration)
 	return args.Error(0)
 }
@@ -114,6 +129,14 @@ func (m *MockReadingProgressRepository) CountReadingBooks(ctx context.Context, u
 
 func (m *MockReadingProgressRepository) GetReadingHistory(ctx context.Context, userID string, limit, offset int) ([]*reader.ReadingProgress, error) {
 	args := m.Called(ctx, userID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.ReadingProgress), args.Error(1)
+}
+
+func (m *MockReadingProgressRepository) GetByUserAndProgressRange(ctx context.Context, userID string, minProgress, maxProgress float64) ([]*reader.ReadingProgress, error) {
+	args := m.Called(ctx, userID, minProgress, maxProgress)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -842,7 +865,7 @@ func TestReaderService_SaveReadingProgress_Success(t *testing.T) {
 	chapterID := "chapter123"
 	progress := 0.5
 
-	mockProgressRepo.On("SaveProgress", ctx, userID, bookID, chapterID, progress).
+	mockProgressRepo.On("SaveProgressWithInitial", ctx, userID, bookID, chapterID, progress, int64(0)).
 		Return(nil)
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Maybe()
 
@@ -892,7 +915,7 @@ func TestReaderService_SaveReadingProgress_RepositoryError(t *testing.T) {
 	chapterID := "chapter123"
 	progress := 0.5
 
-	mockProgressRepo.On("SaveProgress", ctx, userID, bookID, chapterID, progress).
+	mockProgressRepo.On("SaveProgressWithInitial", ctx, userID, bookID, chapterID, progress, int64(0)).
 		Return(errors.New("保存失败"))
 
 	// Act
@@ -913,7 +936,10 @@ func TestReaderService_UpdateReadingTime_Success(t *testing.T) {
 	bookID := primitive.NewObjectID().Hex()
 	duration := int64(3600) // 1小时
 
-	mockProgressRepo.On("UpdateReadingTime", ctx, userID, bookID, duration).
+	// 记录存在，使用 IncrementReadingTime
+	mockProgressRepo.On("GetByUserAndBook", ctx, userID, bookID).
+		Return(&reader.ReadingProgress{}, nil)
+	mockProgressRepo.On("IncrementReadingTime", ctx, userID, bookID, duration).
 		Return(nil)
 
 	// Act

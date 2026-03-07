@@ -191,6 +191,19 @@ func (m *mockWalletRepository) UpdateBalance(ctx context.Context, userID string,
 	return nil
 }
 
+func (m *mockWalletRepository) UpdateBalanceWithCheck(ctx context.Context, userID string, amount int64) error {
+	if amount < 0 {
+		wallet, ok := m.wallets[userID]
+		if !ok {
+			return errors.New("wallet not found")
+		}
+		if wallet.Balance < types.Money(-amount) {
+			return errors.New("余额不足")
+		}
+	}
+	return m.UpdateBalance(ctx, userID, amount)
+}
+
 func (m *mockWalletRepository) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
 	return nil
 }

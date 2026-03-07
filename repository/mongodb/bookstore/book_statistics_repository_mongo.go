@@ -541,48 +541,37 @@ func (r *MongoBookStatisticsRepository) UpdateRatingSummary(ctx context.Context,
 	return err
 }
 
-// UpdateRating 根据新增评分更新统计（按增量更新平均值与计数）
+// UpdateRating 根据新增评分更新统计（已废弃，业务逻辑移至Service层）
 func (r *MongoBookStatisticsRepository) UpdateRating(ctx context.Context, bookID string, rating int) error {
 	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return fmt.Errorf("invalid book ID: %w", err)
 	}
-	// 读取当前统计
+
 	var stats bookstore.BookStatistics
 	err = r.GetCollection().FindOne(ctx, bson.M{"book_id": objectID}).Decode(&stats)
-	if err != nil {
-		if err != mongo.ErrNoDocuments {
-			return err
-		}
-		// 初始创建
-		stats = bookstore.BookStatistics{BookID: objectID, AverageRating: 0, RatingCount: 0}
+	if err != nil && err != mongo.ErrNoDocuments {
+		return err
 	}
 
-	newCount := stats.RatingCount + 1
-	// Rating 类型需要转换为 float64 进行运算
-	newAvg := ((float64(stats.AverageRating) * float64(stats.RatingCount)) + float64(rating)) / float64(newCount)
+	currentAvg := stats.AverageRating
+	currentCount := stats.RatingCount
+	newCount := currentCount + 1
+	newAvg := ((float64(currentAvg) * float64(currentCount)) + float64(rating)) / float64(newCount)
 
-	_, err = r.GetCollection().UpdateOne(
-		ctx,
-		bson.M{"book_id": bookID},
-		bson.M{"$set": bson.M{"average_rating": types.Rating(newAvg), "rating_count": newCount, "updated_at": time.Now()}},
-		options.Update().SetUpsert(true),
-	)
-	return err
+	return r.UpdateRatingValues(ctx, bookID, types.Rating(newAvg), newCount)
 }
 
-// RemoveRating 根据移除评分更新统计
+// RemoveRating 根据移除评分更新统计（已废弃，业务逻辑移至Service层）
 func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID string, rating int) error {
+	var stats bookstore.BookStatistics
 	objectID, err := r.ParseID(bookID)
 	if err != nil {
 		return fmt.Errorf("invalid book ID: %w", err)
 	}
-	var stats bookstore.BookStatistics
+
 	err = r.GetCollection().FindOne(ctx, bson.M{"book_id": objectID}).Decode(&stats)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil
-		}
+	if err != nil && err != mongo.ErrNoDocuments {
 		return err
 	}
 
@@ -590,20 +579,34 @@ func (r *MongoBookStatisticsRepository) RemoveRating(ctx context.Context, bookID
 		return nil
 	}
 
-	newCount := stats.RatingCount - 1
+	currentCount := stats.RatingCount
+	newCount := currentCount - 1
 	var newAvg float64
 	if newCount > 0 {
-		// Rating 类型需要转换为 float64 进行运算
-		newAvg = ((float64(stats.AverageRating) * float64(stats.RatingCount)) - float64(rating)) / float64(newCount)
+		newAvg = ((float64(stats.AverageRating) * float64(currentCount)) - float64(rating)) / float64(newCount)
 	} else {
 		newAvg = 0
 	}
 
-	_, err = r.GetCollection().UpdateOne(
-		ctx,
-		bson.M{"book_id": bookID},
-		bson.M{"$set": bson.M{"average_rating": types.Rating(newAvg), "rating_count": newCount, "updated_at": time.Now()}},
-	)
+	return r.UpdateRatingValues(ctx, bookID, types.Rating(newAvg), newCount)
+}
+
+// UpdateRatingValues 直接更新评分值（不包含业务逻辑，仅负责数据持久化）
+func (r *MongoBookStatisticsRepository) UpdateRatingValues(ctx context.Context, bookID string, avgRating interface{}, count int64) error {
+	objectID, err := r.ParseID(bookID)
+	if err != nil {
+		return fmt.Errorf("invalid book ID: %w", err)
+	}
+	filter := bson.M{"book_id": objectID}
+	update := bson.M{
+		"$set": bson.M{
+			"average_rating": avgRating,
+			"rating_count":   count,
+			"updated_at":    time.Now(),
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err = r.GetCollection().UpdateOne(ctx, filter, update, opts)
 	return err
 }
 

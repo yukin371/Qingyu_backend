@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ⚠️ 部分修复
+**状态**: ✅ Phase 2 已完成 (2026-03-07)
 **创建日期**: 2026-03-05
 **来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
 **审查日期**: 2026-03-05
@@ -498,11 +498,11 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 - [ ] outline_repository_mongo.go::normalizeAndValidateOutlineQueryID → WriterService.ValidateID
 
 ### Bookstore 域
-- [ ] ranking_repository_mongo.go::CalculateRealtimeRanking → RankingService.CalculateRealtimeRanking
-- [ ] ranking_repository_mongo.go::CalculateWeeklyRanking → RankingService.CalculateWeeklyRanking
-- [ ] ranking_repository_mongo.go::CalculateMonthlyRanking → RankingService.CalculateMonthlyRanking
-- [ ] ranking_repository_mongo.go::CalculateNewbieRanking → RankingService.CalculateNewbieRanking
-- [ ] ranking_repository_mongo.go::UpdateRankings → RankingService.UpdateRankings
+- [x] ranking_repository_mongo.go::CalculateRealtimeRanking → RankingService.CalculateRealtimeRanking ✅
+- [x] ranking_repository_mongo.go::CalculateWeeklyRanking → RankingService.CalculateWeeklyRanking ✅
+- [x] ranking_repository_mongo.go::CalculateMonthlyRanking → RankingService.CalculateMonthlyRanking ✅
+- [x] ranking_repository_mongo.go::CalculateNewbieRanking → RankingService.CalculateNewbieRanking ✅
+- [x] ranking_repository_mongo.go::UpdateRankings → RankingService.UpdateRankings ✅
 - [ ] book_statistics_repository_mongo.go::UpdateRating → BookStatsService.CalculateNewRating
 - [ ] book_statistics_repository_mongo.go::RemoveRating → BookStatsService.CalculateRemoveRating
 - [ ] book_statistics_repository_mongo.go::BatchRecalculateStatistics → BookStatsService.RecalculateStatistics
@@ -515,7 +515,7 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 - [ ] collection_repository_mongo.go::validateCollectionTag → CollectionService.ValidateTag
 
 ### Finance 域
-- [ ] wallet_repository_mongo.go::UpdateBalance → WalletService.UpdateBalance
+- [x] wallet_repository_mongo.go::UpdateBalanceWithCheck → WalletService.UpdateBalanceWithCheck ✅ (已添加余额验证)
 
 ### Social 域
 - [ ] follow_repository_mongo.go::sanitizeFollowType → FollowService.ValidateFollowType

@@ -336,14 +336,27 @@ func (r *MongoBatchOperationRepository) UpdateStatus(ctx context.Context, operat
 	return nil
 }
 
-// UpdateItemStatus 更新操作项状态
+// UpdateItemStatus 更新操作项状态（简化版，仅更新基础字段，向后兼容）
 func (r *MongoBatchOperationRepository) UpdateItemStatus(ctx context.Context, operationID, targetID string, itemStatus writer.BatchItemStatus, errCode, errMsg string) error {
+	now := primitive.NewDateTimeFromTime(time.Now())
+
+	updates := map[string]interface{}{
+		"items.$.status":        itemStatus,
+		"items.$.error_code":    errCode,
+		"items.$.error_msg":     errMsg,
+		"items.$.error_message": errMsg,
+		"items.$.updated_at":    now,
+	}
+
+	return r.UpdateItemStatusDirect(ctx, operationID, targetID, updates)
+}
+
+// UpdateItemStatusDirect 直接更新操作项状态（不包含业务逻辑，仅负责数据持久化）
+func (r *MongoBatchOperationRepository) UpdateItemStatusDirect(ctx context.Context, operationID, targetID string, updates map[string]interface{}) error {
 	objID, err := r.ParseID(operationID)
 	if err != nil {
 		return fmt.Errorf("无效的批量操作ID: %w", err)
 	}
-
-	now := primitive.NewDateTimeFromTime(time.Now())
 
 	filter := bson.M{
 		"_id":         objID,
@@ -351,29 +364,10 @@ func (r *MongoBatchOperationRepository) UpdateItemStatus(ctx context.Context, op
 		"items.target_id": targetID,
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"items.$.status":         itemStatus,
-			"items.$.error_code":     errCode,
-			"items.$.error_msg":      errMsg,
-			"items.$.error_message":  errMsg,
-			"items.$.updated_at":     now,
-		},
-	}
-
-	// 如果是成功或失败状态，设置completed_at
-	if itemStatus == writer.BatchItemStatusSucceeded || itemStatus == writer.BatchItemStatusFailed {
-		update["$set"].(bson.M)["items.$.completed_at"] = &now
-	}
-
-	// 如果是处理中状态，设置started_at（如果还未设置）
-	if itemStatus == writer.BatchItemStatusProcessing {
-		update["$set"].(bson.M)["items.$.started_at"] = &now
-	}
-
+	update := bson.M{"$set": updates}
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("更新操作项状态失败: %w", err)
+		return fmt.Errorf("更新操作项失败: %w", err)
 	}
 
 	if result.MatchedCount == 0 {
