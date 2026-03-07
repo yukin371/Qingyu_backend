@@ -46,7 +46,7 @@ def main() -> int:
     parser.add_argument("--base-url", default=os.environ.get("PUBLICATION_SMOKE_BASE_URL", "http://localhost:9090"))
     parser.add_argument("--server-port", default=os.environ.get("PUBLICATION_SMOKE_PORT", "9090"))
     parser.add_argument("--server-health-path", default="/health")
-    parser.add_argument("--health-timeout", type=int, default=90)
+    parser.add_argument("--health-timeout", type=int, default=45)
     parser.add_argument("--server-log", default=None)
     parser.add_argument("--approve-document", action="store_true")
     parser.add_argument("--reject-project", action="store_true")

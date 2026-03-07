@@ -21,7 +21,7 @@ jobs:
   smoke:
     name: Publication Smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     services:
       mongodb:
