@@ -20,16 +20,16 @@ type MongoReviewRepository struct {
 	likeCollection   *mongo.Collection
 }
 
-func sanitizeReviewQueryToken(field, value string) (string, error) {
+func sanitizeReviewQueryToken(field, value string) (primitive.ObjectID, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
-		return "", fmt.Errorf("%s不能为空", field)
+		return primitive.ObjectID{}, fmt.Errorf("%s不能为空", field)
 	}
 	objectID, err := primitive.ObjectIDFromHex(value)
 	if err != nil {
-		return value, nil
+		return primitive.ObjectID{}, fmt.Errorf("%s格式无效: %w", field, err)
 	}
-	return objectID.Hex(), nil
+	return objectID, nil
 }
 
 func sanitizeReviewFilter(filter bson.M) (bson.M, error) {

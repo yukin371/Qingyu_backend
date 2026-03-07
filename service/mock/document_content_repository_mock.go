@@ -68,8 +68,8 @@ func (m *MockDocumentContentRepository) GetByDocumentID(ctx context.Context, doc
 }
 
 // UpdateWithVersion mocks base method
-func (m *MockDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, content string, expectedVersion int) error {
-	args := m.Called(ctx, documentID, content, expectedVersion)
+func (m *MockDocumentContentRepository) UpdateWithVersion(ctx context.Context, documentID string, updates map[string]interface{}, expectedVersion int) error {
+	args := m.Called(ctx, documentID, updates, expectedVersion)
 	return args.Error(0)
 }
 

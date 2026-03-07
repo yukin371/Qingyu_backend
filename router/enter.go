@@ -28,13 +28,15 @@ import (
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
+	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
-	internalAPIService "Qingyu_backend/service/internalapi"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
+	internalAPIService "Qingyu_backend/service/internalapi"
+	recommendationService "Qingyu_backend/service/recommendation"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
@@ -444,6 +446,11 @@ func RegisterRoutes(r *gin.Engine) {
 	} else {
 		// 创建推荐API
 		recommendationApi := recommendationAPI.NewRecommendationAPI(recommendationSvc)
+		if mongoDB := serviceContainer.GetMongoDB(); mongoDB != nil {
+			tableRepo := recommendationRepo.NewMongoTableRepository(mongoDB)
+			tableSvc := recommendationService.NewRecommendationTableService(tableRepo)
+			recommendationApi.WithTableService(tableSvc)
+		}
 		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
 
 		logger.Info("✓ 推荐系统路由已注册到: /api/v1/recommendation/")

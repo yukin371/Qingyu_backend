@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"Qingyu_backend/models/writer"
-	"Qingyu_backend/repository/mongodb/base"
 	writerrepo "Qingyu_backend/repository/interfaces/writer"
+	"Qingyu_backend/repository/mongodb/base"
 )
 
 const (
@@ -406,6 +406,9 @@ func (r *MongoCommentRepository) buildFilter(filter *writer.CommentFilter) bson.
 
 	if filter.DocumentID != nil {
 		mongoFilter["document_id"] = *filter.DocumentID
+	}
+	if filter.ParagraphID != nil {
+		mongoFilter["paragraph_id"] = *filter.ParagraphID
 	}
 	if filter.ChapterID != nil {
 		mongoFilter["chapter_id"] = *filter.ChapterID

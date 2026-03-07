@@ -17,13 +17,14 @@ type DocumentContent struct {
 	LastSavedAt  time.Time          `bson:"last_saved_at" json:"lastSavedAt"`
 	LastEditedBy string             `bson:"last_edited_by" json:"lastEditedBy"`
 
-	DocumentID  primitive.ObjectID `bson:"document_id" json:"documentId" validate:"required"`
-	Content     string             `bson:"content" json:"content"`                        // 文档内容
-	ContentType string             `bson:"content_type" json:"contentType"`               // markdown | richtext
-	WordCount   int                `bson:"word_count" json:"wordCount"`                   // 字数统计
-	CharCount   int                `bson:"char_count" json:"charCount"`                   // 字符统计
-	GridFSID    primitive.ObjectID `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"` // 大文件GridFS ID
-	Version     int                `bson:"version" json:"version"`                        // 版本号（乐观锁）
+	DocumentID     primitive.ObjectID `bson:"document_id" json:"documentId" validate:"required"`
+	Content        string             `bson:"content" json:"content"`                                    // 文档内容
+	ContentType    string             `bson:"content_type" json:"contentType"`                           // markdown | richtext
+	ParagraphOrder int                `bson:"paragraph_order,omitempty" json:"paragraphOrder,omitempty"` // 段落顺序（用于tiptap分段存储）
+	WordCount      int                `bson:"word_count" json:"wordCount"`                               // 字数统计
+	CharCount      int                `bson:"char_count" json:"charCount"`                               // 字符统计
+	GridFSID       primitive.ObjectID `bson:"gridfs_id,omitempty" json:"gridfsId,omitempty"`             // 大文件GridFS ID
+	Version        int                `bson:"version" json:"version"`                                    // 版本号（乐观锁）
 }
 
 // IsLargeDocument 判断是否为大文档（>1MB）
@@ -47,7 +48,7 @@ func (d *DocumentContent) Validate() error {
 	if d.ContentType == "" {
 		return fmt.Errorf("内容类型不能为空")
 	}
-	if d.ContentType != "markdown" && d.ContentType != "richtext" {
+	if d.ContentType != "markdown" && d.ContentType != "richtext" && d.ContentType != "tiptap" {
 		return fmt.Errorf("无效的内容类型: %s", d.ContentType)
 	}
 	return nil
