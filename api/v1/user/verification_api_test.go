@@ -311,7 +311,7 @@ func TestSendEmailVerifyCode_InvalidEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -343,7 +343,7 @@ func TestSendEmailVerifyCode_MissingEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -373,7 +373,7 @@ func TestSendEmailVerifyCode_EmptyEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -411,7 +411,7 @@ func TestSendPhoneVerifyCode_MissingPhone(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -441,7 +441,7 @@ func TestSendPhoneVerifyCode_EmptyPhone(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -480,7 +480,7 @@ func TestVerifyEmail_InvalidEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -514,7 +514,7 @@ func TestVerifyEmail_MissingEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -547,7 +547,7 @@ func TestVerifyEmail_InvalidCodeLength(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -581,7 +581,7 @@ func TestVerifyEmail_MissingCode(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -621,7 +621,7 @@ func TestUnbindEmail_MissingPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -653,7 +653,7 @@ func TestUnbindEmail_PasswordTooShort(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -687,7 +687,7 @@ func TestUnbindEmail_EmptyPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -727,7 +727,7 @@ func TestUnbindPhone_MissingPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -759,7 +759,7 @@ func TestUnbindPhone_PasswordTooShort(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -799,7 +799,7 @@ func TestDeleteDevice_MissingPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -831,7 +831,7 @@ func TestDeleteDevice_PasswordTooShort(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -865,7 +865,7 @@ func TestDeleteDevice_DeviceNotFound(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -875,7 +875,7 @@ func TestDeleteDevice_DeviceNotFound(t *testing.T) {
 		err := serviceInterfaces.NewServiceError("UserService", serviceInterfaces.ErrorTypeNotFound, "设备不存在", nil)
 		if serviceInterfaces.IsNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{
-				"code":    404,
+				"code":    1004,
 				"message": "设备不存在",
 			})
 			return

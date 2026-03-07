@@ -105,7 +105,8 @@ func RegisterUserRoutes(
 	{
 		// 个人信息管理
 		authenticated.GET("/profile", handlers.ProfileHandler.GetProfile)
-		authenticated.PUT("/profile", handlers.ProfileHandler.UpdateProfile)
+		authenticated.PUT("/profile", handlers.ProfileHandler.UpdateProfile)    // 完整更新（向后兼容）
+		authenticated.PATCH("/profile", handlers.ProfileHandler.UpdateProfile) // 部分更新
 		authenticated.PUT("/password", handlers.ProfileHandler.UpdatePassword)
 		authenticated.POST("/avatar", handlers.ProfileHandler.UploadAvatar)
 

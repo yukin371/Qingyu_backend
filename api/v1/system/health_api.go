@@ -27,7 +27,7 @@ func NewHealthAPI() *HealthAPI {
 // @Produce json
 // @Success 200 {object} shared.APIResponse "健康"
 // @Failure 500 {object} shared.ErrorResponse "不健康"
-// @Router /system/health [get]
+// @Router /api/v1/system/health [get]
 func (api *HealthAPI) SystemHealth(c *gin.Context) {
 	container := service.GetServiceContainer()
 	if container == nil {
@@ -67,7 +67,7 @@ func (api *HealthAPI) SystemHealth(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse "健康"
 // @Failure 404 {object} shared.ErrorResponse "服务不存在"
 // @Failure 500 {object} shared.ErrorResponse "不健康"
-// @Router /system/health/{service} [get]
+// @Router /api/v1/system/health/{service} [get]
 func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 	serviceName := c.Param("service")
 
@@ -105,7 +105,7 @@ func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} shared.APIResponse "成功"
 // @Failure 500 {object} shared.ErrorResponse "失败"
-// @Router /system/metrics [get]
+// @Router /api/v1/system/metrics [get]
 func (api *HealthAPI) AllMetrics(c *gin.Context) {
 	container := service.GetServiceContainer()
 	if container == nil {
@@ -138,7 +138,7 @@ func (api *HealthAPI) AllMetrics(c *gin.Context) {
 // @Success 200 {object} shared.APIResponse "成功"
 // @Failure 404 {object} shared.ErrorResponse "服务不存在"
 // @Failure 500 {object} shared.ErrorResponse "失败"
-// @Router /system/metrics/{service} [get]
+// @Router /api/v1/system/metrics/{service} [get]
 func (api *HealthAPI) ServiceMetrics(c *gin.Context) {
 	serviceName := c.Param("service")
 

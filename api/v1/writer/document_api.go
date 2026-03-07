@@ -141,7 +141,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 
 // UpdateDocument 更新文档
 // @Summary 更新文档
-// @Description 更新文档信息
+// @Description 更新文档信息（支持部分更新）
 // @Tags 文档管理
 // @Accept json
 // @Produce json
@@ -149,6 +149,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 // @Param request body object true "更新文档请求"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{id} [put]
+// @Router /api/v1/documents/{id} [patch]
 func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	documentID := c.Param("id")
 

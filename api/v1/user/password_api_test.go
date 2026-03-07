@@ -30,7 +30,7 @@ func TestSendPasswordResetCode_InvalidEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -62,7 +62,7 @@ func TestSendPasswordResetCode_MissingEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -92,7 +92,7 @@ func TestSendPasswordResetCode_EmptyEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -132,7 +132,7 @@ func TestResetPassword_InvalidEmailFormat(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -168,7 +168,7 @@ func TestResetPassword_InvalidCodeLength(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -204,7 +204,7 @@ func TestResetPassword_PasswordTooShort(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -240,7 +240,7 @@ func TestResetPassword_MissingEmail(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -275,7 +275,7 @@ func TestResetPassword_MissingCode(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -310,7 +310,7 @@ func TestResetPassword_MissingNewPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -345,7 +345,7 @@ func TestResetPassword_InvalidCode(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -354,7 +354,7 @@ func TestResetPassword_InvalidCode(t *testing.T) {
 		// 模拟验证码无效错误
 		if req.Code == "000000" {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "验证码无效或已过期",
 			})
 			return
@@ -398,7 +398,7 @@ func TestUpdatePassword_MissingOldPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -433,7 +433,7 @@ func TestUpdatePassword_NewPasswordTooShort(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -469,7 +469,7 @@ func TestUpdatePassword_MissingNewPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -504,7 +504,7 @@ func TestUpdatePassword_EmptyOldPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -540,7 +540,7 @@ func TestUpdatePassword_EmptyNewPassword(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -576,7 +576,7 @@ func TestUpdatePassword_OldPasswordMismatch(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return
@@ -625,7 +625,7 @@ func TestUpdatePassword_MissingUserID(t *testing.T) {
 		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
+				"code":    1001,
 				"message": "参数错误",
 			})
 			return

@@ -80,7 +80,7 @@ func setupRelationTestRouter(relationService socialAPI.UserRelationServiceInterf
 		// 检查是否有错误写入
 		if len(c.Errors) > 0 {
 			c.JSON(500, gin.H{
-				"code":    500,
+				"code":    5000,
 				"message": "内部服务器错误",
 				"details": c.Errors.Last().Error(),
 			})

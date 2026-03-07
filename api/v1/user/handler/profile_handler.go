@@ -82,7 +82,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 // UpdateProfile 更新当前用户信息
 //
 //	@Summary		更新当前用户信息
-//	@Description	更新当前登录用户的个人信息
+//	@Description	更新当前登录用户的个人信息（支持部分更新）
 //	@Tags			用户管理-个人信息
 //	@Accept			json
 //	@Produce		json
@@ -93,6 +93,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 //	@Failure		401		{object}	shared.ErrorResponse
 //	@Failure		500		{object}	shared.ErrorResponse
 //	@Router			/api/v1/user/profile [put]
+//	@Router			/api/v1/user/profile [patch]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
