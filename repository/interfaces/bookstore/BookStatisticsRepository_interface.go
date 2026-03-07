@@ -33,6 +33,7 @@ type BookStatisticsRepository interface {
 	IncrementShareCount(ctx context.Context, bookID string) error
 	UpdateRating(ctx context.Context, bookID string, rating int) error
 	RemoveRating(ctx context.Context, bookID string, rating int) error
+	UpdateRatingValues(ctx context.Context, bookID string, avgRating interface{}, count int64) error
 	UpdateHotScore(ctx context.Context, bookID string, hotScore float64) error
 
 	// 批量统计操作

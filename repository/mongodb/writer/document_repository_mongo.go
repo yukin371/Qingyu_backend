@@ -32,23 +32,23 @@ func NewMongoDocumentRepository(db *mongo.Database) writingInterface.DocumentRep
 }
 
 // Create 创建文档
+// 重构：移除业务逻辑，默认值设置和验证现在由 Service 层处理
+// Repository 层只负责数据持久化，参见 Issue #010
 func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Document) error {
 	if doc == nil {
 		return fmt.Errorf("文档对象不能为空")
 	}
 
-	// 生成ID
+	// 生成ID（如果未设置）
 	if doc.IdentifiedEntity.ID.IsZero() {
 		doc.IdentifiedEntity.ID = primitive.NewObjectID()
 	}
 
-	// 设置时间戳和默认值
-	doc.TouchForCreate()
+	// 设置时间戳（仅设置 CreatedAt 和 UpdatedAt）
+	doc.Timestamps.TouchForCreate()
 
-	// 基础验证（不验证文档类型，因为需要项目的writing_type）
-	if err := doc.ValidateWithoutType(); err != nil {
-		return fmt.Errorf("文档数据验证失败: %w", err)
-	}
+	// 注意: 业务验证和默认值设置（Status, StableRef, OrderKey）已移到 Service 层
+	// Repository 层不再包含业务规则
 
 	// 插入数据库
 	_, err := r.GetCollection().InsertOne(ctx, doc)

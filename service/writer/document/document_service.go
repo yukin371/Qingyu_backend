@@ -3,6 +3,7 @@ package document
 import (
 	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/models/writer/types"
 	"context"
 	"fmt"
 	"time"
@@ -141,15 +142,23 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	doc.Tags = req.Tags
 	doc.Notes = req.Notes
 
-	// 5. 保存文档
+	// 5. 设置默认值（业务规则从 Repository 层移到 Service 层）
+	s.SetDocumentDefaults(doc)
+
+	// 6. 验证文档
+	if err := s.ValidateDocument(doc, project); err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档验证失败", err.Error(), err)
+	}
+
+	// 7. 保存文档
 	if err := s.documentRepo.Create(ctx, doc); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "创建文档失败", "", err)
 	}
 
-	// 6. 更新项目统计（异步）
+	// 8. 更新项目统计（异步）
 	go s.updateProjectStatistics(context.Background(), req.ProjectID)
 
-	// 7. 发布事件
+	// 9. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.created",
@@ -291,6 +300,74 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID string)
 	}
 
 	return nil
+}
+
+// ValidateDocument 验证文档并设置默认值
+// 业务规则：将验证逻辑从 Repository 层移到 Service 层
+// 这是 Issue #010 重构的一部分
+func (s *DocumentService) ValidateDocument(doc *writer.Document, project *writer.Project) error {
+	if doc == nil {
+		return fmt.Errorf("文档对象不能为空")
+	}
+
+	// 验证标题
+	if doc.Title == "" {
+		return fmt.Errorf("文档标题不能为空")
+	}
+	if len(doc.Title) > 200 {
+		return fmt.Errorf("文档标题不能超过200字符")
+	}
+
+	// 验证项目ID
+	if doc.ProjectID.IsZero() {
+		return fmt.Errorf("项目ID不能为空")
+	}
+
+	// 验证文档类型（基于项目的 writing_type）
+	if doc.Type != "" {
+		wt, ok := types.GlobalRegistry.Get(project.WritingType)
+		if !ok {
+			return fmt.Errorf("无效的写作类型: %s", project.WritingType)
+		}
+		if !wt.ValidateDocumentType(doc.Type) {
+			return fmt.Errorf("无效的文档类型: %s", doc.Type)
+		}
+	}
+
+	// 验证层级（基于项目的写作类型的最大层级）
+	maxDepth := 10 // 默认最大深度
+	if project.WritingType != "" {
+		if wt, ok := types.GlobalRegistry.Get(project.WritingType); ok {
+			maxDepth = wt.GetMaxDepth()
+		}
+	}
+	if doc.Level < 0 || doc.Level >= maxDepth {
+		return fmt.Errorf("无效的文档层级: %d", doc.Level)
+	}
+
+	return nil
+}
+
+// SetDocumentDefaults 设置文档默认值
+// 业务规则：将默认值设置从 Repository 层移到 Service 层
+// 这是 Issue #010 重构的一部分
+func (s *DocumentService) SetDocumentDefaults(doc *writer.Document) {
+	if doc == nil {
+		return
+	}
+
+	// 设置默认状态
+	if doc.Status == "" {
+		doc.Status = writer.DocumentStatusPlanned
+	}
+
+	// 初始化v1.1新增字段的默认值（如果为空）
+	if doc.StableRef == "" {
+		doc.StableRef = primitive.NewObjectID().Hex()
+	}
+	if doc.OrderKey == "" {
+		doc.OrderKey = writer.DefaultOrderKey
+	}
 }
 
 // 私有方法

@@ -674,6 +674,31 @@ func (s *BatchOperationService) executeApplyTemplate(ctx context.Context, batchO
 	return fmt.Errorf("批量应用模板功能尚未实现")
 }
 
+// UpdateBatchItemStatus 更新批量操作项状态（包含完整业务逻辑）
+func (s *BatchOperationService) UpdateBatchItemStatus(ctx context.Context, operationID, targetID string, itemStatus writer.BatchItemStatus, errCode, errMsg string) error {
+	now := primitive.NewDateTimeFromTime(time.Now())
+
+	updates := map[string]interface{}{
+		"items.$.status":        itemStatus,
+		"items.$.error_code":    errCode,
+		"items.$.error_msg":     errMsg,
+		"items.$.error_message": errMsg,
+		"items.$.updated_at":    now,
+	}
+
+	// 业务规则：成功或失败状态需要设置completed_at
+	if itemStatus == writer.BatchItemStatusSucceeded || itemStatus == writer.BatchItemStatusFailed {
+		updates["items.$.completed_at"] = &now
+	}
+
+	// 业务规则：处理中状态需要设置started_at
+	if itemStatus == writer.BatchItemStatusProcessing {
+		updates["items.$.started_at"] = &now
+	}
+
+	return s.batchOpRepo.UpdateItemStatusDirect(ctx, operationID, targetID, updates)
+}
+
 // BaseService接口实现
 func (s *BatchOperationService) Initialize(ctx context.Context) error {
 	return nil
