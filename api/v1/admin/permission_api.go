@@ -83,14 +83,14 @@ func (api *PermissionAPI) GetPermission(c *gin.Context) {
 //	@Tags			Admin-Permission
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.Permission	true	"权限信息"
+//	@Param			request	body		admin.PermissionRequest	true	"权限信息"
 //	@Success		201		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions [post]
 func (api *PermissionAPI) CreatePermission(c *gin.Context) {
-	var req auth.Permission
+	var req admin.PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
@@ -112,7 +112,7 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			code		path		string			true	"权限代码"
-//	@Param			request	body		auth.Permission	true	"权限信息"
+//	@Param			request	body		admin.PermissionRequest	true	"权限信息"
 //	@Success		200		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		404		{object}	response.APIResponse
@@ -124,7 +124,7 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 		return
 	}
 
-	var req auth.Permission
+	var req admin.PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
@@ -594,4 +594,17 @@ func (api *PermissionAPI) BatchRevokeRoleFromUsers(c *gin.Context) {
 	}
 
 	api.executeBatchRoleOperation(c, req, api.permissionService.RemoveRoleFromUser)
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// PermissionRequest 权限请求（用于swagger文档）
+type PermissionRequest struct {
+	Code        string `json:"code" binding:"required" example:"user.read"`
+	Name        string `json:"name" binding:"required" example:"读取用户"`
+	Description string `json:"description" example:"读取用户信息的权限"`
+	Resource    string `json:"resource" example:"user"`
+	Action      string `json:"action" example:"read"`
+	Effect      string `json:"effect" example:"allow"`
+	Priority    int    `json:"priority" example:"1"`
 }

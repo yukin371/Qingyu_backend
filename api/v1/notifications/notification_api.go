@@ -916,7 +916,7 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "通知ID"
 // @Param request body object{method=string} true "重新发送请求"
-// @Success 200 {object} response.APIResponse{data=dto.MarkAsReadResponse}
+// @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse "参数错误"
 // @Failure 404 {object} response.APIResponse "通知不存在"
 // @Router /api/v1/notifications/{id}/resend [post]

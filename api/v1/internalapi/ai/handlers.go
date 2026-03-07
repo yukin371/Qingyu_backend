@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/response"
 	internalService "Qingyu_backend/service/internalapi"
 )
 
@@ -39,12 +40,12 @@ func NewDocumentAPI(service *internalService.WriterDraftService) *DocumentAPI {
 // @Tags Internal-AI-Documents
 // @Accept json
 // @Produce json
-// @Param request body service_internalapi.CreateOrUpdateRequest true "文档信息"
+// @Param request body CreateOrUpdateDocumentRequest true "文档信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/internal/ai/documents [post]
 func (api *DocumentAPI) CreateOrUpdateDocument(c *gin.Context) {
-	var req service_internalapi.CreateOrUpdateRequest
+	var req internalService.CreateOrUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -288,7 +289,7 @@ func CreateOrUpdateDocument(c *gin.Context) {
 		})
 		return
 	}
-	var req service_internalapi.CreateOrUpdateRequest
+	var req internalService.CreateOrUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -436,13 +437,13 @@ func NewConceptAPI(service *internalService.ConceptService) *ConceptAPI {
 // @Tags Internal-AI-Concepts
 // @Accept json
 // @Produce json
-// @Param request body service_internalapi.CreateConceptRequest true "创建请求"
+// @Param request body CreateConceptRequest true "创建请求"
 // @Success 201 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/internal/ai/concepts [post]
 func (api *ConceptAPI) CreateConcept(c *gin.Context) {
-	var req service_internalapi.CreateConceptRequest
+	var req internalService.CreateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
@@ -532,14 +533,14 @@ func (api *ConceptAPI) GetConcept(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "概念ID"
-// @Param request body service_internalapi.UpdateConceptRequest true "更新请求"
+// @Param request body UpdateConceptRequest true "更新请求"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/internal/ai/concepts/{id} [put]
 func (api *ConceptAPI) UpdateConcept(c *gin.Context) {
 	conceptID := c.Param("id")
-	var req service_internalapi.UpdateConceptRequest
+	var req internalService.UpdateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
@@ -747,7 +748,7 @@ func CreateConcept(c *gin.Context) {
 		})
 		return
 	}
-	var req service_internalapi.CreateConceptRequest
+	var req internalService.CreateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -799,7 +800,7 @@ func UpdateConcept(c *gin.Context) {
 		return
 	}
 	conceptID := c.Param("id")
-	var req service_internalapi.UpdateConceptRequest
+	var req internalService.UpdateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -902,4 +903,41 @@ func BatchGetConcepts(c *gin.Context) {
 		"concepts": concepts,
 		"total":    len(concepts),
 	})
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// CreateOrUpdateDocumentRequest 创建或更新文档请求（用于swagger文档）
+type CreateOrUpdateDocumentRequest struct {
+	UserID    string              `json:"user_id" binding:"required" example:"user123"`
+	ProjectID string              `json:"project_id" binding:"required" example:"project456"`
+	Action    string              `json:"action" binding:"required" example:"create"` // create, update, create_or_update, append
+	Document  WriterDraftDocument `json:"document" binding:"required"`
+}
+
+// WriterDraftDocument 文档数据（用于swagger文档）
+type WriterDraftDocument struct {
+	ChapterNum int    `json:"chapter_num" example:"1"`
+	Title      string `json:"title" example:"第一章 开始"`
+	Content    string `json:"content" example:"文档内容..."`
+	Format     string `json:"format" example:"markdown"`
+}
+
+// CreateConceptRequest 创建概念请求（用于swagger文档）
+type CreateConceptRequest struct {
+	UserID    string   `json:"user_id" binding:"required" example:"user123"`
+	ProjectID string   `json:"project_id" binding:"required" example:"project456"`
+	Name      string   `json:"name" binding:"required" example:"主角"`
+	Category  string   `json:"category" example:"character"`
+	Content   string   `json:"content" example:"主角的详细描述..."`
+	Tags      []string `json:"tags" example:"主角,重要"`
+}
+
+// UpdateConceptRequest 更新概念请求（用于swagger文档）
+type UpdateConceptRequest struct {
+	UserID    string   `json:"user_id" binding:"required" example:"user123"`
+	ProjectID string   `json:"project_id" binding:"required" example:"project456"`
+	Name      string   `json:"name" example:"主角"`
+	Content   string   `json:"content" example:"更新后的描述..."`
+	Tags      []string `json:"tags" example:"主角,重要,更新"`
 }

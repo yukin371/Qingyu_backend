@@ -4,19 +4,19 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	authsvc "Qingyu_backend/service/auth"
 	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/service/auth"
 )
 
 // AuthAPI 认证服务API处理器
 type AuthAPI struct {
-	authService auth.AuthService
+	authService authsvc.AuthService
 	codeManager *emailcode.Manager
 }
 
 // NewAuthAPI 创建认证API实例
-func NewAuthAPI(authService auth.AuthService) *AuthAPI {
+func NewAuthAPI(authService authsvc.AuthService) *AuthAPI {
 	return &AuthAPI{
 		authService: authService,
 		codeManager: emailcode.NewManager(),
@@ -244,4 +244,20 @@ func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
 		"expires_in_seconds":  600,
 		"cooldown_in_seconds": 60,
 	})
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// RegisterRequest 注册请求（用于swagger文档）
+type RegisterRequest struct {
+	Username        string `json:"username" binding:"required,min=3,max=50" example:"testuser"`
+	Email           string `json:"email" binding:"required,email" example:"test@example.com"`
+	Password        string `json:"password" binding:"required,min=6" example:"password123"`
+	VerificationCode string `json:"verification_code" example:"123456"`
+}
+
+// LoginRequest 登录请求（用于swagger文档）
+type LoginRequest struct {
+	Username string `json:"username" binding:"required" example:"testuser"`
+	Password string `json:"password" binding:"required" example:"password123"`
 }

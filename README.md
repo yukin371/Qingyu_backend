@@ -1307,12 +1307,19 @@ go tool pprof -list CreateBook /path/to/profile
 
 ## 相关文档
 
+### 核心文档
 - [架构设计文档](./doc/architecture/项目概述.md)
 - [API接口文档](./doc/api/API接口总览.md)
 - [数据库设计](./doc/design/database/数据库设计说明书.md)
 - [部署运维手册](./docs/ops/部署运维手册.md)
 - [开发规范](./doc/architecture/项目开发规则.md)
 - [Viper配置管理详解](./doc/Viper配置管理机制详解.md)
+
+### API 文档导出
+- 📘 [Swagger API 文档导出说明](./docs/api/SWAGGER_API_导出说明.md) - 如何将 API 文档导出到 Postman、Apifox 等工具
+  - `make swagger-convert` - 生成 JSON 格式（适用于 Postman）
+  - `docs/api/swagger.yaml` - YAML 格式（适用于 Apifox）
+  - `docs/api/swagger.json` - JSON 格式（适用于 Postman）
 
 ## 致谢
 
