@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: 部分修复
+**状态**: Phase 1 完成 (2026-03-07)
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 API 分析](../reports/archived/backend-api-analysis-2026-01-26.md)
 
@@ -230,9 +230,9 @@ type Pagination struct {
 ### 响应码统一
 - [x] 定义统一的响应常量
 - [x] 创建响应工具函数
-- [ ] 更新所有 API Handler
+- [x] 更新所有 API Handler（2026-03-07 完成：16个文件从shared包迁移到pkg/response）
 - [ ] 前端适配完成
-- [ ] 测试验证
+- [x] 测试验证（api/v1包测试通过）
 
 ### URL 前缀统一
 - [x] 列出所有需要迁移的端点
@@ -248,7 +248,31 @@ type Pagination struct {
 
 ---
 
-## 当前进展（2026-03-06）
+## 当前进展（2026-03-07）
+
+### ✅ 响应函数收敛完成
+
+将16个API文件从`api/v1/shared`包迁移到`pkg/response`包：
+
+| 包 | 文件 |
+|---|---|
+| admin | config_api.go |
+| bookstore | book_statistics_api.go, chapter_catalog_api.go |
+| content | chapter_api.go, document_api.go, progress_api.go, project_api.go |
+| finance | author_revenue_api.go, membership_api.go, wallet_api.go |
+| reader | chapter_api.go |
+| user/handler | auth_handler.go, profile_handler.go, public_user_handler.go, stats_handler.go |
+| writer | batch_operation_api.go, template_api.go |
+
+**主要变更**:
+- 替换`shared.SuccessData/BadRequest/NotFound/Unauthorized/Forbidden/Conflict/InternalError`等函数为`response`包等价函数
+- 修复`response.Success`签名差异（移除状态码和消息参数）
+- 保留`shared`包的`ValidateRequest/BindParams`等工具函数
+- 更新import声明，添加`pkg/response`包引用
+
+---
+
+## 历史进展（2026-03-06）
 
 已完成一批低风险、可独立合并的 API 标准化修复：
 
