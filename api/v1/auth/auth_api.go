@@ -30,13 +30,13 @@ func NewAuthAPI(authService authsvc.AuthService) *AuthAPI {
 //	@Tags			认证
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.RegisterRequest	true	"注册信息"
+//	@Param			request	body		authsvc.RegisterRequest	true	"注册信息"
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object} response.APIResponse
 //	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/register [post]
 func (api *AuthAPI) Register(c *gin.Context) {
-	var req auth.RegisterRequest
+	var req authsvc.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
 		return
@@ -73,14 +73,14 @@ func (api *AuthAPI) Register(c *gin.Context) {
 //	@Tags			认证
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.LoginRequest	true	"登录信息"
+//	@Param			request	body		authsvc.LoginRequest	true	"登录信息"
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object} response.APIResponse
 //	@Failure		401		{object} response.APIResponse
 //	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/login [post]
 func (api *AuthAPI) Login(c *gin.Context) {
-	var req auth.LoginRequest
+	var req authsvc.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
 		return

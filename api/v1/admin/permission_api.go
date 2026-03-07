@@ -83,20 +83,31 @@ func (api *PermissionAPI) GetPermission(c *gin.Context) {
 //	@Tags			Admin-Permission
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		admin.PermissionRequest	true	"权限信息"
+//	@Param			request	body		PermissionRequest	true	"权限信息"
 //	@Success		201		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions [post]
 func (api *PermissionAPI) CreatePermission(c *gin.Context) {
-	var req admin.PermissionRequest
+	var req PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	if err := api.permissionService.CreatePermission(c.Request.Context(), &req); err != nil {
+	// 转换为 auth.Permission 类型
+	permission := &auth.Permission{
+		Code:        req.Code,
+		Name:        req.Name,
+		Description: req.Description,
+		Resource:    req.Resource,
+		Action:      req.Action,
+		Effect:      req.Effect,
+		Priority:    req.Priority,
+	}
+
+	if err := api.permissionService.CreatePermission(c.Request.Context(), permission); err != nil {
 		c.Error(err)
 		return
 	}
@@ -112,7 +123,7 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			code		path		string			true	"权限代码"
-//	@Param			request	body		admin.PermissionRequest	true	"权限信息"
+//	@Param			request	body		PermissionRequest	true	"权限信息"
 //	@Success		200		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		404		{object}	response.APIResponse
@@ -124,14 +135,24 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 		return
 	}
 
-	var req admin.PermissionRequest
+	var req PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	req.Code = code
-	if err := api.permissionService.UpdatePermission(c.Request.Context(), &req); err != nil {
+	// 转换为 auth.Permission 类型
+	permission := &auth.Permission{
+		Code:        code,
+		Name:        req.Name,
+		Description: req.Description,
+		Resource:    req.Resource,
+		Action:      req.Action,
+		Effect:      req.Effect,
+		Priority:    req.Priority,
+	}
+
+	if err := api.permissionService.UpdatePermission(c.Request.Context(), permission); err != nil {
 		c.Error(err)
 		return
 	}

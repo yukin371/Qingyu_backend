@@ -28,12 +28,12 @@ func NewCategoryAdminAPI(categoryService adminsvc.CategoryAdminService) *Categor
 // @Tags Admin-Category
 // @Accept json
 // @Produce json
-// @Param request body admin.CreateCategoryRequest true "分类信息"
+// @Param request body adminsvc.CreateCategoryRequest true "分类信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/admin/categories [post]
 func (api *CategoryAdminAPI) CreateCategory(c *gin.Context) {
-	var req admin.CreateCategoryRequest
+	var req adminsvc.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ErrorJSON(c, http.StatusBadRequest, "参数错误")
 		return
@@ -145,7 +145,7 @@ func (api *CategoryAdminAPI) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	var req admin.UpdateCategoryRequest
+	var req adminsvc.UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ErrorJSON(c, http.StatusBadRequest, "参数错误")
 		return
@@ -204,7 +204,7 @@ func (api *CategoryAdminAPI) MoveCategory(c *gin.Context) {
 		return
 	}
 
-	var req admin.MoveCategoryRequest
+	var req adminsvc.MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.ErrorJSON(c, http.StatusBadRequest, "参数错误")
 		return
