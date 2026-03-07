@@ -4,7 +4,6 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -182,17 +181,19 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 		comment.RejectReason = reason
 	}
 
-	// 保存回复
-	if err := s.commentRepo.Create(ctx, comment); err != nil {
-		return nil, fmt.Errorf("保存回复失败: %w", err)
-	}
-
-	// 增加父评论的回复数
-	if comment.State == social.CommentStateNormal {
-		if err := s.commentRepo.IncrementReplyCount(ctx, parentCommentID); err != nil {
-			// 非致命错误，只记录日志
-			log.Printf("Warning: failed to increment reply count")
+	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.commentRepo.Create(txCtx, comment); err != nil {
+			return fmt.Errorf("保存回复失败: %w", err)
 		}
+
+		if comment.State == social.CommentStateNormal {
+			if err := s.commentRepo.IncrementReplyCount(txCtx, parentCommentID); err != nil {
+				return fmt.Errorf("更新父评论回复数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	// 发布事件
@@ -314,16 +315,19 @@ func (s *CommentService) DeleteComment(ctx context.Context, userID, commentID st
 		return fmt.Errorf("没有权限删除此评论")
 	}
 
-	// 删除评论
-	if err := s.commentRepo.Delete(ctx, commentID); err != nil {
-		return fmt.Errorf("删除评论失败: %w", err)
-	}
-
-	// 如果是回复，减少父评论的回复数
-	if comment.ParentID != nil && *comment.ParentID != "" {
-		if err := s.commentRepo.DecrementReplyCount(ctx, *comment.ParentID); err != nil {
-			fmt.Printf("Warning: Failed to decrement reply count: %v\n", err)
+	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.commentRepo.Delete(txCtx, commentID); err != nil {
+			return fmt.Errorf("删除评论失败: %w", err)
 		}
+
+		if comment.ParentID != nil && *comment.ParentID != "" {
+			if err := s.commentRepo.DecrementReplyCount(txCtx, *comment.ParentID); err != nil {
+				return fmt.Errorf("减少父评论回复数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件

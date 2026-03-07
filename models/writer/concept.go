@@ -17,3 +17,15 @@ type Concept struct {
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updatedAt"`
 }
+
+// BeforeCreate 创建前设置时间戳。
+func (c *Concept) BeforeCreate() {
+	now := time.Now()
+	c.CreatedAt = now
+	c.UpdatedAt = now
+}
+
+// BeforeUpdate 更新前刷新时间戳。
+func (c *Concept) BeforeUpdate() {
+	c.UpdatedAt = time.Now()
+}

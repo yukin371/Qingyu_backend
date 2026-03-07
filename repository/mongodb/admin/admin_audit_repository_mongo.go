@@ -28,8 +28,8 @@ func NewAuditRepository(db *mongo.Database) adminInterface.AuditRepository {
 
 // CreateAuditRecord 创建审核记录
 func (r *AuditRepositoryImpl) CreateAuditRecord(ctx context.Context, record *adminModel.AuditRecord) error {
-	if record.ID == "" {
-		record.ID = primitive.NewObjectID().Hex()
+	if record.ID.IsZero() {
+		record.ID = primitive.NewObjectID()
 	}
 	if record.CreatedAt.IsZero() {
 		record.CreatedAt = time.Now()
@@ -66,11 +66,15 @@ func (r *AuditRepositoryImpl) GetAuditRecord(ctx context.Context, contentID, con
 
 // UpdateAuditRecord 更新审核记录
 func (r *AuditRepositoryImpl) UpdateAuditRecord(ctx context.Context, recordID string, updates map[string]interface{}) error {
+	objID, err := primitive.ObjectIDFromHex(recordID)
+	if err != nil {
+		return fmt.Errorf("无效的审核记录ID: %w", err)
+	}
 	updates["updated_at"] = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": recordID},
+		bson.M{"_id": objID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {

@@ -34,6 +34,9 @@ type BatchOperationRepository interface {
 	// UpdateItemStatus 更新操作项状态
 	UpdateItemStatus(ctx context.Context, operationID, targetID string, itemStatus writer.BatchItemStatus, errCode, errMsg string) error
 
+	// UpdateItemStatusDirect 直接更新操作项状态（不包含业务逻辑，仅负责数据持久化）
+	UpdateItemStatusDirect(ctx context.Context, operationID, targetID string, updates map[string]interface{}) error
+
 	// AddOperationLog 添加操作日志（如果有独立的日志表）
 	AddOperationLog(ctx context.Context, operationID string, log map[string]interface{}) error
 

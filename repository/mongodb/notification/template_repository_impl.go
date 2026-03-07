@@ -29,28 +29,10 @@ func NewNotificationTemplateRepository(db *mongo.Database) repo.NotificationTemp
 
 // Create 创建通知模板
 func (r *NotificationTemplateRepositoryImpl) Create(ctx context.Context, template *notification.NotificationTemplate) error {
-	objectID, err := primitive.ObjectIDFromHex(template.ID)
-	if err != nil {
-		// 如果ID无效，生成新的
-		objectID = primitive.NewObjectID()
-		template.ID = objectID.Hex()
+	if template.ID.IsZero() {
+		template.ID = primitive.NewObjectID()
 	}
-
-	doc := bson.M{
-		"_id":        objectID,
-		"type":       template.Type,
-		"action":     template.Action,
-		"title":      template.Title,
-		"content":    template.Content,
-		"variables":  template.Variables,
-		"data":       template.Data,
-		"language":   template.Language,
-		"is_active":  template.IsActive,
-		"created_at": template.CreatedAt,
-		"updated_at": template.UpdatedAt,
-	}
-
-	_, err = r.templateCollection.InsertOne(ctx, doc)
+	_, err := r.templateCollection.InsertOne(ctx, template)
 	if err != nil {
 		return fmt.Errorf("创建通知模板失败: %w", err)
 	}

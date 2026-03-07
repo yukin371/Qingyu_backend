@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: 待处理
+**状态**: Phase 1 完成 (2026-03-07)
 **创建日期**: 2026-03-05
 **来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 API 分析](../reports/archived/backend-api-analysis-2026-01-26.md)
 
@@ -228,23 +228,142 @@ type Pagination struct {
 ## 检查清单
 
 ### 响应码统一
-- [ ] 定义统一的响应常量
-- [ ] 创建响应工具函数
-- [ ] 更新所有 API Handler
+- [x] 定义统一的响应常量
+- [x] 创建响应工具函数
+- [x] 更新所有 API Handler（2026-03-07 完成：16个文件从shared包迁移到pkg/response）
 - [ ] 前端适配完成
-- [ ] 测试验证
+- [x] 测试验证（api/v1包测试通过）
 
 ### URL 前缀统一
-- [ ] 列出所有需要迁移的端点
-- [ ] 修改路由定义
+- [x] 列出所有需要迁移的端点
+- [x] 修改路由定义
 - [ ] 更新 API 文档
 - [ ] 前端调用更新
 
 ### PATCH 方法支持
-- [ ] 识别需要部分更新的资源
-- [ ] 实现 PATCH Handler
+- [x] 识别需要部分更新的资源
+- [x] 实现 PATCH Handler
 - [ ] 实现 Service 层方法
 - [ ] 添加测试
+
+---
+
+## 当前进展（2026-03-07）
+
+### ✅ 响应函数收敛完成
+
+将16个API文件从`api/v1/shared`包迁移到`pkg/response`包：
+
+| 包 | 文件 |
+|---|---|
+| admin | config_api.go |
+| bookstore | book_statistics_api.go, chapter_catalog_api.go |
+| content | chapter_api.go, document_api.go, progress_api.go, project_api.go |
+| finance | author_revenue_api.go, membership_api.go, wallet_api.go |
+| reader | chapter_api.go |
+| user/handler | auth_handler.go, profile_handler.go, public_user_handler.go, stats_handler.go |
+| writer | batch_operation_api.go, template_api.go |
+
+**主要变更**:
+- 替换`shared.SuccessData/BadRequest/NotFound/Unauthorized/Forbidden/Conflict/InternalError`等函数为`response`包等价函数
+- 修复`response.Success`签名差异（移除状态码和消息参数）
+- 保留`shared`包的`ValidateRequest/BindParams`等工具函数
+- 更新import声明，添加`pkg/response`包引用
+
+---
+
+## 历史进展（2026-03-06）
+
+已完成一批低风险、可独立合并的 API 标准化修复：
+
+1. `api/v1/admin/analytics_api.go`
+   - 从裸 `c.JSON` 切换到 `pkg/response`
+   - 成功响应统一为 `code=0`
+   - 参数错误统一走 `response.BadRequest`
+
+2. `api/v1/admin/audit_api.go`
+   - 列表接口改为统一 `pagination` 响应结构
+   - 成功响应统一为 `code=0`
+
+3. `api/v1/content/project_api.go`
+4. `api/v1/content/document_api.go`
+5. `api/v1/content/progress_api.go`
+   - 分页接口从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
+6. PATCH 首批落地
+   - `PATCH /api/v1/reader/settings`
+   - `PATCH /api/v1/notifications/preferences`
+   - 复用现有部分更新 handler，无新增 service 风险
+
+7. PATCH 第二批落地
+   - `PATCH /api/v1/reader/bookmarks/:id`
+   - `PATCH /api/v1/reader/collections/:id`
+   - `PATCH /api/v1/reader/folders/:id`（测试路由）
+   - `PATCH /api/v1/social/collections/:id`
+   - `PATCH /api/v1/social/collections/folders/:id`
+
+8. PATCH 第三批落地
+   - `PATCH /api/v1/reader/comments/:id`
+   - `PATCH /api/v1/social/booklists/:id`
+
+9. 分页响应继续收敛
+   - `GET /api/v1/social/booklists`
+   - `GET /api/v1/reader/collections`
+   - `GET /api/v1/reader/collections/tag/:tag`
+   - `GET /api/v1/public/collections`
+   - `GET /api/v1/reader/comments`
+   - 从旧的 `data.list/comments + total/page/size` 收敛为统一 `data + pagination`
+
+10. finance 分页响应继续收敛
+   - `GET /api/v1/finance/author/earnings`
+   - `GET /api/v1/finance/author/earnings/:bookId`
+   - `GET /api/v1/finance/author/withdrawals`
+   - `GET /api/v1/finance/author/revenue-details`
+   - `GET /api/v1/finance/author/settlements`
+   - `GET /api/v1/finance/membership/cards`
+   - `GET /api/v1/finance/wallet/withdrawals`
+   - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
+11. bookstore 分页响应继续收敛
+   - `GET /api/v1/reading/statistics/time-range`
+   - `GET /api/v1/reading/statistics/search`
+   - `GET /api/v1/reader/purchases`
+   - `GET /api/v1/reader/purchases/{bookId}`
+   - 从旧 `shared.Paginated` 收敛到 `pkg/response.Paginated`
+
+12. admin 权限模板接口响应收敛
+   - `api/v1/admin/permission_template_api.go`
+   - 从裸 `c.JSON + success/error 自定义结构` 收敛到 `pkg/response`
+   - 列表接口保持非分页，但成功响应统一为 `code=0`
+
+未完成：
+
+- `/system/*` 的历史文档与 swagger 注解清理
+- 其他资源的 PATCH 方法补齐
+- 其他仍使用旧 `shared`/裸 `c.JSON` 的 handler 收口
+
+### TODO 清单
+
+- [ ] 清理 `/system/*` 的残余 Swagger 注解和文档示例，统一为 `/api/v1/system/*`
+- [ ] 继续补 `PATCH` 到剩余明显的部分更新接口，优先 `review`、`message`、`writer` 侧资源
+- [ ] 收敛公开 API 中仍使用裸 `c.JSON` 的 handler，优先 `content/project_api.go`
+- [ ] 收敛公开 API 中仍使用 `shared.Success/BadRequest/InternalError` 的旧风格 handler 到 `pkg/response`
+- [ ] 统一剩余列表接口的分页结构，清理 `data.total/page/size` 和 `shared.Paginated` 尾项
+- [ ] 评估并处理重复端点问题，给出保留、兼容或弃用策略
+- [ ] 在基线 `ObjectID` 编译问题修复后，补跑 `go test ./api/v1/...` 的整体验证
+- [ ] 前端适配剩余响应结构变化，确保分页与成功码口径一致
+
+补充确认：
+
+- `router/enter.go` 当前调用 `systemRouter.InitSystemRoutes(v1)`
+- `router/system/system_router.go` 在 `v1` 分组下注册 `"/system"`
+- 运行时真实路径已是 `/api/v1/system/*`
+- 本轮新增测试已验证不会注册裸 `/system/*`
+
+注意：
+
+- 当前分支基线存在与本 issue 无关的 `ObjectID` 迁移编译错误，导致无法在该 worktree 上完成 `go test ./api/v1/admin ./api/v1/content/...` 的整体验证。
+- 本轮修改已完成代码收敛和测试断言调整，但需在基线修复后再做完整测试。
 
 ---
 

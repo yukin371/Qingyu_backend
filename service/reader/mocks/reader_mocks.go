@@ -411,7 +411,7 @@ func (m *MockAnalyticsService) TrackReadingProgress(ctx context.Context, userID,
 // CreateTestChapter creates a test chapter for testing purposes
 func CreateTestChapter(id, bookID primitive.ObjectID, num int, isFree bool, price int64) *bookstore.Chapter {
 	return &bookstore.Chapter{
-		ID:          id.Hex(),
+		ID:          id,
 		BookID:      bookID.Hex(),
 		Title:       "Test Chapter " + string(rune(num)),
 		ChapterNum:  num,
@@ -431,7 +431,7 @@ func CreateTestBook(id primitive.ObjectID, title string) map[string]interface{} 
 		"title":     title,
 		"cover_url": "http://example.com/cover.jpg",
 		"author":    "Test Author",
-		"status":    "published",
+		"status":    "ongoing",
 	}
 }
 

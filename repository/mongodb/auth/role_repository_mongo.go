@@ -46,7 +46,7 @@ func (r *RoleRepositoryImpl) CreateRole(ctx context.Context, role *authModel.Rol
 
 	// 设置ID
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		role.ID = oid.Hex()
+		role.ID = oid
 	}
 
 	return nil
@@ -318,7 +318,6 @@ func (r *RoleRepositoryImpl) GetUserRoles(ctx context.Context, userID string) ([
 
 		// 为角色名称创建虚拟角色对象
 		role := &authModel.Role{
-			ID:          roleName, // 使用名称作为ID
 			Name:        roleName,
 			Description: roleName + " role",
 		}

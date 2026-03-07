@@ -175,19 +175,25 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 		CreatedAt:  time.Now(),
 	}
 
-	// 添加点赞
-	if err := s.likeRepo.AddLike(ctx, like); err != nil {
+	if err := s.likeRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.likeRepo.AddLike(txCtx, like); err != nil {
+			if err.Error() == "已经点赞过了" {
+				return err
+			}
+			return fmt.Errorf("点赞评论失败: %w", err)
+		}
+
+		if s.commentRepo != nil {
+			if err := s.commentRepo.IncrementLikeCount(txCtx, commentID); err != nil {
+				return fmt.Errorf("更新评论点赞数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
 		if err.Error() == "已经点赞过了" {
 			return nil
 		}
-		return fmt.Errorf("点赞评论失败: %w", err)
-	}
-
-	// 更新评论点赞数
-	if s.commentRepo != nil {
-		if err := s.commentRepo.IncrementLikeCount(ctx, commentID); err != nil {
-			fmt.Printf("Warning: Failed to increment comment like count\n")
-		}
+		return err
 	}
 
 	// 发布点赞事件
@@ -205,19 +211,25 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 		return fmt.Errorf("评论ID不能为空")
 	}
 
-	// 取消点赞
-	if err := s.likeRepo.RemoveLike(ctx, userID, social.LikeTargetTypeComment, commentID); err != nil {
+	if err := s.likeRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.likeRepo.RemoveLike(txCtx, userID, social.LikeTargetTypeComment, commentID); err != nil {
+			if err.Error() == "点赞记录不存在" {
+				return err
+			}
+			return fmt.Errorf("取消点赞评论失败: %w", err)
+		}
+
+		if s.commentRepo != nil {
+			if err := s.commentRepo.DecrementLikeCount(txCtx, commentID); err != nil {
+				return fmt.Errorf("更新评论点赞数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
 		if err.Error() == "点赞记录不存在" {
 			return nil
 		}
-		return fmt.Errorf("取消点赞评论失败: %w", err)
-	}
-
-	// 更新评论点赞数
-	if s.commentRepo != nil {
-		if err := s.commentRepo.DecrementLikeCount(ctx, commentID); err != nil {
-			fmt.Printf("Warning: Failed to decrement comment like count\n")
-		}
+		return err
 	}
 
 	// 发布取消点赞事件

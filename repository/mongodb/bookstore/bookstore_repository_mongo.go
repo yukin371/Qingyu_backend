@@ -24,6 +24,19 @@ type MongoBookRepository struct {
 	client *mongo.Client
 }
 
+func normalizeBookEntity(book *bookstore.Book) {
+	if book == nil {
+		return
+	}
+	book.Status = bookstore.NormalizeBookStatus(book.Status)
+}
+
+func normalizeBookEntities(books []*bookstore.Book) {
+	for _, book := range books {
+		normalizeBookEntity(book)
+	}
+}
+
 // NewMongoBookRepository 创建MongoDB书籍仓储实例
 func NewMongoBookRepository(client *mongo.Client, database string) BookstoreInterface.BookRepository {
 	db := client.Database(database)
@@ -74,6 +87,7 @@ func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstor
 	}
 
 	log.Printf("[DEBUG] GetByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status)
+	normalizeBookEntity(&book)
 	return &book, nil
 }
 
@@ -174,6 +188,7 @@ func (r *MongoBookRepository) GetByAuthor(ctx context.Context, author string, li
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	return books, nil
 }
@@ -195,7 +210,21 @@ func (r *MongoBookRepository) GetByAuthorID(ctx context.Context, authorID string
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 	return books, nil
+}
+
+// GetByProjectID 根据来源项目ID获取书籍
+func (r *MongoBookRepository) GetByProjectID(ctx context.Context, projectID string) (*bookstore.Book, error) {
+	var book bookstore.Book
+	err := r.GetCollection().FindOne(ctx, bson.M{"project_id": projectID}).Decode(&book)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &book, nil
 }
 
 // GetByCategory 根据分类获取书籍列表
@@ -216,6 +245,7 @@ func (r *MongoBookRepository) GetByCategory(ctx context.Context, categoryID stri
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	return books, nil
 }
@@ -233,6 +263,7 @@ func (r *MongoBookRepository) GetByStatus(ctx context.Context, status bookstore.
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	return books, nil
 }
@@ -267,10 +298,10 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "rating", Value: -1}, {Key: "view_count", Value: -1}})
 
-	// 查询精选书籍，包含所有已发布状态（published, ongoing, completed）
+	// 查询精选书籍，兼容历史 published 数据并统一到 ongoing/completed 口径。
 	cursor, err := r.GetCollection().Find(ctx, bson.M{
 		"is_featured": true,
-		"status":      bson.M{"$in": []string{"published", "ongoing", "completed"}},
+		"status":      bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 	}, opts)
 	if err != nil {
 		return nil, err
@@ -281,6 +312,7 @@ func (r *MongoBookRepository) GetFeatured(ctx context.Context, limit, offset int
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	return books, nil
 }
@@ -292,9 +324,9 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "view_count", Value: -1}, {Key: "rating", Value: -1}})
 
-	// 查询热门书籍，包含所有已发布状态（published, ongoing, completed）
+	// 查询热门书籍，兼容历史 published 数据并统一到 ongoing/completed 口径。
 	cursor, err := r.GetCollection().Find(ctx, bson.M{
-		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
+		"status": bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 	}, opts)
 	if err != nil {
 		log.Printf("[DEBUG] GetHotBooks failed: %v\n", err)
@@ -307,6 +339,7 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 		log.Printf("[DEBUG] GetHotBooks decode failed: %v\n", err)
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	log.Printf("[DEBUG] GetHotBooks found %d books, IDs: %v\n", len(books), getHotBookIDs(books))
 	return books, nil
@@ -327,9 +360,9 @@ func (r *MongoBookRepository) GetNewReleases(ctx context.Context, limit, offset 
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "published_at", Value: -1}})
-	// 查询新上架书籍，包含所有已发布状态（published, ongoing, completed）
+	// 查询新上架书籍，兼容历史 published 数据并统一到 ongoing/completed 口径。
 	cursor, err := r.GetCollection().Find(ctx, bson.M{
-		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
+		"status": bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 	}, opts)
 	if err != nil {
 		return nil, err
@@ -339,6 +372,7 @@ func (r *MongoBookRepository) GetNewReleases(ctx context.Context, limit, offset 
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 	return books, nil
 }
 
@@ -395,9 +429,9 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, limit,
 	}
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	// 查询所有已发布的书籍
+	// 查询所有公开书籍，兼容历史 published 数据并统一到 ongoing/completed 口径。
 	cursor, err := r.GetCollection().Find(ctx, bson.M{
-		"status": bson.M{"$in": []string{"published", "ongoing", "completed"}},
+		"status": bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 	}, opts)
 	if err != nil {
 		return nil, err
@@ -408,6 +442,7 @@ func (r *MongoBookRepository) Search(ctx context.Context, keyword string, limit,
 	if err = cursor.All(ctx, &allBooks); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(allBooks)
 
 	// 在 Go 代码中进行过滤
 	keywordLower := strings.ToLower(keyword)
@@ -537,6 +572,7 @@ func (r *MongoBookRepository) SearchWithPagination(ctx context.Context, keyword 
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, 0, err
 	}
+	normalizeBookEntities(books)
 
 	total, err := r.GetCollection().CountDocuments(ctx, query)
 	if err != nil {
@@ -619,6 +655,7 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	if err = cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	normalizeBookEntities(books)
 
 	return books, nil
 }
@@ -724,8 +761,8 @@ func (r *MongoBookRepository) GetStats(ctx context.Context) (*bookstore.BookStat
 	}
 	stats.TotalBooks = total
 
-	// 已发布书籍数
-	published, err := r.GetCollection().CountDocuments(ctx, bson.M{"status": "published"})
+	// 对外公开书籍数，兼容历史 published 数据。
+	published, err := r.GetCollection().CountDocuments(ctx, bson.M{"status": bson.M{"$in": bookstore.PublicBookStatusQueryValues()}})
 	if err != nil {
 		return nil, err
 	}

@@ -95,14 +95,14 @@ func InitReaderRouter(
 		// 书架管理
 		books := readerGroup.Group("/books")
 		{
-			books.GET("", booksApiHandler.GetBookshelf)                          // 获取书架
-			books.GET("/recent", booksApiHandler.GetRecentReading)               // 获取最近阅读
-			books.GET("/unfinished", booksApiHandler.GetUnfinishedBooks)         // 获取未读完
-			books.GET("/finished", booksApiHandler.GetFinishedBooks)             // 获取已读完
-			books.POST("/:bookId", booksApiHandler.AddToBookshelf)               // 添加到书架
-			books.DELETE("/:bookId", booksApiHandler.RemoveFromBookshelf)        // 从书架移除
-			books.PUT("/:bookId/status", booksApiHandler.UpdateBookStatus)       // 更新书籍状态
-			books.PUT("/batch/status", booksApiHandler.BatchUpdateBookStatus)    // 批量更新书籍状态
+			books.GET("", booksApiHandler.GetBookshelf)                       // 获取书架
+			books.GET("/recent", booksApiHandler.GetRecentReading)            // 获取最近阅读
+			books.GET("/unfinished", booksApiHandler.GetUnfinishedBooks)      // 获取未读完
+			books.GET("/finished", booksApiHandler.GetFinishedBooks)          // 获取已读完
+			books.POST("/:bookId", booksApiHandler.AddToBookshelf)            // 添加到书架
+			books.DELETE("/:bookId", booksApiHandler.RemoveFromBookshelf)     // 从书架移除
+			books.PUT("/:bookId/status", booksApiHandler.UpdateBookStatus)    // 更新书籍状态
+			books.PUT("/batch/status", booksApiHandler.BatchUpdateBookStatus) // 批量更新书籍状态
 
 			// 书籍点赞（如果likeApiHandler可用）
 			if likeApiHandler != nil {
@@ -192,6 +192,7 @@ func InitReaderRouter(
 				bookmarks.GET("", bookmarkApiHandler.GetBookmarks)          // 获取书签列表
 				bookmarks.GET("/:id", bookmarkApiHandler.GetBookmark)       // 获取书签详情
 				bookmarks.PUT("/:id", bookmarkApiHandler.UpdateBookmark)    // 更新书签
+				bookmarks.PATCH("/:id", bookmarkApiHandler.UpdateBookmark)  // 部分更新书签
 				bookmarks.DELETE("/:id", bookmarkApiHandler.DeleteBookmark) // 删除书签
 
 				// 按书籍获取
@@ -210,9 +211,10 @@ func InitReaderRouter(
 		// 阅读设置
 		settings := readerGroup.Group("/settings")
 		{
-			settings.GET("", settingApiHandler.GetReadingSettings)    // 获取阅读设置
-			settings.POST("", settingApiHandler.SaveReadingSettings)  // 保存阅读设置
-			settings.PUT("", settingApiHandler.UpdateReadingSettings) // 更新阅读设置
+			settings.GET("", settingApiHandler.GetReadingSettings)      // 获取阅读设置
+			settings.POST("", settingApiHandler.SaveReadingSettings)    // 保存阅读设置
+			settings.PUT("", settingApiHandler.UpdateReadingSettings)   // 更新阅读设置
+			settings.PATCH("", settingApiHandler.UpdateReadingSettings) // 部分更新阅读设置
 		}
 
 		// 主题管理

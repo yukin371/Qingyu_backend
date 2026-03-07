@@ -49,8 +49,8 @@ func (r *PermissionTemplateRepositoryMongo) CreateTemplate(ctx context.Context, 
 	template.UpdatedAt = time.Now()
 
 	// 生成ID
-	if template.ID == "" {
-		template.ID = primitive.NewObjectID().Hex()
+	if template.ID.IsZero() {
+		template.ID = primitive.NewObjectID()
 	}
 
 	// 检查代码唯一性
@@ -65,7 +65,7 @@ func (r *PermissionTemplateRepositoryMongo) CreateTemplate(ctx context.Context, 
 	}
 
 	// 清除缓存
-	r.clearTemplateCache(ctx, template.ID)
+	r.clearTemplateCache(ctx, template.ID.Hex())
 	r.clearTemplateListCache(ctx)
 
 	return nil
@@ -85,9 +85,11 @@ func (r *PermissionTemplateRepositoryMongo) GetTemplateByID(ctx context.Context,
 		}
 	}
 
-	// 从数据库获取 - 由于模型ID字段是string类型，_id存储为字符串
-	// 直接使用字符串ID查询，而不是转换为ObjectId
-	template, err := r.findOneByStringID(ctx, templateID)
+	objectID, err := primitive.ObjectIDFromHex(templateID)
+	if err != nil {
+		return nil, authModel.ErrTemplateNotFound
+	}
+	template, err := r.findOneByObjectID(ctx, objectID)
 	if err != nil {
 		return nil, authModel.ErrTemplateNotFound
 	}
@@ -123,9 +125,11 @@ func (r *PermissionTemplateRepositoryMongo) UpdateTemplate(ctx context.Context, 
 	// 添加更新时间
 	updates["updated_at"] = time.Now()
 
-	// 执行更新 - 由于模型ID字段是string类型，_id存储为字符串
-	// 直接使用字符串ID查询，而不是转换为ObjectId
-	filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
+	objectID, err := primitive.ObjectIDFromHex(templateID)
+	if err != nil {
+		return authModel.ErrTemplateNotFound
+	}
+	filter := bson.M{"_id": objectID}
 	_, err = r.getCollection().UpdateOne(ctx, filter, bson.M{"$set": updates})
 
 	if err != nil {
@@ -152,9 +156,11 @@ func (r *PermissionTemplateRepositoryMongo) DeleteTemplate(ctx context.Context, 
 		return authModel.ErrTemplateIsSystem
 	}
 
-	// 执行删除 - 由于模型ID字段是string类型，_id存储为字符串
-	// 直接使用字符串ID查询，而不是转换为ObjectId
-	filter := bson.M{"_id": exactTemplateMatchRegex(templateID)}
+	objectID, err := primitive.ObjectIDFromHex(templateID)
+	if err != nil {
+		return authModel.ErrTemplateNotFound
+	}
+	filter := bson.M{"_id": objectID}
 	result, err := r.getCollection().DeleteOne(ctx, filter)
 
 	if err != nil {
@@ -382,7 +388,7 @@ func (r *PermissionTemplateRepositoryMongo) InitializeSystemTemplates(ctx contex
 			if errors.Is(err, authModel.ErrTemplateNotFound) {
 				template.CreatedAt = time.Now()
 				template.UpdatedAt = time.Now()
-				template.ID = primitive.NewObjectID().Hex()
+				template.ID = primitive.NewObjectID()
 
 				_, err := r.getCollection().InsertOne(ctx, template)
 				if err != nil {
@@ -393,10 +399,7 @@ func (r *PermissionTemplateRepositoryMongo) InitializeSystemTemplates(ctx contex
 			}
 		} else {
 			// 已存在，更新（保持系统模板的权限最新）
-			objectID, err := primitive.ObjectIDFromHex(existing.ID)
-			if err != nil {
-				continue
-			}
+			objectID := existing.ID
 
 			filter := bson.M{"_id": objectID}
 			update := bson.M{
@@ -435,20 +438,6 @@ func (r *PermissionTemplateRepositoryMongo) findOneByObjectID(ctx context.Contex
 		ID primitive.ObjectID `bson:"_id"`
 	}{
 		ID: objectID,
-	}
-	return r.findTemplateByQuery(ctx, filter)
-}
-
-// findOneByStringID 根据字符串ID查询单个模板（仅允许安全字符）
-func (r *PermissionTemplateRepositoryMongo) findOneByStringID(ctx context.Context, id string) (*authModel.PermissionTemplate, error) {
-	safeID, err := normalizeTemplateIdentifier(id)
-	if err != nil {
-		return nil, authModel.ErrTemplateNotFound
-	}
-	filter := struct {
-		ID primitive.Regex `bson:"_id"`
-	}{
-		ID: exactTemplateMatchRegex(safeID),
 	}
 	return r.findTemplateByQuery(ctx, filter)
 }

@@ -10,8 +10,8 @@ import (
 
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
-	"Qingyu_backend/global"
 	"Qingyu_backend/migration/seeds"
+	"Qingyu_backend/service"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -40,20 +40,25 @@ func main() {
 	fmt.Printf("  数据库名: %s\n", mongoConfig.Database)
 	fmt.Println()
 
-	// 初始化数据库
+	// 初始化服务容器并获取MongoDB连接
 	fmt.Println("🔗 连接数据库...")
-	if err := core.InitDB(); err != nil {
-		log.Fatalf("❌ 初始化数据库失败: %v\n", err)
+	if err := core.InitServices(); err != nil {
+		log.Fatalf("❌ 初始化服务失败: %v\n", err)
 	}
+	container := service.GetServiceContainer()
+	if container == nil || container.GetMongoDB() == nil {
+		log.Fatal("❌ MongoDB 连接未初始化")
+	}
+	db := container.GetMongoDB()
+	defer func() {
+		if err := service.CloseServices(context.Background()); err != nil {
+			log.Printf("⚠️ 关闭服务容器失败: %v\n", err)
+		}
+	}()
 	fmt.Println("✓ 数据库连接成功")
 	fmt.Println()
 
 	ctx := context.Background()
-
-	// 检查数据库连接
-	if global.DB == nil {
-		log.Fatal("❌ 数据库未初始化")
-	}
 
 	// 显示菜单
 	for {
@@ -75,14 +80,14 @@ func main() {
 
 		switch choice {
 		case 1:
-			cleanAllData(ctx)
-			createAllData(ctx, global.DB)
+			cleanAllData(ctx, db)
+			createAllData(ctx, db)
 		case 2:
-			createAllData(ctx, global.DB)
+			createAllData(ctx, db)
 		case 3:
-			cleanAllData(ctx)
+			cleanAllData(ctx, db)
 		case 4:
-			showStatistics(ctx)
+			showStatistics(ctx, db)
 		case 5:
 			fmt.Println("👋 再见！")
 			os.Exit(0)
@@ -96,12 +101,16 @@ func main() {
 	}
 }
 
-func cleanAllData(ctx context.Context) {
+func cleanAllData(ctx context.Context, db *mongo.Database) {
 	fmt.Println("🗑️  开始清理测试数据...")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	collections := []string{
 		"users",
+		"projects",
+		"documents",
+		"document_contents",
+		"publication_records",
 		"books",
 		"chapters",
 		"chapter_contents",
@@ -116,7 +125,7 @@ func cleanAllData(ctx context.Context) {
 	totalDeleted := 0
 
 	for _, collName := range collections {
-		collection := global.DB.Collection(collName)
+		collection := db.Collection(collName)
 		result, err := collection.DeleteMany(ctx, bson.M{})
 		if err != nil {
 			fmt.Printf("❌ 清理 %s 失败: %v\n", collName, err)
@@ -139,7 +148,7 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	fmt.Println()
 
 	// 1. 创建用户
-	fmt.Println("【1/5】创建用户数据")
+	fmt.Println("【1/6】创建用户数据")
 	if err := seeds.SeedEnhancedUsers(ctx, db); err != nil {
 		fmt.Printf("❌ 创建用户失败: %v\n", err)
 	} else {
@@ -147,8 +156,19 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 2. 创建书籍
-	fmt.Println("【2/5】创建书籍数据")
+	// 2. 创建联调写作与发布数据
+	fmt.Println("【2/6】创建联调发布数据")
+	publicationInfo, err := seeds.SeedPublicationFlowData(ctx, db)
+	if err != nil {
+		fmt.Printf("❌ 创建联调发布数据失败: %v\n", err)
+	} else {
+		fmt.Println("✓ 联调发布数据创建完成")
+		printPublicationFlowSeedInfo(publicationInfo)
+	}
+	fmt.Println()
+
+	// 3. 创建书籍
+	fmt.Println("【3/6】创建书籍数据")
 	if err := seeds.SeedBooks(ctx, db); err != nil {
 		fmt.Printf("❌ 创建书籍失败: %v\n", err)
 	} else {
@@ -156,8 +176,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 3. 创建章节
-	fmt.Println("【3/5】创建章节数据")
+	// 4. 创建章节
+	fmt.Println("【4/6】创建章节数据")
 	if err := seeds.SeedChapters(ctx, db); err != nil {
 		fmt.Printf("❌ 创建章节失败: %v\n", err)
 	} else {
@@ -165,8 +185,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 4. 创建钱包
-	fmt.Println("【4/5】创建钱包数据")
+	// 5. 创建钱包
+	fmt.Println("【5/6】创建钱包数据")
 	if err := seeds.SeedWallets(ctx, db); err != nil {
 		fmt.Printf("❌ 创建钱包失败: %v\n", err)
 	} else {
@@ -174,8 +194,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 5. 创建社交数据
-	fmt.Println("【5/5】创建社交数据")
+	// 6. 创建社交数据
+	fmt.Println("【6/6】创建社交数据")
 	if err := seeds.SeedSocialData(ctx, db); err != nil {
 		fmt.Printf("❌ 创建社交数据失败: %v\n", err)
 	} else {
@@ -191,7 +211,7 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	printTestAccounts()
 }
 
-func showStatistics(ctx context.Context) {
+func showStatistics(ctx context.Context, db *mongo.Database) {
 	fmt.Println("📊 数据统计")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
@@ -200,6 +220,10 @@ func showStatistics(ctx context.Context) {
 		Alias string
 	}{
 		{"users", "用户"},
+		{"projects", "写作项目"},
+		{"documents", "写作文档"},
+		{"document_contents", "文档内容"},
+		{"publication_records", "发布记录"},
 		{"books", "书籍"},
 		{"chapters", "章节"},
 		{"chapter_contents", "章节内容"},
@@ -213,7 +237,7 @@ func showStatistics(ctx context.Context) {
 
 	total := 0
 	for _, coll := range collections {
-		count, err := global.DB.Collection(coll.Name).CountDocuments(ctx, bson.M{})
+		count, err := db.Collection(coll.Name).CountDocuments(ctx, bson.M{})
 		if err != nil {
 			fmt.Printf("❌ 统计 %s 失败: %v\n", coll.Alias, err)
 			continue
@@ -297,7 +321,25 @@ func printTestAccounts() {
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println("💡 提示：")
 	fmt.Println("1. 所有账号可直接登录")
-	fmt.Println("2. 建议定期更换测试密码")
-	fmt.Println("3. 生产环境请使用强密码")
+	fmt.Println("2. 运行 seed 后会额外输出联调 ProjectId / DocumentId")
+	fmt.Println("3. 建议定期更换测试密码")
+	fmt.Println("4. 生产环境请使用强密码")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+}
+
+func printPublicationFlowSeedInfo(info *seeds.PublicationFlowSeedInfo) {
+	if info == nil {
+		return
+	}
+
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("🚀 发布联调数据")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Printf("  作者账号: %s\n", info.AuthorUsername)
+	fmt.Printf("  管理员账号: %s\n", info.AdminUsername)
+	fmt.Printf("  ProjectId: %s\n", info.ProjectID)
+	for idx, documentID := range info.DocumentIDs {
+		fmt.Printf("  DocumentId[%d]: %s\n", idx, documentID)
+	}
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 }

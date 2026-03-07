@@ -2,7 +2,7 @@
 
 **优先级**: 高 (P0)
 **类型**: 架构问题
-**状态**: ❌ 待修复（已审查确认）
+**状态**: ✅ Phase 4 已完成 (2026-03-07)
 **创建日期**: 2026-03-05
 **来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
 **审查日期**: 2026-03-05
@@ -16,22 +16,35 @@
 
 ### 审查发现
 
-#### #010-A: Bookstore域 Repository 重构（P0）- ❌ 待修复
+#### #010-A: Bookstore域 Repository 重构（P0）- ✅ 已完成
 
-1. ❌ **`repository/mongodb/bookstore/ranking_repository_mongo.go` 包含榜单计算业务逻辑**
-2. ❌ **权重配置硬编码**（0.7, 0.3等）
-3. ❌ **无独立的 RankingService**
+1. ✅ **榜单计算已从 `ranking_repository_mongo.go` 移到 `service/bookstore/ranking_service.go`**
+2. ✅ **榜单更新事务编排已移到 Service 层**
+3. ✅ **权重配置已抽离为 `RankingConfig` 结构体**
+4. ✅ **已创建独立 `RankingService`**
 
-**证据**:
-- 第523-586行：`CalculateRealtimeRanking` 包含热度分数计算
-- 第532-540行：权重配置硬编码
-- Service层直接调用Repository的计算方法
+**Phase 4.3 完成 (2026-03-07)**:
+- Repository 接口已删除 `Calculate*Ranking` 方法
+- 新增 `GetBooksForRanking` 数据访问方法
+- `RankingService` 负责所有榜单计算逻辑（分数计算、资格判断、排序、排名）
+- 权重配置通过 `RankingConfig` 可配置化
 
 #### #010-C: Finance域 Repository 重构（P0）- ⚠️ 部分修复
 
 1. ✅ **Service层已实现余额验证**（transaction_service.go, withdraw_service.go）
 2. ❌ **事务编排不完整**（存在TODO注释）
 3. ⚠️ **存在竞态条件风险**
+
+#### #010-E: Stats域 Repository 重构（P2）- ✅ 已完成
+
+**Phase 4.1 BookStatsRepository (2026-03-07)**:
+- ✅ `GetBookTotalViews`, `GetBookTotalLikes`, `CalculateBookAvgRating` 等方法保留在Repository
+- ✅ 这些方法为纯聚合操作(SUM/AVG)，属于数据访问范畴，无需迁移
+
+**Phase 4.2 ReaderBehaviorRepository (2026-03-07)**:
+- ✅ `CalculateCompletionRate`, `CalculateDropOffRate`, `CalculateRetention` 已迁移到 `ReadingStatsService`
+- ✅ `CalculateAvgReadTime` 保留在Repository（纯AVG聚合操作）
+- ✅ 新增数据访问方法: `CountByChapterAndType`, `CountByChapter`, `GetDistinctUsersByBookAndDateRange`, `CountActiveUsersInList`
 
 ---
 
@@ -141,6 +154,13 @@ func (r *MongoRankingRepository) CalculateRealtimeRanking(ctx context.Context) {
 - Repository 层不应该包含业务逻辑
 
 **应该移到**: `RankingService.CalculateRealtimeRanking()`
+
+**当前剩余 TODO**:
+- [ ] 抽离独立 `RankingService`，避免继续挂在 `BookstoreService`
+- [ ] 将榜单权重配置外置，避免 Service 中继续硬编码
+- [ ] 为榜单刷新补独立调度/任务入口
+- [ ] 明确榜单算法依赖的统计字段来源，补齐 `like_count` 等独立统计口径
+- [ ] 评估是否需要按统计快照而不是全量 `List()` 计算榜单
 
 #### Stats 域 - 统计计算
 
@@ -486,11 +506,11 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 - [ ] outline_repository_mongo.go::normalizeAndValidateOutlineQueryID → WriterService.ValidateID
 
 ### Bookstore 域
-- [ ] ranking_repository_mongo.go::CalculateRealtimeRanking → RankingService.CalculateRealtimeRanking
-- [ ] ranking_repository_mongo.go::CalculateWeeklyRanking → RankingService.CalculateWeeklyRanking
-- [ ] ranking_repository_mongo.go::CalculateMonthlyRanking → RankingService.CalculateMonthlyRanking
-- [ ] ranking_repository_mongo.go::CalculateNewbieRanking → RankingService.CalculateNewbieRanking
-- [ ] ranking_repository_mongo.go::UpdateRankings → RankingService.UpdateRankings
+- [x] ranking_repository_mongo.go::CalculateRealtimeRanking → RankingService.CalculateRealtimeRanking ✅
+- [x] ranking_repository_mongo.go::CalculateWeeklyRanking → RankingService.CalculateWeeklyRanking ✅
+- [x] ranking_repository_mongo.go::CalculateMonthlyRanking → RankingService.CalculateMonthlyRanking ✅
+- [x] ranking_repository_mongo.go::CalculateNewbieRanking → RankingService.CalculateNewbieRanking ✅
+- [x] ranking_repository_mongo.go::UpdateRankings → RankingService.UpdateRankings ✅
 - [ ] book_statistics_repository_mongo.go::UpdateRating → BookStatsService.CalculateNewRating
 - [ ] book_statistics_repository_mongo.go::RemoveRating → BookStatsService.CalculateRemoveRating
 - [ ] book_statistics_repository_mongo.go::BatchRecalculateStatistics → BookStatsService.RecalculateStatistics
@@ -503,18 +523,18 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 - [ ] collection_repository_mongo.go::validateCollectionTag → CollectionService.ValidateTag
 
 ### Finance 域
-- [ ] wallet_repository_mongo.go::UpdateBalance → WalletService.UpdateBalance
+- [x] wallet_repository_mongo.go::UpdateBalanceWithCheck → WalletService.UpdateBalanceWithCheck ✅ (已添加余额验证)
 
 ### Social 域
 - [ ] follow_repository_mongo.go::sanitizeFollowType → FollowService.ValidateFollowType
 - [ ] follow_repository_mongo.go::UpdateMutualStatus → FollowService.UpdateMutualStatus
 
 ### Stats 域
-- [ ] reader_behavior_repository_mongo.go::CalculateAvgReadTime → StatsService.CalculateAvgReadTime
-- [ ] reader_behavior_repository_mongo.go::CalculateCompletionRate → StatsService.CalculateCompletionRate
-- [ ] reader_behavior_repository_mongo.go::CalculateDropOffRate → StatsService.CalculateDropOffRate
-- [ ] reader_behavior_repository_mongo.go::CalculateRetention → StatsService.CalculateRetention
-- [ ] book_stats_repository_mongo.go::所有Calculate*方法 → BookStatsService
+- [x] reader_behavior_repository_mongo.go::CalculateCompletionRate → ReadingStatsService.CalculateCompletionRate ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateDropOffRate → ReadingStatsService.CalculateDropOffRate ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateRetention → ReadingStatsService.CalculateRetention ✅ (Phase 4.2)
+- [x] reader_behavior_repository_mongo.go::CalculateAvgReadTime → 保留在Repository（纯聚合操作） ✅ (Phase 4.2)
+- [x] book_stats_repository_mongo.go::所有Calculate*方法 → 保留在Repository（纯聚合操作） ✅ (Phase 4.1)
 
 ### User 域
 - [ ] user_repository_mongo.go::ValidateUser → UserService.ValidateUser

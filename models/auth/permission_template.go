@@ -1,20 +1,24 @@
 package auth
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // PermissionTemplate 权限模板模型
 // 权限模板用于预定义一组权限，可以快速应用到角色
 type PermissionTemplate struct {
-	ID          string    `bson:"_id,omitempty" json:"id"`
-	Name        string    `bson:"name" json:"name"`                   // 模板名称
-	Code        string    `bson:"code" json:"code"`                   // 模板代码（唯一标识）
-	Description string    `bson:"description" json:"description"`     // 模板描述
-	Permissions []string  `bson:"permissions" json:"permissions"`     // 权限列表
-	IsSystem    bool      `bson:"is_system" json:"is_system"`         // 是否系统模板（不可删除）
-	Category    string    `bson:"category" json:"category"`           // 分类：reader, author, admin, custom
-	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
-	CreatedBy   string    `bson:"created_by,omitempty" json:"created_by,omitempty"` // 创建者ID
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name        string             `bson:"name" json:"name"`                   // 模板名称
+	Code        string             `bson:"code" json:"code"`                   // 模板代码（唯一标识）
+	Description string             `bson:"description" json:"description"`     // 模板描述
+	Permissions []string           `bson:"permissions" json:"permissions"`     // 权限列表
+	IsSystem    bool               `bson:"is_system" json:"is_system"`         // 是否系统模板（不可删除）
+	Category    string             `bson:"category" json:"category"`           // 分类：reader, author, admin, custom
+	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time          `bson:"updated_at" json:"updated_at"`
+	CreatedBy   string             `bson:"created_by,omitempty" json:"created_by,omitempty"` // 创建者ID
 }
 
 // 预定义模板代码

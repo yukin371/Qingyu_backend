@@ -52,12 +52,7 @@ func SetupMiddleware(logger *zap.Logger) ([]gin.HandlerFunc, error) {
 //
 // JWT 认证中间件，验证用户身份并提取用户信息到上下文
 func SetupAuthMiddleware(jwtSecret string, logger *zap.Logger) gin.HandlerFunc {
-	// TODO: 实现JWT认证中间件
-	// 这里先返回一个简单的中间件，后续需要完整实现
-	return func(c *gin.Context) {
-		// 暂时跳过认证
-		c.Next()
-	}
+	return auth.JWTAuth()
 }
 
 // SetupPermissionMiddleware 配置权限中间件

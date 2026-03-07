@@ -50,7 +50,7 @@ type ChapterOutline struct {
 
 // WorldSettings 世界观设定
 type WorldSettings struct {
-	ID          string                 `json:"id"`
+	ID          primitive.ObjectID     `json:"id"`
 	ProjectID   string                 `json:"projectId"`
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
@@ -67,18 +67,18 @@ type WorldSettings struct {
 
 // PlotThread 情节线索
 type PlotThread struct {
-	ID           string    `json:"id"`
-	ProjectID    string    `json:"projectId"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	Status       string    `json:"status"`   // active, resolved, pending, suspended
-	Priority     int       `json:"priority"` // 1-10, 10为最高优先级
-	ChapterIDs   []string  `json:"chapterIds"`
-	Characters   []string  `json:"characters,omitempty"`
-	StartChapter string    `json:"startChapter,omitempty"`
-	EndChapter   string    `json:"endChapter,omitempty"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	ID           primitive.ObjectID `json:"id"`
+	ProjectID    string             `json:"projectId"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Status       string             `json:"status"`   // active, resolved, pending, suspended
+	Priority     int                `json:"priority"` // 1-10, 10为最高优先级
+	ChapterIDs   []string           `json:"chapterIds"`
+	Characters   []string           `json:"characters,omitempty"`
+	StartChapter string             `json:"startChapter,omitempty"`
+	EndChapter   string             `json:"endChapter,omitempty"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	UpdatedAt    time.Time          `json:"updatedAt"`
 }
 
 // BeforeCreate 在创建前设置时间戳
@@ -86,8 +86,8 @@ func (w *WorldSettings) BeforeCreate() {
 	now := time.Now()
 	w.CreatedAt = now
 	w.UpdatedAt = now
-	if w.ID == "" {
-		w.ID = primitive.NewObjectID().Hex()
+	if w.ID.IsZero() {
+		w.ID = primitive.NewObjectID()
 	}
 }
 
@@ -101,8 +101,8 @@ func (p *PlotThread) BeforeCreate() {
 	now := time.Now()
 	p.CreatedAt = now
 	p.UpdatedAt = now
-	if p.ID == "" {
-		p.ID = primitive.NewObjectID().Hex()
+	if p.ID.IsZero() {
+		p.ID = primitive.NewObjectID()
 	}
 }
 

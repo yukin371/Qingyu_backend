@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload coverage to artifacts
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: |
@@ -229,7 +229,7 @@ jobs:
         run: go tool cover -html=integration_coverage.out -o integration_coverage.html
 
       - name: Upload integration coverage to artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: integration-coverage-report
           path: |
@@ -316,6 +316,111 @@ jobs:
       - name: Cleanup
         if: always()
         run: pkill -f server || true
+
+  publication-flow-smoke:
+    name: Publication Flow Smoke
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 20
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh 'mongodb://admin:password@localhost:27017/?authSource=admin' --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
+      - name: Run publication happy path smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --approve-document
+
+      - name: Run publication reject-project smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --reject-project
+
+      - name: Run publication reject-document smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --reject-document
+
+      - name: Run publication resubmit-after-reject smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --retry-after-reject
 
   # E2E 测试
   e2e-test:
@@ -568,12 +673,12 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [test, integration-test, api-test, e2e-test, lint, security]
+    needs: [test, integration-test, api-test, publication-flow-smoke, e2e-test, lint, security]
     if: always()
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -590,6 +695,9 @@ jobs:
           echo "## API Tests" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.api-test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Publication Flow Smoke" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.publication-flow-smoke.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## E2E Tests" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.e2e-test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -604,6 +712,7 @@ jobs:
           needs.test.result != 'success' ||
           (needs.integration-test.result != 'success' && needs.integration-test.result != 'skipped') ||
           (needs.api-test.result != 'success' && needs.api-test.result != 'skipped') ||
+          (needs.publication-flow-smoke.result != 'success' && needs.publication-flow-smoke.result != 'skipped') ||
           (needs.e2e-test.result != 'success' && needs.e2e-test.result != 'skipped')
         run: |
           echo "One or more test jobs failed!"

@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	adminService "Qingyu_backend/service/admin"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	adminService "Qingyu_backend/service/admin"
 )
 
 // TestAnalyticsAPI_GetUserGrowthTrend_Success 测试获取用户增长趋势成功
@@ -42,7 +42,7 @@ func TestAnalyticsAPI_GetUserGrowthTrend_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.Equal(t, "获取成功", response["message"])
 	assert.NotNil(t, response["data"])
 }
@@ -68,7 +68,7 @@ func TestAnalyticsAPI_GetUserGrowthTrend_MissingDates(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(400), response["code"])
+	assert.Equal(t, float64(1001), response["code"])
 	assert.Contains(t, response["message"], "开始日期和结束日期不能为空")
 }
 
@@ -141,7 +141,7 @@ func TestAnalyticsAPI_GetContentStatistics_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -208,7 +208,7 @@ func TestAnalyticsAPI_GetRevenueReport_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -257,7 +257,7 @@ func TestAnalyticsAPI_GetActiveUsersReport_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 }
 
@@ -330,7 +330,7 @@ func TestAnalyticsAPI_GetSystemOverview_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	// 验证返回的数据结构
@@ -429,7 +429,7 @@ func TestAnalyticsAPI_GetAnalyticsDashboard_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 	assert.NotNil(t, response["data"])
 
 	// Go JSON 序列化使用 PascalCase，所以字段名是 SystemOverview, UserGrowth 等
@@ -452,7 +452,7 @@ func TestAnalyticsAPI_GetCustomAnalyticsQuery_Success(t *testing.T) {
 	router.POST("/analytics/custom", api.GetCustomAnalyticsQuery)
 
 	query := CustomAnalyticsQuery{
-		Metrics:   []string{"users", "revenue"},
+		Metrics:    []string{"users", "revenue"},
 		Dimensions: []string{"date"},
 		StartDate:  "2026-01-01",
 		EndDate:    "2026-01-31",
@@ -472,7 +472,7 @@ func TestAnalyticsAPI_GetCustomAnalyticsQuery_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 }
 
 // TestAnalyticsAPI_GetCustomAnalyticsQuery_InvalidJSON 测试无效JSON
@@ -515,7 +515,7 @@ func TestAnalyticsAPI_CompareAnalyticsPeriods_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Contains(t, data, "period1")
@@ -568,7 +568,7 @@ func TestAnalyticsAPI_GetRealTimeStats_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Contains(t, data, "online_users")
@@ -597,7 +597,7 @@ func TestAnalyticsAPI_GetAnalyticsPredictions_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 
-	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, float64(0), response["code"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, "users", data["type"])
@@ -708,13 +708,13 @@ func (m *mockAnalyticsService) GetActiveUsersReport(ctx context.Context, req *ad
 		{Date: "2026-01-01", Count: 500},
 	}
 	return &adminService.ActiveUsersReportResponse{
-		StartDate:           req.StartDate,
-		EndDate:             req.EndDate,
-		Type:                req.Type,
-		AverageActiveUsers:  500,
-		PeakActiveUsers:     500,
-		PeakDate:            "2026-01-01",
-		Data:                data,
+		StartDate:          req.StartDate,
+		EndDate:            req.EndDate,
+		Type:               req.Type,
+		AverageActiveUsers: 500,
+		PeakActiveUsers:    500,
+		PeakDate:           "2026-01-01",
+		Data:               data,
 	}, nil
 }
 

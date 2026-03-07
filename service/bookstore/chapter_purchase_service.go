@@ -111,7 +111,7 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	}
 
 	for _, chapter := range chapters {
-		chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
+		chapterOID := chapter.ID
 		item := bookstore.ChapterCatalogItem{
 			ChapterID:   chapterOID,
 			Title:       chapter.Title,
@@ -125,7 +125,7 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 
 		// 标记是否已购买
 		if userID != "" {
-			item.IsPurchased = purchasedIDSet[chapter.ID]
+			item.IsPurchased = purchasedIDSet[chapter.ID.Hex()]
 		}
 
 		// 统计
@@ -396,7 +396,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 		// 为每个章节创建单独的购买记录
 		for _, chapter := range chapters {
-			chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
+			chapterOID := chapter.ID
 			bookOID, _ := primitive.ObjectIDFromHex(chapter.BookID)
 			purchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
@@ -414,7 +414,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 			if err := s.purchaseRepo.Create(txCtx, purchase); err != nil {
 				return fmt.Errorf("failed to create purchase record: %w", err)
 			}
-			purchasedChapterIDs = append(purchasedChapterIDs, chapter.ID)
+			purchasedChapterIDs = append(purchasedChapterIDs, chapter.ID.Hex())
 		}
 
 		return nil
@@ -509,7 +509,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 
 		// 为每个付费章节创建购买记录
 		for _, chapter := range chapters {
-			chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
+			chapterOID := chapter.ID
 			chapterPurchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
 				ChapterID:    chapterOID,
@@ -526,7 +526,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 			if err := s.purchaseRepo.Create(txCtx, chapterPurchase); err != nil {
 				return fmt.Errorf("failed to create chapter purchase record: %w", err)
 			}
-			chapterIDs = append(chapterIDs, chapter.ID)
+			chapterIDs = append(chapterIDs, chapter.ID.Hex())
 		}
 
 		return nil
@@ -653,7 +653,7 @@ func (s *ChapterPurchaseServiceImpl) CheckChapterAccess(ctx context.Context, use
 		return nil, errors.New("chapter not found")
 	}
 
-	chapterOID, _ := primitive.ObjectIDFromHex(chapter.ID)
+	chapterOID := chapter.ID
 	accessInfo := &bookstore.ChapterAccessInfo{
 		ChapterID:   chapterOID,
 		Title:       chapter.Title,

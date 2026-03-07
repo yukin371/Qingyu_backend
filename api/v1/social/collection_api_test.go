@@ -171,6 +171,7 @@ func setupCollectionTestRouter(collectionService interfaces.CollectionService, u
 		v1.GET("/collections/check/:book_id", api.CheckCollected)
 		v1.GET("/collections/tag/:tag", api.GetCollectionsByTag)
 		v1.PUT("/collections/:id", api.UpdateCollection)
+		v1.PATCH("/collections/:id", api.UpdateCollection)
 		v1.DELETE("/collections/:id", api.DeleteCollection)
 		v1.POST("/collections/:id/share", api.ShareCollection)
 		v1.DELETE("/collections/:id/share", api.UnshareCollection)
@@ -181,6 +182,7 @@ func setupCollectionTestRouter(collectionService interfaces.CollectionService, u
 		v1.POST("/folders", api.CreateFolder)
 		v1.GET("/folders", api.GetFolders)
 		v1.PUT("/folders/:id", api.UpdateFolder)
+		v1.PATCH("/folders/:id", api.UpdateFolder)
 		v1.DELETE("/folders/:id", api.DeleteFolder)
 
 		v1.GET("/collections/stats", api.GetCollectionStats)
@@ -305,9 +307,10 @@ func TestCollectionAPI_GetCollections_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
-	data := response["data"].(map[string]interface{})
-	assert.Equal(t, float64(2), data["total"])
-	assert.NotNil(t, data["list"])
+	assert.NotNil(t, response["data"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }
@@ -549,6 +552,60 @@ func TestCollectionAPI_UpdateFolder_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCollectionAPI_PatchCollection_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	collectionID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	newPublic := true
+	mockService.On("UpdateCollection", mock.Anything, userID, collectionID, mock.Anything).Return(nil)
+
+	reqBody := map[string]interface{}{
+		"is_public": &newPublic,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PATCH", "/api/v1/reader/collections/"+collectionID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestCollectionAPI_PatchFolder_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCollectionService)
+	userID := primitive.NewObjectID().Hex()
+	folderID := primitive.NewObjectID().Hex()
+	router := setupCollectionTestRouter(mockService, userID)
+
+	newDesc := "仅更新描述"
+	mockService.On("UpdateFolder", mock.Anything, userID, folderID, mock.Anything).Return(nil)
+
+	reqBody := map[string]interface{}{
+		"description": &newDesc,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PATCH", "/api/v1/reader/folders/"+folderID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
 // TestCollectionAPI_DeleteFolder_Success 测试删除收藏夹成功
 func TestCollectionAPI_DeleteFolder_Success(t *testing.T) {
 	// Given
@@ -666,9 +723,10 @@ func TestCollectionAPI_GetPublicCollections_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
-	data := response["data"].(map[string]interface{})
-	assert.Equal(t, float64(2), data["total"])
-	assert.NotNil(t, data["list"])
+	assert.NotNil(t, response["data"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }
@@ -739,9 +797,10 @@ func TestCollectionAPI_GetCollectionsByTag_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
-	data := response["data"].(map[string]interface{})
-	assert.Equal(t, float64(1), data["total"])
-	assert.NotNil(t, data["list"])
+	assert.NotNil(t, response["data"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(1), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }

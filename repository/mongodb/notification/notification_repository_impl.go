@@ -30,28 +30,10 @@ func NewNotificationRepository(db *mongo.Database) repo.NotificationRepository {
 
 // Create 创建通知
 func (r *NotificationRepositoryImpl) Create(ctx context.Context, notif *notification.Notification) error {
-	objectID, err := primitive.ObjectIDFromHex(notif.ID)
-	if err != nil {
-		// 如果ID无效，生成新的
-		objectID = primitive.NewObjectID()
-		notif.ID = objectID.Hex()
+	if notif.ID.IsZero() {
+		notif.ID = primitive.NewObjectID()
 	}
-
-	doc := bson.M{
-		"_id":        objectID,
-		"user_id":    notif.UserID,
-		"type":       notif.Type,
-		"priority":   notif.Priority,
-		"title":      notif.Title,
-		"content":    notif.Content,
-		"data":       notif.Data,
-		"read":       notif.Read,
-		"read_at":    notif.ReadAt,
-		"created_at": notif.CreatedAt,
-		"expires_at": notif.ExpiresAt,
-	}
-
-	_, err = r.notificationCollection.InsertOne(ctx, doc)
+	_, err := r.notificationCollection.InsertOne(ctx, notif)
 	if err != nil {
 		return fmt.Errorf("创建通知失败: %w", err)
 	}
@@ -456,5 +438,3 @@ func (r *NotificationRepositoryImpl) DeleteReadForUser(ctx context.Context, user
 
 	return result.DeletedCount, nil
 }
-
-

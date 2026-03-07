@@ -187,7 +187,7 @@ func (s *ChapterServiceImpl) GetChapterByNumber(ctx context.Context, userID, boo
 		return nil, ErrChapterNotFound
 	}
 
-	return s.GetChapterContent(ctx, userID, bookID, chapter.ID)
+	return s.GetChapterContent(ctx, userID, bookID, chapter.ID.Hex())
 }
 
 // GetNextChapter 获取下一章信息
@@ -294,12 +294,12 @@ func (s *ChapterServiceImpl) checkChapterAccess(ctx context.Context, userID stri
 	// 检查VIP权限
 	if s.vipService != nil {
 		// 使用 CheckVIPAccess 检查VIP权限
-		hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapter.ID, !chapter.IsFree)
+		hasAccess, err := s.vipService.CheckVIPAccess(ctx, userID, chapter.ID.Hex(), !chapter.IsFree)
 		if err == nil && hasAccess {
 			return true, ""
 		}
 		// 如果VIP检查失败，继续检查是否已购买该章节
-		purchased, err := s.vipService.CheckChapterPurchased(ctx, userID, chapter.ID)
+		purchased, err := s.vipService.CheckChapterPurchased(ctx, userID, chapter.ID.Hex())
 		if err == nil && purchased {
 			return true, ""
 		}
@@ -333,12 +333,12 @@ func (s *ChapterServiceImpl) buildChapterInfo(ctx context.Context, userID string
 		readingProgress, err := s.readerService.GetReadingProgress(ctx, userID, chapter.BookID)
 		if err == nil && readingProgress != nil {
 			progress = float64(readingProgress.Progress)
-				isRead = (readingProgress.ChapterID.Hex() == chapter.ID)
+			isRead = (readingProgress.ChapterID.Hex() == chapter.ID.Hex())
 		}
 	}
 
 	return &ChapterInfo{
-		ChapterID:    chapter.ID,
+		ChapterID:    chapter.ID.Hex(),
 		BookID:       chapter.BookID,
 		Title:        chapter.Title,
 		ChapterNum:   chapter.ChapterNum,

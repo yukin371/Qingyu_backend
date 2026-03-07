@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/notification"
 	notificationRepo "Qingyu_backend/repository/mongodb/notification"
@@ -52,7 +53,7 @@ func TestPushDeviceRepository_Create_WithInvalidID(t *testing.T) {
 	defer cleanup()
 
 	device := &notification.PushDevice{
-		ID:          "invalid-id",
+		ID:          primitive.NewObjectID(),
 		UserID:      "user123",
 		DeviceType:  "android",
 		DeviceToken: "test_token_456",
@@ -68,7 +69,7 @@ func TestPushDeviceRepository_Create_WithInvalidID(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotEmpty(t, device.ID)
-	assert.NotEqual(t, "invalid-id", device.ID)
+	assert.NotEqual(t, primitive.NilObjectID, device.ID)
 }
 
 // TestPushDeviceRepository_GetByID 测试根据ID获取推送设备
@@ -90,7 +91,7 @@ func TestPushDeviceRepository_GetByID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -154,13 +155,13 @@ func TestPushDeviceRepository_Update(t *testing.T) {
 		"device_token": "new_token",
 		"is_active":    false,
 	}
-	err = repo.Update(ctx, device.ID, updates)
+	err = repo.Update(ctx, device.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证更新
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "new_token", found.DeviceToken)
 	assert.False(t, found.IsActive)
@@ -202,13 +203,13 @@ func TestPushDeviceRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 删除设备
-	err = repo.Delete(ctx, device.ID)
+	err = repo.Delete(ctx, device.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 }
@@ -246,7 +247,7 @@ func TestPushDeviceRepository_Exists(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	exists, err := repo.Exists(ctx, device.ID)
+	exists, err := repo.Exists(ctx, device.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
@@ -412,7 +413,7 @@ func TestPushDeviceRepository_BatchDelete(t *testing.T) {
 		}
 		err := repo.Create(ctx, device)
 		require.NoError(t, err)
-		ids = append(ids, device.ID)
+		ids = append(ids, device.ID.Hex())
 	}
 
 	// Act
@@ -448,14 +449,14 @@ func TestPushDeviceRepository_BatchDelete_WithInvalidID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act - 包含无效ID
-	ids := []string{device.ID, "invalid-id"}
+	ids := []string{device.ID.Hex(), "invalid-id"}
 	err = repo.BatchDelete(ctx, ids)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证有效ID的设备已删除
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 }
@@ -520,13 +521,13 @@ func TestPushDeviceRepository_UpdateLastUsed(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Act
-	err = repo.UpdateLastUsed(ctx, device.ID)
+	err = repo.UpdateLastUsed(ctx, device.ID.Hex())
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证最后使用时间已更新
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 	require.NoError(t, err)
 	assert.True(t, found.LastUsedAt.After(oldTime))
 }
@@ -587,12 +588,12 @@ func TestPushDeviceRepository_DeleteInactiveDevices(t *testing.T) {
 	assert.GreaterOrEqual(t, count, int64(1))
 
 	// 验证不活跃设备已删除
-	found, err := repo.GetByID(ctx, inactiveDevice.ID)
+	found, err := repo.GetByID(ctx, inactiveDevice.ID.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, found)
 
 	// 验证活跃设备仍然存在
-	found, err = repo.GetByID(ctx, activeDevice.ID)
+	found, err = repo.GetByID(ctx, activeDevice.ID.Hex())
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 }
@@ -713,13 +714,13 @@ func TestPushDeviceRepository_Update_Token(t *testing.T) {
 	updates := map[string]interface{}{
 		"device_token": "new_token",
 	}
-	err = repo.Update(ctx, device.ID, updates)
+	err = repo.Update(ctx, device.ID.Hex(), updates)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证token已更新
-	found, err := repo.GetByID(ctx, device.ID)
+	found, err := repo.GetByID(ctx, device.ID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, "new_token", found.DeviceToken)
 }

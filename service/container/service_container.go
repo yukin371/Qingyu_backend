@@ -34,6 +34,7 @@ import (
 	// Notification service
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	// Shared services
 	"Qingyu_backend/service/admin"
@@ -50,10 +51,14 @@ import (
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
+	pkgmetrics "Qingyu_backend/pkg/metrics"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
+	eventservice "Qingyu_backend/service/events"
 
 	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -135,11 +140,23 @@ type ServiceContainer struct {
 // Repository工厂将在Initialize()时自动创建
 func NewServiceContainer() *ServiceContainer {
 	return &ServiceContainer{
-		services:       make(map[string]serviceInterfaces.BaseService),
-		serviceMetrics: make(map[string]*metrics.ServiceMetrics),
-		initialized:    false,
-		eventBus:       base.NewSimpleEventBus(), // 创建事件总线
+		services:         make(map[string]serviceInterfaces.BaseService),
+		serviceMetrics:   make(map[string]*metrics.ServiceMetrics),
+		initialized:      false,
+		eventBus:         base.NewSimpleEventBus(), // Mongo 初始化前的兜底总线
+		providerRegistry: NewProviderRegistry(),
 	}
+}
+
+func (c *ServiceContainer) initEventBus() error {
+	if c.mongoDB == nil {
+		c.eventBus = base.NewSimpleEventBus()
+		return nil
+	}
+
+	store := eventservice.NewMongoEventStore(c.mongoDB, eventservice.DefaultEventStoreConfig())
+	c.eventBus = eventservice.NewPersistedEventBus(base.NewSimpleEventBus(), store, false)
+	return nil
 }
 
 // RegisterService 注册服务
@@ -458,6 +475,14 @@ func (c *ServiceContainer) GetEventBus() serviceInterfaces.EventBus {
 	return c.eventBus
 }
 
+// GetPersistedEventBus 获取支持事件回放的持久化事件总线。
+func (c *ServiceContainer) GetPersistedEventBus() eventservice.PersistedEventBusInterface {
+	if persisted, ok := c.eventBus.(eventservice.PersistedEventBusInterface); ok {
+		return persisted
+	}
+	return nil
+}
+
 // Initialize 初始化所有服务
 func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	if c.initialized {
@@ -474,6 +499,10 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 		c.mongoClient,
 		c.mongoDB,
 	)
+
+	if err := c.initEventBus(); err != nil {
+		return fmt.Errorf("事件总线初始化失败: %w", err)
+	}
 
 	// 3. 初始化Redis客户端（失败不阻塞）
 	if err := c.initRedis(); err != nil {
@@ -519,12 +548,20 @@ func (c *ServiceContainer) initMongoDB() error {
 		return fmt.Errorf("获取MongoDB配置失败: %w", err)
 	}
 
+	dbMetricsCollector := pkgmetrics.NewDbMetricsCollector(
+		mongoCfg.Database,
+		time.Duration(mongoCfg.SlowMS)*time.Millisecond,
+		mongoCfg.ProfilingLevel,
+	)
+
 	clientOptions := options.Client().
 		ApplyURI(mongoCfg.URI).
 		SetMaxPoolSize(mongoCfg.MaxPoolSize).
 		SetMinPoolSize(mongoCfg.MinPoolSize).
 		SetConnectTimeout(mongoCfg.ConnectTimeout).
-		SetServerSelectionTimeout(mongoCfg.ServerTimeout)
+		SetServerSelectionTimeout(mongoCfg.ServerTimeout).
+		SetMonitor(dbMetricsCollector.GetMonitorCommand()).
+		SetPoolMonitor(dbMetricsCollector.GetPoolMonitor())
 
 	ctx, cancel := context.WithTimeout(context.Background(), mongoCfg.ConnectTimeout)
 	defer cancel()
@@ -542,8 +579,40 @@ func (c *ServiceContainer) initMongoDB() error {
 	c.mongoClient = client
 	c.mongoDB = client.Database(mongoCfg.Database)
 
+	if err := c.configureMongoProfiler(ctx, mongoCfg); err != nil {
+		zap.L().Warn("配置MongoDB profiler失败，继续以驱动监控模式运行",
+			zap.Error(err),
+			zap.Int("profiling_level", mongoCfg.ProfilingLevel),
+			zap.Int64("slow_ms", mongoCfg.SlowMS),
+		)
+	}
+
 	// 不再设置全局DB变量（ARCH-002重构）
 	// 所有依赖应该通过容器注入，而不是使用全局变量
+	return nil
+}
+
+func (c *ServiceContainer) configureMongoProfiler(ctx context.Context, mongoCfg *config.MongoDBConfig) error {
+	if mongoCfg == nil || mongoCfg.ProfilingLevel <= 0 {
+		return nil
+	}
+
+	command := bson.D{
+		{Key: "profile", Value: mongoCfg.ProfilingLevel},
+		{Key: "slowms", Value: mongoCfg.SlowMS},
+	}
+
+	var result bson.M
+	if err := c.mongoDB.RunCommand(ctx, command).Decode(&result); err != nil {
+		return err
+	}
+
+	zap.L().Info("MongoDB profiler configured",
+		zap.String("database", mongoCfg.Database),
+		zap.Int("profiling_level", mongoCfg.ProfilingLevel),
+		zap.Int64("slow_ms", mongoCfg.SlowMS),
+		zap.Int64("profiler_size_mb", mongoCfg.ProfilerSizeMB),
+	)
 	return nil
 }
 
@@ -596,6 +665,12 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 	for name, service := range c.services {
 		if err := service.Close(ctx); err != nil {
 			lastErr = fmt.Errorf("关闭服务 %s 失败: %w", name, err)
+		}
+	}
+
+	if closer, ok := c.eventBus.(interface{ Close() error }); ok {
+		if err := closer.Close(); err != nil {
+			lastErr = fmt.Errorf("关闭事件总线失败: %w", err)
 		}
 	}
 
@@ -851,7 +926,52 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 5.1 创建 WalletService（简单版，只需要 WalletRepository）
 	walletRepo := c.repositoryFactory.CreateWalletRepository()
-	walletSvc := financeWalletService.NewUnifiedWalletService(walletRepo)
+	if c.providerRegistry == nil {
+		c.providerRegistry = NewProviderRegistry()
+	}
+	if _, exists := c.providerRegistry.Get("mongoTransactionRunner"); !exists {
+		if err := c.RegisterProvider(Provider{
+			Name:      "mongoTransactionRunner",
+			Singleton: true,
+			Lazy:      true,
+			Factory: func(container *ServiceContainer) (interface{}, error) {
+				return pkgtransaction.NewMongoRunner(container.repositoryFactory.GetClient()), nil
+			},
+		}); err != nil {
+			return fmt.Errorf("注册通用事务Provider失败: %w", err)
+		}
+	}
+	if _, exists := c.providerRegistry.Get("walletTransactionRunner"); !exists {
+		if err := c.RegisterProvider(Provider{
+			Name:         "walletTransactionRunner",
+			Dependencies: []string{"mongoTransactionRunner"},
+			Singleton:    true,
+			Lazy:         true,
+			Factory: func(container *ServiceContainer) (interface{}, error) {
+				runner, err := container.GetProvider("mongoTransactionRunner")
+				if err != nil {
+					return nil, err
+				}
+				txRunner, ok := runner.(pkgtransaction.Runner)
+				if !ok {
+					return nil, fmt.Errorf("mongoTransactionRunner 类型不正确")
+				}
+				return financeWalletService.NewGenericTransactionRunner(txRunner), nil
+			},
+		}); err != nil {
+			return fmt.Errorf("注册钱包事务Provider失败: %w", err)
+		}
+	}
+	txRunnerInstance, err := c.GetProvider("walletTransactionRunner")
+	if err != nil {
+		return fmt.Errorf("获取钱包事务Provider失败: %w", err)
+	}
+	txRunner, ok := txRunnerInstance.(financeWalletService.TransactionRunner)
+	if !ok {
+		return fmt.Errorf("walletTransactionRunner 类型不正确")
+	}
+
+	walletSvc := financeWalletService.NewUnifiedWalletServiceWithRunner(walletRepo, txRunner)
 	c.walletService = walletSvc // 保存为接口类型
 
 	// 类型断言为 BaseService，以便注册到服务映射
@@ -1094,10 +1214,18 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 5.10 Finance Services
 	membershipRepo := c.repositoryFactory.CreateMembershipRepository()
-	c.membershipService = financeService.NewMembershipService(membershipRepo)
+	mongoTxRunnerInstance, err := c.GetProvider("mongoTransactionRunner")
+	if err != nil {
+		return fmt.Errorf("获取通用事务Provider失败: %w", err)
+	}
+	mongoTxRunner, ok := mongoTxRunnerInstance.(pkgtransaction.Runner)
+	if !ok {
+		return fmt.Errorf("mongoTransactionRunner 类型不正确")
+	}
+	c.membershipService = financeService.NewMembershipServiceWithDependencies(membershipRepo, walletRepo, mongoTxRunner)
 
 	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
-	c.authorRevenueService = financeService.NewAuthorRevenueService(authorRevenueRepo)
+	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
 
@@ -1253,13 +1381,17 @@ var _ admin.AuditRepository = (*adminAuditRepositoryAdapter)(nil)
 // Create 创建审核记录
 func (a *adminAuditRepositoryAdapter) Create(ctx context.Context, record *admin.AuditRecord) error {
 	adminRecord := &adminModel.AuditRecord{
-		ID:          record.ID,
 		ContentID:   record.ContentID,
 		ContentType: record.ContentType,
 		Status:      record.Status,
 		ReviewerID:  record.ReviewerID,
 		CreatedAt:   record.CreatedAt,
 		UpdatedAt:   record.UpdatedAt,
+	}
+	if record.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(record.ID); err == nil {
+			adminRecord.ID = oid
+		}
 	}
 	return a.repo.CreateAuditRecord(ctx, adminRecord)
 }
@@ -1271,7 +1403,7 @@ func (a *adminAuditRepositoryAdapter) Get(ctx context.Context, recordID string) 
 		return nil, err
 	}
 	return &admin.AuditRecord{
-		ID:          adminRecord.ID,
+		ID:          adminRecord.ID.Hex(),
 		ContentID:   adminRecord.ContentID,
 		ContentType: adminRecord.ContentType,
 		Status:      adminRecord.Status,
@@ -1302,7 +1434,7 @@ func (a *adminAuditRepositoryAdapter) ListByStatus(ctx context.Context, contentT
 	result := make([]*admin.AuditRecord, len(records))
 	for i, r := range records {
 		result[i] = &admin.AuditRecord{
-			ID:          r.ID,
+			ID:          r.ID.Hex(),
 			ContentID:   r.ContentID,
 			ContentType: r.ContentType,
 			Status:      r.Status,
@@ -1322,7 +1454,7 @@ func (a *adminAuditRepositoryAdapter) ListByContent(ctx context.Context, content
 	}
 
 	return []*admin.AuditRecord{{
-		ID:          record.ID,
+		ID:          record.ID.Hex(),
 		ContentID:   record.ContentID,
 		ContentType: record.ContentType,
 		Status:      record.Status,
@@ -1342,12 +1474,16 @@ var _ admin.LogRepository = (*adminLogRepositoryAdapter)(nil)
 // Create 创建日志
 func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.AdminLog) error {
 	adminLog := &adminModel.AdminLog{
-		ID:        log.ID,
 		AdminID:   log.AdminID,
 		Operation: log.Operation,
 		Target:    log.Target, // shared/admin 只有一个 Target 字段
 		Details:   log.Details,
 		CreatedAt: log.CreatedAt,
+	}
+	if log.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(log.ID); err == nil {
+			adminLog.ID = oid
+		}
 	}
 	return a.repo.CreateAdminLog(ctx, adminLog)
 }
@@ -1371,7 +1507,7 @@ func (a *adminLogRepositoryAdapter) List(ctx context.Context, filter *admin.LogF
 	result := make([]*admin.AdminLog, len(logs))
 	for i, l := range logs {
 		result[i] = &admin.AdminLog{
-			ID:        l.ID,
+			ID:        l.ID.Hex(),
 			AdminID:   l.AdminID,
 			Operation: l.Operation,
 			Target:    l.Target, // adminModel 只有一个 Target 字段

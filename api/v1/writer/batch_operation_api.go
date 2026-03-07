@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/models/writer"
-	"Qingyu_backend/service/writer/document"
-
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"Qingyu_backend/models/writer"
+	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/document"
 )
 
 // BatchOperationAPI 批量操作API
@@ -56,14 +56,14 @@ type SubmitBatchOperationResponse struct {
 func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 	var req SubmitBatchOperationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未授权")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
@@ -82,7 +82,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 
 	batchOp, err := api.batchOpSvc.Submit(c.Request.Context(), submitReq)
 	if err != nil {
-		shared.InternalError(c, "提交批量操作失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		api.batchOpSvc.Execute(ctx, batchOp.ID.Hex())
 	}()
 
-	shared.Success(c, 200, "批量操作已提交", SubmitBatchOperationResponse{
+	response.Success(c, SubmitBatchOperationResponse{
 		BatchID:          batchOp.ID.Hex(),
 		Status:           batchOp.Status,
 		PreflightSummary: batchOp.PreflightSummary,
@@ -113,17 +113,17 @@ func (api *BatchOperationAPI) GetBatchOperationStatus(c *gin.Context) {
 	id := c.Param("id")
 	batchID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的批量操作ID")
+		response.BadRequest(c, "参数错误", "无效的批量操作ID")
 		return
 	}
 
 	progress, err := api.batchOpSvc.GetProgress(c.Request.Context(), batchID.Hex())
 	if err != nil {
-		shared.NotFound(c, "批量操作不存在")
+		response.NotFound(c, "批量操作不存在")
 		return
 	}
 
-	shared.SuccessData(c, progress)
+	response.Success(c, progress)
 }
 
 // CancelBatchOperation 取消批量操作
@@ -139,23 +139,23 @@ func (api *BatchOperationAPI) CancelBatchOperation(c *gin.Context) {
 	id := c.Param("id")
 	batchID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的批量操作ID")
+		response.BadRequest(c, "参数错误", "无效的批量操作ID")
 		return
 	}
 
 	_, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未授权")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	err = api.batchOpSvc.Cancel(c.Request.Context(), batchID.Hex())
 	if err != nil {
-		shared.BadRequest(c, "取消操作失败", err.Error())
+		response.BadRequest(c, "取消操作失败", err.Error())
 		return
 	}
 
-	shared.Success(c, 200, "批量操作已取消", nil)
+	response.Success(c, nil)
 }
 
 // UndoBatchOperation 撤销批量操作
@@ -171,23 +171,23 @@ func (api *BatchOperationAPI) UndoBatchOperation(c *gin.Context) {
 	id := c.Param("id")
 	batchID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的批量操作ID")
+		response.BadRequest(c, "参数错误", "无效的批量操作ID")
 		return
 	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未授权")
+		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	err = api.batchOpSvc.Undo(c.Request.Context(), batchID.Hex(), userID.(string))
 	if err != nil {
-		shared.BadRequest(c, "撤销操作失败", err.Error())
+		response.BadRequest(c, "撤销操作失败", err.Error())
 		return
 	}
 
-	shared.Success(c, 200, "批量操作已撤销", nil)
+	response.Success(c, nil)
 }
 
 // RegisterRoutes 注册路由

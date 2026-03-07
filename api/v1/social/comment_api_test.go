@@ -155,6 +155,7 @@ func setupCommentTestRouter(commentService interfaces.CommentService, userID str
 		v1.GET("", api.GetCommentList)
 		v1.GET("/:id", api.GetCommentDetail)
 		v1.PUT("/:id", api.UpdateComment)
+		v1.PATCH("/:id", api.UpdateComment)
 		v1.DELETE("/:id", api.DeleteComment)
 		v1.POST("/:id/reply", api.ReplyComment)
 		v1.POST("/:id/like", api.LikeComment)
@@ -337,9 +338,10 @@ func TestCommentAPI_GetCommentList_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 
-	data := response["data"].(map[string]interface{})
-	assert.NotNil(t, data["comments"])
-	assert.Equal(t, float64(2), data["total"])
+	assert.NotNil(t, response["data"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }
@@ -456,6 +458,40 @@ func TestCommentAPI_UpdateComment_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.Equal(t, "操作成功", response["message"])  // 成功响应message为"操作成功"
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_PatchComment_Success 测试成功PATCH更新评论
+func TestCommentAPI_PatchComment_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	userID := primitive.NewObjectID().Hex()
+	commentID := primitive.NewObjectID().Hex()
+	router := setupCommentTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"content": "PATCH更新后的评论内容，这是一本非常好的书！",
+	}
+
+	mockService.On("UpdateComment", mock.Anything, userID, commentID, "PATCH更新后的评论内容，这是一本非常好的书！").Return(nil)
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest(http.MethodPatch, "/api/v1/reader/comments/"+commentID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+	assert.Equal(t, "操作成功", response["message"])
 
 	mockService.AssertExpectations(t)
 }

@@ -8,8 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	writermodels "Qingyu_backend/models/writer"
-	writerservice "Qingyu_backend/service/writer"
 	"Qingyu_backend/pkg/response"
+	writerservice "Qingyu_backend/service/writer"
 )
 
 // isWriterErrorCode 检查错误是否为特定的 Writer 错误码
@@ -53,13 +53,13 @@ func NewCommentAPI(commentService writerservice.CommentService) *CommentAPI {
 func (api *CommentAPI) CreateComment(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	// 构建批注
 	comment, err := req.ToComment(documentID, userID.(string), userName)
 	if err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -111,7 +111,7 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 func (api *CommentAPI) GetComments(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -120,8 +120,15 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
 	// 构建筛选条件
+	docObjID, err := primitive.ObjectIDFromHex(documentID)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "无效的文档ID")
+		return
+	}
+
 	filter := &writermodels.CommentFilter{
-		Resolved: nil,
+		DocumentID: &docObjID,
+		Resolved:   nil,
 	}
 
 	if resolved := c.Query("resolved"); resolved != "" {
@@ -169,7 +176,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 func (api *CommentAPI) GetComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -203,13 +210,13 @@ func (api *CommentAPI) GetComment(c *gin.Context) {
 func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
 	var req UpdateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -246,7 +253,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 func (api *CommentAPI) DeleteComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -278,7 +285,7 @@ func (api *CommentAPI) DeleteComment(c *gin.Context) {
 func (api *CommentAPI) ResolveComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -294,7 +301,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 			return
 		}
 		if err == writerservice.ErrCommentAlreadyResolved {
-			response.BadRequest(c,  "批注已解决", err.Error())
+			response.BadRequest(c, "批注已解决", err.Error())
 			return
 		}
 		c.Error(err)
@@ -320,7 +327,7 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 	commentID := c.Param("id")
 	if commentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
@@ -353,13 +360,13 @@ func (api *CommentAPI) UnresolveComment(c *gin.Context) {
 func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	parentID := c.Param("id")
 	if parentID == "" {
-		response.BadRequest(c,  "参数错误", "批注ID不能为空")
+		response.BadRequest(c, "参数错误", "批注ID不能为空")
 		return
 	}
 
 	var req ReplyCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -399,7 +406,7 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 	threadID := c.Param("threadId")
 	if threadID == "" {
-		response.BadRequest(c,  "参数错误", "线程ID不能为空")
+		response.BadRequest(c, "参数错误", "线程ID不能为空")
 		return
 	}
 
@@ -427,7 +434,7 @@ func (api *CommentAPI) GetCommentThread(c *gin.Context) {
 func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -458,13 +465,13 @@ func (api *CommentAPI) GetCommentStats(c *gin.Context) {
 func (api *CommentAPI) SearchComments(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	keyword := c.Query("keyword")
 	if keyword == "" {
-		response.BadRequest(c,  "参数错误", "关键词不能为空")
+		response.BadRequest(c, "参数错误", "关键词不能为空")
 		return
 	}
 
@@ -503,12 +510,12 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	var req BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	if len(req.CommentIDs) == 0 {
-		response.BadRequest(c,  "参数错误", "批注ID列表不能为空")
+		response.BadRequest(c, "参数错误", "批注ID列表不能为空")
 		return
 	}
 
@@ -524,12 +531,13 @@ func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 
 // CreateCommentRequest 创建批注请求
 type CreateCommentRequest struct {
-	Content   string                       `json:"content" binding:"required"`
-	Type      string                       `json:"type"`
-	ChapterID string                       `json:"chapterId"`
-	Position  writermodels.CommentPosition `json:"position" binding:"required"`
-	ParentID  *string                      `json:"parentId"`
-	Metadata  writermodels.CommentMetadata `json:"metadata"`
+	Content     string                        `json:"content" binding:"required"`
+	Type        string                        `json:"type"`
+	ParagraphID string                        `json:"paragraphId" binding:"required"`
+	ChapterID   string                        `json:"chapterId,omitempty"` // Deprecated: 禁止新写
+	Position    *writermodels.CommentPosition `json:"position,omitempty"`  // Deprecated: 禁止新写
+	ParentID    *string                       `json:"parentId"`
+	Metadata    writermodels.CommentMetadata  `json:"metadata"`
 }
 
 // ToComment 转换为批注模型
@@ -539,12 +547,16 @@ func (r *CreateCommentRequest) ToComment(documentID, userID, userName string) (*
 		return nil, err
 	}
 
-	var chapterID primitive.ObjectID
 	if r.ChapterID != "" {
-		chapterID, err = primitive.ObjectIDFromHex(r.ChapterID)
-		if err != nil {
-			return nil, err
-		}
+		return nil, errors.New("chapterId 已废弃，请改用 paragraphId")
+	}
+	if r.Position != nil {
+		return nil, errors.New("position 已废弃，请改用 paragraphId")
+	}
+
+	paragraphID, err := primitive.ObjectIDFromHex(r.ParagraphID)
+	if err != nil {
+		return nil, errors.New("无效的 paragraphId")
 	}
 
 	userObjID, err := primitive.ObjectIDFromHex(userID)
@@ -562,16 +574,15 @@ func (r *CreateCommentRequest) ToComment(documentID, userID, userName string) (*
 	}
 
 	comment := &writermodels.DocumentComment{
-		DocumentID: docID,
-		ChapterID:  chapterID,
-		UserID:     userObjID,
-		UserName:   userName,
-		Content:    r.Content,
-		Type:       writermodels.CommentType(r.Type),
-		Position:   r.Position,
-		ParentID:   parentID,
-		Metadata:   r.Metadata,
-		Resolved:   false,
+		DocumentID:  docID,
+		ParagraphID: paragraphID,
+		UserID:      userObjID,
+		UserName:    userName,
+		Content:     r.Content,
+		Type:        writermodels.CommentType(r.Type),
+		ParentID:    parentID,
+		Metadata:    r.Metadata,
+		Resolved:    false,
 	}
 
 	return comment, nil

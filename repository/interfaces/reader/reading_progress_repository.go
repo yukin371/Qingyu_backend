@@ -21,7 +21,10 @@ type ReadingProgressRepository interface {
 
 	// 进度保存和更新
 	SaveProgress(ctx context.Context, userID, bookID, chapterID string, progress float64) error
+	SaveProgressWithInitial(ctx context.Context, userID, bookID, chapterID string, progress float64, initialReadingTime int64) error
+	UpdateProgressFields(ctx context.Context, userID, bookID string, updates map[string]interface{}) error
 	UpdateReadingTime(ctx context.Context, userID, bookID string, duration int64) error
+	IncrementReadingTime(ctx context.Context, userID, bookID string, duration int64) error
 	UpdateLastReadAt(ctx context.Context, userID, bookID string) error
 
 	// 批量更新
@@ -35,6 +38,7 @@ type ReadingProgressRepository interface {
 
 	// 阅读记录
 	GetReadingHistory(ctx context.Context, userID string, limit, offset int) ([]*reader.ReadingProgress, error)
+	GetByUserAndProgressRange(ctx context.Context, userID string, minProgress, maxProgress float64) ([]*reader.ReadingProgress, error)
 	GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error)
 	GetFinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error)
 

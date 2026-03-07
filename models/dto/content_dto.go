@@ -201,6 +201,45 @@ type UpdateContentRequest struct {
 	Version    int    `json:"version" validate:"min=0"` // 用于版本冲突检测
 }
 
+// ParagraphContent 段落内容
+type ParagraphContent struct {
+	ParagraphID string    `json:"paragraphId,omitempty"`
+	Order       int       `json:"order"`
+	Content     string    `json:"content"`
+	ContentType string    `json:"contentType,omitempty"` // tiptap | markdown
+	Version     int       `json:"version,omitempty"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+}
+
+// DocumentContentsResponse 文档段落内容响应
+type DocumentContentsResponse struct {
+	DocumentID string             `json:"documentId"`
+	Contents   []ParagraphContent `json:"contents"`
+	Total      int                `json:"total"`
+	WordCount  int                `json:"wordCount"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+}
+
+// ReplaceDocumentContentsRequest 替换文档段落请求
+type ReplaceDocumentContentsRequest struct {
+	DocumentID string             `json:"documentId" validate:"required"`
+	Contents   []ParagraphContent `json:"contents"`
+}
+
+// ReplaceDocumentContentsResponse 替换文档段落响应
+type ReplaceDocumentContentsResponse struct {
+	DocumentID string    `json:"documentId"`
+	Total      int       `json:"total"`
+	WordCount  int       `json:"wordCount"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+// ReindexDocumentContentsResponse 重新编号响应
+type ReindexDocumentContentsResponse struct {
+	DocumentID string `json:"documentId"`
+	Total      int    `json:"total"`
+}
+
 // DuplicateRequest 复制文档/项目请求
 type DuplicateRequest struct {
 	NewTitle      string `json:"newTitle" validate:"required,min=1,max=200"`
@@ -525,6 +564,7 @@ type PublicationRecord struct {
 	ResourceTitle   string              `json:"resourceTitle"`
 	BookstoreID     string              `json:"bookstoreId"`
 	BookstoreName   string              `json:"bookstoreName"`
+	ExternalID      string              `json:"externalId,omitempty"`
 	Status          string              `json:"status"`
 	PublishTime     *time.Time          `json:"publishTime"`
 	ScheduledTime   *time.Time          `json:"scheduledTime"`
@@ -532,6 +572,9 @@ type PublicationRecord struct {
 	UnpublishReason string              `json:"unpublishReason,omitempty"`
 	Metadata        PublicationMetadata `json:"metadata"`
 	CreatedBy       string              `json:"createdBy"`
+	ReviewedBy      string              `json:"reviewedBy,omitempty"`
+	ReviewedAt      *time.Time          `json:"reviewedAt,omitempty"`
+	ReviewNote      string              `json:"reviewNote,omitempty"`
 	CreatedAt       time.Time           `json:"createdAt"`
 	UpdatedAt       time.Time           `json:"updatedAt"`
 }
@@ -590,6 +633,8 @@ const (
 	PublicationStatusPending = "pending"
 	// PublicationStatusPublished 已发布
 	PublicationStatusPublished = "published"
+	// PublicationStatusRejected 审核拒绝
+	PublicationStatusRejected = "rejected"
 	// PublicationStatusUnpublished 已取消发布
 	PublicationStatusUnpublished = "unpublished"
 	// PublicationStatusFailed 发布失败
@@ -720,7 +765,9 @@ type ChapterPublishStatus struct {
 	IsPublished   bool       `json:"isPublished"`
 	ChapterNumber int        `json:"chapterNumber"`
 	PublishTime   *time.Time `json:"publishTime,omitempty"`
+	PublishedAt   *time.Time `json:"publishedAt,omitempty"`
 	UpdateTime    time.Time  `json:"updateTime"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 // UpdateChapterPublishStatusRequest 更新章节发布状态请求
@@ -744,6 +791,7 @@ type ReadingProgressResponse struct {
 	Progress    float64 `json:"progress"`
 	ReadingTime int64   `json:"readingTime"`
 	UpdateTime  int64   `json:"updateTime"`
+	UpdatedAt   int64   `json:"updatedAt"`
 	BookTitle   string  `json:"bookTitle"`
 	ChapterNum  int     `json:"chapterNum"`
 }

@@ -2,7 +2,10 @@ package finance
 
 import (
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/interfaces/finance"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"context"
 	"fmt"
 	"time"
@@ -38,12 +41,21 @@ type MembershipService interface {
 // MembershipServiceImpl 会员服务实现
 type MembershipServiceImpl struct {
 	membershipRepo finance.MembershipRepository
+	walletRepo     sharedRepo.WalletRepository
+	txRunner       pkgtransaction.Runner
 }
 
 // NewMembershipService 创建会员服务
 func NewMembershipService(membershipRepo finance.MembershipRepository) MembershipService {
+	return NewMembershipServiceWithDependencies(membershipRepo, nil, nil)
+}
+
+// NewMembershipServiceWithDependencies 创建带钱包与事务依赖的会员服务。
+func NewMembershipServiceWithDependencies(membershipRepo finance.MembershipRepository, walletRepo sharedRepo.WalletRepository, txRunner pkgtransaction.Runner) MembershipService {
 	return &MembershipServiceImpl{
 		membershipRepo: membershipRepo,
+		walletRepo:     walletRepo,
+		txRunner:       txRunner,
 	}
 }
 
@@ -118,6 +130,8 @@ func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, pl
 
 	endTime = startTime.AddDate(0, 0, plan.Duration)
 
+	paymentID := primitive.NewObjectID()
+
 	// 5. 创建会员记录
 	membership := &financeModel.UserMembership{
 		UserID:      userID,
@@ -129,17 +143,32 @@ func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, pl
 		EndTime:     endTime,
 		AutoRenew:   false,
 		Status:      financeModel.MembershipStatusActive,
-		PaymentID:   primitive.NewObjectID(), // TODO: 创建支付记录
+		PaymentID:   paymentID,
 		ActivatedAt: now,
 	}
 
-	err = s.membershipRepo.CreateMembership(ctx, membership)
-	if err != nil {
-		return nil, fmt.Errorf("创建会员失败: %w", err)
+	if s.walletRepo == nil || s.txRunner == nil {
+		err = s.membershipRepo.CreateMembership(ctx, membership)
+		if err != nil {
+			return nil, fmt.Errorf("创建会员失败: %w", err)
+		}
+		return membership, nil
 	}
 
-	// 6. TODO: 创建支付记录并扣款
-	// 这里需要集成钱包服务或支付网关
+	if err := s.txRunner.Run(ctx, func(txCtx context.Context) error {
+		if err := s.ensureWalletCanPay(txCtx, userID, plan.Price); err != nil {
+			return err
+		}
+		if err := s.membershipRepo.CreateMembership(txCtx, membership); err != nil {
+			return fmt.Errorf("创建会员失败: %w", err)
+		}
+		if err := s.applyWalletMembershipCharge(txCtx, userID, plan, paymentID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
 	return membership, nil
 }
@@ -215,12 +244,31 @@ func (s *MembershipServiceImpl) RenewMembership(ctx context.Context, userID stri
 		"status":   financeModel.MembershipStatusActive,
 	}
 
-	err = s.membershipRepo.UpdateMembership(ctx, membership.ID, updates)
-	if err != nil {
-		return nil, fmt.Errorf("续费失败: %w", err)
+	paymentID := primitive.NewObjectID()
+
+	if s.walletRepo == nil || s.txRunner == nil {
+		err = s.membershipRepo.UpdateMembership(ctx, membership.ID, updates)
+		if err != nil {
+			return nil, fmt.Errorf("续费失败: %w", err)
+		}
+		return s.membershipRepo.GetMembership(ctx, userID)
 	}
 
-	// TODO: 创建支付记录并扣款
+	if err := s.txRunner.Run(ctx, func(txCtx context.Context) error {
+		if err := s.ensureWalletCanPay(txCtx, userID, plan.Price); err != nil {
+			return err
+		}
+		updates["payment_id"] = paymentID
+		if err := s.membershipRepo.UpdateMembership(txCtx, membership.ID, updates); err != nil {
+			return fmt.Errorf("续费失败: %w", err)
+		}
+		if err := s.applyWalletMembershipCharge(txCtx, userID, plan, paymentID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
 	// 重新获取更新后的会员信息
 	return s.membershipRepo.GetMembership(ctx, userID)
@@ -419,4 +467,40 @@ func (s *MembershipServiceImpl) getLevelFromType(planType string) string {
 	default:
 		return financeModel.MembershipLevelNormal
 	}
+}
+
+func (s *MembershipServiceImpl) ensureWalletCanPay(ctx context.Context, userID string, amount types.Money) error {
+	wallet, err := s.walletRepo.GetWallet(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("获取钱包失败: %w", err)
+	}
+	if wallet.Frozen {
+		return fmt.Errorf("钱包已冻结，无法购买会员")
+	}
+	if wallet.Balance < amount {
+		return fmt.Errorf("余额不足")
+	}
+	return nil
+}
+
+func (s *MembershipServiceImpl) applyWalletMembershipCharge(ctx context.Context, userID string, plan *financeModel.MembershipPlan, paymentID primitive.ObjectID) error {
+	if err := s.walletRepo.UpdateBalance(ctx, userID, -int64(plan.Price)); err != nil {
+		return fmt.Errorf("扣减会员费用失败: %w", err)
+	}
+
+	transaction := &financeModel.Transaction{
+		UserID:          userID,
+		Type:            financeModel.TransactionTypeConsume,
+		Amount:          -plan.Price,
+		Method:          financeModel.PaymentMethodBank,
+		Reason:          fmt.Sprintf("membership:%s", plan.Type),
+		Status:          financeModel.TransactionStatusSuccess,
+		OrderNo:         paymentID.Hex(),
+		TransactionTime: time.Now(),
+	}
+	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
+		return fmt.Errorf("创建会员支付流水失败: %w", err)
+	}
+
+	return nil
 }

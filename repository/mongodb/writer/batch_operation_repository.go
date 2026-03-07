@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	ErrBatchOperationNotFound     = errors.New("batch operation not found")
+	ErrBatchOperationNotFound       = errors.New("batch operation not found")
 	ErrBatchOperationNotCancellable = errors.New("batch operation is not cancellable")
 )
 
@@ -45,7 +45,7 @@ type BatchOperationRepository interface {
 
 // BatchOperationRepositoryImpl 批量操作仓储实现
 type BatchOperationRepositoryImpl struct {
-	*base.BaseMongoRepository // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	*base.BaseMongoRepository                   // 嵌入基类，继承ID转换和通用CRUD方法喵~
 	itemCollection            *mongo.Collection // 辅助collection独立管理喵~
 }
 
@@ -60,8 +60,16 @@ func NewBatchOperationRepository(db *mongo.Database) BatchOperationRepository {
 // Create 创建批量操作
 func (r *BatchOperationRepositoryImpl) Create(ctx context.Context, op *writer.BatchOperation) error {
 	op.TouchForCreate()
-	_, err := r.GetCollection().InsertOne(ctx, op)
-	return err
+	result, err := r.GetCollection().InsertOne(ctx, op)
+	if err != nil {
+		return err
+	}
+	if op.ID.IsZero() {
+		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+			op.ID = oid
+		}
+	}
+	return nil
 }
 
 // GetByID 根据ID获取批量操作

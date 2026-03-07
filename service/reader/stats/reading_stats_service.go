@@ -37,37 +37,31 @@ func NewReadingStatsService(
 
 // CalculateChapterStats 计算章节统计数据
 func (s *ReadingStatsService) CalculateChapterStats(ctx context.Context, chapterID string) (*stats.ChapterStats, error) {
-	// 1. 获取基础统计
 	uniqueReaders, err := s.readerBehaviorRepo.CountUniqueReadersByChapter(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("统计独立读者数失败: %w", err)
 	}
 
-	// 2. 计算平均阅读时长
 	avgReadTime, err := s.readerBehaviorRepo.CalculateAvgReadTime(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("计算平均阅读时长失败: %w", err)
 	}
 
-	// 3. 计算完读率
-	completionRate, err := s.readerBehaviorRepo.CalculateCompletionRate(ctx, chapterID)
+	completionRate, err := s.CalculateCompletionRate(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("计算完读率失败: %w", err)
 	}
 
-	// 4. 计算跳出率
-	dropOffRate, err := s.readerBehaviorRepo.CalculateDropOffRate(ctx, chapterID)
+	dropOffRate, err := s.CalculateDropOffRate(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("计算跳出率失败: %w", err)
 	}
 
-	// 5. 获取现有统计记录
 	chapterStats, err := s.chapterStatsRepo.GetByChapterID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("获取章节统计失败: %w", err)
 	}
 
-	// 6. 更新统计数据
 	if chapterStats != nil {
 		updates := map[string]interface{}{
 			"unique_viewers":  uniqueReaders,
@@ -82,7 +76,6 @@ func (s *ReadingStatsService) CalculateChapterStats(ctx context.Context, chapter
 			return nil, fmt.Errorf("更新章节统计失败: %w", err)
 		}
 
-		// 重新获取更新后的数据
 		chapterStats, err = s.chapterStatsRepo.GetByChapterID(ctx, chapterID)
 		if err != nil {
 			return nil, fmt.Errorf("获取更新后的章节统计失败: %w", err)
@@ -212,7 +205,36 @@ func (s *ReadingStatsService) GenerateHeatmap(ctx context.Context, bookID string
 
 // CalculateCompletionRate 计算完读率
 func (s *ReadingStatsService) CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error) {
-	return s.readerBehaviorRepo.CalculateCompletionRate(ctx, chapterID)
+	totalCount, err := s.readerBehaviorRepo.CountByChapter(ctx, chapterID)
+	if err != nil {
+		return 0, fmt.Errorf("获取总行为数失败: %w", err)
+	}
+	if totalCount == 0 {
+		return 0, nil
+	}
+
+	completeCount, err := s.readerBehaviorRepo.CountByChapterAndType(ctx, chapterID, stats.BehaviorTypeComplete)
+	if err != nil {
+		return 0, fmt.Errorf("获取完读行为数失败: %w", err)
+	}
+	return float64(completeCount) / float64(totalCount), nil
+}
+
+// CalculateDropOffRate 计算跳出率
+func (s *ReadingStatsService) CalculateDropOffRate(ctx context.Context, chapterID string) (float64, error) {
+	totalCount, err := s.readerBehaviorRepo.CountByChapter(ctx, chapterID)
+	if err != nil {
+		return 0, fmt.Errorf("获取总行为数失败: %w", err)
+	}
+	if totalCount == 0 {
+		return 0, nil
+	}
+
+	dropOffCount, err := s.readerBehaviorRepo.CountByChapterAndType(ctx, chapterID, stats.BehaviorTypeDropOff)
+	if err != nil {
+		return 0, fmt.Errorf("获取跳出行为数失败: %w", err)
+	}
+	return float64(dropOffCount) / float64(totalCount), nil
 }
 
 // CalculateDropOffPoints 计算跳出点
@@ -269,7 +291,24 @@ func (s *ReadingStatsService) RecordReaderBehavior(ctx context.Context, behavior
 
 // CalculateRetention 计算留存率
 func (s *ReadingStatsService) CalculateRetention(ctx context.Context, bookID string, days int) (float64, error) {
-	return s.readerBehaviorRepo.CalculateRetention(ctx, bookID, days)
+	now := time.Now()
+	targetDate := now.AddDate(0, 0, -days)
+	targetDateEnd := targetDate.Add(24 * time.Hour)
+
+	targetReaders, err := s.readerBehaviorRepo.GetDistinctUsersByBookAndDateRange(ctx, bookID, targetDate, targetDateEnd)
+	if err != nil {
+		return 0, fmt.Errorf("获取目标读者失败: %w", err)
+	}
+	if len(targetReaders) == 0 {
+		return 0, nil
+	}
+
+	today := now.Truncate(24 * time.Hour)
+	activeCount, err := s.readerBehaviorRepo.CountActiveUsersInList(ctx, bookID, targetReaders, today)
+	if err != nil {
+		return 0, fmt.Errorf("统计活跃读者失败: %w", err)
+	}
+	return float64(activeCount) / float64(len(targetReaders)), nil
 }
 
 // GetDailyStats 获取每日统计

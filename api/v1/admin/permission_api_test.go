@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	authModel "Qingyu_backend/models/auth"
 	sharedService "Qingyu_backend/service/shared"
@@ -444,8 +445,8 @@ func TestPermissionAPI_GetAllRoles_Success(t *testing.T) {
 	router := setupPermissionAPITestRouter(mockService)
 
 	expectedRoles := []*authModel.Role{
-		{ID: "role1", Name: "Admin", Permissions: []string{"read", "write"}},
-		{ID: "role2", Name: "User", Permissions: []string{"read"}},
+		{ID: primitive.NewObjectID(), Name: "Admin", Permissions: []string{"read", "write"}},
+		{ID: primitive.NewObjectID(), Name: "User", Permissions: []string{"read"}},
 	}
 
 	mockService.On("GetAllRoles", mock.Anything).Return(expectedRoles, nil)
@@ -486,8 +487,8 @@ func TestPermissionAPI_GetRole_Success(t *testing.T) {
 	mockService := new(MockPermissionService)
 	router := setupPermissionAPITestRouter(mockService)
 
-	roleID := "role123"
-	expectedRole := &authModel.Role{ID: roleID, Name: "Editor"}
+	roleID := primitive.NewObjectID().Hex()
+	expectedRole := &authModel.Role{ID: primitive.NewObjectID(), Name: "Editor"}
 
 	mockService.On("GetRoleByID", mock.Anything, roleID).Return(expectedRole, nil)
 
@@ -566,8 +567,9 @@ func TestPermissionAPI_UpdateRole_Success(t *testing.T) {
 	mockService := new(MockPermissionService)
 	router := setupPermissionAPITestRouter(mockService)
 
-	roleID := "role123"
-	req := authModel.Role{ID: roleID, Name: "Updated Moderator"}
+	roleObjectID := primitive.NewObjectID()
+	roleID := roleObjectID.Hex()
+	req := authModel.Role{ID: roleObjectID, Name: "Updated Moderator"}
 	mockService.On("UpdateRole", mock.Anything, &req).Return(nil)
 
 	// When

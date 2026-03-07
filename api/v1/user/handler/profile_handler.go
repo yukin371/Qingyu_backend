@@ -1,10 +1,7 @@
 package handler
 
 import (
-	serviceInterfaces "Qingyu_backend/service/interfaces/base"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"errors"
-	"net/http"
 	"strings"
 	"time"
 
@@ -12,6 +9,9 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
+	"Qingyu_backend/pkg/response"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	sharedStorage "Qingyu_backend/service/shared/storage"
 )
 
@@ -50,7 +50,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -65,18 +65,18 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 		if errors.As(err, &serviceErr) {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			default:
-				shared.InternalError(c, "获取用户信息失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "获取用户信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	// 直接返回 Service 层的 DTO
-	shared.Success(c, http.StatusOK, "获取成功", resp.User)
+	response.Success(c, resp.User)
 }
 
 // UpdateProfile 更新当前用户信息
@@ -97,13 +97,13 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req dto.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	if req.Birthday != nil && *req.Birthday != "" {
 		birthday, err := time.Parse(time.RFC3339, *req.Birthday)
 		if err != nil {
-			shared.BadRequest(c, "生日格式错误，请使用RFC3339格式（如1990-01-01T00:00:00Z）", err.Error())
+			response.BadRequest(c, "生日格式错误，请使用RFC3339格式（如1990-01-01T00:00:00Z）", err.Error())
 			return
 		}
 		updates["birthday"] = birthday
@@ -155,20 +155,20 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			case serviceInterfaces.ErrorTypeValidation:
-				shared.BadRequest(c, "更新失败", serviceErr.Message)
+				response.BadRequest(c, "更新失败", serviceErr.Message)
 			default:
-				shared.InternalError(c, "更新失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "更新失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	// 返回更新后的用户信息
-	shared.Success(c, http.StatusOK, "更新成功", updatedUser)
+	response.Success(c, updatedUser)
 }
 
 // UpdatePassword 修改密码
@@ -189,13 +189,13 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req dto.UpdatePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
@@ -215,21 +215,21 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			case serviceInterfaces.ErrorTypeUnauthorized:
-				shared.Unauthorized(c, "旧密码错误")
+				response.Unauthorized(c, "旧密码错误")
 			case serviceInterfaces.ErrorTypeValidation:
-				shared.BadRequest(c, "修改密码失败", serviceErr.Message)
+				response.BadRequest(c, "修改密码失败", serviceErr.Message)
 			default:
-				shared.InternalError(c, "修改密码失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "修改密码失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "密码修改成功", nil)
+	response.Success(c, nil)
 }
 
 // UploadAvatar 上传头像
@@ -251,27 +251,27 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	// 检查存储服务是否可用
 	if h.storageService == nil {
-		shared.InternalError(c, "存储服务不可用", nil)
+		response.InternalError(c, nil)
 		return
 	}
 
 	// 获取上传的文件
 	fileHeader, err := c.FormFile("avatar")
 	if err != nil {
-		shared.BadRequest(c, "请选择文件", err.Error())
+		response.BadRequest(c, "请选择文件", err.Error())
 		return
 	}
 
 	// 验证文件大小（最大5MB）
 	const maxSize = 5 * 1024 * 1024
 	if fileHeader.Size > maxSize {
-		shared.BadRequest(c, "文件大小不能超过5MB", "")
+		response.BadRequest(c, "文件大小不能超过5MB", "")
 		return
 	}
 
@@ -279,14 +279,14 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	allowedTypes := []string{"image/jpeg", "image/jpg", "image/png", "image/gif"}
 	contentType := fileHeader.Header.Get("Content-Type")
 	if !isAllowedType(contentType, allowedTypes) {
-		shared.BadRequest(c, "只支持JPG、PNG、GIF格式", "")
+		response.BadRequest(c, "只支持JPG、PNG、GIF格式", "")
 		return
 	}
 
 	// 打开文件
 	file, err := fileHeader.Open()
 	if err != nil {
-		shared.InternalError(c, "打开文件失败", err)
+		response.InternalError(c, err)
 		return
 	}
 	defer file.Close()
@@ -304,7 +304,7 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 
 	fileInfo, err := h.storageService.Upload(c.Request.Context(), uploadReq)
 	if err != nil {
-		shared.InternalError(c, "上传失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -327,11 +327,11 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	if err != nil {
 		// 上传成功但更新失败，记录警告
 		// 注意：文件已经上传，但没有更新用户记录
-		shared.InternalError(c, "上传成功但更新用户信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, http.StatusOK, "上传成功", dto.UploadAvatarResponse{
+	response.Success(c, dto.UploadAvatarResponse{
 		AvatarURL: avatarURL,
 		Message:   "头像上传成功",
 	})
@@ -372,26 +372,26 @@ func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 	// 从Context中获取当前用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	// 解析请求体
 	var req DowngradeRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 验证确认标志
 	if !req.Confirm {
-		shared.BadRequest(c, "请确认降级操作", "")
+		response.BadRequest(c, "请确认降级操作", "")
 		return
 	}
 
 	// 验证目标角色
 	if req.TargetRole != "reader" && req.TargetRole != "author" {
-		shared.BadRequest(c, "目标角色无效，只能降级为reader或author", "")
+		response.BadRequest(c, "目标角色无效，只能降级为reader或author", "")
 		return
 	}
 
@@ -407,7 +407,7 @@ func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeValidation:
-				shared.BadRequest(c, "参数错误", serviceErr.Message)
+				response.BadRequest(c, "参数错误", serviceErr.Message)
 			case serviceInterfaces.ErrorTypeBusiness:
 				// 业务错误：如"已经是读者，无法降级"应该返回403
 				c.JSON(403, shared.ErrorResponse{
@@ -416,18 +416,18 @@ func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 					Timestamp: time.Now().UnixMilli(),
 				})
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			default:
-				shared.InternalError(c, "降级失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "降级失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	// 返回成功响应
-	shared.Success(c, 200, "降级成功", map[string]interface{}{
+	response.Success(c, map[string]interface{}{
 		"current_roles": resp.CurrentRoles,
 	})
 }

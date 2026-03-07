@@ -1,0 +1,87 @@
+﻿name: Publication Flow Smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'service/auth/**'
+      - 'service/writer/**'
+      - 'repository/mongodb/writer/**'
+      - 'router/admin/**'
+      - 'router/shared/**'
+      - 'router/writer/**'
+      - 'models/dto/**'
+      - 'migration/seeds/**'
+      - 'cmd/seed_data/**'
+      - 'scripts/e2e_publication_flow.py'
+      - 'scripts/testing/publication_flow_smoke.py'
+      - '.github/workflows/publication-flow-smoke.yml'
+
+jobs:
+  smoke:
+    name: Publication Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh 'mongodb://admin:password@localhost:27017/?authSource=admin' --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      GO_VERSION: '1.24'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Set isolated test database
+        run: |
+          SANITIZED_JOB="${GITHUB_JOB//-/_}"
+          echo "TEST_DB_NAME=qingyu_test_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${SANITIZED_JOB}" >> $GITHUB_ENV
+          echo "QINGYU_TEST_DB_ISOLATION=true" >> $GITHUB_ENV
+
+      - name: Run publication flow smoke
+        env:
+          MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          QINGYU_DATABASE_PRIMARY_MONGODB_URI: mongodb://admin:password@localhost:27017/?authSource=admin
+          QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE: ${{ env.TEST_DB_NAME }}
+          REDIS_ADDR: localhost:6379
+          QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
+          QINGYU_SERVER_PORT: '9090'
+          PUBLICATION_SMOKE_BASE_URL: http://localhost:9090
+        run: |
+          python scripts/testing/publication_flow_smoke.py --approve-document

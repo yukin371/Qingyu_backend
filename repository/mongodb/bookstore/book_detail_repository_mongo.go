@@ -24,6 +24,18 @@ type MongoBookDetailRepository struct {
 	client *mongo.Client
 }
 
+func parseObjectIDs(ids []string) ([]primitive.ObjectID, error) {
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, fmt.Errorf("invalid object id %s: %w", id, err)
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
+	return objectIDs, nil
+}
+
 // NewMongoBookDetailRepository 创建MongoDB书籍详情仓储实例
 func NewMongoBookDetailRepository(client *mongo.Client, database string) BookstoreInterface.BookDetailRepository {
 	db := client.Database(database)
@@ -428,7 +440,11 @@ func (r *MongoBookDetailRepository) SearchByFilter(ctx context.Context, filter *
 		query["author_id"] = *filter.AuthorID
 	}
 	if len(filter.CategoryIDs) > 0 {
-		query["category_ids"] = bson.M{"$in": filter.CategoryIDs}
+		categoryObjectIDs, err := parseObjectIDs(filter.CategoryIDs)
+		if err != nil {
+			return nil, err
+		}
+		query["category_ids"] = bson.M{"$in": categoryObjectIDs}
 	}
 	if len(filter.Tags) > 0 {
 		query["tags"] = bson.M{"$in": filter.Tags}
@@ -605,7 +621,7 @@ func (r *MongoBookDetailRepository) GetSimilarBooks(ctx context.Context, bookID 
 		return nil, err
 	}
 	query := bson.M{
-		"_id": bson.M{"$ne": bookID},
+		"_id": bson.M{"$ne": objectID},
 		"$or": []bson.M{
 			{"tags": bson.M{"$in": current.Tags}},
 			{"category_ids": bson.M{"$in": current.CategoryIDs}},
@@ -705,14 +721,19 @@ func (r *MongoBookDetailRepository) BatchUpdateCategories(ctx context.Context, b
 		objectIDs = append(objectIDs, oid)
 	}
 
+	categoryObjectIDs, err := parseObjectIDs(categoryIDs)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
 	update := bson.M{
 		"$set": bson.M{
-			"category_ids": categoryIDs,
+			"category_ids": categoryObjectIDs,
 			"updated_at":   time.Now(),
 		},
 	}
-	_, err := r.GetCollection().UpdateMany(ctx, filter, update)
+	_, err = r.GetCollection().UpdateMany(ctx, filter, update)
 	return err
 }
 
@@ -938,7 +959,11 @@ func (r *MongoBookDetailRepository) CountByFilter(ctx context.Context, filterObj
 		query["author_id"] = *filterObj.AuthorID
 	}
 	if len(filterObj.CategoryIDs) > 0 {
-		query["category_ids"] = bson.M{"$in": filterObj.CategoryIDs}
+		categoryObjectIDs, err := parseObjectIDs(filterObj.CategoryIDs)
+		if err != nil {
+			return 0, err
+		}
+		query["category_ids"] = bson.M{"$in": categoryObjectIDs}
 	}
 	if len(filterObj.Tags) > 0 {
 		query["tags"] = bson.M{"$in": filterObj.Tags}

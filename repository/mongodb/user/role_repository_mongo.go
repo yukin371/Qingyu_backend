@@ -57,8 +57,8 @@ func (r *MongoRoleRepository) Create(ctx context.Context, role *authModel.Role) 
 	role.UpdatedAt = now
 
 	// 生成ObjectID
-	if role.ID == "" {
-		role.ID = primitive.NewObjectID().Hex()
+	if role.ID.IsZero() {
+		role.ID = primitive.NewObjectID()
 	}
 
 	// 插入文档
@@ -233,7 +233,15 @@ func (r *MongoRoleRepository) Count(ctx context.Context, filter infrastructure.F
 
 // Exists 检查角色是否存在
 func (r *MongoRoleRepository) Exists(ctx context.Context, id string) (bool, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return false, UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,
@@ -392,7 +400,15 @@ func (r *MongoRoleRepository) GetRolePermissions(ctx context.Context, roleID str
 // UpdateRolePermissions 更新角色的全部权限
 func (r *MongoRoleRepository) UpdateRolePermissions(ctx context.Context, roleID string, permissions []string) error {
 	now := time.Now()
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{
 		"permissions": permissions,
 		"updated_at":  now,
@@ -421,7 +437,15 @@ func (r *MongoRoleRepository) UpdateRolePermissions(ctx context.Context, roleID 
 // AddPermission 为角色添加权限
 func (r *MongoRoleRepository) AddPermission(ctx context.Context, roleID string, permission string) error {
 	now := time.Now()
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{
 		"$addToSet": bson.M{"permissions": permission},
 		"$set":      bson.M{"updated_at": now},
@@ -450,7 +474,15 @@ func (r *MongoRoleRepository) AddPermission(ctx context.Context, roleID string, 
 // RemovePermission 从角色移除权限
 func (r *MongoRoleRepository) RemovePermission(ctx context.Context, roleID string, permission string) error {
 	now := time.Now()
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return UserInterface.NewUserRepositoryError(
+			UserInterface.ErrorTypeValidation,
+			"无效的角色ID",
+			err,
+		)
+	}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{
 		"$pull": bson.M{"permissions": permission},
 		"$set":  bson.M{"updated_at": now},

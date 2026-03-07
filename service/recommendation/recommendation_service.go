@@ -2,6 +2,7 @@ package recommendation
 
 import (
 	recModel "Qingyu_backend/models/recommendation"
+	sharedtypes "Qingyu_backend/models/shared/types"
 	"context"
 	"fmt"
 	"sort"
@@ -172,11 +173,16 @@ func (s *RecommendationServiceImpl) GetHotItems(ctx context.Context, itemType st
 
 // RecordUserBehavior 记录用户行为
 func (s *RecommendationServiceImpl) RecordUserBehavior(ctx context.Context, req *RecordBehaviorRequest) error {
+	actionType, err := sharedtypes.ParseRecommendationBehaviorType(req.ActionType)
+	if err != nil {
+		return fmt.Errorf("无效的行为类型: %w", err)
+	}
+
 	behavior := &recModel.UserBehavior{
 		UserID:     req.UserID,
 		ItemID:     req.ItemID,
 		ItemType:   req.ItemType,
-		ActionType: req.ActionType,
+		ActionType: actionType.String(),
 		Duration:   req.Duration,
 		Metadata:   req.Metadata,
 	}
@@ -198,12 +204,16 @@ func (s *RecommendationServiceImpl) GetUserBehaviors(ctx context.Context, userID
 	// 转换为响应格式
 	result := make([]*UserBehavior, len(behaviors))
 	for i, b := range behaviors {
+		actionType, err := sharedtypes.ParseRecommendationBehaviorType(b.ActionType)
+		if err != nil {
+			actionType = sharedtypes.RecommendationBehaviorType(b.ActionType)
+		}
 		result[i] = &UserBehavior{
-			ID:         b.ID,
+			ID:         b.ID.Hex(),
 			UserID:     b.UserID,
 			ItemID:     b.ItemID,
 			ItemType:   b.ItemType,
-			ActionType: b.ActionType,
+			ActionType: actionType.String(),
 			Duration:   b.Duration,
 			Metadata:   b.Metadata,
 			CreatedAt:  b.CreatedAt,
