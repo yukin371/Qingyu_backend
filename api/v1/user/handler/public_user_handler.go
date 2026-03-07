@@ -45,9 +45,9 @@ func (h *PublicUserHandler) SetBookstoreService(bookstoreSvc BookstoreService) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse{data=dto.UserProfileResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.UserProfileResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id} [get]
 func (h *PublicUserHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
@@ -104,9 +104,9 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse{data=dto.PublicUserProfileResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.PublicUserProfileResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id}/profile [get]
 func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 	userID := c.Param("id")
@@ -166,9 +166,9 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 //	@Param			page	query		int		false	"页码"		default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
 //	@Param			status	query		string	false	"状态筛选"	Enums(published, completed)
-//	@Success		200		{object}	shared.APIResponse{data=dto.GetUserBooksResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.GetUserBooksResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id}/books [get]
 func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 	userID := c.Param("id")

@@ -31,10 +31,10 @@ func NewProgressAPI(progressService contentService.ReadingProgressServicePort) *
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookId	path		string	true	"书籍ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/{bookId} [get]
 func (api *ProgressAPI) GetProgress(c *gin.Context) {
 	bookID := c.Param("bookId")
@@ -67,10 +67,10 @@ func (api *ProgressAPI) GetProgress(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SaveProgressRequest	true	"保存进度请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/progress [post]
 func (api *ProgressAPI) SaveProgress(c *gin.Context) {
 	var req dto.SaveProgressRequest
@@ -105,10 +105,10 @@ func (api *ProgressAPI) SaveProgress(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object{bookId=string,duration=int}	true	"更新时长请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/reading-time [put]
 func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 	var req struct {
@@ -144,9 +144,9 @@ func (api *ProgressAPI) UpdateReadingTime(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/recent [get]
 func (api *ProgressAPI) GetRecentBooks(c *gin.Context) {
 	// 获取用户ID
@@ -177,9 +177,9 @@ func (api *ProgressAPI) GetRecentBooks(c *gin.Context) {
 //	@Tags			内容管理-进度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/stats [get]
 func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 	// 获取用户ID
@@ -207,10 +207,10 @@ func (api *ProgressAPI) GetReadingStats(c *gin.Context) {
 //	@Produce		json
 //	@Param			page		query		int	false	"页码"	default(1)
 //	@Param			pageSize	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/history [get]
 func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 	// 获取用户ID
@@ -246,9 +246,9 @@ func (api *ProgressAPI) GetReadingHistory(c *gin.Context) {
 //	@Tags			内容管理-进度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/unfinished [get]
 func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
@@ -274,9 +274,9 @@ func (api *ProgressAPI) GetUnfinishedBooks(c *gin.Context) {
 //	@Tags			内容管理-进度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/progress/finished [get]
 func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID

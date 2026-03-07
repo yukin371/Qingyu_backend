@@ -29,7 +29,7 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/wallet/balance [get]
@@ -57,7 +57,7 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/wallet [get]
@@ -92,7 +92,7 @@ type RechargeRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		RechargeRequest	true	"充值信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -136,7 +136,7 @@ type ConsumeRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		ConsumeRequest	true	"消费信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -181,7 +181,7 @@ type TransferRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		TransferRequest	true	"转账信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -221,7 +221,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			type		query		string	false	"交易类型"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/wallet/transactions [get]
@@ -267,7 +267,7 @@ type WithdrawRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		WithdrawRequest	true	"提现信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -307,7 +307,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			status		query		string	false	"状态"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/wallet/withdrawals [get]

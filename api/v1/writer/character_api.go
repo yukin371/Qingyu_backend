@@ -28,9 +28,9 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body object true "创建角色请求"
-// @Success 201 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [post]
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -70,8 +70,8 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 // @Produce json
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [get]
 func (api *CharacterApi) GetCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -98,7 +98,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [get]
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -125,9 +125,9 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
 // @Param request body object true "更新角色请求"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [put]
 func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -161,8 +161,8 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 // @Produce json
 // @Param characterId path string true "角色ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [delete]
 func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 	characterID := c.Param("characterId")
@@ -190,8 +190,8 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 // @Produce json
 // @Param projectId query string true "项目ID"
 // @Param request body object true "创建关系请求"
-// @Success 201 {object} response.Response
-// @Failure 400 {object} response.Response
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /api/v1/characters/relations [post]
 func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
@@ -223,7 +223,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param characterId query string false "角色ID（可选，不传则返回项目所有关系）"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/relations [get]
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -255,8 +255,8 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 // @Produce json
 // @Param relationId path string true "关系ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/relations/{relationId} [delete]
 func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 	relationID := c.Param("relationId")
@@ -283,7 +283,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/graph [get]
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 	projectID := c.Param("projectId")

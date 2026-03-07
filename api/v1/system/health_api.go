@@ -25,8 +25,8 @@ func NewHealthAPI() *HealthAPI {
 // @Tags 系统监控
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse "健康"
-// @Failure 500 {object} shared.ErrorResponse "不健康"
+// @Success 200 {object} response.APIResponse "健康"
+// @Failure 500 {object} response.APIResponse "不健康"
 // @Router /api/v1/system/health [get]
 func (api *HealthAPI) SystemHealth(c *gin.Context) {
 	container := service.GetServiceContainer()
@@ -64,9 +64,9 @@ func (api *HealthAPI) SystemHealth(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param service path string true "服务名称"
-// @Success 200 {object} shared.APIResponse "健康"
-// @Failure 404 {object} shared.ErrorResponse "服务不存在"
-// @Failure 500 {object} shared.ErrorResponse "不健康"
+// @Success 200 {object} response.APIResponse "健康"
+// @Failure 404 {object} response.APIResponse "服务不存在"
+// @Failure 500 {object} response.APIResponse "不健康"
 // @Router /api/v1/system/health/{service} [get]
 func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 	serviceName := c.Param("service")
@@ -103,8 +103,8 @@ func (api *HealthAPI) ServiceHealth(c *gin.Context) {
 // @Tags 系统监控
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse "成功"
-// @Failure 500 {object} shared.ErrorResponse "失败"
+// @Success 200 {object} response.APIResponse "成功"
+// @Failure 500 {object} response.APIResponse "失败"
 // @Router /api/v1/system/metrics [get]
 func (api *HealthAPI) AllMetrics(c *gin.Context) {
 	container := service.GetServiceContainer()
@@ -135,9 +135,9 @@ func (api *HealthAPI) AllMetrics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param service path string true "服务名称"
-// @Success 200 {object} shared.APIResponse "成功"
-// @Failure 404 {object} shared.ErrorResponse "服务不存在"
-// @Failure 500 {object} shared.ErrorResponse "失败"
+// @Success 200 {object} response.APIResponse "成功"
+// @Failure 404 {object} response.APIResponse "服务不存在"
+// @Failure 500 {object} response.APIResponse "失败"
 // @Router /api/v1/system/metrics/{service} [get]
 func (api *HealthAPI) ServiceMetrics(c *gin.Context) {
 	serviceName := c.Param("service")

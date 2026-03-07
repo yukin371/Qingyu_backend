@@ -133,7 +133,7 @@ func (api *CategoryAdminAPI) GetCategoryByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "分类ID"
-// @Param request body adminsvc.UpdateCategoryRequest true "更新内容"
+// @Param request body admin.UpdateCategoryRequest true "更新内容"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -193,7 +193,7 @@ func (api *CategoryAdminAPI) DeleteCategory(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "分类ID"
-// @Param request body adminsvc.MoveCategoryRequest true "移动信息"
+// @Param request body admin.MoveCategoryRequest true "移动信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/admin/categories/{id}/move [put]
@@ -225,7 +225,7 @@ func (api *CategoryAdminAPI) MoveCategory(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "分类ID"
-// @Param request body object {sort_order=int} true "排序序号"
+// @Param request body map[string]int true "排序序号 {\"sort_order\": 1}"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/admin/categories/{id}/sort [put]
@@ -250,4 +250,30 @@ func (api *CategoryAdminAPI) SortCategory(c *gin.Context) {
 	}
 
 	response.SuccessJSON(c, "调整成功", nil)
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// CreateCategoryRequest 创建分类请求
+type CreateCategoryRequest struct {
+	Name        string `json:"name" binding:"required" example:"玄幻"`
+	Description string `json:"description" example:"玄幻小说分类"`
+	ParentID    string `json:"parent_id" example:""`
+	SortOrder   int    `json:"sort_order" example:"1"`
+	Icon        string `json:"icon" example:"/icons/xuanhuan.png"`
+}
+
+// UpdateCategoryRequest 更新分类请求
+type UpdateCategoryRequest struct {
+	Name        string `json:"name" example:"玄幻"`
+	Description string `json:"description" example:"玄幻小说分类"`
+	ParentID    string `json:"parent_id" example:""`
+	SortOrder   int    `json:"sort_order" example:"1"`
+	Icon        string `json:"icon" example:"/icons/xuanhuan.png"`
+	IsActive    bool   `json:"is_active" example:"true"`
+}
+
+// MoveCategoryRequest 移动分类请求
+type MoveCategoryRequest struct {
+	NewParentID string `json:"new_parent_id" binding:"required" example:"parent_category_id"`
 }

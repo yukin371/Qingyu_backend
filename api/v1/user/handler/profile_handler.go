@@ -41,10 +41,10 @@ func (h *ProfileHandler) SetStorageService(storageSvc sharedStorage.StorageServi
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200		{object}	shared.APIResponse{data=dto.UserProfileResponse}
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.UserProfileResponse}
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/profile [get]
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
@@ -88,10 +88,10 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		dto.UpdateProfileRequest	true	"更新信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/profile [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
@@ -180,10 +180,10 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		dto.UpdatePasswordRequest	true	"密码信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/password [put]
 func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 	// 从Context中获取当前用户ID
@@ -241,11 +241,11 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			file	formData	file	true	"头像文件"
-//	@Success		200		{object}	shared.APIResponse{data=dto.UploadAvatarResponse}
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		413		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.UploadAvatarResponse}
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		413		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/avatar [post]
 func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	// 从Context中获取当前用户ID
@@ -362,11 +362,11 @@ type DowngradeRoleRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		DowngradeRoleRequest	true	"降级请求"
-//	@Success		200		{object}	shared.APIResponse{data=map[string]interface{}}
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=map[string]interface{}}
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/role/downgrade [post]
 func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 	// 从Context中获取当前用户ID
@@ -410,7 +410,7 @@ func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 				response.BadRequest(c, "参数错误", serviceErr.Message)
 			case serviceInterfaces.ErrorTypeBusiness:
 				// 业务错误：如"已经是读者，无法降级"应该返回403
-				c.JSON(403, shared.ErrorResponse{
+				c.JSON(403, response.APIResponse{
 					Code:      1003,
 					Message:   serviceErr.Message,
 					Timestamp: time.Now().UnixMilli(),

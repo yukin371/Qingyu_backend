@@ -37,9 +37,9 @@ func NewAnnouncementAPI(announcementService messagingService.AnnouncementService
 // @Param offset query int false "偏移量" default(0)
 // @Param sortBy query string false "排序字段(priority/created_at/view_count)" default(priority)
 // @Param sortOrder query string false "排序方向(asc/desc)" default(desc)
-// @Success 200 {object} shared.APIResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements [get]
 func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 	// 解析查询参数
@@ -110,10 +110,10 @@ func (api *AnnouncementAPI) GetAnnouncements(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements/{id} [get]
 func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
@@ -138,10 +138,10 @@ func (api *AnnouncementAPI) GetAnnouncementByID(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body object true "创建公告请求"
-// @Success 201 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements [post]
 func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 	var req messagingService.CreateAnnouncementRequest
@@ -174,11 +174,11 @@ func (api *AnnouncementAPI) CreateAnnouncement(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
 // @Param request body object true "更新公告请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements/{id} [put]
 func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
@@ -208,11 +208,11 @@ func (api *AnnouncementAPI) UpdateAnnouncement(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path string true "公告ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements/{id} [delete]
 func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 	id, ok := shared.GetRequiredParam(c, "id", "公告ID")
@@ -236,10 +236,10 @@ func (api *AnnouncementAPI) DeleteAnnouncement(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body object true "批量更新状态请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements/batch-status [put]
 func (api *AnnouncementAPI) BatchUpdateStatus(c *gin.Context) {
 	var req messagingService.BatchUpdateAnnouncementStatusRequest
@@ -269,10 +269,10 @@ type BatchDeleteRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body BatchDeleteRequest true "批量删除请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/announcements/batch-delete [delete]
 func (api *AnnouncementAPI) BatchDelete(c *gin.Context) {
 	var req BatchDeleteRequest

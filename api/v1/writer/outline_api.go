@@ -28,9 +28,9 @@ func NewOutlineApi(outlineService interfaces.OutlineService) *OutlineApi {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param request body interfaces.CreateOutlineRequest true "创建大纲请求"
-// @Success 201 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 401 {object} response.Response
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines [post]
 func (api *OutlineApi) CreateOutline(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -70,8 +70,8 @@ func (api *OutlineApi) CreateOutline(c *gin.Context) {
 // @Produce json
 // @Param outlineId path string true "大纲ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [get]
 func (api *OutlineApi) GetOutline(c *gin.Context) {
 	outlineID := c.Param("outlineId")
@@ -98,7 +98,7 @@ func (api *OutlineApi) GetOutline(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines [get]
 func (api *OutlineApi) ListOutlines(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -123,7 +123,7 @@ func (api *OutlineApi) ListOutlines(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines/tree [get]
 func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 	projectID := c.Param("projectId")
@@ -150,9 +150,9 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 // @Param outlineId path string true "大纲ID"
 // @Param projectId query string true "项目ID"
 // @Param request body interfaces.UpdateOutlineRequest true "更新大纲请求"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [put]
 func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 	outlineID := c.Param("outlineId")
@@ -186,8 +186,8 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 // @Produce json
 // @Param outlineId path string true "大纲ID"
 // @Param projectId query string true "项目ID"
-// @Success 200 {object} response.Response
-// @Failure 404 {object} response.Response
+// @Success 200 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [delete]
 func (api *OutlineApi) DeleteOutline(c *gin.Context) {
 	outlineID := c.Param("outlineId")
@@ -215,7 +215,7 @@ func (api *OutlineApi) DeleteOutline(c *gin.Context) {
 // @Produce json
 // @Param projectId path string true "项目ID"
 // @Param parentId query string false "父节点ID（不传则返回根节点）"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines/children [get]
 func (api *OutlineApi) GetOutlineChildren(c *gin.Context) {
 	projectID := c.Param("projectId")

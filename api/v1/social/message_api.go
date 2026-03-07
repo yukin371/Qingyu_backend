@@ -311,7 +311,7 @@ func (api *MessageAPIV2) CreateConversation(c *gin.Context) {
 // @Security BearerAuth
 // @Param conversationId path string true "会话ID"
 // @Param request body dto.MarkConversationReadRequest true "标记已读请求"
-// @Success 200 {object} response.APIResponse{data=dto.MarkAsReadResponse}
+// @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse "参数错误"
 // @Router /api/v1/social/messages/conversations/{conversationId}/read [post]
 func (api *MessageAPIV2) MarkConversationRead(c *gin.Context) {

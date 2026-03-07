@@ -29,7 +29,7 @@ func NewQuotaApi(quotaService *aiService.QuotaService) *QuotaApi {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota [get]
 func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -53,7 +53,7 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/all [get]
 func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -77,7 +77,7 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 // @Tags AI配额
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/statistics [get]
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -103,7 +103,7 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 // @Produce json
 // @Param limit query int false "每页数量" default(20)
 // @Param offset query int false "偏移量" default(0)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/transactions [get]
 func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -148,7 +148,7 @@ type RechargeRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body RechargeRequest true "充值请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/recharge [post]
 func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 	userID, exists := c.Get("user_id")

@@ -32,10 +32,10 @@ func NewAuditAdminAPI(auditService audit.ContentAuditService) *AuditAdminAPI {
 //	@Param			targetType	query		string	false	"目标类型(document/chapter/comment)"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			limit		query		int		false	"每页数量"	default(50)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.ErrorResponse
-//	@Failure		403			{object}	shared.ErrorResponse
-//	@Failure		500			{object}	shared.ErrorResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		403			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/pending [get]
 func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 	targetType := c.Query("targetType")
@@ -79,11 +79,11 @@ func (api *AuditAdminAPI) GetPendingAudits(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			id		path		string				true	"审核记录ID"
 //	@Param			request	body		ReviewAuditRequest	true	"审核信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/{id}/review [post]
 func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
@@ -133,11 +133,11 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			id		path		string				true	"审核记录ID"
 //	@Param			request	body		ReviewAppealRequest	true	"审核申诉信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/{id}/appeal/review [post]
 func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
@@ -187,10 +187,10 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			minRiskLevel	query		int	false	"最低风险等级"	default(3)
 //	@Param			limit			query		int	false	"数量限制"		default(50)
-//	@Success		200				{object}	shared.APIResponse
-//	@Failure		401				{object}	shared.ErrorResponse
-//	@Failure		403				{object}	shared.ErrorResponse
-//	@Failure		500				{object}	shared.ErrorResponse
+//	@Success		200				{object}	response.APIResponse
+//	@Failure		401				{object}	response.APIResponse
+//	@Failure		403				{object}	response.APIResponse
+//	@Failure		500				{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/high-risk [get]
 func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 	minRiskLevel := 3
@@ -226,10 +226,10 @@ func (api *AuditAdminAPI) GetHighRiskAudits(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		403	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		403	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/statistics [get]
 func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 	// 调用AuditService获取审核统计
@@ -251,11 +251,11 @@ func (api *AuditAdminAPI) GetAuditStatistics(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		BatchReviewAuditRequest	true	"批量审核请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/audit/batch-review [post]
 func (api *AuditAdminAPI) BatchReviewAudit(c *gin.Context) {
 	var req BatchReviewAuditRequest

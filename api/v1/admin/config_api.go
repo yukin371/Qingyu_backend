@@ -31,9 +31,9 @@ type GetAllConfigsResponse struct {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} shared.APIResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config [get]
 func (api *ConfigAPI) GetAllConfigs(c *gin.Context) {
 	groups, err := api.configService.GetAllConfigs(c.Request.Context())
@@ -60,10 +60,10 @@ type GetConfigByKeyRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param key path string true "配置键（如 server.port）"
-// @Success 200 {object} shared.APIResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config/{key} [get]
 func (api *ConfigAPI) GetConfigByKey(c *gin.Context) {
 	var req GetConfigByKeyRequest
@@ -95,11 +95,11 @@ type UpdateConfigRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body UpdateConfigRequest true "更新配置请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 403 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config [put]
 func (api *ConfigAPI) UpdateConfig(c *gin.Context) {
 	var req UpdateConfigRequest
@@ -135,11 +135,11 @@ type BatchUpdateConfigRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body BatchUpdateConfigRequest true "批量更新配置请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 403 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config/batch [put]
 func (api *ConfigAPI) BatchUpdateConfig(c *gin.Context) {
 	var req BatchUpdateConfigRequest
@@ -178,9 +178,9 @@ type ValidateConfigRequest struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body ValidateConfigRequest true "验证配置请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 401 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
 // @Router /api/v1/admin/config/validate [post]
 func (api *ConfigAPI) ValidateConfig(c *gin.Context) {
 	var req ValidateConfigRequest
@@ -209,9 +209,9 @@ type GetConfigBackupsResponse struct {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} shared.APIResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config/backups [get]
 func (api *ConfigAPI) GetConfigBackups(c *gin.Context) {
 	backups, err := api.configService.GetConfigBackups(c.Request.Context())
@@ -232,10 +232,10 @@ func (api *ConfigAPI) GetConfigBackups(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} shared.APIResponse
-// @Failure 401 {object} shared.ErrorResponse
-// @Failure 403 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 403 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/admin/config/restore [post]
 func (api *ConfigAPI) RestoreConfigBackup(c *gin.Context) {
 	if err := api.configService.RestoreConfigBackup(c.Request.Context()); err != nil {

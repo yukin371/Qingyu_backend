@@ -30,11 +30,11 @@ func NewSystemAdminAPI(adminSvc admin.AdminService) *SystemAdminAPI {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		ReviewWithdrawRequest	true	"审核信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/withdraw/review [post]
 func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	var req ReviewWithdrawRequest
@@ -69,11 +69,11 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/statistics [get]
 func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 	userID := c.Param("id")
@@ -104,10 +104,10 @@ func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 //	@Param			page_size	query		int		false	"每页数量"		default(20)
 //	@Param			admin_id	query		string	false	"管理员ID"
 //	@Param			operation	query		string	false	"操作类型"
-//	@Success		200			{object}	shared.PaginatedResponse
-//	@Failure		401			{object}	shared.ErrorResponse
-//	@Failure		403			{object}	shared.ErrorResponse
-//	@Failure		500			{object}	shared.ErrorResponse
+//	@Success		200			{object}	response.PaginatedResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		403			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/operation-logs [get]
 func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 	// 解析分页参数
@@ -142,10 +142,10 @@ func (api *SystemAdminAPI) GetOperationLogs(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	shared.APIResponse{data=SystemStatsResponse}
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		403	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse{data=SystemStatsResponse}
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		403	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/admin/stats [get]
 func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -168,10 +168,10 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		403	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		403	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/admin/config [get]
 func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -195,11 +195,11 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		SystemConfigRequest	true	"配置信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/config [put]
 func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	var req SystemConfigRequest
@@ -229,11 +229,11 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		object	true	"公告信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/announcements [post]
 func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	var req struct {
@@ -277,10 +277,10 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int	false	"页码"		default(1)
 //	@Param			page_size	query		int	false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.PaginatedResponse
-//	@Failure		401			{object}	shared.ErrorResponse
-//	@Failure		403			{object}	shared.ErrorResponse
-//	@Failure		500			{object}	shared.ErrorResponse
+//	@Success		200			{object}	response.PaginatedResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		403			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/announcements [get]
 func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))

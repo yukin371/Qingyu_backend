@@ -1,13 +1,15 @@
 package shared
 
 import (
-	"Qingyu_backend/service/shared/storage"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/shared/storage"
 )
 
 // StorageAPI 文件存储API处理器
@@ -28,6 +30,9 @@ type initiateMultipartUploadPayload struct {
 	IsPublic  bool              `json:"is_public"`
 	Metadata  map[string]string `json:"metadata,omitempty"`
 }
+
+// 确保 response 包被导入以支持 swagger 文档生成
+var _ = response.APIResponse{}
 
 // NewStorageAPI 创建存储API实例
 func NewStorageAPI(
@@ -55,10 +60,10 @@ func NewStorageAPI(
 //	@Param			file		formData	file	true	"文件"
 //	@Param			category	formData	string	false	"分类"	default(attachment)
 //	@Param			is_public	formData	boolean	false	"是否公开"	default(false)
-//	@Success		200			{object}	APIResponse
-//	@Failure		400			{object}	ErrorResponse
-//	@Failure		401			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		401			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files/upload [post]
 func (api *StorageAPI) UploadFile(c *gin.Context) {
 	// 1. 获取用户ID
@@ -110,10 +115,10 @@ func (api *StorageAPI) UploadFile(c *gin.Context) {
 //	@Produce		octet-stream
 //	@Param			id	path	string	true	"文件ID"
 //	@Success		200	{file}	binary	"文件内容"
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		403	{object}	ErrorResponse
-//	@Failure		404	{object}	ErrorResponse
-//	@Failure		500	{object}	ErrorResponse
+//	@Failure		400	{object} response.APIResponse
+//	@Failure		403	{object} response.APIResponse
+//	@Failure		404	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/files/{id}/download [get]
 func (api *StorageAPI) DownloadFile(c *gin.Context) {
 	// 1. 获取文件ID
@@ -167,10 +172,10 @@ func (api *StorageAPI) DownloadFile(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"文件ID"
-//	@Success		200	{object}	APIResponse
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		404	{object}	ErrorResponse
-//	@Failure		500	{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400	{object} response.APIResponse
+//	@Failure		404	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/files/{id} [get]
 func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 	fileID := c.Param("id")
@@ -196,11 +201,11 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"文件ID"
-//	@Success		200	{object}	APIResponse
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		401	{object}	ErrorResponse
-//	@Failure		403	{object}	ErrorResponse
-//	@Failure		500	{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400	{object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		403	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/files/{id} [delete]
 func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	// 1. 获取文件ID和用户ID
@@ -244,9 +249,9 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 //	@Param			category	query		string	false	"分类"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页大小"	default(20)
-//	@Success		200			{object}	PaginatedResponse
-//	@Failure		401			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.PaginatedResponse
+//	@Failure		401			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files [get]
 func (api *StorageAPI) ListFiles(c *gin.Context) {
 	// 1. 获取用户ID
@@ -286,9 +291,9 @@ func (api *StorageAPI) ListFiles(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			id			path		string	true	"文件ID"
 //	@Param			expires_in	query		int		false	"过期时间(秒)"	default(3600)
-//	@Success		200			{object}	APIResponse
-//	@Failure		400			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files/{id}/url [get]
 func (api *StorageAPI) GetDownloadURL(c *gin.Context) {
 	fileID := c.Param("id")
@@ -321,10 +326,10 @@ func (api *StorageAPI) GetDownloadURL(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		storage.InitiateMultipartUploadRequest	true	"初始化请求"
-//	@Success		200		{object}	APIResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		401		{object}	ErrorResponse
-//	@Failure		500		{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		401		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/multipart/init [post]
 func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 	// 1. 获取用户ID
@@ -375,9 +380,9 @@ func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 //	@Param			upload_id	formData	string	true	"上传ID"
 //	@Param			chunk_index	formData	int		true	"分片索引"
 //	@Param			chunk		formData	file	true	"分片文件"
-//	@Success		200			{object}	APIResponse
-//	@Failure		400			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files/multipart/upload [post]
 func (api *StorageAPI) UploadChunk(c *gin.Context) {
 	// 1. 获取参数
@@ -427,9 +432,9 @@ func (api *StorageAPI) UploadChunk(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		storage.CompleteMultipartUploadRequest	true	"完成请求"
-//	@Success		200		{object}	APIResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		500		{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/multipart/complete [post]
 func (api *StorageAPI) CompleteMultipartUpload(c *gin.Context) {
 	var req storage.CompleteMultipartUploadRequest
@@ -456,9 +461,9 @@ func (api *StorageAPI) CompleteMultipartUpload(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			upload_id	query		string	true	"上传ID"
-//	@Success		200			{object}	APIResponse
-//	@Failure		400			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files/multipart/abort [post]
 func (api *StorageAPI) AbortMultipartUpload(c *gin.Context) {
 	uploadID := c.Query("upload_id")
@@ -484,9 +489,9 @@ func (api *StorageAPI) AbortMultipartUpload(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			upload_id	query		string	true	"上传ID"
-//	@Success		200			{object}	APIResponse
-//	@Failure		400			{object}	ErrorResponse
-//	@Failure		500			{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/files/multipart/progress [get]
 func (api *StorageAPI) GetUploadProgress(c *gin.Context) {
 	uploadID := c.Query("upload_id")
@@ -520,10 +525,10 @@ func (api *StorageAPI) GetUploadProgress(c *gin.Context) {
 //	@Param			file_id	query		string	true	"文件ID"
 //	@Param			width	query		int		false	"宽度"	default(200)
 //	@Param			height	query		int		false	"高度"	default(200)
-//	@Success		200		{object}	APIResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		404		{object}	ErrorResponse
-//	@Failure		500		{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		404		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/thumbnail [post]
 func (api *StorageAPI) GenerateThumbnail(c *gin.Context) {
 	fileID := c.Query("file_id")
@@ -567,9 +572,9 @@ func (api *StorageAPI) GenerateThumbnail(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			file_id	path	string							true	"文件ID"
 //	@Param			request	body	map[string]interface{}	true	"请求体"
-//	@Success		200		{object}	APIResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		500		{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/{file_id}/access [post]
 func (api *StorageAPI) GrantAccess(c *gin.Context) {
 	fileID := c.Param("file_id")
@@ -601,9 +606,9 @@ func (api *StorageAPI) GrantAccess(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			file_id	path		string	true	"文件ID"
 //	@Param			user_id	query		string	true	"用户ID"
-//	@Success		200		{object}	APIResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		500		{object}	ErrorResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/{file_id}/access [delete]
 func (api *StorageAPI) RevokeAccess(c *gin.Context) {
 	fileID := c.Param("file_id")

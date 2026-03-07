@@ -34,9 +34,9 @@ func NewAuthHandler(userService userServiceInterface.UserService) *AuthHandler {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.RegisterRequest	true	"注册信息"
-//	@Success		200		{object}	shared.APIResponse{data=dto.RegisterResponse}
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.RegisterResponse}
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
@@ -61,13 +61,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			case serviceInterfaces.ErrorTypeBusiness:
 				// 根据错误消息返回具体的错误码
 				if serviceErr.Message == "用户名已存在" {
-					c.JSON(http.StatusConflict, shared.ErrorResponse{
+					c.JSON(http.StatusConflict, response.APIResponse{
 						Code:      2003,
 						Message:   "用户名已被注册",
 						Timestamp: time.Now().UnixMilli(),
 					})
 				} else if serviceErr.Message == "邮箱已存在" {
-					c.JSON(http.StatusConflict, shared.ErrorResponse{
+					c.JSON(http.StatusConflict, response.APIResponse{
 						Code:      2004,
 						Message:   "邮箱已被注册",
 						Timestamp: time.Now().UnixMilli(),
@@ -110,10 +110,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.LoginRequest	true	"登录信息"
-//	@Success		200		{object}	shared.APIResponse{data=dto.LoginResponse}
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.LoginResponse}
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
@@ -178,9 +178,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/user/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// 获取Token（从Authorization header中）

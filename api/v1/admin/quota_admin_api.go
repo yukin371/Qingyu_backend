@@ -30,11 +30,11 @@ func NewQuotaAdminAPI(quotaService *ai.QuotaService) *QuotaAdminAPI {
 //	@Security		ApiKeyAuth
 //	@Param			userId	path		string				true	"用户ID"
 //	@Param			request	body		UpdateQuotaRequest	true	"配额信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/quota/{userId} [put]
 func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
@@ -81,11 +81,11 @@ func (api *QuotaAdminAPI) UpdateUserQuota(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			userId	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/quota/{userId}/suspend [post]
 func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
@@ -112,11 +112,11 @@ func (api *QuotaAdminAPI) SuspendUserQuota(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			userId	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/quota/{userId}/activate [post]
 func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 	targetUserID := c.Param("userId")
@@ -143,11 +143,11 @@ func (api *QuotaAdminAPI) ActivateUserQuota(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			userId	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		403		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/admin/quota/{userId} [get]
 func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 	targetUserID := c.Param("userId")
