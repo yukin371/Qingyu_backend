@@ -51,7 +51,7 @@ type SubmitBatchOperationResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body SubmitBatchOperationRequest true "批量操作请求"
-// @Success 200 {object} SubmitBatchOperationResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/batch-operations [post]
 func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 	var req SubmitBatchOperationRequest
@@ -107,7 +107,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "批量操作ID"
-// @Success 200 {object} object
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/batch-operations/{id} [get]
 func (api *BatchOperationAPI) GetBatchOperationStatus(c *gin.Context) {
 	id := c.Param("id")

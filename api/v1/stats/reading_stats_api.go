@@ -27,7 +27,7 @@ func NewReadingStatsAPI(statsService *readingStatsService.ReadingStatsService) *
 // @Tags 阅读统计
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/my/stats [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
@@ -58,7 +58,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "天数" default(30)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/my/daily [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
@@ -93,7 +93,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param period query string false "周期(week/month/all)" default(week)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/my/ranking [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
@@ -123,7 +123,7 @@ func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "天数" default(7)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/my/reading-time [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
@@ -162,7 +162,7 @@ func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param days query int false "天数" default(30)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/my/history [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
@@ -199,7 +199,7 @@ func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 // @Produce json
 // @Param type query string false "推荐类型(hot/new/personal)" default(personal)
 // @Param limit query int false "数量限制" default(10)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/reading-stats/recommendations [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetRecommendations(c *gin.Context) {

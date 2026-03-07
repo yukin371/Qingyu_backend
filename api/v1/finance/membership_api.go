@@ -28,7 +28,7 @@ func NewMembershipAPI(membershipService financeService.MembershipService) *Membe
 //	@Tags			会员系统
 //	@Accept			json
 //	@Produce		json
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/plans [get]
 func (api *MembershipAPI) GetPlans(c *gin.Context) {
 	plans, err := api.membershipService.GetPlans(c.Request.Context())
@@ -55,7 +55,7 @@ type SubscribeRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		SubscribeRequest	true	"订阅信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/subscribe [post]
 func (api *MembershipAPI) Subscribe(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -87,7 +87,7 @@ func (api *MembershipAPI) Subscribe(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/status [get]
 func (api *MembershipAPI) GetStatus(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -113,7 +113,7 @@ func (api *MembershipAPI) GetStatus(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cancel [post]
 func (api *MembershipAPI) Cancel(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -139,7 +139,7 @@ func (api *MembershipAPI) Cancel(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/renew [put]
 func (api *MembershipAPI) Renew(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -166,7 +166,7 @@ func (api *MembershipAPI) Renew(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			level	query		string	false	"会员等级"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/benefits [get]
 func (api *MembershipAPI) GetBenefits(c *gin.Context) {
 	level := c.Query("level")
@@ -188,7 +188,7 @@ func (api *MembershipAPI) GetBenefits(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/usage [get]
 func (api *MembershipAPI) GetUsage(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -217,7 +217,7 @@ func (api *MembershipAPI) GetUsage(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			status		query		string	false	"状态"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cards [get]
 func (api *MembershipAPI) ListCards(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -252,7 +252,7 @@ type ActivateCardRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		ActivateCardRequest	true	"激活信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cards/activate [post]
 func (api *MembershipAPI) ActivateCard(c *gin.Context) {
 	userID, exists := c.Get("user_id")

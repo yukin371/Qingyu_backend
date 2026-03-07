@@ -42,9 +42,9 @@ func NewWritingAssistantApi(
 // @Accept json
 // @Produce json
 // @Param request body object true "总结请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/writing/summarize [post]
 func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	var req dto.SummarizeRequest
@@ -79,9 +79,9 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "章节总结请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/writing/summarize-chapter [post]
 func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	var req dto.ChapterSummaryRequest
@@ -120,9 +120,9 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "校对请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/writing/proofread [post]
 func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	var req dto.ProofreadRequest
@@ -157,10 +157,10 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "建议ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/writing/suggestions/{id} [get]
 func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 	suggestionID := c.Param("id")
@@ -190,9 +190,9 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "敏感词检测请求"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/audit/sensitive-words [post]
 func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 	var req dto.SensitiveWordsCheckRequest
@@ -229,10 +229,10 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "检测ID"
-// @Success 200 {object} shared.APIResponse
-// @Failure 400 {object} shared.ErrorResponse
-// @Failure 404 {object} shared.ErrorResponse
-// @Failure 500 {object} shared.ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Failure 404 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
 // @Router /api/v1/ai/audit/sensitive-words/{id} [get]
 func (api *WritingAssistantApi) GetSensitiveWordsDetail(c *gin.Context) {
 	checkID := c.Param("id")

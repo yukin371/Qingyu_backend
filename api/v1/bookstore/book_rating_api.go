@@ -31,7 +31,7 @@ func NewBookRatingAPI(bookRatingService bookstoreService.BookRatingService) *Boo
 // @Accept json
 // @Produce json
 // @Param id path string true "评分ID"
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
@@ -67,7 +67,7 @@ func (api *BookRatingAPI) GetBookRating(c *gin.Context) {
 // @Param book_id path string true "图书ID"
 // @Param page query int false "页码" default(1)
 // @Param limit query int false "每页数量" default(10)
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/bookstore/books/{id}/ratings [get]
@@ -113,7 +113,7 @@ func (api *BookRatingAPI) GetRatingsByBookID(c *gin.Context) {
 // @Param user_id path string true "用户ID"
 // @Param page query int false "页码" default(1)
 // @Param limit query int false "每页数量" default(10)
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/bookstore/ratings/user/{id} [get]
@@ -157,7 +157,7 @@ func (api *BookRatingAPI) GetRatingsByUserID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "图书ID"
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/bookstore/books/{id}/average-rating [get]
@@ -191,7 +191,7 @@ func (api *BookRatingAPI) GetAverageRating(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param book_id path string true "图书ID"
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/bookstore/books/{id}/rating-distribution [get]
@@ -225,7 +225,7 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "评分信息"
-// @Success 201 {object} APIResponse "创建成功"
+// @Success 201 {object} response.APIResponse "创建成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/bookstore/books/{id}/rating [post]
@@ -252,7 +252,7 @@ func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 // @Produce json
 // @Param id path string true "评分ID"
 // @Param request body object true "评分信息"
-// @Success 200 {object} APIResponse "更新成功"
+// @Success 200 {object} response.APIResponse "更新成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
@@ -293,7 +293,7 @@ func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评分ID"
-// @Success 200 {object} APIResponse "删除成功"
+// @Success 200 {object} response.APIResponse "删除成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 404 {object} APIResponse "评分不存在"
 // @Failure 500 {object} APIResponse "服务器内部错误"
@@ -327,7 +327,7 @@ func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评分ID"
-// @Success 200 {object} APIResponse "点赞成功"
+// @Success 200 {object} response.APIResponse "点赞成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/ratings/{id}/like [post]
@@ -384,7 +384,7 @@ func (api *BookRatingAPI) LikeRating(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "评分ID"
-// @Success 200 {object} APIResponse "取消点赞成功"
+// @Success 200 {object} response.APIResponse "取消点赞成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/ratings/{id}/unlike [post]
@@ -443,7 +443,7 @@ func (api *BookRatingAPI) UnlikeRating(c *gin.Context) {
 // @Param keyword query string true "搜索关键词"
 // @Param page query int false "页码" default(1)
 // @Param limit query int false "每页数量" default(10)
-// @Success 200 {object} APIResponse "成功"
+// @Success 200 {object} response.APIResponse "成功"
 // @Failure 400 {object} APIResponse "请求参数错误"
 // @Failure 500 {object} APIResponse "服务器内部错误"
 // @Router /api/v1/reading/ratings/search [get]

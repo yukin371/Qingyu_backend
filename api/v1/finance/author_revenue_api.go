@@ -32,7 +32,7 @@ func NewAuthorRevenueAPI(revenueService financeService.AuthorRevenueService) *Au
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings [get]
 func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -64,7 +64,7 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 //	@Param			bookId	path		string	true	"书籍ID"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings/{bookId} [get]
 func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -101,7 +101,7 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdrawals [get]
 func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -142,7 +142,7 @@ type WithdrawRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		WithdrawRequest	true	"提现信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdraw [post]
 func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -189,7 +189,7 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-details [get]
 func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -219,7 +219,7 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			period	query		string	false	"统计周期"	enums(daily,monthly,yearly)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-statistics [get]
 func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -249,7 +249,7 @@ func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/settlements [get]
 func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -279,7 +279,7 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"结算ID"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/settlements/{id} [get]
 func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 	settlementID := c.Param("id")
@@ -305,7 +305,7 @@ func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [get]
 func (api *AuthorRevenueAPI) GetTaxInfo(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -340,7 +340,7 @@ type UpdateTaxInfoRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		UpdateTaxInfoRequest	true	"税务信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [put]
 func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
 	userID, exists := c.Get("user_id")

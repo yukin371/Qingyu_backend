@@ -31,7 +31,7 @@ func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/messages/conversations [get]
 // @Security Bearer
 func (api *MessageAPI) GetConversations(c *gin.Context) {
@@ -81,7 +81,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 // @Param conversationId path string true "会话ID"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(50)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/messages/{conversationId} [get]
 // @Security Bearer
 func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
@@ -147,7 +147,7 @@ type SendMessageRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body SendMessageRequest true "消息信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/messages [post]
 // @Security Bearer
 func (api *MessageAPI) SendMessage(c *gin.Context) {
@@ -190,7 +190,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "消息ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/messages/{id}/read [put]
 // @Security Bearer
 func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
@@ -226,7 +226,7 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "消息ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/messages/{id} [delete]
 // @Security Bearer
 func (api *MessageAPI) DeleteMessage(c *gin.Context) {
@@ -274,7 +274,7 @@ type CreateMentionRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateMentionRequest true "提醒信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/mentions [post]
 // @Security Bearer
 func (api *MessageAPI) CreateMention(c *gin.Context) {
@@ -314,7 +314,7 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/mentions [get]
 // @Security Bearer
 func (api *MessageAPI) GetMentions(c *gin.Context) {
@@ -362,7 +362,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "提醒ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/mentions/{id}/read [put]
 // @Security Bearer
 func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {

@@ -24,7 +24,7 @@ func NewThemeAPI() *ThemeAPI {
 //	@Tags		阅读器-主题
 //	@Param		builtin	query	bool	false	"仅显示内置主题"
 //	@Param		public	query	bool	false	"仅显示公开主题"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes [get]
 func (api *ThemeAPI) GetThemes(c *gin.Context) {
 	// 获取查询参数
@@ -57,7 +57,7 @@ func (api *ThemeAPI) GetThemes(c *gin.Context) {
 //	@Summary	根据名称获取主题
 //	@Tags		阅读器-主题
 //	@Param		name	path	string	true	"主题名称"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{name} [get]
 func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 	name := c.Param("name")
@@ -82,7 +82,7 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //	@Summary	创建自定义主题
 //	@Tags		阅读器-主题
 //	@Param		request	body object	true	"创建主题请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 获取用户ID
@@ -126,7 +126,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Tags		阅读器-主题
 //	@Param		id		path	string						true	"主题ID"
 //	@Param		request	body object	true	"更新主题请求"
-//	@Success	200		{object}	response.Response
+//	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -165,7 +165,7 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 //	@Summary	删除自定义主题
 //	@Tags		阅读器-主题
 //	@Param		id	path	string	true	"主题ID"
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [delete]
 func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -197,7 +197,7 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 //	@Summary	激活主题（应用到阅读设置）
 //	@Tags		阅读器-主题
 //	@Param		name	path	string	true	"主题名称"
-//	@Success	200	{object}	response.Response
+//	@Success	200	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{name}/activate [post]
 func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 	userID, exists := c.Get("user_id")

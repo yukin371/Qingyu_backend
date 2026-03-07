@@ -31,9 +31,9 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.RegisterRequest	true	"注册信息"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object} shared.APIResponse
-//	@Failure		500		{object} shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/register [post]
 func (api *AuthAPI) Register(c *gin.Context) {
 	var req auth.RegisterRequest
@@ -74,10 +74,10 @@ func (api *AuthAPI) Register(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		auth.LoginRequest	true	"登录信息"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object} shared.APIResponse
-//	@Failure		401		{object} shared.APIResponse
-//	@Failure		500		{object} shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse
+//	@Failure		401		{object} response.APIResponse
+//	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/login [post]
 func (api *AuthAPI) Login(c *gin.Context) {
 	var req auth.LoginRequest
@@ -103,9 +103,9 @@ func (api *AuthAPI) Login(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object} shared.APIResponse
-//	@Failure		401	{object} shared.APIResponse
-//	@Failure		500	{object} shared.APIResponse
+//	@Success		200	{object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/logout [post]
 func (api *AuthAPI) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
@@ -136,9 +136,9 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		401	{object} shared.APIResponse
-//	@Failure		500	{object} shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/refresh [post]
 func (api *AuthAPI) RefreshToken(c *gin.Context) {
 	token := c.GetHeader("Authorization")
@@ -169,9 +169,9 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		401	{object} shared.APIResponse
-//	@Failure		500	{object} shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/permissions [get]
 func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 	// 从Context中获取当前用户ID（由中间件设置）
@@ -198,9 +198,9 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		401	{object} shared.APIResponse
-//	@Failure		500	{object} shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/shared/auth/roles [get]
 func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	// 从Context中获取当前用户ID

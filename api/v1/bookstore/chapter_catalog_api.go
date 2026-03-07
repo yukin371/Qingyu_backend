@@ -36,7 +36,7 @@ func NewChapterCatalogAPI(
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -84,7 +84,7 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"书籍ID"
 //	@Param			chapterId	path		string	true	"章节ID"
-//	@Success		200			{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
@@ -124,7 +124,7 @@ func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"书籍ID"
 //	@Param			count	query		int		false	"试读章节数量"	default(10)
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/trial-chapters [get]
@@ -167,7 +167,7 @@ func (api *ChapterCatalogAPI) GetTrialChapters(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/vip-chapters [get]
@@ -205,7 +205,7 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success		200			{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
@@ -247,7 +247,7 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success		200			{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		403			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
@@ -313,7 +313,7 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		403	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -376,7 +376,7 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)
 //	@Param			size	query		int	false	"每页数量"	default(20)
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/reader/purchases [get]
@@ -429,7 +429,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 //	@Param			id		path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/reader/purchases/{bookId} [get]
@@ -492,7 +492,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"章节ID"
-//	@Success		200			{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse

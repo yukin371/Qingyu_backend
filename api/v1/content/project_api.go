@@ -31,10 +31,10 @@ func NewProjectAPI(projectService contentService.ProjectServicePort) *ProjectAPI
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.CreateProjectRequest	true	"创建项目请求"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/projects [post]
 func (api *ProjectAPI) CreateProject(c *gin.Context) {
 	var req dto.CreateProjectRequest
@@ -68,10 +68,10 @@ func (api *ProjectAPI) CreateProject(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [get]
 func (api *ProjectAPI) GetProject(c *gin.Context) {
 	id := c.Param("id")
@@ -98,10 +98,10 @@ func (api *ProjectAPI) GetProject(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"项目ID"
 //	@Param			request	body		dto.UpdateProjectRequest	true	"更新项目请求"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [put]
 func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 	id := c.Param("id")
@@ -133,10 +133,10 @@ func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [delete]
 func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 	id := c.Param("id")
@@ -165,9 +165,9 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 //	@Param			category	query		string	false	"分类"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			pageSize	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/projects [get]
 func (api *ProjectAPI) ListProjects(c *gin.Context) {
 	status := c.Query("status")
@@ -207,10 +207,10 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id}/statistics [get]
 func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 	id := c.Param("id")
@@ -237,10 +237,10 @@ func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"项目ID"
 //	@Param			request	body		dto.ProjectStatistics	true	"统计数据"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id}/statistics [put]
 func (api *ProjectAPI) UpdateProjectStatistics(c *gin.Context) {
 	id := c.Param("id")

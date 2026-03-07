@@ -83,9 +83,9 @@ type TrafficDistributionResponse struct {
 //	@Tags			搜索-灰度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/search/grayscale/status [get]
 func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 	// 获取请求ID
@@ -153,10 +153,10 @@ func (api *GrayscaleAPI) GetGrayscaleStatus(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		UpdateGrayscaleConfigRequest	true	"灰度配置更新请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		401		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/search/grayscale/config [post]
 func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	// 获取请求ID
@@ -265,9 +265,9 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 //	@Tags			搜索-灰度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/search/grayscale/metrics [get]
 func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 	// 获取请求ID
@@ -341,9 +341,9 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 //	@Tags			搜索-灰度
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.ErrorResponse
-//	@Failure		500	{object}	shared.ErrorResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/search/grayscale/traffic [get]
 func (api *GrayscaleAPI) GetTrafficDistribution(c *gin.Context) {
 	// 获取请求ID

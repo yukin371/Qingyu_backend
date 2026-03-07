@@ -40,7 +40,7 @@ func NewNotificationAPI(notificationService notifService.NotificationService) *N
 // @Param offset query int false "偏移量 (default: 0)"
 // @Param sortBy query string false "排序字段 (created_at, priority, read_at)"
 // @Param sortDesc query bool false "是否降序 (default: true)"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications [get]
 func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	// 获取当前用户ID
@@ -137,7 +137,7 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "通知ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/{id} [get]
 func (api *NotificationAPI) GetNotification(c *gin.Context) {
 	// 获取当前用户ID
@@ -183,7 +183,7 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "通知ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/{id}/read [post]
 func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 	// 获取当前用户ID
@@ -222,7 +222,7 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.BatchMarkReadRequest true "批量标记已读请求"
-// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Success 200 {object} response.APIResponse{data=dto.BatchOperationResponse}
 // @Router /api/v1/notifications/batch-read [post]
 func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	// 获取当前用户ID
@@ -280,7 +280,7 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/read-all [post]
 func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 	// 获取当前用户ID
@@ -312,7 +312,7 @@ func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "通知ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/{id} [delete]
 func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 	// 获取当前用户ID
@@ -351,7 +351,7 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.BatchDeleteRequest true "批量删除请求"
-// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Success 200 {object} response.APIResponse{data=dto.BatchOperationResponse}
 // @Router /api/v1/notifications/batch-delete [post]
 func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	// 获取当前用户ID
@@ -409,7 +409,7 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/delete-all [delete]
 func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 	// 获取当前用户ID
@@ -440,7 +440,7 @@ func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/unread-count [get]
 func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 	// 获取当前用户ID
@@ -472,7 +472,7 @@ func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/stats [get]
 func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 	// 获取当前用户ID
@@ -504,7 +504,7 @@ func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/preferences [get]
 func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
@@ -537,7 +537,7 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "偏好设置"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/preferences [put]
 // @Router /api/v1/notifications/preferences [patch]
 func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
@@ -582,7 +582,7 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/preferences/reset [post]
 func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
@@ -613,7 +613,7 @@ func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user-management/email-notifications [get]
 func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
@@ -646,7 +646,7 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "邮件通知设置"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user-management/email-notifications [put]
 func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
@@ -684,7 +684,7 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user-management/sms-notifications [get]
 func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
@@ -717,7 +717,7 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "短信通知设置"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/user-management/sms-notifications [put]
 func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
@@ -756,7 +756,7 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body object true "设备信息"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/push/register [post]
 func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
@@ -805,7 +805,7 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param deviceId path string true "设备ID"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/push/unregister/{deviceId} [delete]
 func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
@@ -843,7 +843,7 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 // @Tags notifications
 // @Accept json
 // @Produce json
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/notifications/push/devices [get]
 func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 	// 获取当前用户ID
@@ -876,7 +876,7 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} shared.APIResponse{data=dto.BatchOperationResponse}
+// @Success 200 {object} response.APIResponse{data=dto.BatchOperationResponse}
 // @Router /api/v1/notifications/clear-read [post]
 func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 	// 获取当前用户ID
@@ -916,9 +916,9 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "通知ID"
 // @Param request body object{method=string} true "重新发送请求"
-// @Success 200 {object} shared.APIResponse{data=dto.MarkAsReadResponse}
-// @Failure 400 {object} shared.APIResponse "参数错误"
-// @Failure 404 {object} shared.APIResponse "通知不存在"
+// @Success 200 {object} response.APIResponse{data=dto.MarkAsReadResponse}
+// @Failure 400 {object} response.APIResponse "参数错误"
+// @Failure 404 {object} response.APIResponse "通知不存在"
 // @Router /api/v1/notifications/{id}/resend [post]
 func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 	// 获取当前用户ID
@@ -976,7 +976,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} shared.APIResponse{data=dto.WSEndpointResponse}
+// @Success 200 {object} response.APIResponse{data=dto.WSEndpointResponse}
 // @Router /api/v1/notifications/ws-endpoint [get]
 func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 	// 获取当前用户ID

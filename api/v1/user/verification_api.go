@@ -37,9 +37,9 @@ func NewVerificationAPI(
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SendEmailCodeRequest	true	"发送验证码请求"
-//	@Success 200 {object} sharedApi.APIResponse{data=dto.SendCodeResponse}
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		429		{object}	sharedApi.APIResponse	"发送过于频繁"
+//	@Success 200 {object} response.APIResponse{data=dto.SendCodeResponse}
+//	@Failure		400		{object} response.APIResponse	"参数错误"
+//	@Failure		429		{object} response.APIResponse	"发送过于频繁"
 //	@Router			/api/v1/users/verify/email/send [post]
 func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	var req dto.SendEmailCodeRequest
@@ -74,8 +74,8 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.SendPhoneCodeRequest	true	"发送验证码请求"
-//	@Success 200 {object} sharedApi.APIResponse{data=dto.SendCodeResponse}
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Success 200 {object} response.APIResponse{data=dto.SendCodeResponse}
+//	@Failure		400		{object} response.APIResponse	"参数错误"
 //	@Router			/api/v1/users/verify/phone/send [post]
 func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 	var req dto.SendPhoneCodeRequest
@@ -104,9 +104,9 @@ func (api *VerificationAPI) SendPhoneVerifyCode(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.VerifyEmailRequest	true	"验证邮箱请求"
-//	@Success 200 {object} sharedApi.APIResponse{data=dto.VerifyEmailResponse}
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		400		{object}	sharedApi.APIResponse	"验证码无效或过期"
+//	@Success 200 {object} response.APIResponse{data=dto.VerifyEmailResponse}
+//	@Failure		400		{object} response.APIResponse	"参数错误"
+//	@Failure		400		{object} response.APIResponse	"验证码无效或过期"
 //	@Router			/api/v1/users/email/verify [post]
 func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 	var req dto.VerifyEmailRequest
@@ -150,9 +150,9 @@ func (api *VerificationAPI) VerifyEmail(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UnbindEmailRequest	true	"解绑邮箱请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		401		{object}	sharedApi.APIResponse	"密码错误"
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse	"参数错误"
+//	@Failure		401		{object} response.APIResponse	"密码错误"
 //	@Router			/api/v1/users/email/unbind [delete]
 func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 	userID := c.GetString("userID")
@@ -187,8 +187,8 @@ func (api *VerificationAPI) UnbindEmail(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UnbindPhoneRequest	true	"解绑手机请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse	"参数错误"
 //	@Router			/api/v1/users/phone/unbind [delete]
 func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 	userID := c.GetString("userID")
@@ -223,10 +223,10 @@ func (api *VerificationAPI) UnbindPhone(c *gin.Context) {
 //	@Produce		json
 //	@Param			deviceId	path		string	true	"设备ID"
 //	@Param			request	body		dto.DeleteDeviceRequest	true	"删除设备请求"
-//	@Success 200 {object} sharedApi.APIResponse
-//	@Failure		400		{object}	sharedApi.APIResponse	"参数错误"
-//	@Failure		401		{object}	sharedApi.APIResponse	"密码错误"
-//	@Failure		404		{object}	sharedApi.APIResponse	"设备不存在"
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object} response.APIResponse	"参数错误"
+//	@Failure		401		{object} response.APIResponse	"密码错误"
+//	@Failure		404		{object} response.APIResponse	"设备不存在"
 //	@Router			/api/v1/users/devices/{deviceId} [delete]
 func (api *VerificationAPI) DeleteDevice(c *gin.Context) {
 	userID := c.GetString("userID")

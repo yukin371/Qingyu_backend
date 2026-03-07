@@ -39,12 +39,12 @@ func NewDocumentAPI(service *internalService.WriterDraftService) *DocumentAPI {
 // @Tags Internal-AI-Documents
 // @Accept json
 // @Produce json
-// @Param request body internalService.CreateOrUpdateRequest true "文档信息"
+// @Param request body service_internalapi.CreateOrUpdateRequest true "文档信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/internal/ai/documents [post]
 func (api *DocumentAPI) CreateOrUpdateDocument(c *gin.Context) {
-	var req internalService.CreateOrUpdateRequest
+	var req service_internalapi.CreateOrUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -288,7 +288,7 @@ func CreateOrUpdateDocument(c *gin.Context) {
 		})
 		return
 	}
-	var req internalService.CreateOrUpdateRequest
+	var req service_internalapi.CreateOrUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -436,13 +436,13 @@ func NewConceptAPI(service *internalService.ConceptService) *ConceptAPI {
 // @Tags Internal-AI-Concepts
 // @Accept json
 // @Produce json
-// @Param request body internalService.CreateConceptRequest true "创建请求"
+// @Param request body service_internalapi.CreateConceptRequest true "创建请求"
 // @Success 201 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/internal/ai/concepts [post]
 func (api *ConceptAPI) CreateConcept(c *gin.Context) {
-	var req internalService.CreateConceptRequest
+	var req service_internalapi.CreateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
@@ -532,14 +532,14 @@ func (api *ConceptAPI) GetConcept(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "概念ID"
-// @Param request body internalService.UpdateConceptRequest true "更新请求"
+// @Param request body service_internalapi.UpdateConceptRequest true "更新请求"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/internal/ai/concepts/{id} [put]
 func (api *ConceptAPI) UpdateConcept(c *gin.Context) {
 	conceptID := c.Param("id")
-	var req internalService.UpdateConceptRequest
+	var req service_internalapi.UpdateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
@@ -747,7 +747,7 @@ func CreateConcept(c *gin.Context) {
 		})
 		return
 	}
-	var req internalService.CreateConceptRequest
+	var req service_internalapi.CreateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -799,7 +799,7 @@ func UpdateConcept(c *gin.Context) {
 		return
 	}
 	conceptID := c.Param("id")
-	var req internalService.UpdateConceptRequest
+	var req service_internalapi.UpdateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

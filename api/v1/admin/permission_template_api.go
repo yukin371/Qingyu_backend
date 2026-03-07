@@ -48,8 +48,8 @@ type ApplyTemplateRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateTemplateRequest true "创建请求"
-// @Success 200 {object} authService.TemplateResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates [post]
 func (api *PermissionTemplateAPI) CreateTemplate(c *gin.Context) {
 	var req CreateTemplateRequest
@@ -84,8 +84,8 @@ func (api *PermissionTemplateAPI) CreateTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "模板ID"
-// @Success 200 {object} authService.TemplateResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/{id} [get]
 func (api *PermissionTemplateAPI) GetTemplate(c *gin.Context) {
 	templateID := c.Param("id")
@@ -110,8 +110,8 @@ func (api *PermissionTemplateAPI) GetTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param code path string true "模板代码"
-// @Success 200 {object} authService.TemplateResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/code/{code} [get]
 func (api *PermissionTemplateAPI) GetTemplateByCode(c *gin.Context) {
 	code := c.Param("code")
@@ -137,8 +137,8 @@ func (api *PermissionTemplateAPI) GetTemplateByCode(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param request body UpdateTemplateRequest true "更新请求"
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/{id} [put]
 func (api *PermissionTemplateAPI) UpdateTemplate(c *gin.Context) {
 	templateID := c.Param("id")
@@ -177,8 +177,8 @@ func (api *PermissionTemplateAPI) UpdateTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "模板ID"
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/{id} [delete]
 func (api *PermissionTemplateAPI) DeleteTemplate(c *gin.Context) {
 	templateID := c.Param("id")
@@ -203,8 +203,8 @@ func (api *PermissionTemplateAPI) DeleteTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param category query string false "分类(reader/author/admin)"
-// @Success 200 {object} ListResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates [get]
 func (api *PermissionTemplateAPI) ListTemplates(c *gin.Context) {
 	category := c.Query("category")
@@ -229,8 +229,8 @@ func (api *PermissionTemplateAPI) ListTemplates(c *gin.Context) {
 // @Produce json
 // @Param id path string true "模板ID"
 // @Param roleId body ApplyTemplateRequest true "角色ID"
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/{id}/apply [post]
 func (api *PermissionTemplateAPI) ApplyTemplate(c *gin.Context) {
 	templateID := c.Param("id")
@@ -262,8 +262,8 @@ func (api *PermissionTemplateAPI) ApplyTemplate(c *gin.Context) {
 // @Tags 权限模板
 // @Accept json
 // @Produce json
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
 // @Router /admin/permission-templates/initialize [post]
 func (api *PermissionTemplateAPI) InitializeSystemTemplates(c *gin.Context) {
 	err := api.templateService.InitializeSystemTemplates(c.Request.Context())
