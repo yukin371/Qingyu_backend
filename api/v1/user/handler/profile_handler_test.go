@@ -349,9 +349,10 @@ func TestProfileHandler_UpdateProfile(t *testing.T) {
 		require.NoError(t, err)
 		data, ok := response["data"].(map[string]interface{})
 		require.True(t, ok)
-		assert.Equal(t, "Updated Nickname", data["nickname"])
-		assert.Equal(t, "Updated bio", data["bio"])
-		assert.NotContains(t, data, "user")
+		user, ok := data["user"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Equal(t, "Updated Nickname", user["nickname"])
+		assert.Equal(t, "Updated bio", user["bio"])
 		mockService.AssertExpectations(t)
 	})
 

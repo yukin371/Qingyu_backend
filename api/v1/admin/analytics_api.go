@@ -379,10 +379,7 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 	// 获取系统概览
 	systemOverview, err := api.analyticsService.GetSystemOverview(context.Background())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取系统概览失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取系统概览失败: %w", err))
 		return
 	}
 
@@ -414,16 +411,12 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 		Type:      "dau",
 	})
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data": dashboardData{
-			SystemOverview: systemOverview,
-			UserGrowth:     userGrowth,
-			ContentStats:   contentStats,
-			RevenueReport:  revenueReport,
-			ActiveUsers:    activeUsers,
-		},
+	response.SuccessWithMessage(c, "获取成功", dashboardData{
+		SystemOverview: systemOverview,
+		UserGrowth:     userGrowth,
+		ContentStats:   contentStats,
+		RevenueReport:  revenueReport,
+		ActiveUsers:    activeUsers,
 	})
 }
 
