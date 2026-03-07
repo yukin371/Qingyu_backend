@@ -82,14 +82,14 @@ func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 	logs, total, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
+			"code":    5000,
 			"message": fmt.Sprintf("查询审计日志失败: %v", err),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
+		"code":    0,
 		"message": "查询成功",
 		"data": gin.H{
 			"logs":      logs,
@@ -117,7 +117,7 @@ func (api *AuditAPI) GetResourceAuditTrail(c *gin.Context) {
 
 	if resourceType == "" || resourceID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
+			"code":    1001,
 			"message": "资源类型和资源ID不能为空",
 		})
 		return
@@ -127,14 +127,14 @@ func (api *AuditAPI) GetResourceAuditTrail(c *gin.Context) {
 	logs, err := api.auditLogService.GetLogsByResource(context.Background(), resourceType, resourceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
+			"code":    5000,
 			"message": fmt.Sprintf("查询资源审计日志失败: %v", err),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
+		"code":    0,
 		"message": "查询成功",
 		"data": gin.H{
 			"logs":  logs,
@@ -189,7 +189,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 	logs, _, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
+			"code":    5000,
 			"message": fmt.Sprintf("查询审计日志失败: %v", err),
 		})
 		return
@@ -200,7 +200,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 		csvData, err := api.exportAuditLogsToCSV(logs)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
+				"code":    5000,
 				"message": fmt.Sprintf("导出CSV失败: %v", err),
 			})
 			return
@@ -217,7 +217,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 		})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
+			"code":    1001,
 			"message": "不支持的导出格式",
 		})
 	}
@@ -241,7 +241,7 @@ func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	_, total, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
+			"code":    5000,
 			"message": fmt.Sprintf("获取统计信息失败: %v", err),
 		})
 		return
@@ -254,7 +254,7 @@ func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	// - 按资源类型统计
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
+		"code":    0,
 		"message": "获取统计信息成功",
 		"data": gin.H{
 			"total_logs": total,

@@ -108,7 +108,8 @@ func InitProjectRouter(r *gin.RouterGroup, projectApi *writer.ProjectApi) {
 		projectGroup.POST("", projectApi.CreateProject)
 		projectGroup.GET("", projectApi.ListProjects)
 		projectGroup.GET("/:id", projectApi.GetProject)
-		projectGroup.PUT("/:id", projectApi.UpdateProject)
+		projectGroup.PUT("/:id", projectApi.UpdateProject)       // 完整更新（向后兼容）
+		projectGroup.PATCH("/:id", projectApi.UpdateProject)     // 部分更新
 		projectGroup.DELETE("/:id", projectApi.DeleteProject)
 
 		// 项目统计
@@ -133,7 +134,8 @@ func InitDocumentRouter(r *gin.RouterGroup, documentApi *writer.DocumentApi, loc
 		// 通过请求体创建文档（E2E测试支持）
 		documentGroup.POST("", documentApi.CreateDocumentByBody)
 		documentGroup.GET("/:id", documentApi.GetDocument)
-		documentGroup.PUT("/:id", documentApi.UpdateDocument)
+		documentGroup.PUT("/:id", documentApi.UpdateDocument)       // 完整更新（向后兼容）
+		documentGroup.PATCH("/:id", documentApi.UpdateDocument)     // 部分更新
 		documentGroup.DELETE("/:id", documentApi.DeleteDocument)
 		documentGroup.PUT("/:id/move", documentApi.MoveDocument)
 		documentGroup.POST("/:id/duplicate", documentApi.DuplicateDocument)

@@ -145,7 +145,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 
 // UpdateProject 更新项目
 // @Summary 更新项目
-// @Description 更新项目信息
+// @Description 更新项目信息（支持部分更新）
 // @Tags 项目管理
 // @Accept json
 // @Produce json
@@ -155,6 +155,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Failure 403 {object} response.APIResponse
 // @Router /api/v1/projects/{id} [put]
+// @Router /api/v1/projects/{id} [patch]
 func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	projectID := c.Param("id")
 

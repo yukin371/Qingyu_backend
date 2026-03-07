@@ -11,18 +11,20 @@ func JSON(c *gin.Context, code int, obj any) {
 }
 
 // SuccessJSON 返回成功响应（不转义中文）
+// Deprecated: 请使用 response.Success 或 response.SuccessWithMessage
 func SuccessJSON(c *gin.Context, message string, data any) {
 	JSON(c, 200, gin.H{
-		"code":    200,
+		"code":    CodeSuccess, // 统一使用 0 表示成功
 		"message": message,
 		"data":    data,
 	})
 }
 
 // PaginatedJSON 返回分页响应（不转义中文）
+// Deprecated: 请使用 response.Paginated
 func PaginatedJSON(c *gin.Context, message string, data any, total int64, page, pageSize int) {
 	JSON(c, 200, gin.H{
-		"code":    200,
+		"code":    CodeSuccess, // 统一使用 0 表示成功
 		"message": message,
 		"data":    data,
 		"total":   total,

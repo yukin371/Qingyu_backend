@@ -158,7 +158,7 @@ func setupUserAdminTestRouter(userAdminService *MockUserAdminService) *gin.Engin
 		if len(c.Errors) > 0 {
 			// 返回500错误
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
+				"code":    5000,
 				"message": c.Errors.String(),
 			})
 		}
