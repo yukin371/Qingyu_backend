@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 	"errors"
 )
 
@@ -122,6 +122,7 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 //	@Param		request	body		UpdateSettingsRequest	true	"更新设置请求"
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/settings [put]
+//	@Router		/api/v1/reader/settings [patch]
 func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 	// 检查服务是否初始化
 	if api.readerService == nil {

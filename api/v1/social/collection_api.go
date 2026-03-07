@@ -220,7 +220,7 @@ func (api *CollectionAPI) GetCollections(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // UpdateCollectionRequest 更新收藏请求
@@ -240,6 +240,7 @@ type UpdateCollectionRequest struct {
 // @Param request body UpdateCollectionRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/{id} [put]
+// @Router /api/v1/reader/collections/{id} [patch]
 // @Security Bearer
 func (api *CollectionAPI) UpdateCollection(c *gin.Context) {
 	collectionID, ok := shared.GetRequiredParam(c, "id", "收藏ID")
@@ -404,7 +405,7 @@ func (api *CollectionAPI) GetCollectionsByTag(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // =========================
@@ -499,6 +500,7 @@ type UpdateFolderRequest struct {
 // @Param request body UpdateFolderRequest true "更新信息"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/reader/collections/folders/{id} [put]
+// @Router /api/v1/reader/collections/folders/{id} [patch]
 // @Security Bearer
 func (api *CollectionAPI) UpdateFolder(c *gin.Context) {
 	folderID, ok := shared.GetRequiredParam(c, "id", "收藏夹ID")
@@ -677,7 +679,7 @@ func (api *CollectionAPI) GetPublicCollections(c *gin.Context) {
 		return
 	}
 
-	shared.RespondWithPaginated(c, collections, int(total), params.Page, params.PageSize, "")
+	response.Paginated(c, collections, total, params.Page, params.PageSize, "获取成功")
 }
 
 // ShareCollectionWithURL 分享收藏并返回分享链接

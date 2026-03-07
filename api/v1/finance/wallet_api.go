@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/finance/wallet"
 )
 
@@ -340,5 +341,5 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, requests, int64(len(requests)), page, pageSize, "查询提现申请成功")
+	response.Paginated(c, requests, int64(len(requests)), page, pageSize, "查询提现申请成功")
 }

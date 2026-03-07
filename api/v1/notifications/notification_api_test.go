@@ -268,6 +268,7 @@ func setupNotificationTestRouter(service *MockNotificationService, userID string
 		v1.GET("/stats", api.GetNotificationStats)
 		v1.GET("/preferences", api.GetNotificationPreference)
 		v1.PUT("/preferences", api.UpdateNotificationPreference)
+		v1.PATCH("/preferences", api.UpdateNotificationPreference)
 		v1.POST("/preferences/reset", api.ResetNotificationPreference)
 		v1.POST("/clear-read", api.ClearReadNotifications)
 		v1.POST("/:id/resend", api.ResendNotification)
@@ -275,6 +276,30 @@ func setupNotificationTestRouter(service *MockNotificationService, userID string
 	}
 
 	return r
+}
+
+func TestNotificationAPI_UpdateNotificationPreference_Patch_Success(t *testing.T) {
+	// Given
+	mockService := new(MockNotificationService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupNotificationTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"enableSystem": true,
+	}
+
+	mockService.On("UpdateNotificationPreference", mock.Anything, userID, mock.AnythingOfType("*service.UpdateNotificationPreferenceRequest")).Return(nil)
+
+	// When
+	bodyBytes, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PATCH", "/api/v1/notifications/preferences", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
 }
 
 // =========================
