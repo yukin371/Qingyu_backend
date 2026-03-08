@@ -179,7 +179,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 获取章节内容
-		chapterContent := actions.GetChapter(chapter.ID, token)
+		chapterContent := actions.GetChapter(chapter.ID.Hex(), token)
 
 		// 验证响应
 		assertions.AssertResponseContains(chapterContent, "data")
@@ -196,7 +196,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 保存阅读进度
-		progress := actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
+		progress := actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID.Hex(), token)
 
 		// 验证响应包含code和message字段（data可能为null）
 		assertions.AssertResponseContains(progress, "code")

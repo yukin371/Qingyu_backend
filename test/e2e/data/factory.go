@@ -185,7 +185,7 @@ func (f *TestDataFactory) CreateChapter(ctx context.Context, bookID string, chap
 		IsFree:     isFree,
 		Price:      0,
 	}
-	chapter.ID = chapterID.Hex()
+	chapter.ID = chapterID
 	chapter.BookID = bookObjID.Hex()
 	chapter.CreatedAt = time.Now()
 	chapter.UpdatedAt = time.Now()
