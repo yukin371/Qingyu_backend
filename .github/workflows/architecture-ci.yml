@@ -19,7 +19,7 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: 检查代码依赖关系
@@ -51,7 +51,7 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: 下载依赖
@@ -83,7 +83,7 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: 安装golangci-lint
@@ -118,7 +118,7 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: 运行Gosec安全扫描
         uses: securego/gosec@master
@@ -150,7 +150,7 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: 验证接口契约
         run: |
