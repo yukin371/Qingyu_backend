@@ -79,7 +79,7 @@ func NewTestHelper(t *testing.T, router *gin.Engine) *TestHelper {
 // 认证相关辅助函数
 // ========================================
 
-// LoginUser 用户登录并返回token
+// LoginUser 用户登录并返回token（如果用户不存在则自动注册）
 func (h *TestHelper) LoginUser(username, password string) string {
 	loginData := map[string]interface{}{
 		"username": username,
@@ -94,12 +94,46 @@ func (h *TestHelper) LoginUser(username, password string) string {
 	h.router.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		h.t.Logf("❌ 登录失败\n"+
-			"  用户名: %s\n"+
-			"  状态码: %d (期望: 200)\n"+
-			"  响应: %s",
-			username, w.Code, w.Body.String())
-		return ""
+		// 登录失败，尝试注册用户
+		h.t.Logf("⚠ 登录失败，尝试注册用户: %s", username)
+		registerData := map[string]interface{}{
+			"username": username,
+			"password": password,
+			"email":    username + "@test.com",
+			"nickname": username,
+		}
+		regBody, _ := json.Marshal(registerData)
+		regReq := httptest.NewRequest("POST", APIBasePath+"/auth/register", bytes.NewReader(regBody))
+		regReq.Header.Set("Content-Type", "application/json")
+
+		regW := httptest.NewRecorder()
+		h.router.ServeHTTP(regW, regReq)
+
+		if regW.Code != http.StatusOK && regW.Code != http.StatusCreated {
+			h.t.Logf("❌ 注册用户失败\n"+
+				"  用户名: %s\n"+
+				"  状态码: %d\n"+
+				"  响应: %s",
+				username, regW.Code, regW.Body.String())
+			return ""
+		}
+
+		h.t.Logf("✓ 注册用户成功: %s", username)
+
+		// 重新登录
+		req = httptest.NewRequest("POST", LoginPath, bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w = httptest.NewRecorder()
+		h.router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			h.t.Logf("❌ 注册后登录失败\n"+
+				"  用户名: %s\n"+
+				"  状态码: %d (期望: 200)\n"+
+				"  响应: %s",
+				username, w.Code, w.Body.String())
+			return ""
+		}
 	}
 
 	var response map[string]interface{}
