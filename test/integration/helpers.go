@@ -103,7 +103,7 @@ func (h *TestHelper) LoginUser(username, password string) string {
 			"nickname": username,
 		}
 		regBody, _ := json.Marshal(registerData)
-		regReq := httptest.NewRequest("POST", APIBasePath+"/auth/register", bytes.NewReader(regBody))
+		regReq := httptest.NewRequest("POST", APIBasePath+"/register", bytes.NewReader(regBody))
 		regReq.Header.Set("Content-Type", "application/json")
 
 		regW := httptest.NewRecorder()
