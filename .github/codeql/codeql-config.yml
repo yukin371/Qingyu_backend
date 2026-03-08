@@ -1,0 +1,18 @@
+# CodeQL 配置文件
+# 用于配置安全扫描行为
+
+name: "Custom CodeQL Configuration"
+
+# 查询套件配置 - 使用安全与质量查询
+queries:
+  - uses: security-and-quality
+
+# 路径过滤 - 排除测试文件和mock文件
+paths-ignore:
+  - '**/mock_*.go'
+  - '**/*_mock.go'
+  - '**/testdata/**'
+
+# 包含的路径
+paths:
+  - '**/*.go'
