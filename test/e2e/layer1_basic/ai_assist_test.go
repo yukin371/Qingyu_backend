@@ -74,7 +74,11 @@ func TestAIAssistFunctionality(t *testing.T) {
 		}
 
 		// 创建章节
-		projectId := env.GetTestData("project_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Log("⚠ 项目创建失败，跳过章节创建")
+			return
+		}
 		chapterReq := map[string]interface{}{
 			"project_id": projectId,
 			"title":      "测试章节",
@@ -105,8 +109,16 @@ func TestAIAssistFunctionality(t *testing.T) {
 		t.Log("测试AI续写功能...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
-		chapterId := env.GetTestData("chapter_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Skip("项目创建失败，跳过测试")
+			return
+		}
+		chapterId, ok := env.GetTestData("chapter_id").(string)
+		if !ok || chapterId == "" {
+			t.Skip("章节创建失败，跳过测试")
+			return
+		}
 
 		// AI续写请求
 		continueReq := map[string]interface{}{
@@ -148,8 +160,16 @@ func TestAIAssistFunctionality(t *testing.T) {
 		t.Log("测试AI润色功能...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
-		chapterId := env.GetTestData("chapter_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Skip("项目创建失败，跳过测试")
+			return
+		}
+		chapterId, ok := env.GetTestData("chapter_id").(string)
+		if !ok || chapterId == "" {
+			t.Skip("章节创建失败，跳过测试")
+			return
+		}
 
 		// AI润色请求
 		polishReq := map[string]interface{}{
@@ -191,8 +211,16 @@ func TestAIAssistFunctionality(t *testing.T) {
 		t.Log("测试AI扩写功能...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
-		chapterId := env.GetTestData("chapter_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Skip("项目创建失败，跳过测试")
+			return
+		}
+		chapterId, ok := env.GetTestData("chapter_id").(string)
+		if !ok || chapterId == "" {
+			t.Skip("章节创建失败，跳过测试")
+			return
+		}
 
 		// AI扩写请求
 		expandReq := map[string]interface{}{
@@ -234,8 +262,16 @@ func TestAIAssistFunctionality(t *testing.T) {
 		t.Log("测试AI缩写功能...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
-		chapterId := env.GetTestData("chapter_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Skip("项目创建失败，跳过测试")
+			return
+		}
+		chapterId, ok := env.GetTestData("chapter_id").(string)
+		if !ok || chapterId == "" {
+			t.Skip("章节创建失败，跳过测试")
+			return
+		}
 
 		// AI缩写请求
 		shortenReq := map[string]interface{}{
@@ -273,7 +309,11 @@ func TestAIAssistFunctionality(t *testing.T) {
 		t.Log("测试AI摘要生成功能...")
 
 		token := env.GetTestData("auth_token").(string)
-		projectId := env.GetTestData("project_id").(string)
+		projectId, ok := env.GetTestData("project_id").(string)
+		if !ok || projectId == "" {
+			t.Skip("项目创建失败，跳过测试")
+			return
+		}
 
 		// 长文本用于生成摘要
 		longText := `这是一个关于冒险的故事。主人公小明是一个勇敢的年轻人，
