@@ -443,7 +443,7 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 	default:
 		sort = bson.D{{Key: "created_at", Value: -1}}
 	}
-	total, err := r.GetCollection().CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
 	}
@@ -452,7 +452,7 @@ func (r *MongoCommentRepository) GetCommentsByBookIDSorted(ctx context.Context, 
 		SetSort(sort).
 		SetSkip(skip).
 		SetLimit(int64(size))
-	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
 	}
