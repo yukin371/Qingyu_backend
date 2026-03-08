@@ -2,6 +2,7 @@ package writer
 
 import (
 	"strconv"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 
@@ -19,6 +20,13 @@ func NewPublishApi(publishService interfaces.PublishService) *PublishApi {
 	return &PublishApi{
 		publishService: publishService,
 	}
+}
+
+// isValidProjectID 校验项目ID格式，限制为常见的安全字符集，防止注入非法字符
+var projectIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+
+func isValidProjectID(id string) bool {
+	return projectIDPattern.MatchString(id)
 }
 
 // PublishProject 发布项目到书城
@@ -115,6 +123,10 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 
 	if projectID == "" {
 		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		return
+	}
+	if !isValidProjectID(projectID) {
+		response.BadRequest(c, "参数错误", "项目ID格式不正确")
 		return
 	}
 
@@ -282,6 +294,10 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		return
+	}
+	if !isValidProjectID(projectID) {
+		response.BadRequest(c, "参数错误", "项目ID格式不正确")
 		return
 	}
 
