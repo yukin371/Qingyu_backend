@@ -105,8 +105,8 @@ func (m *MockSensitiveWordRepo) Health(ctx context.Context) error {
 
 // setupIntegrationTest 设置集成测试环境
 func setupIntegrationTest(t *testing.T) (*mongo.Database, func()) {
-	// 连接测试MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 连接测试MongoDB - 使用较短的超时以快速失败
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	candidates := make([]string, 0, 2)
@@ -125,12 +125,16 @@ func setupIntegrationTest(t *testing.T) (*mongo.Database, func()) {
 		lastErr error
 	)
 	for _, uri := range candidates {
-		client, err = mongo.Connect(ctx, options.Client().ApplyURI(uri))
+		// 设置更短的服务器选择超时
+		clientOpts := options.Client().
+			ApplyURI(uri).
+			SetServerSelectionTimeout(3 * time.Second)
+		client, err = mongo.Connect(ctx, clientOpts)
 		if err != nil {
 			lastErr = err
 			continue
 		}
-		pingCtx, pingCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		pingCtx, pingCancel := context.WithTimeout(context.Background(), 2*time.Second)
 		pingErr := client.Ping(pingCtx, nil)
 		pingCancel()
 		if pingErr == nil {
@@ -140,7 +144,11 @@ func setupIntegrationTest(t *testing.T) (*mongo.Database, func()) {
 		_ = client.Disconnect(context.Background())
 		client = nil
 	}
-	require.NotNil(t, client, "应该能连接到MongoDB: %v", lastErr)
+	// 如果MongoDB不可用，跳过测试而不是失败
+	if client == nil {
+		t.Skipf("MongoDB不可用，跳过集成测试: %v", lastErr)
+		return nil, func() {}
+	}
 
 	// 创建独立的测试数据库
 	dbName := fmt.Sprintf("qingyu_integration_test_%d", time.Now().Unix())

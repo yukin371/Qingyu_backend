@@ -611,6 +611,9 @@ jobs:
     name: Benchmark Tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      deployments: write
 
     services:
       mongodb:
