@@ -1,0 +1,74 @@
+# 集成测试环境 Docker Compose 配置
+# 包含运行集成测试所需的所有服务（使用本地镜像）
+#
+# 使用方法:
+#   docker-compose -f docker/docker-compose.integration.yml up -d
+#   # 等待服务就绪后运行测试
+#   go test -v ./test/integration/...
+#   go test -v ./test/repository/...
+#   # 测试完成后清理
+#   docker-compose -f docker/docker-compose.integration.yml down -v
+
+services:
+  # MongoDB副本集 - 主节点
+  mongodb-primary:
+    image: mongo:7.0
+    container_name: qingyu-mongodb-primary
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: qingyu_test
+    command: >
+      mongod --replSet rs0 --bind_ip_all --quiet --logpath /dev/null
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    tmpfs:
+      - /data/db
+    networks:
+      - integration-test
+
+  # MongoDB副本集初始化
+  mongodb-init:
+    image: mongo:7.0
+    container_name: qingyu-mongodb-init
+    depends_on:
+      mongodb-primary:
+        condition: service_healthy
+    command: >
+      mongosh --host mongodb-primary:27017 --eval "
+        try {
+          rs.status();
+        } catch(e) {
+          rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb-primary:27017'}]});
+          while (rs.status().ok !== 1) { sleep(1000); }
+          print('Replica set initialized');
+        }
+      "
+    networks:
+      - integration-test
+
+  # Redis测试缓存
+  redis-test:
+    image: redis:7-alpine
+    container_name: qingyu-redis-integration
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly no --save ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+
+    tmpfs:
+      - /data
+    networks:
+      - integration-test
+
+networks:
+  integration-test:
+    driver: bridge
