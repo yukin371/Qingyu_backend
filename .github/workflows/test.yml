@@ -218,6 +218,7 @@ jobs:
           QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
+          ELASTICSEARCH_ENABLED: "false"
         run: |
           go test -v -race -count=1 \
             -tags=integration \
