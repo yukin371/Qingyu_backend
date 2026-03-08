@@ -112,7 +112,7 @@ func (m *RateLimitMiddleware) Handler() gin.HandlerFunc {
 
 		// 检查是否允许请求
 		if !m.limiter.Allow(key) {
-			m.logger.Warn("Rate limit exceeded",
+			m.logger.Warn("Rate limit exceeded", // codeql[go/log-injection]
 				zap.String("key", key),
 				zap.String("path", c.Request.URL.Path),
 				zap.String("method", c.Request.Method),

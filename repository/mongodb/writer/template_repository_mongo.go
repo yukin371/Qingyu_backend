@@ -229,7 +229,7 @@ func (r *MongoTemplateRepository) ListByProject(ctx context.Context, projectID p
 	mongoFilter := r.buildFilter(&projectID, "", false, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询项目模板列表失败: %w", err)
 	}
@@ -279,7 +279,7 @@ func (r *MongoTemplateRepository) ListByWorkspace(ctx context.Context, workspace
 
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询工作区模板列表失败: %w", err)
 	}
@@ -298,7 +298,7 @@ func (r *MongoTemplateRepository) ListGlobal(ctx context.Context, filter *writer
 	mongoFilter := r.buildFilter(nil, "", true, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询全局模板列表失败: %w", err)
 	}

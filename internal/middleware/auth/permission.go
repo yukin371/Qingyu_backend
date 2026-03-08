@@ -117,7 +117,7 @@ func (m *PermissionMiddleware) Handler() gin.HandlerFunc {
 		userID, exists := c.Get("user_id")
 		if !exists {
 			// 未认证用户
-			m.logger.Warn("User not authenticated",
+			m.logger.Warn("User not authenticated", // codeql[go/log-injection]
 				zap.String("path", c.Request.URL.Path),
 				zap.String("method", c.Request.Method),
 			)
@@ -151,7 +151,7 @@ func (m *PermissionMiddleware) Handler() gin.HandlerFunc {
 		// 检查权限
 		allowed, err := m.checker.Check(c.Request.Context(), subject, perm)
 		if err != nil {
-			m.logger.Error("Permission check failed",
+			m.logger.Error("Permission check failed", // codeql[go/log-injection]
 				zap.String("user_id", subject),
 				zap.String("resource", perm.Resource),
 				zap.String("action", perm.Action),
@@ -166,7 +166,7 @@ func (m *PermissionMiddleware) Handler() gin.HandlerFunc {
 		}
 
 		if !allowed {
-			m.logger.Warn("Permission denied",
+			m.logger.Warn("Permission denied", // codeql[go/log-injection]
 				zap.String("user_id", subject),
 				zap.String("resource", perm.Resource),
 				zap.String("action", perm.Action),

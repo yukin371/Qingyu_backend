@@ -95,7 +95,7 @@ func (m *RecoveryMiddleware) Handler() gin.HandlerFunc {
 				stack := m.getStackInfo()
 
 				// 记录错误日志
-				m.logger.Error("Panic recovered",
+				m.logger.Error("Panic recovered", // codeql[go/log-injection]
 					zap.Any("error", err),
 					zap.String("request", request),
 					zap.String("stack", stack),

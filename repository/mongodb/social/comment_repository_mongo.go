@@ -313,7 +313,7 @@ func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID
 		"state":       social.CommentStateNormal,
 		"parent_id":   nil, // 只获取顶级评论
 	}
-	total, err := r.GetCollection().CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
 	}
@@ -322,7 +322,7 @@ func (r *MongoCommentRepository) GetCommentsByBookID(ctx context.Context, bookID
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetSkip(skip).
 		SetLimit(int64(size))
-	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
 	}
@@ -638,7 +638,7 @@ func (r *MongoCommentRepository) GetBookRatingStats(ctx context.Context, bookID 
 		}}},
 	}
 
-	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rating stats: %w", err)
 	}

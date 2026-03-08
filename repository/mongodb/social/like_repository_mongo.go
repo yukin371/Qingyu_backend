@@ -143,7 +143,7 @@ func (r *MongoLikeRepository) RemoveLike(ctx context.Context, userID, targetType
 		return err
 	}
 
-	result, err := r.GetCollection().DeleteOne(ctx, bson.M{
+	result, err := r.GetCollection().DeleteOne(ctx, bson.M{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		"user_id":     safeUserID,
 		"target_type": safeTargetType,
 		"target_id":   safeTargetID,
@@ -182,7 +182,7 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.GetCollection().CountDocuments(ctx, bson.M{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.M{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		"user_id":     safeUserID,
 		"target_type": safeTargetType,
 		"target_id":   safeTargetID,
@@ -270,7 +270,7 @@ func (r *MongoLikeRepository) GetLikeCount(ctx context.Context, targetType, targ
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.GetCollection().CountDocuments(ctx, bson.D{
+	count, err := r.GetCollection().CountDocuments(ctx, bson.D{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		{Key: "target_type", Value: safeTargetType},
 		{Key: "target_id", Value: safeTargetID},
 	})

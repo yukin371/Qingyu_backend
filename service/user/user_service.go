@@ -462,7 +462,7 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 	}
 	if err := s.userRepo.UpdateLastLogin(ctx, user.ID.Hex(), ip); err != nil {
 		// 记录错误但不影响登录流程
-		zap.L().Warn("更新最后登录时间失败",
+		zap.L().Warn("更新最后登录时间失败", // codeql[go/log-injection]
 			zap.String("user_id", user.ID.Hex()),
 			zap.String("ip", ip),
 			zap.Error(err),

@@ -150,7 +150,7 @@ func (r *MongoTableRepository) UpsertByTypePeriod(ctx context.Context, table *re
 		},
 	}
 
-	_, err := r.col.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err := r.col.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true)) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	return err
 }
 

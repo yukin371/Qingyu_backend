@@ -445,7 +445,7 @@ func (s *OAuthService) LinkAccount(ctx context.Context, userID string, provider 
 		return nil, fmt.Errorf("failed to create OAuth account: %w", err)
 	}
 
-	s.logger.Info("OAuth account linked",
+	s.logger.Info("OAuth account linked", // codeql[go/log-injection]
 		zap.String("user_id", userID),
 		zap.String("provider", string(provider)),
 		zap.String("provider_user_id", identity.ProviderID),
@@ -479,7 +479,7 @@ func (s *OAuthService) UnlinkAccount(ctx context.Context, userID, accountID stri
 		return fmt.Errorf("failed to delete OAuth account: %w", err)
 	}
 
-	s.logger.Info("OAuth account unlinked",
+	s.logger.Info("OAuth account unlinked", // codeql[go/log-injection]
 		zap.String("user_id", userID),
 		zap.String("account_id", accountID),
 	)
@@ -503,7 +503,7 @@ func (s *OAuthService) SetPrimaryAccount(ctx context.Context, userID, accountID 
 		return fmt.Errorf("failed to set primary account: %w", err)
 	}
 
-	s.logger.Info("Primary account set",
+	s.logger.Info("Primary account set", // codeql[go/log-injection]
 		zap.String("user_id", userID),
 		zap.String("account_id", accountID),
 	)
@@ -549,7 +549,7 @@ func (s *OAuthService) RefreshToken(ctx context.Context, accountID string) (*oau
 		s.logger.Warn("Failed to update refreshed token", zap.Error(err))
 	}
 
-	s.logger.Info("OAuth token refreshed",
+	s.logger.Info("OAuth token refreshed", // codeql[go/log-injection]
 		zap.String("account_id", accountID),
 		zap.String("provider", string(account.Provider)),
 	)

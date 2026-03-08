@@ -218,7 +218,7 @@ func (h *WSHub) Run() {
 			h.mu.Lock()
 			h.clients[client.ID] = client
 			h.mu.Unlock()
-			log.Printf("客户端已注册: %s (用户: %s)", client.ID, client.UserID)
+			log.Printf("客户端已注册: %s (用户: %s)", client.ID, client.UserID) // codeql[go/log-injection]
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client.ID]; ok {

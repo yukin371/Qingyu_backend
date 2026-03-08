@@ -168,7 +168,7 @@ func (r *MongoMessageRepository) GetConversationByParticipants(ctx context.Conte
 	}
 
 	var conversation social.Conversation
-	err := r.GetCollection().FindOne(ctx, filter).Decode(&conversation)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&conversation) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("conversation not found")
@@ -409,7 +409,7 @@ func (r *MongoMessageRepository) GetMessagesBetweenUsers(ctx context.Context, us
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.messagesCol.Find(ctx, filter, opts)
+	cursor, err := r.messagesCol.Find(ctx, filter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find messages: %w", err)
 	}

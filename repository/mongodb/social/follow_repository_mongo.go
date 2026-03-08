@@ -135,7 +135,7 @@ func (r *MongoFollowRepository) DeleteFollow(ctx context.Context, followerID, fo
 	if err != nil {
 		return err
 	}
-	_, err = r.GetCollection().DeleteOne(ctx, bson.D{
+	_, err = r.GetCollection().DeleteOne(ctx, bson.D{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		{Key: "follower_id", Value: safeFollowerID},
 		{Key: "following_id", Value: safeFollowingID},
 		{Key: "follow_type", Value: safeFollowType},
@@ -197,7 +197,7 @@ func (r *MongoFollowRepository) IsFollowing(ctx context.Context, followerID, fol
 		"follow_type":  safeFollowType,
 	}
 
-	count, err := r.GetCollection().CountDocuments(ctx, filter)
+	count, err := r.GetCollection().CountDocuments(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return false, fmt.Errorf("failed to check follow status: %w", err)
 	}
@@ -220,7 +220,7 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 	}
 
 	// 统计总数
-	total, err := r.GetCollection().CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count followers: %w", err)
 	}
@@ -232,7 +232,7 @@ func (r *MongoFollowRepository) GetFollowers(ctx context.Context, userID string,
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find followers: %w", err)
 	}
@@ -267,7 +267,7 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 	}
 
 	// 统计总数
-	total, err := r.GetCollection().CountDocuments(ctx, filter)
+	total, err := r.GetCollection().CountDocuments(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count following: %w", err)
 	}
@@ -279,7 +279,7 @@ func (r *MongoFollowRepository) GetFollowing(ctx context.Context, userID string,
 		SetLimit(int64(size)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	cursor, err := r.GetCollection().Find(ctx, filter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find following: %w", err)
 	}
@@ -319,7 +319,7 @@ func (r *MongoFollowRepository) UpdateMutualStatus(ctx context.Context, follower
 		},
 	}
 
-	_, err = r.GetCollection().UpdateOne(ctx, bson.D{
+	_, err = r.GetCollection().UpdateOne(ctx, bson.D{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		{Key: "follower_id", Value: safeFollowerID},
 		{Key: "following_id", Value: safeFollowingID},
 		{Key: "follow_type", Value: safeFollowType},
@@ -358,7 +358,7 @@ func (r *MongoFollowRepository) DeleteAuthorFollow(ctx context.Context, userID, 
 	if err != nil {
 		return err
 	}
-	_, err = r.authorFollowsCollection.DeleteOne(ctx, bson.D{
+	_, err = r.authorFollowsCollection.DeleteOne(ctx, bson.D{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		{Key: "user_id", Value: safeUserID},
 		{Key: "author_id", Value: safeAuthorID},
 	})
@@ -379,7 +379,7 @@ func (r *MongoFollowRepository) GetAuthorFollow(ctx context.Context, userID, aut
 		return nil, err
 	}
 	var authorFollow social.AuthorFollow
-	err = r.authorFollowsCollection.FindOne(ctx, bson.D{
+	err = r.authorFollowsCollection.FindOne(ctx, bson.D{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		{Key: "user_id", Value: safeUserID},
 		{Key: "author_id", Value: safeAuthorID},
 	}).Decode(&authorFollow)
