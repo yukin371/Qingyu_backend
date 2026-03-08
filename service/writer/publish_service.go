@@ -514,6 +514,9 @@ func (s *PublishService) UpdateDocumentPublishStatus(
 	if err != nil {
 		return errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "发布记录不存在", "", err)
 	}
+	if record == nil {
+		return errors.NewServiceError("PublishService", errors.ServiceErrorNotFound, "发布记录不存在", "", nil)
+	}
 
 	// 取消发布
 	if !req.IsPublished {
