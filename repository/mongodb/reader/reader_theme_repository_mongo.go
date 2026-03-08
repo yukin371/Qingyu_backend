@@ -65,18 +65,17 @@ func (r *ReaderThemeRepositoryMongo) GetThemeByName(ctx context.Context, name st
 
 // CreateTheme 创建主题
 func (r *ReaderThemeRepositoryMongo) CreateTheme(ctx context.Context, theme *readerModel.ReaderTheme) error {
+	if theme.ID.IsZero() {
+		theme.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	theme.CreatedAt = now
 	theme.UpdatedAt = now
 	theme.UseCount = 0
 
-	result, err := r.collection.InsertOne(ctx, theme)
+	_, err := r.collection.InsertOne(ctx, theme)
 	if err != nil {
 		return fmt.Errorf("创建主题失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		theme.ID = oid.Hex()
 	}
 
 	return nil
@@ -208,7 +207,7 @@ func (r *ReaderThemeRepositoryMongo) SetActiveTheme(ctx context.Context, userID,
 	// 如果主题是内置主题，需要为用户创建一个副本
 	if theme.IsBuiltIn {
 		newTheme := *theme
-		newTheme.ID = "" // 让MongoDB生成新ID
+		newTheme.ID = primitive.NilObjectID // 让MongoDB生成新ID
 		newTheme.CreatorID = userID
 		newTheme.IsBuiltIn = false
 		newTheme.IsActive = true
@@ -300,7 +299,7 @@ func (r *ReaderThemeRepositoryMongo) BatchGetThemes(ctx context.Context, themeID
 		if err := cursor.Decode(&theme); err != nil {
 			continue
 		}
-		themes[theme.ID] = &theme
+		themes[theme.ID.Hex()] = &theme
 	}
 
 	return themes, nil

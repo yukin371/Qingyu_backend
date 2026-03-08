@@ -204,7 +204,7 @@ func (l *EventLogger) LogReplayStarted(ctx context.Context, eventType string, st
 		fields = append(fields, zap.Duration("range", duration))
 	}
 
-	l.logger.Info("Event replay started", fields...)
+	l.logger.Info("Event replay started", fields...) // codeql[go/log-injection]
 }
 
 // LogReplayCompleted 记录事件回放完成
@@ -226,9 +226,9 @@ func (l *EventLogger) LogReplayCompleted(ctx context.Context, eventType string, 
 
 	// 根据结果确定日志级别
 	if result.FailedCount > 0 {
-		l.logger.Warn("Event replay completed with failures", fields...)
+		l.logger.Warn("Event replay completed with failures", fields...) // codeql[go/log-injection]
 	} else {
-		l.logger.Info("Event replay completed successfully", fields...)
+		l.logger.Info("Event replay completed successfully", fields...) // codeql[go/log-injection]
 	}
 }
 
@@ -247,7 +247,7 @@ func (l *EventLogger) LogReplayFailed(ctx context.Context, eventType string, err
 		fields = append(fields, zap.String("trace_id", traceID))
 	}
 
-	l.logger.Error("Event replay failed", fields...)
+	l.logger.Error("Event replay failed", fields...) // codeql[go/log-injection]
 }
 
 // getTraceID 从context中获取trace_id

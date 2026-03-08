@@ -140,45 +140,47 @@ func (s *MessageService) SendMessage(ctx context.Context, senderID, receiverID, 
 
 	// 查找或创建会话
 	participantIDs := []string{senderID, receiverID}
-	conversation, err := s.messageRepo.GetConversationByParticipants(ctx, participantIDs)
+	var message *social.Message
+	var conversation *social.Conversation
 
-	if err != nil || conversation == nil {
-		// 创建新会话
-		conversation = &social.Conversation{
-			Participants: participantIDs,
-			UnreadCount:  make(map[string]int),
+	if err := s.messageRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		var err error
+		conversation, err = s.messageRepo.GetConversationByParticipants(txCtx, participantIDs)
+		if err != nil || conversation == nil {
+			conversation = &social.Conversation{
+				Participants: participantIDs,
+				UnreadCount:  make(map[string]int),
+			}
+			conversation.CreatedAt = time.Now()
+			conversation.UpdatedAt = time.Now()
+			if err := s.messageRepo.CreateConversation(txCtx, conversation); err != nil {
+				return fmt.Errorf("创建会话失败: %w", err)
+			}
 		}
-		conversation.CreatedAt = time.Now()
-		conversation.UpdatedAt = time.Now()
-		if err := s.messageRepo.CreateConversation(ctx, conversation); err != nil {
-			return nil, fmt.Errorf("创建会话失败: %w", err)
+
+		message = &social.Message{
+			ConversationID: conversation.ID.Hex(),
+			SenderID:       senderID,
+			ReceiverID:     receiverID,
+			Content:        content,
+			MessageType:    messageType,
 		}
-	}
+		message.IsRead = false
+		message.CreatedAt = time.Now()
+		message.UpdatedAt = time.Now()
 
-	// 创建消息
-	message := &social.Message{
-		ConversationID: conversation.ID.Hex(),
-		SenderID:       senderID,
-		ReceiverID:     receiverID,
-		Content:        content,
-		MessageType:    messageType,
-	}
-	message.IsRead = false
-	message.CreatedAt = time.Now()
-	message.UpdatedAt = time.Now()
-
-	if err := s.messageRepo.CreateMessage(ctx, message); err != nil {
-		return nil, fmt.Errorf("发送消息失败: %w", err)
-	}
-
-	// 更新会话最后一条消息
-	if err := s.messageRepo.UpdateLastMessage(ctx, conversation.ID.Hex(), message); err != nil {
-		fmt.Printf("Warning: Failed to update last message: %v\n", err)
-	}
-
-	// 增加接收者未读数
-	if err := s.messageRepo.IncrementUnreadCount(ctx, conversation.ID.Hex(), receiverID); err != nil {
-		fmt.Printf("Warning: Failed to increment unread count: %v\n", err)
+		if err := s.messageRepo.CreateMessage(txCtx, message); err != nil {
+			return fmt.Errorf("发送消息失败: %w", err)
+		}
+		if err := s.messageRepo.UpdateLastMessage(txCtx, conversation.ID.Hex(), message); err != nil {
+			return fmt.Errorf("更新最后一条消息失败: %w", err)
+		}
+		if err := s.messageRepo.IncrementUnreadCount(txCtx, conversation.ID.Hex(), receiverID); err != nil {
+			return fmt.Errorf("增加未读数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	// 发布事件
@@ -208,14 +210,16 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, userID, messageI
 		return nil // 已读则跳过
 	}
 
-	// 标记已读
-	if err := s.messageRepo.MarkMessageAsRead(ctx, messageID); err != nil {
-		return fmt.Errorf("标记消息已读失败: %w", err)
-	}
-
-	// 减少未读数
-	if err := s.messageRepo.ClearUnreadCount(ctx, message.ConversationID, userID); err != nil {
-		fmt.Printf("Warning: Failed to clear unread count: %v\n", err)
+	if err := s.messageRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.messageRepo.MarkMessageAsRead(txCtx, messageID); err != nil {
+			return fmt.Errorf("标记消息已读失败: %w", err)
+		}
+		if err := s.messageRepo.ClearUnreadCount(txCtx, message.ConversationID, userID); err != nil {
+			return fmt.Errorf("清空未读数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil

@@ -29,8 +29,8 @@ func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 //	@Tags			认证
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.RegisterRequest	true	"注册信息"
-//	@Success 200 {object} APIResponse
+//	@Param			request	body		RegisterRequest	true	"注册信息"
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/shared/auth/register [post]
@@ -67,8 +67,8 @@ func (api *AuthAPI) Register(c *gin.Context) {
 //	@Tags			认证
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.LoginRequest	true	"登录信息"
-//	@Success 200 {object} APIResponse
+//	@Param			request	body		LoginRequest	true	"登录信息"
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		401		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
@@ -97,7 +97,7 @@ func (api *AuthAPI) Login(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/logout [post]
@@ -130,7 +130,7 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/refresh [post]
@@ -163,7 +163,7 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/permissions [get]
@@ -192,7 +192,7 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		401	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/roles [get]
@@ -213,10 +213,6 @@ func (api *AuthAPI) GetUserRoles(c *gin.Context) {
 	response.SuccessWithMessage(c, "获取角色成功", roles)
 }
 
-type sendVerificationCodeRequest struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
 // SendVerificationCode 发送注册邮箱验证码
 //
 //	@Summary		发送邮箱验证码
@@ -225,7 +221,7 @@ type sendVerificationCodeRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		sendVerificationCodeRequest	true	"邮箱信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/shared/auth/send-verification-code [post]
@@ -244,4 +240,26 @@ func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
 		"expires_in_seconds":  600,
 		"cooldown_in_seconds": 60,
 	})
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// RegisterRequest 注册请求（用于swagger文档）
+type RegisterRequest struct {
+	Username         string `json:"username" binding:"required" example:"testuser"`
+	Email            string `json:"email" binding:"required,email" example:"test@example.com"`
+	Password         string `json:"password" binding:"required,min=6" example:"password123"`
+	Role             string `json:"role" example:"reader"`
+	VerificationCode string `json:"verification_code" example:"123456"`
+}
+
+// LoginRequest 登录请求（用于swagger文档）
+type LoginRequest struct {
+	Username string `json:"username" binding:"required" example:"testuser"`
+	Password string `json:"password" binding:"required" example:"password123"`
+}
+
+// sendVerificationCodeRequest 发送验证码请求
+type sendVerificationCodeRequest struct {
+	Email string `json:"email" binding:"required,email" example:"test@example.com"`
 }

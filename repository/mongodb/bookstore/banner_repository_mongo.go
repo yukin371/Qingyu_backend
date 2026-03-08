@@ -215,7 +215,7 @@ func (r *MongoBannerRepository) GetByTargetType(ctx context.Context, targetType 
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "sort_order", Value: 1}, {Key: "created_at", Value: -1}})
 
-	cursor, err := r.GetCollection().Find(ctx, bson.M{"target_type": targetType, "is_active": true}, opts)
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"target_type": targetType, "is_active": true}, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, err
 	}

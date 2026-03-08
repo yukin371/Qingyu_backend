@@ -31,8 +31,8 @@ func NewMigrator(db *mongo.Database) *Migrator {
 
 // Register 注册迁移
 func (m *Migrator) Register(name string, migration SimpleMigration) error {
-	// 验证名称格式：数字_字母下划线（例如: 001_create_users_indexes）
-	matched, err := regexp.MatchString(`^\d{3}_[a-z_]+$`, name)
+	// 验证名称格式：数字_小写字母数字下划线（例如: 001_create_users_indexes, 003_create_books_indexes_p0）
+	matched, err := regexp.MatchString(`^\d{3}_[a-z0-9_]+$`, name)
 	if err != nil {
 		return fmt.Errorf("迁移名称验证失败: %w", err)
 	}

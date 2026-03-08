@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
@@ -616,6 +617,28 @@ func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, boo
 	return nil
 }
 
+// calculateNewRating 计算新增评分后的平均分和数量
+func (s *BookStatisticsServiceImpl) calculateNewRating(currentAvg types.Rating, currentCount int64, newRating int) (types.Rating, int64) {
+	newCount := currentCount + 1
+	newAvg := ((float64(currentAvg) * float64(currentCount)) + float64(newRating)) / float64(newCount)
+	return types.Rating(newAvg), newCount
+}
+
+// calculateRemoveRating 计算移除评分后的平均分和数量
+func (s *BookStatisticsServiceImpl) calculateRemoveRating(currentAvg types.Rating, currentCount int64, removedRating int) (types.Rating, int64) {
+	if currentCount <= 1 {
+		return 0, 0
+	}
+	newCount := currentCount - 1
+	newAvg := ((float64(currentAvg) * float64(currentCount)) - float64(removedRating)) / float64(newCount)
+	return types.Rating(newAvg), newCount
+}
+
+// updateRatingFields 更新评分字段（使用Repository的直接设置方法）
+func (s *BookStatisticsServiceImpl) updateRatingFields(ctx context.Context, bookID string, avgRating types.Rating, count int64) error {
+	return s.statsRepo.UpdateRatingValues(ctx, bookID, avgRating, count)
+}
+
 // UpdateRating 更新评分统计
 func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID string, rating float64) error {
 	if bookID == "" {
@@ -625,9 +648,21 @@ func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID str
 		return errors.New("rating must be between 1 and 5")
 	}
 
-	// 更新评分统计 - 将float64转换为int
-	if err := s.statsRepo.UpdateRating(ctx, bookID, int(rating)); err != nil {
-		return fmt.Errorf("failed to update rating: %w", err)
+	stats, err := s.statsRepo.GetByBookID(ctx, bookID)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return fmt.Errorf("failed to get statistics: %w", err)
+	}
+
+	var currentAvg types.Rating
+	var currentCount int64
+	if stats != nil {
+		currentAvg = stats.AverageRating
+		currentCount = stats.RatingCount
+	}
+
+	newAvg, newCount := s.calculateNewRating(currentAvg, currentCount, int(rating))
+	if err := s.updateRatingFields(ctx, bookID, newAvg, newCount); err != nil {
+		return fmt.Errorf("failed to update rating fields: %w", err)
 	}
 
 	// 更新热度分数
@@ -654,9 +689,21 @@ func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID str
 		return errors.New("rating must be between 1 and 5")
 	}
 
-	// 移除评分统计
-	if err := s.statsRepo.RemoveRating(ctx, bookID, int(rating)); err != nil {
-		return fmt.Errorf("failed to remove rating: %w", err)
+	stats, err := s.statsRepo.GetByBookID(ctx, bookID)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return fmt.Errorf("failed to get statistics: %w", err)
+	}
+
+	var currentAvg types.Rating
+	var currentCount int64
+	if stats != nil {
+		currentAvg = stats.AverageRating
+		currentCount = stats.RatingCount
+	}
+
+	newAvg, newCount := s.calculateRemoveRating(currentAvg, currentCount, int(rating))
+	if err := s.updateRatingFields(ctx, bookID, newAvg, newCount); err != nil {
+		return fmt.Errorf("failed to update rating fields: %w", err)
 	}
 
 	// 更新热度分数

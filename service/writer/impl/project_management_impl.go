@@ -68,9 +68,9 @@ func (p *ProjectManagementImpl) CreateProject(ctx context.Context, req *serviceW
 	}
 	// 转换响应类型
 	return &serviceWriter.CreateProjectResponse{
-		ProjectID: projectResp.ProjectID,
+		ProjectID: projectResp.ID.Hex(), // 使用ID.Hex()
 		Title:     projectResp.Title,
-		Status:    projectResp.Status,
+		Status:    string(projectResp.Status), // 转换为string
 		CreatedAt: projectResp.CreatedAt,
 	}, nil
 }

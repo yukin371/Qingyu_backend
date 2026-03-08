@@ -1,18 +1,17 @@
 package handler
 
 import (
-	bookstoreModel "Qingyu_backend/models/bookstore"
-	serviceInterfaces "Qingyu_backend/service/interfaces/base"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	"context"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
+	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/pkg/response"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
 )
 
 // PublicUserHandler 公开用户信息处理器
@@ -46,14 +45,14 @@ func (h *PublicUserHandler) SetBookstoreService(bookstoreSvc BookstoreService) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse{data=dto.UserProfileResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.UserProfileResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id} [get]
 func (h *PublicUserHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.BadRequest(c, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -67,13 +66,13 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			default:
-				shared.InternalError(c, "获取用户信息失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "获取用户信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -94,7 +93,7 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 		CreatedAt: createdAt,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", publicProfile)
+	response.Success(c, publicProfile)
 }
 
 // GetUserProfile 获取用户详细资料（公开访问）
@@ -105,14 +104,14 @@ func (h *PublicUserHandler) GetUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse{data=dto.PublicUserProfileResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.PublicUserProfileResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id}/profile [get]
 func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.BadRequest(c, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -126,13 +125,13 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
 			case serviceInterfaces.ErrorTypeNotFound:
-				shared.NotFound(c, "用户不存在")
+				response.NotFound(c, "用户不存在")
 			default:
-				shared.InternalError(c, "获取用户信息失败", err)
+				response.InternalError(c, err)
 			}
 			return
 		}
-		shared.InternalError(c, "获取用户信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
@@ -153,7 +152,7 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 		CreatedAt: createdAt,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", publicProfile)
+	response.Success(c, publicProfile)
 }
 
 // GetUserBooks 获取用户的作品列表
@@ -167,14 +166,14 @@ func (h *PublicUserHandler) GetUserProfile(c *gin.Context) {
 //	@Param			page	query		int		false	"页码"		default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
 //	@Param			status	query		string	false	"状态筛选"	Enums(published, completed)
-//	@Success		200		{object}	shared.APIResponse{data=dto.GetUserBooksResponse}
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse{data=dto.GetUserBooksResponse}
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/{id}/books [get]
 func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		shared.BadRequest(c, "参数错误", "用户ID不能为空")
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
 		return
 	}
 
@@ -185,7 +184,7 @@ func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 
 	// 如果没有设置BookstoreService，返回空列表
 	if h.bookstoreService == nil {
-		shared.Success(c, http.StatusOK, "获取成功", dto.GetUserBooksResponse{
+		response.Success(c, dto.GetUserBooksResponse{
 			Books: []map[string]interface{}{},
 			Total: 0,
 			Page:  page,
@@ -197,17 +196,17 @@ func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 	// 调用BookstoreService查询用户的已发布作品
 	booksRaw, total, err := h.bookstoreService.GetBooksByAuthorID(c.Request.Context(), userID, page, size)
 	if err != nil {
-		shared.InternalError(c, "获取用户作品失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	// 将返回的书籍转换为响应格式
-	response := dto.GetUserBooksResponse{
+	resp := dto.GetUserBooksResponse{
 		Books: booksRaw,
 		Total: int(total),
 		Page:  page,
 		Size:  size,
 	}
 
-	shared.Success(c, http.StatusOK, "获取成功", response)
+	response.Success(c, resp)
 }

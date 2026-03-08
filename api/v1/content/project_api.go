@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/response"
+
 	"Qingyu_backend/models/dto"
-	"Qingyu_backend/api/v1/shared"
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -30,22 +31,22 @@ func NewProjectAPI(projectService contentService.ProjectServicePort) *ProjectAPI
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.CreateProjectRequest	true	"创建项目请求"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/projects [post]
 func (api *ProjectAPI) CreateProject(c *gin.Context) {
 	var req dto.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 	_ = userID // TODO: 使用userID
@@ -56,7 +57,7 @@ func (api *ProjectAPI) CreateProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 201, "创建成功", result)
+	response.Created(c, result)
 }
 
 // GetProject 获取项目详情
@@ -67,15 +68,15 @@ func (api *ProjectAPI) CreateProject(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [get]
 func (api *ProjectAPI) GetProject(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -85,7 +86,7 @@ func (api *ProjectAPI) GetProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // UpdateProject 更新项目
@@ -97,21 +98,21 @@ func (api *ProjectAPI) GetProject(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"项目ID"
 //	@Param			request	body		dto.UpdateProjectRequest	true	"更新项目请求"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [put]
 func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req dto.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -121,7 +122,7 @@ func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "更新成功", result)
+	response.SuccessWithMessage(c, "更新成功", result)
 }
 
 // DeleteProject 删除项目
@@ -132,15 +133,15 @@ func (api *ProjectAPI) UpdateProject(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id} [delete]
 func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -150,7 +151,7 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "删除成功", nil)
+	response.SuccessWithMessage(c, "删除成功", nil)
 }
 
 // ListProjects 获取项目列表
@@ -164,13 +165,13 @@ func (api *ProjectAPI) DeleteProject(c *gin.Context) {
 //	@Param			category	query		string	false	"分类"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			pageSize	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/projects [get]
 func (api *ProjectAPI) ListProjects(c *gin.Context) {
 	status := c.Query("status")
-	category := c.Query("category")
+	// category参数已移除，因为dto.ListProjectsRequest不支持
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
@@ -185,7 +186,8 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 		Page:     page,
 		PageSize: pageSize,
 		Status:   status,
-		Category: category,
+		// Category字段已从dto.ListProjectsRequest移除
+		// 如需按分类筛选，请使用其他方式
 	}
 
 	result, err := api.projectService.ListProjects(c.Request.Context(), req)
@@ -194,7 +196,7 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Projects, result.Total, page, pageSize, "获取成功")
+	response.Paginated(c, result.Projects, result.Total, page, pageSize, "获取成功")
 }
 
 // GetProjectStatistics 获取项目统计
@@ -205,15 +207,15 @@ func (api *ProjectAPI) ListProjects(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"项目ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id}/statistics [get]
 func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -223,7 +225,7 @@ func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // UpdateProjectStatistics 更新项目统计
@@ -235,21 +237,21 @@ func (api *ProjectAPI) GetProjectStatistics(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"项目ID"
 //	@Param			request	body		dto.ProjectStatistics	true	"统计数据"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/projects/{id}/statistics [put]
 func (api *ProjectAPI) UpdateProjectStatistics(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var stats dto.ProjectStatistics
 	if err := c.ShouldBindJSON(&stats); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -259,7 +261,7 @@ func (api *ProjectAPI) UpdateProjectStatistics(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "更新成功", nil)
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // 以下是扩展功能的占位实现，使用适配器委托给现有服务

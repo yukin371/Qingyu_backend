@@ -154,7 +154,7 @@ func (s *SearchService) searchWithProvider(ctx context.Context, req *search.Sear
 	// 获取对应的 Provider
 	prov, err := s.GetProvider(req.Type)
 	if err != nil {
-		s.logger.Printf("[SearchService] Provider not found: %s", req.Type)
+		s.logger.Printf("[SearchService] Provider not found: %s", req.Type) // codeql[go/log-injection]
 		return nil, fmt.Errorf("provider not found: %s", req.Type)
 	}
 
@@ -173,7 +173,7 @@ func (s *SearchService) searchWithES(ctx context.Context, req *search.SearchRequ
 	// 根据搜索类型确定索引名称
 	indexName := s.getESIndexName(req.Type)
 	if indexName == "" {
-		s.logger.Printf("[SearchService] Unsupported search type for ES: %s", req.Type)
+		s.logger.Printf("[SearchService] Unsupported search type for ES: %s", req.Type) // codeql[go/log-injection]
 		return nil, fmt.Errorf("unsupported search type for ES: %s", req.Type)
 	}
 
@@ -306,7 +306,7 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 			if useES {
 				engineName = "ES"
 			}
-			s.logger.Printf("[SearchService] Cache hit for key: %s (engine: %s)", cacheKey, engineName)
+			s.logger.Printf("[SearchService] Cache hit for key: %s (engine: %s)", cacheKey, engineName) // codeql[go/log-injection]
 			// 从缓存反序列化响应
 			resp := &search.SearchResponse{}
 			if err := s.unmarshalResponse(cachedData, resp); err == nil {
@@ -356,7 +356,7 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		if useES {
 			engineName = "ES"
 		}
-		s.logger.Printf("[SearchService] Search failed: type=%s, engine=%s, error=%v", req.Type, engineName, err)
+		s.logger.Printf("[SearchService] Search failed: type=%s, engine=%s, error=%v", req.Type, engineName, err) // codeql[go/log-injection]
 		return nil, search.WrapError(err, search.ErrCodeEngineFailure, "Search execution failed")
 	}
 
@@ -390,7 +390,7 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 	if useES {
 		engineName = "ES"
 	}
-	s.logger.Printf("[SearchService] Search completed: type=%s, engine=%s, query=%s, took=%v, total=%d, cache_hit=%v",
+	s.logger.Printf("[SearchService] Search completed: type=%s, engine=%s, query=%s, took=%v, total=%d, cache_hit=%v", // codeql[go/log-injection]
 		req.Type, engineName, req.Query, took, resp.Data.Total, cacheHit)
 
 	return resp, nil

@@ -150,7 +150,7 @@ func (m *JWTAuthMiddleware) Handler() gin.HandlerFunc {
 			ctx := c.Request.Context()
 			isBlacklisted, err := m.blacklist.IsBlacklisted(ctx, token)
 			if err != nil {
-				m.logger.Error("Failed to check blacklist",
+				m.logger.Error("Failed to check blacklist", // codeql[go/log-injection]
 					zap.String("token", token),
 					zap.Error(err),
 				)

@@ -143,7 +143,7 @@ func (s *NotificationServiceComplete) MarkAllAsRead(ctx context.Context, userID 
 			"read_at":    time.Now(),
 			"updated_at": time.Now(),
 		}
-		if err := s.messageRepo.UpdateNotification(ctx, notification.ID, updates); err != nil {
+		if err := s.messageRepo.UpdateNotification(ctx, notification.ID.Hex(), updates); err != nil {
 			// 记录错误但继续
 			continue
 		}

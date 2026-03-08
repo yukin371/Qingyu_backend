@@ -118,6 +118,7 @@ func setupBookmarkTestRouter(bookmarkService interfaces.BookmarkService, userID 
 		v1.GET("/books/:bookId/bookmarks", api.GetBookmarks)
 		v1.GET("/bookmarks/:id", api.GetBookmark)
 		v1.PUT("/bookmarks/:id", api.UpdateBookmark)
+		v1.PATCH("/bookmarks/:id", api.UpdateBookmark)
 		v1.DELETE("/bookmarks/:id", api.DeleteBookmark)
 		v1.GET("/bookmarks/export", api.ExportBookmarks)
 		v1.GET("/bookmarks/stats", api.GetBookmarkStats)
@@ -377,6 +378,31 @@ func TestBookmarkAPI_UpdateBookmark_NotFound(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestBookmarkAPI_PatchBookmark_Success(t *testing.T) {
+	// Given
+	mockService := new(MockBookmarkService)
+	userID := primitive.NewObjectID().Hex()
+	bookmarkID := primitive.NewObjectID().Hex()
+	router := setupBookmarkTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"note": "仅更新备注",
+	}
+
+	mockService.On("UpdateBookmark", mock.Anything, bookmarkID, mock.Anything).Return(nil)
+
+	// When
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PATCH", "/api/v1/reader/bookmarks/"+bookmarkID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
 }
 
 func TestBookmarkAPI_DeleteBookmark_Success(t *testing.T) {

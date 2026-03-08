@@ -125,7 +125,8 @@ func TestPermissionTemplateAPI_CreateTemplate_Success(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	assert.True(t, resp["success"].(bool))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.NotNil(t, resp["data"])
 
 	mockService.AssertExpectations(t)
 }
@@ -176,7 +177,8 @@ func TestPermissionTemplateAPI_GetTemplate_Success(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	assert.True(t, resp["success"].(bool))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.NotNil(t, resp["data"])
 
 	mockService.AssertExpectations(t)
 }
@@ -218,6 +220,10 @@ func TestPermissionTemplateAPI_UpdateTemplate_Success(t *testing.T) {
 	router.ServeHTTP(w, httpReq)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), resp["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -235,6 +241,10 @@ func TestPermissionTemplateAPI_DeleteTemplate_Success(t *testing.T) {
 	router.ServeHTTP(w, httpReq)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), resp["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -276,16 +286,10 @@ func TestPermissionTemplateAPI_ListTemplates_All(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-
-	// 检查success字段
-	if success, ok := resp["success"]; ok {
-		assert.True(t, success.(bool))
-	}
-
-	// 检查data字段
-	if data, ok := resp["data"].(map[string]interface{}); ok {
-		assert.Equal(t, float64(2), data["total"])
-	}
+	assert.Equal(t, float64(0), resp["code"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["total"])
+	assert.Len(t, data["items"].([]interface{}), 2)
 
 	mockService.AssertExpectations(t)
 }
@@ -318,16 +322,10 @@ func TestPermissionTemplateAPI_ListTemplates_WithCategory(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-
-	// 检查success字段
-	if success, ok := resp["success"]; ok {
-		assert.True(t, success.(bool))
-	}
-
-	// 检查data字段
-	if data, ok := resp["data"].(map[string]interface{}); ok {
-		assert.Equal(t, float64(1), data["total"])
-	}
+	assert.Equal(t, float64(0), resp["code"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, float64(1), data["total"])
+	assert.Len(t, data["items"].([]interface{}), 1)
 
 	mockService.AssertExpectations(t)
 }
@@ -353,6 +351,10 @@ func TestPermissionTemplateAPI_ApplyTemplate_Success(t *testing.T) {
 	router.ServeHTTP(w, httpReq)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), resp["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -391,6 +393,10 @@ func TestPermissionTemplateAPI_InitializeSystemTemplates_Success(t *testing.T) {
 	router.ServeHTTP(w, httpReq)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), resp["code"])
 
 	mockService.AssertExpectations(t)
 }
@@ -421,7 +427,8 @@ func TestPermissionTemplateAPI_GetTemplateByCode_Success(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	assert.True(t, resp["success"].(bool))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.NotNil(t, resp["data"])
 
 	mockService.AssertExpectations(t)
 }

@@ -228,6 +228,74 @@ func (r *MongoReadingProgressRepository) SaveProgress(ctx context.Context, userI
 	return nil
 }
 
+// UpdateProgressFields 更新阅读进度字段（不包含业务逻辑，仅负责数据持久化）
+func (r *MongoReadingProgressRepository) UpdateProgressFields(ctx context.Context, userID, bookID string, updates map[string]interface{}) error {
+	userOID, err := r.ParseID(userID)
+	if err != nil {
+		return err
+	}
+	bookOID, err := r.ParseID(bookID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"user_id": userOID,
+		"book_id": bookOID,
+	}
+
+	update := bson.M{"$set": updates}
+	_, err = r.GetCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("更新阅读进度失败: %w", err)
+	}
+
+	return nil
+}
+
+// SaveProgressWithInitial 保存阅读进度（指定初始值）
+func (r *MongoReadingProgressRepository) SaveProgressWithInitial(ctx context.Context, userID, bookID, chapterID string, progress float64, initialReadingTime int64) error {
+	userOID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("无效的用户ID: %w", err)
+	}
+	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("无效的书籍ID: %w", err)
+	}
+	chapterOID, err := r.ParseID(chapterID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"user_id": userOID,
+		"book_id": bookOID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"chapter_id":   chapterOID,
+			"progress":     progress,
+			"last_read_at": time.Now(),
+			"updated_at":   time.Now(),
+		},
+		"$setOnInsert": bson.M{
+			"_id":          primitive.NewObjectID(),
+			"reading_time": initialReadingTime,
+			"created_at":   time.Now(),
+		},
+	}
+
+	opts := options.Update().SetUpsert(true)
+	_, err = r.GetCollection().UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("保存阅读进度失败: %w", err)
+	}
+
+	return nil
+}
+
 // UpdateReadingTime 更新阅读时长
 func (r *MongoReadingProgressRepository) UpdateReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
 	userOID, err := primitive.ObjectIDFromHex(userID)
@@ -271,6 +339,44 @@ func (r *MongoReadingProgressRepository) UpdateReadingTime(ctx context.Context, 
 			LastReadAt:       time.Now(),
 		}
 		return r.Create(ctx, progress)
+	}
+
+	return nil
+}
+
+// IncrementReadingTime 增加阅读时长（不包含业务逻辑，仅负责数据持久化）
+func (r *MongoReadingProgressRepository) IncrementReadingTime(ctx context.Context, userID, bookID string, duration int64) error {
+	userOID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("无效的用户ID: %w", err)
+	}
+	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	if err != nil {
+		return fmt.Errorf("无效的书籍ID: %w", err)
+	}
+
+	filter := bson.M{
+		"user_id": userOID,
+		"book_id": bookOID,
+	}
+
+	update := bson.M{
+		"$inc": bson.M{
+			"reading_time": duration,
+		},
+		"$set": bson.M{
+			"last_read_at": time.Now(),
+			"updated_at":   time.Now(),
+		},
+	}
+
+	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("增加阅读时长失败: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("阅读进度记录不存在")
 	}
 
 	return nil
@@ -496,7 +602,34 @@ func (r *MongoReadingProgressRepository) GetReadingHistory(ctx context.Context, 
 	return progresses, nil
 }
 
-// GetUnfinishedBooks 获取未读完的书籍
+// GetByUserAndProgressRange 按进度范围获取阅读进度（通用查询方法）
+func (r *MongoReadingProgressRepository) GetByUserAndProgressRange(ctx context.Context, userID string, minProgress, maxProgress float64) ([]*reader.ReadingProgress, error) {
+	userOID, err := r.ParseID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"user_id":  userOID,
+		"progress": bson.M{"$gte": minProgress, "$lt": maxProgress},
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "last_read_at", Value: -1}})
+
+	cursor, err := r.GetCollection().Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("查询阅读进度失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var progresses []*reader.ReadingProgress
+	if err = cursor.All(ctx, &progresses); err != nil {
+		return nil, fmt.Errorf("解析数据失败: %w", err)
+	}
+
+	return progresses, nil
+}
+
+// GetUnfinishedBooks 获取未读完的书籍（业务规则：进度 < 100%）
 func (r *MongoReadingProgressRepository) GetUnfinishedBooks(ctx context.Context, userID string) ([]*reader.ReadingProgress, error) {
 	userOID, err := r.ParseID(userID)
 	if err != nil {

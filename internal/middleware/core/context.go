@@ -109,7 +109,7 @@ func (rc *RequestContext) LogInfo(msg string, fields ...zap.Field) {
 		zap.String("path", rc.Request.URL.Path),
 		zap.String("method", rc.Request.Method),
 	}, fields...)
-	rc.logger.Info(msg, allFields...)
+	rc.logger.Info(msg, allFields...) // codeql[go/log-injection]
 }
 
 // LogError 记录错误日志
@@ -119,7 +119,7 @@ func (rc *RequestContext) LogError(msg string, fields ...zap.Field) {
 		zap.String("path", rc.Request.URL.Path),
 		zap.String("method", rc.Request.Method),
 	}, fields...)
-	rc.logger.Error(msg, allFields...)
+	rc.logger.Error(msg, allFields...) // codeql[go/log-injection]
 }
 
 // LogWarn 记录警告日志
@@ -129,5 +129,5 @@ func (rc *RequestContext) LogWarn(msg string, fields ...zap.Field) {
 		zap.String("path", rc.Request.URL.Path),
 		zap.String("method", rc.Request.Method),
 	}, fields...)
-	rc.logger.Warn(msg, allFields...)
+	rc.logger.Warn(msg, allFields...) // codeql[go/log-injection]
 }

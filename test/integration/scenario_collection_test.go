@@ -100,11 +100,14 @@ func TestCollectionScenario(t *testing.T) {
 		w := helper.DoAuthRequest("GET", ReaderCollectionsPath+"?page=1&size=20", nil, token)
 		response := helper.AssertSuccess(w, 200, "获取收藏列表失败")
 
-		data := response["data"].(map[string]interface{})
-		list := data["list"].([]interface{})
-		assert.Greater(t, len(list), 0, "应该有至少一条收藏记录")
+		// data字段直接是数组，分页信息在pagination字段中
+		data, ok := response["data"].([]interface{})
+		if !ok {
+			t.Fatalf("data字段类型断言失败，实际类型: %T", response["data"])
+		}
+		assert.Greater(t, len(data), 0, "应该有至少一条收藏记录")
 
-		helper.LogSuccess("获取收藏列表成功，共%d条", len(list))
+		helper.LogSuccess("获取收藏列表成功，共%d条", len(data))
 	})
 
 	t.Run("5.收藏夹管理_创建收藏夹", func(t *testing.T) {
@@ -127,8 +130,15 @@ func TestCollectionScenario(t *testing.T) {
 		w := helper.DoAuthRequest("GET", ReaderCollectionsPath+"/folders", nil, token)
 		response := helper.AssertSuccess(w, 200, "获取收藏夹列表失败")
 
-		data := response["data"].(map[string]interface{})
-		list := data["list"].([]interface{})
+		// GetFolders API返回的是 {"list": [...]} 格式
+		data, ok := response["data"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("data字段类型断言失败，实际类型: %T", response["data"])
+		}
+		list, ok := data["list"].([]interface{})
+		if !ok {
+			t.Fatalf("list字段类型断言失败，实际类型: %T", data["list"])
+		}
 		assert.Greater(t, len(list), 0, "应该有至少一个收藏夹")
 
 		helper.LogSuccess("获取收藏夹列表成功，共%d个", len(list))

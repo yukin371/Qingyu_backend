@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	response "Qingyu_backend/pkg/response"
 	adminService "Qingyu_backend/service/admin"
+	"github.com/gin-gonic/gin"
 )
 
 // AuditAPI 审计追踪API
@@ -39,7 +40,7 @@ func NewAuditAPI(auditLogService adminService.AuditLogService, exportService adm
 // @Param end_date query string false "结束日期 (YYYY-MM-DD)"
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(20)
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/audit/trail [get]
 func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 	// 解析查询参数
@@ -81,24 +82,11 @@ func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 	// 查询审计日志
 	logs, total, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("查询审计日志失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("查询审计日志失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "查询成功",
-		"data": gin.H{
-			"logs":      logs,
-			"total":     total,
-			"page":      page,
-			"size":      size,
-			"totalPages": (total + int64(size) - 1) / int64(size),
-		},
-	})
+	response.Paginated(c, logs, total, page, size, "查询成功")
 }
 
 // GetResourceAuditTrail 获取资源审计追踪
@@ -109,37 +97,27 @@ func (api *AuditAPI) GetAuditTrail(c *gin.Context) {
 // @Produce json
 // @Param type path string true "资源类型"
 // @Param id path string true "资源ID"
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/audit/trail/resource/{type}/{id} [get]
 func (api *AuditAPI) GetResourceAuditTrail(c *gin.Context) {
 	resourceType := c.Param("type")
 	resourceID := c.Param("id")
 
 	if resourceType == "" || resourceID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "资源类型和资源ID不能为空",
-		})
+		response.BadRequest(c, "资源类型和资源ID不能为空", nil)
 		return
 	}
 
 	// 查询资源相关日志
 	logs, err := api.auditLogService.GetLogsByResource(context.Background(), resourceType, resourceID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("查询资源审计日志失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("查询资源审计日志失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "查询成功",
-		"data": gin.H{
-			"logs":  logs,
-			"total": len(logs),
-		},
+	response.SuccessWithMessage(c, "查询成功", gin.H{
+		"logs":  logs,
+		"total": len(logs),
 	})
 }
 
@@ -188,10 +166,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 
 	logs, _, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("查询审计日志失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("查询审计日志失败: %w", err))
 		return
 	}
 
@@ -199,10 +174,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 	if format == "csv" {
 		csvData, err := api.exportAuditLogsToCSV(logs)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": fmt.Sprintf("导出CSV失败: %v", err),
-			})
+			response.InternalError(c, fmt.Errorf("导出CSV失败: %w", err))
 			return
 		}
 
@@ -211,15 +183,13 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 		c.Data(http.StatusOK, "text/csv", csvData)
 	} else if format == "xlsx" {
 		// TODO: 实现Excel导出
-		c.JSON(http.StatusNotImplemented, gin.H{
-			"code":    501,
-			"message": "Excel导出功能待实现",
+		response.JSON(c, http.StatusNotImplemented, response.APIResponse{
+			Code:      response.CodeInternalError,
+			Message:   "Excel导出功能待实现",
+			Timestamp: time.Now().UnixMilli(),
 		})
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "不支持的导出格式",
-		})
+		response.BadRequest(c, "不支持的导出格式", nil)
 	}
 }
 
@@ -229,7 +199,7 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 // @Tags Admin-Audit
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/audit/statistics [get]
 func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	// 获取总日志数
@@ -240,10 +210,7 @@ func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 
 	_, total, err := api.auditLogService.QueryAuditLogs(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取统计信息失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取统计信息失败: %w", err))
 		return
 	}
 
@@ -253,13 +220,8 @@ func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	// - 按日期统计
 	// - 按资源类型统计
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取统计信息成功",
-		"data": gin.H{
-			"total_logs": total,
-			// 更多统计信息待添加
-		},
+	response.SuccessWithMessage(c, "获取统计信息成功", gin.H{
+		"total_logs": total,
 	})
 }
 

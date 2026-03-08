@@ -5,7 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
+
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -30,21 +31,21 @@ func NewChapterAPI(chapterService contentService.ChapterServicePort) *ChapterAPI
 //	@Produce		json
 //	@Param			bookId		path		string	true	"书籍ID"
 //	@Param			chapterId	path		string	true	"章节ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters/{chapterId} [get]
 func (api *ChapterAPI) GetChapter(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.BadRequest(c, "参数错误", "章节ID不能为空")
+		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -54,7 +55,7 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // ListChapters 获取章节列表
@@ -65,14 +66,14 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			bookId	path		string	true	"书籍ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters [get]
 func (api *ChapterAPI) ListChapters(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -82,7 +83,7 @@ func (api *ChapterAPI) ListChapters(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetNextChapter 获取下一章
@@ -94,21 +95,21 @@ func (api *ChapterAPI) ListChapters(c *gin.Context) {
 //	@Produce		json
 //	@Param			bookId		path		string	true	"书籍ID"
 //	@Param			chapterId	path		string	true	"章节ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters/{chapterId}/next [get]
 func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.BadRequest(c, "参数错误", "章节ID不能为空")
+		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -118,7 +119,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetPreviousChapter 获取上一章
@@ -130,21 +131,21 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 //	@Produce		json
 //	@Param			bookId		path		string	true	"书籍ID"
 //	@Param			chapterId	path		string	true	"章节ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters/{chapterId}/previous [get]
 func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.BadRequest(c, "参数错误", "章节ID不能为空")
+		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -154,7 +155,7 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetChapterByNumber 根据章节号获取章节
@@ -166,22 +167,22 @@ func (api *ChapterAPI) GetPreviousChapter(c *gin.Context) {
 //	@Produce		json
 //	@Param			bookId		path		string	true	"书籍ID"
 //	@Param			chapterNum	path		int		true	"章节号"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters/by-number/{chapterNum} [get]
 func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	chapterNumStr := c.Param("chapterNum")
 	chapterNum, err := strconv.Atoi(chapterNumStr)
 	if err != nil {
-		shared.BadRequest(c, "参数错误", "无效的章节号格式")
+		response.BadRequest(c, "参数错误", "无效的章节号格式")
 		return
 	}
 
@@ -191,7 +192,7 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetChapterInfo 获取章节信息
@@ -203,15 +204,15 @@ func (api *ChapterAPI) GetChapterByNumber(c *gin.Context) {
 //	@Produce		json
 //	@Param			bookId		path		string	true	"书籍ID"
 //	@Param			chapterId	path		string	true	"章节ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/books/{bookId}/chapters/{chapterId}/info [get]
 func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 	chapterID := c.Param("chapterId")
 	if chapterID == "" {
-		shared.BadRequest(c, "参数错误", "章节ID不能为空")
+		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -221,5 +222,5 @@ func (api *ChapterAPI) GetChapterInfo(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }

@@ -137,7 +137,7 @@ func (r *MongoLikeRepository) RemoveLike(ctx context.Context, userID, targetType
 		return err
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{
+	result, err := r.collection.DeleteOne(ctx, bson.M{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		"user_id":     safeUserID,
 		"target_type": safeTargetType,
 		"target_id":   safeTargetID,
@@ -176,7 +176,7 @@ func (r *MongoLikeRepository) IsLiked(ctx context.Context, userID, targetType, t
 
 	// TODO: 优先从Redis缓存查询
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{
+	count, err := r.collection.CountDocuments(ctx, bson.M{ // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 		"user_id":     safeUserID,
 		"target_type": safeTargetType,
 		"target_id":   safeTargetID,
@@ -380,4 +380,22 @@ func (r *MongoLikeRepository) CountTargetLikes(ctx context.Context, targetType, 
 // Health 健康检查
 func (r *MongoLikeRepository) Health(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
+}
+
+// RunInTransaction 在事务中执行点赞相关操作
+func (r *MongoLikeRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.collection.Database().Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start like transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("like transaction failed: %w", err)
+	}
+
+	return nil
 }

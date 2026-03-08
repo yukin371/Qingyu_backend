@@ -37,6 +37,9 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 	if category == nil {
 		return errors.New("category cannot be nil")
 	}
+	if category.ID.IsZero() {
+		category.ID = primitive.NewObjectID()
+	}
 
 	category.CreatedAt = time.Now()
 	category.UpdatedAt = time.Now()
@@ -45,8 +48,6 @@ func (r *MongoCategoryRepository) Create(ctx context.Context, category *bookstor
 	if err != nil {
 		return err
 	}
-
-	// ID 已在调用方设置（或自动生成），无需从结果获取
 	return nil
 }
 
@@ -271,7 +272,7 @@ func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*books
 			Category: *cat,
 			Children: make([]*bookstore.CategoryTree, 0),
 		}
-		categoryMap[cat.ID] = tree
+		categoryMap[cat.ID.Hex()] = tree
 
 		if cat.Level == 0 {
 			roots = append(roots, tree)
@@ -282,7 +283,7 @@ func (r *MongoCategoryRepository) GetCategoryTree(ctx context.Context) ([]*books
 	for _, cat := range categories {
 		if cat.ParentID != nil {
 			if parent, exists := categoryMap[*cat.ParentID]; exists {
-				parent.Children = append(parent.Children, categoryMap[cat.ID])
+				parent.Children = append(parent.Children, categoryMap[cat.ID.Hex()])
 			}
 		}
 	}
@@ -378,7 +379,7 @@ func (r *MongoCategoryRepository) GetDescendants(ctx context.Context, categoryID
 
 		for _, child := range children {
 			descendants = append(descendants, child)
-			if err := getChildren(child.ID); err != nil {
+			if err := getChildren(child.ID.Hex()); err != nil {
 				return err
 			}
 		}

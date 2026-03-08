@@ -32,6 +32,11 @@ func createTestProject(authorID, title string) *writer.Project {
 	}
 	project.AuthorID = authorID
 	project.Title = title
+	// Repository 测试不依赖 Service 层，直接设置测试所需的默认值
+	project.Settings = writer.ProjectSettings{
+		AutoBackup:     true,
+		BackupInterval: 24,
+	}
 	return project
 }
 

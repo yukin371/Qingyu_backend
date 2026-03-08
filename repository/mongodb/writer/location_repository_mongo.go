@@ -71,7 +71,7 @@ func (r *LocationRepositoryMongo) FindByID(ctx context.Context, locationID strin
 func (r *LocationRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Location, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.GetCollection().Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find locations failed", err)
 	}

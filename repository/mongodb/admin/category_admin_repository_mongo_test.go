@@ -2,6 +2,9 @@ package admin
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +16,25 @@ import (
 
 	"Qingyu_backend/models/bookstore"
 )
+
+func oid(seed string) primitive.ObjectID {
+	normalizedSeed := strings.ToLower(strings.TrimSpace(seed))
+	sum := sha1.Sum([]byte(normalizedSeed))
+	normalized := hex.EncodeToString(sum[:])[:24]
+	objectID, err := primitive.ObjectIDFromHex(normalized)
+	if err != nil {
+		panic(err)
+	}
+	return objectID
+}
+
+func hexID(seed string) string {
+	return oid(seed).Hex()
+}
+
+func strPtr(v string) *string {
+	return &v
+}
 
 // setupTestDB 设置测试数据库（使用内存MongoDB或跳过集成测试）
 func setupTestDB(t *testing.T) *mongo.Database {
@@ -45,12 +67,12 @@ func TestCategoryAdminMongoRepository_Create(t *testing.T) {
 	assert.NotEmpty(t, category.ID)
 
 	// 验证创建成功
-	retrieved, err := repo.GetByID(ctx, category.ID)
+	retrieved, err := repo.GetByID(ctx, category.ID.Hex())
 	assert.NoError(t, err)
 	assert.Equal(t, "测试分类", retrieved.Name)
 
 	// 清理
-	repo.Delete(ctx, category.ID)
+	repo.Delete(ctx, category.ID.Hex())
 }
 
 // TestCategoryAdminMongoRepository_Create_WithID 测试使用指定ID创建分类
@@ -65,7 +87,7 @@ func TestCategoryAdminMongoRepository_Create_WithID(t *testing.T) {
 
 	id := primitive.NewObjectID().Hex()
 	category := &bookstore.Category{
-		ID:          id,
+		ID:          oid(id),
 		Name:        "指定ID分类",
 		Description: "测试",
 		SortOrder:   1,
@@ -74,10 +96,10 @@ func TestCategoryAdminMongoRepository_Create_WithID(t *testing.T) {
 
 	err := repo.Create(ctx, category)
 	assert.NoError(t, err)
-	assert.Equal(t, id, category.ID)
+	assert.Equal(t, id, category.ID.Hex())
 
 	// 清理
-	repo.Delete(ctx, category.ID)
+	repo.Delete(ctx, category.ID.Hex())
 }
 
 // TestCategoryAdminMongoRepository_GetByID 测试获取分类
@@ -100,14 +122,14 @@ func TestCategoryAdminMongoRepository_GetByID(t *testing.T) {
 	repo.Create(ctx, category)
 
 	// 测试获取
-	retrieved, err := repo.GetByID(ctx, category.ID)
+	retrieved, err := repo.GetByID(ctx, category.ID.Hex())
 	assert.NoError(t, err)
 	assert.NotNil(t, retrieved)
 	assert.Equal(t, category.ID, retrieved.ID)
 	assert.Equal(t, "测试分类", retrieved.Name)
 
 	// 清理
-	repo.Delete(ctx, category.ID)
+	repo.Delete(ctx, category.ID.Hex())
 }
 
 // TestCategoryAdminMongoRepository_GetByID_NotFound 测试获取不存在的分类
@@ -174,13 +196,13 @@ func TestCategoryAdminMongoRepository_Update(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 验证更新
-	retrieved, _ := repo.GetByID(ctx, category.ID)
+	retrieved, _ := repo.GetByID(ctx, category.ID.Hex())
 	assert.Equal(t, "更新后的名称", retrieved.Name)
 	assert.Equal(t, "更新后的描述", retrieved.Description)
 	assert.Equal(t, 5, retrieved.SortOrder)
 
 	// 清理
-	repo.Delete(ctx, category.ID)
+	repo.Delete(ctx, category.ID.Hex())
 }
 
 // TestCategoryAdminMongoRepository_Update_NotFound 测试更新不存在的分类
@@ -195,7 +217,7 @@ func TestCategoryAdminMongoRepository_Update_NotFound(t *testing.T) {
 
 	nonExistentID := primitive.NewObjectID().Hex()
 	category := &bookstore.Category{
-		ID:        nonExistentID,
+		ID:        oid(nonExistentID),
 		Name:      "不存在的分类",
 		SortOrder: 1,
 		IsActive:  true,
@@ -217,7 +239,7 @@ func TestCategoryAdminMongoRepository_Update_InvalidID(t *testing.T) {
 	ctx := context.Background()
 
 	category := &bookstore.Category{
-		ID:        "invalid-id",
+		ID:        primitive.NilObjectID,
 		Name:      "测试",
 		SortOrder: 1,
 		IsActive:  true,
@@ -246,11 +268,11 @@ func TestCategoryAdminMongoRepository_Delete(t *testing.T) {
 	repo.Create(ctx, category)
 
 	// 删除
-	err := repo.Delete(ctx, category.ID)
+	err := repo.Delete(ctx, category.ID.Hex())
 	assert.NoError(t, err)
 
 	// 验证已删除
-	_, err = repo.GetByID(ctx, category.ID)
+	_, err = repo.GetByID(ctx, category.ID.Hex())
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -307,7 +329,7 @@ func TestCategoryAdminMongoRepository_List(t *testing.T) {
 	for _, cat := range categories {
 		err := repo.Create(ctx, cat)
 		assert.NoError(t, err)
-		ids = append(ids, cat.ID)
+		ids = append(ids, cat.ID.Hex())
 	}
 	defer func() {
 		for _, id := range ids {
@@ -337,8 +359,8 @@ func TestCategoryAdminMongoRepository_List_WithFilter(t *testing.T) {
 
 	repo.Create(ctx, cat1)
 	repo.Create(ctx, cat2)
-	defer repo.Delete(ctx, cat1.ID)
-	defer repo.Delete(ctx, cat2.ID)
+	defer repo.Delete(ctx, cat1.ID.Hex())
+	defer repo.Delete(ctx, cat2.ID.Hex())
 
 	// 查询活跃分类
 	filter := bson.M{"is_active": true}
@@ -391,25 +413,25 @@ func TestCategoryAdminMongoRepository_HasChildren(t *testing.T) {
 		IsActive:  true,
 	}
 	repo.Create(ctx, parent)
-	defer repo.Delete(ctx, parent.ID)
+	defer repo.Delete(ctx, parent.ID.Hex())
 
 	// 创建子分类
 	child := &bookstore.Category{
 		Name:      "子分类",
 		SortOrder: 1,
 		IsActive:  true,
-		ParentID:  &parent.ID,
+		ParentID:  strPtr(parent.ID.Hex()),
 	}
 	repo.Create(ctx, child)
-	defer repo.Delete(ctx, child.ID)
+	defer repo.Delete(ctx, child.ID.Hex())
 
 	// 检查是否有子分类
-	hasChildren, err := repo.HasChildren(ctx, parent.ID)
+	hasChildren, err := repo.HasChildren(ctx, parent.ID.Hex())
 	assert.NoError(t, err)
 	assert.True(t, hasChildren)
 
 	// 子分类应该没有子节点
-	hasChildren, err = repo.HasChildren(ctx, child.ID)
+	hasChildren, err = repo.HasChildren(ctx, child.ID.Hex())
 	assert.NoError(t, err)
 	assert.False(t, hasChildren)
 }
@@ -431,9 +453,9 @@ func TestCategoryAdminMongoRepository_HasChildren_NoChildren(t *testing.T) {
 		IsActive:  true,
 	}
 	repo.Create(ctx, category)
-	defer repo.Delete(ctx, category.ID)
+	defer repo.Delete(ctx, category.ID.Hex())
 
-	hasChildren, err := repo.HasChildren(ctx, category.ID)
+	hasChildren, err := repo.HasChildren(ctx, category.ID.Hex())
 	assert.NoError(t, err)
 	assert.False(t, hasChildren)
 }
@@ -469,7 +491,7 @@ func TestCategoryAdminMongoRepository_NameExistsAtLevel(t *testing.T) {
 		IsActive:  true,
 	}
 	repo.Create(ctx, category)
-	defer repo.Delete(ctx, category.ID)
+	defer repo.Delete(ctx, category.ID.Hex())
 
 	// 检查同名是否存在（应该存在）
 	exists, err := repo.NameExistsAtLevel(ctx, nil, "玄幻", "")
@@ -482,7 +504,7 @@ func TestCategoryAdminMongoRepository_NameExistsAtLevel(t *testing.T) {
 	assert.False(t, exists)
 
 	// 排除当前ID（用于更新时检查）
-	exists, err = repo.NameExistsAtLevel(ctx, nil, "玄幻", category.ID)
+	exists, err = repo.NameExistsAtLevel(ctx, nil, "玄幻", category.ID.Hex())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 }
@@ -504,20 +526,21 @@ func TestCategoryAdminMongoRepository_NameExistsAtLevel_WithParent(t *testing.T)
 		IsActive:  true,
 	}
 	repo.Create(ctx, parent)
-	defer repo.Delete(ctx, parent.ID)
+	defer repo.Delete(ctx, parent.ID.Hex())
 
 	// 创建子分类
 	child := &bookstore.Category{
 		Name:      "子分类",
 		SortOrder: 1,
 		IsActive:  true,
-		ParentID:  &parent.ID,
+		ParentID:  strPtr(parent.ID.Hex()),
 	}
 	repo.Create(ctx, child)
-	defer repo.Delete(ctx, child.ID)
+	defer repo.Delete(ctx, child.ID.Hex())
 
 	// 检查同名在同一父级下（应该存在）
-	exists, err := repo.NameExistsAtLevel(ctx, &parent.ID, "子分类", "")
+	parentID := parent.ID.Hex()
+	exists, err := repo.NameExistsAtLevel(ctx, &parentID, "子分类", "")
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
@@ -568,20 +591,20 @@ func TestCategoryAdminMongoRepository_UpdateBookCount(t *testing.T) {
 
 	// 创建分类
 	category := &bookstore.Category{
-		Name:        "测试分类",
-		SortOrder:   1,
-		IsActive:    true,
-		BookCount:   0,
+		Name:      "测试分类",
+		SortOrder: 1,
+		IsActive:  true,
+		BookCount: 0,
 	}
 	repo.Create(ctx, category)
-	defer repo.Delete(ctx, category.ID)
+	defer repo.Delete(ctx, category.ID.Hex())
 
 	// 更新作品数量
-	err := repo.UpdateBookCount(ctx, category.ID, 100)
+	err := repo.UpdateBookCount(ctx, category.ID.Hex(), 100)
 	assert.NoError(t, err)
 
 	// 验证更新
-	retrieved, _ := repo.GetByID(ctx, category.ID)
+	retrieved, _ := repo.GetByID(ctx, category.ID.Hex())
 	assert.Equal(t, int64(100), retrieved.BookCount)
 }
 
@@ -618,19 +641,19 @@ func TestCategoryAdminMongoRepository_BatchUpdateStatus(t *testing.T) {
 	repo.Create(ctx, cat2)
 	repo.Create(ctx, cat3)
 
-	defer repo.Delete(ctx, cat1.ID)
-	defer repo.Delete(ctx, cat2.ID)
-	defer repo.Delete(ctx, cat3.ID)
+	defer repo.Delete(ctx, cat1.ID.Hex())
+	defer repo.Delete(ctx, cat2.ID.Hex())
+	defer repo.Delete(ctx, cat3.ID.Hex())
 
 	// 批量禁用
-	ids := []string{cat1.ID, cat2.ID}
+	ids := []string{cat1.ID.Hex(), cat2.ID.Hex()}
 	err := repo.BatchUpdateStatus(ctx, ids, false)
 	assert.NoError(t, err)
 
 	// 验证更新
-	retrieved1, _ := repo.GetByID(ctx, cat1.ID)
-	retrieved2, _ := repo.GetByID(ctx, cat2.ID)
-	retrieved3, _ := repo.GetByID(ctx, cat3.ID)
+	retrieved1, _ := repo.GetByID(ctx, cat1.ID.Hex())
+	retrieved2, _ := repo.GetByID(ctx, cat2.ID.Hex())
+	retrieved3, _ := repo.GetByID(ctx, cat3.ID.Hex())
 
 	assert.False(t, retrieved1.IsActive)
 	assert.False(t, retrieved2.IsActive)
@@ -674,22 +697,22 @@ func TestCategoryAdminMongoRepository_GetDescendantIDs(t *testing.T) {
 	repo.Create(ctx, grandchild1)
 
 	// 建立层级关系
-	child1.ParentID = &root.ID
-	child2.ParentID = &root.ID
-	grandchild1.ParentID = &child1.ID
+	child1.ParentID = strPtr(root.ID.Hex())
+	child2.ParentID = strPtr(root.ID.Hex())
+	grandchild1.ParentID = strPtr(child1.ID.Hex())
 	repo.Update(ctx, child1)
 	repo.Update(ctx, child2)
 	repo.Update(ctx, grandchild1)
 
 	defer func() {
-		repo.Delete(ctx, root.ID)
-		repo.Delete(ctx, child1.ID)
-		repo.Delete(ctx, child2.ID)
-		repo.Delete(ctx, grandchild1.ID)
+		repo.Delete(ctx, root.ID.Hex())
+		repo.Delete(ctx, child1.ID.Hex())
+		repo.Delete(ctx, child2.ID.Hex())
+		repo.Delete(ctx, grandchild1.ID.Hex())
 	}()
 
 	// 获取根分类的所有子孙ID
-	descendantIDs, err := repo.GetDescendantIDs(ctx, root.ID)
+	descendantIDs, err := repo.GetDescendantIDs(ctx, root.ID.Hex())
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, len(descendantIDs), 3)
 }
@@ -707,9 +730,9 @@ func TestCategoryAdminMongoRepository_GetDescendantIDs_NoDescendants(t *testing.
 	// 创建没有子分类的分类
 	category := &bookstore.Category{Name: "独立分类", SortOrder: 1, IsActive: true}
 	repo.Create(ctx, category)
-	defer repo.Delete(ctx, category.ID)
+	defer repo.Delete(ctx, category.ID.Hex())
 
-	descendantIDs, err := repo.GetDescendantIDs(ctx, category.ID)
+	descendantIDs, err := repo.GetDescendantIDs(ctx, category.ID.Hex())
 	assert.NoError(t, err)
 	assert.Empty(t, descendantIDs)
 }
@@ -747,13 +770,13 @@ func TestCategoryAdminMongoRepository_GetTree(t *testing.T) {
 	repo.Create(ctx, root2)
 	repo.Create(ctx, child1)
 
-	child1.ParentID = &root1.ID
+	child1.ParentID = strPtr(root1.ID.Hex())
 	repo.Update(ctx, child1)
 
 	defer func() {
-		repo.Delete(ctx, root1.ID)
-		repo.Delete(ctx, root2.ID)
-		repo.Delete(ctx, child1.ID)
+		repo.Delete(ctx, root1.ID.Hex())
+		repo.Delete(ctx, root2.ID.Hex())
+		repo.Delete(ctx, child1.ID.Hex())
 	}()
 
 	// 获取分类树（只返回根节点）
@@ -791,5 +814,5 @@ func TestCategoryAdminMongoRepository_Timestamps(t *testing.T) {
 	assert.True(t, category.CreatedAt.After(beforeCreate), "CreatedAt should be recent")
 
 	// 清理
-	repo.Delete(ctx, category.ID)
+	repo.Delete(ctx, category.ID.Hex())
 }

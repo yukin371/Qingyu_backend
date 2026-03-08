@@ -9,6 +9,7 @@ import (
 
 	"Qingyu_backend/models/dto"
 	"Qingyu_backend/pkg/lock"
+	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	"Qingyu_backend/service/interfaces"
@@ -63,9 +64,14 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var exportSvc interfaces.ExportService
 
 	// 创建PublishService（发布服务）
-	// 注意：由于PublicationRepository和BookstoreClient尚未完全实现，暂时使用MockPublishService
-	// 当书城服务完善后，可以替换为真实的PublishService
-	var publishSvc interfaces.PublishService = NewMockPublishService()
+	publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
+	publishSvc := writerservice.NewPublishService(
+		writerservice.NewPublishProjectRepositoryAdapter(projectRepo),
+		writerservice.NewPublishDocumentRepositoryAdapter(documentRepo, mongoDB),
+		publicationRepo,
+		writerservice.NewLocalBookstoreClient(mongoDB),
+		writerservice.NewPublishEventBusAdapter(eventBus),
+	)
 
 	// 创建DocumentLockService（文档锁服务）
 	// 从服务容器获取Redis客户端
@@ -234,5 +240,13 @@ func (m *MockPublishService) GetPublicationRecords(ctx context.Context, projectI
 
 // GetPublicationRecord 获取发布记录详情
 func (m *MockPublishService) GetPublicationRecord(ctx context.Context, recordID string) (*interfaces.PublicationRecord, error) {
+	return nil, nil
+}
+
+func (m *MockPublishService) GetPendingPublicationRecords(ctx context.Context, page, pageSize int) ([]*interfaces.PublicationRecord, int64, error) {
+	return []*interfaces.PublicationRecord{}, 0, nil
+}
+
+func (m *MockPublishService) ReviewPublication(ctx context.Context, recordID, reviewerID string, approved bool, note string) (*interfaces.PublicationRecord, error) {
 	return nil, nil
 }

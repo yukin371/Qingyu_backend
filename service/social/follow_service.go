@@ -102,23 +102,27 @@ func (s *FollowService) FollowUser(ctx context.Context, followerID, followingID 
 		UpdatedAt:   time.Now(),
 	}
 
-	if err := s.followRepo.CreateFollow(ctx, follow); err != nil {
-		return fmt.Errorf("关注失败: %w", err)
-	}
-
-	// 如果是互相关注，更新对方的关注状态
-	if isFollowed {
-		if err := s.followRepo.UpdateMutualStatus(ctx, followingID, followerID, "user", true); err != nil {
-			fmt.Printf("Warning: Failed to update mutual status: %v\n", err)
+	if err := s.followRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.followRepo.CreateFollow(txCtx, follow); err != nil {
+			return fmt.Errorf("关注失败: %w", err)
 		}
-	}
 
-	// 更新统计
-	if err := s.followRepo.UpdateFollowStats(ctx, followerID, 0, 1); err != nil {
-		fmt.Printf("Warning: Failed to update follower stats: %v\n", err)
-	}
-	if err := s.followRepo.UpdateFollowStats(ctx, followingID, 1, 0); err != nil {
-		fmt.Printf("Warning: Failed to update following stats: %v\n", err)
+		if isFollowed {
+			if err := s.followRepo.UpdateMutualStatus(txCtx, followingID, followerID, "user", true); err != nil {
+				return fmt.Errorf("更新互相关注状态失败: %w", err)
+			}
+		}
+
+		if err := s.followRepo.UpdateFollowStats(txCtx, followerID, 0, 1); err != nil {
+			return fmt.Errorf("更新关注统计失败: %w", err)
+		}
+		if err := s.followRepo.UpdateFollowStats(txCtx, followingID, 1, 0); err != nil {
+			return fmt.Errorf("更新粉丝统计失败: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件
@@ -149,24 +153,27 @@ func (s *FollowService) UnfollowUser(ctx context.Context, followerID, followingI
 		return fmt.Errorf("检查互相关注状态失败: %w", err)
 	}
 
-	// 删除关注关系
-	if err := s.followRepo.DeleteFollow(ctx, followerID, followingID, "user"); err != nil {
-		return fmt.Errorf("取消关注失败: %w", err)
-	}
-
-	// 如果之前是互相关注，更新对方的关注状态
-	if isMutual {
-		if err := s.followRepo.UpdateMutualStatus(ctx, followingID, followerID, "user", false); err != nil {
-			fmt.Printf("Warning: Failed to update mutual status: %v\n", err)
+	if err := s.followRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.followRepo.DeleteFollow(txCtx, followerID, followingID, "user"); err != nil {
+			return fmt.Errorf("取消关注失败: %w", err)
 		}
-	}
 
-	// 更新统计
-	if err := s.followRepo.UpdateFollowStats(ctx, followerID, 0, -1); err != nil {
-		fmt.Printf("Warning: Failed to update follower stats: %v\n", err)
-	}
-	if err := s.followRepo.UpdateFollowStats(ctx, followingID, -1, 0); err != nil {
-		fmt.Printf("Warning: Failed to update following stats: %v\n", err)
+		if isMutual {
+			if err := s.followRepo.UpdateMutualStatus(txCtx, followingID, followerID, "user", false); err != nil {
+				return fmt.Errorf("更新互相关注状态失败: %w", err)
+			}
+		}
+
+		if err := s.followRepo.UpdateFollowStats(txCtx, followerID, 0, -1); err != nil {
+			return fmt.Errorf("更新关注统计失败: %w", err)
+		}
+		if err := s.followRepo.UpdateFollowStats(txCtx, followingID, -1, 0); err != nil {
+			return fmt.Errorf("更新粉丝统计失败: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件
@@ -278,13 +285,16 @@ func (s *FollowService) FollowAuthor(ctx context.Context, userID, authorID, auth
 		UpdatedAt:     time.Now(),
 	}
 
-	if err := s.followRepo.CreateAuthorFollow(ctx, authorFollow); err != nil {
-		return fmt.Errorf("关注作者失败: %w", err)
-	}
-
-	// 更新统计
-	if err := s.followRepo.UpdateFollowStats(ctx, userID, 0, 1); err != nil {
-		fmt.Printf("Warning: Failed to update follow stats: %v\n", err)
+	if err := s.followRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.followRepo.CreateAuthorFollow(txCtx, authorFollow); err != nil {
+			return fmt.Errorf("关注作者失败: %w", err)
+		}
+		if err := s.followRepo.UpdateFollowStats(txCtx, userID, 0, 1); err != nil {
+			return fmt.Errorf("更新关注统计失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件
@@ -310,13 +320,16 @@ func (s *FollowService) UnfollowAuthor(ctx context.Context, userID, authorID str
 	}
 
 	// 删除关注
-	if err := s.followRepo.DeleteAuthorFollow(ctx, userID, authorID); err != nil {
-		return fmt.Errorf("取消关注失败: %w", err)
-	}
-
-	// 更新统计
-	if err := s.followRepo.UpdateFollowStats(ctx, userID, 0, -1); err != nil {
-		fmt.Printf("Warning: Failed to update follow stats: %v\n", err)
+	if err := s.followRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.followRepo.DeleteAuthorFollow(txCtx, userID, authorID); err != nil {
+			return fmt.Errorf("取消关注失败: %w", err)
+		}
+		if err := s.followRepo.UpdateFollowStats(txCtx, userID, 0, -1); err != nil {
+			return fmt.Errorf("更新关注统计失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// 发布事件

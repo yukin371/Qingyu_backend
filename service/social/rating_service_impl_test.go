@@ -115,6 +115,10 @@ func (m *MockReviewRepository) DecrementReviewLikeCount(ctx context.Context, rev
 	return args.Error(0)
 }
 
+func (m *MockReviewRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 func (m *MockReviewRepository) GetAverageRating(ctx context.Context, bookID string) (float64, error) {
 	args := m.Called(ctx, bookID)
 	return args.Get(0).(float64), args.Error(1)

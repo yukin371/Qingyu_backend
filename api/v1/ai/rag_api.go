@@ -60,7 +60,7 @@ type RetrieveAndGenerateResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body RetrieveAndGenerateRequest true "检索生成请求"
-// @Success 200 {object} shared.APIResponse
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/rag/retrieve [post]
 func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 	var req RetrieveAndGenerateRequest
@@ -111,8 +111,8 @@ func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param query query string true "查询内容"
-// @Param topK topK int false "返回数量" default(5)
-// @Success 200 {object} shared.APIResponse
+// @Param topK query int false "返回数量" default(5)
+// @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/rag/search [get]
 func (api *RAGApi) SearchSimilar(c *gin.Context) {
 	query := c.Query("query")

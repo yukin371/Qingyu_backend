@@ -33,7 +33,7 @@ func NewAnnouncementPublicAPI(announcementService messagingService.AnnouncementS
 //	@Param			targetRole	query		string	false	"目标角色(all/reader/writer/admin)"	default(all)
 //	@Param			limit			query		int		false	"限制数量"	default(10)
 //	@Success		200				{object}	response.APIResponse
-//	@Failure		500				{object}	response.ErrorResponse
+//	@Failure		500				{object}	response.APIResponse
 //	@Router			/api/v1/announcements/effective [get]
 func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
 	// 1. 获取参数
@@ -59,9 +59,9 @@ func (api *AnnouncementPublicAPI) GetEffectiveAnnouncements(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"公告ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/announcements/{id}/view [post]
 func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 	// 1. 获取公告ID
@@ -89,10 +89,10 @@ func (api *AnnouncementPublicAPI) IncrementViewCount(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"公告ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.ErrorResponse
-//	@Failure		404		{object}	shared.ErrorResponse
-//	@Failure		500		{object}	shared.ErrorResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/announcements/{id} [get]
 func (api *AnnouncementPublicAPI) GetAnnouncementByID(c *gin.Context) {
 	// 1. 获取公告ID

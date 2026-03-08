@@ -14,7 +14,7 @@ import (
 
 // BookStreamRepository 书籍流式仓储
 type BookStreamRepository struct {
-	baseRepo *MongoBookRepository
+	baseRepo  *MongoBookRepository
 	cursorMgr *CursorManager
 }
 
@@ -96,8 +96,8 @@ func (r *BookStreamRepository) buildQuery(filter *bookstore.BookFilter) bson.M {
 	if filter.Status != nil {
 		query["status"] = *filter.Status
 	} else {
-		// 默认只返回已发布的书籍
-		query["status"] = bson.M{"$in": []string{"published", "ongoing", "completed"}}
+		// 默认只返回公开书籍，同时兼容历史 published 数据。
+		query["status"] = bson.M{"$in": bookstore.PublicBookStatusQueryValues()}
 	}
 
 	// 分类过滤

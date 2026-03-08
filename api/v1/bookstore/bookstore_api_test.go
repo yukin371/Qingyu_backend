@@ -2,6 +2,7 @@ package bookstore
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,9 +12,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/internal/middleware/builtin"
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/shared"
-	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/pkg/logger"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
@@ -275,7 +276,7 @@ func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 		v1.GET("/books/search", api.SearchBooks)
 		v1.GET("/books/search/title", api.SearchByTitle)
 		v1.GET("/books/search/author", api.SearchByAuthor)
-		v1.GET("/books/tags", api.GetBooksByTags) // 新增：按标签筛选
+		v1.GET("/books/tags", api.GetBooksByTags)     // 新增：按标签筛选
 		v1.GET("/books/status", api.GetBooksByStatus) // 新增：按状态筛选
 		v1.GET("/books/:id/view", api.IncrementBookView)
 		v1.GET("/books/:id/similar", api.GetSimilarBooks)
@@ -351,6 +352,66 @@ func TestBookstoreAPI_GetBooks_DefaultPagination(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestBookstoreAPI_SearchBooks_ReturnsPaginatedResponse(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchBooksWithFilter", mock.Anything, mock.Anything).Return(books, int64(3), nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search?keyword=test&page=2&size=10", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var body map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &body)
+	assert.NoError(t, err)
+	_, hasPagination := body["pagination"]
+	assert.True(t, hasPagination)
+}
+
+func TestBookstoreAPI_SearchByTitle_ReturnsPaginatedResponse(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchByTitle", mock.Anything, "test", 1, 20).Return(books, int64(1), nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/title?title=test", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var body map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &body)
+	assert.NoError(t, err)
+	_, hasPagination := body["pagination"]
+	assert.True(t, hasPagination)
+}
+
+func TestBookstoreAPI_SearchByAuthor_ReturnsPaginatedResponse(t *testing.T) {
+	mockService := new(MockBookstoreService)
+	router := setupBookstoreTestRouter(mockService)
+
+	books := []*bookstoreModel.Book{}
+	mockService.On("SearchByAuthor", mock.Anything, "author", 1, 20).Return(books, int64(2), nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/bookstore/books/search/author?author=author", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var body map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &body)
+	assert.NoError(t, err)
+	_, hasPagination := body["pagination"]
+	assert.True(t, hasPagination)
 }
 
 func TestBookstoreAPI_GetBookByID_Success(t *testing.T) {
@@ -577,7 +638,7 @@ func TestBookstoreAPI_GetCategoryByID_Success(t *testing.T) {
 	router := setupBookstoreTestRouter(mockService)
 
 	categoryID := primitive.NewObjectID().Hex()
-	category := &bookstoreModel.Category{ID: primitive.NewObjectID().Hex(), Name: "测试分类"}
+	category := &bookstoreModel.Category{ID: primitive.NewObjectID(), Name: "测试分类"}
 	mockService.On("GetCategoryByID", mock.Anything, categoryID).Return(category, nil)
 
 	// When

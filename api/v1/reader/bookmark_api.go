@@ -8,9 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerModels "Qingyu_backend/models/reader"
+	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 	readerservice "Qingyu_backend/service/reader"
-	"Qingyu_backend/pkg/response"
 )
 
 // BookmarkAPI 书签API
@@ -180,6 +180,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [put]
+//	@Router			/api/v1/reader/bookmarks/{id} [patch]
 func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	bookmarkID := c.Param("id")
 

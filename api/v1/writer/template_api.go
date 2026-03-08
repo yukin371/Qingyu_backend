@@ -116,7 +116,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 // @Param pageSize query int false "每页数量" default(20)
 // @Param sortBy query string false "排序字段" default(created_at)
 // @Param sortOrder query int false "排序方向 (1=升序, -1=降序)" default(-1)
-// @Success 200 {object} shared.PaginatedResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse

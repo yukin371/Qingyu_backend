@@ -58,7 +58,7 @@ type PaginatedResponse struct {
 //	@Tags			书城
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/bookstore/homepage [get]
 func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
@@ -81,7 +81,7 @@ func (api *BookstoreAPI) GetHomepage(c *gin.Context) {
 //	@Param			page	query		int	false	"页码"	default(1)
 //	@Param			size	query		int	false	"每页数量"	default(20)
 //	@Param			q		query		string	false	"搜索关键词（搜索标题、作者、标签）"
-//	@Success 200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/books [get]
 func (api *BookstoreAPI) GetBooks(c *gin.Context) {
@@ -133,7 +133,7 @@ func (api *BookstoreAPI) GetBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -185,7 +185,7 @@ func (api *BookstoreAPI) GetBookByID(c *gin.Context) {
 //	@Param			id		path		string	true	"分类ID"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			size		query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/categories/{id}/books [get]
@@ -232,7 +232,7 @@ func (api *BookstoreAPI) GetBooksByCategory(c *gin.Context) {
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)
 //	@Param			size	query		int	false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/recommended [get]
 func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
@@ -266,7 +266,7 @@ func (api *BookstoreAPI) GetRecommendedBooks(c *gin.Context) {
 //	@Produce		json
 //	@Param			page	query		int	false	"页码"	default(1)
 //	@Param			size	query		int	false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/featured [get]
 func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
@@ -307,7 +307,7 @@ func (api *BookstoreAPI) GetFeaturedBooks(c *gin.Context) {
 //	@Param			sortOrder	query		string		false	"排序方向"	Enums(asc, desc)
 //	@Param			page		query		int			false	"页码"	default(1)
 //	@Param			size		query		int			false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/search [get]
@@ -415,12 +415,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 			books := api.convertSearchResponseToBooks(newResp.Data.Results)
 			bookDTOs := ToBookDTOsFromPtrSlice(books)
 
-			responseData := map[string]interface{}{
-				"books": bookDTOs,
-				"total": newResp.Data.Total,
-			}
-
-			response.SuccessWithMessage(c, "搜索书籍成功", responseData)
+			response.Paginated(c, bookDTOs, newResp.Data.Total, page, size, "搜索书籍成功")
 			return
 		}
 
@@ -543,13 +538,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
 
 	// 构造响应数据
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	// 使用response包的响应函数
-	response.SuccessWithMessage(c, "搜索书籍成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索书籍成功")
 }
 
 // SearchByTitle 按标题搜索书籍
@@ -562,7 +551,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 //	@Param       title query string true "标题关键词"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/title [get]
@@ -594,12 +583,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 
 	// 响应封装
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	response.SuccessWithMessage(c, "搜索成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索成功")
 }
 
 // SearchByAuthor 按作者搜索书籍
@@ -612,10 +596,11 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 //	@Param       author query string true "作者姓名"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/author [get]
+//
 // SearchByAuthor 按作者搜索书籍
 //
 //	@Summary     按作者搜索书籍
@@ -626,7 +611,7 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 //	@Param       author query string true "作者姓名"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/search/author [get]
@@ -658,12 +643,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 
 	// 响应封装
 	bookDTOs := ToBookDTOsFromPtrSlice(books)
-	responseData := map[string]interface{}{
-		"books": bookDTOs,
-		"total": total,
-	}
-
-	response.SuccessWithMessage(c, "搜索成功", responseData)
+	response.Paginated(c, bookDTOs, total, page, size, "搜索成功")
 }
 
 // GetCategoryTree 获取分类树
@@ -673,7 +653,7 @@ func (api *BookstoreAPI) SearchByAuthor(c *gin.Context) {
 //	@Tags			分类
 //	@Accept			json
 //	@Produce		json
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/bookstore/categories/tree [get]
 func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
@@ -699,7 +679,7 @@ func (api *BookstoreAPI) GetCategoryTree(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"分类ID"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -733,7 +713,7 @@ func (api *BookstoreAPI) GetCategoryByID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"数量限制"	default(5)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/banners [get]
 func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
@@ -759,7 +739,7 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"书籍ID"
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -794,7 +774,7 @@ func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Banner ID"
-//	@Success		200	{object}	APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
@@ -828,7 +808,7 @@ func (api *BookstoreAPI) IncrementBannerClick(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			limit	query		int	false	"限制数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/rankings/realtime [get]
 func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
@@ -855,7 +835,7 @@ func (api *BookstoreAPI) GetRealtimeRanking(c *gin.Context) {
 //	@Produce		json
 //	@Param			period	query		string	false	"周期 (格式: 2024-W01)"
 //	@Param			limit	query		int		false	"限制数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/rankings/weekly [get]
 func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
@@ -883,7 +863,7 @@ func (api *BookstoreAPI) GetWeeklyRanking(c *gin.Context) {
 //	@Produce		json
 //	@Param			period	query		string	false	"月份 (格式: 2024-01)"
 //	@Param			limit	query		int		false	"限制数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/rankings/monthly [get]
 func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
@@ -911,7 +891,7 @@ func (api *BookstoreAPI) GetMonthlyRanking(c *gin.Context) {
 //	@Produce		json
 //	@Param			period	query		string	false	"月份 (格式: 2024-01)"
 //	@Param			limit	query		int		false	"限制数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/rankings/newbie [get]
 func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
@@ -940,7 +920,7 @@ func (api *BookstoreAPI) GetNewbieRanking(c *gin.Context) {
 //	@Param			type	path		string	true	"榜单类型"	Enums(realtime,weekly,monthly,newbie)
 //	@Param			period	query		string	false	"周期"
 //	@Param			limit	query		int		false	"限制数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	APIResponse
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/bookstore/rankings/{type} [get]
@@ -968,7 +948,6 @@ func (api *BookstoreAPI) GetRankingByType(c *gin.Context) {
 
 // GetBooksByTags 按标签筛选书籍
 //
-
 
 // ========== 以下方法已移至Service层，保留调用包装 ==========
 
@@ -1028,10 +1007,11 @@ func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.Searc
 //	@Param       tags query string true "标签列表（逗号分隔）"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/tags [get]
+//
 // GetBooksByTags 按标签筛选书籍
 //
 //	@Summary     按标签筛选书籍
@@ -1042,7 +1022,7 @@ func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.Searc
 //	@Param       tags query string true "标签列表（逗号分隔）"
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/tags [get]
@@ -1101,7 +1081,7 @@ func (api *BookstoreAPI) GetBooksByTags(c *gin.Context) {
 //	@Param       status query string true "书籍状态" Enums(ongoing,completed,paused)
 //	@Param       page query int false "页码" default(1)
 //	@Param       size query int false "每页数量" default(20)
-//	@Success     200 {object} PaginatedResponse
+//	@Success 200 {object} response.PaginatedResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/status [get]
@@ -1160,11 +1140,12 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 //	@Produce     json
 //	@Param       id path string true "书籍ID"
 //	@Param       limit query int false "返回数量" default(10)
-//	@Success     200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     404 {object} APIResponse
 //	@Failure     500 {object} APIResponse
 //	@Router      /api/v1/bookstore/books/{id}/similar [get]
+//
 // GetSimilarBooks 获取相似书籍推荐
 //
 //	@Summary     获取相似书籍推荐
@@ -1174,7 +1155,7 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 //	@Produce     json
 //	@Param       id path string true "书籍ID"
 //	@Param       limit query int false "返回数量" default(10)
-//	@Success     200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Failure     400 {object} APIResponse
 //	@Failure     404 {object} APIResponse
 //	@Failure     500 {object} APIResponse

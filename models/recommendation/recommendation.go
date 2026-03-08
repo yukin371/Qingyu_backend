@@ -1,11 +1,17 @@
 package recommendation
 
-import "time"
+import (
+	"time"
+
+	sharedtypes "Qingyu_backend/models/shared/types"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // UserBehaviorRecord 用户行为记录（旧版，保留用于兼容）
 // 注意：新的推荐系统应使用 Behavior 模型
 type UserBehaviorRecord struct {
-	ID         string                 `json:"id" bson:"_id,omitempty"`
+	ID         primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
 	UserID     string                 `json:"user_id" bson:"user_id"`
 	ItemID     string                 `json:"item_id" bson:"item_id"`
 	ItemType   string                 `json:"item_type" bson:"item_type"`                   // book, chapter, article
@@ -35,16 +41,18 @@ type RecommendedItem struct {
 	GeneratedAt time.Time              `json:"generated_at,omitempty"` // 生成时间
 }
 
-// 行为类型
+// 行为类型（保留旧常量名用于兼容，规范值统一走 shared/types）
 const (
-	ActionTypeView     = "view"     // 浏览
-	ActionTypeClick    = "click"    // 点击
-	ActionTypeFavorite = "favorite" // 收藏
-	ActionTypeRead     = "read"     // 阅读
-	ActionTypePurchase = "purchase" // 购买
-	ActionTypeComment  = "comment"  // 评论
-	ActionTypeShare    = "share"    // 分享
-	ActionTypeRate     = "rate"     // 评分
+	ActionTypeView     = string(sharedtypes.RecommendationBehaviorView)    // 浏览
+	ActionTypeClick    = string(sharedtypes.RecommendationBehaviorClick)   // 点击
+	ActionTypeFavorite = "favorite"                                        // 旧别名，规范值为 collect
+	ActionTypeCollect  = string(sharedtypes.RecommendationBehaviorCollect) // 收藏
+	ActionTypeRead     = string(sharedtypes.RecommendationBehaviorRead)    // 阅读
+	ActionTypeFinish   = string(sharedtypes.RecommendationBehaviorFinish)  // 完读
+	ActionTypePurchase = string(sharedtypes.RecommendationBehaviorPurchase)
+	ActionTypeComment  = string(sharedtypes.RecommendationBehaviorComment)
+	ActionTypeShare    = string(sharedtypes.RecommendationBehaviorShare)
+	ActionTypeRate     = string(sharedtypes.RecommendationBehaviorRate)
 )
 
 // 内容类型

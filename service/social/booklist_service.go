@@ -197,13 +197,16 @@ func (s *BookListService) LikeBookList(ctx context.Context, userID, bookListID s
 		CreatedAt:  time.Now(),
 	}
 
-	if err := s.bookListRepo.CreateBookListLike(ctx, bookListLike); err != nil {
-		return fmt.Errorf("点赞失败: %w", err)
-	}
-
-	// 增加点赞数
-	if err := s.bookListRepo.IncrementBookListLikeCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment like count\n")
+	if err := s.bookListRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.bookListRepo.CreateBookListLike(txCtx, bookListLike); err != nil {
+			return fmt.Errorf("点赞失败: %w", err)
+		}
+		if err := s.bookListRepo.IncrementBookListLikeCount(txCtx, bookListID); err != nil {
+			return fmt.Errorf("增加点赞数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -221,15 +224,19 @@ func (s *BookListService) ForkBookList(ctx context.Context, userID, bookListID s
 		return nil, fmt.Errorf("获取原书单失败: %w", err)
 	}
 
-	// 复制书单
-	forkedList, err := s.bookListRepo.ForkBookList(ctx, bookListID, userID)
-	if err != nil {
-		return nil, fmt.Errorf("复制书单失败: %w", err)
-	}
-
-	// 增加被复制次数
-	if err := s.bookListRepo.IncrementForkCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment fork count\n")
+	var forkedList *social.BookList
+	if err := s.bookListRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		var txErr error
+		forkedList, txErr = s.bookListRepo.ForkBookList(txCtx, bookListID, userID)
+		if txErr != nil {
+			return fmt.Errorf("复制书单失败: %w", txErr)
+		}
+		if err := s.bookListRepo.IncrementForkCount(txCtx, bookListID); err != nil {
+			return fmt.Errorf("增加复制次数失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	s.publishBookListEvent(ctx, "booklist.forked", userID, forkedList.ID.Hex())

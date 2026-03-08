@@ -29,7 +29,7 @@ import (
 //	@Param			tags		query		[]string	false	"标签"
 //	@Param			sortBy		query		string		false	"排序字段"	default(created_at)
 //	@Param			sortOrder	query		string		false	"排序方向"	default(desc)
-//	@Success		200			{object}	object	"流式响应"
+//	@Success		200			{object} response.APIResponse	"流式响应"
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/stream [get]
@@ -183,7 +183,7 @@ func (api *BookstoreAPI) sendStreamError(w http.ResponseWriter, err error) {
 //	@Param			keyword		query		string		false	"搜索关键词"
 //	@Param			cursor		query		string		false	"游标"
 //	@Param			limit		query		int			false	"每批数量"	default(20)
-//	@Success		200			{object}	StreamSearchResult
+//	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/books/stream-batch [get]

@@ -51,8 +51,8 @@ func NewContentExportAPI(
 //	@Param			start_date	query		string	false	"开始日期"	format(date)
 //	@Param			end_date		query		string	false	"结束日期"	format(date)
 //	@Success		200			{file}		file
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/content/books/export [get]
 func (api *ContentExportAPI) ExportBooks(c *gin.Context) {
 	format := c.DefaultQuery("format", "csv")
@@ -149,8 +149,8 @@ func (api *ContentExportAPI) ExportBooks(c *gin.Context) {
 //	@Param			start_date	query		string	false	"开始日期"	format(date)
 //	@Param			end_date		query		string	false	"结束日期"	format(date)
 //	@Success		200			{file}		file
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/content/chapters/export [get]
 func (api *ContentExportAPI) ExportChapters(c *gin.Context) {
 	format := c.DefaultQuery("format", "csv")
@@ -376,7 +376,7 @@ type ChapterExportAdapter struct {
 
 func (a *ChapterExportAdapter) ToExportRow() []string {
 	return []string{
-		a.chapter.ID,
+		a.chapter.ID.Hex(),
 		a.chapter.BookID,
 		a.chapter.Title,
 		strconv.Itoa(a.chapter.ChapterNum),

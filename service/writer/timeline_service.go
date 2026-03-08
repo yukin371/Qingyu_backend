@@ -134,7 +134,7 @@ func (s *TimelineService) CreateEvent(
 		busEvent := &base.BaseEvent{
 			EventType: "timeline_event.created",
 			EventData: map[string]interface{}{
-				"event_id":    event.ID,
+				"event_id":    event.ID.Hex(),
 				"timeline_id": req.TimelineID,
 				"project_id":  projectID,
 			},
@@ -269,7 +269,7 @@ func (s *TimelineService) GetTimelineVisualization(
 		}
 
 		nodes = append(nodes, &serviceInterfaces.TimelineEventNode{
-			ID:         event.ID,
+			ID:         event.ID.Hex(),
 			Title:      event.Title,
 			StoryTime:  storyTimeStr,
 			EventType:  string(event.EventType),
@@ -294,8 +294,8 @@ func analyzeEventConnections(events []*writer.TimelineEvent) []*serviceInterface
 	// 简单实现：相邻事件建立sequential连接
 	for i := 0; i < len(events)-1; i++ {
 		connections = append(connections, &serviceInterfaces.EventConnection{
-			FromEventID: events[i].ID,
-			ToEventID:   events[i+1].ID,
+			FromEventID: events[i].ID.Hex(),
+			ToEventID:   events[i+1].ID.Hex(),
 			Type:        "sequential",
 		})
 	}

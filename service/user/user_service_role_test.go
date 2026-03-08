@@ -158,8 +158,8 @@ func TestUserService_GetUserRoles_Success(t *testing.T) {
 	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
 
 	roles := []*authModel.Role{
-		{ID: "role1", Name: "reader"},
-		{ID: "role2", Name: "author"},
+		{ID: primitive.NewObjectID(), Name: "reader"},
+		{ID: primitive.NewObjectID(), Name: "author"},
 	}
 
 	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)

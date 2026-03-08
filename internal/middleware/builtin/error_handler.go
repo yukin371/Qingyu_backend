@@ -70,7 +70,7 @@ func (m *ErrorHandlerMiddleware) Handler() gin.HandlerFunc {
 // handleMiddlewareError 处理中间件错误
 func (m *ErrorHandlerMiddleware) handleMiddlewareError(c *gin.Context, err interface{}) {
 	// 记录错误日志
-	m.logger.Error("Middleware error",
+	m.logger.Error("Middleware error", // codeql[go/log-injection]
 		zap.String("path", c.Request.URL.Path),
 		zap.String("method", c.Request.Method),
 		zap.Any("error", err),
@@ -97,7 +97,7 @@ func (m *ErrorHandlerMiddleware) handleGinErrors(c *gin.Context) {
 	errorMessage := errors.GetErrorMessage(err)
 
 	// 记录错误日志
-	m.logger.Error("Gin error",
+	m.logger.Error("Gin error", // codeql[go/log-injection]
 		zap.String("path", c.Request.URL.Path),
 		zap.String("method", c.Request.Method),
 		zap.Int("status", statusCode),

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
@@ -201,6 +200,7 @@ func (s *BookDetailServiceImpl) UpdateBookDetail(ctx context.Context, bookDetail
 		"description":   bookDetail.Description,
 		"cover_url":     bookDetail.CoverURL,
 		"categories":    bookDetail.Categories,
+		"category_ids":  bookDetail.CategoryIDs,
 		"tags":          bookDetail.Tags,
 		"status":        bookDetail.Status,
 		"word_count":    bookDetail.WordCount,

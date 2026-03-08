@@ -515,6 +515,24 @@ func (r *MongoReviewRepository) DecrementReviewLikeCount(ctx context.Context, re
 	return nil
 }
 
+// RunInTransaction 在事务中执行书评相关操作
+func (r *MongoReviewRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.reviewCollection.Database().Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start review transaction session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		return nil, fn(sessCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("review transaction failed: %w", err)
+	}
+
+	return nil
+}
+
 // ========== 统计 ==========
 
 // GetAverageRating 获取书籍平均评分

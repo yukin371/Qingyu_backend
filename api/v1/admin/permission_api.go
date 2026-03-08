@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/auth"
@@ -33,9 +34,9 @@ func NewPermissionAPI(permissionService sharedService.PermissionService) *Permis
 //	@Tags			Admin-Permission
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		403	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		403	{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions [get]
 func (api *PermissionAPI) GetAllPermissions(c *gin.Context) {
 	permissions, err := api.permissionService.GetAllPermissions(c.Request.Context())
@@ -55,9 +56,9 @@ func (api *PermissionAPI) GetAllPermissions(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			code	path	string	true	"权限代码"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions/{code} [get]
 func (api *PermissionAPI) GetPermission(c *gin.Context) {
 	code := c.Param("code")
@@ -82,20 +83,31 @@ func (api *PermissionAPI) GetPermission(c *gin.Context) {
 //	@Tags			Admin-Permission
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		auth.Permission	true	"权限信息"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Param			request	body		PermissionRequest	true	"权限信息"
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions [post]
 func (api *PermissionAPI) CreatePermission(c *gin.Context) {
-	var req auth.Permission
+	var req PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	if err := api.permissionService.CreatePermission(c.Request.Context(), &req); err != nil {
+	// 转换为 auth.Permission 类型
+	permission := &auth.Permission{
+		Code:        req.Code,
+		Name:        req.Name,
+		Description: req.Description,
+		Resource:    req.Resource,
+		Action:      req.Action,
+		Effect:      req.Effect,
+		Priority:    req.Priority,
+	}
+
+	if err := api.permissionService.CreatePermission(c.Request.Context(), permission); err != nil {
 		c.Error(err)
 		return
 	}
@@ -111,10 +123,10 @@ func (api *PermissionAPI) CreatePermission(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			code		path		string			true	"权限代码"
-//	@Param			request	body		auth.Permission	true	"权限信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Param			request	body		PermissionRequest	true	"权限信息"
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions/{code} [put]
 func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 	code := c.Param("code")
@@ -123,14 +135,24 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 		return
 	}
 
-	var req auth.Permission
+	var req PermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
-	req.Code = code
-	if err := api.permissionService.UpdatePermission(c.Request.Context(), &req); err != nil {
+	// 转换为 auth.Permission 类型
+	permission := &auth.Permission{
+		Code:        code,
+		Name:        req.Name,
+		Description: req.Description,
+		Resource:    req.Resource,
+		Action:      req.Action,
+		Effect:      req.Effect,
+		Priority:    req.Priority,
+	}
+
+	if err := api.permissionService.UpdatePermission(c.Request.Context(), permission); err != nil {
 		c.Error(err)
 		return
 	}
@@ -146,9 +168,9 @@ func (api *PermissionAPI) UpdatePermission(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			code	path	string	true	"权限代码"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/admin/permissions/{code} [delete]
 func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 	code := c.Param("code")
@@ -174,9 +196,9 @@ func (api *PermissionAPI) DeletePermission(c *gin.Context) {
 //	@Tags			Admin-Role
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401	{object}	shared.APIResponse
-//	@Failure		403	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401	{object}	response.APIResponse
+//	@Failure		403	{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles [get]
 func (api *PermissionAPI) GetAllRoles(c *gin.Context) {
 	roles, err := api.permissionService.GetAllRoles(c.Request.Context())
@@ -196,9 +218,9 @@ func (api *PermissionAPI) GetAllRoles(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"角色ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id} [get]
 func (api *PermissionAPI) GetRole(c *gin.Context) {
 	roleID := c.Param("id")
@@ -224,10 +246,10 @@ func (api *PermissionAPI) GetRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object	true	"角色信息"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles [post]
 func (api *PermissionAPI) CreateRole(c *gin.Context) {
 	var req auth.Role
@@ -253,9 +275,9 @@ func (api *PermissionAPI) CreateRole(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string		true	"角色ID"
 //	@Param			request	body		object	true	"角色信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id} [put]
 func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 	roleID := c.Param("id")
@@ -270,7 +292,12 @@ func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	req.ID = roleID
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "角色ID格式无效")
+		return
+	}
+	req.ID = objectID
 	if err := api.permissionService.UpdateRole(c.Request.Context(), &req); err != nil {
 		c.Error(err)
 		return
@@ -287,9 +314,9 @@ func (api *PermissionAPI) UpdateRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"角色ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id} [delete]
 func (api *PermissionAPI) DeleteRole(c *gin.Context) {
 	roleID := c.Param("id")
@@ -315,9 +342,9 @@ func (api *PermissionAPI) DeleteRole(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"角色ID"
 //	@Param			permissionCode	path		string	true	"权限代码"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id}/permissions/{permissionCode} [post]
 func (api *PermissionAPI) AssignPermissionToRole(c *gin.Context) {
 	roleID := c.Param("id")
@@ -345,9 +372,9 @@ func (api *PermissionAPI) AssignPermissionToRole(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"角色ID"
 //	@Param			permissionCode	path		string	true	"权限代码"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id}/permissions/{permissionCode} [delete]
 func (api *PermissionAPI) RemovePermissionFromRole(c *gin.Context) {
 	roleID := c.Param("id")
@@ -374,9 +401,9 @@ func (api *PermissionAPI) RemovePermissionFromRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"角色ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/admin/roles/{id}/permissions [get]
 func (api *PermissionAPI) GetRolePermissions(c *gin.Context) {
 	roleID := c.Param("id")
@@ -404,8 +431,8 @@ func (api *PermissionAPI) GetRolePermissions(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{userId}/roles [get]
 func (api *PermissionAPI) GetUserRoles(c *gin.Context) {
 	userID := c.Param("userId")
@@ -432,8 +459,8 @@ func (api *PermissionAPI) GetUserRoles(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId		path		string					true	"用户ID"
 //	@Param			request	body		AssignRoleRequest	true	"角色信息"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{userId}/roles [post]
 func (api *PermissionAPI) AssignRoleToUser(c *gin.Context) {
 	userID := c.Param("userId")
@@ -465,8 +492,8 @@ func (api *PermissionAPI) AssignRoleToUser(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	path		string	true	"用户ID"
 //	@Param			role	query		string	true	"角色名称"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{userId}/roles [delete]
 func (api *PermissionAPI) RemoveRoleFromUser(c *gin.Context) {
 	userID := c.Param("userId")
@@ -493,8 +520,8 @@ func (api *PermissionAPI) RemoveRoleFromUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{userId}/permissions [get]
 func (api *PermissionAPI) GetUserPermissions(c *gin.Context) {
 	userID := c.Param("userId")
@@ -556,8 +583,8 @@ func (api *PermissionAPI) executeBatchRoleOperation(c *gin.Context, req BatchRol
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchRoleOperationRequest	true	"批量角色操作请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/batch-assign-role [post]
 func (api *PermissionAPI) BatchAssignRoleToUsers(c *gin.Context) {
 	var req BatchRoleOperationRequest
@@ -577,8 +604,8 @@ func (api *PermissionAPI) BatchAssignRoleToUsers(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchRoleOperationRequest	true	"批量角色操作请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/batch-revoke-role [post]
 func (api *PermissionAPI) BatchRevokeRoleFromUsers(c *gin.Context) {
 	var req BatchRoleOperationRequest
@@ -588,4 +615,17 @@ func (api *PermissionAPI) BatchRevokeRoleFromUsers(c *gin.Context) {
 	}
 
 	api.executeBatchRoleOperation(c, req, api.permissionService.RemoveRoleFromUser)
+}
+
+// ========== Swagger 请求结构体定义 ==========
+
+// PermissionRequest 权限请求（用于swagger文档）
+type PermissionRequest struct {
+	Code        string `json:"code" binding:"required" example:"user.read"`
+	Name        string `json:"name" binding:"required" example:"读取用户"`
+	Description string `json:"description" example:"读取用户信息的权限"`
+	Resource    string `json:"resource" example:"user"`
+	Action      string `json:"action" example:"read"`
+	Effect      string `json:"effect" example:"allow"`
+	Priority    int    `json:"priority" example:"1"`
 }

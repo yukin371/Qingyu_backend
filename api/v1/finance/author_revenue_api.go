@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
 )
 
@@ -32,12 +32,12 @@ func NewAuthorRevenueAPI(revenueService financeService.AuthorRevenueService) *Au
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings [get]
 func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -46,11 +46,11 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 
 	earnings, total, err := api.revenueService.GetEarnings(c.Request.Context(), userID.(string), page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取收入列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, earnings, total, page, pageSize, "获取收入列表成功")
+	response.Paginated(c, earnings, total, page, pageSize, "获取收入列表成功")
 }
 
 // GetBookEarnings 获取某本书的收入
@@ -64,31 +64,31 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 //	@Param			bookId	path		string	true	"书籍ID"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings/{bookId} [get]
 func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	bookID := c.Param("bookId")
 	if bookID == "" {
-		shared.BadRequest(c, "书籍ID不能为空", "")
+		response.BadRequest(c, "书籍ID不能为空", "")
 		return
 	}
 
 	earnings, total, err := api.revenueService.GetBookEarnings(c.Request.Context(), userID.(string), bookID)
 	if err != nil {
-		shared.InternalError(c, "获取书籍收入失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	shared.Paginated(c, earnings, total, page, pageSize, "获取书籍收入成功")
+	response.Paginated(c, earnings, total, page, pageSize, "获取书籍收入成功")
 }
 
 // GetWithdrawals 获取提现记录
@@ -101,12 +101,12 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdrawals [get]
 func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -115,11 +115,11 @@ func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 
 	withdrawals, total, err := api.revenueService.GetWithdrawals(c.Request.Context(), userID.(string), page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取提现记录失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, withdrawals, total, page, pageSize, "获取提现记录成功")
+	response.Paginated(c, withdrawals, total, page, pageSize, "获取提现记录成功")
 }
 
 // WithdrawRequest 提现申请请求
@@ -142,18 +142,18 @@ type WithdrawRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		WithdrawRequest	true	"提现信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdraw [post]
 func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req WithdrawRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
@@ -172,11 +172,11 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 		accountInfo,
 	)
 	if err != nil {
-		shared.InternalError(c, "申请提现失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "申请提现成功", withdrawal)
+	response.SuccessWithMessage(c, "申请提现成功", withdrawal)
 }
 
 // GetRevenueDetails 获取收入明细
@@ -189,12 +189,12 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-details [get]
 func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -203,11 +203,11 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 
 	details, total, err := api.revenueService.GetRevenueDetails(c.Request.Context(), userID.(string), page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取收入明细失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, details, total, page, pageSize, "获取收入明细成功")
+	response.Paginated(c, details, total, page, pageSize, "获取收入明细成功")
 }
 
 // GetRevenueStatistics 获取收入统计
@@ -219,12 +219,12 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			period	query		string	false	"统计周期"	enums(daily,monthly,yearly)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-statistics [get]
 func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -232,11 +232,11 @@ func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 
 	statistics, err := api.revenueService.GetRevenueStatistics(c.Request.Context(), userID.(string), period)
 	if err != nil {
-		shared.InternalError(c, "获取收入统计失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取收入统计成功", statistics)
+	response.SuccessWithMessage(c, "获取收入统计成功", statistics)
 }
 
 // GetSettlements 获取结算记录
@@ -249,12 +249,12 @@ func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/settlements [get]
 func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
@@ -263,11 +263,11 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 
 	settlements, total, err := api.revenueService.GetSettlements(c.Request.Context(), userID.(string), page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取结算记录失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, settlements, total, page, pageSize, "获取结算记录成功")
+	response.Paginated(c, settlements, total, page, pageSize, "获取结算记录成功")
 }
 
 // GetSettlement 获取结算详情
@@ -279,22 +279,22 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id	path		string	true	"结算ID"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/settlements/{id} [get]
 func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 	settlementID := c.Param("id")
 	if settlementID == "" {
-		shared.BadRequest(c, "结算ID不能为空", "")
+		response.BadRequest(c, "结算ID不能为空", "")
 		return
 	}
 
 	settlement, err := api.revenueService.GetSettlement(c.Request.Context(), settlementID)
 	if err != nil {
-		shared.InternalError(c, "获取结算详情失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取结算详情成功", settlement)
+	response.SuccessWithMessage(c, "获取结算详情成功", settlement)
 }
 
 // GetTaxInfo 获取税务信息
@@ -305,22 +305,22 @@ func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [get]
 func (api *AuthorRevenueAPI) GetTaxInfo(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	taxInfo, err := api.revenueService.GetTaxInfo(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取税务信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取税务信息成功", taxInfo)
+	response.SuccessWithMessage(c, "获取税务信息成功", taxInfo)
 }
 
 // UpdateTaxInfoRequest 更新税务信息请求
@@ -340,18 +340,18 @@ type UpdateTaxInfoRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		UpdateTaxInfoRequest	true	"税务信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [put]
 func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req UpdateTaxInfoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
@@ -365,9 +365,9 @@ func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
 
 	err := api.revenueService.UpdateTaxInfo(c.Request.Context(), userID.(string), taxInfo)
 	if err != nil {
-		shared.InternalError(c, "更新税务信息失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "更新税务信息成功", nil)
+	response.SuccessWithMessage(c, "更新税务信息成功", nil)
 }

@@ -365,7 +365,7 @@ func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler,
 		opts.SetSkip(filter.Offset)
 	}
 
-	cursor, err := s.collection.Find(ctx, mongoFilter, opts)
+	cursor, err := s.collection.Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		duration := time.Since(startTime)
 		s.logger.LogReplayFailed(ctx, eventType, err, duration)

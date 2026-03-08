@@ -35,9 +35,9 @@ func NewOAuthAPI(oauthService auth.OAuthServiceInterface, authService auth.AuthS
 //	@Produce		json
 //	@Param			provider	path		string				true	"OAuth提供商 (google/github/qq)"
 //	@Param			request		body		OAuthAuthorizeRequest	true	"授权请求"
-//	@Success		200			{object} shared.APIResponse
-//	@Failure		400			{object} shared.APIResponse
-//	@Failure		500			{object} shared.APIResponse
+//	@Success		200			{object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/shared/oauth/{provider}/authorize [post]
 func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
@@ -81,10 +81,10 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 //	@Produce		json
 //	@Param			provider	path		string				true	"OAuth提供商 (google/github/qq)"
 //	@Param			request		body		OAuthCallbackRequest	true	"回调请求"
-//	@Success		200			{object} shared.APIResponse
-//	@Failure		400			{object} shared.APIResponse
-//	@Failure		401			{object} shared.APIResponse
-//	@Failure		500			{object} shared.APIResponse
+//	@Success		200			{object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		401			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/shared/oauth/{provider}/callback [post]
 func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
@@ -156,9 +156,9 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success		200	{object} shared.APIResponse
-//	@Failure		401	{object} shared.APIResponse
-//	@Failure		500	{object} shared.APIResponse
+//	@Success		200	{object} response.APIResponse
+//	@Failure		401	{object} response.APIResponse
+//	@Failure		500	{object} response.APIResponse
 //	@Router			/api/v1/shared/oauth/accounts [get]
 func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -185,10 +185,10 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			accountID	path		string	true	"OAuth账号ID"
-//	@Success		200			{object} shared.APIResponse
-//	@Failure		400			{object} shared.APIResponse
-//	@Failure		401			{object} shared.APIResponse
-//	@Failure		500			{object} shared.APIResponse
+//	@Success		200			{object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		401			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID} [delete]
 func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -221,10 +221,10 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			accountID	path		string	true	"OAuth账号ID"
-//	@Success		200			{object} shared.APIResponse
-//	@Failure		400			{object} shared.APIResponse
-//	@Failure		401			{object} shared.APIResponse
-//	@Failure		500			{object} shared.APIResponse
+//	@Success		200			{object} response.APIResponse
+//	@Failure		400			{object} response.APIResponse
+//	@Failure		401			{object} response.APIResponse
+//	@Failure		500			{object} response.APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID}/primary [put]
 func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")

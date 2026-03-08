@@ -60,7 +60,7 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	fmt.Println()
 
 	// 1. 创建用户
-	fmt.Println("【1/5】创建用户数据")
+	fmt.Println("【1/6】创建用户数据")
 	if err := seeds.SeedEnhancedUsers(ctx, db); err != nil {
 		fmt.Printf("❌ 创建用户失败: %v\n", err)
 	} else {
@@ -68,8 +68,20 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 2. 创建书籍
-	fmt.Println("【2/5】创建书籍数据")
+	// 2. 创建联调发布数据
+	fmt.Println("【2/6】创建发布联调数据")
+	publicationInfo, err := seeds.SeedPublicationFlowData(ctx, db)
+	if err != nil {
+		fmt.Printf("❌ 创建发布联调数据失败: %v\n", err)
+	} else {
+		fmt.Println("✓ 发布联调数据创建完成")
+		fmt.Printf("  项目ID: %s\n", publicationInfo.ProjectID)
+		fmt.Printf("  文档ID: %v\n", publicationInfo.DocumentIDs)
+	}
+	fmt.Println()
+
+	// 3. 创建书籍
+	fmt.Println("【3/6】创建书籍数据")
 	if err := seeds.SeedBooks(ctx, db); err != nil {
 		fmt.Printf("❌ 创建书籍失败: %v\n", err)
 	} else {
@@ -77,8 +89,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 3. 创建章节
-	fmt.Println("【3/5】创建章节数据")
+	// 4. 创建章节
+	fmt.Println("【4/6】创建章节数据")
 	if err := seeds.SeedChapters(ctx, db); err != nil {
 		fmt.Printf("❌ 创建章节失败: %v\n", err)
 	} else {
@@ -86,8 +98,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 4. 创建钱包
-	fmt.Println("【4/5】创建钱包数据")
+	// 5. 创建钱包
+	fmt.Println("【5/6】创建钱包数据")
 	if err := seeds.SeedWallets(ctx, db); err != nil {
 		fmt.Printf("❌ 创建钱包失败: %v\n", err)
 	} else {
@@ -95,8 +107,8 @@ func createAllData(ctx context.Context, db *mongo.Database) {
 	}
 	fmt.Println()
 
-	// 5. 创建社交数据
-	fmt.Println("【5/5】创建社交数据")
+	// 6. 创建社交数据
+	fmt.Println("【6/6】创建社交数据")
 	if err := seeds.SeedSocialData(ctx, db); err != nil {
 		fmt.Printf("❌ 创建社交数据失败: %v\n", err)
 	} else {

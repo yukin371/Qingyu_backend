@@ -32,7 +32,7 @@ func (api *RecommendationAPI) WithTableService(tableService recommendation.Recom
 //	@Summary	获取个性化推荐
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(10)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/personalized [get]
 func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
@@ -69,7 +69,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		itemId	query		string	true	"物品ID（书籍ID）"
 //	@Param		limit	query		int		false	"推荐数量"	default(10)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/similar [get]
 func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 	itemID := c.Query("itemId")
@@ -104,7 +104,7 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 //	@Summary	记录用户行为
 //	@Tags		推荐系统
 //	@Param		body	body		object	true	"行为数据"
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/behavior [post]
 func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
@@ -118,7 +118,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	var req struct {
 		ItemID       string                 `json:"itemId" binding:"required"`
 		ItemType     string                 `json:"itemType"`                        // book/article等，默认book
-		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/favorite/read等
+		BehaviorType string                 `json:"behaviorType" binding:"required"` // view/click/collect/read/finish等
 		Duration     int64                  `json:"duration"`                        // 阅读时长（秒）
 		Metadata     map[string]interface{} `json:"metadata"`
 	}
@@ -158,7 +158,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 //	@Summary	获取首页推荐（混合推荐策略：个性化+热门）
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(20)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/homepage [get]
 func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 	// 获取用户ID（可选）
@@ -205,7 +205,7 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		limit	query		int		false	"推荐数量"	default(20)
 //	@Param		type	query		string	false	"物品类型"	default(book)
-//	@Success	200		{object}	shared.APIResponse
+//	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/hot [get]
 func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 	// 获取limit参数
@@ -238,7 +238,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 //	@Tags		推荐系统
 //	@Param		category	query		string	true	"分类名称"
 //	@Param		limit		query		int		false	"推荐数量"	default(20)
-//	@Success	200			{object}	shared.APIResponse
+//	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/recommendation/category [get]
 func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 	category := c.Query("category")

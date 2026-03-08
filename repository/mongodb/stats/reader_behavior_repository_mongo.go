@@ -259,48 +259,51 @@ func (r *MongoReaderBehaviorRepository) CalculateAvgReadTime(ctx context.Context
 	return avgTime, nil
 }
 
-// CalculateCompletionRate 计算完读率
-func (r *MongoReaderBehaviorRepository) CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error) {
-	totalCount, err := r.collection.CountDocuments(ctx, bson.M{"chapter_id": chapterID})
-	if err != nil {
-		return 0, err
-	}
-
-	if totalCount == 0 {
-		return 0, nil
-	}
-
-	completeCount, err := r.collection.CountDocuments(ctx, bson.M{
+// CountByChapterAndType 统计指定章节和行为类型的数量（纯数据查询）
+func (r *MongoReaderBehaviorRepository) CountByChapterAndType(ctx context.Context, chapterID string, behaviorType string) (int64, error) {
+	return r.collection.CountDocuments(ctx, bson.M{
 		"chapter_id":    chapterID,
-		"behavior_type": stats.BehaviorTypeComplete,
+		"behavior_type": behaviorType,
 	})
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(completeCount) / float64(totalCount), nil
 }
 
-// CalculateDropOffRate 计算跳出率
-func (r *MongoReaderBehaviorRepository) CalculateDropOffRate(ctx context.Context, chapterID string) (float64, error) {
-	totalCount, err := r.collection.CountDocuments(ctx, bson.M{"chapter_id": chapterID})
-	if err != nil {
-		return 0, err
-	}
+// CountByChapter 统计指定章节的总行为数（纯数据查询）
+func (r *MongoReaderBehaviorRepository) CountByChapter(ctx context.Context, chapterID string) (int64, error) {
+	return r.collection.CountDocuments(ctx, bson.M{"chapter_id": chapterID})
+}
 
-	if totalCount == 0 {
-		return 0, nil
-	}
-
-	dropOffCount, err := r.collection.CountDocuments(ctx, bson.M{
-		"chapter_id":    chapterID,
-		"behavior_type": stats.BehaviorTypeDropOff,
+// GetDistinctUsersByBookAndDateRange 获取指定时间范围内阅读指定书籍的唯一用户列表（纯数据查询）
+func (r *MongoReaderBehaviorRepository) GetDistinctUsersByBookAndDateRange(ctx context.Context, bookID string, start, end time.Time) ([]string, error) {
+	results, err := r.collection.Distinct(ctx, "user_id", bson.M{
+		"book_id": bookID,
+		"read_at": bson.M{
+			"$gte": start,
+			"$lt":  end,
+		},
 	})
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return float64(dropOffCount) / float64(totalCount), nil
+	userIDs := make([]string, 0, len(results))
+	for _, r := range results {
+		if id, ok := r.(string); ok {
+			userIDs = append(userIDs, id)
+		}
+	}
+	return userIDs, nil
+}
+
+// CountActiveUsersInList 统计指定用户列表中在指定时间后仍活跃的用户数（纯数据查询）
+func (r *MongoReaderBehaviorRepository) CountActiveUsersInList(ctx context.Context, bookID string, userIDs []string, since time.Time) (int64, error) {
+	if len(userIDs) == 0 {
+		return 0, nil
+	}
+	return r.collection.CountDocuments(ctx, bson.M{
+		"book_id": bookID,
+		"user_id": bson.M{"$in": userIDs},
+		"read_at": bson.M{"$gte": since},
+	})
 }
 
 // CreateSession 创建阅读会话
@@ -355,41 +358,6 @@ func (r *MongoReaderBehaviorRepository) GetRetentionByBookID(ctx context.Context
 		return nil, nil
 	}
 	return &retention, err
-}
-
-// CalculateRetention 计算留存率
-func (r *MongoReaderBehaviorRepository) CalculateRetention(ctx context.Context, bookID string, days int) (float64, error) {
-	// 简化实现：计算N天前的读者在今天还活跃的比例
-	targetDate := time.Now().AddDate(0, 0, -days)
-
-	// 统计N天前的读者数
-	targetReaders, err := r.collection.Distinct(ctx, "user_id", bson.M{
-		"book_id": bookID,
-		"read_at": bson.M{
-			"$gte": targetDate,
-			"$lt":  targetDate.Add(24 * time.Hour),
-		},
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	if len(targetReaders) == 0 {
-		return 0, nil
-	}
-
-	// 统计这些读者今天还活跃的数量
-	today := time.Now().Truncate(24 * time.Hour)
-	activeCount, err := r.collection.CountDocuments(ctx, bson.M{
-		"book_id": bookID,
-		"user_id": bson.M{"$in": targetReaders},
-		"read_at": bson.M{"$gte": today},
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(activeCount) / float64(len(targetReaders)), nil
 }
 
 // BatchCreate 批量创建

@@ -2,6 +2,7 @@ package finance
 
 import (
 	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
 	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
@@ -43,17 +44,16 @@ func NewWalletRepository(db *mongo.Database) financeInterface.WalletRepository {
 
 // CreateWallet 创建钱包
 func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *financeModel.Wallet) error {
+	if wallet.ID.IsZero() {
+		wallet.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	wallet.CreatedAt = now
 	wallet.UpdatedAt = now
 
-	result, err := r.walletCollection.InsertOne(ctx, wallet)
+	_, err := r.walletCollection.InsertOne(ctx, wallet)
 	if err != nil {
 		return fmt.Errorf("创建钱包失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		wallet.ID = oid.Hex()
 	}
 
 	return nil
@@ -125,6 +125,8 @@ func (r *WalletRepositoryImpl) UpdateWallet(ctx context.Context, walletID string
 }
 
 // UpdateBalance 更新余额（原子操作）
+// 注意：此方法不进行余额验证，仅用于确定安全的操作（如充值）
+// 对于可能减少余额的操作，应使用 UpdateBalanceWithCheck
 func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string, amount int64) error {
 	safeUserID, err := sanitizeFinanceUserID(userID)
 	if err != nil {
@@ -151,20 +153,64 @@ func (r *WalletRepositoryImpl) UpdateBalance(ctx context.Context, userID string,
 	return nil
 }
 
+// UpdateBalanceWithCheck 更新余额并验证（防止负数余额）
+// 这是带有余额验证的原子操作，用于扣款等可能减少余额的场景
+// 如果扣款后余额会变成负数，则操作会失败
+func (r *WalletRepositoryImpl) UpdateBalanceWithCheck(ctx context.Context, userID string, amount int64) error {
+	safeUserID, err := sanitizeFinanceUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	// 如果是增加余额（正数），直接使用 UpdateBalance
+	if amount >= 0 {
+		return r.UpdateBalance(ctx, userID, amount)
+	}
+
+	// 对于减少余额的操作，使用条件更新确保余额不会变成负数
+	// 条件：当前余额 + amount >= 0
+	result, err := r.walletCollection.UpdateOne(
+		ctx,
+		bson.M{
+			"user_id": safeUserID,
+			"balance": bson.M{"$gte": -amount}, // 确保扣款后余额 >= 0
+		},
+		bson.M{
+			"$inc": bson.M{"balance": amount},
+			"$set": bson.M{"updated_at": time.Now()},
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("更新余额失败: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		wallet, err := r.GetWallet(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if wallet.Balance < types.Money(-amount) {
+			return fmt.Errorf("余额不足: 当前余额 %d, 尝试扣款 %d", wallet.Balance, -amount)
+		}
+		return fmt.Errorf("钱包不存在")
+	}
+
+	return nil
+}
+
 // ============ 交易管理 ============
 
 // CreateTransaction 创建交易记录
 func (r *WalletRepositoryImpl) CreateTransaction(ctx context.Context, transaction *financeModel.Transaction) error {
+	if transaction.ID.IsZero() {
+		transaction.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	transaction.CreatedAt = now
 
-	result, err := r.transactionCollection.InsertOne(ctx, transaction)
+	_, err := r.transactionCollection.InsertOne(ctx, transaction)
 	if err != nil {
 		return fmt.Errorf("创建交易记录失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		transaction.ID = oid.Hex()
 	}
 
 	return nil
@@ -271,17 +317,16 @@ func (r *WalletRepositoryImpl) CountTransactions(ctx context.Context, filter *fi
 
 // CreateWithdrawRequest 创建提现请求
 func (r *WalletRepositoryImpl) CreateWithdrawRequest(ctx context.Context, request *financeModel.WithdrawRequest) error {
+	if request.ID.IsZero() {
+		request.ID = primitive.NewObjectID()
+	}
 	now := time.Now()
 	request.CreatedAt = now
 	request.UpdatedAt = now
 
-	result, err := r.withdrawRequestCollection.InsertOne(ctx, request)
+	_, err := r.withdrawRequestCollection.InsertOne(ctx, request)
 	if err != nil {
 		return fmt.Errorf("创建提现请求失败: %w", err)
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		request.ID = oid.Hex()
 	}
 
 	return nil
@@ -408,4 +453,25 @@ func (r *WalletRepositoryImpl) CountWithdrawRequests(ctx context.Context, filter
 // Health 健康检查
 func (r *WalletRepositoryImpl) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
+}
+
+// RunInTransaction 在事务中执行钱包相关操作
+func (r *WalletRepositoryImpl) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	session, err := r.db.Client().StartSession()
+	if err != nil {
+		return fmt.Errorf("启动事务失败: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		if err := fn(sessCtx); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return fmt.Errorf("事务执行失败: %w", err)
+	}
+
+	return nil
 }

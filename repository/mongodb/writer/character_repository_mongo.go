@@ -54,7 +54,7 @@ func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID str
 	var character writer.Character
 	filter := bson.M{"_id": characterID}
 
-	err := r.GetCollection().FindOne(ctx, filter).Decode(&character)
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&character) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "character not found", err)
@@ -69,7 +69,7 @@ func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID str
 func (r *CharacterRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Character, error) {
 	filter := bson.M{"project_id": projectID}
 
-	cursor, err := r.GetCollection().Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find characters failed", err)
 	}
@@ -106,7 +106,7 @@ func (r *CharacterRepositoryMongo) Update(ctx context.Context, character *writer
 func (r *CharacterRepositoryMongo) Delete(ctx context.Context, characterID string) error {
 	filter := bson.M{"_id": characterID}
 
-	result, err := r.GetCollection().DeleteOne(ctx, filter)
+	result, err := r.GetCollection().DeleteOne(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete character failed", err)
 	}

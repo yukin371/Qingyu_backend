@@ -29,8 +29,8 @@ func NewAdminLogRepository(db *mongo.Database) adminInterface.AdminLogRepository
 
 // CreateAdminLog 创建管理员操作日志
 func (r *AdminLogRepositoryImpl) CreateAdminLog(ctx context.Context, log *adminModel.AdminLog) error {
-	if log.ID == "" {
-		log.ID = primitive.NewObjectID().Hex()
+	if log.ID.IsZero() {
+		log.ID = primitive.NewObjectID()
 	}
 	if log.CreatedAt.IsZero() {
 		log.CreatedAt = time.Now()
@@ -47,7 +47,11 @@ func (r *AdminLogRepositoryImpl) CreateAdminLog(ctx context.Context, log *adminM
 // GetAdminLog 根据ID获取管理员日志
 func (r *AdminLogRepositoryImpl) GetAdminLog(ctx context.Context, logID string) (*adminModel.AdminLog, error) {
 	var log adminModel.AdminLog
-	err := r.collection.FindOne(ctx, bson.M{"_id": logID}).Decode(&log)
+	objID, err := primitive.ObjectIDFromHex(logID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的管理员日志ID: %w", err)
+	}
+	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&log)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("管理员日志不存在")

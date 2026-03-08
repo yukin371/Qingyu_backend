@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/pkg/response"
+
 	"Qingyu_backend/models/dto"
-	"Qingyu_backend/api/v1/shared"
 	contentService "Qingyu_backend/service/interfaces/content"
 )
 
@@ -30,21 +31,21 @@ func NewDocumentAPI(documentService contentService.DocumentServicePort) *Documen
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.CreateDocumentRequest	true	"创建文档请求"
-//	@Success		201		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		201		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents [post]
 func (api *DocumentAPI) CreateDocument(c *gin.Context) {
 	var req dto.CreateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	// 获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 	_ = userID // TODO: 使用userID
@@ -55,7 +56,7 @@ func (api *DocumentAPI) CreateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 201, "创建成功", result)
+	response.Created(c, result)
 }
 
 // GetDocument 获取文档详情
@@ -66,15 +67,15 @@ func (api *DocumentAPI) CreateDocument(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"文档ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id} [get]
 func (api *DocumentAPI) GetDocument(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -84,7 +85,7 @@ func (api *DocumentAPI) GetDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // UpdateDocument 更新文档
@@ -96,21 +97,21 @@ func (api *DocumentAPI) GetDocument(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"文档ID"
 //	@Param			request	body		dto.UpdateDocumentRequest	true	"更新文档请求"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id} [put]
 func (api *DocumentAPI) UpdateDocument(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req dto.UpdateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -120,7 +121,7 @@ func (api *DocumentAPI) UpdateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "更新成功", result)
+	response.SuccessWithMessage(c, "更新成功", result)
 }
 
 // DeleteDocument 删除文档
@@ -131,15 +132,15 @@ func (api *DocumentAPI) UpdateDocument(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"文档ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id} [delete]
 func (api *DocumentAPI) DeleteDocument(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -149,7 +150,7 @@ func (api *DocumentAPI) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "删除成功", nil)
+	response.SuccessWithMessage(c, "删除成功", nil)
 }
 
 // ListDocuments 获取文档列表
@@ -164,9 +165,9 @@ func (api *DocumentAPI) DeleteDocument(c *gin.Context) {
 //	@Param			status		query		string	false	"状态"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			pageSize	query		int		false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/documents [get]
 func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 	projectID := c.Query("projectId")
@@ -196,7 +197,7 @@ func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Documents, int64(result.Total), page, pageSize, "获取成功")
+	response.Paginated(c, result.Documents, int64(result.Total), page, pageSize, "获取成功")
 }
 
 // DuplicateDocument 复制文档
@@ -208,21 +209,21 @@ func (api *DocumentAPI) ListDocuments(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"文档ID"
 //	@Param			request	body		dto.DuplicateRequest	true	"复制请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/duplicate [post]
 func (api *DocumentAPI) DuplicateDocument(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req dto.DuplicateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -232,7 +233,7 @@ func (api *DocumentAPI) DuplicateDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "复制成功", result)
+	response.SuccessWithMessage(c, "复制成功", result)
 }
 
 // MoveDocument 移动文档
@@ -244,33 +245,42 @@ func (api *DocumentAPI) DuplicateDocument(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"文档ID"
 //	@Param			request	body		dto.MoveDocumentRequest	true	"移动请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/move [put]
 func (api *DocumentAPI) MoveDocument(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req dto.MoveDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
 	req.DocumentID = id
 
-	err := api.documentService.MoveDocument(c.Request.Context(), req.DocumentID, req.NewParentID, req.Order)
+	// 从*string转换为string，如果为nil则传空字符串
+	newParentID := ""
+	if req.NewParentID != nil {
+		newParentID = *req.NewParentID
+	}
+
+	// content接口使用旧的order int参数，但DTO使用orderKey string
+	// 这里我们暂时使用orderKey，因为content层需要适配
+	// TODO: 更新content接口以支持orderKey
+	err := api.documentService.MoveDocument(c.Request.Context(), req.DocumentID, newParentID, 0)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	shared.Success(c, 200, "移动成功", nil)
+	response.SuccessWithMessage(c, "移动成功", nil)
 }
 
 // GetDocumentTree 获取文档树
@@ -281,14 +291,14 @@ func (api *DocumentAPI) MoveDocument(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			projectId	path		string	true	"项目ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/tree/{projectId} [get]
 func (api *DocumentAPI) GetDocumentTree(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		shared.BadRequest(c, "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -298,7 +308,7 @@ func (api *DocumentAPI) GetDocumentTree(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // GetDocumentContent 获取文档内容
@@ -309,15 +319,15 @@ func (api *DocumentAPI) GetDocumentTree(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"文档ID"
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		400	{object}	shared.APIResponse
-//	@Failure		404	{object}	shared.APIResponse
-//	@Failure		500	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		400	{object}	response.APIResponse
+//	@Failure		404	{object}	response.APIResponse
+//	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/content [get]
 func (api *DocumentAPI) GetDocumentContent(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -327,7 +337,7 @@ func (api *DocumentAPI) GetDocumentContent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "获取成功", result)
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // UpdateDocumentContent 更新文档内容
@@ -339,21 +349,21 @@ func (api *DocumentAPI) GetDocumentContent(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"文档ID"
 //	@Param			request	body		dto.UpdateContentRequest	true	"更新内容请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/content [put]
 func (api *DocumentAPI) UpdateDocumentContent(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req dto.UpdateContentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -365,7 +375,7 @@ func (api *DocumentAPI) UpdateDocumentContent(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "更新成功", nil)
+	response.SuccessWithMessage(c, "更新成功", nil)
 }
 
 // AutoSaveDocument 自动保存文档
@@ -376,14 +386,14 @@ func (api *DocumentAPI) UpdateDocumentContent(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.AutoSaveRequest	true	"自动保存请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/autosave [post]
 func (api *DocumentAPI) AutoSaveDocument(c *gin.Context) {
 	var req dto.AutoSaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -393,7 +403,7 @@ func (api *DocumentAPI) AutoSaveDocument(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "保存成功", result)
+	response.SuccessWithMessage(c, "保存成功", result)
 }
 
 // GetVersionHistory 获取版本历史
@@ -406,14 +416,14 @@ func (api *DocumentAPI) AutoSaveDocument(c *gin.Context) {
 //	@Param			id		path		string	true	"文档ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			pageSize	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/versions [get]
 func (api *DocumentAPI) GetVersionHistory(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -433,7 +443,7 @@ func (api *DocumentAPI) GetVersionHistory(c *gin.Context) {
 		return
 	}
 
-	shared.Paginated(c, result.Versions, int64(result.Total), page, pageSize, "获取成功")
+	response.Paginated(c, result.Versions, int64(result.Total), page, pageSize, "获取成功")
 }
 
 // RestoreVersion 恢复版本
@@ -445,21 +455,21 @@ func (api *DocumentAPI) GetVersionHistory(c *gin.Context) {
 //	@Produce		json
 //	@Param			id			path		string	true	"文档ID"
 //	@Param			versionId	path		string	true	"版本ID"
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		404			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		404			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/content/documents/{id}/versions/{versionId}/restore [post]
 func (api *DocumentAPI) RestoreVersion(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		shared.BadRequest(c, "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	versionID := c.Param("versionId")
 	if versionID == "" {
-		shared.BadRequest(c, "参数错误", "版本ID不能为空")
+		response.BadRequest(c, "参数错误", "版本ID不能为空")
 		return
 	}
 
@@ -469,5 +479,5 @@ func (api *DocumentAPI) RestoreVersion(c *gin.Context) {
 		return
 	}
 
-	shared.Success(c, 200, "恢复成功", nil)
+	response.SuccessWithMessage(c, "恢复成功", nil)
 }

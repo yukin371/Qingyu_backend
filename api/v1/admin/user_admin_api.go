@@ -36,10 +36,10 @@ func NewUserAdminAPI(userAdminService adminservice.UserAdminService) *UserAdminA
 //	@Param			role		query		string				false	"角色筛选"
 //	@Param			page		query		int					false	"页码"	default(1)
 //	@Param			size		query		int					false	"每页数量"	default(20)
-//	@Success		200			{object}	shared.APIResponse
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		401			{object}	shared.APIResponse
-//	@Failure		403			{object}	shared.APIResponse
+//	@Success		200			{object}	response.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		401			{object}	response.APIResponse
+//	@Failure		403			{object}	response.APIResponse
 //	@Router			/api/v1/admin/users [get]
 func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -78,11 +78,11 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id} [get]
 func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 	userID := c.Param("id")
@@ -113,11 +113,11 @@ func (api *UserAdminAPI) GetUserDetail(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string	true	"用户ID"
 //	@Param			request	body		UpdateUserStatusRequest	true	"状态信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/status [put]
 func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 	userID := c.Param("id")
@@ -181,11 +181,11 @@ func (api *UserAdminAPI) UpdateUserStatus(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string					true	"用户ID"
 //	@Param			request	body		UpdateUserRoleRequest	true	"角色信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/role [put]
 func (api *UserAdminAPI) UpdateUserRole(c *gin.Context) {
 	userID := c.Param("id")
@@ -228,11 +228,11 @@ func (api *UserAdminAPI) UpdateUserRole(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id} [delete]
 func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
@@ -267,10 +267,10 @@ func (api *UserAdminAPI) DeleteUser(c *gin.Context) {
 //	@Param			id		path		string	true	"用户ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/activities [get]
 func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 	userID := c.Param("id")
@@ -310,10 +310,10 @@ func (api *UserAdminAPI) GetUserActivities(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/statistics [get]
 func (api *UserAdminAPI) GetUserStatistics(c *gin.Context) {
 	userID := c.Param("id")
@@ -343,11 +343,11 @@ func (api *UserAdminAPI) GetUserStatistics(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string	true	"用户ID"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/{id}/reset-password [post]
 func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 	userID := c.Param("id")
@@ -382,10 +382,10 @@ func (api *UserAdminAPI) ResetUserPassword(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchUpdateStatusRequest	true	"批量更新请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/batch-update-status [post]
 func (api *UserAdminAPI) BatchUpdateStatus(c *gin.Context) {
 	var req BatchUpdateStatusRequest
@@ -416,10 +416,10 @@ func (api *UserAdminAPI) BatchUpdateStatus(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchDeleteUsersRequest	true	"批量删除请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/batch-delete [post]
 func (api *UserAdminAPI) BatchDeleteUsers(c *gin.Context) {
 	var req BatchDeleteUsersRequest
@@ -451,9 +451,9 @@ func (api *UserAdminAPI) BatchDeleteUsers(c *gin.Context) {
 //	@Param			keyword	query		string	true	"搜索关键词"
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			size		query		int		false	"每页数量"	default(20)
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/search [get]
 func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 	keyword := c.Query("keyword")
@@ -488,8 +488,8 @@ func (api *UserAdminAPI) SearchUsers(c *gin.Context) {
 //	@Tags			Admin-User
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/count-by-status [get]
 func (api *UserAdminAPI) CountByStatus(c *gin.Context) {
 	counts, err := api.userAdminService.CountByStatus(c.Request.Context())
@@ -552,10 +552,10 @@ type BatchCreateUserRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		CreateUserRequest	true	"用户信息"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users [post]
 func (api *UserAdminAPI) CreateUser(c *gin.Context) {
 	var req CreateUserRequest
@@ -599,10 +599,10 @@ func (api *UserAdminAPI) CreateUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		BatchCreateUserRequest	true	"批量创建请求"
-//	@Success		200		{object}	shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		401		{object}	shared.APIResponse
-//	@Failure		403		{object}	shared.APIResponse
+//	@Success		200		{object}	response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		401		{object}	response.APIResponse
+//	@Failure		403		{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/batch-create [post]
 func (api *UserAdminAPI) BatchCreateUsers(c *gin.Context) {
 	var req BatchCreateUserRequest

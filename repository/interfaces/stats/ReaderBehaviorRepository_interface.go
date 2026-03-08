@@ -27,8 +27,12 @@ type ReaderBehaviorRepository interface {
 	CountUniqueReaders(ctx context.Context, bookID string) (int64, error)
 	CountUniqueReadersByChapter(ctx context.Context, chapterID string) (int64, error)
 	CalculateAvgReadTime(ctx context.Context, chapterID string) (float64, error)
-	CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error)
-	CalculateDropOffRate(ctx context.Context, chapterID string) (float64, error)
+
+	// 原始数据查询方法（供Service层计算使用）
+	CountByChapterAndType(ctx context.Context, chapterID string, behaviorType string) (int64, error)
+	CountByChapter(ctx context.Context, chapterID string) (int64, error)
+	GetDistinctUsersByBookAndDateRange(ctx context.Context, bookID string, start, end time.Time) ([]string, error)
+	CountActiveUsersInList(ctx context.Context, bookID string, userIDs []string, since time.Time) (int64, error)
 
 	// 会话相关
 	CreateSession(ctx context.Context, session *stats.ReadingSession) error
@@ -38,7 +42,6 @@ type ReaderBehaviorRepository interface {
 	// 留存数据
 	CreateRetention(ctx context.Context, retention *stats.ReaderRetention) error
 	GetRetentionByBookID(ctx context.Context, bookID string) (*stats.ReaderRetention, error)
-	CalculateRetention(ctx context.Context, bookID string, days int) (float64, error)
 
 	// 批量操作
 	BatchCreate(ctx context.Context, behaviors []*stats.ReaderBehavior) error

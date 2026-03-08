@@ -62,7 +62,13 @@ func (r *MongoPermissionRepository) GetPermissionByCode(ctx context.Context, cod
 func (r *MongoPermissionRepository) CreatePermission(ctx context.Context, permission *auth.Permission) error {
 	permission.CreatedAt = time.Now()
 
-	_, err := r.db.Collection(PermissionCollection).InsertOne(ctx, permission)
+	result, err := r.db.Collection(PermissionCollection).InsertOne(ctx, permission)
+	if err != nil {
+		return err
+	}
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		permission.ID = oid
+	}
 	return err
 }
 
@@ -99,9 +105,13 @@ func (r *MongoPermissionRepository) GetAllRoles(ctx context.Context) ([]*auth.Ro
 
 func (r *MongoPermissionRepository) GetRoleByID(ctx context.Context, roleID string) (*auth.Role, error) {
 	var role auth.Role
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return nil, err
+	}
+	filter := bson.M{"_id": objectID}
 
-	err := r.db.Collection(RoleCollection).FindOne(ctx, filter).Decode(&role)
+	err = r.db.Collection(RoleCollection).FindOne(ctx, filter).Decode(&role)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +135,13 @@ func (r *MongoPermissionRepository) CreateRole(ctx context.Context, role *auth.R
 	role.CreatedAt = time.Now()
 	role.UpdatedAt = time.Now()
 
-	_, err := r.db.Collection(RoleCollection).InsertOne(ctx, role)
+	result, err := r.db.Collection(RoleCollection).InsertOne(ctx, role)
+	if err != nil {
+		return err
+	}
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		role.ID = oid
+	}
 	return err
 }
 
@@ -133,14 +149,27 @@ func (r *MongoPermissionRepository) UpdateRole(ctx context.Context, role *auth.R
 	role.UpdatedAt = time.Now()
 
 	filter := bson.M{"_id": role.ID}
-	update := bson.M{"$set": role}
+
+	// Only allow specific fields to be updated to avoid using the entire
+	// user-controlled struct as the update document.
+	updateFields := bson.M{
+		"name":        role.Name,
+		"description": role.Description,
+		"updated_at":  role.UpdatedAt,
+	}
+
+	update := bson.M{"$set": updateFields}
 
 	_, err := r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
 	return err
 }
 
 func (r *MongoPermissionRepository) DeleteRole(ctx context.Context, roleID string) error {
-	filter := bson.M{"_id": roleID, "is_system": false} // 不能删除系统角色
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"_id": objectID, "is_system": false} // 不能删除系统角色
 	result, err := r.db.Collection(RoleCollection).DeleteOne(ctx, filter)
 	if err != nil {
 		return err
@@ -152,24 +181,32 @@ func (r *MongoPermissionRepository) DeleteRole(ctx context.Context, roleID strin
 }
 
 func (r *MongoPermissionRepository) AssignPermissionToRole(ctx context.Context, roleID, permissionCode string) error {
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{
 		"$addToSet": bson.M{"permissions": permissionCode},
 		"$set":      bson.M{"updated_at": time.Now()},
 	}
 
-	_, err := r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
+	_, err = r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
 	return err
 }
 
 func (r *MongoPermissionRepository) RemovePermissionFromRole(ctx context.Context, roleID, permissionCode string) error {
-	filter := bson.M{"_id": roleID}
+	objectID, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"_id": objectID}
 	update := bson.M{
 		"$pull": bson.M{"permissions": permissionCode},
 		"$set":  bson.M{"updated_at": time.Now()},
 	}
 
-	_, err := r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
+	_, err = r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
 	return err
 }
 

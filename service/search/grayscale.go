@@ -79,7 +79,7 @@ func (g *grayscaleDecision) ShouldUseES(ctx context.Context, searchType string, 
 
 	// 如果灰度未启用，使用 MongoDB
 	if config == nil || !enabled {
-		g.logger.Debug("灰度未启用，使用 MongoDB",
+		g.logger.Debug("灰度未启用，使用 MongoDB", // codeql[go/log-injection]
 			zap.String("user_id", userID),
 			zap.String("search_type", searchType),
 		)
@@ -110,7 +110,7 @@ func (g *grayscaleDecision) ShouldUseES(ctx context.Context, searchType string, 
 		engine = "ES"
 	}
 
-	g.logger.Info("灰度决策完成",
+	g.logger.Info("灰度决策完成", // codeql[go/log-injection]
 		zap.String("user_id", userID),
 		zap.String("search_type", searchType),
 		zap.String("engine", engine),

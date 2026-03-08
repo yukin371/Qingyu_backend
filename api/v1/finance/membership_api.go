@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
 )
 
@@ -28,16 +28,16 @@ func NewMembershipAPI(membershipService financeService.MembershipService) *Membe
 //	@Tags			会员系统
 //	@Accept			json
 //	@Produce		json
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/plans [get]
 func (api *MembershipAPI) GetPlans(c *gin.Context) {
 	plans, err := api.membershipService.GetPlans(c.Request.Context())
 	if err != nil {
-		shared.InternalError(c, "获取套餐列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取套餐列表成功", plans)
+	response.SuccessWithMessage(c, "获取套餐列表成功", plans)
 }
 
 // SubscribeRequest 订阅请求
@@ -55,28 +55,28 @@ type SubscribeRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		SubscribeRequest	true	"订阅信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/subscribe [post]
 func (api *MembershipAPI) Subscribe(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req SubscribeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
 	membership, err := api.membershipService.Subscribe(c.Request.Context(), userID.(string), req.PlanID, req.PaymentMethod)
 	if err != nil {
-		shared.InternalError(c, "订阅失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "订阅成功", membership)
+	response.SuccessWithMessage(c, "订阅成功", membership)
 }
 
 // GetStatus 获取会员状态
@@ -87,22 +87,22 @@ func (api *MembershipAPI) Subscribe(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/status [get]
 func (api *MembershipAPI) GetStatus(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	membership, err := api.membershipService.GetMembership(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取会员状态失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取会员状态成功", membership)
+	response.SuccessWithMessage(c, "获取会员状态成功", membership)
 }
 
 // Cancel 取消自动续费
@@ -113,22 +113,22 @@ func (api *MembershipAPI) GetStatus(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cancel [post]
 func (api *MembershipAPI) Cancel(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	err := api.membershipService.CancelMembership(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "取消自动续费失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "取消自动续费成功", nil)
+	response.SuccessWithMessage(c, "取消自动续费成功", nil)
 }
 
 // Renew 手动续费
@@ -139,22 +139,22 @@ func (api *MembershipAPI) Cancel(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/renew [put]
 func (api *MembershipAPI) Renew(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	membership, err := api.membershipService.RenewMembership(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "续费失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "续费成功", membership)
+	response.SuccessWithMessage(c, "续费成功", membership)
 }
 
 // GetBenefits 获取会员权益列表
@@ -166,18 +166,18 @@ func (api *MembershipAPI) Renew(c *gin.Context) {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			level	query		string	false	"会员等级"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/benefits [get]
 func (api *MembershipAPI) GetBenefits(c *gin.Context) {
 	level := c.Query("level")
 
 	benefits, err := api.membershipService.GetBenefits(c.Request.Context(), level)
 	if err != nil {
-		shared.InternalError(c, "获取权益列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取权益列表成功", benefits)
+	response.SuccessWithMessage(c, "获取权益列表成功", benefits)
 }
 
 // GetUsage 获取会员权益使用情况
@@ -188,22 +188,22 @@ func (api *MembershipAPI) GetBenefits(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/usage [get]
 func (api *MembershipAPI) GetUsage(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	usage, err := api.membershipService.GetUsage(c.Request.Context(), userID.(string))
 	if err != nil {
-		shared.InternalError(c, "获取权益使用情况失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "获取权益使用情况成功", usage)
+	response.SuccessWithMessage(c, "获取权益使用情况成功", usage)
 }
 
 // ListCards 获取会员卡列表
@@ -217,7 +217,7 @@ func (api *MembershipAPI) GetUsage(c *gin.Context) {
 //	@Param			page		query		int		false	"页码"	default(1)
 //	@Param			page_size	query		int		false	"每页数量"	default(20)
 //	@Param			status		query		string	false	"状态"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cards [get]
 func (api *MembershipAPI) ListCards(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -231,11 +231,11 @@ func (api *MembershipAPI) ListCards(c *gin.Context) {
 
 	cards, total, err := api.membershipService.ListCards(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		shared.InternalError(c, "获取会员卡列表失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Paginated(c, cards, total, page, pageSize, "获取会员卡列表成功")
+	response.Paginated(c, cards, total, page, pageSize, "获取会员卡列表成功")
 }
 
 // ActivateCardRequest 激活会员卡请求
@@ -252,26 +252,26 @@ type ActivateCardRequest struct {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		ActivateCardRequest	true	"激活信息"
-//	@Success 200 {object} APIResponse
+//	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cards/activate [post]
 func (api *MembershipAPI) ActivateCard(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		shared.Unauthorized(c, "未认证")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 
 	var req ActivateCardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		shared.BadRequest(c, "请求参数错误", err.Error())
+		response.BadRequest(c, "请求参数错误", err.Error())
 		return
 	}
 
 	membership, err := api.membershipService.ActivateCard(c.Request.Context(), userID.(string), req.Code)
 	if err != nil {
-		shared.InternalError(c, "激活会员卡失败", err)
+		response.InternalError(c, err)
 		return
 	}
 
-	shared.Success(c, 200, "激活会员卡成功", membership)
+	response.SuccessWithMessage(c, "激活会员卡成功", membership)
 }

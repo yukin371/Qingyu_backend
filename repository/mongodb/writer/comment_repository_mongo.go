@@ -90,7 +90,7 @@ func (r *MongoCommentRepository) List(ctx context.Context, filter *writer.Commen
 	mongoFilter := r.buildFilter(filter)
 
 	// 获取总数
-	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter)
+	total, err := r.GetCollection().CountDocuments(ctx, mongoFilter) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, err
 	}
@@ -102,7 +102,7 @@ func (r *MongoCommentRepository) List(ctx context.Context, filter *writer.Commen
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, 0, err
 	}

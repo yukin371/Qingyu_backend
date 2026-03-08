@@ -30,10 +30,10 @@ func NewSecurityAPI(userService user2.UserService) *SecurityAPI {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object	true	"发送验证码请求"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/email/send-code [post]
 func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 	var req user2.SendEmailVerificationRequest
@@ -58,10 +58,10 @@ func (api *SecurityAPI) SendEmailVerification(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object	true	"验证邮箱请求"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/email/verify [post]
 func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 	var req user2.VerifyEmailRequest
@@ -88,9 +88,9 @@ func (api *SecurityAPI) VerifyEmail(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object	true	"请求重置密码"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/password/reset-request [post]
 func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 	var req user2.RequestPasswordResetRequest
@@ -115,10 +115,10 @@ func (api *SecurityAPI) RequestPasswordReset(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		object	true	"确认重置密码"
-//	@Success 200 {object} shared.APIResponse
-//	@Failure		400		{object}	shared.APIResponse
-//	@Failure		404		{object}	shared.APIResponse
-//	@Failure		500		{object}	shared.APIResponse
+//	@Success 200 {object} response.APIResponse
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		404		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/password/reset [post]
 func (api *SecurityAPI) ConfirmPasswordReset(c *gin.Context) {
 	var req user2.ConfirmPasswordResetRequest

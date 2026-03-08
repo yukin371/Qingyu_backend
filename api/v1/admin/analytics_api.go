@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	response "Qingyu_backend/pkg/response"
 	adminService "Qingyu_backend/service/admin"
+	"github.com/gin-gonic/gin"
 )
 
 // AnalyticsAPI 统计分析API
@@ -32,7 +33,7 @@ func NewAnalyticsAPI(analyticsService adminService.AnalyticsService) *AnalyticsA
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param interval query string true "间隔 (daily/weekly/monthly)" Enums(daily, weekly, monthly)
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/user-growth [get]
 func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -41,38 +42,26 @@ func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 
 	// 参数验证
 	if startDateStr == "" || endDateStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "开始日期和结束日期不能为空",
-		})
+		response.BadRequest(c, "开始日期和结束日期不能为空", nil)
 		return
 	}
 
 	// 解析日期
 	startDate, err := time.Parse("2006-01-02", startDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("开始日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("开始日期格式错误: %v", err), nil)
 		return
 	}
 
 	endDate, err := time.Parse("2006-01-02", endDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("结束日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("结束日期格式错误: %v", err), nil)
 		return
 	}
 
 	// 验证间隔参数
 	if interval != "daily" && interval != "weekly" && interval != "monthly" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "间隔参数必须是 daily、weekly 或 monthly",
-		})
+		response.BadRequest(c, "间隔参数必须是 daily、weekly 或 monthly", nil)
 		return
 	}
 
@@ -86,18 +75,11 @@ func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 	// 调用服务
 	resp, err := api.analyticsService.GetUserGrowthTrend(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取用户增长趋势失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取用户增长趋势失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data":    resp,
-	})
+	response.SuccessWithMessage(c, "获取成功", resp)
 }
 
 // GetContentStatistics 获取内容统计
@@ -108,7 +90,7 @@ func (api *AnalyticsAPI) GetUserGrowthTrend(c *gin.Context) {
 // @Produce json
 // @Param start_date query string false "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string false "结束日期 (YYYY-MM-DD)"
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/content-statistics [get]
 func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -120,10 +102,7 @@ func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 		if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
 			startDate = &t
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": fmt.Sprintf("开始日期格式错误: %v", err),
-			})
+			response.BadRequest(c, fmt.Sprintf("开始日期格式错误: %v", err), nil)
 			return
 		}
 	}
@@ -132,10 +111,7 @@ func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 		if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
 			endDate = &t
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": fmt.Sprintf("结束日期格式错误: %v", err),
-			})
+			response.BadRequest(c, fmt.Sprintf("结束日期格式错误: %v", err), nil)
 			return
 		}
 	}
@@ -149,18 +125,11 @@ func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 	// 调用服务
 	resp, err := api.analyticsService.GetContentStatistics(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取内容统计失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取内容统计失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data":    resp,
-	})
+	response.SuccessWithMessage(c, "获取成功", resp)
 }
 
 // GetRevenueReport 获取收入报告
@@ -172,7 +141,7 @@ func (api *AnalyticsAPI) GetContentStatistics(c *gin.Context) {
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param interval query string true "间隔 (daily/weekly/monthly)" Enums(daily, weekly, monthly)
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/revenue-report [get]
 func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -181,38 +150,26 @@ func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 
 	// 参数验证
 	if startDateStr == "" || endDateStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "开始日期和结束日期不能为空",
-		})
+		response.BadRequest(c, "开始日期和结束日期不能为空", nil)
 		return
 	}
 
 	// 解析日期
 	startDate, err := time.Parse("2006-01-02", startDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("开始日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("开始日期格式错误: %v", err), nil)
 		return
 	}
 
 	endDate, err := time.Parse("2006-01-02", endDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("结束日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("结束日期格式错误: %v", err), nil)
 		return
 	}
 
 	// 验证间隔参数
 	if interval != "daily" && interval != "weekly" && interval != "monthly" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "间隔参数必须是 daily、weekly 或 monthly",
-		})
+		response.BadRequest(c, "间隔参数必须是 daily、weekly 或 monthly", nil)
 		return
 	}
 
@@ -226,18 +183,11 @@ func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 	// 调用服务
 	resp, err := api.analyticsService.GetRevenueReport(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取收入报告失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取收入报告失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data":    resp,
-	})
+	response.SuccessWithMessage(c, "获取成功", resp)
 }
 
 // GetActiveUsersReport 获取活跃用户报告
@@ -249,7 +199,7 @@ func (api *AnalyticsAPI) GetRevenueReport(c *gin.Context) {
 // @Param start_date query string true "开始日期 (YYYY-MM-DD)"
 // @Param end_date query string true "结束日期 (YYYY-MM-DD)"
 // @Param type query string true "类型 (dau/wau/mau)" Enums(dau, wau, mau)
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/active-users [get]
 func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 	startDateStr := c.Query("start_date")
@@ -258,46 +208,31 @@ func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 
 	// 参数验证
 	if startDateStr == "" || endDateStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "开始日期和结束日期不能为空",
-		})
+		response.BadRequest(c, "开始日期和结束日期不能为空", nil)
 		return
 	}
 
 	if reportType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "报告类型不能为空",
-		})
+		response.BadRequest(c, "报告类型不能为空", nil)
 		return
 	}
 
 	// 解析日期
 	startDate, err := time.Parse("2006-01-02", startDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("开始日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("开始日期格式错误: %v", err), nil)
 		return
 	}
 
 	endDate, err := time.Parse("2006-01-02", endDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("结束日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("结束日期格式错误: %v", err), nil)
 		return
 	}
 
 	// 验证类型参数
 	if reportType != "dau" && reportType != "wau" && reportType != "mau" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "类型参数必须是 dau、wau 或 mau",
-		})
+		response.BadRequest(c, "类型参数必须是 dau、wau 或 mau", nil)
 		return
 	}
 
@@ -311,18 +246,11 @@ func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 	// 调用服务
 	resp, err := api.analyticsService.GetActiveUsersReport(context.Background(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取活跃用户报告失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取活跃用户报告失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data":    resp,
-	})
+	response.SuccessWithMessage(c, "获取成功", resp)
 }
 
 // GetSystemOverview 获取系统概览
@@ -331,24 +259,17 @@ func (api *AnalyticsAPI) GetActiveUsersReport(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/system-overview [get]
 func (api *AnalyticsAPI) GetSystemOverview(c *gin.Context) {
 	// 调用服务
 	resp, err := api.analyticsService.GetSystemOverview(context.Background())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取系统概览失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取系统概览失败: %w", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data":    resp,
-	})
+	response.SuccessWithMessage(c, "获取成功", resp)
 }
 
 // ExportAnalyticsReport 导出统计分析报告
@@ -371,10 +292,7 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 
 	// 参数验证
 	if reportType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "报告类型不能为空",
-		})
+		response.BadRequest(c, "报告类型不能为空", nil)
 		return
 	}
 
@@ -388,19 +306,13 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 		}
 	}
 	if !isValidType {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "无效的报告类型",
-		})
+		response.BadRequest(c, "无效的报告类型", nil)
 		return
 	}
 
 	// 验证导出格式
 	if format != "csv" && format != "xlsx" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "不支持的导出格式",
-		})
+		response.BadRequest(c, "不支持的导出格式", nil)
 		return
 	}
 
@@ -426,10 +338,7 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 		csvData = []byte("Date,Count,Type\n")
 
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "不支持的报告类型",
-		})
+		response.BadRequest(c, "不支持的报告类型", nil)
 		return
 	}
 
@@ -440,9 +349,10 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 		c.Data(http.StatusOK, "text/csv", csvData)
 	} else if format == "xlsx" {
 		// TODO: 实现Excel导出
-		c.JSON(http.StatusNotImplemented, gin.H{
-			"code":    501,
-			"message": "Excel导出功能待实现",
+		response.JSON(c, http.StatusNotImplemented, response.APIResponse{
+			Code:      response.CodeInternalError,
+			Message:   "Excel导出功能待实现",
+			Timestamp: time.Now().UnixMilli(),
 		})
 		return
 	}
@@ -454,12 +364,12 @@ func (api *AnalyticsAPI) ExportAnalyticsReport(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/dashboard [get]
 func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 	// 并行获取各种统计数据
 	type dashboardData struct {
-		SystemOverview  *adminService.SystemOverviewResponse
+		SystemOverview *adminService.SystemOverviewResponse
 		UserGrowth     *adminService.UserGrowthTrendResponse
 		ContentStats   *adminService.ContentStatisticsResponse
 		RevenueReport  *adminService.RevenueReportResponse
@@ -469,10 +379,7 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 	// 获取系统概览
 	systemOverview, err := api.analyticsService.GetSystemOverview(context.Background())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取系统概览失败: %v", err),
-		})
+		response.InternalError(c, fmt.Errorf("获取系统概览失败: %w", err))
 		return
 	}
 
@@ -504,16 +411,12 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 		Type:      "dau",
 	})
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data": dashboardData{
-			SystemOverview: systemOverview,
-			UserGrowth:     userGrowth,
-			ContentStats:   contentStats,
-			RevenueReport:  revenueReport,
-			ActiveUsers:    activeUsers,
-		},
+	response.SuccessWithMessage(c, "获取成功", dashboardData{
+		SystemOverview: systemOverview,
+		UserGrowth:     userGrowth,
+		ContentStats:   contentStats,
+		RevenueReport:  revenueReport,
+		ActiveUsers:    activeUsers,
 	})
 }
 
@@ -524,39 +427,32 @@ func (api *AnalyticsAPI) GetAnalyticsDashboard(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param query body CustomAnalyticsQuery true "自定义查询条件"
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/custom [post]
 func (api *AnalyticsAPI) GetCustomAnalyticsQuery(c *gin.Context) {
 	var req CustomAnalyticsQuery
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("请求参数错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("请求参数错误: %v", err), nil)
 		return
 	}
 
 	// TODO: 实现自定义查询逻辑
 	// 这里可以根据 req.Metrics, req.Dimensions, req.Filters 等参数构建查询
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data": gin.H{
-			"query": req,
-			"result": "自定义查询结果",
-		},
+	response.SuccessWithMessage(c, "获取成功", gin.H{
+		"query":  req,
+		"result": "自定义查询结果",
 	})
 }
 
 // CustomAnalyticsQuery 自定义分析查询
 type CustomAnalyticsQuery struct {
-	Metrics   []string                 `json:"metrics" binding:"required"`   // 指标：users, books, revenue, etc.
-	Dimensions []string                `json:"dimensions"`                   // 维度：date, category, etc.
-	Filters   map[string]interface{}   `json:"filters"`                      // 过滤条件
-	StartDate string                   `json:"start_date" binding:"required"`
-	EndDate   string                   `json:"end_date" binding:"required"`
-	Limit     int                      `json:"limit"`
+	Metrics    []string               `json:"metrics" binding:"required"` // 指标：users, books, revenue, etc.
+	Dimensions []string               `json:"dimensions"`                 // 维度：date, category, etc.
+	Filters    map[string]interface{} `json:"filters"`                    // 过滤条件
+	StartDate  string                 `json:"start_date" binding:"required"`
+	EndDate    string                 `json:"end_date" binding:"required"`
+	Limit      int                    `json:"limit"`
 }
 
 // CompareAnalyticsPeriods 对比不同时期的统计数据
@@ -570,7 +466,7 @@ type CustomAnalyticsQuery struct {
 // @Param period2_start query string true "第二期开始日期 (YYYY-MM-DD)"
 // @Param period2_end query string true "第二期结束日期 (YYYY-MM-DD)"
 // @Param metrics query string true "对比指标，逗号分隔 (users,revenue,etc)"
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/compare [get]
 func (api *AnalyticsAPI) CompareAnalyticsPeriods(c *gin.Context) {
 	period1StartStr := c.Query("period1_start")
@@ -581,70 +477,51 @@ func (api *AnalyticsAPI) CompareAnalyticsPeriods(c *gin.Context) {
 
 	// 参数验证
 	if period1StartStr == "" || period1EndStr == "" || period2StartStr == "" || period2EndStr == "" || metricsStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "缺少必要参数",
-		})
+		response.BadRequest(c, "缺少必要参数", nil)
 		return
 	}
 
 	// 解析日期
 	period1Start, err := time.Parse("2006-01-02", period1StartStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("第一期开始日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("第一期开始日期格式错误: %v", err), nil)
 		return
 	}
 
 	period1End, err := time.Parse("2006-01-02", period1EndStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("第一期结束日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("第一期结束日期格式错误: %v", err), nil)
 		return
 	}
 
 	period2Start, err := time.Parse("2006-01-02", period2StartStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("第二期开始日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("第二期开始日期格式错误: %v", err), nil)
 		return
 	}
 
 	period2End, err := time.Parse("2006-01-02", period2EndStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": fmt.Sprintf("第二期结束日期格式错误: %v", err),
-		})
+		response.BadRequest(c, fmt.Sprintf("第二期结束日期格式错误: %v", err), nil)
 		return
 	}
 
 	// TODO: 实现时期对比逻辑
 	// 获取两个时期的数据并进行对比
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "对比成功",
-		"data": gin.H{
-			"period1": gin.H{
-				"start": period1Start.Format("2006-01-02"),
-				"end":   period1End.Format("2006-01-02"),
-			},
-			"period2": gin.H{
-				"start": period2Start.Format("2006-01-02"),
-				"end":   period2End.Format("2006-01-02"),
-			},
-			"metrics": metricsStr,
-			"comparison": map[string]interface{}{
-				"growth_rate": 12.5,
-				"change":     1234,
-			},
+	response.SuccessWithMessage(c, "对比成功", gin.H{
+		"period1": gin.H{
+			"start": period1Start.Format("2006-01-02"),
+			"end":   period1End.Format("2006-01-02"),
+		},
+		"period2": gin.H{
+			"start": period2Start.Format("2006-01-02"),
+			"end":   period2End.Format("2006-01-02"),
+		},
+		"metrics": metricsStr,
+		"comparison": map[string]interface{}{
+			"growth_rate": 12.5,
+			"change":      1234,
 		},
 	})
 }
@@ -655,22 +532,18 @@ func (api *AnalyticsAPI) CompareAnalyticsPeriods(c *gin.Context) {
 // @Tags Admin-Analytics
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/realtime [get]
 func (api *AnalyticsAPI) GetRealTimeStats(c *gin.Context) {
 	// TODO: 实现实时统计逻辑
 	// 可以使用 Redis 等缓存存储实时数据
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data": gin.H{
-			"online_users":     1234,
-			"active_sessions":  456,
-			"requests_per_sec": 78,
-			"avg_response_time": 45,
-			"timestamp": time.Now().Unix(),
-		},
+	response.SuccessWithMessage(c, "获取成功", gin.H{
+		"online_users":      1234,
+		"active_sessions":   456,
+		"requests_per_sec":  78,
+		"avg_response_time": 45,
+		"timestamp":         time.Now().Unix(),
 	})
 }
 
@@ -682,7 +555,7 @@ func (api *AnalyticsAPI) GetRealTimeStats(c *gin.Context) {
 // @Produce json
 // @Param type query string true "预测类型 (users/revenue/content)" Enums(users, revenue, content)
 // @Param days query int false "预测天数" default(30)
-// @Success 200 {object} map[string]interface{} "code,message,data"
+// @Success 200 {object} response.APIResponse "code,message,data"
 // @Router /api/v1/admin/analytics/predict [get]
 func (api *AnalyticsAPI) GetAnalyticsPredictions(c *gin.Context) {
 	predictType := c.Query("type")
@@ -690,33 +563,23 @@ func (api *AnalyticsAPI) GetAnalyticsPredictions(c *gin.Context) {
 
 	// 参数验证
 	if predictType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "预测类型不能为空",
-		})
+		response.BadRequest(c, "预测类型不能为空", nil)
 		return
 	}
 
 	days, err := strconv.Atoi(daysStr)
 	if err != nil || days <= 0 || days > 365 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "预测天数必须在1-365之间",
-		})
+		response.BadRequest(c, "预测天数必须在1-365之间", nil)
 		return
 	}
 
 	// TODO: 实现预测逻辑
 	// 可以使用机器学习模型或简单的趋势分析
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "获取成功",
-		"data": gin.H{
-			"type":       predictType,
-			"days":       days,
-			"prediction": "预测数据",
-			"confidence": 0.85,
-		},
+	response.SuccessWithMessage(c, "获取成功", gin.H{
+		"type":       predictType,
+		"days":       days,
+		"prediction": "预测数据",
+		"confidence": 0.85,
 	})
 }

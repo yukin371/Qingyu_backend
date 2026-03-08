@@ -5,13 +5,14 @@ import (
 	"context"
 	"fmt"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"Qingyu_backend/models/shared/types"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
 // TransactionServiceImpl 交易服务实现
 type TransactionServiceImpl struct {
 	walletRepo sharedRepo.WalletRepository
+	txRunner   TransactionRunner
 }
 
 // TransactionService 交易服务接口
@@ -25,8 +26,14 @@ type TransactionService interface {
 
 // NewTransactionService 创建交易服务
 func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionService {
+	return NewTransactionServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
+}
+
+// NewTransactionServiceWithRunner 创建带显式事务入口的交易服务
+func NewTransactionServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) TransactionService {
 	return &TransactionServiceImpl{
 		walletRepo: walletRepo,
+		txRunner:   txRunner,
 	}
 }
 
@@ -54,7 +61,6 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 		return nil, fmt.Errorf("钱包已冻结，无法充值")
 	}
 
-	// 4. 创建交易记录
 	transaction := &financeModel.Transaction{
 		UserID:  wallet.UserID,
 		Type:    "recharge",
@@ -65,13 +71,16 @@ func (s *TransactionServiceImpl) Recharge(ctx context.Context, walletID string, 
 		Reason:  "充值",
 	}
 
-	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
-		return nil, fmt.Errorf("创建交易记录失败: %w", err)
-	}
-
-	// 5. 更新余额
-	if err := s.walletRepo.UpdateBalance(ctx, walletID, amount); err != nil {
-		return nil, fmt.Errorf("更新余额失败: %w", err)
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
+			return fmt.Errorf("创建交易记录失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateBalance(txCtx, walletID, amount); err != nil {
+			return fmt.Errorf("更新余额失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return convertToTransactionResponse(transaction), nil
@@ -100,7 +109,6 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 		return nil, fmt.Errorf("余额不足")
 	}
 
-	// 5. 创建交易记录
 	transaction := &financeModel.Transaction{
 		UserID: wallet.UserID,
 		Type:   "consume",
@@ -109,13 +117,16 @@ func (s *TransactionServiceImpl) Consume(ctx context.Context, walletID string, a
 		Reason: reason,
 	}
 
-	if err := s.walletRepo.CreateTransaction(ctx, transaction); err != nil {
-		return nil, fmt.Errorf("创建交易记录失败: %w", err)
-	}
-
-	// 6. 更新余额
-	if err := s.walletRepo.UpdateBalance(ctx, walletID, -amount); err != nil {
-		return nil, fmt.Errorf("更新余额失败: %w", err)
+	if err := runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.CreateTransaction(txCtx, transaction); err != nil {
+			return fmt.Errorf("创建交易记录失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateBalance(txCtx, walletID, -amount); err != nil {
+			return fmt.Errorf("更新余额失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return convertToTransactionResponse(transaction), nil
@@ -150,7 +161,6 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 		return fmt.Errorf("余额不足")
 	}
 
-	// 6. 创建转出交易记录
 	outTransaction := &financeModel.Transaction{
 		UserID:        fromWallet.UserID,
 		Type:          "transfer_out",
@@ -160,11 +170,6 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 		RelatedUserID: toWallet.UserID,
 	}
 
-	if err := s.walletRepo.CreateTransaction(ctx, outTransaction); err != nil {
-		return fmt.Errorf("创建转出记录失败: %w", err)
-	}
-
-	// 7. 创建转入交易记录
 	inTransaction := &financeModel.Transaction{
 		UserID:        toWallet.UserID,
 		Type:          "transfer_in",
@@ -174,21 +179,21 @@ func (s *TransactionServiceImpl) Transfer(ctx context.Context, fromWalletID, toW
 		RelatedUserID: fromWallet.UserID,
 	}
 
-	if err := s.walletRepo.CreateTransaction(ctx, inTransaction); err != nil {
-		return fmt.Errorf("创建转入记录失败: %w", err)
-	}
-
-	// 8. 更新余额
-	if err := s.walletRepo.UpdateBalance(ctx, fromWalletID, -amount); err != nil {
-		return fmt.Errorf("更新源钱包余额失败: %w", err)
-	}
-
-	if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
-		// TODO: 需要回滚
-		return fmt.Errorf("更新目标钱包余额失败: %w", err)
-	}
-
-	return nil
+	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {
+		if err := s.walletRepo.CreateTransaction(txCtx, outTransaction); err != nil {
+			return fmt.Errorf("创建转出记录失败: %w", err)
+		}
+		if err := s.walletRepo.CreateTransaction(txCtx, inTransaction); err != nil {
+			return fmt.Errorf("创建转入记录失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateBalance(txCtx, fromWalletID, -amount); err != nil {
+			return fmt.Errorf("更新源钱包余额失败: %w", err)
+		}
+		if err := s.walletRepo.UpdateBalance(txCtx, toWalletID, amount); err != nil {
+			return fmt.Errorf("更新目标钱包余额失败: %w", err)
+		}
+		return nil
+	})
 }
 
 // GetTransaction 获取交易记录
@@ -227,7 +232,7 @@ func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, userID st
 // convertToTransactionResponse 转换为响应格式
 func convertToTransactionResponse(transaction *financeModel.Transaction) *Transaction {
 	return &Transaction{
-		ID:              transaction.ID,
+		ID:              transaction.ID.Hex(),
 		UserID:          transaction.UserID,
 		Type:            transaction.Type,
 		Amount:          int64(transaction.Amount),

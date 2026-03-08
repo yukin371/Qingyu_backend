@@ -4,6 +4,7 @@
 .PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run guard-arch
 .PHONY: docker-up docker-down docker-logs benchmark check security deps deps-update
 .PHONY: test-e2e test-e2e-quick test-e2e-standard test-e2e-layer1 test-e2e-layer2 test-e2e-layer3
+.PHONY: swagger swagger-yaml swagger-clean
 
 # 默认目标
 help:
@@ -55,6 +56,11 @@ help:
 	@echo ""
 	@echo "清理:"
 	@echo "  make clean           - 清理构建文件"
+	@echo ""
+	@echo "API文档:"
+	@echo "  make swagger         - 生成Swagger文档(JSON+YAML)"
+	@echo "  make swagger-convert - 将现有YAML转换为JSON（推荐，避免栈溢出问题）"
+	@echo "  make swagger-yaml    - 仅生成YAML格式Swagger文档"
 
 # 生成所有 Protobuf 代码
 proto: proto-go proto-python
@@ -276,3 +282,61 @@ test-e2e-layer3:
 	@echo "运行Layer 3边界场景测试..."
 	@echo "预计耗时: 5-8分钟"
 	go test -v -timeout 10m ./test/e2e/layer3_boundary/...
+
+# ========== Swagger文档生成 ==========
+
+# 将YAML转换为JSON（使用现有的swagger.yaml）
+swagger-convert:
+	@echo "=========================================="
+	@echo "Swagger文档转换 (YAML -> JSON)"
+	@echo "=========================================="
+	@echo ""
+	@echo "注意：由于swaggo工具在处理复杂类型时存在栈溢出bug，"
+	@echo "我们使用预先生成的swagger.yaml文件转换为JSON格式。"
+	@echo ""
+	@echo "运行转换..."
+	@go run scripts/swagger_convert.go
+	@echo ""
+	@echo "=========================================="
+
+# 生成Swagger文档（JSON和YAML）
+swagger:
+	@echo "生成Swagger API文档..."
+	@swag init \
+		--g cmd/server/main.go \
+		--g cmd/demo_server/main.go \
+		--g cmd/serverdemo/main.go \
+		--output docs/api \
+		--outputTypes json,yaml \
+		--parseDependency \
+		--parseInternal \
+		--markdownFiles docs/api \
+		--exclude ./test,e2e ./...
+	@echo "✅ Swagger文档已生成:"
+	@echo "   - docs/api/swagger.json (JSON格式，适用于Postman导入)"
+	@echo "   - docs/api/swagger.yaml (YAML格式，适用于Apifox导入)"
+	@echo ""
+	@echo "导入方式:"
+	@echo "  Postman: Import -> Upload Files -> 选择 docs/api/swagger.json"
+	@echo "  Apifox:  项目设置 -> 导入数据 -> OpenAPI/Swagger -> 选择 docs/api/swagger.yaml"
+
+# 仅生成YAML格式Swagger文档
+swagger-yaml:
+	@echo "生成Swagger YAML文档..."
+	@swag init \
+		--g cmd/server/main.go \
+		--g cmd/demo_server/main.go \
+		--g cmd/serverdemo/main.go \
+		--output docs/api \
+		--outputTypes yaml \
+		--parseDependency \
+		--parseInternal \
+		--markdownFiles docs/api \
+		--exclude ./test,e2e ./...
+	@echo "✅ docs/api/swagger.yaml 已生成"
+
+# 清理Swagger文档
+swagger-clean:
+	@echo "清理Swagger文档..."
+	@rm -f docs/api/swagger.json docs/api/swagger.yaml docs/api/docs.go
+	@echo "Swagger文档已清理"

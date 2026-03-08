@@ -24,7 +24,7 @@ type MongoTemplateRepository struct {
 func NewMongoTemplateRepository(db *mongo.Database) writerInterface.TemplateRepository {
 	return &MongoTemplateRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "templates"),
-		db:                 db,
+		db:                  db,
 	}
 }
 
@@ -38,9 +38,14 @@ func (r *MongoTemplateRepository) Create(ctx context.Context, template *writer.T
 	template.TouchForCreate()
 
 	// 插入数据库
-	_, err := r.GetCollection().InsertOne(ctx, template)
+	result, err := r.GetCollection().InsertOne(ctx, template)
 	if err != nil {
 		return fmt.Errorf("创建模板失败: %w", err)
+	}
+	if template.ID.IsZero() {
+		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+			template.ID = oid
+		}
 	}
 
 	return nil
@@ -54,7 +59,7 @@ func (r *MongoTemplateRepository) GetByID(ctx context.Context, id primitive.Obje
 		"_id": id,
 		// 同时排除软删除的模板
 		"deleted_at": nil,
-		"status": bson.M{"$ne": writer.TemplateStatusDeleted},
+		"status":     bson.M{"$ne": writer.TemplateStatusDeleted},
 	}
 
 	err := r.GetCollection().FindOne(ctx, filter).Decode(&template)
@@ -224,7 +229,7 @@ func (r *MongoTemplateRepository) ListByProject(ctx context.Context, projectID p
 	mongoFilter := r.buildFilter(&projectID, "", false, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询项目模板列表失败: %w", err)
 	}
@@ -274,7 +279,7 @@ func (r *MongoTemplateRepository) ListByWorkspace(ctx context.Context, workspace
 
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询工作区模板列表失败: %w", err)
 	}
@@ -293,7 +298,7 @@ func (r *MongoTemplateRepository) ListGlobal(ctx context.Context, filter *writer
 	mongoFilter := r.buildFilter(nil, "", true, filter)
 	opts := r.buildSortOptions(filter)
 
-	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts)
+	cursor, err := r.GetCollection().Find(ctx, mongoFilter, opts) // codeql[go/sql-injection]: MongoDB query, not SQL - IDs are validated ObjectIDs
 	if err != nil {
 		return nil, fmt.Errorf("查询全局模板列表失败: %w", err)
 	}

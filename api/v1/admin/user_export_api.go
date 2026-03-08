@@ -31,14 +31,14 @@ func NewUserExportAPI(userAdminService adminservice.UserAdminService) *UserExpor
 //	@Description	管理员导出用户数据，支持CSV和Excel格式
 //	@Tags			Admin-User
 //	@Accept			json
-//	@Produce		csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+//	@Produce		text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 //	@Param			format	query		string	false	"导出格式"	Enums(csv,xlsx)
 //	@Param			role		query		string	false	"角色筛选"
 //	@Param			status		query		string	false	"状态筛选"
 //	@Param			keyword		query		string	false	"关键词搜索"
 //	@Success		200			{file}		file
-//	@Failure		400			{object}	shared.APIResponse
-//	@Failure		500			{object}	shared.APIResponse
+//	@Failure		400			{object}	response.APIResponse
+//	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/export [get]
 func (api *UserExportAPI) ExportUsers(c *gin.Context) {
 	format := c.DefaultQuery("format", "csv")
@@ -81,7 +81,7 @@ func (api *UserExportAPI) ExportUsers(c *gin.Context) {
 //	@Tags			Admin-User
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	shared.APIResponse
+//	@Success		200	{object}	response.APIResponse
 //	@Router			/api/v1/admin/users/export/template [get]
 func (api *UserExportAPI) GetUserExportTemplate(c *gin.Context) {
 	template := []map[string]string{

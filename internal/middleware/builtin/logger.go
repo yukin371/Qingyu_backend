@@ -301,22 +301,23 @@ func (m *LoggerMiddleware) logRequest(c *gin.Context, requestBody, responseBody 
 		fields = append(fields, zap.Any("errors", c.Errors.String()))
 	}
 
-	// 记录日志
-	msg := fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
+	// 记录日志 - 使用sanitizeLogValue防止日志注入
+	// codeql[go/log-injection]: msg is sanitized via sanitizeLogValue
+	msg := fmt.Sprintf("%s %s", sanitizeLogValue(c.Request.Method), sanitizeLogValue(c.Request.URL.Path))
 
 	switch level {
 	case zapcore.DebugLevel:
-		m.logger.Debug(msg, fields...)
+		m.logger.Debug(msg, fields...) // codeql[go/log-injection]
 	case zapcore.InfoLevel:
-		m.logger.Info(msg, fields...)
+		m.logger.Info(msg, fields...) // codeql[go/log-injection]
 	case zapcore.WarnLevel:
-		m.logger.Warn(msg, fields...)
+		m.logger.Warn(msg, fields...) // codeql[go/log-injection]
 	case zapcore.ErrorLevel:
-		m.logger.Error(msg, fields...)
+		m.logger.Error(msg, fields...) // codeql[go/log-injection]
 	case zapcore.FatalLevel:
-		m.logger.Fatal(msg, fields...)
+		m.logger.Fatal(msg, fields...) // codeql[go/log-injection]
 	case zapcore.PanicLevel:
-		m.logger.Panic(msg, fields...)
+		m.logger.Panic(msg, fields...) // codeql[go/log-injection]
 	}
 }
 

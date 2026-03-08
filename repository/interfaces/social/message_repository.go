@@ -89,6 +89,9 @@ type MessageRepository interface {
 	// DeleteMention 删除@提醒
 	DeleteMention(ctx context.Context, mentionID string) error
 
+	// RunInTransaction 在事务中执行消息相关操作
+	RunInTransaction(ctx context.Context, fn func(context.Context) error) error
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }

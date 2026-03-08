@@ -54,8 +54,8 @@ func (r UserRole) CanModerate() bool {
 type PageMode string
 
 const (
-	PageModeScroll    PageMode = "scroll"
-	PageModePaginate  PageMode = "paginate"
+	PageModeScroll   PageMode = "scroll"
+	PageModePaginate PageMode = "paginate"
 )
 
 // AllPageModes 所有有效模式
@@ -89,25 +89,22 @@ func ParsePageMode(s string) (PageMode, error) {
 type DocumentStatus string
 
 const (
-	DocumentStatusDraft     DocumentStatus = "draft"
-	DocumentStatusPublished DocumentStatus = "published"
-	DocumentStatusArchived  DocumentStatus = "archived"
-	DocumentStatusDeleted   DocumentStatus = "deleted"
+	DocumentStatusPlanned   DocumentStatus = "planned"
+	DocumentStatusWriting   DocumentStatus = "writing"
+	DocumentStatusCompleted DocumentStatus = "completed"
 )
 
 // AllDocumentStatuses 所有有效状态
 var AllDocumentStatuses = []DocumentStatus{
-	DocumentStatusDraft,
-	DocumentStatusPublished,
-	DocumentStatusArchived,
-	DocumentStatusDeleted,
+	DocumentStatusPlanned,
+	DocumentStatusWriting,
+	DocumentStatusCompleted,
 }
 
 // IsValid 检查状态是否有效
 func (s DocumentStatus) IsValid() bool {
 	switch s {
-	case DocumentStatusDraft, DocumentStatusPublished,
-		DocumentStatusArchived, DocumentStatusDeleted:
+	case DocumentStatusPlanned, DocumentStatusWriting, DocumentStatusCompleted:
 		return true
 	default:
 		return false
@@ -130,17 +127,17 @@ func ParseDocumentStatus(s string) (DocumentStatus, error) {
 
 // IsPublic 是否公开状态
 func (s DocumentStatus) IsPublic() bool {
-	return s == DocumentStatusPublished
+	return false
 }
 
 // CanEdit 是否可编辑
 func (s DocumentStatus) CanEdit() bool {
-	return s == DocumentStatusDraft || s == DocumentStatusPublished
+	return s == DocumentStatusPlanned || s == DocumentStatusWriting || s == DocumentStatusCompleted
 }
 
 // CanDelete 是否可删除
 func (s DocumentStatus) CanDelete() bool {
-	return s != DocumentStatusDeleted
+	return true
 }
 
 // WithdrawalStatus 提现状态
@@ -211,25 +208,34 @@ type BookStatus string
 
 const (
 	BookStatusDraft     BookStatus = "draft"
-	BookStatusPublished BookStatus = "published"
+	BookStatusOngoing   BookStatus = "ongoing"
 	BookStatusCompleted BookStatus = "completed"
 	BookStatusPaused    BookStatus = "paused"
 	BookStatusDeleted   BookStatus = "deleted"
 )
 
+const legacyBookStatusPublished = "published"
+
 // AllBookStatuses 所有有效状态
 var AllBookStatuses = []BookStatus{
 	BookStatusDraft,
-	BookStatusPublished,
+	BookStatusOngoing,
 	BookStatusCompleted,
 	BookStatusPaused,
 	BookStatusDeleted,
 }
 
+func normalizeBookStatus(status BookStatus) BookStatus {
+	if string(status) == legacyBookStatusPublished {
+		return BookStatusOngoing
+	}
+	return status
+}
+
 // IsValid 检查状态是否有效
 func (s BookStatus) IsValid() bool {
-	switch s {
-	case BookStatusDraft, BookStatusPublished,
+	switch normalizeBookStatus(s) {
+	case BookStatusDraft, BookStatusOngoing,
 		BookStatusCompleted, BookStatusPaused, BookStatusDeleted:
 		return true
 	default:
@@ -244,7 +250,7 @@ func (s BookStatus) String() string {
 
 // ParseBookStatus 从字符串解析状态
 func ParseBookStatus(s string) (BookStatus, error) {
-	status := BookStatus(s)
+	status := normalizeBookStatus(BookStatus(s))
 	if !status.IsValid() {
 		return "", fmt.Errorf("invalid book status: %s", s)
 	}
@@ -253,7 +259,8 @@ func ParseBookStatus(s string) (BookStatus, error) {
 
 // IsPublic 是否公开
 func (s BookStatus) IsPublic() bool {
-	return s == BookStatusPublished
+	normalized := normalizeBookStatus(s)
+	return normalized == BookStatusOngoing || normalized == BookStatusCompleted
 }
 
 // CanEdit 是否可编辑
