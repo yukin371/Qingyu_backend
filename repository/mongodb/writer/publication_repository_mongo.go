@@ -172,8 +172,17 @@ func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, page
 }
 
 func (r *MongoPublicationRepository) FindByResourceID(ctx context.Context, resourceID string) (*serviceInterfaces.PublicationRecord, error) {
+	objectID, err := primitive.ObjectIDFromHex(resourceID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resource id: %w", err)
+	}
+
 	var doc publicationRecordDocument
-	if err := r.collection.FindOne(ctx, bson.M{"resource_id": resourceID}, options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})).Decode(&doc); err != nil {
+	if err := r.collection.FindOne(
+		ctx,
+		bson.M{"resource_id": objectID},
+		options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}}),
+	).Decode(&doc); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
