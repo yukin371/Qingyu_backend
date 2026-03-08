@@ -149,7 +149,16 @@ func (r *MongoPermissionRepository) UpdateRole(ctx context.Context, role *auth.R
 	role.UpdatedAt = time.Now()
 
 	filter := bson.M{"_id": role.ID}
-	update := bson.M{"$set": role}
+
+	// Only allow specific fields to be updated to avoid using the entire
+	// user-controlled struct as the update document.
+	updateFields := bson.M{
+		"name":        role.Name,
+		"description": role.Description,
+		"updated_at":  role.UpdatedAt,
+	}
+
+	update := bson.M{"$set": updateFields}
 
 	_, err := r.db.Collection(RoleCollection).UpdateOne(ctx, filter, update)
 	return err
