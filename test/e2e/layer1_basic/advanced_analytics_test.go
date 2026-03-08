@@ -61,8 +61,14 @@ func TestAdvancedAnalytics(t *testing.T) {
 		projectResp := actions.CreateProject(token, projectReq)
 		var projectId string
 		if data, ok := projectResp["data"].(map[string]interface{}); ok {
+			// 支持驼峰命名 projectId（Go标准）和蛇形命名 id
 			if id, ok := data["projectId"].(string); ok {
 				projectId = id
+			} else if id, ok := data["id"].(string); ok {
+				projectId = id
+			}
+
+			if projectId != "" {
 				env.SetTestData("project_id", projectId)
 				t.Logf("✓ 项目创建成功: %s", projectId)
 			}

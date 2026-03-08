@@ -213,7 +213,15 @@ func TestTemplateManagement(t *testing.T) {
 		var documentId string
 
 		if data, ok := projectResp["data"].(map[string]interface{}); ok {
-			if projectId, ok := data["projectId"].(string); ok {
+			// 支持驼峰命名 projectId（Go标准）和蛇形命名 id
+			var projectId string
+			if id, ok := data["projectId"].(string); ok {
+				projectId = id
+			} else if id, ok := data["id"].(string); ok {
+				projectId = id
+			}
+
+			if projectId != "" {
 				// 创建章节
 				chapterReq := map[string]interface{}{
 					"project_id": projectId,
