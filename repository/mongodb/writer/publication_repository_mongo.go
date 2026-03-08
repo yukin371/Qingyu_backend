@@ -172,15 +172,11 @@ func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, page
 }
 
 func (r *MongoPublicationRepository) FindByResourceID(ctx context.Context, resourceID string) (*serviceInterfaces.PublicationRecord, error) {
-	objectID, err := primitive.ObjectIDFromHex(resourceID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid resource id: %w", err)
-	}
-
+	// resource_id 存储为 string 类型，直接使用 string 查询
 	var doc publicationRecordDocument
 	if err := r.collection.FindOne(
 		ctx,
-		bson.M{"resource_id": objectID},
+		bson.M{"resource_id": resourceID},
 		options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}}),
 	).Decode(&doc); err != nil {
 		if err == mongo.ErrNoDocuments {
