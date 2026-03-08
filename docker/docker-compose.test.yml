@@ -1,6 +1,4 @@
 # CI/测试环境 Docker Compose 配置
-version: '3.8'
-
 services:
   # MongoDB数据库（测试专用）- 配置为单节点副本集以支持事务
   mongodb-test:
@@ -12,10 +10,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: qingyu_test
-      MONGO_REPLICA_SET_NAME: rs0
-    # 配置为单节点副本集以支持事务
-    command: >
-      mongod --bind_ip_all --replSet rs0 --keyFile /dev/null
+    # 配置为单节点副本集以支持事务（不需要keyFile，使用无认证模式）
+    command: mongod --bind_ip_all --replSet rs0 --noauth
     networks:
       - test-network
     healthcheck:

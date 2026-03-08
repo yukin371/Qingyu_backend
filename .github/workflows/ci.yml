@@ -201,8 +201,8 @@ jobs:
           ' --quiet
 
           # Wait for replica set to be ready
-          sleep 5
-          docker exec qingyu-mongodb-test mongosh --eval 'rs.status()' --quiet | head -5
+          sleep 3
+          docker exec qingyu-mongodb-test mongosh --eval 'rs.status().ok' --quiet
           echo "MongoDB replica set is ready!"
 
       - name: Wait for Redis
@@ -315,8 +315,8 @@ jobs:
           ' --quiet
 
           # Wait for replica set to be ready
-          sleep 5
-          docker exec qingyu-mongodb-test mongosh --eval 'rs.status()' --quiet | head -5
+          sleep 3
+          docker exec qingyu-mongodb-test mongosh --eval 'rs.status().ok' --quiet
           echo "MongoDB replica set is ready!"
 
       - name: Wait for Redis
@@ -446,8 +446,8 @@ jobs:
           ' --quiet
 
           # Wait for replica set to be ready
-          sleep 5
-          docker exec qingyu-mongodb-test mongosh --eval 'rs.status()' --quiet | head -5
+          sleep 3
+          docker exec qingyu-mongodb-test mongosh --eval 'rs.status().ok' --quiet
           echo "MongoDB replica set is ready!"
 
       - name: Download dependencies
