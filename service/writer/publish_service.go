@@ -297,7 +297,7 @@ func (s *PublishService) UnpublishProject(ctx context.Context, projectID, userID
 func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projectID string) (*serviceInterfaces.PublicationStatus, error) {
 	// 先在服务层验证项目ID格式，防止不合法的用户输入直接进入仓储查询
 	if !isValidProjectID(projectID) {
-		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorBadRequest, "项目ID格式不正确", "", nil)
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorValidation, "项目ID格式不正确", "", nil)
 	}
 
 	// 获取项目信息
