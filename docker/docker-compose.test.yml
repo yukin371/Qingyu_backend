@@ -1,6 +1,6 @@
 # CI/测试环境 Docker Compose 配置
 services:
-  # MongoDB数据库（测试专用）- 配置为单节点副本集以支持事务
+  # MongoDB数据库（测试专用）
   mongodb-test:
     image: mongo:7.0
     container_name: qingyu-mongodb-test
@@ -10,12 +10,10 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: qingyu_test
-    # 配置为单节点副本集以支持事务（不需要keyFile，使用无认证模式）
-    command: mongod --bind_ip_all --replSet rs0 --noauth
+    command: mongod --bind_ip_all
     networks:
       - test-network
     healthcheck:
-      # MongoDB 7.0使用mongosh，检查副本集状态
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
       interval: 5s
       timeout: 3s
