@@ -15,10 +15,10 @@ env:
   GO_VERSION: '1.25'
 
 jobs:
-  # 代码检查和格式化 - 在轻量级作业后运行以避免资源争用
+  # 代码检查和格式化 - 在所有测试作业后运行以避免资源争用
   lint:
     name: Code Linting
-    needs: [security, dependency-check]
+    needs: [security, unit-tests, e2e-tests, api-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
