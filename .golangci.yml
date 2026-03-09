@@ -46,10 +46,38 @@ linters-settings:
     check-type-assertions: false
 
   govet:
-    enable-all: true
-    disable:
-      - shadow  # shadow 变量检查过于严格
-      - fieldalignment  # 字段对齐检查 - 纯性能优化，不影响功能，且手动修复成本高
+    enable-all: false
+    enable:
+      - asmdecl
+      - assign
+      - atomic
+      - atomicalign
+      - bools
+      - buildtag
+      - cgocall
+      - composites
+      - copylocks
+      - errorsas
+      - framepointer
+      - httpresponse
+      - ifaceassert
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - nilness
+      - printf
+      - reflectvaluecompare
+      - shift
+      - sigchanyzer
+      - sortslice
+      - stdmethods
+      - stringintconv
+      - structtag
+      - tests
+      - unmarshal
+      - unreachable
+      - unsafeptr
+      - unusedresult
 
   staticcheck:
     checks: ["all"]
