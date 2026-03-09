@@ -30,7 +30,6 @@ type SearchService struct {
 
 	// 灰度决策
 	grayscaleDecision GrayScaleDecision // 灰度决策器
-	mu                sync.RWMutex      // 读写锁
 }
 
 // Config 搜索服务配置

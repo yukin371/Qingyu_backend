@@ -169,7 +169,6 @@ func (s *AIService) Close() error {
 
 // Deprecated: Use AIService instead
 type Service struct {
-	legacyService  *AIService
 	adapterManager *adapter.AdapterManager
 }
 
