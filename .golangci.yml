@@ -5,11 +5,11 @@ run:
   timeout: 10m
   tests: true
   go: '1.24'
-  # 排除废弃和归档目录
+  # 排除废弃和归档目录（使用正则表达式）
   skip-dirs:
-    - \.archive
-    - _deprecated
-    - \.archive/temp_tests
+    - ^\.archive
+    - _deprecated$
+    - temp_tests
 
 linters:
   disable-all: true
