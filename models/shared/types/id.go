@@ -69,7 +69,7 @@ func ParseObjectIDSlice(ss []string) ([]primitive.ObjectID, map[int]error) {
 // ToHexSlice 批量转换 ObjectID 为 hex 字符串
 // Deprecated: 使用 repository 包的 ToHexSlice 替代
 func ToHexSlice(ids []primitive.ObjectID) []string {
-    result := make([]string, 0, len(ids))
+    result := make([]string, len(ids))
     for i, id := range ids {
         result[i] = ToHex(id)
     }
