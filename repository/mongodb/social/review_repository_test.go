@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/social"
 	socialIntf "Qingyu_backend/repository/interfaces/social"
@@ -56,8 +57,8 @@ func TestReviewRepository_GetReviewByID(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "测试书评标题",
 		Content:  "测试书评内容",
@@ -101,13 +102,13 @@ func TestReviewRepository_GetReviewsByBook(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	bookID := "test_book_123"
+	bookID := primitive.NewObjectID().Hex()
 
 	// 创建多条书评
 	for i := 0; i < 5; i++ {
 		review := &social.Review{
 			BookID:   bookID,
-			UserID:   "user123",
+			UserID:   primitive.NewObjectID().Hex(),
 			UserName: "测试用户",
 			Title:    "书评标题",
 			Content:  "书评内容",
@@ -134,12 +135,13 @@ func TestReviewRepository_GetReviewsByUser(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	userID := "test_user_123"
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
 
 	// 创建多条书评
 	for i := 0; i < 3; i++ {
 		review := &social.Review{
-			BookID:   "book123",
+			BookID:   bookID,
 			UserID:   userID,
 			UserName: "测试用户",
 			Title:    "书评标题",
@@ -169,8 +171,8 @@ func TestReviewRepository_GetPublicReviews(t *testing.T) {
 
 	// 创建公开书评
 	publicReview := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "公开书评",
 		Content:  "公开内容",
@@ -182,8 +184,8 @@ func TestReviewRepository_GetPublicReviews(t *testing.T) {
 
 	// 创建私密书评
 	privateReview := &social.Review{
-		BookID:   "book456",
-		UserID:   "user456",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户2",
 		Title:    "私密书评",
 		Content:  "私密内容",
@@ -212,14 +214,14 @@ func TestReviewRepository_GetReviewsByRating(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	bookID := "test_book_rating"
+	bookID := primitive.NewObjectID().Hex()
 
 	// 创建不同评分的书评
 	ratings := []int{5, 5, 4, 4, 3}
 	for _, rating := range ratings {
 		review := &social.Review{
 			BookID:   bookID,
-			UserID:   "user123",
+			UserID:   primitive.NewObjectID().Hex(),
 			UserName: "测试用户",
 			Title:    "书评标题",
 			Content:  "书评内容",
@@ -249,8 +251,8 @@ func TestReviewRepository_UpdateReview(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "原始标题",
 		Content:  "原始内容",
@@ -286,8 +288,8 @@ func TestReviewRepository_DeleteReview(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "待删除的书评",
 		Content:  "待删除的内容",
@@ -317,8 +319,8 @@ func TestReviewRepository_CreateReviewLike(t *testing.T) {
 
 	// 先创建书评
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "书评标题",
 		Content:  "书评内容",
@@ -331,7 +333,7 @@ func TestReviewRepository_CreateReviewLike(t *testing.T) {
 	// 创建点赞
 	reviewLike := &social.ReviewLike{
 		ReviewID: review.ID.Hex(),
-		UserID:   "user456",
+		UserID:   primitive.NewObjectID().Hex(),
 	}
 
 	// Act
@@ -351,8 +353,8 @@ func TestReviewRepository_DeleteReviewLike(t *testing.T) {
 
 	// 先创建书评
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "书评标题",
 		Content:  "书评内容",
@@ -362,22 +364,23 @@ func TestReviewRepository_DeleteReviewLike(t *testing.T) {
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
 
-	// 创建点赞
+	// 创建点赞 - 使用有效的ObjectID格式
+	likeUserID := primitive.NewObjectID().Hex()
 	reviewLike := &social.ReviewLike{
 		ReviewID: review.ID.Hex(),
-		UserID:   "user456",
+		UserID:   likeUserID,
 	}
 	err = repo.CreateReviewLike(ctx, reviewLike)
 	require.NoError(t, err)
 
-	// Act - 删除点赞
-	err = repo.DeleteReviewLike(ctx, review.ID.Hex(), "user456")
+	// Act - 删除点赞（使用创建时的同一个userID）
+	err = repo.DeleteReviewLike(ctx, review.ID.Hex(), likeUserID)
 
 	// Assert
 	require.NoError(t, err)
 
 	// 验证已删除
-	found, err := repo.GetReviewLike(ctx, review.ID.Hex(), "user456")
+	found, err := repo.GetReviewLike(ctx, review.ID.Hex(), likeUserID)
 	require.Error(t, err)
 	assert.Nil(t, found)
 }
@@ -390,8 +393,8 @@ func TestReviewRepository_GetReviewLike(t *testing.T) {
 
 	// 先创建书评
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "书评标题",
 		Content:  "书评内容",
@@ -401,22 +404,23 @@ func TestReviewRepository_GetReviewLike(t *testing.T) {
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
 
-	// 创建点赞
+	// 创建点赞 - 使用有效的ObjectID格式
+	likeUserID := primitive.NewObjectID().Hex()
 	reviewLike := &social.ReviewLike{
 		ReviewID: review.ID.Hex(),
-		UserID:   "user456",
+		UserID:   likeUserID,
 	}
 	err = repo.CreateReviewLike(ctx, reviewLike)
 	require.NoError(t, err)
 
-	// Act
-	found, err := repo.GetReviewLike(ctx, review.ID.Hex(), "user456")
+	// Act - 使用创建时的同一个userID查询
+	found, err := repo.GetReviewLike(ctx, review.ID.Hex(), likeUserID)
 
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, found)
 	assert.Equal(t, review.ID.Hex(), found.ReviewID)
-	assert.Equal(t, "user456", found.UserID)
+	assert.Equal(t, likeUserID, found.UserID)
 }
 
 // TestReviewRepository_IsReviewLiked 测试检查是否已点赞
@@ -427,8 +431,8 @@ func TestReviewRepository_IsReviewLiked(t *testing.T) {
 
 	// 先创建书评
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "书评标题",
 		Content:  "书评内容",
@@ -438,23 +442,25 @@ func TestReviewRepository_IsReviewLiked(t *testing.T) {
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
 
-	// 创建点赞
+	// 创建点赞 - 使用有效的ObjectID格式
+	likedUserID := primitive.NewObjectID().Hex()
 	reviewLike := &social.ReviewLike{
 		ReviewID: review.ID.Hex(),
-		UserID:   "user456",
+		UserID:   likedUserID,
 	}
 	err = repo.CreateReviewLike(ctx, reviewLike)
 	require.NoError(t, err)
 
-	// Act - 检查已点赞的用户
-	liked, err := repo.IsReviewLiked(ctx, review.ID.Hex(), "user456")
+	// Act - 检查已点赞的用户（使用创建时的同一个userID）
+	liked, err := repo.IsReviewLiked(ctx, review.ID.Hex(), likedUserID)
 
 	// Assert
 	require.NoError(t, err)
 	assert.True(t, liked)
 
-	// Act - 检查未点赞的用户
-	liked, err = repo.IsReviewLiked(ctx, review.ID.Hex(), "user789")
+	// Act - 检查未点赞的用户（使用另一个有效的ObjectID）
+	notLikedUserID := primitive.NewObjectID().Hex()
+	liked, err = repo.IsReviewLiked(ctx, review.ID.Hex(), notLikedUserID)
 
 	// Assert
 	require.NoError(t, err)
@@ -469,8 +475,8 @@ func TestReviewRepository_GetReviewLikes(t *testing.T) {
 
 	// 先创建书评
 	review := &social.Review{
-		BookID:   "book123",
-		UserID:   "user123",
+		BookID:   primitive.NewObjectID().Hex(),
+		UserID:   primitive.NewObjectID().Hex(),
 		UserName: "测试用户",
 		Title:    "书评标题",
 		Content:  "书评内容",
@@ -480,11 +486,11 @@ func TestReviewRepository_GetReviewLikes(t *testing.T) {
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
 
-	// 创建多个点赞
+	// 创建多个点赞 - 使用有效的ObjectID格式
 	for i := 0; i < 3; i++ {
 		reviewLike := &social.ReviewLike{
 			ReviewID: review.ID.Hex(),
-			UserID:   "user" + string(rune(i)),
+			UserID:   primitive.NewObjectID().Hex(),
 		}
 		err = repo.CreateReviewLike(ctx, reviewLike)
 		require.NoError(t, err)
@@ -568,19 +574,19 @@ func TestReviewRepository_GetAverageRating(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	bookID := "test_book_avg_rating"
+	bookID := primitive.NewObjectID().Hex() // 使用有效的ObjectID格式
 
 	// 创建不同评分的书评
 	ratings := []int{5, 4, 3, 5, 4} // 平均4.2
 	for _, rating := range ratings {
 		review := &social.Review{
 			BookID:   bookID,
-			UserID:   "user123",
+			UserID:   primitive.NewObjectID().Hex(),
 			UserName: "测试用户",
 			Title:    "书评标题",
 			Content:  "书评内容",
 			Rating:   rating,
-			IsPublic: true,
+		IsPublic: true,
 		}
 		err := repo.CreateReview(ctx, review)
 		require.NoError(t, err)
@@ -600,14 +606,14 @@ func TestReviewRepository_GetRatingDistribution(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	bookID := "test_book_distribution"
+	bookID := primitive.NewObjectID().Hex() // 使用有效的ObjectID格式
 
 	// 创建不同评分的书评
 	ratings := []int{5, 5, 4, 4, 3}
 	for _, rating := range ratings {
 		review := &social.Review{
 			BookID:   bookID,
-			UserID:   "user123",
+			UserID:   primitive.NewObjectID().Hex(),
 			UserName: "测试用户",
 			Title:    "书评标题",
 			Content:  "书评内容",
@@ -635,13 +641,13 @@ func TestReviewRepository_CountReviews(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	bookID := "test_book_count"
+	bookID := primitive.NewObjectID().Hex() // 使用有效的ObjectID格式
 
 	// 创建多条书评
 	for i := 0; i < 7; i++ {
 		review := &social.Review{
 			BookID:   bookID,
-			UserID:   "user123",
+			UserID:   primitive.NewObjectID().Hex(),
 			UserName: "测试用户",
 			Title:    "书评标题",
 			Content:  "书评内容",
@@ -666,12 +672,12 @@ func TestReviewRepository_CountUserReviews(t *testing.T) {
 	repo, ctx, cleanup := setupReviewRepo(t)
 	defer cleanup()
 
-	userID := "test_user_count"
+	userID := primitive.NewObjectID().Hex() // 使用有效的ObjectID格式
 
 	// 创建多条书评
 	for i := 0; i < 4; i++ {
 		review := &social.Review{
-			BookID:   "book123",
+			BookID:   primitive.NewObjectID().Hex(),
 			UserID:   userID,
 			UserName: "测试用户",
 			Title:    "书评标题",
