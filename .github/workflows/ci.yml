@@ -6,6 +6,11 @@ on:
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
+# 并发控制：同一分支只运行最新的工作流，取消旧的
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GO_VERSION: '1.25'
 
